@@ -79,7 +79,7 @@ public:
 		if (auto const* structure = dynamic_cast<StructType const*>(type))
 			return structValue(structure, std::move(offset), out);
 		Logger::instance().error(
-			"--evm-memory-layout: unsupported materialisation type '"
+			"EVM memory lowering: unsupported materialisation type '"
 			+ (type ? type->toString(true) : std::string("?")) + "'", m_loc);
 		return nullptr;
 	}
@@ -209,7 +209,7 @@ private:
 		if (structure->containsNestedMapping())
 		{
 			Logger::instance().error(
-				"--evm-memory-layout: a memory struct cannot contain a mapping", m_loc);
+				"EVM memory lowering: a memory struct cannot contain a mapping", m_loc);
 			return nullptr;
 		}
 		auto const* structW = dynamic_cast<awst::ARC4Struct const*>(
@@ -265,7 +265,7 @@ public:
 		if (auto const* structure = dynamic_cast<StructType const*>(type))
 			return structValue(structure, std::move(value), out);
 		Logger::instance().error(
-			"--evm-memory-layout: unsupported spill type '"
+			"EVM memory lowering: unsupported spill type '"
 			+ (type ? type->toString(true) : std::string("?")) + "'", m_loc);
 		return nullptr;
 	}
@@ -415,7 +415,7 @@ private:
 		if (structure->containsNestedMapping())
 		{
 			Logger::instance().error(
-				"--evm-memory-layout: a memory struct cannot contain a mapping", m_loc);
+				"EVM memory lowering: a memory struct cannot contain a mapping", m_loc);
 			return nullptr;
 		}
 		auto const* structW = dynamic_cast<awst::ARC4Struct const*>(

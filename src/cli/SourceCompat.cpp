@@ -4,6 +4,9 @@
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Token.h>
+#include <libsolutil/Keccak256.h>
+
+#include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <fstream>
@@ -265,6 +268,49 @@ std::string transformSource(std::string const& _source)
 	}
 
 	return applyReplacements(_source, std::move(replacements));
+}
+
+bool writeSourceRewriteManifest(
+	fs::path const& _path,
+	SourceRewriteMap const& _sources,
+	std::string& _error)
+{
+	using njson = nlohmann::ordered_json;
+	njson manifest{
+		{"schema", "puya-sol/source-rewrite-manifest/v1"},
+		{"mode", "legacy-source-rewrite"},
+		{"warning", "These sources were modified before Solidity parsing; "
+			"the result is not a compilation of the original source text."},
+		{"sources", njson::array()},
+	};
+	for (auto const& [sourceUnit, record]: _sources)
+	{
+		manifest["sources"].push_back({
+			{"source_unit", sourceUnit},
+			{"changed", record.originalSource != record.transformedSource},
+			{"original_keccak256",
+				solidity::util::keccak256(record.originalSource).hex()},
+			{"transformed_keccak256",
+				solidity::util::keccak256(record.transformedSource).hex()},
+			{"original_source", record.originalSource},
+			{"transformed_source", record.transformedSource},
+		});
+	}
+
+	std::ofstream out(_path.string(), std::ios::binary | std::ios::trunc);
+	if (!out)
+	{
+		_error = "cannot open " + _path.string();
+		return false;
+	}
+	out << manifest.dump(2) << '\n';
+	out.close();
+	if (!out)
+	{
+		_error = "failed writing " + _path.string();
+		return false;
+	}
+	return true;
 }
 
 std::set<std::string> collectEventSignatures(std::string const& _source)

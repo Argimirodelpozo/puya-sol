@@ -138,7 +138,7 @@ def test_erc1967_default_mode(harness):
 
 
 def test_erc1967_evm_layout(harness):
-    _run_flow(harness, ["--evm-layout"])
+    _run_flow(harness, ["--evm-storage-layout"])
 
 
 # Admin-slot assembly reached through a LIBRARY (the OZ
@@ -180,7 +180,7 @@ def test_erc1967_library_attribution_default(harness):
 
 
 def test_erc1967_library_attribution_evm_layout(harness):
-    _run_lib_flow(harness, ["--evm-layout"])
+    _run_lib_flow(harness, ["--evm-storage-layout"])
 
 
 # ── 1967 slot-constant data flow + admin forms (erc1967_slot_flow.sol) ──────

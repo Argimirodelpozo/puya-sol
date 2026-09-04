@@ -49,7 +49,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	solidity::frontend::Block const& block,
 	std::shared_ptr<awst::Block> placeholder = nullptr);
 
-/// --evm-memory-layout: spill MEMORY PARAMS that inline assembly treats as
+/// EVM blob memory: spill MEMORY PARAMS that inline assembly treats as
 /// pointers (`keccak256(marketParams, 128)` on a struct param) into blob
 /// regions at function entry, registering each as a blob aggregate on `_fn`.
 /// Statements are appended to `_out` (caller prepends them to the body).
@@ -72,7 +72,7 @@ std::shared_ptr<awst::Expression> materializeBlobValue(
 	awst::SourceLocation const& _loc,
 	std::vector<std::shared_ptr<awst::Statement>>& _out);
 
-/// --evm-memory-layout: recursively allocate and spill `_value` using solc's
+/// EVM blob memory: recursively allocate and spill `_value` using solc's
 /// memory head/data sizes.  Reference children receive real pointer words;
 /// scalar width conversion is delegated to the shared EVM leaf codec.
 bool emitBlobBackValue(

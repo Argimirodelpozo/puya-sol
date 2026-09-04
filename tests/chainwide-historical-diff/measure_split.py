@@ -47,7 +47,7 @@ def _candidates(config: dict) -> list[str]:
 
 def _compile(case_dir: Path, case: dict, split_path: Path, out_dir: Path):
     mf = case.get("multifile")
-    extra_args = ["--evm-layout", "--split-config", str(split_path)]
+    extra_args = ["--evm-storage-layout", "--split-config", str(split_path)]
     if mf:
         src_root = out_dir / "src"
         shutil.copytree(case_dir / "src", src_root)

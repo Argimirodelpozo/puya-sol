@@ -10,7 +10,7 @@ them:
   driven through the same decoded call sequence with the same (mapped) senders.
   Compilable in either storage model: the default **named-cell** model (each
   state var in its own box/app-global, keys derived by hashing the variable
-  name) or, with `--evm-layout`, the **EVM slot** model
+  name) or, with `--evm-storage-layout`, the **EVM slot** model
   (`--evm-storage-layout`: one flat `uint256 slot → bytes32` space backed by
   boxes). The slot model makes the storage diff *slot-for-slot* — the same
   layout on both legs, so comparison stops being name-based alignment.
@@ -41,12 +41,12 @@ python3 replay.py pepe --host eth.blockscout.com \
 python3 fetch.py eth.blockscout.com 0x6982...1933 pepe --max-txns 300
 python3 replay.py pepe            # uses cases/pepe/
 
-# EVM-COMPAT MODES: compile the AVM leg with --evm-storage-layout (flat EVM
-# slot space in boxes) and/or --evm-memory-layout (universal blob memory).
+# EVM-COMPAT MODE: compile the AVM leg with --evm-storage-layout (flat EVM
+# slot space in boxes). Universal EVM memory mode is not currently available.
 # In slot mode the storage diff becomes SLOT-FOR-SLOT (see chd_slot_reader).
-python3 replay.py usde --evm-layout                 # FULL EVM semantics (storage+memory+transient)
-python3 replay.py morpho --evm-layout               # (--evm-memory is folded into --evm-layout now)
-python3 batch.py --evm-layout --max-txns 200 --only usde,degen
+python3 replay.py usde --evm-storage-layout
+python3 replay.py morpho --evm-storage-layout
+python3 batch.py --evm-storage-layout --max-txns 200 --only usde,degen
 
 # Before a batch: rewind LocalNet's clock. Each replay ratchets it forward by
 # that window's span and it never comes back, so a long batch drifts years into
@@ -75,7 +75,7 @@ python3 harvest.py --tvl 40
 
 # self-test the STORAGE DIFFER on a synthetic contract (no network)
 ../WIP/tiny-fuzzing-oracle/.evmvenv/bin/python selftest.py            # named-cell model
-../WIP/tiny-fuzzing-oracle/.evmvenv/bin/python selftest.py --evm-layout
+../WIP/tiny-fuzzing-oracle/.evmvenv/bin/python selftest.py --evm-storage-layout
 ```
 
 `selftest.py` exists because a real history only exercises the storage shapes
@@ -89,6 +89,11 @@ undecoded nested map, and array/struct maps that were never discovered at all).
 Requires: LocalNet running, `build/puya-sol` built, and the
 `tests/WIP/tiny-fuzzing-oracle/.evmvenv` venv (web3/eth-tester/py-solc-x) —
 the EVM leg runs under that interpreter as a subprocess.
+
+This is a research harness, so its AVM compilations explicitly opt into
+`--legacy-source-rewrite` and retain `source-rewrite-manifest.json`. Inspect
+that record for the exact before/after text; results from a changed source are
+not evidence about compilation of the original source bytes.
 
 ## Oracle-backed joint CCTP replay
 
@@ -309,7 +314,8 @@ scan backstops logless hosts. Then:
 ```
 
 decodes each era's init calldata and ctor args into marker form, compiles
-the era with puya-sol `--evm-layout` into `upgrade_<i>/out_avm`, and merges
+the era with puya-sol `--evm-storage-layout` into `upgrade_<i>/out_avm`, and
+merges
 ready-to-run entries into the joint config. An unverified era aborts the
 generator — the replay cannot cross an upgrade whose source is unknown;
 narrow the window instead.
@@ -343,7 +349,7 @@ avm_leg.py   compile prepared.sol with puya-sol, deploy on LocalNet (real ctor
              (opcode/box budgets) are reported for symmetric re-skip.
              → avm_results.json
 chd_slot_reader.py
-             [--evm-layout only] rebuilds a slot→word map from the app's page
+             [--evm-storage-layout only] rebuilds a slot→word map from the app's page
              ("p:"++itob(slot/64), 64 slots per 2048-B box) and sparse
              ("s:"++slot32) boxes, then walks solc's OWN storageLayout with the
              same forward keccak derivations the EVM reader uses. Output shape
@@ -614,7 +620,7 @@ this table twice (see below).
 - **Permit2** — the first DeFi-infrastructure singleton under the program cap,
   66/200 clean and now with **no** timestamp values absorbed as noise.
 - **CCTP v1 TokenMinter** — solc 0.7.6 source relaxed identically on both legs,
-  full `--evm-layout`, O2 AVM size **6,432 B**. A selector-bounded parent set
+  `--evm-storage-layout`, O2 AVM size **6,432 B**. A selector-bounded parent set
   exercised **8 historical mints + 4 burns** through a taped USDC stand-in;
   **33/41 replayed**, 8 failed empty-calldata transactions skipped, zero
   pragma-induced status flips, zero divergences, platform limits, blind slots,

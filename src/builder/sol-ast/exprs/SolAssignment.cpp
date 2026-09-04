@@ -394,7 +394,7 @@ SolAssignment::tryHandleBlobRespill()
 		|| m_scope.findBlobAggregate(lvd->id()).empty())
 		return std::nullopt;
 	// Blob-backing is selected per declaration whenever Yul observes an EVM
-	// pointer, not only by the universal --evm-memory-layout profile. Therefore
+	// pointer, not only by a universal memory profile. Therefore
 	// every such high-level re-assignment must re-spill/repoint the backing
 	// offset; falling through would attempt to assign to a materialized value
 	// expression (and is not a valid lvalue).

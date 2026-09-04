@@ -493,6 +493,22 @@ if(BUILD_TESTING)
 			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
 			-P ${CMAKE_SOURCE_DIR}/tests/cmake/RemovedCliOptionsTest.cmake
 	)
+	add_test(
+		NAME puya-sol-cli-source-policy
+		COMMAND ${CMAKE_COMMAND}
+			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
+			-DSOURCE_DIR=${CMAKE_SOURCE_DIR}/tests/cli-validation
+			-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/source-policy-test-output
+			-P ${CMAKE_SOURCE_DIR}/tests/cmake/SourcePolicyTest.cmake
+	)
+	add_test(
+		NAME puya-sol-cli-evm-layout-options
+		COMMAND ${CMAKE_COMMAND}
+			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
+			-DSOURCE_FILE=${CMAKE_SOURCE_DIR}/tests/cli-validation/Minimal.sol
+			-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/evm-layout-options-test-output
+			-P ${CMAKE_SOURCE_DIR}/tests/cmake/EvmLayoutOptionsTest.cmake
+	)
 
 	add_executable(puya-sol-function-symbol-table-tests
 		tests/cpp/FunctionSymbolTableTests.cpp

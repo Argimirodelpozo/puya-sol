@@ -223,7 +223,12 @@ _BACKEND_CACHE_DIR = CACHE_DIR / "backend"
 # the ~5s Python step — used to compute the L2 key cheaply.
 _NOOP_PUYA = shutil.which("true") or "/bin/true"
 # Files the frontend writes; everything else in out_dir is a backend artifact.
-_FRONTEND_ONLY_FILES = {"awst.json", "options.json", "puya-sol.log"}
+_FRONTEND_ONLY_FILES = {
+    "awst.json",
+    "options.json",
+    "puya-sol.log",
+    "source-rewrite-manifest.json",
+}
 
 # This research harness intentionally measures documented AVM adaptations as
 # well as exact EVM behavior. The production CLI is fail-closed, so acknowledge
@@ -261,7 +266,16 @@ def _puya_sol_cmd(
 ) -> list[str]:
     """Build the puya-sol argv. `puya_path` selects the backend: the real PUYA
     for a full compile, or a no-op (`true`) to emit AWST only."""
-    cmd = [str(COMPILER), "--source", str(source_path)]
+    # The imported corpus intentionally contains pre-0.8 syntax and pragmas.
+    # Production compilation preserves those sources and lets solc reject an
+    # incompatible constraint; this research harness explicitly requests the
+    # compatibility rewrite and retains its per-run source manifest.
+    cmd = [
+        str(COMPILER),
+        "--legacy-source-rewrite",
+        "--source",
+        str(source_path),
+    ]
     for divergence in _RESEARCH_DIVERGENCES:
         cmd += ["--allow-divergence", divergence]
     for extra in all_sources:
@@ -378,8 +392,8 @@ def _backend_cache_lookup(key: str, out_dir: Path) -> bool:
 
 def _backend_cache_store(key: str, out_dir: Path) -> None:
     """Atomically store out_dir's backend artifacts under `key` (same race-safe
-    tmp-dir+rename scheme as _cache_store). The frontend trio
-    (awst.json/options.json/puya-sol.log) is excluded — it's regenerated cheaply
+    tmp-dir+rename scheme as _cache_store). Frontend-only files, including the
+    source rewrite manifest, are excluded because they are regenerated cheaply
     on every run."""
     _BACKEND_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     entry = _BACKEND_CACHE_DIR / key

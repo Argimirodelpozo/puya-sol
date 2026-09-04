@@ -334,7 +334,8 @@ void ContractBuilder::collectBoxArrayVars(
 				"storage `bool[]` is unsupported in the default storage mode: "
 				"puya's box-backed bool-array append and read disagree on "
 				"packing (puyabug.md #10) — push(true);push(true) reads back "
-				"[true, false]. Compile with --evm-layout (byte-consistent "
+				"[true, false]. Compile with --evm-storage-layout "
+				"(byte-consistent "
 				"slot storage), or use uint8[]/bool[N].",
 				loc);
 		if (lengthInitialized.count(var->id()))

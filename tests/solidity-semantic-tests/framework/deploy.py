@@ -280,8 +280,7 @@ def deploy(
     # Slot mode: `new C()` grants children 4 ALGO (box MBR headroom) and the
     # inner create raises the creator's own min balance — give every deploy
     # enough slack that a couple of child creations never overspend.
-    if "--evm-storage-layout" in os.environ.get("PUYA_SOL_EXTRA_ARGS", "") \
-            or "--evm-layout" in os.environ.get("PUYA_SOL_EXTRA_ARGS", ""):
+    if "--evm-storage-layout" in os.environ.get("PUYA_SOL_EXTRA_ARGS", ""):
         min_balance += 10_000_000
     total_fund = min_balance + fund_wei + extra_funding_microalgos
     sp2 = algod.suggested_params()

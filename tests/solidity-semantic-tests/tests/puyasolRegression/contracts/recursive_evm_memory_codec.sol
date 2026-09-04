@@ -1,6 +1,6 @@
 // CUSTOM puya-sol regression: recursive ARC4 <-> EVM memory conversion.
 // Every parameter/local below is deliberately mentioned by inline assembly so
-// --evm-memory-layout spills it to scratch-backed EVM memory. Returning the
+// Assembly use spills it to scratch-backed EVM memory. Returning the
 // whole value forces the inverse materialisation path.
 contract RecursiveEvmMemoryCodec {
     struct Item {

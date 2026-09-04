@@ -883,7 +883,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryMcopy(
 	auto srcIt = m_locals.find(srcVar);
 	if (dstIt == m_locals.end() || srcIt == m_locals.end())
 		return false;
-	// BLOB-backed vars (--evm-memory-layout, asm-touched) hold a uint64
+	// BLOB-backed vars (asm-touched EVM memory) hold a uint64
 	// offset; the real data lives in the blob. This value-model fast path
 	// would replace3 a DETACHED copy while every other reader (returns,
 	// mloads) uses the blob — the writes silently vanished

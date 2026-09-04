@@ -1,5 +1,5 @@
 /// @file main.cpp
-/// puya-sol pipeline: parse args → transform sources → CompilerStack
+/// puya-sol pipeline: parse args → load sources → CompilerStack
 /// → AWST build → post-passes → awst.json + options.json → puya backend.
 /// CLI details live in src/cli/ (CliOptions, SourceCompat, CompilerSetup, AwstPostPasses).
 
@@ -56,6 +56,17 @@ int main(int _argc, char* _argv[])
 
 	logger.info("puya-sol v0.1.0 — Solidity to Algorand Compiler");
 	logger.info("Source: " + sourceFile);
+	if (opts.legacySourceRewrite)
+	{
+		// This acknowledgement cannot be hidden with --log-level error. The
+		// research harness intentionally opts in, but ordinary builds must never
+		// mistake transformed legacy text for the source they supplied.
+		std::cerr
+			<< "WARNING: UNSAFE LEGACY SOURCE REWRITE ENABLED. Solidity source "
+				"will be modified before parsing; exact before/after text and hashes "
+				"will be written to source-rewrite-manifest.json."
+			<< std::endl;
+	}
 
 	fs::path sourceDir = sourceAbsPath.parent_path();
 	// solc's BASE PATH: it decides the main file's source-unit name, and hence
@@ -95,32 +106,46 @@ int main(int _argc, char* _argv[])
 	}
 	std::string rawMainSource = std::move(*rawMainSourceOpt);
 
-	// Pre-scan: collect event signatures from imported interface files
-	// so we can remove duplicate event declarations from the contract source.
-	auto interfaceEvents = collectInterfaceEventsFromImports(rawMainSource, sourceDir);
-
-	// Apply all source transformations
-	std::string mainSourceContent = transformSource(rawMainSource);
-	mainSourceContent = removeInheritedEvents(mainSourceContent, interfaceEvents);
+	// Original source is the default and is passed byte-for-byte to solc. The
+	// compatibility transforms exist only for explicitly acknowledged corpus
+	// research and are recorded below for auditability.
+	SourceRewriteMap rewriteRecords;
+	std::string mainSourceContent = rawMainSource;
+	if (opts.legacySourceRewrite)
+	{
+		auto interfaceEvents =
+			collectInterfaceEventsFromImports(rawMainSource, sourceDir);
+		mainSourceContent = transformSource(rawMainSource);
+		mainSourceContent =
+			removeInheritedEvents(mainSourceContent, interfaceEvents);
+	}
 	fileReader.addOrUpdateFile(sourceAbsPath, mainSourceContent);
 
 	// Get the normalized source unit name for the main file
 	std::string sourceUnitName = fileReader.cliPathToSourceUnitName(sourceAbsPath);
+	if (opts.legacySourceRewrite)
+		rewriteRecords[sourceUnitName] =
+			{rawMainSource, mainSourceContent};
 	logger.debug("Source unit: " + sourceUnitName);
 
-	// Wrap the FileReader callback to transform imported files
+	// Imported files obey the same policy as explicit sources. In normal mode
+	// this callback is a transparent pass-through.
 	auto baseReader = fileReader.reader();
-	auto relaxingReader = [&](std::string const& _kind, std::string const& _path)
+	auto sourceReader = [&](std::string const& _kind, std::string const& _path)
 		-> solidity::frontend::ReadCallback::Result
 	{
 		auto result = baseReader(_kind, _path);
-		if (result.success)
-			result.responseOrErrorMessage = transformSource(result.responseOrErrorMessage);
+		if (result.success && opts.legacySourceRewrite)
+		{
+			auto original = result.responseOrErrorMessage;
+			result.responseOrErrorMessage = transformSource(original);
+			rewriteRecords[_path] =
+				{std::move(original), result.responseOrErrorMessage};
+		}
 		return result;
 	};
 
-	// Set up CompilerStack with pragma-relaxing reader
-	solidity::frontend::CompilerStack compiler(relaxingReader);
+	solidity::frontend::CompilerStack compiler(sourceReader);
 
 	// Set sources — main source + any additional source files
 	std::map<std::string, std::string> sources;
@@ -133,8 +158,14 @@ int main(int _argc, char* _argv[])
 		{
 			std::string extraContent((std::istreambuf_iterator<char>(extraFile)),
 				std::istreambuf_iterator<char>());
-			extraContent = transformSource(extraContent);
 			std::string extraUnit = fileReader.cliPathToSourceUnitName(extraPath);
+			if (opts.legacySourceRewrite)
+			{
+				auto originalExtra = extraContent;
+				extraContent = transformSource(extraContent);
+				rewriteRecords[extraUnit] =
+					{std::move(originalExtra), extraContent};
+			}
 			sources[extraUnit] = extraContent;
 			fileReader.addOrUpdateFile(extraPath, extraContent);
 			logger.info("Additional source: " + extraUnit);
@@ -161,6 +192,20 @@ int main(int _argc, char* _argv[])
 	// An AST from failed analysis is not safe to lower: types, referenced
 	// declarations, virtual targets, and call graphs may be unset or partial.
 	bool success = compiler.parseAndAnalyze();
+	if (opts.legacySourceRewrite)
+	{
+		fs::create_directories(opts.outputDir);
+		fs::path manifestPath =
+			fs::path(opts.outputDir) / "source-rewrite-manifest.json";
+		std::string manifestError;
+		if (!writeSourceRewriteManifest(
+				manifestPath, rewriteRecords, manifestError))
+		{
+			logger.error("Legacy source rewrite manifest: " + manifestError);
+			return 1;
+		}
+		logger.info("Wrote: " + manifestPath.string());
+	}
 	if (!success)
 	{
 		reportCompilationErrors(compiler);
@@ -182,17 +227,6 @@ int main(int _argc, char* _argv[])
 		if (sources.count(extraUnit))
 			sourceAliases[extraPath.string()] = extraUnit;
 	}
-
-	// Build AWST
-	// --evm-memory-layout (and the memory half of the --evm-layout umbrella)
-	// currently changes NOTHING: memory modelling is decided per call site, so
-	// the flag is accepted but only warned about (no TargetProfile field
-	// carries it). --evm-layout still applies its storage half, which works.
-	if (opts.evmMemoryLayout)
-		logger.warning(
-			"--evm-memory-layout is not implemented: the flag is accepted but "
-			"no lowering consults it. Memory modelling is currently decided per "
-			"call site. (--evm-layout still applies its storage half.)");
 
 	logger.info("Building AWST...");
 	puyasol::builder::AWSTBuilder builder;

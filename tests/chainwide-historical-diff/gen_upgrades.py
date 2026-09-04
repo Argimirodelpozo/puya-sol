@@ -7,7 +7,7 @@ joint-config "upgrades" entries, with per-era AVM artifacts compiled.
 
 For each detected era this decodes the implementation's constructor args and
 the upgradeToAndCall embedded init calldata into the marker form both legs
-resolve, compiles the era's source with puya-sol --evm-layout into
+resolve, compiles the era's source with puya-sol --evm-storage-layout into
 upgrade_<i>/out_avm, writes upgrade_<i>/abi.json, and prints (or merges with
 --into) the ready-to-run "upgrades" entries. An UNVERIFIED era aborts: the
 replay cannot cross an upgrade whose source is unknown — narrow the window
@@ -86,7 +86,8 @@ def build_avm(tag: str, up: dict) -> None:
         ]
     else:
         cmd = [str(PUYA_SOL), "--source", str(src_dir / "prepared.sol")]
-    cmd += ["--evm-layout", "--puya-path", str(PUYA),
+    cmd += ["--legacy-source-rewrite", "--evm-storage-layout",
+            "--puya-path", str(PUYA),
             "--output-dir", str(out_dir)]
     res = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
     approval = out_dir / f"{up['name']}.approval.bin"

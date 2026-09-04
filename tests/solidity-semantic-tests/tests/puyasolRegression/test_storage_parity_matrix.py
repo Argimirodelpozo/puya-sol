@@ -34,7 +34,7 @@ def _run(harness, app, sig):
 
 
 def test_slot_mode_raw_word_parity(harness):
-    artifacts = harness.compile(SOURCE, extra_args=["--evm-layout"])
+    artifacts = harness.compile(SOURCE, extra_args=["--evm-storage-layout"])
     app = harness.deploy(artifacts, "StorageParitySlots")
     for sig in SLOT_PROBES:
         _run(harness, app, sig)
@@ -42,7 +42,7 @@ def test_slot_mode_raw_word_parity(harness):
 
 @pytest.mark.parametrize("mode", ["default", "slot"])
 def test_core_semantics_both_modes(harness, mode):
-    extra = ["--evm-layout"] if mode == "slot" else []
+    extra = ["--evm-storage-layout"] if mode == "slot" else []
     artifacts = harness.compile(SOURCE, extra_args=extra)
     app = harness.deploy(artifacts, "StorageParityCore")
     for sig in CORE_PROBES:
@@ -55,7 +55,7 @@ BOOLS = "puyasolRegression/contracts/storage_parity_bools.sol"
 def test_bool_array_slot_mode_parity(harness):
     """Slot mode: byte-consistent bool[] incl. the T,T discriminator and
     raw-word + pop-zeroing checks (oracle-endorsed expectations)."""
-    artifacts = harness.compile(BOOLS, extra_args=["--evm-layout"])
+    artifacts = harness.compile(BOOLS, extra_args=["--evm-storage-layout"])
     app = harness.deploy(artifacts, "BoolArrayParity")
     for sig in ("pushReadTrueTrue()", "wordAndOps()"):
         _run(harness, app, sig)
@@ -63,7 +63,7 @@ def test_bool_array_slot_mode_parity(harness):
 
 def test_bool_array_default_mode_fails_loud(harness):
     """Default mode: storage bool[] is puyabug.md #10 (silent wrong reads) —
-    must be a COMPILE error pointing at --evm-layout."""
+    must be a COMPILE error pointing at --evm-storage-layout."""
     from framework.compile import CompileError
     with pytest.raises(CompileError, match="bool"):
         harness.compile(BOOLS)

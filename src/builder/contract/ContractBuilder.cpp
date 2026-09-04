@@ -396,7 +396,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	if (!_placeholder)
 		markAssemblyAggregates(fn, _block);
 
-	// --evm-memory-layout: MEMORY PARAMS the assembly treats as pointers
+	// EVM blob memory: MEMORY PARAMS the assembly treats as pointers
 	// (`keccak256(s, 32)` on a `string memory s` param) — spill the incoming
 	// VALUE into a blob region at function entry and register the param as
 	// blob-backed, so asm gets a real offset and value uses read it back.

@@ -3877,7 +3877,7 @@ def test_extended_evm_memory_does_not_overlap_transient_scratch(harness):
     fixed transient/flash-accounting scratch range 5..15."""
     arts = harness.compile(
         "puyasolRegression/contracts/evm_memory_extended_scratch_isolation.sol",
-        extra_args=["--evm-layout", "--evm-memory-slots", "7"])
+        extra_args=["--evm-storage-layout", "--evm-memory-slots", "7"])
     app = harness.deploy(arts, "C")
     got = harness.call(app, "probe()", extra_fee=10_000).abi_return
     assert [as_int(value) for value in got] == [111, 222]
@@ -4174,10 +4174,12 @@ def test_evm_layout_unlocks_packed_array_copy(harness):
     assert tuple(as_int(x) for x in r.abi_return) == tuple(range(9)) + (0,)
 
 
-# ── stage 3: --evm-memory-layout (universal blob memory) guards ─────────────
+# ── On-demand EVM blob-memory lowering guards ──────────────────────────────
 
-_EVM_MEM = ["--evm-memory-layout"]
-_EVM_BOTH = ["--evm-storage-layout", "--evm-memory-layout"]
+# Memory lowering is selected by the assembly/data-flow shape, not by a
+# universal CLI mode. These cases continue to exercise that on-demand path.
+_EVM_MEM: list[str] = []
+_EVM_BOTH = ["--evm-storage-layout"]
 
 
 def test_recursive_evm_memory_codec(harness):
@@ -5209,7 +5211,7 @@ def test_evm_ctor_address_namespace(harness):
     acct = harness.localnet.account
     arts = harness.compile(
         "puyasolRegression/contracts/evm_ctor_address_namespace.sol",
-        extra_args=["--evm-layout", "--contract-abi", "evm"])
+        extra_args=["--evm-storage-layout", "--contract-abi", "evm"])
     app = harness.deploy(arts, ctor_args=[acct.address])
     a20 = decode_address(acct.address)[-20:]
     body = evm_abi_encode(["address"], ["0x" + a20.hex()])

@@ -890,7 +890,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// buildBlock; the free/library path builds the body directly, so mark here too.
 	markAssemblyAggregates(fnCtx, _func.body());
 
-	// --evm-memory-layout: spill asm-pointer memory params (the LIBRARY path —
+	// EVM blob memory: spill asm-pointer memory params (the LIBRARY path —
 	// Morpho's MarketParamsLib.id(), Solady's LibString helpers, ...).
 	std::vector<std::shared_ptr<awst::Statement>> asmParamSpills;
 	emitAsmParamSpills(m_session.typeMapper, fnCtx, _func.body(), _sourceFile,

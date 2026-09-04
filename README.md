@@ -112,6 +112,22 @@ build/puya-sol \
 
 For multi-source projects (e.g., contracts with imports), pass each `--source` repeatedly. Outputs land in the `--output-dir` as `<Contract>.approval.teal`, `<Contract>.clear.teal`, `<Contract>.arc56.json`, plus `awst.json` for debugging.
 
+Source text is passed to the pinned Solidity frontend unchanged by default,
+including every version pragma in entry, additional, and imported files. An
+incompatible pragma is therefore a compilation error, just as it is in solc.
+The old pre-0.8 compatibility transforms remain available only for corpus
+research through the explicit `--legacy-source-rewrite` flag. That mode prints
+an unsuppressible warning and writes `source-rewrite-manifest.json` containing
+the exact original and transformed text plus both Keccak-256 hashes for every
+source unit. Its output must not be represented as a compilation of the
+original source.
+
+`--evm-memory-layout` is unavailable until a universal EVM memory model is
+implemented, and the `--evm-layout` umbrella is unavailable because it would
+include that missing behavior. Both options fail with status 2 before source
+processing, even when logs are filtered. The implemented storage-only subset
+remains available explicitly as `--evm-storage-layout`.
+
 Add `--evm-selectors` when Solidity-visible selector values must match solc/EVM
 keccak semantics. ARC-4 selectors remain the AVM application-call routing
 identity, and the compiler translates them at Solidity-visible boundaries such
@@ -169,7 +185,7 @@ that exceed AVM program-size limits must currently be reduced or refactored.
 
 ## Testing
 
-The Solidity semantic-test corpus (~1322 tests imported from `solidity/test/libsolidity/semanticTests/`) drives most of the regression coverage. Each iteration's results are captured in [`tests/solidity-semantic-tests/results_v<N>.txt`](tests/solidity-semantic-tests/) so regressions are caught test-by-test. This research harness explicitly opts into every policy-listed AVM adaptation so it can measure and classify those differences; ordinary compiler invocations remain fail-closed.
+The Solidity semantic-test corpus (~1322 tests imported from `solidity/test/libsolidity/semanticTests/`) drives most of the regression coverage. Each iteration's results are captured in [`tests/solidity-semantic-tests/results_v<N>.txt`](tests/solidity-semantic-tests/) so regressions are caught test-by-test. This research harness explicitly opts into the legacy source rewrite and every policy-listed AVM adaptation so it can measure and classify those differences; ordinary compiler invocations preserve source text and remain fail-closed.
 
 Run the full suite (requires AlgoKit localnet running):
 

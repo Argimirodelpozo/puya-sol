@@ -154,18 +154,16 @@ void printUsage(char const* _progName)
 		<< "  --evm-memory-slots <N> Scratch slots for EVM memory, contiguous from slot 0 (default 5 = 20KB,\n"
 		<< "                         max " << builder::ScratchLayout::maxMemorySlots
 		<< "; UltraHonk needs ~32). Transient/flash reservations follow at N..N+10\n"
-		<< "  --evm-layout           FULL EVM data-location semantics: implies both\n"
-		<< "                         --evm-storage-layout and --evm-memory-layout (plus the\n"
-		<< "                         transient space coherent with them). The recommended\n"
-		<< "                         mode for asm-heavy real-world contracts.\n"
-		<< "  --evm-memory-layout    Universal blob memory: every asm-touched memory aggregate\n"
-		<< "                         is pointer-modeled in the flat blob (EVM layout).\n"
 		<< "  --evm-storage-layout   Back all storage with EVM-numbered slots (paged/sparse boxes).\n"
 		<< "                         Faithful assembly slot arithmetic; no ARC-56 state decls.\n"
+		<< "  --evm-memory-layout    UNAVAILABLE: rejected until universal EVM memory is implemented.\n"
+		<< "  --evm-layout           UNAVAILABLE: rejected because it includes that memory mode.\n"
 		<< "  --output-ir            Output all intermediate representations (SSA IR, MIR, TEAL)\n"
 		<< "  --no-output-logs       Disable writing compilation logs to output directory\n"
 		<< "  --via-yul-behavior     Emulate Solidity's viaIR/compileViaYul codegen semantics\n"
 		<< "                         (separate subroutines per modifier, fresh vars per _ invocation)\n"
+		<< "  --legacy-source-rewrite  RESEARCH ONLY: opt into pre-0.8 source rewrites.\n"
+		<< "                         Emits source-rewrite-manifest.json with exact before/after text.\n"
 		<< "  --evm-selectors        Expose keccak-based Solidity function/event selectors,\n"
 		<< "                         interface IDs, msg.sig, and selector-bearing ABI values.\n"
 		<< "                         ARC-4 selectors remain the route in the ARC-4 profile.\n"
@@ -258,16 +256,21 @@ Options parseArgs(int _argc, char* _argv[])
 		else if (arg == "--evm-storage-layout")
 			opts.evmStorageLayout = true;
 		else if (arg == "--evm-memory-layout")
-			opts.evmMemoryLayout = true;
+		{
+			std::cerr
+				<< "Error: --evm-memory-layout is not implemented and cannot be "
+					"enabled. Compilation stopped before source processing."
+				<< std::endl;
+			std::exit(2);
+		}
 		else if (arg == "--evm-layout")
 		{
-			// The umbrella: full EVM data-location semantics. Storage as
-			// EVM-numbered slots, memory as the flat pointer-modeled blob
-			// (asm string/bytes arithmetic works), and the transient space
-			// coherent with both. The split flags remain for lane-isolated
-			// testing.
-			opts.evmStorageLayout = true;
-			opts.evmMemoryLayout = true;
+			std::cerr
+				<< "Error: --evm-layout is unavailable because its EVM memory "
+					"mode is not implemented. Use --evm-storage-layout only when "
+					"slot-compatible storage is sufficient."
+				<< std::endl;
+			std::exit(2);
 		}
 		else if (arg == "--output-ir")
 			opts.outputIr = true;
@@ -275,6 +278,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.outputLogs = false;
 		else if (arg == "--via-yul-behavior")
 			opts.viaYulBehavior = true;
+		else if (arg == "--legacy-source-rewrite")
+			opts.legacySourceRewrite = true;
 		else if (arg == "--evm-selectors")
 			opts.evmSelectors = true;
 		else if (arg == "--contract-abi" && i + 1 < _argc)

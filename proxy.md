@@ -101,7 +101,7 @@ today is only upgradeable once it also touches the admin slot (or once the
 
 Guard: `puyasolRegression/test_erc1967.py` — full flow (fail-closed update,
 admin round-trip, upgradeTo trap, admin-signed native update preserving
-state) in both default and `--evm-layout` modes. `Proxy.sol`/`ERC1967Utils`
+state) in both default and `--evm-storage-layout` modes. `Proxy.sol`/`ERC1967Utils`
 machinery unreached from compiled entry points still DCEs away as before.
 
 **Mid-history upgrades: ✅** (joint replay `"upgrades"` config). At the
@@ -186,7 +186,7 @@ Guard: `puyasolRegression/test_uups.py` over a flattened OZ v5 closure
 (business logic + proxiableUUID work, upgradeToAndCall traps, stranger/bare
 updates rejected, owner updates natively with state preserved). Deployed
 proof: **FBTC (Base) replays 197/200 with zero divergences** under
-`--evm-layout` — a live UUPS implementation compiling verbatim.
+`--evm-storage-layout` — a live UUPS implementation compiling verbatim.
 
 ---
 

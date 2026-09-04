@@ -1,5 +1,10 @@
 # Semantic Test Status — v501 ("who still assumes slot 0" audit)
 
+> **Historical flag note (2026-09-03):** Entries below preserve the option
+> names used when each run was recorded. `--evm-layout` and
+> `--evm-memory-layout` are now rejected because universal EVM memory was never
+> implemented; current storage-mode runs use `--evm-storage-layout`.
+>
 > **Full run 2026-08-19: 8 failed / 1445 passed / 113 xf / 32 xp** (RESULTS_v501_slot0_audit.txt).
 > Baseline held; +3 guard passes. Review items B7/B8/C10/C11 as the single
 > audit pass that entry asked for — the multi-slot memory migration

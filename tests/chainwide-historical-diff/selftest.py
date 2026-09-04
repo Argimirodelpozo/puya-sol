@@ -9,6 +9,7 @@ readers claim to handle — scalar, nested, STRUCT and ARRAY valued mappings —
 so a broken decoder shows up as a divergence rather than as silence.
 
   <tiny-fuzzing-oracle/.evmvenv/bin/python> selftest.py
+      [--evm-storage-layout]
 
 (runs under the EVM venv — it needs solcx/eth_abi to synthesise the case; both
 replay legs are subprocesses with their own interpreters, so that is fine.)
@@ -146,7 +147,11 @@ def main():
     from differ import print_report
     case_dir = build_case()
     print(f"[selftest] synthetic case at {case_dir}")
-    evm_layout = "--evm-layout" in sys.argv
+    if "--evm-layout" in sys.argv:
+        sys.exit(
+            "--evm-layout is unavailable; use --evm-storage-layout for "
+            "slot-compatible storage only")
+    evm_layout = "--evm-storage-layout" in sys.argv
     if evm_layout:
         print("[selftest] --evm-storage-layout slot mode")
     rep = replay(TAG, max_txns=len(CALLS), snapshot_every=5,

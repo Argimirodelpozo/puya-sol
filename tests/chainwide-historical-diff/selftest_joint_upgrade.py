@@ -104,7 +104,8 @@ def compile_avm(source_dir: Path, out_dir: Path) -> None:
         [
             str(PUYA_SOL),
             "--source", str(source_dir / "prepared.sol"),
-            "--evm-layout",
+            "--legacy-source-rewrite",
+            "--evm-storage-layout",
             "--puya-path", str(PUYA),
             "--output-dir", str(out_dir),
         ],

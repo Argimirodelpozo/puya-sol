@@ -2,6 +2,7 @@
 """Run the historical replay across a list of candidate contracts, sequentially.
 
   python3 batch.py [--max-txns N] [--only tag1,tag2]
+                   [--evm-storage-layout]
 
 Sequential ON PURPOSE: one LocalNet, and concurrent puya-sol compiles poison the
 shared compile cache. Failures (unverified / multi-file / old solc / external-
@@ -172,12 +173,14 @@ def main():
     refetch = "--refetch" in argv        # re-pull history (e.g. for a deeper window)
     if refetch:
         argv.remove("--refetch")
-    evm_layout = "--evm-layout" in argv  # slot-mode AVM leg (--evm-storage-layout)
+    if "--evm-layout" in argv or "--evm-memory" in argv:
+        sys.exit(
+            "--evm-layout/--evm-memory are unavailable; use "
+            "--evm-storage-layout for slot-compatible storage only")
+    evm_layout = "--evm-storage-layout" in argv
     if evm_layout:
-        argv.remove("--evm-layout")
-    evm_memory = "--evm-memory" in argv   # + stage-3 universal blob memory
-    if evm_memory:
-        argv.remove("--evm-memory")
+        argv.remove("--evm-storage-layout")
+    evm_memory = False
 
     summary = []
     for host, addr, tag in CANDIDATES:

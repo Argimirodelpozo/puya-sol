@@ -10,7 +10,7 @@ def test_nested_precompile_expression(harness):
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/asm_multislot_rt_copies.sol",
         contract_name="MultiSlotRtCopies",
-        extra_args=["--evm-layout"],
+        extra_args=["--evm-storage-layout"],
     )
     value = bytes.fromhex("0123456789abcdef" * 4)
     got = harness.call(app, "nestedIdentity(bytes32)", value).abi_return
@@ -21,7 +21,7 @@ def test_identity_cross_slot(harness):
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/asm_multislot_rt_copies.sol",
         contract_name="MultiSlotRtCopies",
-        extra_args=["--evm-layout"],
+        extra_args=["--evm-storage-layout"],
     )
     # src in slot 1, dst in slot 2 — both far from slot 0.
     r = harness.call(app, "identityCross(uint256,uint256)", 5000, 9200).abi_return
@@ -36,7 +36,7 @@ def test_sha256_cross_slot(harness):
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/asm_multislot_rt_copies.sol",
         contract_name="MultiSlotRtCopies",
-        extra_args=["--evm-layout"],
+        extra_args=["--evm-storage-layout"],
     )
     want = hashlib.sha256(b"\x41" * 32).digest()
     got = bytes(harness.call(app, "shaCross(uint256)", 6000).abi_return)
@@ -47,7 +47,7 @@ def test_mcopy_dynamic_cross_slot(harness):
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/asm_multislot_rt_copies.sol",
         contract_name="MultiSlotRtCopies",
-        extra_args=["--evm-layout"],
+        extra_args=["--evm-storage-layout"],
     )
     got = bytes(
         harness.call(app, "mcopyCross(uint256,uint256,uint256)", 5100, 9300, 32).abi_return
@@ -59,7 +59,7 @@ def test_runtime_out_offset_returndata(harness):
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/asm_multislot_rt_copies.sol",
         contract_name="RtOutCaller",
-        extra_args=["--evm-layout"],
+        extra_args=["--evm-storage-layout"],
     )
     assert as_int(harness.call(app, "h(uint256,uint256)", 7, 0x40).abi_return) == 1007
     # Out buffer past the slot boundary too.

@@ -72,7 +72,7 @@ def test_expression_and_control_guards(harness):
 def test_storage_identity_and_slot_lowering(harness):
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/new_review_storage.sol",
-        extra_args=["--evm-layout"], fund_wei=5_000_000)
+        extra_args=["--evm-storage-layout"], fund_wei=5_000_000)
 
     assert _ints(harness.call(app, "transientPair()").abi_return) == (11, 22)
     assert _ints(harness.call(app, "recordPair(uint256)", 7).abi_return) == (101, 202)
@@ -94,7 +94,8 @@ def test_storage_identity_and_slot_lowering(harness):
 def test_base_constructor_postinit_triggers(harness):
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/new_review_constructor.sol",
-        contract_name="NewReviewConstructor", extra_args=["--evm-layout"],
+        contract_name="NewReviewConstructor",
+        extra_args=["--evm-storage-layout"],
         fund_wei=2_000_000)
     assert as_int(harness.call(
         app, "childAnswer()", extra_fee=5_000).abi_return) == 42
@@ -129,7 +130,8 @@ def test_recursive_multibox_struct_guard(harness):
 def test_recursive_shape_audit_guards(harness):
     evm = harness.compile_and_deploy(
         "puyasolRegression/contracts/recursive_shape_audit.sol",
-        contract_name="RecursiveShapeEvm", extra_args=["--evm-layout"],
+        contract_name="RecursiveShapeEvm",
+        extra_args=["--evm-storage-layout"],
         fund_wei=2_000_000)
     harness.call(evm, "replace(uint256[][][])",
                  [[[5, 6], [7]], [[8]]])

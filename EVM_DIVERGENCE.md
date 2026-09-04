@@ -13,6 +13,10 @@ stable names, and there is no catch-all opt-in. Explicitly configured EVM
 environment values are already acknowledged by their configuration options.
 Fundamentally unsupported features remain unconditional compile errors.
 
+The historical `--evm-memory-layout` flag did not actually select a universal
+memory model. It and the `--evm-layout` umbrella are now rejected before source
+processing; only the implemented `--evm-storage-layout` subset can be enabled.
+
 The semantic-test harness opts into every listed adaptation because its job is
 to measure and classify EVM/AVM differences. That harness policy does not alter
 the compiler's fail-closed default.

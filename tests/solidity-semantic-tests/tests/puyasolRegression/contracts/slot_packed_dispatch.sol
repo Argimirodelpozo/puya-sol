@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// Storage shapes that drive the --evm-layout slot dispatcher's packed
+/// Storage shapes that drive the --evm-storage-layout dispatcher's packed
 /// element loop (EvmSlotStorageDispatch): the loop reads one storage word per
 /// `__per` elements and slices each element out of it, so an off-by-one in the
 /// word boundary, the lane offset, or the element width aliases neighbours

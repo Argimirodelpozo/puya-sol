@@ -2,6 +2,7 @@
 """Orchestrator: fetch → EVM leg → AVM leg → diff, with symmetric re-skip.
 
   python3 replay.py <tag> [--host H --address A] [--max-txns N] [--fetch]
+                    [--evm-storage-layout]
 
 If the AVM leg hits a platform limit (opcode/box budget) on a txn, that txn is
 added to the skip set and BOTH legs are re-run, so the two states stay in
@@ -150,12 +151,14 @@ def main():
     force_fetch = "--fetch" in argv
     if force_fetch:
         argv.remove("--fetch")
-    evm_layout = "--evm-layout" in argv
+    if "--evm-layout" in argv or "--evm-memory" in argv:
+        sys.exit(
+            "--evm-layout/--evm-memory are unavailable; use "
+            "--evm-storage-layout for slot-compatible storage only")
+    evm_layout = "--evm-storage-layout" in argv
     if evm_layout:
-        argv.remove("--evm-layout")
-    evm_memory = "--evm-memory" in argv
-    if evm_memory:
-        argv.remove("--evm-memory")
+        argv.remove("--evm-storage-layout")
+    evm_memory = False
     child_box = "--child-programs-via-box" in argv
     if child_box:
         argv.remove("--child-programs-via-box")
@@ -170,7 +173,7 @@ def main():
         fetch_case(host, address, tag, max_txns)
 
     print(f"[replay] {tag}: max_txns={max_txns}"
-          + (" [--evm-layout]" if evm_layout else ""))
+          + (" [--evm-storage-layout]" if evm_layout else ""))
     print_report(replay(tag, max_txns, snap, evm_layout, evm_memory,
                         split_config, force_delegate, child_box))
 

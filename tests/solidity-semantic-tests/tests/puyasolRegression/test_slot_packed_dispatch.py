@@ -1,7 +1,8 @@
 """Slot-mode packed element dispatch (EvmSlotStorageDispatch).
 
 Surfaced while compiling a real third-party CCTP integration: its
-`mapping(uint32 => mapping(address => address))` made every --evm-layout build
+`mapping(uint32 => mapping(address => address))` made every
+--evm-storage-layout build
 warn "__wb potentially used before assignment". The warning was spurious (the
 buffer is always established at the first word boundary), but it showed the
 dispatcher's packed multi-lane loop had no targeted coverage — the corpus
@@ -108,4 +109,4 @@ def test_slot_packed_dispatch_default_mode(harness):
 
 
 def test_slot_packed_dispatch_evm_layout(harness):
-    _run(harness, ["--evm-layout"])
+    _run(harness, ["--evm-storage-layout"])

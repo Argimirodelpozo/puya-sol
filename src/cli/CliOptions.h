@@ -1,7 +1,7 @@
 /// @file CliOptions.h
 /// puya-sol CLI surface: the Options struct, --help text, argv parsing, and
 /// Logger configuration. Moved out of main.cpp so the driver stays a readable
-/// pipeline; splitter-specific option *application* lives in AwstPostPasses.
+/// pipeline.
 #pragma once
 
 #include <cstdint>
@@ -29,6 +29,10 @@ struct Options
 	bool outputIr = false;
 	bool outputLogs = true;
 	bool viaYulBehavior = false;
+	// Research-only compatibility shims for pre-0.8 corpus sources. Disabled
+	// by default so the compiler always enforces the source's original pragma
+	// and syntax contract.
+	bool legacySourceRewrite = false;
 	// --evm-selectors: expose Solidity/EVM keccak selectors to Solidity code
 	// while retaining ARC-4 selectors at the AVM application-call boundary.
 	// Opt-in because external function-pointer representation grows to carry
@@ -63,9 +67,6 @@ struct Options
 	// AVM.sol group-scratch range at N+1..N+10 (default N=5 reproduces the
 	// historical 0..4 / 5 / 6..15 layout exactly). UltraHonk needs ~32.
 	int evmMemorySlots = 0;
-	// --evm-memory-layout: universal blob memory — every asm-touched memory
-	// aggregate is pointer-modeled (EVM layout) regardless of allocation shape.
-	bool evmMemoryLayout = false;
 	// --evm-storage-layout: back ALL contract storage with EVM-numbered slots
 	// (hybrid paged/sparse boxes) instead of per-variable named cells. Makes
 	// assembly slot arithmetic faithful; disables ARC-56 state declarations.
