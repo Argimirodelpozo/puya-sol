@@ -160,6 +160,24 @@ def test_composite_bytes32_key_uses_solidity_packed_width() -> None:
     assert seen == [(7).to_bytes(4, "big") + bytes.fromhex(token)]
 
 
+def test_bytes32_getter_results_are_mapping_key_evidence() -> None:
+    role = "ab" * 32
+    snapshots = {
+        "4": {
+            "ADMIN_ROLE()": ["0x" + role],
+            "count()": [7],
+            "failed()": "REVERT:nope",
+        },
+    }
+    getters = [
+        {"sig": "ADMIN_ROLE()", "outputs": [{"type": "bytes32"}]},
+        {"sig": "count()", "outputs": [{"type": "uint256"}]},
+    ]
+
+    assert bytes32_mapping_key_candidates(
+        [], {}, lambda data: data, snapshots, getters) == [role]
+
+
 def test_slot_reader_covers_dependency_and_composite_mapping_keys() -> None:
     dep = bytes.fromhex("11" * 32)
     token = bytes.fromhex("22" * 32)
@@ -217,6 +235,18 @@ def test_slot_reader_covers_dependency_and_composite_mapping_keys() -> None:
     assert storage["maps"]["limits"] == {"«D0»": 123}
     assert storage["maps"]["remotes"] == {"0x" + composite.hex(): "«D0»"}
     assert storage["maps"]["__unattributed_boxes__"] == 0
+
+    storage = read_slot_storage(
+        {**slots, 999: (1).to_bytes(32, "big")},
+        layout, {"«D0»": dep}, fold, calls, fns)
+    assert storage["maps"]["__unattributed_boxes__"] == 1
+    assert storage["maps"]["__unattributed_box_groups__"] == {
+        "unresolved_layout": {
+            "slots": 1, "transactions": [], "signatures": {},
+            "sample": ["999"],
+        },
+    }
+    assert storage["coverage"]["unattributed_slots"] == ["999"]
 
 
 def test_recursive_native_and_evm_readers_cover_aave_shaped_state() -> None:

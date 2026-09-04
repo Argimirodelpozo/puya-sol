@@ -92,6 +92,38 @@ def clock_target(ts, epoch, base):
     return int(base) + max(0, int(ts) - int(epoch or 0))
 
 
+def deployment_clock_target(creation_ts, calls, base):
+    """Map contract creation through the same epoch shift as replay calls.
+
+    Creation normally predates the first call, so ``clock_target`` cannot be
+    reused: its forward-only clamp would collapse creation onto the first-call
+    instant. Preserve that historical lead time when the chain is fresh, and
+    apply the same positive shift to both when LocalNet has already advanced.
+    """
+    if not base:
+        return int(creation_ts or 0)
+    epoch = replay_epoch(calls)
+    if not creation_ts or not epoch:
+        return int(base)
+    return max(61, int(base) + int(creation_ts) - epoch)
+
+
+def replay_time_base(chain_now, creation_ts, calls):
+    """Choose a call epoch whose shifted creation is still reachable.
+
+    An already-advanced AVM chain cannot rewind to a creation timestamp that
+    predates the first call. Move the call base ahead by that lead as well, so
+    mapping creation through ``deployment_clock_target`` lands just after the
+    current chain rather than behind it.
+    """
+    epoch = replay_epoch(calls)
+    if not epoch:
+        return max(0, int(chain_now or 0) + 1)
+    creation = int(creation_ts or epoch)
+    lead = max(0, epoch - creation)
+    return max(epoch, int(chain_now or 0) + 1 + lead)
+
+
 def replay_clock_targets(calls, base):
     """Return one deterministic, strictly increasing timestamp per entry.
 
@@ -246,10 +278,13 @@ def tape_script_chunks(answers, selectors):
     return out
 
 
-def bytes32_mapping_key_candidates(calls, fns, keccak_fn):
+def bytes32_mapping_key_candidates(calls, fns, keccak_fn, snapshots=None,
+                                   getters=None):
     """bytes32 mapping keys evidenced by replay calldata.
 
-    Besides literal bytes32 arguments, include the common Solidity helper
+    Besides literal bytes32 arguments, include bytes32 values observed through
+    zero-argument getters. Public role/domain constants commonly key mappings
+    without ever appearing in calldata. Also include the common Solidity helper
     ``keccak256(abi.encodePacked(uintN, bytes32))``.  CCTP's TokenMinter uses
     exactly that shape for ``remoteTokensToLocalTokens``: probing only the raw
     remote-token argument leaves every written entry invisible on both legs.
@@ -287,6 +322,20 @@ def bytes32_mapping_key_candidates(calls, fns, keccak_fn):
                 continue
             packed = n.to_bytes(bits // 8, "big") + bytes.fromhex(b["__b__"])
             add(bytes(keccak_fn(packed)).hex())
+
+    getter_outputs = {
+        getter.get("sig"): getter.get("outputs") or []
+        for getter in getters or []
+    }
+    for snapshot in (snapshots or {}).values():
+        if not isinstance(snapshot, dict):
+            continue
+        for sig, values in snapshot.items():
+            if not isinstance(values, list):
+                continue
+            for value, output in zip(values, getter_outputs.get(sig) or []):
+                if output.get("type") == "bytes32" and isinstance(value, str):
+                    add(value)
     return out
 
 

@@ -26,7 +26,8 @@ from chd_common import (ZERO, arg_content20, build_dep_tape_plans,
                         build_registry, bytes32_mapping_key_candidates,
                         canon_value,
                         call_without_consuming_tapes, dump_json,
-                        evm_sender_privkey, load_json, marker_for,
+                        deployment_clock_target, evm_sender_privkey, load_json,
+                        marker_for,
                         probe_clock_target, replay_clock_targets, replay_epoch,
                         scale_value, sender_marker, symbol)
 from chd_storage import (EvmStorageReader, KeyEvidence,
@@ -591,11 +592,20 @@ def main():
     def run_once(skips):
         from eth_tester import EthereumTester, PyEVMBackend
         epoch = replay_epoch(calls)
+        deployment_target = deployment_clock_target(
+            (case.get("creation") or {}).get("ts"), calls, time_base or epoch)
+        target = (deployment_target or time_base or epoch
+                  or (txns[0]["ts"] if txns else 61))
+        # Funding each historical sender and deploying dependencies mine setup
+        # blocks. Begin far enough below the target that those blocks cannot
+        # consume the creation timestamp; re-anchor immediately before CREATE.
+        setup_headroom = (len(sender_acct) + 2 * len(deps)
+                          + len(link_libraries) + 64)
+        start = max(61, int(target) - setup_headroom)
         genesis = None
         if pin_time and txns:
             try:
                 from eth_tester.backends.pyevm.main import get_default_genesis_params
-                start = time_base or (case["creation"]["ts"] or txns[0]["ts"])
                 genesis = get_default_genesis_params(
                     {"timestamp": max(61, start) - 60,
                      # susde's ctor burns >12M gas legitimately; mainnet's block
@@ -603,19 +613,26 @@ def main():
                      "gas_limit": 60_000_000})
             except Exception:
                 genesis = None
+
+        if pin_time:
+            # py-evm normally chooses max(parent+1, wall-clock) for every
+            # implicit pending header. That silently jumps a historical
+            # genesis to today before the first setup transaction and can make
+            # time-gated constructors revert. This process is a dedicated leg,
+            # so pin its implicit clock; explicit time_travel calls below still
+            # move the chain forward along the shared replay schedule.
+            from eth._utils import headers as pyevm_headers
+            pyevm_headers.eth_now = lambda: int(start)
         tester = EthereumTester(PyEVMBackend(genesis_parameters=genesis)
                                 if genesis else PyEVMBackend())
         w3 = Web3(Web3.EthereumTesterProvider(tester))
 
-        # Py-EVM's pending block starts at wall time even when a historical
-        # custom-genesis timestamp was requested. Without an explicit anchor,
-        # the first funding transaction silently jumps there. Anchor before
-        # any setup transaction; the exact replay base is finalized after the
-        # target has been deployed.
+        # Keep every implicit setup header off the wall clock. The target is
+        # re-anchored to its creation instant immediately before deployment.
         if pin_time:
             pending_ts = int(tester.get_block_by_number("pending")["timestamp"])
-            requested = int(time_base or epoch or pending_ts)
-            tester.time_travel(max(requested, pending_ts))
+            if start > pending_ts:
+                tester.time_travel(start)
 
         # ── VM-level tape interception ────────────────────────────────────
         # Solidity calls view functions via STATICCALL; a stub whose fallback
@@ -864,6 +881,15 @@ def main():
             finally:
                 _trace["suppress_addr"] = None
 
+        if pin_time and deployment_target:
+            pending_ts = int(tester.get_block_by_number("pending")["timestamp"])
+            if pending_ts > deployment_target:
+                raise SystemExit(
+                    "historical setup exhausted deployment clock headroom: "
+                    f"pending={pending_ts}, target={deployment_target}")
+            if pending_ts < deployment_target:
+                tester.time_travel(deployment_target)
+
         txh = _deploy_target(C)
         rc = w3.eth.get_transaction_receipt(txh)
         caddr = rc["contractAddress"]
@@ -1083,7 +1109,8 @@ contract ChdErc1967Proxy {
                          for addr, i in (reg.get("deps") or {}).items()
                          if addr in _dep_local})
             extras = bytes32_mapping_key_candidates(
-                calls, meta.get("fns") or {}, keccak)
+                calls, meta.get("fns") or {}, keccak, snapshots,
+                meta.get("getters") or [])
             evidence = KeyEvidence(
                 calls, meta.get("fns") or {}, syms, extras)
             written = {slot for slots in sstore_trace.values() for slot in slots}

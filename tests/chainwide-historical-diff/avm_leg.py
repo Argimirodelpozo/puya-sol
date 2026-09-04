@@ -445,7 +445,7 @@ def _read_avm_maps_legacy(algod, app_id, arc56, syms, fold, calls=None):
 
 
 def read_avm_maps(algod, app_id, arc56, layout, syms, fold, calls=None,
-                  fns=None, app_id_symbols=None):
+                  fns=None, app_id_symbols=None, snapshots=None, getters=None):
     """Read native box state through the recursive solc/ARC-56 type tree."""
     try:
         names = [base64.b64decode(item["name"])
@@ -467,7 +467,8 @@ def read_avm_maps(algod, app_id, arc56, layout, syms, fold, calls=None,
         digest.update(data)
         return digest.digest()
 
-    extras = bytes32_mapping_key_candidates(calls or [], fns or {}, _keccak)
+    extras = bytes32_mapping_key_candidates(
+        calls or [], fns or {}, _keccak, snapshots, getters)
     evidence = KeyEvidence(calls or [], fns or {}, syms, extras)
     reader = NativeStorageReader(
         layout, arc56, box_values, evidence,
@@ -1361,7 +1362,7 @@ def main():
         slot_layout = load_json(case_dir / "storage_layout.json")
         storage = read_slot_storage(
             read_slot_map(algod, app.app_id), slot_layout, syms, fold, calls,
-            meta.get("fns") or {})
+            meta.get("fns") or {}, snapshots, meta.get("getters") or [])
     else:
         slot_layout = load_json(case_dir / "storage_layout.json")
         storage = read_avm_storage(algod, app.app_id, arc56, fold)
@@ -1372,7 +1373,8 @@ def main():
             if addr in (reg.get("deps") or {})})
         maps = read_avm_maps(
             algod, app.app_id, arc56, slot_layout, syms, fold, calls,
-            meta.get("fns") or {}, app_id_symbols)
+            meta.get("fns") or {}, app_id_symbols, snapshots,
+            meta.get("getters") or [])
         storage["raw_slots"] = maps.pop("__raw_slots__", {})
         storage["coverage"] = maps.pop("__coverage__", {})
         storage["maps"] = maps

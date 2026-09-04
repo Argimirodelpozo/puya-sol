@@ -12,7 +12,7 @@ from Crypto.Hash import keccak as _keccak_mod
 
 from chd_common import bytes32_mapping_key_candidates
 from chd_storage import (EvmStorageReader, KeyCandidate, KeyEvidence,
-                         evm_key_bytes)
+                         evm_key_bytes, grouped_uncovered_slots)
 
 
 def _kec(data: bytes) -> bytes:
@@ -50,9 +50,11 @@ def read_slot_map(algod, app_id) -> dict[int, bytes]:
 
 
 def read_slot_storage(slotmap: dict[int, bytes], layout: dict, syms: dict,
-                      fold, calls, fns=None) -> dict:
+                      fold, calls, fns=None, snapshots=None,
+                      getters=None) -> dict:
     """Walk the reconstructed words through the shared recursive reader."""
-    extras = bytes32_mapping_key_candidates(calls, fns or {}, _kec)
+    extras = bytes32_mapping_key_candidates(
+        calls, fns or {}, _kec, snapshots, getters)
     evidence = KeyEvidence(calls, fns or {}, syms, extras)
 
     def slot_mode_key(candidate: KeyCandidate, type_doc: dict) -> bytes:
@@ -73,11 +75,14 @@ def read_slot_storage(slotmap: dict[int, bytes], layout: dict, syms: dict,
         written_slots=set(slotmap), mapping_key_encoder=slot_mode_key,
         full_word_addresses=True)
     storage = reader.read(fold)
-    storage["maps"]["__unattributed_boxes__"] = len(
-        set(slotmap) - set(reader.seen))
+    unattributed = sorted(set(slotmap) - set(reader.seen))
+    storage["maps"]["__unattributed_boxes__"] = len(unattributed)
+    storage["maps"]["__unattributed_box_groups__"] = grouped_uncovered_slots(
+        unattributed, {}, calls)
     storage["coverage"] = {
         "slots_total": len(slotmap),
         "typed_slots": len(set(slotmap) & set(reader.seen)),
-        "unattributed": len(set(slotmap) - set(reader.seen)),
+        "unattributed": len(unattributed),
+        "unattributed_slots": [str(slot) for slot in unattributed],
     }
     return storage

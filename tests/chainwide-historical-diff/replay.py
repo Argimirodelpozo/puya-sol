@@ -17,7 +17,8 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from chd_common import CASES, EVM_PY, HERE, load_json, replay_epoch
+from chd_common import (CASES, EVM_PY, HERE, load_json, replay_epoch,
+                        replay_time_base)
 from differ import diff_case, print_report
 
 
@@ -93,9 +94,12 @@ def replay(tag: str, max_txns: int = 300, snapshot_every: int = 25,
         # Prefer TRUE historical time: a freshly reset LocalNet sits at ts=0,
         # so the window's own epoch is reachable and both legs replay at the
         # real historical instants. Only once the chain has ratcheted past it
-        # does the base become "just ahead of the chain" and the epoch shift.
-        epoch = replay_epoch(case.get("txns") or [])
-        base = max(_chain_now() + 1, epoch)
+        # does the base shift. Include the creation-to-first-call lead in that
+        # shift, or the mapped deployment would still sit behind LocalNet.
+        txns = case.get("txns") or []
+        epoch = replay_epoch(txns)
+        base = replay_time_base(
+            _chain_now(), (case.get("creation") or {}).get("ts"), txns)
         _run([str(EVM_PY), str(HERE / "evm_leg.py"), str(case_dir),
               json.dumps({"max_txns": max_txns, "snapshot_every": snapshot_every,
                           "pin_time": True, "time_base": base,

@@ -50,9 +50,10 @@ python3 batch.py --evm-storage-layout --max-txns 200 --only usde,degen
 
 # Before a batch: rewind LocalNet's clock. Each replay ratchets it forward by
 # that window's span and it never comes back, so a long batch drifts years into
-# the future (see the clock note under "Scope & constraints"). Py-EVM's
-# pending block starts at wall time, so the shared epoch is normally shifted;
-# historical DELTAS are preserved. Nothing in this suite persists on LocalNet.
+# the future (see the clock note under "Scope & constraints"). A fresh reset
+# replays the true historical epoch; an already-advanced LocalNet applies one
+# shared positive shift while preserving every historical delta. Nothing in
+# this suite persists on LocalNet.
 algokit localnet reset
 
 # INTERNAL (contract-to-contract) CALLS merged into the stream — for a
@@ -505,9 +506,10 @@ skips and must be reported separately.
   compiler's contract-value convention — and read the real approval program via
   `app_params_get`, so `.code.length > 0` and OZ's assembly `Address.isContract`
   both answer correctly.
-- **8 KB program cap** (1 base + 3 extra pages × 2048 B). Morpho Blue compiles
-  at 13741 B and UniV4 PoolManager at 30751 B — both need the uros splitter to
-  deploy. Permit2 (6218 B) fits and replays.
+- **16 KiB program cap** (1 base + 7 extra pages × 2048 B under consensus
+  v42). Morpho Blue now fits at 13741 B; UniV4 PoolManager at 30751 B still
+  needs the uros splitter. Permit2 (6218 B) and Euler EUL (10604 B) both fit
+  and replay.
 - **256 inner txns per top-level txn.** A Solidity loop of external calls
   (batch airdrop, multicall, liquidation sweep) has a ceiling the EVM lacks;
   verified on LocalNet at exactly 256 ok / 257 `too many inner transactions`.
@@ -547,14 +549,17 @@ skips and must be reported separately.
   txns gains nothing without a deeper window.
 - Reverted historical txns are replayed and must revert on both legs (payload
   compared) — signal, not noise.
-- **Block time is pinned on both legs, but the epoch normally shifts.** Py-EVM
-  finalizes a reachable base from its pending block after setup; that exact base
-  and the target constructor's actual deployment timestamp are then handed to
-  the AVM leg. Every entry receives a timestamp from one shared, strictly
-  increasing schedule. Historical gaps are preserved exactly; entries sharing
-  a timestamp (usually internal calls recovered from one Ethereum transaction)
-  receive deterministic one-second tie breaks because Py-EVM mines each entry
-  in its own block. There is no timestamp tolerance in the differ: unequal
+- **Block time is pinned on both legs.** Py-EVM's implicit pending-header clock
+  is pinned before backend construction, preventing its normal wall-clock jump
+  from changing a historical, time-gated constructor. With a freshly reset
+  LocalNet, creation and replay use their true historical timestamps. If
+  LocalNet has already advanced, creation and every call receive the same
+  positive epoch shift, including the original creation-to-first-call lead.
+  Every entry then follows one shared, strictly increasing schedule on both
+  legs. Historical gaps are preserved exactly; entries sharing a timestamp
+  (usually internal calls recovered from one Ethereum transaction) receive
+  deterministic one-second tie breaks because Py-EVM mines each entry in its
+  own block. There is no timestamp tolerance in the differ: unequal
   timestamp-derived values are real findings.
 
   Two algod dev-mode facts shape the AVM side:
@@ -600,11 +605,11 @@ this table twice (see below).
 
 | | |
 |---|---|
-| contracts replayed | **75** |
-| zero divergences | **75** |
+| contracts replayed | **76** |
+| zero divergences | **76** |
 | with divergences | 0 |
-| transactions replayed on both legs | **20,223** of 28,524 in-window (71%) |
-| skipped, by cause | closed-world 7,101, avm-platform-limit 1,128, no-calldata 35, value 25, unknown-selector 12 |
+| transactions replayed on both legs | **20,468** of 28,824 in-window (71%) |
+| skipped, by cause | closed-world 7,156, avm-platform-limit 1,128, no-calldata 35, value 25, unknown-selector 12 |
 
 ### Headline runs
 
@@ -619,6 +624,10 @@ this table twice (see below).
   compiler-friendliness.
 - **Permit2** — the first DeFi-infrastructure singleton under the program cap,
   66/200 clean and now with **no** timestamp values absorbed as noise.
+- **Euler EUL** — an 18-source ERC20Votes/Permit/AccessControl governance token,
+  approval size **10,604 B**. **245/300** historical transactions and **256/256**
+  parameterized probes matched; all six mapping roots and all **223** nonzero
+  storage slots were attributed and compared, with zero divergences.
 - **CCTP v1 TokenMinter** — solc 0.7.6 source relaxed identically on both legs,
   `--evm-storage-layout`, O2 AVM size **6,432 B**. A selector-bounded parent set
   exercised **8 historical mints + 4 burns** through a taped USDC stand-in;
@@ -631,8 +640,9 @@ this table twice (see below).
 
 Nothing in the corpus currently shows a divergence. What remains is structural:
 
-- **8 KB program cap** — `pol` (8322 B, 130 B over), `strk`, `ens_tok`, `ondo`,
-  `xtoken`, and both Polymarket contracts. Splitter territory, not compiler bugs.
+- **16 KiB program cap** — consensus v42 removed the former size blocker for
+  8–16 KiB contracts. Larger programs such as UniV4 PoolManager (30751 B)
+  remain splitter territory, not compiler bugs.
 - **Raft protocol** (RToken, PositionManager, ERC20Indexable, 0.8.19): the
   harness ladder works end-to-end — PriceFeed dep falls back to a stand-in,
   four tapes load, the missing-ctor ABI gets synthesized — and every contract
@@ -681,6 +691,7 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | `wbt_d2` WBT | ethereum | 590/2000 | ✅ | closed-world 956, avm-platform-limit 454 |
 | `opmint` OptimismMintableERC20 | base | 285/300 | ✅ | closed-world 15 |
 | `op_gov` GovernanceToken | optimism | 247/400 | ✅ | closed-world 100, avm-platform-limit 41, no-calldata 7, value 5 |
+| `eul` Eul | ethereum | 245/300 | ✅ | closed-world 55 |
 | `apecoin` Astgik | ethereum | 200/200 | ✅ | — |
 | `l2custom` L2CustomERC20 | optimism | 200/200 | ✅ | — |
 | `pepe_ic` PepeToken | ethereum | 200/200 | ✅ | — |
@@ -771,7 +782,7 @@ a dependency supplies its code, not its history.
 
 ## Corpus status
 
-~40 real contracts replay their on-chain history with **zero divergences** in
+Dozens of real contracts replay their on-chain history with **zero divergences** in
 slot mode, spanning plain ERC-20s, permit/ShortStrings, ERC20Votes/Checkpoints,
 tax-on-transfer, pausable/role-gated, bridged L2 tokens, ERC-4626-adjacent
 vault tokens — and **Permit2**, the first DeFi-infrastructure singleton that
@@ -847,8 +858,9 @@ more robust than decoding an opcode stream. Two things fall out of it:
 Both legs now use one solc-`storageLayout` type walk. Mapping depth is not a
 case distinction: the reader recursively follows mapping values, structs,
 fixed/dynamic arrays, packed elements, and structs that themselves contain
-mappings. Keys are encoded from the declared Solidity key type. Candidates
-come recursively from typed calldata and sender/dependency identities; values
+mappings. Keys are encoded from the declared Solidity key type. Candidates come
+recursively from typed calldata, sender/dependency identities, and bytes32
+values returned by zero-argument getters (public role/domain constants); values
 discovered in storage feed later levels, so an `EnumerableSet` value array, for
 example, supplies the keys for its position mapping. Context relationships
 bound large nested domains without assuming a specific depth or contract.

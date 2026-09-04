@@ -139,8 +139,9 @@ CANDIDATES = [
     # staking / restaking / lending governance tokens — far heavier users of
     # checkpoints, permits and role machinery. Funnel over the top 40: 13
     # viable, 10 proxies (delegatecall — architecturally out), 11 pre-0.8, 6
-    # already held. Every one attempted COMPILES in slot+memory mode; sizes
-    # below are the slot-mode approval program against the 8192 B cap.
+    # already held. Sizes below are slot-mode approval programs. They were
+    # originally screened against the old 8192 B cap; consensus v42 permits
+    # 16384 B, so the 9.x KiB entries are deployable without splitting.
     ("eth.blockscout.com", "0x9d65ff81a3c488d585bbfb0bfe3c7707c7917f54", "ssv"),  # $9.2B  4198B — clean 196/200
     ("eth.blockscout.com", "0xc20059e0317de91738d13af027dfc4a50781b066", "sdao"),  # $3.7B  5059B — clean 79/200
     ("eth.blockscout.com", "0xfe0c30065b384f05761f15d0cc899d4f9f9cc0eb", "etherfi"),  # $3.2B  7196B — clean 33/200
@@ -149,16 +150,17 @@ CANDIDATES = [
     ("eth.blockscout.com", "0xb113c6cf239f60d380359b762e95c13817275277", "bmex"),  # $0.8B  7269B — clean 4/200
     ("eth.blockscout.com", "0xf0db65d17e30a966c2ae6a21f6bba71cea6e9754", "lombard"),  # $0.6B  7944B — solc ParserError on the verified tree
     ("eth.blockscout.com", "0x232ce3bd40fcd6f80f3d55a522d03f25df784ee2", "lighter"),  # $0.5B  3843B — clean 195/200
-    # over the 8192 B cap (need the uros splitter to deploy):
+    # Formerly over the 8192 B cap; now directly deployable under v42:
     ("eth.blockscout.com", "0x64d0f55cd8c7133a9d7102b13987235f486f2224", "swissborg"),# $0.8B  9603B
     ("eth.blockscout.com", "0x0b010000b7624eb9b3dfbc279673c76e9d29d5f7", "obol"),     # $0.5B  9576B
-    # DeFi singletons (non-proxy ^0.8): Permit2 FITS and replays clean;
-    # Morpho Blue (13741 B) and UniV4 PoolManager (30751 B) compile but need
-    # the splitter. Seaport is not viable (near-total assembly over structs).
+    # DeFi singletons (non-proxy ^0.8): Permit2 and Morpho Blue fit directly;
+    # UniV4 PoolManager (30751 B) still needs the splitter. Seaport is not
+    # viable (near-total assembly over structs).
     ("eth.blockscout.com", "0x000000000022D473030F116dDEE9F6B43aC78BA3", "permit2"),
+    ("eth.blockscout.com", "0xd9fcd98c322942075a5c3860693e9f4f03aae07b", "eul"),  # Euler EUL — ERC20Votes/Permit/AccessControl; 10604B, clean 245/300
     ("eth.blockscout.com", "0xD322A49006FC828F9B5B37Ab215F99B4E5caB19C", "aave_gateway"),  # Aave v3 periphery — replays clean (1/200; 153 value txns forward to the proxied Pool)  #        6218B — replays clean
-    ("eth.blockscout.com", "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb", "morpho"),   #       13741B
-    ("eth.blockscout.com", "0x000000000004444c5dc75cB358380D2e3dE08A90", "univ4"),    #       30751B
+    ("eth.blockscout.com", "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb", "morpho"),   # 13741B — fits v42
+    ("eth.blockscout.com", "0x000000000004444c5dc75cB358380D2e3dE08A90", "univ4"),    # 30751B — splitter required
 ]
 
 
