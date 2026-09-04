@@ -61,6 +61,121 @@ static std::vector<size_t> collectParamIndices(
 	return indices;
 }
 
+namespace
+{
+bool hasModifierDefinition(solidity::frontend::FunctionDefinition const& function)
+{
+	for (auto const& invocation: function.modifiers())
+		if (dynamic_cast<solidity::frontend::ModifierDefinition const*>(
+				invocation->name().annotation().referencedDeclaration))
+			return true;
+	return false;
+}
+
+bool hasFunctionPointerParameter(
+	solidity::frontend::FunctionDefinition const& function)
+{
+	for (auto const& parameter: function.parameters())
+		if (dynamic_cast<solidity::frontend::FunctionType const*>(
+				parameter->type()))
+			return true;
+	return false;
+}
+
+struct FunctionReferenceCollector: solidity::frontend::ASTConstVisitor
+{
+	std::set<int64_t> ids;
+
+	void add(solidity::frontend::Declaration const* declaration)
+	{
+		if (auto const* function = dynamic_cast<
+				solidity::frontend::FunctionDefinition const*>(declaration))
+			ids.insert(function->id());
+	}
+
+	bool visit(solidity::frontend::Identifier const& identifier) override
+	{
+		add(identifier.annotation().referencedDeclaration);
+		return true;
+	}
+
+	bool visit(solidity::frontend::MemberAccess const& member) override
+	{
+		add(member.annotation().referencedDeclaration);
+		return true;
+	}
+
+	bool visit(solidity::frontend::IdentifierPath const& path) override
+	{
+		add(path.annotation().referencedDeclaration);
+		return true;
+	}
+};
+} // namespace
+
+void AWSTBuilder::collectHostBoundFunctions(
+	solidity::frontend::CompilerStack& _compiler)
+{
+	std::map<int64_t, solidity::frontend::FunctionDefinition const*> candidates;
+	std::map<int64_t, std::set<int64_t>> references;
+	auto consider = [&](solidity::frontend::FunctionDefinition const* function) {
+		if (!function || !function->isImplemented() || function->isConstructor())
+			return;
+		auto const* scope = function->annotation().contract;
+		if (!function->isFree() && (!scope || !scope->isLibrary()))
+			return;
+		if (m_session.analysis.hasReachabilityGraphs
+			&& !m_session.analysis.reachableFunctionIds.count(function->id()))
+			return;
+
+		candidates.emplace(function->id(), function);
+		FunctionReferenceCollector collector;
+		function->accept(collector);
+		references.emplace(function->id(), std::move(collector.ids));
+
+		bool const needsConcreteHost = hasFunctionPointerParameter(*function)
+			|| hasModifierDefinition(*function)
+			|| (!m_session.profile.evmStorageLayout
+				&& m_session.analysis.callablesWithStorageAssembly.count(
+					function->id()));
+		if (needsConcreteHost)
+			m_hostBoundFunctionIds.insert(function->id());
+	};
+
+	for (auto const& sourceName: _compiler.sourceNames())
+	{
+		auto const& unit = _compiler.ast(sourceName);
+		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
+			solidity::frontend::ContractDefinition>(unit.nodes()))
+			if (contract && contract->isLibrary())
+				for (auto const* function: contract->definedFunctions())
+					consider(function);
+		for (auto const* function: solidity::frontend::ASTNode::filteredNodes<
+			solidity::frontend::FunctionDefinition>(unit.nodes()))
+			consider(function);
+	}
+
+	// A root subroutine cannot call an instance method. Pull callers of a
+	// host-bound function into the same concrete contract until the set closes.
+	bool changed = true;
+	while (changed)
+	{
+		changed = false;
+		for (auto const& [caller, callees]: references)
+			if (!m_hostBoundFunctionIds.count(caller))
+				for (int64_t callee: callees)
+					if (m_hostBoundFunctionIds.count(callee))
+					{
+						changed = m_hostBoundFunctionIds.insert(caller).second;
+						break;
+					}
+	}
+
+	for (auto const& [id, function]: candidates)
+		if (m_hostBoundFunctionIds.count(id))
+			m_hostBoundFunctions.push_back(function);
+}
+
 
 std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	solidity::frontend::CompilerStack& _compiler,
@@ -76,6 +191,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	m_session.begin(_compiler, _sourceAliases, std::move(_targetProfile));
 	m_storageMapper = std::make_unique<StorageMapper>(m_session.typeMapper);
 	m_hostBoundFunctions.clear();
+	m_hostBoundFunctionIds.clear();
 	m_selectorContracts.clear();
 	for (auto const& sourceName: _compiler.sourceNames())
 		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
@@ -87,6 +203,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 	registerFunctionIds(_compiler, m_functionSymbols);
 	presetDispatchCref(_compiler, _sourceFile, m_session.functionPointers);
+	collectHostBoundFunctions(_compiler);
 	translateLibraryFunctions(_compiler, _sourceFile, roots);
 	translateFreeFunctions(_compiler, _sourceFile, roots);
 	translateContracts(_compiler, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior, roots);
@@ -161,25 +278,12 @@ void AWSTBuilder::translateLibraryFunctions(
 					continue;
 				}
 
-				// Library functions with fn-ptr params are internalized per-contract
-				// instead of emitted as root subroutines: the fn-ptr dispatcher
-				// may invoke contract instance methods, rejected from root scope.
-				// EXTERNAL library fn-ptrs warn (Solidity would DELEGATECALL;
-				// AVM has no equivalent) and are still internalized best-effort.
-				bool hasFnParam = false;
-				for (auto const& p: func->parameters())
+				// Modifier chains and function-pointer/storage-assembly callees need
+				// instance-method targets. collectHostBoundFunctions also closes this
+				// set over root callers, so no emitted SubroutineID is left dangling.
+				if (m_hostBoundFunctionIds.count(func->id()))
 				{
-					if (dynamic_cast<solidity::frontend::FunctionType const*>(p->type()))
-					{
-						hasFnParam = true;
-						break;
-					}
-				}
-				bool const needsStorageHost = !m_session.profile.evmStorageLayout
-					&& m_session.analysis.callablesWithStorageAssembly.count(func->id());
-				if (hasFnParam || needsStorageHost)
-				{
-					if (hasFnParam
+					if (hasFunctionPointerParameter(*func)
 						&& func->visibility() == solidity::frontend::Visibility::External)
 					{
 						awst::SourceLocation warnLoc;
@@ -193,7 +297,6 @@ void AWSTBuilder::translateLibraryFunctions(
 					}
 					Logger::instance().debug(
 						"Registering host-bound library function: " + qualifiedName);
-					m_hostBoundFunctions.push_back(func);
 					continue;
 				}
 
@@ -230,12 +333,10 @@ void AWSTBuilder::translateFreeFunctions(
 			}
 
 			std::string qualifiedName = func->name();
-			if (!m_session.profile.evmStorageLayout
-				&& m_session.analysis.callablesWithStorageAssembly.count(func->id()))
+			if (m_hostBoundFunctionIds.count(func->id()))
 			{
 				Logger::instance().debug(
 					"Registering host-bound free function: " + qualifiedName);
-				m_hostBoundFunctions.push_back(func);
 				continue;
 			}
 			auto const* symbol = m_functionSymbols.resolve(func->id());
@@ -910,39 +1011,6 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		sub->body->body.insert(sub->body->body.begin(),
 			std::make_move_iterator(asmParamSpills.begin()),
 			std::make_move_iterator(asmParamSpills.end()));
-
-	// Inline modifier bodies. currentContract=null (no virtual-override resolution).
-	if (!_func.modifiers().empty())
-	{
-		auto const& returnParams = _func.returnParameters();
-		std::vector<solidity::frontend::VariableDeclaration const*> namedReturnList;
-		for (auto const& rp: returnParams)
-			if (!rp->name().empty())
-				namedReturnList.push_back(rp.get());
-
-		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyList;
-		for (size_t idx: mappingStorageParams)
-			mappingKeyList.push_back(_func.parameters()[idx].get());
-		for (auto const& rp: returnParams)
-		{
-			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
-				&& !rp->name().empty())
-			{
-				mappingKeyList.push_back(rp.get());
-			}
-		}
-
-		std::vector<solidity::frontend::VariableDeclaration const*> blobAggList;
-		for (size_t idx: blobAggParams)
-			blobAggList.push_back(_func.parameters()[idx].get());
-
-		fnCtx.namedReturns = std::move(namedReturnList);
-		fnCtx.mappingKeyParams = std::move(mappingKeyList);
-		fnCtx.blobAggParams = std::move(blobAggList);
-		fnCtx.currentContract = nullptr;
-		inlineModifiers(fnCtx, _func, sub->body);
-	}
 
 	prependFreestandingReturnInits(_func, *sub, loc);
 

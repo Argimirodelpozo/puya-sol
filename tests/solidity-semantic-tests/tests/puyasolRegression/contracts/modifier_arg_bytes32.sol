@@ -11,8 +11,8 @@ pragma solidity ^0.8.20;
 // sweep (gho, strk, imx, xerc20, burnminterc20) — it is the OZ AccessControl
 // `onlyRole(SOME_ROLE)` idiom, so it is everywhere.
 //
-// Fixed by relabelling the value to the declared bytesN at both modifier
-// argument-binding sites (ModifierInliner and ModifierBodyInliner).
+// Fixed by relabelling the value to the declared bytesN at modifier argument
+// binding.
 contract ModifierArgBytes32 {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");

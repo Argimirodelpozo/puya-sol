@@ -294,8 +294,8 @@ void ContractBuilder::buildPostInitMethod(
 					continue;
 
 				// Storage-pointer params: alias, don't copy — writes inside the
-				// base ctor must reach the underlying storage (mirrors
-				// ModifierInliner.cpp:200-228).
+					// base ctor must reach the underlying storage (mirrors
+					// modifier-chain storage argument handling).
 				if (params[i]->referenceLocation()
 					== solidity::frontend::VariableDeclaration::Location::Storage)
 				{
@@ -341,7 +341,7 @@ void ContractBuilder::buildPostInitMethod(
 			auto baseBody = buildBlock(baseCtor->body());
 			m_functionCtx->inConstructor = false;
 			m_functionCtx->callableId = 0;
-			inlineModifiers(*baseCtor, baseBody);
+			buildConstructorModifierChain(*baseCtor, baseBody, _contractName);
 			for (auto& stmt: baseBody->body)
 				postInitBody->body.push_back(std::move(stmt));
 		}
@@ -355,7 +355,7 @@ void ContractBuilder::buildPostInitMethod(
 			auto ctorBody = buildBlock(constructor->body());
 			m_functionCtx->inConstructor = false;
 			m_functionCtx->callableId = 0;
-			inlineModifiers(*constructor, ctorBody);
+			buildConstructorModifierChain(*constructor, ctorBody, _contractName);
 			m_tr->setInConstructor(false);
 			for (auto& stmt: ctorBody->body)
 				postInitBody->body.push_back(std::move(stmt));

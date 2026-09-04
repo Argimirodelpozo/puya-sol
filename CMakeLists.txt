@@ -191,7 +191,6 @@ set(SOURCES
 	src/awst/WType.cpp
 	src/awst/Node.cpp
 	src/awst/Visit.cpp
-	src/awst/Clone.cpp
 	# Builder core
 	src/builder/AWSTBuilder.cpp
 	src/builder/CompilationSession.cpp
@@ -207,8 +206,7 @@ set(SOURCES
 	src/builder/contract/EvmEntryRouter.cpp
 	src/builder/contract/StorageDispatch.cpp
 	src/builder/contract/EvmSlotStorageDispatch.cpp
-	src/builder/contract/ModifierBodyInliner.cpp
-	src/builder/contract/ModifierInliner.cpp
+	src/builder/contract/ModifierChainBuilder.cpp
 	src/builder/contract/FunctionBuilder.cpp
 	src/builder/contract/ApprovalProgramBuilder.cpp
 	src/builder/contract/ParamABIValidator.cpp

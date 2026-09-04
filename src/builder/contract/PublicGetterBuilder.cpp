@@ -216,53 +216,9 @@ std::shared_ptr<awst::Expression> buildSlotModeGetterRead(
 						solidity::frontend::ArrayType const*>(mtOfM);
 					ma2 && !ma2->isByteArrayOrString())
 					continue;
-				auto const& off = st->storageOffsetsOfMember(m->name());
-				sol_ast::EvmSlotLowering::Addr fa;
-				fa.slot = off.first == 0 ? addr->slot
-					: awst::makeBigUIntBinOp(addr->slot,
-						awst::BigUIntBinaryOperator::Add,
-						awst::makeIntegerConstant(off.first.str(), loc,
-							awst::WType::biguintType()), loc);
-				fa.byteOffset = off.second
-					? awst::makeIntegerConstant(
-						static_cast<uint64_t>(off.second), loc)
-					: nullptr;
-				fa.size = mtOfM->storageBytes();
-				fa.solType = mtOfM;
-				fa.wtype = tm.map(mtOfM);
-				// Full-32 account widening matches the write side
-				// ONLY when the field is ALONE in its slot; a
-				// PACKED account is stored as its trailing 20
-				// bytes, and a widened read swallows the
-				// neighbours (returned rescale's low byte inside
-				// the address on the Comet/CoW RewardConfig
-				// shape). Same aloneness test as
-				// EvmSlotLowering::resolve.
-				bool aloneInSlot = true;
-				for (auto const& m2: st->structDefinition().members())
-				{
-					if (!m2 || m2->name() == m->name())
-						continue;
-					auto const& mo2 =
-						st->storageOffsetsOfMember(m2->name());
-					if (mo2.first == off.first)
-					{
-						aloneInSlot = false;
-						break;
-					}
-				}
-				if (fa.wtype == awst::WType::accountType()
-					&& !fa.byteOffset && aloneInSlot)
-					fa.size = 32;   // matches the write side's widening
-				std::shared_ptr<awst::Expression> item;
-				if (dynamic_cast<solidity::frontend::StructType const*>(mtOfM))
-					// readStructValue owns the recursive storage projection;
-					// a nested struct is not a distinct getter shape.
-					item = low.readStructValue(fa);
-				else if (sol_ast::EvmSlotLowering::isBytesLike(mtOfM))
-					item = low.readBytesValue(fa);
-				else
-					item = low.readValue(fa);
+				auto fa = low.memberAddr(addr->slot, st, m->name(), mtOfM,
+					/*_widenStandaloneAccount=*/true);
+				auto item = low.readAny(fa, mtOfM);
 				if (auto it2 = builder::SolIntType::fromSol(mtOfM);
 					item && it2 && it2->isSigned && it2->bits < 256)
 					item = TypeCoercion::signExtendToUint256(

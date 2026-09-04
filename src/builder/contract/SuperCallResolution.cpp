@@ -154,7 +154,7 @@ void ContractBuilder::collectSuperCallMetadata(
 	};
 
 	// A function executes the bodies of its applied modifiers too. Resolve the
-	// actual virtual modifier exactly as the modifier inliner does, then attach
+	// actual virtual modifier exactly as modifier lowering does, then attach
 	// every super/base call found there to the enclosing function's override map.
 	auto processFunction = [&](solidity::frontend::FunctionDefinition const& fn,
 		solidity::frontend::ContractDefinition const& scope, bool eager)

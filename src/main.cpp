@@ -20,7 +20,6 @@
 
 #include <boost/filesystem.hpp>
 
-#include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -183,11 +182,10 @@ int main(int _argc, char* _argv[])
 	for (size_t i = 1; i < opts.sourceFiles.size(); ++i)
 	{
 		fs::path extraPath = fs::absolute(opts.sourceFiles[i]);
-		std::ifstream extraFile(extraPath.string());
-		if (extraFile)
+		auto extraContentOpt = readSourceFile(extraPath.string());
+		if (extraContentOpt)
 		{
-			std::string extraContent((std::istreambuf_iterator<char>(extraFile)),
-				std::istreambuf_iterator<char>());
+			std::string extraContent = std::move(*extraContentOpt);
 			std::string extraUnit = fileReader.cliPathToSourceUnitName(extraPath);
 			if (opts.legacySourceRewrite)
 			{
@@ -281,8 +279,8 @@ int main(int _argc, char* _argv[])
 				? opts.evmMemorySlots
 				: puyasol::builder::ScratchLayout::defaultMemorySlots),
 	};
-	// --xchain-template: split the pinned LogicSig template at the 20-byte
-	// owner placeholder. The derived address is the exact program hash, so
+	// --xchain-template: split the supplied LogicSig template at the 20-byte
+	// owner placeholder. The derived address commits to the exact program, so
 	// any decode/placement error must fail the COMPILE, not the funds.
 	if (!opts.xchainTemplateHex.empty())
 	{

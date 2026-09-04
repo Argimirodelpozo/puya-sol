@@ -1025,15 +1025,14 @@ def test_struct_array_box_size(harness):
 def test_modifier_storage_ref_arg(harness):
     """puyasolRegression/contracts/modifier_storage_ref_arg.sol — NOT an o.g. semantic test.
 
-    Found by COVERAGE-GUIDED fuzzing (the storage-ref alias path in ModifierInliner
+    Found by COVERAGE-GUIDED fuzzing (the modifier-chain storage-ref alias path
     was 0%-covered). A modifier with a STORAGE-REFERENCE param — modifier
     m(uint256[] storage a, uint256 i) { a[i] += 1; _; } applied as m(arr, i) — bound
     the ref to a __mod_a LOCAL and remapped, so the modifier body's a[i] += 1 wrote a
     local copy and the mutation was SILENTLY DROPPED (fArr(0) returned 10 not 11).
-    ModifierBodyInliner aliased storage-ref params; the subroutine-chain
-    ModifierInliner (the default for non-constructor fns) didn't. FIX: port the
-    storage-alias branch — the aliased target is a contract-global state var,
-    resolvable from the modifier subroutine.
+    The old textual lowering aliased storage-ref params; the subroutine-chain
+    lowering didn't. FIX: port the storage-alias branch — the aliased target is
+    a contract-global state var, resolvable from the modifier subroutine.
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/modifier_storage_ref_arg.sol")
     assert as_int(harness.call(app, "fArr(uint256)", 0).abi_return) == 11   # arr[0] 10->11
@@ -1048,11 +1047,11 @@ def test_modifier_storage_ref_arg(harness):
 def test_modifier_arg_side_effecting(harness):
     """puyasolRegression/contracts/modifier_arg_side_effecting.sol — NOT an o.g. semantic test.
 
-    Found by COVERAGE-GUIDED fuzzing (ModifierInliner was 39.9% line-covered;
+    Found by COVERAGE-GUIDED fuzzing (modifier-chain lowering was 39.9% line-covered;
     modifier args with side-effecting exprs were unhit). A modifier ARGUMENT
     that is a ternary with a negate/checked branch — `gate(uint256(int256(
     a > 0 ? a : -a)))` — lowered the ternary as a branch-gating if/else assigning
-    its result to a temp, but the ModifierInliner never drained that if/else into
+    its result to a temp, but modifier lowering never drained that if/else into
     the modifier body before binding the arg. So the binding read the temp before
     it was assigned → the ternary collapsed to its false branch (`-a`) → the gate
     arg became huge → require(<1000) failed on EVERY call. FIX: drain the arg
@@ -1812,9 +1811,9 @@ def test_modifier_stack_conditional(harness):
 
     Found by the dedicated MODIFIER fuzz axis. Stacked modifiers `m() gated both` must nest with the
     LEFTMOST outermost (Solidity evaluates modifiers left-to-right): `if (gate) { ctr++; _; ctr++; }`.
-    The pre-fix body inliner iterated modifiers forward and wrapped each as the OUTER layer, so the
+    The old textual lowering iterated modifiers forward and wrapped each as the OUTER layer, so the
     rightmost (`both`) became outermost -> `ctr++; if (gate) {_;} ctr++` and ctr incremented even when
-    gate was false. Fix iterates modifiers right-to-left (mirrors the viaIR chain builder).
+    gate was false. Unified chain lowering orders them right-to-left.
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/modifier_stack_conditional.sol")
     assert as_int(harness.call(app, "getCtr()").abi_return) == 0
@@ -1829,11 +1828,9 @@ def test_modifier_multiple_placeholder(harness):
     """puyasolRegression/contracts/modifier_multiple_placeholder.sol — NOT an o.g. semantic test.
 
     Found by the modifier fuzz axis. A modifier with multiple `_;` (e.g. `twice() { _; _; }`) runs the
-    function body once per placeholder. The body inliner splices the placeholder body per `_;`; before
-    the fix it shared the same AWST nodes across the copies, so a checked-arithmetic body aliased its
-    overflow-assert temps (and SingleEvaluation cache keys) and miscompiled — the AVM value diverged
-    from EVM and reverts flipped. Fixed by deep-cloning the spliced body per `_;` (awst::cloneBlock,
-    fresh SingleEvaluation ids, sharing preserved within each splice).
+    function body once per placeholder. Each placeholder must create an independent call block; sharing
+    AWST nodes aliased checked-arithmetic temps and SingleEvaluation cache keys, so AVM values diverged
+    from EVM and reverts flipped. The modifier chain now builds fresh calls for every placeholder.
     """
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/modifier_multiple_placeholder.sol")
@@ -1848,6 +1845,53 @@ def test_modifier_multiple_placeholder(harness):
     assert as_int(harness.call(app, "getCtr()").abi_return) == 2
     # value-returning body under twice -> returns v (last `_;` wins)
     assert as_int(harness.call(app, "ret(uint256)", 7).abi_return) == 7
+
+
+def test_modifier_constructor_chain(harness):
+    """Constructor modifiers use the same fresh-call chain as regular methods.
+
+    Both the inline-create and deferred ``__postInit`` paths must run the body
+    once per placeholder. The leading unnamed parameter also verifies that
+    dead ABI arguments are not invented as internal chain locals.
+    """
+    for contract_name in ("InlineCtorChain", "DeferredCtorChain"):
+        app = harness.compile_and_deploy(
+            "puyasolRegression/contracts/modifier_constructor_chain.sol",
+            contract_name=contract_name,
+            ctor_args=[123, 7],
+        )
+        assert as_int(harness.call(app, "trace()").abi_return) == 757
+        if contract_name == "DeferredCtorChain":
+            assert as_int(harness.call(app, "count()").abi_return) == 2
+
+    memory_app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/modifier_constructor_chain.sol",
+        contract_name="MemoryCtorChain",
+        ctor_args=[(1,)],
+    )
+    assert as_int(harness.call(memory_app, "trace()").abi_return) == 22
+
+
+def test_modifier_host_bound_callers(harness):
+    """Root callers close over a modifier-bearing library function.
+
+    The leaf's memory-struct mutation must write back through both a free
+    function and another library function. A same-named host modifier catches
+    accidental virtual lookup against the consuming contract.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/modifier_host_bound_callers.sol")
+    result = harness.call(app, "freePath(uint256,uint256)", 10, 5)
+    assert tuple(as_int(x) for x in result.abi_return) == (11, 13)
+    result = harness.call(app, "libraryPath(uint256,uint256)", 20, 7)
+    assert tuple(as_int(x) for x in result.abi_return) == (21, 23)
+
+
+def test_modifier_library_only(harness):
+    """A source containing only a public library still gets a concrete host."""
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/modifier_library_only.sol")
+    assert as_int(harness.call(app, "bump(uint256)", 9).abi_return) == 10
 
 
 def test_struct_fixed_array_first_write(harness):

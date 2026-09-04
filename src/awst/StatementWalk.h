@@ -11,7 +11,7 @@ namespace puyasol::awst
 /// if/else branches, while / for-in loop bodies (`_isLoopBody` = true), and
 /// switch cases + default. THE single enumeration of AWST statement
 /// containers — hand-rolled copies of this list drift (the T5 walker-gap
-/// class: Switch was missing from the modifier-inliner walks, ForInLoop from
+/// class: Switch was missing from the modifier-chain walks, ForInLoop from
 /// every walker, WhileLoop from the storage-ref return rewrite). Add any new
 /// container HERE and every walker inherits it.
 inline void forEachChildBlock(

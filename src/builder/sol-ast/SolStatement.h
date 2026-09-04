@@ -3,7 +3,7 @@
 /// @file SolStatement.h
 /// Base class for Solidity statement wrappers + buildStatement/buildBlock entry points.
 ///
-/// Wrappers take a BlockContext& (enclosing loop, placeholder body, etc.).
+/// Wrappers take a BlockContext& (enclosing loop, placeholder factory, etc.).
 /// Expression children compose through m_blk.builderCtx().buildExpr(...).
 
 #include "awst/Node.h"

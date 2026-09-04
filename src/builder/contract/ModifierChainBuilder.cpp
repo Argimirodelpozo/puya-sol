@@ -1,11 +1,7 @@
-/// @file ModifierInliner.cpp
-/// Builds the modifier *call* chain for `function f() m1 m2` — emits
-/// `__body`, `__mod0`, `__mod1` subroutines and rewrites `_method.body`
-/// to invoke the outermost one. The body-level inliner (the free
-/// `inlineModifiers` used by library / free-function translation) lives
-/// in `ModifierBodyInliner.cpp`; the `ContractBuilder::inlineModifiers`
-/// wrapper at the bottom of this file delegates there so both paths
-/// share the same implementation.
+/// @file ModifierChainBuilder.cpp
+/// Builds modifier call chains for contract methods and constructors. Each
+/// Solidity placeholder becomes a fresh call to the next link in the chain,
+/// preserving multiple-placeholder semantics without copying AWST nodes.
 
 #include "builder/contract/ContractBuilder.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
@@ -15,7 +11,6 @@
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
-#include "awst/Clone.h"
 #include "awst/Termination.hpp"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -23,30 +18,22 @@
 namespace puyasol::builder
 {
 
-void ContractBuilder::inlineModifiers(
-	solidity::frontend::FunctionDefinition const& _func,
-	std::shared_ptr<awst::Block>& _body
-)
-{
-	// Delegate to the shared free/library implementation using the same owned
-	// per-function state as buildBlock.
-	::puyasol::builder::inlineModifiers(m_functionCtx.value(), _func, _body);
-}
-
 void ContractBuilder::buildModifierChain(
 	solidity::frontend::FunctionDefinition const& _func,
 	awst::ContractMethod& _method,
 	std::string const& _contractName,
-	std::vector<std::shared_ptr<awst::Statement>> const& _paramDecodes
+	std::vector<ParamDecode> const& _paramDecodes,
+	std::vector<size_t> const& _writeBackParams
 )
 {
-	int chainId = awst::NameGen::next("ModifierInliner.modChainCounter");
+	int chainId = awst::NameGen::next("ModifierChainBuilder.modChainCounter");
 
 	auto const& modifiers = _func.modifiers();
 	if (modifiers.empty())
 		return;
 
-	std::string baseName = _func.name();
+	std::string baseName = _method.memberName.empty()
+		? _func.name() : _method.memberName;
 	std::string cref = m_sourceFile + "." + _contractName;
 
 	// Return-parameter THREADING (mirrors solc IR). A modifier arg or the body may
@@ -55,7 +42,12 @@ void ContractBuilder::buildModifierChain(
 	// every chain sub and capture them back out at each `_`, letting mutations propagate.
 	// (rewriteARC4Returns Pass 2/3 skip modifier'd functions, so these stay NATIVE — no
 	// ARC4 mismatch.) Found by the dispatch fuzzer + the chain-as-default experiment.
-	struct RetInfo { std::string name; awst::WType const* type; };
+	struct RetInfo
+	{
+		std::string name;
+		awst::WType const* type;
+		bool isWriteBack;
+	};
 	std::vector<RetInfo> retInfos;
 	// Thread the SAME types _method.returnType declares — that is what the body sub
 	// returns after rewriteARC4Returns (which promotes signed sub-64 and wide-uint
@@ -75,13 +67,21 @@ void ContractBuilder::buildModifierChain(
 		awst::WType const* rt =
 			(retTuple && ri < retTuple->types().size()) ? retTuple->types()[ri]
 			: (!retTuple ? _method.returnType : m_typeMapper.map(rp->type()));
-		retInfos.push_back({nm, rt});
+		retInfos.push_back({nm, rt, false});
 	}
+	for (size_t paramIndex: _writeBackParams)
+		if (paramIndex < _method.args.size())
+		{
+			auto const& arg = _method.args[paramIndex];
+			retInfos.push_back({arg.name, arg.wtype, true});
+		}
 	bool const hasRet = (_method.returnType != awst::WType::voidType());
 	// Leading return-param args, prepended to every chain sub's signature.
 	std::vector<awst::SubroutineArgument> retArgs;
 	for (auto const& r: retInfos)
-		retArgs.push_back(awst::SubroutineArgument{r.name, _method.sourceLocation, r.type});
+		if (!r.isWriteBack)
+			retArgs.push_back(awst::SubroutineArgument{
+				r.name, _method.sourceLocation, r.type});
 	// Prepend retArgs to a sub's args (returns a fresh combined vector).
 	auto withRetArgs = [&](std::vector<awst::SubroutineArgument> const& _fnArgs) {
 		std::vector<awst::SubroutineArgument> out = retArgs;
@@ -92,7 +92,9 @@ void ContractBuilder::buildModifierChain(
 	auto pushThreadedArgs = [&](std::shared_ptr<awst::SubroutineCallExpression> const& _call,
 		awst::SourceLocation const& _loc) {
 		for (auto const& r: retInfos)
-			awst::pushCallArg(_call->args, r.name, awst::makeVarExpression(r.name, r.type, _loc));
+			if (!r.isWriteBack)
+				awst::pushCallArg(_call->args, r.name,
+					awst::makeVarExpression(r.name, r.type, _loc));
 		for (auto const& arg: _method.args)
 			awst::pushCallArg(_call->args, arg.name,
 				awst::makeVarExpression(arg.name, arg.wtype, _loc));
@@ -127,20 +129,15 @@ void ContractBuilder::buildModifierChain(
 		return awst::makeReturnStatement(std::move(tup), _loc);
 	};
 
-	// Every emitted sub receives the still-ARC4-encoded `__arc4_*` params. Prepend a
-	// FRESH clone of the ABI param decodes to any sub that uses them (the body's
-	// arithmetic, a modifier's arg expr), so it works on native values. Clone per sub
-	// (fresh SingleEvaluation ids) — sharing the same statement nodes across subs aliases
-	// them. Decoding in each sub is redundant but idempotent + correct.
+	// Every emitted sub receives the still-ARC4-encoded `__arc4_*` params.
+	// Materialize independent decode assignments for each body from the compact
+	// recipes retained by FunctionBuilder.
 	auto prependDecodes = [&](std::shared_ptr<awst::Block> const& _blk) {
 		if (_paramDecodes.empty() || !_blk) return;
-		std::vector<std::shared_ptr<awst::Statement>> clones;
-		clones.reserve(_paramDecodes.size());
-		for (auto const& s: _paramDecodes)
-			clones.push_back(awst::cloneStmt(s));
+		auto decodes = makeParamDecodeStatements(_paramDecodes);
 		_blk->body.insert(_blk->body.begin(),
-			std::make_move_iterator(clones.begin()),
-			std::make_move_iterator(clones.end()));
+			std::make_move_iterator(decodes.begin()),
+			std::make_move_iterator(decodes.end()));
 	};
 
 	// Innermost subroutine = original function body.
@@ -183,7 +180,11 @@ void ContractBuilder::buildModifierChain(
 				isExplicitBaseModifier = true;
 		}
 
-		if (m_currentContract && !isExplicitBaseModifier)
+		auto const* declaringContract = _func.annotation().contract;
+		bool const supportsVirtualModifiers = declaringContract
+			&& !declaringContract->isLibrary() && !_func.isFree();
+		if (m_currentContract && supportsVirtualModifiers
+			&& !isExplicitBaseModifier)
 		{
 			std::string modName = modDef->name();
 			solidity::frontend::ModifierDefinition const* resolved = nullptr;
@@ -221,7 +222,7 @@ void ContractBuilder::buildModifierChain(
 			for (size_t pi = 0; pi < args->size() && pi < params.size(); ++pi)
 			{
 				auto const& param = params[pi];
-				std::string uniqueName = "__mod_" + param->name() + "_" + std::to_string(awst::NameGen::next("ModifierInliner.modArgCounter"));
+				std::string uniqueName = "__mod_" + param->name() + "_" + std::to_string(awst::NameGen::next("ModifierChainBuilder.modArgCounter"));
 				auto* paramType = m_typeMapper.map(param->type());
 
 				// --evm-storage-layout: storage-ref modifier params bind as
@@ -251,11 +252,29 @@ void ContractBuilder::buildModifierChain(
 				auto argExpr = m_exprBuilder->buildExpr(*(*args)[pi]);
 				if (!argExpr) continue;
 
+				// Solidity memory parameters alias an identifier argument. Remap the
+				// modifier declaration directly to that variable so writes before or
+				// after `_` remain visible to the wrapped body and its caller.
+				if (param->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::Memory)
+				{
+					m_exprBuilder->appendEffectsTo(modBody->body);
+					if (auto const* variable =
+						dynamic_cast<awst::VarExpression const*>(argExpr.get());
+						variable && variable->wtype == paramType)
+					{
+						m_tr->setParamRemap(param->id(), sol_ast::ParamRemap{
+							variable->name, paramType});
+						remappedDeclIds.push_back(param->id());
+						continue;
+					}
+				}
+
 				// Storage-POINTER modifier param (`modifier m(uint256[] storage a, ...)`
 				// / `mapping(...) storage`): alias it to the ARGUMENT's storage location
 				// so the modifier body's writes (`a[i] += 1`) mutate the real state var,
-				// not a local copy. Mirrors ModifierBodyInliner; the aliased target is a
-				// contract-global state var / mapping, resolvable from this modifier
+				// not a local copy. The aliased target is a contract-global state var or
+				// mapping, resolvable from this modifier
 				// subroutine. Without it the write was bound to a `__mod_a` LOCAL and
 				// silently DROPPED. Found by coverage-guided fuzzing (this storage-ref
 				// alias path was 0%-covered in the whole suite).
@@ -284,7 +303,7 @@ void ContractBuilder::buildModifierChain(
 				// those PRE-statements in the context; drain them into the modifier body
 				// BEFORE the binding, else `__mod_arg = …(temp)` runs before the if/else
 				// assigns the temp (the ternary collapsed to its false branch, reverting
-				// every call). Found by coverage-guided fuzzing (modifier inliner cold).
+				// every call). Found by coverage-guided fuzzing (modifier lowering cold).
 				m_exprBuilder->appendEffectsTo(modBody->body);
 
 				auto target = awst::makeVarExpression(uniqueName, paramType, modLoc);
@@ -299,17 +318,19 @@ void ContractBuilder::buildModifierChain(
 
 		// At `_`: thread the return-param(s) in, call nextSubName, capture them back out
 		// so a repeated/looped `_;` accumulates and a modifier arg's writes propagate.
-		auto placeholderBlock = awst::makeBlock(modSub.sourceLocation);
-		{
+		auto makePlaceholder = [&, nextSubName,
+			loc = modSub.sourceLocation]() {
+			auto placeholderBlock = awst::makeBlock(loc);
 			auto call = awst::makeSubroutineCall(
-				awst::InstanceMethodTarget{nextSubName}, _method.returnType, modSub.sourceLocation);
-			pushThreadedArgs(call, modSub.sourceLocation);
-			captureReturn(placeholderBlock, std::move(call), modSub.sourceLocation);
-		}
+				awst::InstanceMethodTarget{nextSubName}, _method.returnType, loc);
+			pushThreadedArgs(call, loc);
+			captureReturn(placeholderBlock, std::move(call), loc);
+			return placeholderBlock;
+		};
 
-		setPlaceholderBody(placeholderBlock);
+		setPlaceholderFactory(std::move(makePlaceholder));
 		auto translatedBody = buildBlock(modDef->body());
-		setPlaceholderBody(nullptr);
+		setPlaceholderFactory({});
 
 		if (translatedBody)
 		{
@@ -354,8 +375,10 @@ void ContractBuilder::buildModifierChain(
 	// (threading the return params in), capture them back, and return them.
 	auto entryBody = awst::makeBlock(_method.sourceLocation);
 
-	for (auto const& r: retInfos) // zero-init the return-param vars before the call
+	for (auto const& r: retInfos) // zero-init named return vars before the call
 	{
+		if (r.isWriteBack)
+			continue;
 		auto target = awst::makeVarExpression(r.name, r.type, _method.sourceLocation);
 		auto zeroVal = StorageMapper::makeDefaultValue(r.type, _method.sourceLocation);
 		entryBody->body.push_back(awst::makeAssignmentStatement(
@@ -376,6 +399,51 @@ void ContractBuilder::buildModifierChain(
 			awst::makeExpressionStatement(std::move(call), _method.sourceLocation));
 
 	_method.body = entryBody;
+}
+
+void ContractBuilder::buildConstructorModifierChain(
+	solidity::frontend::FunctionDefinition const& _func,
+	std::shared_ptr<awst::Block>& _body,
+	std::string const& _contractName)
+{
+	bool hasModifier = false;
+	for (auto const& invocation: _func.modifiers())
+		if (dynamic_cast<solidity::frontend::ModifierDefinition const*>(
+				invocation->name().annotation().referencedDeclaration))
+		{
+			hasModifier = true;
+			break;
+		}
+	if (!hasModifier)
+		return;
+
+	awst::ContractMethod constructor;
+	constructor.sourceLocation = makeLoc(_func.location());
+	constructor.cref = m_sourceFile + "." + _contractName;
+	constructor.memberName = "__ctor_" + std::to_string(_func.id());
+	constructor.returnType = awst::WType::voidType();
+	constructor.body = std::move(_body);
+	for (auto const& parameter: _func.parameters())
+	{
+		// An unnamed constructor parameter is accepted at the ABI boundary, but
+		// neither its body nor a modifier invocation can reference it. Do not
+		// invent and thread a dead internal local for it.
+		if (parameter->name().empty())
+			continue;
+		constructor.args.push_back({
+			parameter->name(),
+			makeLoc(parameter->location()),
+			m_typeMapper.map(parameter->type())});
+	}
+
+	auto const* savedReturnType = m_functionCtx->returnType;
+	bool const savedFrameIsProgram = m_functionCtx->frameIsProgram;
+	m_functionCtx->returnType = awst::WType::voidType();
+	m_functionCtx->frameIsProgram = true;
+	buildModifierChain(_func, constructor, _contractName);
+	m_functionCtx->frameIsProgram = savedFrameIsProgram;
+	m_functionCtx->returnType = savedReturnType;
+	_body = std::move(constructor.body);
 }
 
 } // namespace puyasol::builder

@@ -31,7 +31,7 @@ void Context::setInConstructor(bool _flag)
 
 std::string Context::awstVarName(solidity::frontend::VariableDeclaration const& _vd) const
 {
-	// Modifier-inliner remap wins (same modifier applied twice → unique per-instance
+	// Modifier-lowering remap wins (same modifier applied twice → unique per-instance
 	// local names, keyed by decl id).
 	if (auto const* remap = findParamRemap(_vd.id()))
 		return remap->name;

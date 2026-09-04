@@ -20,12 +20,13 @@ namespace puyasol::cli
 void applyInlineOverrides(AwstRoots& _roots, Options const& _opts)
 {
 	auto& logger = puyasol::Logger::instance();
-
-	// --force-inline-sub: set inlineOpt=true on matching Subroutine / ContractMethod nodes.
-	if (!_opts.forceInlineSubs.empty())
+	auto applyOverrides = [&](auto const& _names, bool _inline,
+		std::string const& _option, std::string const& _action)
 	{
-		std::set<std::string> wanted(
-			_opts.forceInlineSubs.begin(), _opts.forceInlineSubs.end());
+		if (_names.empty())
+			return;
+
+		std::set<std::string> wanted(_names.begin(), _names.end());
 		std::set<std::string> hit;
 		for (auto& root : _roots)
 		{
@@ -33,7 +34,7 @@ void applyInlineOverrides(AwstRoots& _roots, Options const& _opts)
 			{
 				if (wanted.count(sub->name))
 				{
-					sub->inlineOpt = true;
+					sub->inlineOpt = _inline;
 					hit.insert(sub->name);
 				}
 			}
@@ -43,7 +44,7 @@ void applyInlineOverrides(AwstRoots& _roots, Options const& _opts)
 				{
 					if (wanted.count(m.memberName))
 					{
-						m.inlineOpt = true;
+						m.inlineOpt = _inline;
 						hit.insert(m.memberName);
 					}
 				}
@@ -53,52 +54,18 @@ void applyInlineOverrides(AwstRoots& _roots, Options const& _opts)
 		{
 			if (!hit.count(name))
 				logger.warning(
-					"--force-inline-sub: '" + name + "' not found "
+					_option + ": '" + name + "' not found "
 					"as Subroutine or ContractMethod in any root");
 		}
 		if (!hit.empty())
 			logger.info(
-				"--force-inline-sub: marked " + std::to_string(hit.size())
-				+ " node(s) for inlining");
-	}
+				_option + ": marked " + std::to_string(hit.size()) + _action);
+	};
 
-	// --force-no-inline-sub: set inlineOpt=false so a single-call sub remains a
-	// real callsub instead of being folded into each call site.
-	if (!_opts.forceNoInlineSubs.empty())
-	{
-		std::set<std::string> wanted(
-			_opts.forceNoInlineSubs.begin(), _opts.forceNoInlineSubs.end());
-		std::set<std::string> hit;
-		for (auto& root : _roots)
-		{
-			if (auto* sub = dynamic_cast<puyasol::awst::Subroutine*>(root.get()))
-			{
-				if (wanted.count(sub->name))
-				{
-					sub->inlineOpt = false;
-					hit.insert(sub->name);
-				}
-			}
-			else if (auto* contract = dynamic_cast<puyasol::awst::Contract*>(root.get()))
-			{
-				for (auto& m : contract->methods)
-					if (wanted.count(m.memberName))
-					{
-						m.inlineOpt = false;
-						hit.insert(m.memberName);
-					}
-			}
-		}
-		for (auto const& name : wanted)
-			if (!hit.count(name))
-				logger.warning(
-					"--force-no-inline-sub: '" + name + "' not found "
-					"as Subroutine or ContractMethod in any root");
-		if (!hit.empty())
-			logger.info(
-				"--force-no-inline-sub: marked " + std::to_string(hit.size())
-				+ " node(s) non-inline");
-	}
+	applyOverrides(_opts.forceInlineSubs, true,
+		"--force-inline-sub", " node(s) for inlining");
+	applyOverrides(_opts.forceNoInlineSubs, false,
+		"--force-no-inline-sub", " node(s) non-inline");
 }
 
 namespace

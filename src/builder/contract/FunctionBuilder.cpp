@@ -56,44 +56,70 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 }
 
 namespace {
-// Handle-model copy+write-back for MEMORY-ref params of internal contract methods. Solidity passes
-// memory by reference (callee mutations propagate to the caller); our value-translation copies, so
-// a method that mutates a memory STRUCT param would lose it. (Arrays already write through via puya
-// ReferenceArray; libraries/free fns already augment in buildFreestandingSubroutine — this brings
-// contract methods in line.) Each mutated memory-ref param is appended to the method's return; the
-// internal caller (SolInternalCall) writes it back. Storage refs use the box-key/offset handle, not
-// this. Mirrors the freestanding logic + the caller's memoryRefParamIndices filter exactly.
-void augmentMethodForMutatedMemoryParams(
+// Value-model reference parameters need an explicit post-call value. Contract
+// internal methods only need this for mutated memory structs; host-bound
+// library/free functions also mirror the storage write-backs of root
+// subroutines. The returned indices are threaded through modifier placeholders.
+std::vector<size_t> augmentMethodForReferenceParams(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& func,
 	TypeMapper& typeMapper,
-	solidity::frontend::ContractDefinition const* mostDerived)
+	solidity::frontend::ContractDefinition const* mostDerived,
+	bool asInternalCopy,
+	std::set<int64_t> const& asmSlotParamIds)
 {
 	using namespace solidity::frontend;
-	if (!func.isImplemented() || !method.body) return;
-	// Internal only: Public/External are ABI entry points (augmenting their return breaks the
-	// selector's return ABI); Private is threaded by puya. Internal methods are pure callsub
-	// targets — the analogue of library/free fns, which buildFreestandingSubroutine augments.
-	if (func.visibility() != Visibility::Internal) return;
+	if (!func.isImplemented() || !method.body) return {};
+
+	auto const* scope = func.annotation().contract;
+	bool const isFreestanding = func.isFree() || (scope && scope->isLibrary());
+	bool const isInternalMethod = !isFreestanding
+		&& func.visibility() == Visibility::Internal;
+	bool const isHostedFreestanding = asInternalCopy && isFreestanding
+		&& func.visibility() != Visibility::Private;
+	if (!isInternalMethod && !isHostedFreestanding)
+		return {};
+
+	std::vector<size_t> writeBackParams;
+	if (isHostedFreestanding
+		&& !typeMapper.profile().evmStorageLayout
+		&& func.stateMutability() != StateMutability::View
+		&& func.stateMutability() != StateMutability::Pure)
+		for (size_t pi = 0;
+			pi < func.parameters().size() && pi < method.args.size(); ++pi)
+		{
+			auto const& parameter = func.parameters()[pi];
+			if (parameter->referenceLocation()
+					!= VariableDeclaration::Location::Storage)
+				continue;
+			auto const passing = classifyRefParamPassing(
+				typeMapper, *parameter,
+				asmSlotParamIds.count(parameter->id()) != 0);
+			if (passing == RefParamPassing::Value)
+				writeBackParams.push_back(pi);
+		}
 
 	auto isMemRefType = isMemoryRefWriteBackType;
 	auto const& mutations = typeMapper.analysis().parameterMutations(
-		mostDerived, func);
+		isFreestanding ? nullptr : mostDerived, func);
 
-	std::vector<size_t> memIdx;
 	for (size_t pi = 0; pi < func.parameters().size() && pi < method.args.size(); ++pi)
 	{
 		auto const& p = func.parameters()[pi];
 		if (p->referenceLocation() != VariableDeclaration::Location::Memory) continue;
 		if (!p->type() || !isMemRefType(p->type())) continue;
 		if (!mutations.mutates(pi)) continue;
-		memIdx.push_back(pi);
+		// Root library/free subroutines pass large aggregates by shared blob
+		// offset, so their host-bound equivalents must not add a tuple slot.
+		if (isFreestanding && memoryUsesBlob(typeMapper.map(p->type()))) continue;
+		writeBackParams.push_back(pi);
 	}
-	if (memIdx.empty()) return;
+	if (writeBackParams.empty()) return {};
 
 	auto const& loc = method.sourceLocation;
 
-	// Augment the return type: original return value(s) (flattened), then each mem-param type.
+	// Augment the return type: original values (flattened), then storage and
+	// memory reference parameters in the order expected by SolInternalCall.
 	std::vector<awst::WType const*> types;
 	bool origVoid = (method.returnType == awst::WType::voidType());
 	auto const* origTuple = origVoid ? nullptr
@@ -103,13 +129,13 @@ void augmentMethodForMutatedMemoryParams(
 		if (origTuple) for (auto const* t : origTuple->types()) types.push_back(t);
 		else types.push_back(method.returnType);
 	}
-	for (size_t idx : memIdx) types.push_back(method.args[idx].wtype);
+	for (size_t idx : writeBackParams) types.push_back(method.args[idx].wtype);
 	awst::WType const* newRetType =
 		types.size() == 1 ? types[0] : typeMapper.createType<awst::WTuple>(std::move(types));
 	method.returnType = newRetType;
 	bool newIsTuple = (dynamic_cast<awst::WTuple const*>(newRetType) != nullptr);
 
-	// Walk existing returns; append the mem-param vars to match the new shape.
+	// Walk existing returns; append the reference-param vars to match the new shape.
 	// forEachReturnStatement covers ALL nesting (if/else, nested blocks,
 	// loops, switch) — the old hand-rolled walk recursed only IfElse, so an
 	// early `return` inside a for loop kept its unaugmented value and puya
@@ -117,9 +143,10 @@ void augmentMethodForMutatedMemoryParams(
 	forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
 		if (!newIsTuple)
 		{
-			if (!ret.value && memIdx.size() == 1)
+			if (!ret.value && writeBackParams.size() == 1)
 				ret.value = awst::makeVarExpression(
-					method.args[memIdx[0]].name, method.args[memIdx[0]].wtype,
+					method.args[writeBackParams[0]].name,
+					method.args[writeBackParams[0]].wtype,
 					ret.sourceLocation);
 		}
 		else
@@ -131,47 +158,38 @@ void augmentMethodForMutatedMemoryParams(
 					for (auto& it : ot->items) tuple->items.push_back(it);
 				else tuple->items.push_back(ret.value);
 			}
-			for (size_t idx : memIdx)
+			for (size_t idx : writeBackParams)
 				tuple->items.push_back(awst::makeVarExpression(
 					method.args[idx].name, method.args[idx].wtype, ret.sourceLocation));
 			ret.value = std::move(tuple);
 		}
 	});
 
-	// Fall-through: only void methods reach here un-terminated (buildFunction already synthesised
-	// a return for non-void fall-through, which the walk above augmented). Return the mem param(s).
+	// Fall-through: only void methods reach here un-terminated (buildFunction
+	// already synthesized non-void returns). Return the reference params.
 	if (!awst::blockAlwaysTerminates(*method.body))
 	{
 		auto implicit = awst::makeReturnStatement(nullptr, loc);
-		if (!newIsTuple && memIdx.size() == 1)
+		if (!newIsTuple && writeBackParams.size() == 1)
 			implicit->value = awst::makeVarExpression(
-				method.args[memIdx[0]].name, method.args[memIdx[0]].wtype, loc);
+				method.args[writeBackParams[0]].name,
+				method.args[writeBackParams[0]].wtype, loc);
 		else
 		{
 			auto tuple = awst::makeTupleExpression(newRetType, loc);
-			for (size_t idx : memIdx)
+			for (size_t idx : writeBackParams)
 				tuple->items.push_back(awst::makeVarExpression(
 					method.args[idx].name, method.args[idx].wtype, loc));
 			implicit->value = std::move(tuple);
 		}
 		method.body->body.push_back(std::move(implicit));
 	}
+	return writeBackParams;
 }
 } // namespace
 
 namespace
 {
-struct ParamDecode
-{
-	size_t argIndex;
-	std::string name;
-	awst::WType const* nativeType;
-	awst::WType const* arc4Type;
-	awst::SourceLocation loc;
-	unsigned maskBits = 0; // >0 for sub-64-bit unsigned types needing input masking
-	unsigned signedBits = 0; // >0 for signed 64<N<256 int params: sign-extend to 256-bit after decode
-};
-
 /// The ARC-4 parameter remap for an ABI-routed method: rewrite each remappable
 /// arg's wtype to its ARC-4 form (except asm bodies) and record the decodes the
 /// prologue must emit. Pure extraction from buildFunction — the returned list
@@ -207,7 +225,7 @@ if (method.arc4MethodConfig.has_value())
 			unsigned signedBits =
 				(intInfo && intInfo->isSigned && bits > 64 && bits < 256) ? bits : 0;
 			paramDecodes.push_back({pi, arg.name, arg.wtype, arc4Type,
-				arg.sourceLocation, 0, signedBits});
+				arg.sourceLocation, signedBits});
 			// Asm bodies are built (buildBlock) AFTER this loop; defer the ABI wtype change so the Yul
 			// body builds against the native biguint type (set in the decode rename loop below).
 			if (!funcHasInlineAssembly)
@@ -249,94 +267,59 @@ if (method.arc4MethodConfig.has_value())
 namespace
 {
 
-	// buildFunction phase: rewrite `return stateVar[idx]` to return just the
+// buildFunction phase: rewrite `return stateVar[idx]` to return just the
 // uint64 index; call sites reconstitute the location (SolInternalCall).
 // Caller guards storageRefPointerReturn.
 void rewriteStorageRefReturnIndices(awst::ContractMethod& method)
 {
 	std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> rewriteRet;
-		rewriteRet = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
-		{
-			for (auto& stmt: stmts)
-			{
-				if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
-				{
-					if (auto* ix = dynamic_cast<awst::IndexExpression*>(ret->value.get()))
-						ret->value = TypeCoercion::implicitNumericCast(
-							ix->index, awst::WType::uint64Type(),
-							ret->value->sourceLocation);
-				}
-				else
-					// awst::forEachChildBlock: the old hand list missed
-					// WhileLoop/Switch/ForInLoop — `return stateArr;` inside
-					// a loop skipped the storage-ref index rewrite.
-					awst::forEachChildBlock(*stmt, [&](awst::Block& b, bool) {
-						rewriteRet(b.body);
-					});
-			}
-		};
-	rewriteRet(method.body->body);
-}
-
-	// buildFunction phase: decode ARC4-remapped params — rename each arg to
-// __arc4_<name> and build the native-decode assignments. Deferred until
-// after modifier inlining: inlineModifiers replaces method.body wholesale,
-// so prepending earlier would bury the decode inside the wrap. (Asm bodies
-// handle param data directly via calldataload; collectArc4ParamRemaps
-// already gated on that.)
-std::vector<std::shared_ptr<awst::Statement>> buildDeferredParamDecodes(
-	std::vector<ParamDecode>& paramDecodes,
-	awst::ContractMethod& method)
-{
-	std::vector<std::shared_ptr<awst::Statement>> deferredDecodes;
-	for (auto& pd: paramDecodes)
+	rewriteRet = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
 	{
-			// Rename the method arg to __arc4_<name>
-			std::string arc4Name = "__arc4_" + pd.name;
-			for (auto& arg: method.args)
+		for (auto& stmt: stmts)
+		{
+			if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
 			{
-				if (arg.name == pd.name)
-				{
-					arg.name = arc4Name;
-					arg.wtype = pd.arc4Type; // deferred for asm fns; idempotent for the rest
-					break;
-				}
-			}
-
-			auto arc4Var = awst::makeVarExpression(arc4Name, pd.arc4Type, pd.loc);
-
-			std::shared_ptr<awst::Expression> decodeExpr;
-			auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(pd.nativeType);
-			if (refArr && !refArr->arraySize().has_value())
-			{
-				// Dynamic array: ConvertArray (len+substring3) not ARC4Decode,
-				// because extract3(v,2,0) returns empty bytes in the puya backend.
-				auto convert = awst::makeConvertArray(std::move(arc4Var), pd.nativeType, pd.loc);
-				decodeExpr = std::move(convert);
+				if (auto* index = dynamic_cast<awst::IndexExpression*>(
+						ret->value.get()))
+					ret->value = TypeCoercion::implicitNumericCast(
+						index->index, awst::WType::uint64Type(),
+						ret->value->sourceLocation);
 			}
 			else
 			{
-				auto decode = awst::makeARC4Decode(std::move(arc4Var), pd.nativeType, pd.loc);
-				// Signed sub-256: ARC4 decode yields N-bit form; sign-extend to 256-bit
-				// so ops like getAmount*Delta(int128) liquidity<0 branch read sign correctly.
-				if (pd.signedBits > 0)
-					decodeExpr = TypeCoercion::signExtendToUint256(
-						std::move(decode), pd.signedBits, pd.loc);
-				else
-					decodeExpr = std::move(decode);
+				// The old hand-written list missed loops and switches.
+				awst::forEachChildBlock(*stmt, [&](awst::Block& block, bool) {
+					rewriteRet(block.body);
+				});
 			}
-
-			auto target = awst::makeVarExpression(pd.name, pd.nativeType, pd.loc);
-
-			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(decodeExpr), pd.loc);
-			deferredDecodes.push_back(std::move(assign));
-	}
-
-	return deferredDecodes;
+		}
+	};
+	rewriteRet(method.body->body);
 }
 
-	// buildFunction phase: insert the deferred ARC4 decodes at the top of the
-// now-modifier-wrapped body, then wrap self-recursive callsub args whose
+// Rename remapped wire arguments once. Decode statements themselves are built
+// later, once per modifier-chain member (or once for an unmodified method).
+void applyParamDecodeNames(
+	std::vector<ParamDecode> const& paramDecodes,
+	awst::ContractMethod& method)
+{
+	for (auto const& pd: paramDecodes)
+	{
+		std::string arc4Name = "__arc4_" + pd.name;
+		for (auto& arg: method.args)
+		{
+			if (arg.name == pd.name)
+			{
+				arg.name = arc4Name;
+				arg.wtype = pd.arc4Type;
+				break;
+			}
+		}
+	}
+}
+
+// No-modifier-chain buildFunction phase: insert the deferred ARC4 decodes at
+// the top of the method body, then wrap self-recursive callsub args whose
 // positions were remapped. Caller guards non-empty deferredDecodes.
 void insertDeferredDecodes(
 	awst::ContractMethod& method,
@@ -345,42 +328,71 @@ void insertDeferredDecodes(
 	std::vector<ParamDecode> const& paramDecodes,
 	eb::ContractContext& contractCtx)
 {
-		method.body->body.insert(
-			method.body->body.begin(),
-			std::make_move_iterator(deferredDecodes.begin()),
-			std::make_move_iterator(deferredDecodes.end())
-		);
+	method.body->body.insert(
+		method.body->body.begin(),
+		std::make_move_iterator(deferredDecodes.begin()),
+		std::make_move_iterator(deferredDecodes.end()));
 
-		// Self-recursive callsub fix-up: after param remap, internal f(...) calls
-		// still pass biguint args; wrap each remapped position in ARC4Encode.
-		std::string thisName = eb::CallResolver::resolveMethodName(contractCtx, _func);
-		std::map<std::string, awst::WType const*> arc4ByOrig;
+	// Self-recursive callsub fix-up: after param remap, internal f(...) calls
+	// still pass biguint args; wrap each remapped position in ARC4Encode.
+	std::string thisName = eb::CallResolver::resolveMethodName(
+		contractCtx, _func);
+	awst::visitExpressions(*method.body, [&](awst::Expression& expression) {
+		auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&expression);
+		if (!call)
+			return;
+		auto const* target = std::get_if<awst::InstanceMethodTarget>(
+			&call->target);
+		if (!target || target->memberName != thisName)
+			return;
 		for (auto const& pd: paramDecodes)
-			arc4ByOrig[pd.name] = pd.arc4Type;
-
-		awst::visitExpressions(*method.body, [&](awst::Expression& expression) {
-			auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&expression);
-			if (!call)
-				return;
-			auto const* tgt = std::get_if<awst::InstanceMethodTarget>(&call->target);
-			if (!tgt || tgt->memberName != thisName)
-				return;
-			for (auto const& pd: paramDecodes)
-			{
-				if (pd.argIndex >= call->args.size()) continue;
-				auto& a = call->args[pd.argIndex];
-				if (!a.value || a.value->wtype == pd.arc4Type)
-					continue;
-				if (a.value->wtype != awst::WType::biguintType())
-					continue;
-				auto enc = awst::makeARC4Encode(std::move(a.value), pd.arc4Type, a.value->sourceLocation);
-				a.value = std::move(enc);
-			}
-		});
-	}
-
+		{
+			if (pd.argIndex >= call->args.size()) continue;
+			auto& arg = call->args[pd.argIndex];
+			if (!arg.value || arg.value->wtype == pd.arc4Type)
+				continue;
+			if (arg.value->wtype != awst::WType::biguintType())
+				continue;
+			auto loc = arg.value->sourceLocation;
+			arg.value = awst::makeARC4Encode(
+				std::move(arg.value), pd.arc4Type, loc);
+		}
+	});
+}
 
 } // anonymous namespace
+
+std::vector<std::shared_ptr<awst::Statement>>
+ContractBuilder::makeParamDecodeStatements(
+	std::vector<ParamDecode> const& _paramDecodes)
+{
+	std::vector<std::shared_ptr<awst::Statement>> statements;
+	statements.reserve(_paramDecodes.size());
+	for (auto const& decode: _paramDecodes)
+	{
+		auto wireValue = awst::makeVarExpression(
+			"__arc4_" + decode.name, decode.arc4Type, decode.loc);
+		std::shared_ptr<awst::Expression> nativeValue;
+		auto const* array = dynamic_cast<awst::ReferenceArray const*>(
+			decode.nativeType);
+		if (array && !array->arraySize().has_value())
+			nativeValue = awst::makeConvertArray(
+				std::move(wireValue), decode.nativeType, decode.loc);
+		else
+		{
+			nativeValue = awst::makeARC4Decode(
+				std::move(wireValue), decode.nativeType, decode.loc);
+			if (decode.signedBits > 0)
+				nativeValue = TypeCoercion::signExtendToUint256(
+					std::move(nativeValue), decode.signedBits, decode.loc);
+		}
+		statements.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(
+				decode.name, decode.nativeType, decode.loc),
+			std::move(nativeValue), decode.loc));
+	}
+	return statements;
+}
 
 /// buildFunction phase: name/cref, args (with storage/blob wtype overrides), and the companion offset params for offset-convention …
 void ContractBuilder::buildMethodSignature(
@@ -1093,9 +1105,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		else
 			rewriteARC4Returns(method, _func, m_typeMapper, signedReturns, unsignedMasks);
 
-		auto deferredDecodes = buildDeferredParamDecodes(paramDecodes, method);
+		applyParamDecodeNames(paramDecodes, method);
 
 		prependAbiEntryChecks(method, _func);
+
+		// Reference write-backs are part of the callable's real return shape.
+		// Establish that shape before modifier-chain construction so every `_`
+		// captures and forwards the updated parameter values.
+		auto writeBackParams = augmentMethodForReferenceParams(
+			method, _func, m_typeMapper, m_currentContract,
+			_asInternalCopy, asmSlotParamIds);
 
 		// Transient blob init is in the approval-program preamble (transient slot);
 		// per-method init would reset it mid-dispatch, clobbering earlier writes.
@@ -1103,22 +1122,22 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Modifiers → a per-modifier SUBROUTINE CHAIN (mirrors solc's IR modifier lowering,
 		// `IRGenerator::generateModifier`): `__mod{i}_N` + `__body_N` subs, each threading the
 		// return params in/out and passing the still-ARC4-encoded `__arc4_*` params along. This
-		// replaced the old textual `_`-expansion inliner as the default — the textual path
-		// mis-CSE'd a multiple-`_;` modifier whose body contained a call, and the chain handles
-		// it correctly (one lowering instead of two divergent ones). The textual inliner
-		// (ModifierBodyInliner via ContractBuilder::inlineModifiers) is retained for constructors
-		// / library / free functions. Any sub that USES a param needs the native decode, so hand
-		// the decodes to buildModifierChain (it clones them into every sub); the outer method
-		// just dispatches, so its own decode below is suppressed.
+		// avoids textual expansion entirely: each `_` builds a fresh call to the
+		// next member. Any member that uses an ABI parameter receives freshly
+		// materialized native decode assignments from the recipes above.
+		std::vector<std::shared_ptr<awst::Statement>> deferredDecodes;
 		if (!_func.modifiers().empty())
 		{
-			buildModifierChain(_func, method, _contractName, deferredDecodes);
-			deferredDecodes.clear();   // consumed by the chain; the outer insert below is a no-op
+			buildModifierChain(
+				_func, method, _contractName, paramDecodes,
+				writeBackParams);
 			// The chain threads NATIVE return values; encode the outer dispatch
 			// return to its ABI wire type (biguint would otherwise publish as
 			// "uint512" while callers name the declared width → selector mismatch).
 			encodeChainDispatchReturn(method, _func, m_typeMapper);
 		}
+		else
+			deferredDecodes = makeParamDecodeStatements(paramDecodes);
 
 		if (!deferredDecodes.empty())
 			insertDeferredDecodes(
@@ -1134,11 +1153,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		Logger::instance().debug("function '" + method.memberName + "' has no implementation", method.sourceLocation);
 		method.body = awst::makeBlock(method.sourceLocation);
 	}
-
-	// Write-back augmentation for mutated MEMORY-ref params (Solidity passes memory by ref).
-	// No-op unless the method mutates a memory struct/array param; the internal caller writes back.
-	augmentMethodForMutatedMemoryParams(
-		method, _func, m_typeMapper, m_currentContract);
 
 	return method;
 }

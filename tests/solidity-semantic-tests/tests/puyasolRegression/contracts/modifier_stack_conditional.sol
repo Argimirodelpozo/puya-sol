@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// NOT an o.g. semantic test. Guards modifier-stacking NESTING ORDER in the body inliner.
+// NOT an o.g. semantic test. Guards modifier-stacking nesting order.
 // `m() gated both`: Solidity evaluates modifiers left-to-right, so `gated` is OUTERMOST and
-// `both`'s ctr++/ctr++ must run INSIDE `gated`'s `if (gate) { _; }`. The pre-fix inliner iterated
+// `both`'s ctr++/ctr++ must run INSIDE `gated`'s `if (gate) { _; }`. The old textual lowering iterated
 // modifiers forward, making the rightmost (`both`) outermost, so ctr incremented even when gate
 // was false. With gate=false (default) a call to m() must leave ctr at 0.
 contract G {

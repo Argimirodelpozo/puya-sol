@@ -597,8 +597,8 @@ void ContractBuilder::bindBaseCtorArgs(
 			std::move(argExpr), targetType, makeLoc(args[i]->location()));
 
 		// Drain the build's pre-statements (ternary/short-circuit temp
-		// assignments) BEFORE the param binding — same fix as the
-		// modifier-arg twin (ModifierInliner), which this site missed.
+			// assignments) BEFORE the param binding — same fix as the
+			// modifier-chain argument path, which this site missed.
 		m_exprBuilder->appendEffectsTo(createBlock->body);
 
 		auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
@@ -738,13 +738,13 @@ void ContractBuilder::emitInlineCtorPath(
 			}
 		}
 
-		// Translate the base constructor body and inline its modifiers
+		// Translate the base constructor body and lower its modifiers as calls.
 		m_functionCtx->inConstructor = true;
 		m_functionCtx->callableId = baseCtor->id();
 		auto baseBody = buildBlock(baseCtor->body());
 		m_functionCtx->inConstructor = false;
 		m_functionCtx->callableId = 0;
-		inlineModifiers(*baseCtor, baseBody);
+		buildConstructorModifierChain(*baseCtor, baseBody, _contract.name());
 		for (auto& stmt: baseBody->body)
 			createBlock->body.push_back(std::move(stmt));
 	}
@@ -766,7 +766,7 @@ void ContractBuilder::emitInlineCtorPath(
 		auto ctorBody = buildBlock(constructor->body());
 		m_functionCtx->inConstructor = false;
 		m_functionCtx->callableId = 0;
-		inlineModifiers(*constructor, ctorBody);
+		buildConstructorModifierChain(*constructor, ctorBody, _contract.name());
 		m_tr->setInConstructor(false);
 		m_tr->clearSuperTargets();
 		for (auto& stmt: ctorBody->body)

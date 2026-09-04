@@ -228,6 +228,11 @@ public:
 		return true;
 	}
 
+	void recordModifierMemoryAlias(Expression const& _argument)
+	{
+		recordRoots(&_argument, m_facts.direct.mutatedParameterIndices);
+	}
+
 private:
 	ContractDefinition const* m_mostDerived;
 	FunctionDefinition const& m_caller;
@@ -327,13 +332,28 @@ ParameterMutationSummary const& analyzeFrom(
 		auto [it, _] = facts.emplace(function.id(), NodeFacts{});
 		auto& node = it->second;
 		DirectMutationScanner scanner(_mostDerived, function, node);
-		// Modifier-reference write-through is a separate lowering concern: the
-		// current modifier chain copies modifier arguments into locals and does
-		// not thread those locals back. Summarize the function body itself here;
-		// once modifier arguments are true aliases their effects can be added as
-		// ordinary edges without changing this fixed-point representation.
 		if (function.isImplemented())
 			function.body().accept(scanner);
+		// A modifier's memory-reference parameter aliases its argument. The
+		// modifier chain preserves direct identifier aliases, so conservatively
+		// thread any enclosing function parameter supplied at such a position.
+		// This also lets the existing call-edge fixed point propagate the effect
+		// through free/library caller chains.
+		for (auto const& invocation: function.modifiers())
+		{
+			auto const* modifier = dynamic_cast<ModifierDefinition const*>(
+				invocation->name().annotation().referencedDeclaration);
+			auto const* arguments = invocation->arguments();
+			if (!modifier || !arguments)
+				continue;
+			auto const& parameters = modifier->parameters();
+			for (size_t i = 0;
+				i < arguments->size() && i < parameters.size(); ++i)
+				if (parameters[i]->referenceLocation()
+						== VariableDeclaration::Location::Memory
+					&& dynamic_cast<Identifier const*>((*arguments)[i].get()))
+					scanner.recordModifierMemoryAlias(*(*arguments)[i]);
+		}
 		for (auto const& edge: node.edges)
 			if (edge.target)
 				discover(*edge.target);

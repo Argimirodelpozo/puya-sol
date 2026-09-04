@@ -76,6 +76,17 @@ public:
 		std::shared_ptr<awst::Expression> _idx,
 		solidity::frontend::Type const* _elemType);
 
+	/// Address of a struct member relative to `_base`. `_widenStandaloneAccount`
+	/// preserves the direct-member convention where an address that owns its
+	/// slot uses the full 32-byte AVM account; aggregate materialisation passes
+	/// false and keeps the declared EVM field width.
+	Addr memberAddr(
+		std::shared_ptr<awst::Expression> _base,
+		solidity::frontend::StructType const* _structType,
+		std::string const& _memberName,
+		solidity::frontend::Type const* _memberType,
+		bool _widenStandaloneAccount = false);
+
 	/// Coerce a built value to the leaf's native carrier (numeric casts, ARC4
 	/// decode, unsized-bytes relabel) — what writeValue expects.
 	std::shared_ptr<awst::Expression> coerceToNative(

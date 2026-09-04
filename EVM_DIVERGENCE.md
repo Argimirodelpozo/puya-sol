@@ -34,16 +34,19 @@ namespace is the coordinate system of the differential-replay certification.
 (`bzero12 ++ low20`) is not a spendable AVM identity: nobody holds a key
 for it. Consequently, **native value transfer** (`transfer`/`send`/
 `call{value: ...}`) to a 160-bit identity sends funds to a keyless address,
-unrecoverably. The EVM profile without an account model is a
-differential/compat instrument, not a deployment target. The compiler rejects
-this transfer path unless it is explicitly acknowledged with
-`--allow-divergence native-value-transfer`.
+unrecoverably. The EVM profile without an account model is a differential/
+compat instrument, not a deployment target. The shared high-level payment path
+rejects this transfer unless it is explicitly acknowledged with
+`--allow-divergence native-value-transfer`. Known gap: `selfdestruct` and an
+inline-assembly value-bearing `call` currently build payments outside that
+shared boundary, so neither the policy nor receiver mapping covers them.
 
-**The xchain account model closes this** (`--xchain-template`, see
-github.com/algorandfoundation/xchain-accounts): each 20-byte EVM identity E
-owns the LogicSig account `A(E) = sha512_256("Program" ||
-template-with-owner-spliced)`, controlled by the holder of the EVM key.
-With a pinned template supplied:
+**The xchain account model provides a spendable mapping**
+(`--xchain-template`, see github.com/algorandfoundation/xchain-accounts): each
+20-byte EVM identity E owns the LogicSig account
+`A(E) = sha512_256("Program" || template-with-owner-spliced)`, controlled by
+the holder of the EVM key. For paths using the shared payment boundary, with a
+pinned template supplied:
 
 - payments to a 160-bit identity route to `A(E)` — a real, spendable
   account (on-chain derivation; no registry);
@@ -53,8 +56,10 @@ With a pinned template supplied:
 - unclaimed callers keep the low-20 projection as a compatibility shim
   (deploy/creator paths); their identities remain non-payable.
 
-The template must be PINNED: the derived address is the exact program
-hash, so a template upgrade changes every account (migration event).
+The template must be PINNED by the deployment profile: the derived address is
+the exact program hash, so a template upgrade changes every account (migration
+event). The compiler validates hex, length, and unique placeholder placement;
+it does not currently enforce a canonical/audited template hash.
 Residual edge: an EVM identity with 12 leading zero bytes is
 indistinguishable from the `bzero24 ++ appId` contract-value convention
 (probability ~2^-96; such a receiver is treated as a contract).

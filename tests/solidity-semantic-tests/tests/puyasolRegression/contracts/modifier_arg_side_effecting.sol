@@ -1,7 +1,7 @@
 // Modifier ARGUMENT that is a side-effecting expression (ternary with a
 // negate/checked branch): its SolConditional if/else must be drained into the
 // modifier body BEFORE the arg binding. Found by coverage-guided fuzzing
-// (ModifierInliner cold path). Was: `mod(a > 0 ? a : -a)` collapsed to the
+// (modifier-chain cold path). Was: `mod(a > 0 ? a : -a)` collapsed to the
 // false branch -> reverted every call.
 contract C {
     uint256 s;

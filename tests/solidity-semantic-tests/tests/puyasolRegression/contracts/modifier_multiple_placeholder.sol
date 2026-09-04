@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 // NOT an o.g. semantic test. Guards multiple-`_;` modifiers (the body runs once per placeholder).
-// The body inliner splices the placeholder body per `_;`; before the fix it shared the same AWST
-// nodes across the copies, so a checked-arithmetic body aliased its overflow-assert temps and
-// miscompiled (AVM stuck / reverts flipped vs EVM). Fixed by deep-cloning the spliced body per `_;`.
+// Each placeholder must create an independent call block; sharing AWST nodes aliased checked-
+// arithmetic temps and SingleEvaluation cache keys, causing AVM/EVM divergence. The modifier
+// chain now constructs fresh calls for every `_;`.
 contract G {
     uint256 acc;
     uint256 ctr;

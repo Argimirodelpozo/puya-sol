@@ -593,33 +593,10 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveMemberAccess(
 	if (!base)
 		return std::nullopt;
 
-	auto const& off = st->storageOffsetsOfMember(_ma.memberName());
 	auto const* fieldType = _ma.annotation().type;
-	unsigned size = fieldType ? fieldType->storageBytes() : 32;
-
-	// Alone in its slot? (Decides the full-32 account widening.)
-	bool alone = true;
-	for (auto const& memberDecl: st->structDefinition().members())
-	{
-		if (!memberDecl || memberDecl->name() == _ma.memberName())
-			continue;
-		auto const& mo = st->storageOffsetsOfMember(memberDecl->name());
-		if (mo.first == off.first)
-		{
-			alone = false;
-			break;
-		}
-	}
-
-	auto slot = off.first == 0
-		? base->slot
-		: awst::makeBigUIntBinOp(base->slot, awst::BigUIntBinaryOperator::Add,
-			biguintConst(off.first.str()), m_loc);
-	return makeLeafAddr(std::move(slot),
-		off.second
-			? awst::makeIntegerConstant(static_cast<uint64_t>(off.second), m_loc)
-			: nullptr,
-		size, alone, fieldType);
+	return memberAddr(
+		base->slot, st, _ma.memberName(), fieldType,
+		/*_widenStandaloneAccount=*/true);
 }
 
 EvmSlotLowering::Addr EvmSlotLowering::elemAddr(
@@ -656,6 +633,37 @@ EvmSlotLowering::Addr EvmSlotLowering::elemAddr(
 		awst::UInt64BinaryOperator::Mult,
 		awst::makeIntegerConstant(static_cast<uint64_t>(l.size), m_loc), m_loc);
 	return makeLeafAddr(std::move(slot), std::move(off), l.size, false, _elemType);
+}
+
+EvmSlotLowering::Addr EvmSlotLowering::memberAddr(
+	std::shared_ptr<awst::Expression> _base,
+	StructType const* _structType,
+	std::string const& _memberName,
+	Type const* _memberType,
+	bool _widenStandaloneAccount)
+{
+	auto const& off = _structType->storageOffsetsOfMember(_memberName);
+	bool alone = _widenStandaloneAccount;
+	if (alone)
+		for (auto const& member: _structType->structDefinition().members())
+		{
+			if (!member || member->name() == _memberName)
+				continue;
+			if (_structType->storageOffsetsOfMember(member->name()).first == off.first)
+			{
+				alone = false;
+				break;
+			}
+		}
+	auto slot = off.first == 0
+		? std::move(_base)
+		: awst::makeBigUIntBinOp(std::move(_base),
+			awst::BigUIntBinaryOperator::Add, biguintConst(off.first.str()), m_loc);
+	return makeLeafAddr(std::move(slot),
+		off.second
+			? awst::makeIntegerConstant(static_cast<uint64_t>(off.second), m_loc)
+			: nullptr,
+		_memberType ? _memberType->storageBytes() : 32, alone, _memberType);
 }
 
 std::shared_ptr<awst::Expression> EvmSlotLowering::coerceToNative(

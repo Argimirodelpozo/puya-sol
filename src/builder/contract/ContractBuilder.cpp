@@ -337,7 +337,7 @@ void markAssemblyAggregates(
 std::shared_ptr<awst::Block> buildBlock(
 	sol_ast::FunctionContext& _ctx,
 	solidity::frontend::Block const& _block,
-	std::shared_ptr<awst::Block> _placeholder)
+	sol_ast::PlaceholderFactory _placeholder)
 {
 	auto& fn = _ctx;
 	auto& exprBuilder = _ctx.tr.contractCtx;
@@ -444,7 +444,7 @@ void ContractBuilder::setFunctionContext(
 	ctx.mappingKeyParams.clear();
 	ctx.boxKeyStructParams.clear();
 	ctx.blobAggParams.clear();
-	ctx.placeholder.reset();
+	ctx.placeholder = {};
 	ctx.inConstructor = false;
 	ctx.frameIsProgram = false;
 	ctx.encodeReturnsAtBuildTime = false;
@@ -454,9 +454,9 @@ void ContractBuilder::setFunctionContext(
 	ctx.slotRefParams.clear();
 }
 
-void ContractBuilder::setPlaceholderBody(std::shared_ptr<awst::Block> _body)
+void ContractBuilder::setPlaceholderFactory(sol_ast::PlaceholderFactory _factory)
 {
-	m_functionCtx->placeholder = std::move(_body);
+	m_functionCtx->placeholder = std::move(_factory);
 }
 
 void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method,
@@ -678,6 +678,9 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		contract->methods.push_back(std::move(*m_postInitMethod));
 		m_postInitMethod.reset();
 	}
+	for (auto& constructorSubroutine: m_modifierSubroutines)
+		contract->methods.push_back(std::move(constructorSubroutine));
+	m_modifierSubroutines.clear();
 
 
 	std::set<std::string> translatedFunctions;

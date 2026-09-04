@@ -11,7 +11,6 @@
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "awst/Clone.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -33,7 +32,7 @@ namespace
 {
 
 /// Translates Solidity statements into AWST. Holds the BlockContext
-/// (enclosing loop, modifier placeholder body, parent chain).
+/// (enclosing loop, modifier placeholder factory, parent chain).
 class SolStatementVisitor: public SolASTVisitor<std::vector<std::shared_ptr<awst::Statement>>>
 {
 public:
@@ -123,17 +122,16 @@ public:
 
 	ResultT visitPlaceholder(PlaceholderStatement const& _n) override
 	{
-		// Modifier `_;` — splice in the placeholder body if one is set on the current block
-		// context. DEEP-CLONE it: a modifier may contain several `_;` (the body runs once per
-		// placeholder), and splicing the same shared nodes would alias them so a later in-place
-		// pass corrupts every copy. Each splice gets an independent tree; cloneBlock preserves
-		// any DAG sharing within the body and re-mints SingleEvaluation ids.
+		// The factory constructs a new call block for every `_;`. In particular,
+		// a modifier containing more than one placeholder must not share mutable
+		// AWST nodes or SingleEvaluation identities between expansions.
 		if (m_blk.placeholderBody)
 		{
-			auto cloned = awst::cloneBlock(m_blk.placeholderBody);
+			auto placeholder = m_blk.placeholderBody();
 			auto block = awst::makeBlock(locOf(_n));
-			for (auto& s: cloned->body)
-				block->body.push_back(std::move(s));
+			if (placeholder)
+				for (auto& s: placeholder->body)
+					block->body.push_back(std::move(s));
 			return {block};
 		}
 		return {};

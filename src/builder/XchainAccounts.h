@@ -3,7 +3,7 @@
 /// @file XchainAccounts.h
 /// The xchain account model (github.com/algorandfoundation/xchain-accounts):
 /// a 20-byte EVM identity E owns the LogicSig account whose program is the
-/// PINNED template with E spliced at the owner placeholder. The address is
+/// deployment-pinned template with E spliced at the owner placeholder. The address is
 /// on-chain computable — A(E) = sha512_256("Program" || prefix || E || suffix)
 /// — which makes the EVM profile's 160-bit identities SPENDABLE: payments
 /// route to A(E) instead of the keyless padded pseudo-account, and a caller
@@ -66,7 +66,7 @@ inline std::shared_ptr<awst::Expression> mapPaymentReceiver(
 		awst::EqualityComparison::Eq,
 		awst::makeBzero(12, _loc), _loc);
 	// bzero24 ++ appId (the contract-value convention) keeps its meaning: an
-	// EVM identity with 12 leading zero BYTES is unconstructible in practice.
+	// EVM identities with 12 leading zero bytes are reserved for this convention.
 	auto notConvention = awst::makeBytesComparison(
 		awst::makeExtract(r, 12, 12, _loc),
 		awst::EqualityComparison::Ne,

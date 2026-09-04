@@ -20,6 +20,7 @@
 
 #include <map>
 #include <set>
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -34,7 +35,11 @@ namespace eb { class ContractContext; }
 namespace puyasol::builder::sol_ast
 {
 
-/// Modifier-inliner param remap entry: when a modifier is applied
+/// Builds one fresh modifier-placeholder replacement block. A modifier may
+/// contain several `_;` statements, so each expansion owns independent AWST nodes.
+using PlaceholderFactory = std::function<std::shared_ptr<awst::Block>()>;
+
+/// Modifier-lowering param remap entry: when a modifier is applied
 /// multiple times in a single function, each instance's locals get a
 /// unique mangled name with their original AWST type.
 struct ParamRemap
@@ -139,8 +144,9 @@ struct ScopeState
 	/// Promoted to blob-backed (pre-scan in ContractBuilder::buildBlock).
 	std::unordered_set<int64_t> assemblyAggregates;
 
-	/// Modifier-inliner param remap: unique mangled names per expansion
-	/// when the same modifier is applied multiple times. Set/erased by the inliner.
+	/// Modifier-lowering param remap: unique mangled names per invocation
+	/// when the same modifier is applied multiple times. Set/erased by the
+	/// modifier-chain builder.
 	std::unordered_map<int64_t, ParamRemap> paramRemaps;
 
 	/// `super.X()` MRO: decl ID → mangled name. Set per-function, cleared between bodies.
@@ -407,8 +413,8 @@ struct FunctionContext: Context
 	/// param's box key. Assigned after construction (buildFreestandingSubroutine).
 	std::map<std::string, awst::WType const*> boxKeyStructParams;
 
-	/// True iff this function is a constructor body (or is being inlined
-	/// into one). Set by ApprovalProgramBuilder around constructor inlining.
+	/// True while translating the constructor's own body. Constructor modifier
+	/// methods configure their frame and return conventions independently.
 	bool inConstructor = false;
 
 	/// Internal/private function: assembly `return(o,s)` exits the whole program.
@@ -432,7 +438,7 @@ struct FunctionContext: Context
 	std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParams;
 	std::vector<solidity::frontend::VariableDeclaration const*> blobAggParams;
 	std::vector<solidity::frontend::VariableDeclaration const*> slotRefParams;
-	std::shared_ptr<awst::Block> placeholder;
+	PlaceholderFactory placeholder;
 	solidity::frontend::ContractDefinition const* currentContract = nullptr;
 
 	/// Calldata params whose mutable (__cd_off_x, __cd_len_x) pointer locals are
@@ -478,7 +484,7 @@ struct LoopContext
 };
 
 /// Block/scope-level context: nesting chain, enclosing loop (for
-/// continue/break), modifier placeholder body (for `_;` inlining),
+/// continue/break), modifier placeholder factory (for `_;` lowering),
 /// var-name shadowing.
 struct BlockContext: Context
 {
@@ -490,7 +496,7 @@ struct BlockContext: Context
 	FunctionContext& fn;
 	BlockContext* outer = nullptr;
 	LoopContext const* enclosingLoop = nullptr;
-	std::shared_ptr<awst::Block> placeholderBody;
+	PlaceholderFactory placeholderBody;
 
 	/// True iff this block is itself an `unchecked { }` block. The
 	/// effective unchecked-status (this + any ancestor) is exposed via
@@ -506,7 +512,7 @@ struct BlockContext: Context
 		FunctionContext& _fn,
 		BlockContext* _outer,
 		LoopContext const* _loop,
-		std::shared_ptr<awst::Block> _placeholderBody
+		PlaceholderFactory _placeholderBody
 	)
 		: Context(_outer ? static_cast<Context*>(_outer) : static_cast<Context*>(&_fn)),
 		  fn(_fn),
@@ -535,9 +541,8 @@ struct BlockContext: Context
 		return c;
 	}
 
-	/// Derive a context for the body of a modifier-inlined function:
-	/// `_;` placeholders splice in `_body`.
-	/// Same block context, carrying a modifier placeholder body.
+	/// Derive a context for a modifier body. Each `_;` asks `_body` for a
+	/// fresh replacement block. Same block context, carrying the factory.
 	///
 	/// Deliberately a COPY, not `nest()`: the only call site is
 	/// `BlockContext::top(fn).withPlaceholder(body)`, where nesting would set
@@ -549,7 +554,7 @@ struct BlockContext: Context
 	/// fires depends on unrelated code layout). A copy keeps the intended
 	/// meaning (a top-level block that has a placeholder) with the parent the
 	/// caller already owns.
-	BlockContext withPlaceholder(std::shared_ptr<awst::Block> _body) const
+	BlockContext withPlaceholder(PlaceholderFactory _body) const
 	{
 		BlockContext c = *this;
 		c.placeholderBody = std::move(_body);

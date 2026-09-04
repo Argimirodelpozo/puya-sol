@@ -1,7 +1,7 @@
 // Storage-REFERENCE argument to a modifier: the modifier param aliases the
 // arg's storage location, so writes in the modifier body mutate the real state
 // var, not a local copy. Found by coverage-guided fuzzing (the storage-ref
-// alias path in ModifierInliner was 0%-covered; writes were silently dropped).
+// modifier-chain alias path was 0%-covered; writes were silently dropped).
 contract C {
     uint256[] arr;
     mapping(uint256 => uint256) m;

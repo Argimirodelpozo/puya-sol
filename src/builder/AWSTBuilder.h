@@ -49,19 +49,20 @@ private:
 	/// Canonical solc declaration ID → opaque AWST function identity.
 	FunctionSymbolTable m_functionSymbols;
 
-	/// Library functions with function-pointer parameters that must be inlined
-	/// into each using-contract rather than emitted as root Subroutines.
-	/// The fn-ptr dispatcher may invoke contract instance methods, which puya
-	/// rejects from a root Subroutine scope.
-	/// Free/library functions whose lowering needs a concrete host contract
-	/// (function-pointer dispatch or default-layout inline storage assembly).
+	/// Free/library functions whose lowering needs a concrete host contract:
+	/// modifier chains, function-pointer dispatch, or default-layout inline
+	/// storage assembly. Their reverse caller closure is hosted as well because
+	/// a root Subroutine cannot call a contract instance method.
 	std::vector<solidity::frontend::FunctionDefinition const*> m_hostBoundFunctions;
+	std::set<int64_t> m_hostBoundFunctionIds;
 	std::vector<solidity::frontend::ContractDefinition const*> m_selectorContracts;
 
 	// ── Build phases (executed in order from build()) ──
 	// Phase 1: registerFunctionIds → m_functionSymbols.
 	// Phase 1.5: presetDispatchCref → fn-ptr dispatch cref (first deployable contract).
 	// Both defined in builder/FunctionIdRegistry.h.
+	void collectHostBoundFunctions(
+		solidity::frontend::CompilerStack& _compiler);
 
 	/// Phase 2: translate library functions into Subroutine root nodes.
 	void translateLibraryFunctions(
