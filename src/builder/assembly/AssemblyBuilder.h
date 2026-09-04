@@ -45,8 +45,6 @@ namespace puyasol::builder
 /// (EVM uint256 ↔ AVM biguint), a scratch-slot-backed memory blob, and calldata mapping.
 ///
 /// Memory model: EVM linear memory is simulated using AVM scratch slots.
-/// The default five blobs use 0..4; extended configurations move the whole
-/// region above the compiler-reserved 5..15 range. Each blob holds 4096 bytes.
 /// mload/mstore translate to extract3/replace3 on the holding slot, supporting
 /// dynamic offsets. Every slot (incl. slot 0) is read/written directly in
 /// scratch via loads/stores — there is no __evm_memory local cache.
