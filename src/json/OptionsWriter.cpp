@@ -1,7 +1,6 @@
 #include "json/OptionsWriter.h"
-#include "Logger.h"
 
-#include <fstream>
+#include <nlohmann/json.hpp>
 
 namespace puyasol::json
 {
@@ -34,61 +33,34 @@ static void addTemplateVarDefs(
 		defs[name] = value;
 }
 
-void OptionsWriter::write(
-	std::string const& _path,
-	std::string const& _contractName,
-	std::string const& _outputDir,
-	int _optimizationLevel,
-	bool _outputIr,
-	std::set<std::string> const& _templateVarChildren,
-	std::map<std::string, int64_t> const& _intTemplateVars
-)
-{
-	njson opts;
-	opts["compilation_set"] = njson::object();
-	opts["compilation_set"][_contractName] = _outputDir;
-	opts["output_teal"] = true;
-	opts["output_source_map"] = false;
-	opts["output_arc32"] = false;
-	opts["output_arc56"] = true;
-	opts["output_bytecode"] = true;
-	opts["debug_level"] = 1;
-	opts["optimization_level"] = _optimizationLevel;
-	opts["target_avm_version"] = 12;
-	opts["template_vars_prefix"] = "TMPL_";
-	opts["cli_template_definitions"] = njson::object();
-	addTemplateVarDefs(opts, _templateVarChildren, _intTemplateVars);
-	if (_outputIr)
-	{
-		opts["output_ssa_ir"] = true;
-		opts["output_optimization_ir"] = true;
-		opts["output_destructured_ir"] = true;
-		opts["output_memory_ir"] = true;
-	}
-
-	std::ofstream out(_path);
-	if (!out.is_open())
-	{
-		Logger::instance().error("Cannot write options file: " + _path);
-		return;
-	}
-	out << opts.dump(2) << std::endl;
-}
-
-void OptionsWriter::writeMultiple(
-	std::string const& _path,
+bool OptionsWriter::write(
+	boost::filesystem::path const& _path,
 	std::vector<std::string> const& _contractNames,
 	std::string const& _outputDir,
 	int _optimizationLevel,
 	bool _outputIr,
 	std::set<std::string> const& _templateVarChildren,
-	std::map<std::string, int64_t> const& _intTemplateVars
+	std::map<std::string, int64_t> const& _intTemplateVars,
+	artifact::Digest& _digest,
+	std::string& _error
 )
 {
+	if (_contractNames.empty())
+	{
+		_error = "options compilation set cannot be empty";
+		return false;
+	}
 	njson opts;
 	opts["compilation_set"] = njson::object();
 	for (auto const& name: _contractNames)
+	{
+		if (name.empty())
+		{
+			_error = "options compilation target name cannot be empty";
+			return false;
+		}
 		opts["compilation_set"][name] = _outputDir;
+	}
 	opts["output_teal"] = true;
 	opts["output_source_map"] = false;
 	opts["output_arc32"] = false;
@@ -108,13 +80,15 @@ void OptionsWriter::writeMultiple(
 		opts["output_memory_ir"] = true;
 	}
 
-	std::ofstream out(_path);
-	if (!out.is_open())
+	if (!opts["compilation_set"].is_object()
+		|| opts["compilation_set"].size() != _contractNames.size()
+		|| !opts["cli_template_definitions"].is_object())
 	{
-		Logger::instance().error("Cannot write options file: " + _path);
-		return;
+		_error = "options JSON failed schema validation";
+		return false;
 	}
-	out << opts.dump(2) << std::endl;
+	return artifact::writeJsonAtomically(
+		_path, opts.dump(2) + '\n', _digest, _error);
 }
 
 } // namespace puyasol::json

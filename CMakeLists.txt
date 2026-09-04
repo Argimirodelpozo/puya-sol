@@ -182,6 +182,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 # Source files
 set(SOURCES
 	src/main.cpp
+	src/ArtifactIO.cpp
 	src/cli/CliOptions.cpp
 	src/cli/SourceCompat.cpp
 	src/cli/CompilerSetup.cpp
@@ -440,6 +441,7 @@ if(BUILD_TESTING)
 
 	add_executable(puya-sol-source-compat-tests
 		tests/cpp/SourceCompatTests.cpp
+		src/ArtifactIO.cpp
 		src/cli/SourceCompat.cpp
 		src/Logger.cpp
 	)
@@ -521,6 +523,26 @@ if(BUILD_TESTING)
 	)
 	target_include_directories(puya-sol-hex-bytes-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	add_test(NAME puya-sol-hex-bytes COMMAND puya-sol-hex-bytes-tests)
+
+	add_executable(puya-sol-artifact-writer-tests
+		tests/cpp/ArtifactWriterTests.cpp
+		src/ArtifactIO.cpp
+		src/awst/WType.cpp
+		src/cli/AwstPostPasses.cpp
+		src/json/OptionsWriter.cpp
+		src/Logger.cpp
+	)
+	target_include_directories(puya-sol-artifact-writer-tests PRIVATE
+		${CMAKE_SOURCE_DIR}/src)
+	add_dependencies(puya-sol-artifact-writer-tests
+		puya-sol-verify-solidity-build)
+	target_link_libraries(puya-sol-artifact-writer-tests
+		puya_sol_solutil
+		Boost::filesystem
+		Threads::Threads
+	)
+	add_test(NAME puya-sol-artifact-writers
+		COMMAND puya-sol-artifact-writer-tests)
 
 	add_test(
 		NAME puya-sol-arc4-stdlib

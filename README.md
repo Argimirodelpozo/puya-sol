@@ -112,6 +112,14 @@ build/puya-sol \
 
 For multi-source projects (e.g., contracts with imports), pass each `--source` repeatedly. Outputs land in the `--output-dir` as `<Contract>.approval.teal`, `<Contract>.clear.teal`, `<Contract>.arc56.json`, plus `awst.json` for debugging.
 
+Every successful frontend run also writes `artifact-manifest.json`, with the
+byte length and SHA-256 digest of each recorded compiler artifact. A
+`backend-complete` phase is the commit marker for a successful, validated
+backend run; `frontend-only` and `frontend-ready` record only validated
+frontend output. Compiler-owned files for the current targets are invalidated
+before the backend runs, so stale files cannot make a failed run appear
+complete.
+
 Source text is passed to the pinned Solidity frontend unchanged by default,
 including every version pragma in entry, additional, and imported files. An
 incompatible pragma is therefore a compilation error, just as it is in solc.

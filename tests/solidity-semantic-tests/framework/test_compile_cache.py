@@ -10,9 +10,25 @@ from . import compile as compile_module
 
 
 def _git(repo, *args: str) -> None:
-    subprocess.run(
-        ["git", *args], cwd=repo, check=True, capture_output=True, text=True
+    subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True, text=True)
+
+
+def test_frontend_command_uses_explicit_no_puya(tmp_path):
+    source = tmp_path / "C.sol"
+    cmd = compile_module._puya_sol_cmd(
+        source,
+        [source],
+        tmp_path / "out",
+        None,
+        [],
+        None,
+        False,
+        None,
+        None,
     )
+
+    assert "--no-puya" in cmd
+    assert "--puya-path" not in cmd
 
 
 @pytest.mark.parametrize("change", ["delete", "rename"])

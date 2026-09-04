@@ -219,11 +219,9 @@ def _cache_store(key: str, out_dir: Path) -> None:
 # means (AWST + semantic options + puya version) are byte-identical, so the
 # emitted TEAL is identical; any mismatch is a miss (slower, never wrong).
 _BACKEND_CACHE_DIR = CACHE_DIR / "backend"
-# A no-op "backend" so puya-sol writes awst.json/options.json then exits without
-# the ~5s Python step — used to compute the L2 key cheaply.
-_NOOP_PUYA = shutil.which("true") or "/bin/true"
 # Files the frontend writes; everything else in out_dir is a backend artifact.
 _FRONTEND_ONLY_FILES = {
+    "artifact-manifest.json",
     "awst.json",
     "options.json",
     "puya-sol.log",
@@ -261,11 +259,10 @@ def _puya_sol_cmd(
     ensure_budget: dict[str, int] | None,
     via_yul_behavior: bool,
     evm_version: str | None,
-    puya_path: str,
+    puya_path: str | None,
     extra_args: list[str] | None = None,
 ) -> list[str]:
-    """Build the puya-sol argv. `puya_path` selects the backend: the real PUYA
-    for a full compile, or a no-op (`true`) to emit AWST only."""
+    """Build the puya-sol argv; no backend path requests frontend-only mode."""
     # The imported corpus intentionally contains pre-0.8 syntax and pragmas.
     # Production compilation preserves those sources and lets solc reject an
     # incompatible constraint; this research harness explicitly requests the
@@ -281,7 +278,8 @@ def _puya_sol_cmd(
     for extra in all_sources:
         if str(extra) != str(source_path):
             cmd += ["--source", str(extra)]
-    cmd += ["--output-dir", str(out_dir), "--puya-path", puya_path]
+    cmd += ["--output-dir", str(out_dir)]
+    cmd += ["--puya-path", puya_path] if puya_path else ["--no-puya"]
     if import_dir:
         cmd += ["--import-path", str(import_dir)]
     for rmap in remappings:
@@ -387,7 +385,8 @@ def _backend_cache_lookup(key: str, out_dir: Path) -> bool:
             dst = out_dir / src.relative_to(entry)
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
-    return True
+    from .puya_serve import finalize_backend_artifacts
+    return finalize_backend_artifacts(out_dir)
 
 
 def _backend_cache_store(key: str, out_dir: Path) -> None:
@@ -564,7 +563,7 @@ def compile_sol(
     # stack-value cap on long dynamic arrays.
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
 
-    def _run(puya_path: str):
+    def _run(puya_path: str | None):
         return subprocess.run(
             _puya_sol_cmd(
                 source_path, all_sources, out_dir, import_dir, remappings,
@@ -575,11 +574,11 @@ def compile_sol(
         )
 
     try:
-        # Stage 1 — frontend only (no-op backend): emit awst.json/options.json
+        # Stage 1 — frontend only: emit awst.json/options.json
         # cheaply (~0.05s) to compute the AWST-content backend key. A frontend
         # compile error (bad Solidity, hard-errored EVM feature) surfaces here
         # — same terminal outcome as before.
-        front = _run(_NOOP_PUYA)
+        front = _run(None)
         if front.returncode != 0:
             raise CompileError(
                 f"puya-sol exited {front.returncode}"

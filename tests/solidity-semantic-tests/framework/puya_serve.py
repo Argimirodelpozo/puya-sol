@@ -32,12 +32,15 @@ path for every compile.
 xdist note: each worker is a separate process with its own module state,
 hence its own server — no cross-worker coordination needed.
 """
+
 from __future__ import annotations
 
 import atexit
+import hashlib
 import json
 import os
 import subprocess
+import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -170,39 +173,202 @@ def _client() -> _ServeClient:
     return _CLIENT
 
 
-def _write_child_deploy_templates(out_dir: Path, options: dict) -> None:
+_PROGRAM_PAGE_BYTES = 4096
+_BACKEND_SUFFIXES = (
+    ".bin",
+    ".teal",
+    ".arc32.json",
+    ".arc56.json",
+    ".stats.txt",
+    ".assembly-report",
+    ".puya.map",
+    ".ir",
+    ".mir",
+)
+
+
+def _atomic_write_json(path: Path, value: object) -> bytes:
+    """Validate and publish JSON through a verified sibling temporary file."""
+    payload = (json.dumps(value, indent=2, sort_keys=True) + "\n").encode()
+    json.loads(payload)
+    fd, tmp_name = tempfile.mkstemp(prefix=f"{path.name}.tmp-", dir=path.parent)
+    tmp = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if tmp.read_bytes() != payload:
+            raise OSError(f"verification mismatch for {tmp}")
+        os.replace(tmp, path)
+        return payload
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def _artifact_record(path: Path, role: str, data: bytes | None = None) -> dict:
+    data = path.read_bytes() if data is None else data
+    return {
+        "path": path.name,
+        "role": role,
+        "bytes": len(data),
+        "sha256": hashlib.sha256(data).hexdigest(),
+    }
+
+
+def _verified_frontend_manifest(out_dir: Path) -> dict:
+    manifest = json.loads((out_dir / "artifact-manifest.json").read_text())
+    if manifest.get("schema") != "puya-sol/artifact-manifest/v1" or not isinstance(
+        manifest.get("files"), list
+    ):
+        raise ValueError("invalid frontend artifact manifest schema")
+    seen: set[str] = set()
+    for record in manifest["files"]:
+        relative = Path(record.get("path", ""))
+        if (
+            not relative.name
+            or relative.is_absolute()
+            or ".." in relative.parts
+            or str(relative) in seen
+        ):
+            raise ValueError("invalid or duplicate frontend artifact path")
+        seen.add(str(relative))
+        data = (out_dir / relative).read_bytes()
+        if (
+            record.get("bytes") != len(data)
+            or record.get("sha256") != hashlib.sha256(data).hexdigest()
+        ):
+            raise ValueError(f"frontend artifact digest mismatch: {relative}")
+    return manifest
+
+
+def _write_child_deploy_templates(out_dir: Path, options: dict) -> list[dict]:
     """Python port of puya-sol's writeChildDeployTemplates (main.cpp).
 
     For contracts using `new C()`, puya-sol stubs APPROVAL_<Child>/
     CLEAR_<Child> template definitions into options.json and, after the
     backend run, hexes each child's compiled .bin into deploy.tmpl.json
     for the deploy harness to substitute. Mirror that after a serve
-    compile. No children → no file, matching the C++ early return.
+    compile. Missing, empty, or oversized binaries fail the serve path so its
+    caller can fall back to the authoritative CLI path.
     """
     defs = options.get("cli_template_definitions") or {}
     # APPROVAL_ keys carry _P0/_P1 page suffixes; CLEAR_ is one per child.
     children = sorted(
-        k[len("CLEAR_"):] for k in defs
+        k[len("CLEAR_") :]
+        for k in defs
         if isinstance(k, str) and k.startswith("CLEAR_")
     )
     if not children:
-        return
+        return []
     tmpl: dict[str, str] = {}
+    records: list[dict] = []
     for child in children:
         approval = out_dir / f"{child}.approval.bin"
-        if approval.exists():
-            # Two ≤4096-byte pages matching the ApprovalProgramPages template
-            # pair emitted by SolNewExpression; page 1 empty if unused.
-            hex_val = approval.read_bytes().hex()
-            page_hex = 4096 * 2
-            tmpl[f"TMPL_APPROVAL_{child}_P0"] = hex_val[:page_hex]
-            tmpl[f"TMPL_APPROVAL_{child}_P1"] = hex_val[page_hex:]
         clear = out_dir / f"{child}.clear.bin"
-        if clear.exists():
-            tmpl[f"TMPL_CLEAR_{child}"] = clear.read_bytes().hex()
-    # sort_keys matches nlohmann::json's std::map ordering so the file is
-    # byte-identical to the C++ writer's (these land in committed out/ dirs).
-    (out_dir / "deploy.tmpl.json").write_text(json.dumps(tmpl, indent=2, sort_keys=True))
+        approval_data = approval.read_bytes()
+        clear_data = clear.read_bytes()
+        if not approval_data or len(approval_data) > _PROGRAM_PAGE_BYTES * 2:
+            raise ValueError(f"invalid child approval size: {approval}")
+        if not clear_data or len(clear_data) > _PROGRAM_PAGE_BYTES:
+            raise ValueError(f"invalid child clear size: {clear}")
+        approval_hex = approval_data.hex()
+        page_hex = _PROGRAM_PAGE_BYTES * 2
+        page0, page1 = approval_hex[:page_hex], approval_hex[page_hex:]
+        if len(page0) > page_hex or len(page1) > page_hex:
+            raise ValueError(f"child approval page exceeds limit: {approval}")
+        tmpl[f"TMPL_APPROVAL_{child}_P0"] = page0
+        tmpl[f"TMPL_APPROVAL_{child}_P1"] = page1
+        tmpl[f"TMPL_CLEAR_{child}"] = clear_data.hex()
+        records += [
+            _artifact_record(approval, "child-approval-bytecode", approval_data),
+            _artifact_record(clear, "child-clear-bytecode", clear_data),
+        ]
+    if len(tmpl) != len(children) * 3:
+        raise ValueError("deployment template failed schema validation")
+    template_path = out_dir / "deploy.tmpl.json"
+    payload = _atomic_write_json(template_path, tmpl)
+    records.append(
+        _artifact_record(template_path, "child-deployment-template", payload)
+    )
+    return records
+
+
+def _backend_role(name: str) -> str:
+    if name.endswith(".bin"):
+        return "backend-bytecode"
+    if name.endswith(".teal"):
+        return "backend-teal"
+    if name.endswith(".arc56.json"):
+        return "backend-arc56"
+    if name.endswith(".json"):
+        return "backend-json"
+    if name.endswith((".ir", ".mir")):
+        return "backend-ir"
+    return "backend-output"
+
+
+def _collect_backend_records(out_dir: Path) -> list[dict]:
+    awst = json.loads((out_dir / "awst.json").read_text())
+    targets: dict[str, tuple[str, ...]] = {}
+    for root in awst:
+        if root.get("_type") == "Contract":
+            targets[root["name"]] = (
+                ".approval.bin",
+                ".clear.bin",
+                ".approval.teal",
+                ".clear.teal",
+            )
+        elif root.get("_type") == "LogicSignature":
+            targets[root["short_name"]] = (".bin", ".teal")
+    for stem, suffixes in targets.items():
+        for suffix in suffixes:
+            path = out_dir / f"{stem}{suffix}"
+            if not path.is_file() or not path.stat().st_size:
+                raise ValueError(f"missing or empty backend artifact: {path}")
+
+    records: list[dict] = []
+    for path in out_dir.iterdir():
+        if not path.is_file() or not any(
+            path.name.startswith(f"{stem}.") and path.name.endswith(_BACKEND_SUFFIXES)
+            for stem in targets
+        ):
+            continue
+        data = path.read_bytes()
+        if not data:
+            raise ValueError(f"empty backend artifact: {path}")
+        if path.name.endswith(".json"):
+            json.loads(data)
+        records.append(_artifact_record(path, _backend_role(path.name), data))
+    return records
+
+
+def finalize_backend_artifacts(out_dir: Path, options: dict | None = None) -> bool:
+    """Verify frontend inputs and atomically commit serve/cache artifacts."""
+    try:
+        if options is None:
+            options = json.loads((out_dir / "options.json").read_text())
+        manifest = _verified_frontend_manifest(out_dir)
+        records = list(manifest["files"])
+        records += _write_child_deploy_templates(out_dir, options)
+        by_path = {record["path"]: record for record in records}
+        for record in _collect_backend_records(out_dir):
+            existing = by_path.get(record["path"])
+            if existing and (existing["bytes"], existing["sha256"]) != (
+                record["bytes"],
+                record["sha256"],
+            ):
+                raise ValueError(f"backend artifact changed: {record['path']}")
+            by_path.setdefault(record["path"], record)
+        manifest["phase"] = "backend-complete"
+        manifest["files"] = sorted(
+            by_path.values(), key=lambda record: (record["path"], record["role"])
+        )
+        _atomic_write_json(out_dir / "artifact-manifest.json", manifest)
+        return True
+    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+        (out_dir / "deploy.tmpl.json").unlink(missing_ok=True)
+        return False
 
 
 def compile_via_server(out_dir: Path, timeout: float) -> bool:
@@ -251,5 +417,4 @@ def compile_via_server(out_dir: Path, timeout: float) -> bool:
         return False  # compile problem → let the subprocess produce it
     if not any(out_dir.glob("*.arc56.json")):
         return False  # server claimed success but wrote nothing usable
-    _write_child_deploy_templates(out_dir, options)
-    return True
+    return finalize_backend_artifacts(out_dir, options)

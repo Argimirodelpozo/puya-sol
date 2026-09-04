@@ -1,7 +1,10 @@
 #pragma once
 
+#include "ArtifactIO.h"
+
+#include <boost/filesystem/path.hpp>
+
 #include <map>
-#include <nlohmann/json.hpp>
 #include <set>
 #include <string>
 #include <vector>
@@ -13,26 +16,17 @@ namespace puyasol::json
 class OptionsWriter
 {
 public:
-	/// Write options.json to the given path (single contract).
-	static void write(
-		std::string const& _path,
-		std::string const& _contractName,
-		std::string const& _outputDir,
-		int _optimizationLevel = 1,
-		bool _outputIr = false,
-		std::set<std::string> const& _templateVarChildren = {},
-		std::map<std::string, int64_t> const& _intTemplateVars = {}
-	);
-
-	/// Write options.json for multiple contracts (split contract mode).
-	static void writeMultiple(
-		std::string const& _path,
+	/// Atomically write options.json for the complete compilation set.
+	static bool write(
+		boost::filesystem::path const& _path,
 		std::vector<std::string> const& _contractNames,
 		std::string const& _outputDir,
-		int _optimizationLevel = 1,
-		bool _outputIr = false,
-		std::set<std::string> const& _templateVarChildren = {},
-		std::map<std::string, int64_t> const& _intTemplateVars = {}
+		int _optimizationLevel,
+		bool _outputIr,
+		std::set<std::string> const& _templateVarChildren,
+		std::map<std::string, int64_t> const& _intTemplateVars,
+		artifact::Digest& _digest,
+		std::string& _error
 	);
 };
 

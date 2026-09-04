@@ -1,4 +1,5 @@
 #include "cli/SourceCompat.h"
+#include "ArtifactIO.h"
 #include "Logger.h"
 
 #include <liblangutil/CharStream.h>
@@ -297,20 +298,9 @@ bool writeSourceRewriteManifest(
 		});
 	}
 
-	std::ofstream out(_path.string(), std::ios::binary | std::ios::trunc);
-	if (!out)
-	{
-		_error = "cannot open " + _path.string();
-		return false;
-	}
-	out << manifest.dump(2) << '\n';
-	out.close();
-	if (!out)
-	{
-		_error = "failed writing " + _path.string();
-		return false;
-	}
-	return true;
+	artifact::Digest ignored;
+	return artifact::writeJsonAtomically(
+		_path, manifest.dump(2) + '\n', ignored, _error);
 }
 
 std::set<std::string> collectEventSignatures(std::string const& _source)

@@ -69,7 +69,7 @@ int PuyaRunner::run(
 	if (result != 0)
 		Logger::instance().error("puya exited with code: " + std::to_string(result));
 	else
-		Logger::instance().info("puya completed successfully");
+		Logger::instance().debug("puya backend process exited with code 0");
 
 	return result;
 }

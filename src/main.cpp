@@ -3,6 +3,7 @@
 /// → AWST build → post-passes → awst.json + options.json → puya backend.
 /// CLI details live in src/cli/ (CliOptions, SourceCompat, CompilerSetup, AwstPostPasses).
 
+#include "ArtifactIO.h"
 #include "Logger.h"
 #include "HexBytes.h"
 #include "builder/AWSTBuilder.h"
@@ -47,6 +48,35 @@ int main(int _argc, char* _argv[])
 	if (!opts.noPuya && opts.puyaPath.empty())
 	{
 		std::cerr << "Error: --puya-path is required (or use --no-puya)" << std::endl;
+		return 1;
+	}
+
+	// Invalidate the previous run's commit marker and deployment bundle before
+	// doing fallible compilation work. Files without a fresh manifest must not
+	// be treated as one coherent compiler run.
+	auto const outputDir = fs::path(opts.outputDir);
+	auto const artifactManifestPath = outputDir / "artifact-manifest.json";
+	boost::system::error_code outputError;
+	fs::create_directories(outputDir, outputError);
+	if (outputError)
+	{
+		logger.error("Cannot create artifact output directory: "
+			+ outputError.message());
+		return 1;
+	}
+	std::string artifactError;
+	if (!puyasol::artifact::removeFileIfPresent(
+		artifactManifestPath, artifactError)
+		|| !prepareChildDeployArtifacts(opts.outputDir, {}, artifactError))
+	{
+		logger.error("Cannot invalidate previous artifacts: " + artifactError);
+		return 1;
+	}
+	if (!opts.legacySourceRewrite
+		&& !puyasol::artifact::removeFileIfPresent(
+			outputDir / "source-rewrite-manifest.json", artifactError))
+	{
+		logger.error("Cannot remove stale source manifest: " + artifactError);
 		return 1;
 	}
 
@@ -320,24 +350,31 @@ int main(int _argc, char* _argv[])
 	puyasol::json::AWSTSerializer serializer;
 	auto awstJson = serializer.serialize(roots);
 
-	// Create output directory
-	fs::create_directories(opts.outputDir);
-
-	// Write awst.json — and verify the write. A silently truncated awst.json
-	// (full disk, permissions) would otherwise feed the backend a stale or
-	// partial file from a reused output directory.
-	std::string awstPath = (fs::path(opts.outputDir) / "awst.json").string();
+	// Remove compiler-owned outputs for current target names before invoking the
+	// backend. This is the per-run isolation boundary that makes every output
+	// collected below fresh.
+	auto const& childContracts = builder.artifacts().childContracts;
+	if (!prepareChildDeployArtifacts(
+		opts.outputDir, childContracts, artifactError)
+		|| !prepareBackendTargetArtifacts(
+			opts.outputDir, roots, artifactError))
 	{
-		std::ofstream out(awstPath);
-		out << awstJson.dump(2) << std::endl;
-		out.close();
-		if (!out)
-		{
-			logger.error("Failed writing " + awstPath);
-			return 1;
-		}
-		logger.info("Wrote: " + awstPath);
+		logger.error("Cannot prepare artifact output: " + artifactError);
+		return 1;
 	}
+
+	// Atomically publish validated frontend artifacts. artifact-manifest.json
+	// is the commit marker: without it, files in a reused directory must not be
+	// treated as one coherent compiler run.
+	auto const awstPath = outputDir / "awst.json";
+	puyasol::artifact::Digest awstDigest;
+	if (!puyasol::artifact::writeJsonAtomically(
+		awstPath, awstJson.dump(2) + '\n', awstDigest, artifactError))
+	{
+		logger.error("Cannot write AWST artifact: " + artifactError);
+		return 1;
+	}
+	logger.info("Wrote: " + awstPath.string());
 
 	// Dump to stdout if requested (keep on stdout for piping)
 	if (opts.dumpAwst)
@@ -353,20 +390,51 @@ int main(int _argc, char* _argv[])
 			contractNames.push_back(lsig->id);
 	}
 
-	// Write options.json (with template var declarations for child contracts)
-	auto const& childContracts = builder.artifacts().childContracts;
-	std::string optionsPath = (fs::path(opts.outputDir) / "options.json").string();
+	// Write options.json (with template var declarations for child contracts).
+	auto const optionsPath = outputDir / "options.json";
 	std::map<std::string, int64_t> intTemplateVars;
-	if (contractNames.size() <= 1)
+	puyasol::artifact::Digest optionsDigest;
+	if (!puyasol::json::OptionsWriter::write(
+		optionsPath, contractNames, opts.outputDir, opts.optimizationLevel,
+		opts.outputIr, childContracts, intTemplateVars, optionsDigest,
+		artifactError))
 	{
-		std::string contractName = contractNames.empty() ? "" : contractNames[0];
-		puyasol::json::OptionsWriter::write(optionsPath, contractName, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts, intTemplateVars);
+		logger.error("Cannot write options artifact: " + artifactError);
+		return 1;
 	}
-	else
+	logger.info("Wrote: " + optionsPath.string());
+
+	std::vector<puyasol::artifact::Record> artifactRecords{
+		{awstPath.filename().string(), "frontend-awst", awstDigest},
+		{optionsPath.filename().string(), "backend-options", optionsDigest},
+	};
+	if (opts.legacySourceRewrite)
 	{
-		puyasol::json::OptionsWriter::writeMultiple(optionsPath, contractNames, opts.outputDir, opts.optimizationLevel, opts.outputIr, childContracts, intTemplateVars);
+		auto const sourceManifest = outputDir / "source-rewrite-manifest.json";
+		std::vector<std::uint8_t> contents;
+		puyasol::artifact::Digest digest;
+		if (!puyasol::artifact::readBinary(
+			sourceManifest, contents, digest, artifactError))
+		{
+			logger.error("Cannot record source manifest: " + artifactError);
+			return 1;
+		}
+		artifactRecords.push_back({
+			sourceManifest.filename().string(), "source-rewrite-manifest",
+			std::move(digest)});
 	}
-	logger.info("Wrote: " + optionsPath);
+	auto writeArtifactManifest = [&](std::string const& phase) {
+		if (!puyasol::artifact::writeManifest(
+			artifactManifestPath, phase, artifactRecords, artifactError))
+		{
+			logger.error("Cannot write artifact manifest: " + artifactError);
+			return false;
+		}
+		logger.info("Wrote: " + artifactManifestPath.string());
+		return true;
+	};
+	if (!writeArtifactManifest(opts.noPuya ? "frontend-only" : "frontend-ready"))
+		return 1;
 
 	// Summary
 	if (logger.warningCount() > 0)
@@ -383,14 +451,41 @@ int main(int _argc, char* _argv[])
 		logger.info("Invoking puya backend...");
 		puyasol::runner::PuyaRunner runner;
 		runner.setPuyaPath(opts.puyaPath);
-		int exitCode = runner.run(awstPath, optionsPath, opts.logLevel);
+		int exitCode = runner.run(
+			awstPath.string(), optionsPath.string(), opts.logLevel);
 
 		// Never derive deployment templates from stale .bin files left in a
 		// reused output directory when this backend invocation failed.
-		if (exitCode == 0)
-			writeChildDeployTemplates(opts.outputDir, childContracts);
-
-		return exitCode;
+		if (exitCode != 0)
+			return exitCode;
+		if (!writeChildDeployTemplates(
+			opts.outputDir, childContracts, artifactRecords, artifactError))
+		{
+			logger.error("Cannot write child deployment artifacts: " + artifactError);
+			return 1;
+		}
+		if (!collectBackendTargetArtifacts(
+			opts.outputDir, roots, artifactRecords, artifactError))
+		{
+			std::string cleanupError;
+			puyasol::artifact::removeFileIfPresent(
+				outputDir / "deploy.tmpl.json", cleanupError);
+			logger.error("Backend artifact validation failed: " + artifactError);
+			return 1;
+		}
+		if (!childContracts.empty())
+			logger.info("Wrote: "
+				+ (outputDir / "deploy.tmpl.json").string());
+		if (!writeArtifactManifest("backend-complete"))
+		{
+			std::string cleanupError;
+			if (!puyasol::artifact::removeFileIfPresent(
+				outputDir / "deploy.tmpl.json", cleanupError))
+				logger.error("Cannot invalidate deployment template: " + cleanupError);
+			return 1;
+		}
+		logger.info("Backend artifacts validated successfully");
+		return 0;
 	}
 
 	logger.info("Done! AWST JSON generated. Use --puya-path to compile to TEAL.");
