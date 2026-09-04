@@ -213,12 +213,9 @@ bool prepareBackendTargetArtifacts(
 				_error = "invalid backend artifact target name: " + target->stem;
 				return false;
 			}
-			if (!stems.insert(target->stem).second)
-			{
-				_error = "backend artifact filename collision for target: "
-					+ target->stem;
-				return false;
-			}
+			// Repeated AWST ids from explicit/import aliases are coalesced by puya;
+			// it still rejects distinct targets that would share this filename.
+			stems.insert(target->stem);
 		}
 
 	auto const outputDir = fs::path(_outputDir);

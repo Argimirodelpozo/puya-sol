@@ -41,4 +41,20 @@ inline void forEachChildBlock(
 	}
 }
 
+/// Apply `_fn` to every return in a statement tree. Container coverage is
+/// inherited from `forEachChildBlock`, so new statement kinds have one place
+/// to update.
+inline void forEachReturnStatement(
+	std::vector<std::shared_ptr<Statement>>& _statements,
+	std::function<void(ReturnStatement&)> const& _fn)
+{
+	for (auto& statement: _statements)
+		if (auto* ret = dynamic_cast<ReturnStatement*>(statement.get()))
+			_fn(*ret);
+		else
+			forEachChildBlock(*statement, [&](Block& block, bool) {
+				forEachReturnStatement(block.body, _fn);
+			});
+}
+
 } // namespace puyasol::awst

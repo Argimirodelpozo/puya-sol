@@ -146,7 +146,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnElement(
 	std::shared_ptr<awst::Expression> _value,
 	ReturnWireElem const& _plan,
 	awst::SourceLocation const& _loc,
-	bool _asmWrap
+	bool _asmWrap,
+	bool _wire
 )
 {
 	if (!_value)
@@ -163,9 +164,32 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnElement(
 	if (_plan.isSigned)
 	{
 		// Signed: sign-extend the (uint64-held) value to 256-bit two's complement,
-		// then ARC4-encode to arc4.uint256 (mirrors ReturnRewriter Pass 4-single).
+		// then ARC4-encode to arc4.uint256 at the wire boundary.
 		_value = signExtendToUint256(std::move(_value), _plan.bits, _loc);
+		if (!_wire)
+			return _value;
 		return awst::makeARC4Encode(std::move(_value), _plan.wireType, _loc);
+	}
+	if (!_wire)
+	{
+		// Assembly is unchecked. Normalize a wide unsigned result before it is
+		// threaded through modifiers; the eventual wire step then only encodes.
+		if (_asmWrap && _plan.encoded
+			&& _value->wtype == awst::WType::biguintType())
+		{
+			boost::multiprecision::cpp_int mod = 1;
+			mod <<= _plan.bits;
+			_value = awst::makeBigUIntBinOp(
+				std::move(_value), awst::BigUIntBinaryOperator::Mod,
+				awst::makeIntegerConstant(
+					mod.str(), _loc, awst::WType::biguintType()), _loc);
+		}
+		if (_plan.nativeType && awst::isNumericWType(_plan.nativeType)
+			&& awst::isNumericWType(_value->wtype)
+			&& _value->wtype != _plan.nativeType)
+			return implicitNumericCast(
+				std::move(_value), _plan.nativeType, _loc);
+		return _value;
 	}
 	// Unsigned biguint: ARC4-encode to arc4.uintN, guarded on biguint like Pass 2
 	// (the expectedType coercion at the return site makes it biguint in practice).
@@ -196,23 +220,31 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 	std::vector<ReturnWireElem> const& _plan,
 	awst::SourceLocation const& _loc,
 	std::vector<std::shared_ptr<awst::Statement>>& _prepend,
-	bool _asmWrap
+	bool _asmWrap,
+	bool _wire
 )
 {
 	if (_plan.empty() || !_value)
 		return _value;
 	if (_plan.size() == 1)
-		return encodeReturnElement(std::move(_value), _plan[0], _loc, _asmWrap);
+		return encodeReturnElement(
+			std::move(_value), _plan[0], _loc, _asmWrap, _wire);
 
 	bool anyWork = false;
 	for (auto const& p: _plan)
-		if (p.encoded || p.masked) { anyWork = true; break; }
+		if ((_wire && (p.encoded || p.masked))
+			|| (!_wire && (p.isSigned || p.masked
+				|| (_asmWrap && p.encoded))))
+		{
+			anyWork = true;
+			break;
+		}
 	if (!anyWork)
 		return _value;
 
 	std::vector<awst::WType const*> wireTypes;
 	for (auto const& p: _plan)
-		wireTypes.push_back(p.wireType);
+		wireTypes.push_back(_wire ? p.wireType : p.nativeType);
 	auto makeWireTuple = [&]() {
 		return _typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>(wireTypes));
@@ -224,7 +256,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 		for (size_t i = 0; i < _t->items.size() && i < _plan.size(); ++i)
 		{
 			auto elemLoc = _t->items[i]->sourceLocation;
-			_t->items[i] = encodeReturnElement(std::move(_t->items[i]), _plan[i], elemLoc, _asmWrap);
+			_t->items[i] = encodeReturnElement(
+				std::move(_t->items[i]), _plan[i], elemLoc, _asmWrap, _wire);
 		}
 		_t->wtype = makeWireTuple();
 	};
@@ -258,7 +291,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 	{
 		auto const* subTuple = static_cast<awst::WTuple const*>(_value->wtype);
 		std::string tmpName = "__ret_tmp_"
-			+ std::to_string(awst::NameGen::next("ReturnRewriter.retTmpCounter"));
+			+ std::to_string(awst::NameGen::next("TypeCoercion.retTmpCounter"));
 		auto tmpVar = awst::makeVarExpression(tmpName, _value->wtype, _loc);
 		_prepend.push_back(awst::makeAssignmentStatement(tmpVar, std::move(_value), _loc));
 
@@ -266,7 +299,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 		for (size_t i = 0; i < _plan.size() && i < subTuple->types().size(); ++i)
 		{
 			auto item = awst::makeTupleItem(tmpVar, static_cast<int>(i), subTuple->types()[i], _loc);
-			newTuple->items.push_back(encodeReturnElement(std::move(item), _plan[i], _loc, _asmWrap));
+			newTuple->items.push_back(encodeReturnElement(
+				std::move(item), _plan[i], _loc, _asmWrap, _wire));
 		}
 		newTuple->wtype = makeWireTuple();
 		return newTuple;

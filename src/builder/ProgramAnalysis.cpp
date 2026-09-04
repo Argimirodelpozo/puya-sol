@@ -168,6 +168,31 @@ void collectReachableFunctions(CompilerStack& _compiler, ProgramAnalysis& _out)
 	}
 }
 
+/// solc's per-contract graph can stop at a library/free-function entrypoint.
+/// Close each graph over resolved source references so per-contract hosting
+/// keeps the complete downstream chain without falling back to unit-global
+/// emission.
+void closeContractReachability(ProgramAnalysis& _out)
+{
+	for (auto& [_, reachable]: _out.reachableFunctionsByContract)
+	{
+		std::vector<FunctionDefinition const*> pending;
+		for (int64_t id: reachable)
+			if (auto it = _out.functionDeclarations.find(id);
+				it != _out.functionDeclarations.end())
+				pending.push_back(it->second);
+
+		for (size_t i = 0; i < pending.size(); ++i)
+		{
+			FunctionReferenceScanner scanner;
+			pending[i]->accept(scanner);
+			for (auto const* referenced: scanner.references)
+				if (reachable.insert(referenced->id()).second)
+					pending.push_back(referenced);
+		}
+	}
+}
+
 } // namespace
 
 ProgramAnalysis ProgramAnalysis::analyze(
@@ -211,6 +236,7 @@ ProgramAnalysis ProgramAnalysis::analyze(
 				if (auto const* structure = dynamic_cast<StructType const*>(param->type()))
 					result.refPassedStructs.insert(structure->structDefinition().id());
 	});
+	closeContractReachability(result);
 
 	struct BodyFactsWalker: ASTConstVisitor
 	{

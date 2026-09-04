@@ -1,12 +1,12 @@
 #include "builder/contract/ContractBuilder.h"
 #include "awst/NameGen.h"
+#include "awst/StatementWalk.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "Logger.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/contract/ParamABIValidator.h"
-#include "builder/contract/ReturnRewriter.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
 
@@ -872,7 +872,7 @@ void remapGetterReturnToArc4(
 	if (isIntReturn)
 	{
 		auto const* arc4RetType = tm.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
-		forEachReturnStatement(getter.body->body, [&](awst::ReturnStatement& ret) {
+		awst::forEachReturnStatement(getter.body->body, [&](awst::ReturnStatement& ret) {
 			if (ret.value && ret.value->wtype == awst::WType::biguintType()) {
 				auto retLoc = ret.value->sourceLocation;
 				ret.value = arc4UintCodec(std::move(ret.value), arc4RetType, /*isEncode=*/true, retLoc);

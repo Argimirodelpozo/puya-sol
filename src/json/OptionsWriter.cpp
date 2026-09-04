@@ -59,6 +59,8 @@ bool OptionsWriter::write(
 			_error = "options compilation target name cannot be empty";
 			return false;
 		}
+		// Explicit/import aliases can repeat an AWST id; one compilation entry
+		// is the backend's canonical representation.
 		opts["compilation_set"][name] = _outputDir;
 	}
 	opts["output_teal"] = true;
@@ -81,7 +83,6 @@ bool OptionsWriter::write(
 	}
 
 	if (!opts["compilation_set"].is_object()
-		|| opts["compilation_set"].size() != _contractNames.size()
 		|| !opts["cli_template_definitions"].is_object())
 	{
 		_error = "options JSON failed schema validation";

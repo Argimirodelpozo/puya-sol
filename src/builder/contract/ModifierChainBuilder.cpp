@@ -40,8 +40,8 @@ void ContractBuilder::buildModifierChain(
 	// READ/WRITE the named return vars — `mod2(r)`, `m1(x = 2)`, or `r += 1` accumulating
 	// across a repeated/looped `_;`. So thread the return params as LEADING in-args through
 	// every chain sub and capture them back out at each `_`, letting mutations propagate.
-	// (rewriteARC4Returns Pass 2/3 skip modifier'd functions, so these stay NATIVE — no
-	// ARC4 mismatch.) Found by the dispatch fuzzer + the chain-as-default experiment.
+	// These stay native until the outer wrapper return is encoded. Found by the
+	// dispatch fuzzer + the chain-as-default experiment.
 	struct RetInfo
 	{
 		std::string name;
@@ -50,7 +50,7 @@ void ContractBuilder::buildModifierChain(
 	};
 	std::vector<RetInfo> retInfos;
 	// Thread the SAME types _method.returnType declares — that is what the body sub
-	// returns after rewriteARC4Returns (which promotes signed sub-64 and wide-uint
+	// returns after native normalization (which promotes signed sub-64 and wide-uint
 	// return elements to biguint at the ABI boundary). Re-mapping from the Solidity
 	// type instead would give `int64` → uint64, so capturing the body's biguint into
 	// a uint64 threading slot fails puya with "Tuple type mismatch". For a tuple the

@@ -86,21 +86,24 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Encode ONE return value to its ABI wire form per its ReturnWireElem plan
+	/// Transform ONE return value per its ReturnWireElem plan. By default this
+	/// produces the ABI wire form. With `_wire=false`, it performs only the
+	/// native normalization needed before a modifier chain (signed extension,
+	/// sub-word masking, numeric promotion, and assembly wrapping).
 	/// (build-time return encoding, fable-review-2 D2). masked → bitAnd to width;
 	/// signed → signExtendToUint256 then ARC4Encode(arc4.uint256); unsigned biguint →
 	/// ARC4Encode(arc4.uintN) (with `% 2^N` first when `_asmWrap`, since Yul is
 	/// unchecked); array → ARC4Encode(arc4 array); everything else passes through.
-	/// The build-time replacement for the old ReturnRewriter non-chain passes 1-5.
+	/// Shared by direct return construction and modifier-chain normalization.
 	static std::shared_ptr<awst::Expression> encodeReturnElement(
 		std::shared_ptr<awst::Expression> _value,
 		ReturnWireElem const& _plan,
 		awst::SourceLocation const& _loc,
-		bool _asmWrap = false
+		bool _asmWrap = false,
+		bool _wire = true
 	);
 
-	/// Encode a whole return VALUE (scalar or tuple) to its ABI wire form per the
-	/// per-element plan — the build-time counterpart to ReturnRewriter passes 2/3/4.
+	/// Transform a whole return VALUE (scalar or tuple) per the per-element plan.
 	/// Handles a scalar, a literal tuple, a ternary-of-tuples, and an opaque tuple
 	/// value (`return f()`) which spills to a temp appended to `_prepend`. Returns
 	/// the (possibly new) value; the caller inserts `_prepend` before the return.
@@ -110,7 +113,8 @@ public:
 		std::vector<ReturnWireElem> const& _plan,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _prepend,
-		bool _asmWrap = false
+		bool _asmWrap = false,
+		bool _wire = true
 	);
 
 	/// Value of a dynamic CALLDATA param whose mutable pointer locals are live

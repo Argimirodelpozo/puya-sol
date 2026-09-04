@@ -190,16 +190,15 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			std::move(stripPrefix), awst::WType::bytesType(),
 			awst::nextSingleEvalId(), m_loc);
 
-		// Wire ARC4 tuple type: the callee (ReturnRewriter) ARC4-encodes the return
+		// Wire ARC4 tuple type: the callee ARC4-encodes the return
 		// tuple, so the raw log bytes ARE an ARC4 tuple. Reinterpret to that type and
 		// hand the head/tail/bool-packing/dynamic-field layout to puya's ARC4Decode
 		// rather than walking byte offsets by hand. The one convention puya's generic
 		// map doesn't capture is the signed-int wire width: a SIGNED intN return is
-		// sign-extended to uint256 (32B) by ReturnRewriter Pass 4, regardless of width.
+		// sign-extended to uint256 (32B) at its return boundary, regardless of width.
 		// UNSIGNED biguints keep their NATURAL declared width (uint128 → 16B) in every
-		// case — Pass 3 (all-unsigned) and Pass 4 (signed-containing, ReturnRewriter.cpp
-		// line 272-281) both encode them at uintN, never widened. Build the wire element
-		// types to match exactly.
+		// case — every return path encodes them at uintN, never widened. Build
+		// the wire element types to match exactly.
 		auto const* solTuple = dynamic_cast<TupleType const*>(_solReturnType);
 
 		size_t const n = tupleType->types().size();

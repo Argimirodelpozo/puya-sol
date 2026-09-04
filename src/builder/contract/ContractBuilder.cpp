@@ -594,9 +594,24 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// the selected backend binds declarations to physical AVM cells separately.
 	m_exprBuilder->storageLayout = &_storagePlan.solidityLayout;
 
+	// A host-bound free/library function only belongs in contracts whose solc
+	// call graph can reach it.  The unit-global list is deliberately
+	// conservative (it also closes over root callers), but copying that whole
+	// list into every concrete contract both bloats multi-contract output and
+	// can leave unrelated contracts calling runtime helpers they do not own.
+	// If solc did not provide a graph, retain the conservative fallback.
+	std::vector<solidity::frontend::FunctionDefinition const*>
+		reachableHostBoundFunctions;
+	for (auto const* function: m_hostBoundFunctions)
+		if (function
+			&& (!m_typeMapper.analysis().hasContractReachability(_contract.id())
+				|| m_typeMapper.analysis().isFunctionReachable(
+					_contract.id(), function->id())))
+			reachableHostBoundFunctions.push_back(function);
+
 	// Pre-populate host-bound function map before translation so the call
 	// resolver routes them as InstanceMethodTargets.
-	for (auto const* function: m_hostBoundFunctions)
+	for (auto const* function: reachableHostBoundFunctions)
 	{
 		if (!function) continue;
 		auto const* scope = function->annotation().contract;
@@ -822,16 +837,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	// Emit functions whose lowering requires a concrete contract host. This
 	// includes function-pointer dispatch and default-layout storage assembly.
-	for (auto const* function: m_hostBoundFunctions)
+	for (auto const* function: reachableHostBoundFunctions)
 	{
 		if (!function || !function->isImplemented()) continue;
 		auto nameIt = m_exprBuilder->internalizedFunctionNames.find(function->id());
 		if (nameIt == m_exprBuilder->internalizedFunctionNames.end()) continue;
 		clearSuperOverrides();
-		// EVERY host-bound function is internalized into EVERY contract, used
-		// or not — mark the body so EIP-1967 admin-slot uses record under the
-		// function's id and attach via the call graph, not to this contract
-		// unconditionally (BuildArtifacts::noteErc1967AdminUse).
+		// Attribute EIP-1967 admin-slot use to the freestanding function and
+		// attach it through this contract's call graph.
 		m_typeMapper.artifacts().currentFreestandingFunctionId = function->id();
 		auto method = buildFunction(
 			*function, contractName, nameIt->second, /*asInternalCopy=*/true);
@@ -973,19 +986,38 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// check, run inside the UpdateApplication txn.
 	if (proxies::UupsLowering::isUupsImplementation(_contract))
 	{
-		// A modifier'd hook builds as a chain: `_authorizeUpgrade__mod0_<n>`
-		// is the entry that runs the modifiers (onlyOwner and friends) before
-		// the body — prefer it over the bare-body name.
-		awst::ContractMethod const* hook = nullptr;
-		for (auto const& method: contract->methods)
+		// The translated hook remains the chain entry: its wrapper invokes the
+		// outermost modifier subroutine and therefore preserves the complete
+		// permission check. Internal methods use their registered opaque symbol,
+		// so resolve the concrete override instead of looking for the Solidity
+		// source name (or coupling the gate to a generated `__mod0` name).
+		solidity::frontend::FunctionDefinition const* authorizeFunction = nullptr;
+		for (auto const* base: _contract.annotation().linearizedBaseContracts)
 		{
-			if (method.memberName == "_authorizeUpgrade")
-				hook = &method;
-			if (method.memberName.rfind("_authorizeUpgrade__mod0", 0) == 0)
-			{
-				hook = &method;
-				break;
-			}
+			if (!base) continue;
+			for (auto const* function: base->definedFunctions())
+				if (function && function->name() == "_authorizeUpgrade"
+					&& function->isImplemented())
+				{
+					authorizeFunction = function;
+					break;
+				}
+			if (authorizeFunction) break;
+		}
+
+		awst::ContractMethod const* hook = nullptr;
+		if (authorizeFunction)
+		{
+			std::string hookName = authorizeFunction->name();
+			if (auto const* symbol =
+				m_functionSymbols.resolve(authorizeFunction->id()))
+				hookName = *symbol;
+			for (auto const& method: contract->methods)
+				if (method.memberName == hookName)
+				{
+					hook = &method;
+					break;
+				}
 		}
 		if (hook)
 			contract->methods.push_back(proxies::UupsLowering::updateGateMethod(

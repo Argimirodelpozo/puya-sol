@@ -472,11 +472,11 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 	maybeAppendEnumReturnAssert(m_blk, m_node, m_loc, *stmt, result);
 
 	// D2 build-time ABI return encoding: wrap the (already value-coerced) return
-	// value in its ABI wire type right here, instead of the ReturnRewriter post-pass
-	// walking the finished body. Scalar + tuple (literal / ternary / opaque-spill).
+	// value in its ABI wire type right here. Scalar + tuple
+	// (literal / ternary / opaque-spill).
 	// Both the `return expr` and bare `return;`→named-var paths funnel through
-	// stmt->value, so one call covers both. (sub-word mask / asm / modifier'd
-	// returns still use the post-pass.)
+	// stmt->value, so one call covers both. Modifier chains instead normalize
+	// native returns and encode only their outer wrapper.
 	if (m_blk.fn.encodeReturnsAtBuildTime && stmt->value)
 	{
 		auto valLoc = stmt->value->sourceLocation;

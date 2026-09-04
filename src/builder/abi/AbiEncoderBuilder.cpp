@@ -703,7 +703,7 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeSolidityArgs(
 //   3. InnerCallHandlers::encodeArgToBytes: ApplicationArgs for real calls —
 //      encodes at the callee's DECLARED param type when known (exact biguint
 //      width, pad-to-width, dynamic-bytes header), nullptr → backing width.
-//   4. ReturnRewriter's return-wire encoding: ABI return slots (signed →
+//   4. Return-wire encoding: ABI return slots (signed →
 //      sign-extended uint256, unsigned biguint → natural uintN, asm bodies
 //      wrapped mod 2^N). Feeds the method's arc4 return type.
 //   5. SolEmitStatement's event encoding: ARC-28 (biguint-backed ints collapse

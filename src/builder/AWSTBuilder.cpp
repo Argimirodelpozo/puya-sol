@@ -5,6 +5,7 @@
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-types/SolIntType.h"
 #include "awst/Termination.hpp"
+#include "awst/StatementWalk.h"
 #include "builder/FunctionIdRegistry.h"
 #include "builder/SubroutineRegistry.hpp"
 #include "builder/abi/Arc4Stdlib.h"
@@ -14,7 +15,6 @@
 #include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/contract/ContractBuilder.h"
-#include "builder/contract/ReturnRewriter.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
@@ -714,7 +714,7 @@ void augmentFreestandingReturns(
 		// loops, switch) — the old hand-rolled walk recursed only IfElse, so
 		// an early `return` inside a loop kept its unaugmented value (the
 		// FunctionBuilder twin had the same gap).
-		forEachReturnStatement(sub.body->body, [&](awst::ReturnStatement& ret) {
+		awst::forEachReturnStatement(sub.body->body, [&](awst::ReturnStatement& ret) {
 			if (!returnIsTuple)
 			{
 				// Bare return type: one augmented arg. Only handle bare

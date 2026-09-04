@@ -96,9 +96,6 @@ void markAssemblyAggregates(
 
 /// Builds an AWST Contract from a Solidity ContractDefinition (approval/clear programs,
 /// ARC4 methods, modifier lowering, super-call resolution, __postInit generation).
-struct SignedReturnInfo;
-struct UnsignedMaskInfo;
-
 /// Recipe for rebuilding one ABI-to-native parameter assignment. Modifier
 /// chain members each materialize their own statements from this immutable
 /// description; no AWST copying is involved.
@@ -186,8 +183,8 @@ private:
 
 	/// Enable build-time ABI return encoding for the current function (D2).
 	/// `buildBlock` forwards the plan to the FunctionContext; SolReturnStatement
-	/// then ARC4-encodes each return value in place instead of the ReturnRewriter
-	/// post-pass. Cleared for each function by setFunctionContext.
+	/// then ARC4-encodes each return value in place. Cleared for each function by
+	/// setFunctionContext.
 	void setReturnWirePlan(std::vector<ReturnWireElem> _plan, bool _asmWrap)
 	{
 		m_functionCtx->returnWirePlan = std::move(_plan);
@@ -275,8 +272,6 @@ private:
 	);
 
 	// ── buildFunction phases (FunctionBuilder.cpp) ──────────────────────
-	// SignedReturnInfo/UnsignedMaskInfo are defined in ReturnRewriter.h
-	// (forward-declared above the class).
 	void buildMethodSignature(
 		awst::ContractMethod& method,
 		solidity::frontend::FunctionDefinition const& _func,
@@ -286,9 +281,7 @@ private:
 	void computeMethodReturnType(
 		awst::ContractMethod& method,
 		solidity::frontend::FunctionDefinition const& _func,
-		bool funcHasInlineAssembly,
-		std::vector<SignedReturnInfo>& signedReturns,
-		std::vector<UnsignedMaskInfo>& unsignedMasks);
+		bool funcHasInlineAssembly);
 	void setupBodyParamContext(
 		awst::ContractMethod const& method,
 		solidity::frontend::FunctionDefinition const& _func);

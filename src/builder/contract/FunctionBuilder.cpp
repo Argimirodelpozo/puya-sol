@@ -9,7 +9,6 @@
 #include "builder/NatSpecTags.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/contract/ParamABIValidator.h"
-#include "builder/contract/ReturnRewriter.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/itxn/CallResolver.h"
@@ -56,6 +55,156 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 }
 
 namespace {
+
+std::vector<ReturnWireElem> computeReturnPlan(
+	solidity::frontend::FunctionDefinition const& function,
+	awst::WType const* returnType,
+	TypeMapper& typeMapper)
+{
+	auto const& returnParams = function.returnParameters();
+	auto const* tuple = returnType
+		&& returnType->kind() == awst::WTypeKind::WTuple
+		? static_cast<awst::WTuple const*>(returnType) : nullptr;
+	std::vector<ReturnWireElem> plan;
+	for (size_t i = 0; i < returnParams.size(); ++i)
+	{
+		ReturnWireElem item;
+		item.nativeType = tuple
+			? (i < tuple->types().size() ? tuple->types()[i] : nullptr)
+			: returnType;
+		item.wireType = item.nativeType;
+		auto integer = SolIntType::fromSolOrEnum(returnParams[i]->type());
+		if (item.nativeType == awst::WType::biguintType())
+		{
+			item.isSigned = integer && integer->isSigned;
+			item.bits = integer ? integer->bits : 256u;
+			unsigned const wireWidth = item.isSigned ? 256u : item.bits;
+			item.wireType = typeMapper.createType<awst::ARC4UIntN>(
+				static_cast<int>(wireWidth));
+			item.encoded = true;
+		}
+		else if (integer && !integer->isSigned && integer->bits < 64)
+		{
+			item.masked = true;
+			item.bits = integer->bits;
+		}
+		else if (item.nativeType
+			&& item.nativeType->kind() == awst::WTypeKind::ReferenceArray)
+		{
+			auto const* arc4 = typeMapper.mapToARC4Type(item.nativeType);
+			if (arc4 != item.nativeType)
+			{
+				item.wireType = arc4;
+				item.encoded = true;
+			}
+		}
+		plan.push_back(item);
+	}
+	return plan;
+}
+
+void transformReturnValues(
+	std::vector<std::shared_ptr<awst::Statement>>& statements,
+	TypeMapper& typeMapper,
+	std::vector<ReturnWireElem> const& plan,
+	bool asmWrap,
+	bool wire)
+{
+	for (size_t i = 0; i < statements.size(); ++i)
+	{
+		if (auto* ret = dynamic_cast<awst::ReturnStatement*>(statements[i].get()))
+		{
+			if (!ret->value) continue;
+			auto const loc = ret->value->sourceLocation;
+			std::vector<std::shared_ptr<awst::Statement>> prepend;
+			ret->value = TypeCoercion::encodeReturnValue(
+				typeMapper, std::move(ret->value), plan, loc, prepend,
+				asmWrap, wire);
+			auto const inserted = prepend.size();
+			statements.insert(
+				statements.begin() + static_cast<std::ptrdiff_t>(i),
+				std::make_move_iterator(prepend.begin()),
+				std::make_move_iterator(prepend.end()));
+			i += inserted;
+			continue;
+		}
+		awst::forEachChildBlock(*statements[i], [&](awst::Block& block, bool) {
+			transformReturnValues(
+				block.body, typeMapper, plan, asmWrap, wire);
+		});
+	}
+}
+
+void normalizeNativeReturns(
+	awst::ContractMethod& method,
+	solidity::frontend::FunctionDefinition const& function,
+	TypeMapper& typeMapper,
+	std::vector<ReturnWireElem> plan,
+	bool asmWrap,
+	bool applyWireRules)
+{
+	if (!method.body || plan.empty()) return;
+	if (!applyWireRules)
+		for (auto& item: plan)
+		{
+			item.isSigned = false;
+			item.encoded = false;
+			item.masked = false;
+		}
+	transformReturnValues(
+		method.body->body, typeMapper, plan, asmWrap, /*wire=*/false);
+
+	// A scalar named return can be assigned with the mapped native type while
+	// the ABI method threads a promoted biguint. Keep the assignment itself
+	// type-correct; the return transform above handles its final signed form.
+	auto const& returns = function.returnParameters();
+	if (returns.size() != 1 || returns[0]->name().empty()
+		|| !awst::isNumericWType(plan[0].nativeType))
+		return;
+	std::string const name = returns[0]->name();
+	std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> walk;
+	walk = [&](std::vector<std::shared_ptr<awst::Statement>>& body) {
+		for (auto& statement: body)
+		{
+			if (auto* assignment =
+				dynamic_cast<awst::AssignmentStatement*>(statement.get()))
+				if (auto* target =
+					dynamic_cast<awst::VarExpression*>(assignment->target.get());
+					target && target->name == name && assignment->value
+					&& awst::isNumericWType(assignment->value->wtype)
+					&& assignment->value->wtype != plan[0].nativeType)
+				{
+					auto const loc = assignment->value->sourceLocation;
+					assignment->value = TypeCoercion::implicitNumericCast(
+						std::move(assignment->value), plan[0].nativeType, loc);
+					target->wtype = plan[0].nativeType;
+				}
+			awst::forEachChildBlock(*statement, [&](awst::Block& block, bool) {
+				walk(block.body);
+			});
+		}
+	};
+	walk(method.body->body);
+}
+
+void promoteReturnType(
+	awst::ContractMethod& method,
+	std::vector<ReturnWireElem> const& plan,
+	TypeMapper& typeMapper)
+{
+	if (plan.empty()) return;
+	if (plan.size() == 1)
+		method.returnType = plan[0].wireType;
+	else
+	{
+		std::vector<awst::WType const*> wireTypes;
+		for (auto const& item: plan)
+			wireTypes.push_back(item.wireType);
+		method.returnType = typeMapper.createType<awst::WTuple>(
+			std::move(wireTypes));
+	}
+}
+
 // Value-model reference parameters need an explicit post-call value. Contract
 // internal methods only need this for mutated memory structs; host-bound
 // library/free functions also mirror the storage write-backs of root
@@ -140,7 +289,7 @@ std::vector<size_t> augmentMethodForReferenceParams(
 	// loops, switch) — the old hand-rolled walk recursed only IfElse, so an
 	// early `return` inside a for loop kept its unaugmented value and puya
 	// rejected valid Solidity with a return-type mismatch.
-	forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
+	awst::forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
 		if (!newIsTuple)
 		{
 			if (!ret.value && writeBackParams.size() == 1)
@@ -466,13 +615,12 @@ void ContractBuilder::buildMethodSignature(
 
 }
 
-/// buildFunction phase: return type mapping (single or tuple), collecting the ABI-boundary signed/unsigned mask plans for …
+/// buildFunction phase: native return type mapping (single or tuple), including
+/// the biguint promotion required at signed ABI boundaries.
 void ContractBuilder::computeMethodReturnType(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func,
-	bool funcHasInlineAssembly,
-	std::vector<SignedReturnInfo>& signedReturns,
-	std::vector<UnsignedMaskInfo>& unsignedMasks)
+	bool funcHasInlineAssembly)
 {
 	auto const& returnParams = _func.returnParameters();
 
@@ -505,13 +653,6 @@ void ContractBuilder::computeMethodReturnType(
 		{
 			if (intInfo->bits <= 64 && isAbiBoundary)
 				method.returnType = awst::WType::biguintType();
-			if (isAbiBoundary)
-				signedReturns.push_back({intInfo->bits, 0});
-		}
-		else if (intInfo && !intInfo->isSigned && intInfo->bits < 64)
-		{
-			if (isAbiBoundary)
-				unsignedMasks.push_back({intInfo->bits, 0});
 		}
 	}
 	else
@@ -535,13 +676,6 @@ void ContractBuilder::computeMethodReturnType(
 				{
 					if (intInfo->bits <= 64 && isAbiBoundary)
 						mappedType = awst::WType::biguintType();
-					if (isAbiBoundary)
-						signedReturns.push_back({intInfo->bits, ri});
-				}
-				else if (!intInfo->isSigned && intInfo->bits < 64)
-				{
-					if (isAbiBoundary)
-						unsignedMasks.push_back({intInfo->bits, ri});
 				}
 			}
 			types.push_back(mappedType);
@@ -988,10 +1122,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 	buildMethodSignature(method, _func, _contractName, _nameOverride, asmSlotParamIds);
 
-	std::vector<SignedReturnInfo> signedReturns;
-	std::vector<UnsignedMaskInfo> unsignedMasks;
-	computeMethodReturnType(
-		method, _func, funcHasInlineAssembly, signedReturns, unsignedMasks);
+	computeMethodReturnType(method, _func, funcHasInlineAssembly);
 
 	// Solidity `pure` must NOT map to puya `pure`. They are different contracts:
 	// Solidity's means "reads/writes no state" — the function can still REVERT
@@ -1029,13 +1160,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	{
 		setupBodyParamContext(method, _func);
 
-		// D2 build-time ABI return encoding. Instead of the ReturnRewriter post-pass
-		// walking the finished body to convert each return value to its wire type,
-		// SolReturnStatement encodes it as it builds the `return`. Scope (A1+A2):
-		// non-chain, ABI-boundary, non-asm functions with any ENCODED return element
-		// (biguint / signed, scalar or tuple). Sub-word masks (Pass 5), arrays
-		// (Pass 1), asm, and modifier'd (chain) returns still go through the post-pass
-		// / encodeChainDispatchReturn for now.
+		// ABI return encoding belongs at construction time. Plain methods encode
+		// each source return immediately; modifier methods first normalize native
+		// values for chain threading, then encode only the outer wrapper return.
 		std::vector<ReturnWireElem> returnPlan =
 			computeReturnPlan(_func, method.returnType, m_typeMapper);
 		bool anyWork = false;
@@ -1086,24 +1213,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		synthesizeImplicitReturn(
 			method, _func, encodeReturnsAtBuildTime, returnPlan, funcHasInlineAssembly);
 
-		// Build-time encoding path: all return values were encoded in place (explicit
-		// returns in SolReturnStatement, the implicit one above); promote the method's
-		// declared type to the wire type and skip the post-pass. The body was translated
-		// with the NATIVE returnType so named-return assignments still typecheck.
+		// Plain-method return sites are already encoded. Modifier chains must keep
+		// native values until every before/after-placeholder action has run.
 		if (encodeReturnsAtBuildTime)
-		{
-			if (returnPlan.size() == 1)
-				method.returnType = returnPlan[0].wireType;
-			else
-			{
-				std::vector<awst::WType const*> wireTypes;
-				for (auto const& p: returnPlan)
-					wireTypes.push_back(p.wireType);
-				method.returnType = m_typeMapper.createType<awst::WTuple>(std::move(wireTypes));
-			}
-		}
+			promoteReturnType(method, returnPlan, m_typeMapper);
 		else
-			rewriteARC4Returns(method, _func, m_typeMapper, signedReturns, unsignedMasks);
+			normalizeNativeReturns(
+				method, _func, m_typeMapper, returnPlan,
+				funcHasInlineAssembly,
+				method.arc4MethodConfig.has_value()
+					&& !_func.modifiers().empty());
 
 		applyParamDecodeNames(paramDecodes, method);
 
@@ -1131,10 +1250,21 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			buildModifierChain(
 				_func, method, _contractName, paramDecodes,
 				writeBackParams);
-			// The chain threads NATIVE return values; encode the outer dispatch
-			// return to its ABI wire type (biguint would otherwise publish as
-			// "uint512" while callers name the declared width → selector mismatch).
-			encodeChainDispatchReturn(method, _func, m_typeMapper);
+			if (method.arc4MethodConfig.has_value() && anyWork)
+			{
+				// Native normalization already handled signed extension, masking,
+				// and assembly wrap. The dispatch boundary only needs ARC4 encoding.
+				auto dispatchPlan = returnPlan;
+				for (auto& item: dispatchPlan)
+				{
+					item.isSigned = false;
+					item.masked = false;
+				}
+				transformReturnValues(
+					method.body->body, m_typeMapper, dispatchPlan,
+					/*asmWrap=*/false, /*wire=*/true);
+				promoteReturnType(method, returnPlan, m_typeMapper);
+			}
 		}
 		else
 			deferredDecodes = makeParamDecodeStatements(paramDecodes);
