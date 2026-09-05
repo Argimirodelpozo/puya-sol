@@ -39,21 +39,35 @@ namespace is the coordinate system of the differential-replay certification.
 
 **The projection is lossy.** A padded pseudo-account
 (`bzero12 ++ low20`) is not a spendable AVM identity: nobody holds a key
-for it. Consequently, **native value transfer** (`transfer`/`send`/
-`call{value: ...}`) to a 160-bit identity sends funds to a keyless address,
-unrecoverably. The EVM profile without an account model is a differential/
-compat instrument, not a deployment target. The shared high-level payment path
-rejects this transfer unless it is explicitly acknowledged with
-`--allow-divergence native-value-transfer`. Known gap: `selfdestruct` and an
-inline-assembly value-bearing `call` currently build payments outside that
-shared boundary, so neither the policy nor receiver mapping covers them.
+for it. Consequently, **native value transfer** to an ordinary 160-bit identity
+without receiver mapping sends funds to a keyless address, unrecoverably. The
+EVM profile without an account model is a differential/compat instrument, not
+a deployment target. One shared payment boundary covers `transfer`, `send`,
+call-value payments (including value-bearing Yul `call`), high-level
+`selfdestruct` beneficiaries, and child-application funding. Unproven EVM
+address destinations require an account template or explicit
+`--allow-divergence native-value-transfer` acknowledgement.
+
+Destinations already identified as applications by typed-call or creation
+lowering resolve directly to their native escrow, without that identity
+opt-in. Address values using the `bzero24 ++ appId` convention also resolve to
+the application's escrow at runtime; a nonexistent application fails the
+lookup instead of receiving a payment at its keyless encoding. This convention
+applies in both ABI profiles. Zero remains the zero address, not application
+ID zero. Every payment amount is checked before narrowing to AVM's uint64.
+
+`transfer` and `send` to a contract-convention receiver submit a grouped payment
+and zero-argument application call, executing `receive()` or `fallback()` even
+at zero value. Receiver rejection aborts the group (including `send`, which
+cannot catch an inner failure). These calls use AVM fees/opcode budgets, not the
+EVM 2,300-gas stipend. Ordinary accounts receive only a payment; child funding
+and high-level `selfdestruct` payouts do not invoke receiver code.
 
 **The xchain account model provides a spendable mapping**
 (`--xchain-template`, see github.com/algorandfoundation/xchain-accounts): each
 20-byte EVM identity E owns the LogicSig account
 `A(E) = sha512_256("Program" || template-with-owner-spliced)`, controlled by
-the holder of the EVM key. For paths using the shared payment boundary, with a
-pinned template supplied:
+the holder of the EVM key. With a pinned template supplied:
 
 - payments to a 160-bit identity route to `A(E)` — a real, spendable
   account (on-chain derivation; no registry);

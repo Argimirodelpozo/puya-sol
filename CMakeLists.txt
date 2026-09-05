@@ -269,6 +269,7 @@ set(SOURCES
 	src/builder/sol-eb/BuiltinCallables.cpp
 	src/builder/itxn/InnerCallHandlers.cpp
 	src/builder/itxn/InnerCallShapes.cpp
+	src/builder/itxn/NativePayment.cpp
 	src/builder/sol-eb/NodeBuilder.cpp
 	src/builder/sol-eb/SolArrayBuilder.cpp
 	src/builder/sol-eb/SolBoolBuilder.cpp

@@ -3,6 +3,7 @@
 
 #include "builder/sol-eb/BuiltinCallables.h"
 #include "builder/EvmFeaturePolicy.h"
+#include "builder/itxn/NativePayment.h"
 #include "builder/SecpRangeCheck.h"
 #include "awst/NameGen.h"
 #include "builder/sol-eb/BigUIntMathHelpers.h"
@@ -163,25 +164,8 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 	// Post-Cancun EVM selfdestruct only sends funds — no DeleteApplication needed.
 	if (!_args.empty())
 	{
-		auto beneficiary = std::move(_args[0]);
-
-		// Get current app address for the Sender field
-		auto appAddr = awst::makeGlobal(std::string("CurrentApplicationAddress"), awst::WType::accountType(), _loc);
-
-		static awst::WInnerTransactionFields s_payFieldsType(1); // pay
-		auto create = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
-
-		auto typeVal = awst::makeOne(_loc); // pay
-
-		auto feeVal = awst::makeZero(_loc);
-
-		auto amountVal = awst::makeZero(_loc); // CloseRemainderTo sends everything
-
-		create->fields["TypeEnum"] = std::move(typeVal);
-		create->fields["Fee"] = std::move(feeVal);
-		create->fields["Receiver"] = std::move(appAddr);
-		create->fields["Amount"] = std::move(amountVal);
-		create->fields["CloseRemainderTo"] = std::move(beneficiary);
+		auto create = buildNativeClose(_ctx.typeMapper.profile(), _ctx.preEffects(),
+			std::move(_args[0]), _loc);
 
 		static awst::WInnerTransaction s_payTxnType(1);
 		auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);

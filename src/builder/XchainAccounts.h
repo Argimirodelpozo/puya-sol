@@ -48,9 +48,10 @@ inline std::shared_ptr<awst::Expression> derivedAccount(
 
 /// Payment-receiver mapping: a 160-bit pseudo-account (high 12 bytes zero,
 /// and not the bzero24 ++ appId contract convention) pays its owner's derived
-/// LogicSig account; every other receiver (real accounts, app escrows, the
-/// contract convention) passes through untouched. Runtime conditional — the
-/// receiver's shape is a value property.
+/// LogicSig account; every other receiver passes through untouched. The shared
+/// native-payment builder resolves nonzero contract-convention values to app
+/// escrows before invoking this mapping. Runtime conditional — the receiver's
+/// shape is a value property.
 inline std::shared_ptr<awst::Expression> mapPaymentReceiver(
 	TargetProfile const& _profile,
 	std::shared_ptr<awst::Expression> _receiver,
@@ -65,7 +66,7 @@ inline std::shared_ptr<awst::Expression> mapPaymentReceiver(
 		awst::makeExtract(r, 0, 12, _loc),
 		awst::EqualityComparison::Eq,
 		awst::makeBzero(12, _loc), _loc);
-	// bzero24 ++ appId (the contract-value convention) keeps its meaning: an
+	// bzero24 ++ appId (the contract-value convention) keeps its meaning:
 	// EVM identities with 12 leading zero bytes are reserved for this convention.
 	auto notConvention = awst::makeBytesComparison(
 		awst::makeExtract(r, 12, 12, _loc),

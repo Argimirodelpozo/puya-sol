@@ -16,7 +16,7 @@
 #include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "builder/XchainAccounts.h"
+#include "builder/itxn/NativePayment.h"
 #include "Logger.h"
 
 namespace puyasol::builder::eb
@@ -428,44 +428,12 @@ std::string InnerCallHandlers::buildMethodSelector(
 
 // ── Payment ──
 
-std::shared_ptr<awst::Expression> InnerCallHandlers::buildPaymentTransaction(
-	ContractContext& _ctx,
-	std::shared_ptr<awst::Expression> _receiver,
-	std::shared_ptr<awst::Expression> _amount,
-	awst::SourceLocation const& _loc)
-{
-	// Shared native-payment boundary for transfer/send/call-value/typed-call.
-	// All payment lowerings must use it so xchain receiver mapping and divergence
-	// policy cannot be bypassed; without xchain, an EVM-profile 160-bit identity
-	// becomes a keyless padded pseudo-account (see EVM_DIVERGENCE.md).
-	auto const& profile = _ctx.typeMapper.profile();
-	if (profile.xchainAccounts)
-		_receiver = xchain::mapPaymentReceiver(profile, std::move(_receiver), _loc);
-	else if (profile.contractAbi == ContractAbi::Evm)
-		EvmFeaturePolicy::report(
-			EvmFeature::NativeValueTransfer, profile, _loc);
-
-	static awst::WInnerTransactionFields s_payFieldsType(TxnTypePay);
-
-	auto create = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
-	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypePay, _loc);
-	create->fields["Fee"] = awst::makeZero(_loc);
-	create->fields["Receiver"] = std::move(_receiver);
-	create->fields["Amount"] = std::move(_amount);
-	return create;
-}
-
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleTransfer(
 	ContractContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount, awst::SourceLocation const& _loc)
 {
-	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
-	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
-	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
-	submit->itxns.push_back(std::move(create));
-
-	auto stmt = awst::makeExpressionStatement(submit, _loc);
-	_ctx.postEffects().push_back(std::move(stmt));
+	_ctx.postEffects().push_back(buildNativeTransfer(_ctx.typeMapper.profile(), _ctx.preEffects(),
+		std::move(_receiver), std::move(_amount), _loc));
 
 	auto vc = awst::makeVoidConstant(_loc);
 	return std::make_unique<GenericResultBuilder>(_ctx, std::move(vc));
@@ -477,13 +445,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
 {
 	EvmFeaturePolicy::report(
 		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
-	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
-	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
-	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
-	submit->itxns.push_back(std::move(create));
-
-	auto stmt = awst::makeExpressionStatement(submit, _loc);
-	_ctx.postEffects().push_back(std::move(stmt));
+	_ctx.postEffects().push_back(buildNativeTransfer(_ctx.typeMapper.profile(), _ctx.preEffects(),
+		std::move(_receiver), std::move(_amount), _loc));
 
 	return std::make_unique<SolBoolBuilder>(_ctx, awst::makeTrue(_loc));
 }
@@ -494,7 +457,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
 {
 	EvmFeaturePolicy::report(
 		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
-	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
+	auto create = buildNativePayment(_ctx.typeMapper.profile(), _ctx.preEffects(),
+		std::move(_receiver), std::move(_amount), _loc);
 	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
 	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
 	submit->itxns.push_back(std::move(create));
@@ -1015,7 +979,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	if (_memberName == "transfer" && _callNode.arguments().size() == 1)
 	{
 		auto amount = _ctx.buildExpr(*_callNode.arguments()[0]);
-		amount = TypeCoercion::checkedAmountToUint64(_ctx.preEffects(), std::move(amount), _loc);
 		return handleTransfer(_ctx, std::move(_receiver), std::move(amount), _loc);
 	}
 
@@ -1023,7 +986,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	if (_memberName == "send" && _callNode.arguments().size() == 1)
 	{
 		auto amount = _ctx.buildExpr(*_callNode.arguments()[0]);
-		amount = TypeCoercion::checkedAmountToUint64(_ctx.preEffects(), std::move(amount), _loc);
 		return handleSend(_ctx, std::move(_receiver), std::move(amount), _loc);
 	}
 

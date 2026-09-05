@@ -9,6 +9,7 @@
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/itxn/NativePayment.h"
 #include "builder/contract/PostInitTriggers.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/storage/StorageMapper.h"
@@ -558,36 +559,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			// Use the stored app ID from now on
 			auto createdAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
 
-			// Fund the newly created app with minimum balance (200000 microAlgos)
+			// Fund the newly created app's proven native escrow.
 			{
-				// Use the stored app ID
-				auto fundAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
-
-				auto* fundTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-					std::vector<awst::WType const*>{
-						awst::WType::bytesType(), awst::WType::boolType()});
-				auto fundAppParams = awst::makeAppParamsGet(
-					"AppAddress", std::move(fundAppId), fundTupleType, m_loc);
-
-				std::string fundTmpName = "__fund_app_result";
-				auto fundTmpTarget = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
-				auto fundAssign = awst::makeAssignmentStatement(fundTmpTarget, std::move(fundAppParams), m_loc);
-				m_ctx.preEffects().push_back(std::move(fundAssign));
-
-				auto fundTupleRead = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
-				auto fundAddrBytes = awst::makeTupleItem(std::move(fundTupleRead), 0, awst::WType::bytesType(), m_loc);
-				auto fundAddr = awst::makeAsAccount(std::move(fundAddrBytes), m_loc);
-
-				static awst::WInnerTransactionFields s_fundFieldsType(1);
-				auto fundCreate = awst::makeCreateInnerTransaction(&s_fundFieldsType, m_loc);
-
-				fundCreate->fields["TypeEnum"] = awst::makeOne(m_loc); // pay
-
-				auto fundFee = awst::makeZero(m_loc);
-				fundCreate->fields["Fee"] = std::move(fundFee);
-
-				fundCreate->fields["Receiver"] = std::move(fundAddr);
-
 				// MBR (1M) + value ONLY when no __postInit: with postInit, value
 				// travels in the [pay(value),__postInit] group (gtxns Amount GI-1).
 				// Bundling here too → 2x value (MBR+2*500000 verified). A pay txn
@@ -612,7 +585,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				{
 					totalFundAmount = std::move(baseMbr);
 				}
-				fundCreate->fields["Amount"] = std::move(totalFundAmount);
+				auto fundCreate = buildNativePayment(m_ctx.typeMapper.profile(), m_ctx.preEffects(),
+					awst::makeAsApplication(createdAppId, m_loc), std::move(totalFundAmount), m_loc);
 
 				static awst::WInnerTransaction s_fundTxnType(1);
 				auto fundSubmit = awst::makeSubmitInnerTransaction(&s_fundTxnType, m_loc);
@@ -670,31 +644,9 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 
 				auto postAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
 
-				// Re-read the app's address for the Payment receiver.
-				auto* addrTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-					std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::boolType()});
-				auto postAddrCall = awst::makeAppParamsGet(
-					"AppAddress",
-					awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc),
-					addrTupleType, m_loc);
-
-				// (was a bare read of the post-incremented static → id + 1)
-				std::string addrTmp = "__postinit_addr_" + std::to_string(newAppId + 1);
-				auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
-				auto addrAssign = awst::makeAssignmentStatement(addrTmpTarget, std::move(postAddrCall), m_loc);
-				m_ctx.preEffects().push_back(std::move(addrAssign));
-
-				auto addrRead = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
-				auto addrBytes = awst::makeTupleItem(std::move(addrRead), 0, awst::WType::bytesType(), m_loc);
-				auto receiver = awst::makeAsAccount(std::move(addrBytes), m_loc);
-
 				// PaymentTxn (sets msg.value for __postInit)
-				static awst::WInnerTransactionFields s_payFieldsType(1);
-				auto payTxn = awst::makeCreateInnerTransaction(&s_payFieldsType, m_loc);
-				payTxn->fields["TypeEnum"] = awst::makeOne(m_loc);
-				payTxn->fields["Fee"] = awst::makeZero(m_loc);
-				payTxn->fields["Receiver"] = std::move(receiver);
-				payTxn->fields["Amount"] = std::move(callValue);
+				auto payTxn = buildNativePayment(m_ctx.typeMapper.profile(), m_ctx.preEffects(),
+					awst::makeAsApplication(postAppId, m_loc), std::move(callValue), m_loc);
 
 				// AppCall __postInit(args)
 				static awst::WInnerTransactionFields s_applFieldsType2(6);

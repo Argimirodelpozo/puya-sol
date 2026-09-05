@@ -281,8 +281,9 @@ at the SAME address. Effectively deprecated on Ethereum (post-Cancun
 **AVM mapping.** There is no CREATE2 address-preserving redeployment model.
 CREATE2 and Yul `selfdestruct` are rejected. High-level Solidity
 `selfdestruct(beneficiary)` has a different lowering: it transfers the balance
-and halts, without deleting or recreating the application. Its payment-policy
-coverage gap is recorded in [EVM_DIVERGENCE.md](EVM_DIVERGENCE.md). Code replacement
+and halts, without deleting or recreating the application. Its beneficiary uses
+the shared native-payment receiver and identity policy described in
+[EVM_DIVERGENCE.md](EVM_DIVERGENCE.md). Code replacement
 at a stable application identity requires an authorized native update (§1),
 not this metamorphic pattern.
 

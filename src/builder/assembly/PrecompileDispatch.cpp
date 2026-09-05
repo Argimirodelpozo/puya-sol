@@ -3,6 +3,7 @@
 
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/EvmFeaturePolicy.h"
+#include "builder/itxn/NativePayment.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -289,8 +290,8 @@ void AssemblyBuilder::handleAppCall(
 	// Clamp inSize to >= 4 so `bodyLen = inSize - 4` can't underflow into a
 	// huge uint64 (extract3 OOB panic) for inSize < 4 — a plain value-transfer
 	// `call(g, to, amt, 0, 0, 0, 0)` (Solady safeTransferETH) has inSize 0.
-	// The resulting empty-body app call is not a faithful ETH transfer (asm
-	// value transfers are a known gap), but it no longer crashes opaquely.
+	// The resulting empty-body app call still requires an application target;
+	// the payment leg below resolves its receiver through the shared boundary.
 	{
 		auto eoInSize = awst::makeEvalOnce(std::move(inSizeAwst), _loc);
 		inSizeAwst = awst::makeConditional(
@@ -321,8 +322,8 @@ void AssemblyBuilder::handleAppCall(
 		std::move(bodyLen), _loc);
 
 	// 2b) call's `value` (arguments[2]): attach a grouped payment (M8 — it was
-	// silently dropped). Receiver mirrors the high-level `.call{value:}` leg:
-	// the address value as an account. Constant 0 (the common
+	// silently dropped). Receiver policy and escrow/xchain resolution match
+	// the high-level payment paths. Constant 0 (the common
 	// `call(g,to,0,...)`) skips the leg entirely.
 	std::shared_ptr<awst::Expression> payTxn;
 	if (_isCall)
@@ -330,35 +331,8 @@ void AssemblyBuilder::handleAppCall(
 		auto constVal = resolveConstantYulValue(_call.arguments[2]);
 		if (!constVal || *constVal != 0)
 		{
-			std::shared_ptr<awst::Expression> receiver;
-			if (addrShared->wtype == awst::WType::accountType())
-				receiver = addrShared;
-			else if (addrShared->wtype == awst::WType::applicationType())
-			{
-				auto* tupleType = m_typeMapper.createType<awst::WTuple>(
-					std::vector<awst::WType const*>{
-						awst::WType::bytesType(), awst::WType::boolType()});
-				auto appParams = awst::makeAppParamsGet("AppAddress",
-					awst::makeReinterpretCast(addrShared, awst::WType::uint64Type(), _loc),
-					tupleType, _loc);
-				receiver = awst::makeAsAccount(awst::makeTupleItem(
-					std::move(appParams), 0, awst::WType::bytesType(), _loc), _loc);
-			}
-			else
-				receiver = awst::makeAsAccount(
-					padTo32Bytes(addrShared, _loc), _loc);
-
-			static constexpr int TxnTypePay = 1;
-			static awst::WInnerTransactionFields s_payFieldsType(TxnTypePay);
-			auto payCreate = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
-			payCreate->fields["TypeEnum"] = awst::makeIntegerConstant(std::to_string(TxnTypePay), _loc);
-			payCreate->fields["Fee"] = awst::makeIntegerConstant("0", _loc);
-			payCreate->fields["Receiver"] = std::move(receiver);
-			// checkedAmountToUint64, not safeBtoi: silent low-8-byte
-			// truncation of a payment amount is a money bug (M17 policy).
-			payCreate->fields["Amount"] = builder::TypeCoercion::checkedAmountToUint64(
-				_out, buildExpression(_call.arguments[2]), _loc);
-			payTxn = std::move(payCreate);
+			payTxn = buildNativePayment(m_typeMapper.profile(), _out,
+				addrShared, buildExpression(_call.arguments[2]), _loc);
 		}
 	}
 

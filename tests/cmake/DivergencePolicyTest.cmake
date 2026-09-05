@@ -48,6 +48,7 @@ function(run_frontend case_name source_name expected_result expected_text)
             "${case_name} emitted AWST despite a denied divergence")
     endif()
     set(frontend_output "${output}" PARENT_SCOPE)
+    set(frontend_awst_path "${case_output}/awst.json" PARENT_SCOPE)
 endfunction()
 
 # Errors remain visible at --log-level error, so log filtering cannot turn an
@@ -75,6 +76,45 @@ run_frontend(
     native_value_allowed NativeValueTransfer.sol 0 ""
     --contract-abi evm
     --allow-divergence native-value-transfer)
+
+# Every source-level payment route uses the same receiver/policy boundary,
+# including assembly words and selfdestruct's CloseRemainderTo beneficiary.
+set(payment_template "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+foreach(payment_source NativeValueTransfer NativeValueSelfdestruct NativeValueAssembly)
+    run_frontend(
+        ${payment_source}_denied ${payment_source}.sol 1
+        "--allow-divergence native-value-transfer"
+        --contract-abi evm --log-level error)
+    run_frontend(
+        ${payment_source}_allowed ${payment_source}.sol 0
+        "[allowed AVM adaptation: native value transfer]"
+        --contract-abi evm --allow-divergence native-value-transfer)
+    run_frontend(
+        ${payment_source}_native ${payment_source}.sol 0 "")
+    run_frontend(
+        ${payment_source}_xchain ${payment_source}.sol 0 ""
+        --contract-abi evm --xchain-template "${payment_template}")
+    file(READ "${frontend_awst_path}" payment_awst)
+    foreach(required_text "sha512_256" "payment target application does not exist")
+        string(FIND "${payment_awst}" "${required_text}" found)
+        if(found EQUAL -1)
+            message(FATAL_ERROR "${payment_source} omitted receiver handling: ${required_text}")
+        endif()
+    endforeach()
+    if(payment_source STREQUAL "NativeValueSelfdestruct")
+        string(FIND "${payment_awst}" "CloseRemainderTo" found)
+    else()
+        string(FIND "${payment_awst}" "transfer amount exceeds uint64" found)
+    endif()
+    if(found EQUAL -1)
+        message(FATAL_ERROR "${payment_source} omitted close/amount handling")
+    endif()
+endforeach()
+
+# No payment is emitted for a constant-zero Yul call. Solc-typed application
+# calls and new-app funding have a proven native escrow, not a lossy account.
+run_frontend(native_zero_assembly NativeValueZeroAssembly.sol 0 "" --contract-abi evm)
+run_frontend(native_known_app NativeValueKnownApp.sol 0 "" --contract-abi evm)
 
 # Missing static-call write protection only warns. The independent low-level
 # call outcome divergence still requires acknowledgment.

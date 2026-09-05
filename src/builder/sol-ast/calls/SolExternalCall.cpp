@@ -6,6 +6,7 @@
 #include "builder/SolcFacts.h"
 #include "builder/abi/EvmAbiDecode.h"
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/itxn/NativePayment.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/SolIntType.h"
@@ -391,15 +392,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	if (callValue)
 	{
 		appId = awst::makeEvalOnce(std::move(appId), m_loc);
-		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
-			std::vector<awst::WType const*>{
-				awst::WType::bytesType(), awst::WType::boolType()});
-		auto appParams = awst::makeAppParamsGet(
-			"AppAddress", appId, tupleType, m_loc);
-		auto escrow = awst::makeAsAccount(awst::makeTupleItem(
-			std::move(appParams), 0, awst::WType::bytesType(), m_loc), m_loc);
-		payTxn = eb::InnerCallHandlers::buildPaymentTransaction(
-			m_ctx, std::move(escrow), std::move(callValue), m_loc);
+		payTxn = buildNativePayment(m_ctx.typeMapper.profile(), m_ctx.preEffects(),
+			awst::makeAsApplication(appId, m_loc), std::move(callValue), m_loc);
 	}
 
 	// Build inner app transaction

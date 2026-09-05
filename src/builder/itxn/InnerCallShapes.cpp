@@ -5,6 +5,7 @@
 ///   - handleStaticCallPrecompile (0x01..0x09 precompiles)
 
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/itxn/NativePayment.h"
 #include "builder/AwstShorthand.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/SolcFacts.h"
@@ -232,7 +233,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 	if (_callValue)
 	{
 		_receiver = awst::makeEvalOnce(_receiver, _loc);
-		payTxn = buildPaymentTransaction(_ctx, _receiver, std::move(_callValue), _loc);
+		payTxn = buildNativePayment(_ctx.typeMapper.profile(), _ctx.preEffects(),
+			_receiver, std::move(_callValue), _loc);
 	}
 	auto appId = addressToAppId(std::move(_receiver), _loc);
 
@@ -468,7 +470,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	if (_callValue)
 	{
 		_receiver = awst::makeEvalOnce(_receiver, _loc);
-		payTxn = buildPaymentTransaction(_ctx, _receiver, std::move(_callValue), _loc);
+		payTxn = buildNativePayment(_ctx.typeMapper.profile(), _ctx.preEffects(),
+			_receiver, std::move(_callValue), _loc);
 	}
 	auto appId = addressToAppId(std::move(_receiver), _loc);
 

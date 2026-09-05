@@ -27,16 +27,6 @@ public:
 		solidity::frontend::Expression const& _baseExpr,
 		awst::SourceLocation const& _loc);
 
-	/// THE payment choke point: PaymentTxn create-fields for `{value:}` legs
-	/// and transfer/send. Maps EVM-profile receivers (xchain A(E) routing,
-	/// contract-value → escrow). Public: SolExternalCall's typed
-	/// `{value:}` leg builds through it too.
-	static std::shared_ptr<awst::Expression> buildPaymentTransaction(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _receiver,
-		std::shared_ptr<awst::Expression> _amount,
-		awst::SourceLocation const& _loc);
-
 private:
 	/// .transfer(amount)
 	static std::unique_ptr<InstanceBuilder> handleTransfer(
