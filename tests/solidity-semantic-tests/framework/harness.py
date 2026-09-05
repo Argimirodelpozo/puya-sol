@@ -134,7 +134,8 @@ class Harness:
 
         Accepted deploy_opts: ctor_args, fund_wei, postinit_args,
         postinit_budget_pool, postinit_inner_txns, skip_postinit,
-        reserve_program_pages, extra_funding_microalgos, and template_values.
+        reserve_program_pages, extra_funding_microalgos, template_values,
+        and exact_schema.
         """
         name = artifacts.last_deployable(contract_name)
         if name is None:

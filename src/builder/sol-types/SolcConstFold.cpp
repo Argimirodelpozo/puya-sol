@@ -156,84 +156,45 @@ std::optional<solidity::u256> SolcConstFold::constantVarEvmWord(
 		return _val;
 	};
 
-	// Literal fast-path. Two cases ConstantEvaluator can't or won't fold:
-	//   - hex literals typed as address/bytesN/etc — TypeProvider::forLiteral
-	//     returns AddressType / FixedBytesType, and constantToTypedValue
-	//     bails on anything that isn't RationalNumberType/StringLiteralType.
-	//   - non-hex string literals — packed left-aligned into a 32-byte word
-	//     using EVM's bytesN convention.
-	if (auto const* literal = dynamic_cast<Literal const*>(initExpr))
+	// Let solc distinguish numeric and string literals (including text beginning
+	// with "0x") and evaluate constant arithmetic before encoding the EVM word.
+	auto evaluated = ConstantEvaluator::tryEvaluate(*initExpr);
+	if (auto const* rat = std::get_if<rational>(&evaluated.value))
 	{
-		std::string const& value = literal->value();
-		auto const* exprType = initExpr->annotation().type;
-		// Bool: ConstantEvaluator's constantToTypedValue handles only
-		// RationalNumberType and StringLiteralType, so `bool constant d =
-		// true;` falls through to monostate. Map true/false directly.
-		if (dynamic_cast<BoolType const*>(exprType))
-			return value == "true" ? solidity::u256(1) : solidity::u256(0);
-		if (value.size() > 2 && value.substr(0, 2) == "0x")
-		{
-			try { return applyBytesNShift(solidity::u256(value)); }
-			catch (...) {}
-		}
-		else if (!dynamic_cast<RationalNumberType const*>(exprType))
-		{
-			// String literal: pack as bytesN (left-aligned). Skip for
-			// rational — those are simple numeric values (e.g. "2") that
-			// ConstantEvaluator handles correctly below.
-			solidity::u256 numVal = 0;
-			for (char ch: value)
-				numVal = (numVal << 8) | static_cast<unsigned char>(ch);
-			size_t shiftBits = (32 - value.size()) * 8;
-			numVal <<= shiftBits;
-			return numVal;
-		}
+		if (rat->denominator() != 1)
+			return std::nullopt;
+		return applyBytesNShift(solidity::u256(rat->numerator()));
+	}
+	if (auto const* text = std::get_if<std::string>(&evaluated.value))
+	{
+		if (text->size() > 32)
+			return std::nullopt;
+		solidity::u256 word = 0;
+		for (unsigned char byte: *text)
+			word = (word << 8) | byte;
+		return word << ((32 - text->size()) * 8);
 	}
 
-	// Chained constant: `const bb = b;` where b's value is itself a
-	// non-rational literal (address/bytesN/bool) that ConstantEvaluator
-	// can't fold to a rational. Recurse via this function so the literal
-	// fast-path above kicks in for the leaf, then re-apply the bytesN
-	// shift for the outer declaration.
+	// The evaluator does not handle bool/address literals. Their annotated solc
+	// types already expose the literal's canonical value; do not parse spelling.
+	if (auto const* literal = dynamic_cast<Literal const*>(initExpr))
+	{
+		auto const* exprType = initExpr->annotation().type;
+		if (dynamic_cast<BoolType const*>(exprType)
+			|| dynamic_cast<AddressType const*>(exprType))
+			return exprType->literalValue(literal);
+	}
+
+	// Solc accepted the implicit conversion at this reference. Non-numeric
+	// constant chains preserve the canonical word: fixed-bytes widening pads on
+	// the RIGHT, so the already left-aligned inner word must not be shifted again.
 	if (auto const* identifier = dynamic_cast<Identifier const*>(initExpr))
 	{
 		if (auto const* refDecl = dynamic_cast<VariableDeclaration const*>(
 				identifier->annotation().referencedDeclaration))
-		{
-			if (refDecl->isConstant())
-			{
-				auto inner = constantVarEvmWord(*refDecl);
-				if (inner)
-				{
-					// Strip the inner bytesN shift (if any) before re-applying
-					// the outer one — otherwise chains like `bytes3 cc = c;
-					// bytes3 ccc = cc;` would shift twice.
-					if (auto const* innerFixedBytes =
-						dynamic_cast<FixedBytesType const*>(refDecl->type()))
-					{
-						size_t innerShift = (32 - innerFixedBytes->numBytes()) * 8;
-						*inner >>= innerShift;
-					}
-					return applyBytesNShift(*inner);
-				}
-			}
-		}
+			return constantVarEvmWord(*refDecl);
 	}
-
-	// Numeric / bool / identifier-chain / arithmetic over constants:
-	// solc's ConstantEvaluator handles all of these (including the
-	// chained-const case `const aa = a;` and constant binary ops like
-	// `const x = 1 << 32;`). It walks the AST itself, so we don't need
-	// our own recursion + depth cap.
-	auto evaluated = ConstantEvaluator::tryEvaluate(*initExpr);
-	if (!std::holds_alternative<rational>(evaluated.value))
-		return std::nullopt;
-
-	auto const& rat = std::get<rational>(evaluated.value);
-	if (rat.denominator() != 1)
-		return std::nullopt;
-
-	return applyBytesNShift(solidity::u256(rat.numerator()));
+	return std::nullopt;
 }
 
 bool SolcConstFold::isEffectFree(Expression const& _expr)

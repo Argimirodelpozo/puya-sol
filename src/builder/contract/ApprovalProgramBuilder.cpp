@@ -131,7 +131,10 @@ void ContractBuilder::emitStateVarInitFor(
 {
 	for (auto const* var: base.stateVariables())
 	{
-		if (var->isConstant())
+		// Transient state belongs only to the transient runtime, never named
+		// persistent cells (which are also absent from its advertised schema).
+		if (var->isConstant() || var->referenceLocation()
+			== solidity::frontend::VariableDeclaration::Location::Transient)
 			continue;
 		if (stateVarInitialized.count(var->id()))
 			continue;

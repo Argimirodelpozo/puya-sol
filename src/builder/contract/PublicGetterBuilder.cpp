@@ -372,8 +372,7 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	);
 
 	auto idxRef = awst::makeVarExpression(getter.args[0].name, getter.args[0].wtype, loc);
-	auto idx = TypeCoercion::implicitNumericCast(
-		idxRef, awst::WType::uint64Type(), loc);
+	auto idx = TypeCoercion::checkedIndexToUint64(body.body, std::move(idxRef), loc);
 
 	// Solidity's generated getter indexes the array, so an out-of-range read is
 	// Panic(0x32). Without this the element decode just reads whatever bytes sit
@@ -396,13 +395,9 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	else
 		arrLength = awst::makeIntegerConstant(
 			arrType->length().str(), loc, awst::WType::uint64Type());
-	auto idxCheckRef = awst::makeVarExpression(
-		getter.args[0].name, getter.args[0].wtype, loc);
-	auto idxCheck = TypeCoercion::implicitNumericCast(
-		idxCheckRef, awst::WType::uint64Type(), loc);
 	body.body.push_back(awst::makeExpressionStatement(
 		awst::makeAssert(
-			awst::makeNumericCompare(std::move(idxCheck),
+			awst::makeNumericCompare(idx,
 				awst::NumericComparison::Lt, std::move(arrLength), loc),
 			loc, "array out-of-bounds"),
 		loc));
@@ -549,18 +544,15 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 		{
 		auto argRef = awst::makeVarExpression(getter.args[i].name, getter.args[i].wtype, loc);
 		auto const* encType = i < keyArgEncodingType.size() ? keyArgEncodingType[i] : argRef->wtype;
-		std::shared_ptr<awst::Expression> encoded = argRef;
-		if (encType != argRef->wtype)
-			encoded = TypeCoercion::implicitNumericCast(std::move(encoded), encType, loc);
-
 		// Bounds-check array-of-non-flat levels (Panic(0x32) on OOB).
 		// Skip mapping levels — they return defaults, not revert.
 		bool isArrayLevel = i < keyArgIsArrayLevel.size() && keyArgIsArrayLevel[i];
+		std::shared_ptr<awst::Expression> encoded = isArrayLevel
+			? TypeCoercion::checkedIndexToUint64(body.body, std::move(argRef), loc)
+			: TypeCoercion::implicitNumericCast(std::move(argRef), encType, loc);
 		if (isArrayLevel)
 		{
 			uint64_t staticN = i < keyArgStaticLen.size() ? keyArgStaticLen[i] : 0;
-			auto argForCheck = awst::makeVarExpression(getter.args[i].name, getter.args[i].wtype, loc);
-			auto argU64 = TypeCoercion::implicitNumericCast(std::move(argForCheck), awst::WType::uint64Type(), loc);
 
 			std::shared_ptr<awst::Expression> lengthExpr;
 			if (staticN > 0)
@@ -594,7 +586,7 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 					std::move(stateGet), awst::makeZero(loc), loc);
 			}
 
-			auto cmp = awst::makeNumericCompare(std::move(argU64), awst::NumericComparison::Lt, std::move(lengthExpr), loc);
+			auto cmp = awst::makeNumericCompare(encoded, awst::NumericComparison::Lt, std::move(lengthExpr), loc);
 			auto assertExpr = awst::makeAssert(std::move(cmp), loc, "array out-of-bounds");
 			body.body.push_back(awst::makeExpressionStatement(std::move(assertExpr), loc));
 		}
@@ -609,12 +601,8 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 			if (arrayStep && currentArrayValue
 				&& dynamic_cast<solidity::frontend::ArrayType const*>(nextType))
 			{
-				auto index = TypeCoercion::implicitNumericCast(
-					awst::makeVarExpression(
-						getter.args[i].name, getter.args[i].wtype, loc),
-					awst::WType::uint64Type(), loc);
 				currentArrayValue = awst::makeIndexExpression(
-					currentArrayValue, std::move(index),
+					currentArrayValue, encoded,
 					tm.mapSolTypeToARC4(nextType), loc);
 			}
 			else
@@ -655,8 +643,7 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 			auto idxRef = awst::makeVarExpression(
 				getter.args[keyArgCount + i].name,
 				getter.args[keyArgCount + i].wtype, loc);
-			auto idx = TypeCoercion::implicitNumericCast(
-				idxRef, awst::WType::uint64Type(), loc);
+			auto idx = TypeCoercion::checkedIndexToUint64(body.body, std::move(idxRef), loc);
 
 			// Solidity panics 0x32 on an out-of-range index. Without this the
 			// getter decodes whatever bytes follow the array and returns them
@@ -679,14 +666,9 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 			else
 				idxLength = awst::makeIntegerConstant(
 					at->length().str(), loc, awst::WType::uint64Type());
-			auto idxCheckRef = awst::makeVarExpression(
-				getter.args[keyArgCount + i].name,
-				getter.args[keyArgCount + i].wtype, loc);
-			auto idxCheck = TypeCoercion::implicitNumericCast(
-				idxCheckRef, awst::WType::uint64Type(), loc);
 			body.body.push_back(awst::makeExpressionStatement(
 				awst::makeAssert(
-					awst::makeNumericCompare(std::move(idxCheck),
+					awst::makeNumericCompare(idx,
 						awst::NumericComparison::Lt, std::move(idxLength), loc),
 					loc, "array out-of-bounds"),
 				loc));

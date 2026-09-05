@@ -9,11 +9,17 @@ contract GetterBounds {
     uint256[] public nums;
     uint256[3] public fixedNums;
     mapping(uint256 => uint256[]) public nested;
+    uint256[2][2] public matrix;
+    mapping(uint256 => uint256)[2] public keyed;
+    mapping(uint256 => uint256[2]) public fixedNested;
 
     function seed() external {
         sets.push(S(11, "x", 22));
         nums.push(7);
         nums.push(8);
         nested[5].push(99);
+        matrix[1][0] = 31;
+        keyed[1][5] = 41;
+        fixedNested[5][0] = 51;
     }
 }

@@ -186,6 +186,7 @@ def deploy(
     skip_postinit: bool = False,
     reserve_program_pages: int = 0,
     template_values: dict[str, int | str] | None = None,
+    exact_schema: bool = False,
 ) -> DeployedApp:
     """Deploy the given compiled-contract artifacts. Raises DeployError on failure.
 
@@ -202,9 +203,20 @@ def deploy(
         the proxy-runtime replay model: implementation constructors bake
         runtime/immutable values but their storage writes occur in the
         implementation account, never in proxy storage.
+    exact_schema: use precisely the ARC-56 state schema, without the historical
+        spare global cells. Useful for testing the compiler's schema contract.
     """
     app_spec = _load_arc56(artifacts["arc56"])
     algod = localnet.algod
+    schema = app_spec.state.schema
+    global_schema = StateSchema(
+        num_uints=schema.global_state.ints if exact_schema else 16,
+        num_byte_slices=schema.global_state.bytes if exact_schema else 16,
+    )
+    local_schema = StateSchema(
+        num_uints=schema.local_state.ints if exact_schema else 0,
+        num_byte_slices=schema.local_state.bytes if exact_schema else 0,
+    )
 
     approval_bin, clear_bin = compile_programs(
         localnet, artifacts, template_values)
@@ -251,8 +263,8 @@ def deploy(
         on_complete=OnComplete.NoOpOC,
         approval_program=approval_bin,
         clear_program=clear_bin,
-        global_schema=StateSchema(num_uints=16, num_byte_slices=16),
-        local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+        global_schema=global_schema,
+        local_schema=local_schema,
         extra_pages=extra_pages,
         boxes=[(0, b"")] * write_budget_refs,
         app_args=app_args,
@@ -276,7 +288,8 @@ def deploy(
     )
 
     # Fund: base MBR + state schema + headroom for inner txns + ctor value forward
-    min_balance = 100_000 + 28_500 * 16 + 50_000 * 16 + 10_000_000
+    min_balance = (100_000 + 28_500 * global_schema.num_uints
+                   + 50_000 * global_schema.num_byte_slices + 10_000_000)
     # Slot mode: `new C()` grants children 4 ALGO (box MBR headroom) and the
     # inner create raises the creator's own min balance — give every deploy
     # enough slack that a couple of child creations never overspend.

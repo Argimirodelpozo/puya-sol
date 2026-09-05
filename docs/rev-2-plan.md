@@ -1,6 +1,7 @@
 # rev-2: sol-types and storage implementation plan
 
-Status: planned; no implementation completed by this document.
+Status: in progress. F2, F4 and F7 are implemented and focused-test verified;
+the remaining findings/refactors and final full-suite verification are pending.
 
 Branch: `rev-2`, based on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`.
 Scope: all nine correctness findings from the sol-types/storage audit, plus
@@ -86,13 +87,13 @@ encoding failure in the default storage mode; cover both paths.
 
 ### F2 — Encode assembly constants from typed solc facts
 
-- [ ] Replace textual `0x` detection in
+- [x] Replace textual `0x` detection in
   [SolcConstFold.cpp](../src/builder/sol-types/SolcConstFold.cpp) with solc literal
   kind/type information. Use `ConstantEvaluator` wherever it supports the value.
-- [ ] Preserve fixed-bytes alignment and right-padding through constant chains
+- [x] Preserve fixed-bytes alignment and right-padding through constant chains
   and widening; share the typed value-to-EVM-word rule rather than undoing and
   reapplying shifts based only on declaration width.
-- [ ] Compare high-level and assembly reads against solc for fixed-bytes chains,
+- [x] Compare high-level and assembly reads against solc for fixed-bytes chains,
   text beginning with `0x`, hex/string literals, and existing numeric/bool/address
   constant cases. Retain explicit conversion distinctions.
 
@@ -122,18 +123,18 @@ This finding was source-traced, not runtime-confirmed in the audit.
 
 ### F4 — Validate getter indices before narrowing
 
-- [ ] Replace unchecked index narrowing in
+- [x] Replace unchecked index narrowing in
   [PublicGetterBuilder.cpp](../src/builder/contract/PublicGetterBuilder.cpp) with
   the existing checked-index conversion or a full-width comparison followed by
   a proven-safe cast. Consume solc's getter parameter and array-length facts.
-- [ ] Cover flat arrays, nested arrays, arrays on either side of mapping levels,
+- [x] Cover flat arrays, nested arrays, arrays on either side of mapping levels,
   and struct-array getters. Preserve the already full-width slot-mode path.
-- [ ] Extend getter regressions with valid boundaries, empty arrays, and invalid
+- [x] Extend getter regressions with valid boundaries, empty arrays, and invalid
   full-width indices; compare getter behavior with explicit indexed reads.
 
 Acceptance: an invalid Solidity index cannot become valid through a narrowing
 cast. The audit traced this ordering issue in default-layout getter generation;
-runtime coverage is still required.
+runtime coverage now includes flat/nested arrays and indices before/after mappings.
 
 ### F5 — Preserve zero defaults for absent large mapping values
 
@@ -176,13 +177,13 @@ Any unavoidable new non-exact behavior requires a separate policy decision.
 
 ### F7 — Exclude transient declarations from persistent initialization
 
-- [ ] Skip transient declarations in named-cell constructor initialization in
+- [x] Skip transient declarations in named-cell constructor initialization in
   [ApprovalProgramBuilder.cpp](../src/builder/contract/ApprovalProgramBuilder.cpp).
   Keep the actual transient-state initialization and lifetime handling intact.
-- [ ] Make initialization, storage declarations and ARC-56 schema generation
+- [x] Make initialization, storage declarations and ARC-56 schema generation
   consume the same storage-class facts; cover mixed persistent/transient and
   inherited declarations in both storage modes.
-- [ ] Add an exact-artifact-schema deployment regression, with no spare global
+- [x] Add an exact-artifact-schema deployment regression, with no spare global
   cells supplied by the harness. Add only the focused harness support needed;
   do not silently change every existing deployment's schema policy.
 
@@ -299,6 +300,21 @@ Unrelated fixes and the format design can proceed while this decision is pending
 F3 is not complete merely because its design is written down.
 
 ## Verification and definition of done
+
+### Checkpoint 1 — constants, getter bounds and transient schema
+
+The first implementation checkpoint passed all 16 native CTests and 42 focused
+semantic/harness tests (two workers, 10.79 seconds). Report:
+`/tmp/puyasol-rev-2-initial-expanded.xml`. The focused command selected
+`test_sol_types_storage.py`, `test_getter_array_bounds.py`,
+`framework/test_compile_cache.py`, and `framework/test_harness.py`, with
+`PUYASOL_LOCALNET_RESET=0`. The earlier 26-case selection also passed the existing
+inline-assembly constant-access tests. Constants and exact-schema deployments
+cover both ABI profiles; getter/schema coverage exercises both storage modes.
+An in-process solc 0.8.34/Cancun oracle confirmed the constant-word expectations.
+The full semantic suite has not yet been rerun for this branch.
+
+### Baseline and remaining gates
 
 The recorded pre-branch semantic baseline is 1,688 passed, 1 failed, 102 xfailed,
 38 xpassed (1,829 total), with 16 native CTests passing; see the
