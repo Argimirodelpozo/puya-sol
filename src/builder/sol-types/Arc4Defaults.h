@@ -9,6 +9,7 @@
 /// ApprovalProgramBuilder, FunctionBuilder, AbiDecode) use these directly.
 
 #include "awst/Node.h"
+#include "builder/sol-types/EncodedSize.h"
 
 #include <cstdint>
 #include <memory>
@@ -46,9 +47,9 @@ bool arc4IsDynamic(awst::WType const* _type);
 /// arrays of dynamic-element types so splice writes see a valid head/tail layout.
 std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type);
 
-/// Compute the fixed encoded byte size of an ARC4 type.
-/// Returns 0 for variable-length types.
-int computeEncodedElementSize(awst::WType const* _type);
+/// Analyze a byte-aligned element's encoded size without narrowing or allocating.
+/// Fixed zero, dynamic, bit-packed, unsupported and overflow are distinct results.
+EncodedSize computeEncodedElementSize(awst::WType const* _type);
 
 /// Single control point for "this memory aggregate lives in the scratch
 /// blob/region model (a uint64 (region,offset) pointer) rather than as an ARC4

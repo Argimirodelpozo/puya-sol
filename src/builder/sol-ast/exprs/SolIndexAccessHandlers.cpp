@@ -93,7 +93,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	// accepts either a physical state key or a storage-ref parameter's runtime
 	// key, so both representations get the same recursive-shape bounds rule.
 	if (arrType->isDynamicallySized() && !arrType->isByteArrayOrString()
-		&& builder::StorageMapper::computeEncodedElementSize(elemType) == 0)
+		&& !builder::computeEncodedElementSize(elemType).fixedBytes())
 		if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
 			if (auto const* decl = dynamic_cast<VariableDeclaration const*>(
 					ident->annotation().referencedDeclaration); decl)

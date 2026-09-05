@@ -231,7 +231,7 @@ void ContractBuilder::buildStorageDispatch(
 		{
 			auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(v->wtype);
 			int elemSize = da
-				? StorageMapper::computeEncodedElementSize(da->elementType()) : 0;
+				? computeEncodedElementSize(da->elementType()).fixedBytes<int>().value_or(0) : 0;
 			if (elemSize <= 0)
 			{
 				if (!da)

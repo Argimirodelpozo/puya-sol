@@ -986,7 +986,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	if (_type->kind() == awst::WTypeKind::ARC4Struct
 		|| _type->kind() == awst::WTypeKind::ARC4Tuple)
 	{
-		int encodedSize = computeEncodedElementSize(_type);
+		int encodedSize = computeEncodedElementSize(_type).fixedBytes<int>().value_or(0);
 		if (encodedSize > 0)
 		{
 			if (encodedSize > kLargeBytesRuntimeThreshold)
@@ -1044,7 +1044,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	// the zero region is allocated at runtime instead of baked into the bytecode.
 	if (_type->kind() == awst::WTypeKind::ARC4StaticArray)
 	{
-		int encodedSize = computeEncodedElementSize(_type);
+		int encodedSize = computeEncodedElementSize(_type).fixedBytes<int>().value_or(0);
 		if (encodedSize > kLargeBytesRuntimeThreshold)
 			return makeZeroBytesRuntime(encodedSize, _type, _loc);
 
@@ -1302,7 +1302,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					srcStat->elementType(), targetStat->elementType())
 				&& srcStat->arraySize() < targetStat->arraySize())
 			{
-				int elemSize = computeEncodedElementSize(srcStat->elementType());
+				int elemSize = computeEncodedElementSize(srcStat->elementType()).fixedBytes<int>().value_or(0);
 				if (elemSize > 0)
 				{
 					int64_t diffElems = targetStat->arraySize() - srcStat->arraySize();
@@ -1327,8 +1327,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 			// encoding is all-zero. Without this the bare ARC4Encode reached puya
 			// as "cannot encode uint8[8][9] to uint8[17][10]".
 			{
-				int const srcElemSize = computeEncodedElementSize(srcStat->elementType());
-				int const tgtElemSize = computeEncodedElementSize(targetStat->elementType());
+				int const srcElemSize = computeEncodedElementSize(srcStat->elementType()).fixedBytes<int>().value_or(0);
+				int const tgtElemSize = computeEncodedElementSize(targetStat->elementType()).fixedBytes<int>().value_or(0);
 				int64_t const srcCount = srcStat->arraySize();
 				int64_t const tgtCount = targetStat->arraySize();
 				if (!awst::structurallyEquivalent(

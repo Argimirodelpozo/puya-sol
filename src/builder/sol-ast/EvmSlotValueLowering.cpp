@@ -473,7 +473,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 			}
 			auto const* elemArc4 = m_ctx.typeMapper.mapSolTypeToARC4(elemType);
 			bool const elemDynamic = arc4IsDynamic(elemArc4);
-			int const elemSize = computeEncodedElementSize(elemArc4);
+			int const elemSize = computeEncodedElementSize(elemArc4).fixedBytes<int>().value_or(0);
 			if (!elemArc4 || (!elemDynamic && elemSize <= 0))
 			{
 				Logger::instance().error(
@@ -1065,7 +1065,7 @@ bool EvmSlotLowering::writeArrayValue(
 			}
 			auto const* elemArc4 = m_ctx.typeMapper.mapSolTypeToARC4(elemType);
 			bool const elemDynamic = arc4IsDynamic(elemArc4);
-			int const elemSize = computeEncodedElementSize(elemArc4);
+			int const elemSize = computeEncodedElementSize(elemArc4).fixedBytes<int>().value_or(0);
 			if (!elemArc4 || (!elemDynamic && elemSize <= 0))
 			{
 				Logger::instance().error(

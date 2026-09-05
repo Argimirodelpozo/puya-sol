@@ -495,7 +495,7 @@ void AWSTBuilder::prependFreestandingReturnInits(
 				!= solidity::frontend::VariableDeclaration::Location::Memory)
 				continue;
 			auto const* rpTypeC = m_session.typeMapper.map(rp->type());
-			int szC = computeEncodedElementSize(rpTypeC);
+			int szC = computeEncodedElementSize(rpTypeC).fixedBytes<int>().value_or(0);
 			if (szC <= AssemblyBuilder::SLOT_SIZE)
 				continue;
 			std::string offN = "__blobagg_off_" + std::to_string(rp->id());

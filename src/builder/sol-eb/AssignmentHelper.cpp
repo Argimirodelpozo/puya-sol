@@ -245,7 +245,7 @@ std::shared_ptr<awst::Expression> AssignmentHelper::arc4EncodeForTarget(
 	{
 		auto const* da = static_cast<awst::ARC4DynamicArray const*>(_target->wtype);
 		if (da->elementType()
-			&& ::puyasol::builder::computeEncodedElementSize(da->elementType()) == 1)
+			&& ::puyasol::builder::computeEncodedElementSize(da->elementType()).fixedBytes() == 1)
 		{
 			auto once = awst::makeEvalOnce(std::move(_value), _loc);
 			auto header = awst::makeUInt16Bytes(awst::makeLen(once, _loc), _loc);

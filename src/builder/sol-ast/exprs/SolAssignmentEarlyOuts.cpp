@@ -573,8 +573,10 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 		return std::nullopt;
 	auto const* rootW = dynamic_cast<awst::ARC4Struct const*>(
 		m_ctx.typeMapper.mapSolTypeToARC4(vd->type()));
-	int const rootSize = builder::computeEncodedElementSize(rootW);
-	if (!rootW || rootSize <= 0)
+	if (!rootW)
+		return std::nullopt;
+	int const rootSize = builder::computeEncodedElementSize(rootW).fixedBytes<int>().value_or(0);
+	if (rootSize <= 0)
 		return std::nullopt;
 
 	auto makeKey = [&]() {

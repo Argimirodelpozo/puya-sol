@@ -3,6 +3,7 @@
 #include <map>
 #include "awst/Node.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/Arc4Defaults.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -57,10 +58,6 @@ public:
 
 	/// Determine if a variable should use box storage.
 	bool shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var) const;
-
-	/// Compute the fixed encoded byte size of an AWST element type.
-	/// Returns 0 for variable-length types (skip splitting).
-	static int computeEncodedElementSize(awst::WType const* _type);
 
 	// ── Multi-box storage for oversized fixed arrays ──
 	// ARC4StaticArrays exceeding AVM's 32768-byte box cap split across N boxes

@@ -427,7 +427,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 			headerBytes = 0;
 		}
 
-		int elemSize = elemType ? builder::computeEncodedElementSize(elemType) : 0;
+		int elemSize = elemType ? builder::computeEncodedElementSize(elemType).fixedBytes<int>().value_or(0) : 0;
 
 		if (elemSize > 0)
 		{

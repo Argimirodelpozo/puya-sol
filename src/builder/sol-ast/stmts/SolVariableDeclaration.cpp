@@ -562,7 +562,7 @@ bool SolVariableDeclaration::tryAsmAggregateInit(
 					m_blk.typeMapper().profile().scratchLayout.memoryFirst(), m_loc),
 					awst::makeIntegerConstant("88", m_loc), m_loc),
 				m_loc));
-			int sz = builder::computeEncodedElementSize(type);
+			int sz = builder::computeEncodedElementSize(type).fixedBytes<int>().value_or(0);
 			if (sz > 0)
 				for (auto& s: AB::emitFreeMemoryBump(
 						m_blk.typeMapper().profile().scratchLayout, sz, m_loc,
@@ -596,7 +596,7 @@ void SolVariableDeclaration::emitDefaultDeclaration(
 	if (!initialValue
 		&& decl.referenceLocation() == VariableDeclaration::Location::Memory)
 	{
-		int sz = builder::computeEncodedElementSize(type);
+		int sz = builder::computeEncodedElementSize(type).fixedBytes<int>().value_or(0);
 
 		// >4096 B: can't hold as a single AVM bytes value. Back with the
 		// multi-slot blob; bind local to FMP base offset so `t.field[i]`

@@ -1,6 +1,6 @@
 # rev-2: sol-types and storage implementation plan
 
-Status: in progress. F2, F4 and F7 are implemented and focused-test verified;
+Status: in progress. F2, F4, F7 and F9 are implemented and focused-test verified;
 the remaining findings/refactors and final full-suite verification are pending.
 
 Branch: `rev-2`, based on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`.
@@ -212,16 +212,16 @@ Classify any placement change under the compatibility gate before shipping it.
 
 ### F9 — Make encoded-size and layout arithmetic checked
 
-- [ ] Replace the ambiguous `int`/zero encoded-size result in
+- [x] Replace the ambiguous `int`/zero encoded-size result in
   [Arc4Defaults.cpp](../src/builder/sol-types/Arc4Defaults.cpp) with explicit fixed,
   dynamic, and unsupported/overflow outcomes. Distinguish an actual zero size
   from an unknown size. Use checked wide arithmetic or bounded comparisons.
-- [ ] Migrate aggregate totals, packed-bool sizes, box/page counts, blob selection,
+- [x] Migrate aggregate totals, packed-bool sizes, box/page counts, blob selection,
   and placement estimates to those results. Model ARC4 sizes, not EVM ABI sizes.
-- [ ] Validate solc array lengths, member offsets and storage strides before
+- [x] Validate solc array lengths, member offsets and storage strides before
   narrowing in TypeMapper, StorageMapper and SlotHandleAccess. Keep logical
   slots full-width; bound only the target representation that requires it.
-- [ ] Test arithmetic boundaries as metadata-only native tests, without giant
+- [x] Test arithmetic boundaries as metadata-only native tests, without giant
   allocations. Add compile-time diagnostics tests for unsupported capacities.
 
 Acceptance: oversized values cannot wrap into small/fixed representations, and
@@ -313,6 +313,21 @@ inline-assembly constant-access tests. Constants and exact-schema deployments
 cover both ABI profiles; getter/schema coverage exercises both storage modes.
 An in-process solc 0.8.34/Cancun oracle confirmed the constant-word expectations.
 The full semantic suite has not yet been rerun for this branch.
+
+### Checkpoint 2 — checked sizes and capacity diagnostics
+
+All 18 native CTests passed, including metadata-only size/overflow tests and
+compile-only diagnostics for solc-valid but unrepresentable array sizes. The
+focused array/storage/getter/UDVT/builder selection passed 247 tests, with 7
+existing xfails and 4 existing xpasses, in 58.30 seconds; no markers changed.
+Report: `/tmp/puyasol-rev-2-sizes.xml`. The full suite remains pending.
+
+`EncodedSize` now distinguishes fixed (including zero), dynamic, packed,
+unsupported and overflow outcomes. Every legacy integer-size consumer requests
+a checked narrowing explicitly. Solc array lengths/member offsets/strides are
+checked before conversion, and default encoding is bounded before allocation.
+The redundant StorageMapper size forwarding API was removed. Builds use
+`CCACHE_DISABLE=1` where the configured cache directory is read-only.
 
 ### Baseline and remaining gates
 

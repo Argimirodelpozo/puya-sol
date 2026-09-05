@@ -763,7 +763,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::offsetForArg(
 					}
 					else
 					{
-						int elemSize = builder::computeEncodedElementSize(elemArc4);
+						int elemSize = builder::computeEncodedElementSize(elemArc4).fixedBytes<int>().value_or(0);
 						if (elemSize <= 0)
 							return awst::makeIntegerConstant(0, m_loc);
 						base = awst::makeUInt64BinOp(

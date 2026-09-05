@@ -410,7 +410,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::stateDynArrayLengthForKey(
 	// matches the stride push/index store at (SolArrayMethod uses
 	// mapSolTypeToARC4 too). Otherwise uint128[] divides by 32 not 16.
 	auto* arc4ElemType = _ctx.typeMapper.mapSolTypeToARC4(_arrType->baseType());
-	unsigned elemSize = builder::StorageMapper::computeEncodedElementSize(arc4ElemType);
+	unsigned elemSize = builder::computeEncodedElementSize(arc4ElemType).fixedBytes<unsigned>().value_or(0);
 
 	// Elements of unknown fixed size (nested dynamic arrays, mappings) can't
 	// use the (box_len - 2) / elemSize trick. The ARC4 dynamic-array encoding

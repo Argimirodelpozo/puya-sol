@@ -6,6 +6,10 @@ namespace puyasol::builder
 namespace
 {
 
+// Defaults are consumed as one stack value or one box initializer, never an
+// unbounded host allocation. Larger zero regions use size-only creation paths.
+constexpr uint64_t kMaxMaterializedDefault = 32768;
+
 std::optional<std::vector<uint8_t>> arc4AggregateDefaultEncoding(
 	std::vector<awst::WType const*> const& _fields)
 {
@@ -18,6 +22,7 @@ std::optional<std::vector<uint8_t>> arc4AggregateDefaultEncoding(
 	encodings.reserve(_fields.size());
 	int64_t headSize = 0;
 	int boolRun = 0;
+	uint64_t totalSize = 0;
 	auto flushBoolRun = [&]() {
 		if (boolRun > 0)
 		{
@@ -31,6 +36,8 @@ std::optional<std::vector<uint8_t>> arc4AggregateDefaultEncoding(
 		{
 			encodings.push_back({Bool, {}});
 			boolRun++;
+			if (boolRun % 8 == 1) ++totalSize;
+			if (totalSize > kMaxMaterializedDefault) return std::nullopt;
 			continue;
 		}
 		flushBoolRun();
@@ -38,6 +45,8 @@ std::optional<std::vector<uint8_t>> arc4AggregateDefaultEncoding(
 		if (!fieldDefault)
 			return std::nullopt;
 		bool const dynamic = arc4IsDynamic(fieldType);
+		totalSize += fieldDefault->size() + (dynamic ? 2 : 0);
+		if (totalSize > kMaxMaterializedDefault) return std::nullopt;
 		headSize += dynamic ? 2 : static_cast<int64_t>(fieldDefault->size());
 		encodings.push_back({
 			dynamic ? Dynamic : Static, std::move(*fieldDefault)});
@@ -84,14 +93,14 @@ std::optional<std::vector<uint8_t>> arc4AggregateDefaultEncoding(
 	return head;
 }
 
-int arc4AggregateEncodedSize(std::vector<awst::WType const*> const& _fields)
+EncodedSize arc4AggregateEncodedSize(std::vector<awst::WType const*> const& _fields)
 {
-	int total = 0;
-	int boolRun = 0;
+	auto total = EncodedSize::fixed(0);
+	uint64_t boolRun = 0;
 	auto flushBoolRun = [&]() {
 		if (boolRun > 0)
 		{
-			total += (boolRun + 7) / 8;
+			total = total.plus(EncodedSize::fixed(boolRun / 8 + (boolRun % 8 != 0)));
 			boolRun = 0;
 		}
 	};
@@ -103,10 +112,7 @@ int arc4AggregateEncodedSize(std::vector<awst::WType const*> const& _fields)
 			continue;
 		}
 		flushBoolRun();
-		int const fieldSize = computeEncodedElementSize(fieldType);
-		if (fieldSize == 0)
-			return 0;
-		total += fieldSize;
+		total = total.plus(computeEncodedElementSize(fieldType));
 	}
 	flushBoolRun();
 	return total;
@@ -208,6 +214,11 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 {
 	if (!_type)
 		return std::nullopt;
+	auto const size = computeEncodedElementSize(_type);
+	if (size.kind == EncodedSize::Kind::Overflow
+		|| size.kind == EncodedSize::Kind::Unsupported
+		|| (size.kind == EncodedSize::Kind::Fixed && size.bytes > kMaxMaterializedDefault))
+		return std::nullopt;
 	switch (_type->kind())
 	{
 	case awst::WTypeKind::ARC4UIntN:
@@ -243,6 +254,8 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 		std::vector<uint8_t> result;
 		if (arc4IsDynamic(elemT))
 		{
+			if (static_cast<uint64_t>(N) > kMaxMaterializedDefault / (2 + elemDefault->size()))
+				return std::nullopt;
 			int64_t headSize = N * 2;
 			int64_t tailSize = static_cast<int64_t>(elemDefault->size());
 			// ARC4 dynamic-element offsets are uint16; bail out if the final
@@ -263,6 +276,10 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 		}
 		else
 		{
+			if (elemDefault->empty())
+				return result;
+			if (static_cast<uint64_t>(N) > kMaxMaterializedDefault / elemDefault->size())
+				return std::nullopt;
 			result.reserve(static_cast<size_t>(N * static_cast<int64_t>(elemDefault->size())));
 			for (int64_t i = 0; i < N; ++i)
 				result.insert(result.end(), elemDefault->begin(), elemDefault->end());
@@ -305,17 +322,17 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 	}
 }
 
-int computeEncodedElementSize(awst::WType const* _type)
+EncodedSize computeEncodedElementSize(awst::WType const* _type)
 {
 	if (!_type)
-		return 0;
+		return {EncodedSize::Kind::Unsupported};
 
 	switch (_type->kind())
 	{
 	case awst::WTypeKind::ARC4UIntN:
-		return static_cast<awst::ARC4UIntN const*>(_type)->n() / 8;
+		return EncodedSize::fixed(static_cast<awst::ARC4UIntN const*>(_type)->n() / 8);
 	case awst::WTypeKind::ARC4UFixedNxM:
-		return static_cast<awst::ARC4UFixedNxM const*>(_type)->n() / 8;
+		return EncodedSize::fixed(static_cast<awst::ARC4UFixedNxM const*>(_type)->n() / 8);
 	case awst::WTypeKind::ARC4Struct:
 	{
 		auto const* structType = static_cast<awst::ARC4Struct const*>(_type);
@@ -329,46 +346,53 @@ int computeEncodedElementSize(awst::WType const* _type)
 	case awst::WTypeKind::ARC4StaticArray:
 	{
 		auto const* arr = static_cast<awst::ARC4StaticArray const*>(_type);
+		if (arr->arraySize() < 0)
+			return {EncodedSize::Kind::Unsupported};
+		auto const count = static_cast<uint64_t>(arr->arraySize());
 		if (arr->elementType() == awst::WType::arc4BoolType())
-			return (arr->arraySize() + 7) / 8;
-		int elemSize = computeEncodedElementSize(arr->elementType());
-		if (elemSize == 0)
-			return 0;
-		return arr->arraySize() * elemSize;
+			return EncodedSize::fixed(count / 8 + (count % 8 != 0));
+		return computeEncodedElementSize(arr->elementType()).times(count);
 	}
 	case awst::WTypeKind::ReferenceArray:
 	{
 		auto const* arr = static_cast<awst::ReferenceArray const*>(_type);
 		if (!arr->arraySize())
-			return 0;
-		int elemSize = computeEncodedElementSize(arr->elementType());
-		if (elemSize == 0)
-			return 0;
-		return *arr->arraySize() * elemSize;
+			return {EncodedSize::Kind::Dynamic};
+		if (*arr->arraySize() < 0)
+			return {EncodedSize::Kind::Unsupported};
+		return computeEncodedElementSize(arr->elementType()).times(*arr->arraySize());
 	}
 	case awst::WTypeKind::ARC4DynamicArray:
-		return 0;
+		return {EncodedSize::Kind::Dynamic};
 	case awst::WTypeKind::Bytes:
 	{
 		auto const* bytesType = static_cast<awst::BytesWType const*>(_type);
 		if (bytesType->length())
-			return *bytesType->length();
-		return 0;
+		{
+			if (*bytesType->length() < 0)
+				return {EncodedSize::Kind::Unsupported};
+			return EncodedSize::fixed(*bytesType->length());
+		}
+		return {EncodedSize::Kind::Dynamic};
 	}
 	case awst::WTypeKind::Basic:
 	{
 		if (_type == awst::WType::biguintType())
-			return 32;
+			return EncodedSize::fixed(32);
 		if (_type == awst::WType::uint64Type())
-			return 8;
+			return EncodedSize::fixed(8);
 		if (_type == awst::WType::boolType())
-			return 8;
+			return EncodedSize::fixed(8);
 		if (_type == awst::WType::accountType())
-			return 32;
-		return 0;
+			return EncodedSize::fixed(32);
+		if (_type == awst::WType::arc4BoolType())
+			return {EncodedSize::Kind::Packed};
+		if (_type == awst::WType::stringType())
+			return {EncodedSize::Kind::Dynamic};
+		return {EncodedSize::Kind::Unsupported};
 	}
 	default:
-		return 0;
+		return {EncodedSize::Kind::Unsupported};
 	}
 }
 
@@ -387,7 +411,7 @@ bool memoryUsesBlob(awst::WType const* _type)
 	// `uint[]` here breaks `T memory a = new uint[](N)` inline-init ("assignment target type
 	// differs from expression value type": the new-array value vs the uint64 offset binding).
 	// Flip here once the blob model handles new-init / push / etc. for small arrays. See PLAN.md.
-	return computeEncodedElementSize(_type) > 4096;
+	return computeEncodedElementSize(_type).fixedBytes().value_or(0) > 4096;
 }
 
 } // namespace puyasol::builder

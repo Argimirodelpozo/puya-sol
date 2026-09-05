@@ -520,7 +520,7 @@ void ContractBuilder::prependNamedReturnInits(
 				!= solidity::frontend::VariableDeclaration::Location::Memory)
 				continue;
 			auto* rpType = m_typeMapper.map(rp->type());
-			int sz = computeEncodedElementSize(rpType);
+			int sz = computeEncodedElementSize(rpType).fixedBytes<int>().value_or(0);
 			if (sz <= 0)
 				continue;
 			// Blob-backed memory return: bind FMP (before bump) to __blobagg_off_<id>

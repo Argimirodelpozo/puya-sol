@@ -872,14 +872,13 @@ void ContractBuilder::emitBoxCreateForStateVars(
 				}
 				uint64_t elemSize = 32; // conservative fallback; dynamic defaults use box_put
 				auto const* elemT = sa->elementType();
-				if (int fixedSize = builder::computeEncodedElementSize(elemT);
-					fixedSize > 0)
-					elemSize = static_cast<uint64_t>(fixedSize);
+				if (auto fixedSize = builder::computeEncodedElementSize(elemT).fixedBytes())
+					elemSize = *fixedSize;
 				// AVM box cap = 32768 B; oversized → multi-box below.
 				// Record per-box size here.
-				uint64_t size = elemSize * static_cast<uint64_t>(sa->arraySize());
-				if (size > 32768)
-					size = 32768;
+				uint64_t count = static_cast<uint64_t>(sa->arraySize());
+				uint64_t size = elemSize && count > 32768 / elemSize
+					? 32768 : elemSize * count;
 				boxSizeVal = static_cast<unsigned>(size);
 			}
 		}

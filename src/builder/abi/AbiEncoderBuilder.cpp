@@ -424,7 +424,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 				}
 
 				awst::WType const* elemW = _ctx.typeMapper.mapSolTypeToARC4(elemSolType);
-				int elemSize = builder::StorageMapper::computeEncodedElementSize(elemW);
+				int elemSize = builder::computeEncodedElementSize(elemW).fixedBytes<int>().value_or(0);
 				bool const normalizeFullWidthElement = elemSolType
 					&& (elemSolType->category() == Type::Category::Address
 						|| elemSolType->category() == Type::Category::Contract);

@@ -475,6 +475,20 @@ if(BUILD_TESTING)
 	target_include_directories(puya-sol-wtype-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	add_test(NAME puya-sol-wtype-equivalence COMMAND puya-sol-wtype-tests)
 
+	add_executable(puya-sol-encoded-size-tests
+		tests/cpp/EncodedSizeTests.cpp
+		src/builder/sol-types/Arc4Defaults.cpp
+		src/awst/WType.cpp
+	)
+	target_include_directories(puya-sol-encoded-size-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_test(NAME puya-sol-encoded-size COMMAND puya-sol-encoded-size-tests)
+	add_test(NAME puya-sol-encoded-size-diagnostics
+		COMMAND ${CMAKE_COMMAND}
+			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
+			-DSOURCE_DIR=${CMAKE_SOURCE_DIR}/tests/cli-validation
+			-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/encoded-size-test-output
+			-P ${CMAKE_SOURCE_DIR}/tests/cmake/EncodedSizeTest.cmake)
+
 	add_executable(puya-sol-scratch-layout-tests
 		tests/cpp/ScratchLayoutTests.cpp
 	)

@@ -64,7 +64,7 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 	if (auto bv = std::dynamic_pointer_cast<awst::BoxValueExpression>(_field))
 	{
 		// (a) Statically oversized fixed types — always eagerly created.
-		if (builder::computeEncodedElementSize(_type) > kAvmStackValueMax)
+		if (builder::computeEncodedElementSize(_type).fixedBytes().value_or(0) > kAvmStackValueMax)
 			return _field;
 		// (b) Top-level dynamic state vars — eagerly created in __postInit.
 		if (isTopLevelDynamicBox(bv.get()))
@@ -72,11 +72,6 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 	}
 	auto def = makeDefaultValue(_type, _loc);
 	return awst::makeStateGet(std::move(_field), std::move(def), _type, _loc);
-}
-
-int StorageMapper::computeEncodedElementSize(awst::WType const* _type)
-{
-	return builder::computeEncodedElementSize(_type);
 }
 
 std::shared_ptr<awst::BoxValueExpression> StorageMapper::makeTopLevelBoxExpr(
@@ -181,8 +176,7 @@ unsigned StorageMapper::arc4StaticArrayElementSize(awst::WType const* _type)
 	if (!sa) return 0;
 	auto const* elem = sa->elementType();
 	if (!elem) return 0;
-	int const size = builder::computeEncodedElementSize(elem);
-	return size > 0 ? static_cast<unsigned>(size) : 0;
+	return builder::computeEncodedElementSize(elem).fixedBytes<unsigned>().value_or(0);
 }
 
 uint64_t StorageMapper::arc4StaticArrayTotalBytes(awst::WType const* _type)
@@ -191,7 +185,7 @@ uint64_t StorageMapper::arc4StaticArrayTotalBytes(awst::WType const* _type)
 	if (!sa || sa->arraySize() <= 0) return 0;
 	unsigned elemSize = arc4StaticArrayElementSize(_type);
 	if (elemSize == 0) return 0;
-	return static_cast<uint64_t>(elemSize) * static_cast<uint64_t>(sa->arraySize());
+	return EncodedSize::fixed(elemSize).times(sa->arraySize()).fixedBytes().value();
 }
 
 bool StorageMapper::isMultiBoxArray(awst::WType const* _type)
@@ -211,7 +205,8 @@ unsigned StorageMapper::numBoxesForArray(awst::WType const* _type)
 	if (perBox == 0) return 1;
 	auto const* sa = static_cast<awst::ARC4StaticArray const*>(_type);
 	uint64_t totalElems = static_cast<uint64_t>(sa->arraySize());
-	return static_cast<unsigned>((totalElems + perBox - 1) / perBox);
+	return checkedSize<unsigned>(totalElems / perBox + (totalElems % perBox != 0),
+		"array box count");
 }
 
 unsigned StorageMapper::elementsPerBox(awst::WType const* _type)
@@ -271,8 +266,8 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	try
 	{
 		auto slotsUpperBound = type->storageSizeUpperBound();
-		unsigned estimatedBytes = static_cast<unsigned>(slotsUpperBound) * 32;
-		unsigned keyBytes = static_cast<unsigned>(storageNameFor(_var).size());
+		auto estimatedBytes = slotsUpperBound * 32;
+		auto keyBytes = storageNameFor(_var).size();
 		unsigned maxValueBytes = (128 > keyBytes) ? (128 - keyBytes) : 0;
 		if (estimatedBytes > maxValueBytes)
 			return true;

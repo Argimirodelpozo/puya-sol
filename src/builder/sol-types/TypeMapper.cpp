@@ -1,5 +1,6 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/FunctionPointerKind.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -82,8 +83,12 @@ awst::WType const* mapArrayCategory(TypeMapper& _tm, Type const* _solType)
 	awst::WType const* arc4ElemType = _tm.mapSolTypeToARC4(arrType->baseType());
 	if (!arrType->isDynamicallySized())
 	{
-		int64_t len = static_cast<int64_t>(arrType->length());
-		return _tm.createType<awst::ARC4StaticArray>(arc4ElemType, len);
+		int64_t len = checkedSize<int64_t>(arrType->length(), "Solidity array length");
+		auto const* result = _tm.createType<awst::ARC4StaticArray>(arc4ElemType, len);
+		// Byte offsets in materialization helpers are host ints. Diagnose an
+		// unsupported shape before default allocation or expression expansion.
+		computeEncodedElementSize(result).fixedBytes<int>();
+		return result;
 	}
 	return _tm.createType<awst::ARC4DynamicArray>(arc4ElemType);
 }

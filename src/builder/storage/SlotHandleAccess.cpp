@@ -5,6 +5,7 @@
 #include "builder/storage/SlotWordCodec.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
+#include "builder/sol-types/EncodedSize.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 
@@ -246,7 +247,7 @@ std::vector<SlotHandleAccess::FieldPos> SlotHandleAccess::fieldPositions(
 		FieldPos f;
 		f.name = member->name();
 		auto const& off = _structType->storageOffsetsOfMember(f.name);
-		f.slot = static_cast<unsigned>(off.first);
+		f.slot = checkedSize<unsigned>(off.first, "struct member slot offset");
 		f.byteOffset = off.second;
 		f.solType = member->type();
 		f.size = f.solType ? f.solType->storageBytes() : 32;
@@ -266,7 +267,7 @@ void SlotHandleAccess::writeStructElem(
 	awst::SourceLocation const& _loc)
 {
 	auto fields = fieldPositions(_structType, _structWType);
-	unsigned strideSlots = static_cast<unsigned>(_structType->storageSize());
+	unsigned strideSlots = checkedSize<unsigned>(_structType->storageSize(), "struct storage stride");
 
 	// Bind value + base once (fields read the value per slot; base used per slot).
 	auto valVar = bindTemp(_out, std::move(_structVal),
@@ -318,7 +319,7 @@ std::shared_ptr<awst::Expression> SlotHandleAccess::readStructElem(
 	awst::SourceLocation const& _loc)
 {
 	auto fields = fieldPositions(_structType, _structWType);
-	unsigned strideSlots = static_cast<unsigned>(_structType->storageSize());
+	unsigned strideSlots = checkedSize<unsigned>(_structType->storageSize(), "struct storage stride");
 
 	auto baseVar = bindTemp(_preOut, std::move(_elemBaseSlot),
 		awst::WType::biguintType(), "rbase", _loc);

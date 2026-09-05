@@ -8,6 +8,7 @@
 #include "HexBytes.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/ScratchLayout.h"
+#include "builder/sol-types/EncodedSize.h"
 #include "cli/AwstPostPasses.h"
 #include "cli/CliOptions.h"
 #include "cli/CompilerSetup.h"
@@ -317,9 +318,18 @@ int main(int _argc, char* _argv[])
 		targetProfile.xchainAccounts = puyasol::builder::TargetProfile::XchainAccounts{
 			{tmpl.begin(), it}, {it + 20, tmpl.end()}};
 	}
-	auto roots = builder.build(
-		compiler, sourceFile, opts.opupBudget, opts.ensureBudget,
-		opts.viaYulBehavior, sourceAliases, std::move(targetProfile));
+	std::vector<std::shared_ptr<puyasol::awst::RootNode>> roots;
+	try
+	{
+		roots = builder.build(
+			compiler, sourceFile, opts.opupBudget, opts.ensureBudget,
+			opts.viaYulBehavior, sourceAliases, std::move(targetProfile));
+	}
+	catch (puyasol::builder::SizeError const& error)
+	{
+		logger.error(error.what());
+		return 1;
+	}
 
 	if (logger.hasErrors())
 	{

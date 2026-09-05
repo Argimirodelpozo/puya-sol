@@ -241,7 +241,7 @@ void registerStateVarSlotRoutes(
 			&& blk.builderCtx().storageMapper.shouldUseBoxStorage(*svDecl))
 		{
 			auto* arc4Elem = blk.typeMapper().mapSolTypeToARC4(arrT->baseType());
-			auto elemSize = builder::StorageMapper::computeEncodedElementSize(arc4Elem);
+			auto elemSize = builder::computeEncodedElementSize(arc4Elem).fixedBytes<int>().value_or(0);
 			AssemblyBuilder::SlotRoute root;
 			root.kind = AssemblyBuilder::SlotRoute::Kind::ArrayRoot;
 			root.varName = physicalName;
@@ -332,8 +332,8 @@ void registerMemberArrayRoutes(
 			blk.builderCtx().storageMapper.physicalBindingFor(*structVar).name;
 		r.fieldName = fieldName;
 		r.wtype = structWType;
-		r.elementSize = builder::StorageMapper::computeEncodedElementSize(
-			blk.typeMapper().mapSolTypeToARC4(localArrT->baseType()));
+		r.elementSize = builder::computeEncodedElementSize(
+			blk.typeMapper().mapSolTypeToARC4(localArrT->baseType())).fixedBytes<int>().value_or(0);
 		slotRoutes[slotStr] = r;
 		constants[yulId->name.str()] = slotStr;
 	}
