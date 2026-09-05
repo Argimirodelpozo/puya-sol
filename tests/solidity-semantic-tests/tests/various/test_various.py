@@ -510,18 +510,16 @@ def test_state_variable_under_contract_name(harness):
     assert as_int(r.abi_return) == 42
 
 def test_staticcall_for_view_and_pure(harness):
-    """various/contracts/staticcall_for_view_and_pure.sol"""
+    """Accepted AVM divergence: cross-contract static calls can change state.
+
+    EVM reverts for fview/fpure; AVM emits a warning and uses an ordinary
+    inner application call. Verify that adaptation, not the EVM-only guard.
+    """
     app = harness.compile_and_deploy("various/contracts/staticcall_for_view_and_pure.sol")
-    # f() -> 0x1 # This should work, next should throw #
-    r = harness.call(app, "f()")
-    # TODO: verify expected: 0x1 # This should work | next should throw #
-    assert not r.reverted
-    # fview() -> FAILURE
-    r = harness.call(app, "fview()", expect_revert=True)
-    assert r.reverted
-    # fpure() -> FAILURE
-    r = harness.call(app, "fpure()", expect_revert=True)
-    assert r.reverted
+    for method in ("f()", "fview()", "fpure()"):
+        r = harness.call(app, method)
+        assert not r.reverted
+        assert as_int(r.abi_return) == 1
 
 @pytest.mark.xfail(reason="pre-Byzantium staticcall semantics — EVM-historical behaviour with no AVM analog", strict=False)
 def test_staticcall_for_view_and_pure_pre_byzantium(harness):  # currently fails

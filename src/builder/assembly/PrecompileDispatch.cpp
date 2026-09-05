@@ -2,6 +2,7 @@
 /// EVM precompile dispatch: routes call/staticcall to specific precompile handlers.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -35,6 +36,9 @@ void AssemblyBuilder::handlePrecompileCall(
 		);
 		return;
 	}
+
+	if (!_isCall)
+		EvmFeaturePolicy::report(EvmFeature::StaticCall, m_typeMapper.profile(), _loc);
 
 	int argBase = _isCall ? 3 : 2; // call has extra `value` at position 2
 

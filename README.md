@@ -183,12 +183,19 @@ historical replay or EVM-domain compatibility, override them with
 `block.coinbase` has no AVM analogue and is a compile error unless an explicit
 20-byte value is supplied with `--evm-coinbase <hex-address>`.
 
-Non-exact EVM behavior fails compilation by default. Research builds can
+Non-exact EVM behavior generally fails compilation by default. Research builds can
 acknowledge an individual supported adaptation with a repeatable flag such as
 `--allow-divergence block-basefee`; there is deliberately no global “allow
 everything” switch. `puya-sol --help` lists the stable names. Configured
 environment values are already explicit, while fundamentally unsupported
 features remain compile errors.
+
+Static-call read-only enforcement is an accepted exception: `.staticcall()`,
+typed external `view`/`pure` calls (including function pointers), and Yul
+`staticcall` emit a warning. Cross-contract calls use ordinary inner application
+calls and may change state. No `--allow-divergence staticcall` flag is required
+(the flag remains accepted for compatibility). Separate divergences, such as
+low-level call failure handling, still require their own acknowledgment.
 
 `type(C).creationCode` and `type(C).runtimeCode` are hard compile errors: the
 deployed program is TEAL, so EVM bytecode — even solc's real object for the
@@ -201,7 +208,7 @@ that exceed AVM program-size limits must currently be reduced or refactored.
 
 ## Testing
 
-The Solidity semantic-test corpus (~1322 tests imported from `solidity/test/libsolidity/semanticTests/`) drives most of the regression coverage. Each iteration's results are captured in [`tests/solidity-semantic-tests/results_v<N>.txt`](tests/solidity-semantic-tests/) so regressions are caught test-by-test. This research harness explicitly opts into the legacy source rewrite and every policy-listed AVM adaptation so it can measure and classify those differences; ordinary compiler invocations preserve source text and remain fail-closed.
+The Solidity semantic-test corpus (~1322 tests imported from `solidity/test/libsolidity/semanticTests/`) drives most of the regression coverage. Each iteration's results are captured in [`tests/solidity-semantic-tests/results_v<N>.txt`](tests/solidity-semantic-tests/) so regressions are caught test-by-test. This research harness explicitly opts into the legacy source rewrite and every policy-listed AVM adaptation so it can measure and classify those differences; ordinary compiler invocations preserve source text and apply the fidelity policy above.
 
 Run the full suite (requires AlgoKit localnet running):
 

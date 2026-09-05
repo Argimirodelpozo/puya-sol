@@ -98,9 +98,9 @@ EvmFeatureDecision EvmFeaturePolicy::decide(
 		return {F::HardCompileError, "blockhash()",
 			"AVM exposes a recent block seed, not an EVM block hash"};
 	case EvmFeature::StaticCall:
-		return {F::AvmAdaptation, "address.staticcall",
-			"uses an ordinary inner application call; AVM cannot enforce the EVM "
-			"read-only guarantee"};
+		return {F::AvmAdaptation, "staticcall",
+			"AVM does not enforce the EVM read-only guarantee; cross-contract "
+			"static calls use ordinary inner application calls and may change state"};
 	case EvmFeature::DelegateCall:
 		return {F::HardRuntimeFailure, "address.delegatecall",
 			"AVM has neither shared caller storage nor EVM delegate-call context"};
@@ -181,8 +181,11 @@ void EvmFeaturePolicy::report(
 		return;
 
 	auto const allow = allowName(_feature);
-	bool const needsOptIn = decision.fidelity == EvmFeatureFidelity::AvmAdaptation
-		|| decision.fidelity == EvmFeatureFidelity::HardRuntimeFailure;
+	// Static-call write protection is an accepted divergence: warn without
+	// requiring an opt-in. Keep its old CLI token valid for existing callers.
+	bool const needsOptIn = _feature != EvmFeature::StaticCall
+		&& (decision.fidelity == EvmFeatureFidelity::AvmAdaptation
+			|| decision.fidelity == EvmFeatureFidelity::HardRuntimeFailure);
 	bool const explicitlyAllowed = needsOptIn && !allow.empty()
 		&& _profile.allowedEvmDivergences.contains(std::string(allow));
 

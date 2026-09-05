@@ -76,7 +76,8 @@ public:
 
 	/// Emit the centrally-owned diagnostic for a non-exact decision. Exact
 	/// features are silent; opt-in-eligible behavior is an error unless its
-	/// allowName() is present in TargetProfile::allowedEvmDivergences.
+	/// allowName() is present in TargetProfile::allowedEvmDivergences. StaticCall
+	/// is an accepted divergence and only warns, with or without its legacy opt-in.
 	static void report(
 		EvmFeature _feature,
 		TargetProfile const& _profile,

@@ -837,9 +837,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 {
 	using namespace solidity::frontend;
 
-	if (_memberName == "staticcall")
-		EvmFeaturePolicy::report(
-			EvmFeature::StaticCall, _ctx.typeMapper.profile(), _loc);
 	auto const& dataArg = *_callNode.arguments()[0];
 
 	// {value:} needs an inner PaymentTxn grouped with a real inner app call.

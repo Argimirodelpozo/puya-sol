@@ -47,6 +47,7 @@ function(run_frontend case_name source_name expected_result expected_text)
         message(FATAL_ERROR
             "${case_name} emitted AWST despite a denied divergence")
     endif()
+    set(frontend_output "${output}" PARENT_SCOPE)
 endfunction()
 
 # Errors remain visible at --log-level error, so log filtering cannot turn an
@@ -75,19 +76,40 @@ run_frontend(
     --contract-abi evm
     --allow-divergence native-value-transfer)
 
-# staticcall also changes low-level-call failure semantics. Acknowledging only
-# one of those independent differences must not implicitly acknowledge both.
+# Missing static-call write protection only warns. The independent low-level
+# call outcome divergence still requires acknowledgment.
 run_frontend(
-    staticcall_denied StaticCall.sol 1
-    "--allow-divergence staticcall")
+    staticcall_outcome_denied StaticCall.sol 1
+    "--allow-divergence low-level-call-outcome")
 run_frontend(
     staticcall_partially_allowed StaticCall.sol 1
     "--allow-divergence low-level-call-outcome"
     --allow-divergence staticcall)
 run_frontend(
-    staticcall_allowed StaticCall.sol 0 ""
+    staticcall_warns StaticCall.sol 0
+    "[allowed AVM adaptation: staticcall] AVM does not enforce the EVM read-only guarantee"
+    --allow-divergence low-level-call-outcome)
+run_frontend(
+    staticcall_legacy_opt_in StaticCall.sol 0
+    "[allowed AVM adaptation: staticcall]"
     --allow-divergence staticcall
     --allow-divergence low-level-call-outcome)
+run_frontend(
+    staticcall_warning_filtered StaticCall.sol 0 ""
+    --allow-divergence low-level-call-outcome --log-level error)
+
+run_frontend(
+    typed_staticcall_warns TypedStaticCall.sol 0
+    "[allowed AVM adaptation: staticcall] AVM does not enforce the EVM read-only guarantee")
+string(REGEX MATCHALL "\\[allowed AVM adaptation: staticcall\\]" static_warnings "${frontend_output}")
+list(LENGTH static_warnings static_warning_count)
+if(NOT static_warning_count EQUAL 4)
+    message(FATAL_ERROR
+        "expected warnings for view/pure/getter/pointer calls only, got ${static_warning_count}:\n${frontend_output}")
+endif()
+run_frontend(
+    assembly_staticcall_warns AssemblyStaticCall.sol 0
+    "[allowed AVM adaptation: staticcall] AVM does not enforce the EVM read-only guarantee")
 
 run_frontend(
     delegatecall_denied DelegateCall.sol 1

@@ -3,10 +3,12 @@
 /// Uses FunctionCallKind + FunctionType::Kind for dispatch.
 
 #include "builder/sol-ast/SolExpressionFactory.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "builder/abi/Arc4Stdlib.h"
 #include "builder/itxn/AsaIntrinsics.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/itxn/CallResolver.h"
+#include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-ast/calls/SolRequireAssert.h"
 #include "builder/sol-ast/calls/SolRevert.h"
 #include "builder/sol-ast/calls/SolBuiltinCall.h"
@@ -193,6 +195,14 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 		_node.expression().annotation().type);
 	if (!funcType)
 		return nullptr;
+
+	// Solc's resolved call kind and mutability cover direct calls, getters,
+	// call options, and external function pointers without syntax heuristics.
+	if (funcType->kind() == Kind::BareStaticCall
+		|| (funcType->kind() == Kind::External
+			&& funcType->stateMutability() <= solidity::frontend::StateMutability::View))
+		EvmFeaturePolicy::report(EvmFeature::StaticCall, m_ctx.typeMapper.profile(),
+			m_ctx.makeLoc(_node.location().start, _node.location().end));
 
 	switch (funcType->kind())
 	{
