@@ -3,9 +3,50 @@
 
 #include "builder/itxn/CallResolver.h"
 #include "builder/sol-types/OverloadSuffix.h"
+#include "builder/sol-types/ConversionPlan.h"
+#include "builder/sol-types/TypeMapper.h"
+#include "Logger.h"
 
 namespace puyasol::builder::eb
 {
+
+std::shared_ptr<awst::Expression> CallResolver::buildOperatorCall(
+	ContractContext& _ctx,
+	solidity::frontend::FunctionDefinition const& _function,
+	std::initializer_list<solidity::frontend::Expression const*> _operands,
+	awst::SourceLocation const& _loc)
+{
+	ResolvedCall resolved;
+	if (!tryResolveLibraryOrFree(_ctx, &_function, resolved))
+	{
+		Logger::instance().error("unresolved user-defined operator function", _loc);
+		return nullptr;
+	}
+	auto call = awst::makeSubroutineCall(
+		std::move(resolved.target),
+		_ctx.typeMapper.functionReturnPlan(_function).nativeType, _loc);
+	size_t index = 0;
+	for (auto const* operand: _operands)
+	{
+		auto const& parameter = *_function.parameters().at(index);
+		auto lowered = _ctx.lowerOperand([&]() {
+			return builder::ConversionPlan{
+				operand->annotation().type, parameter.type(),
+				_ctx.typeMapper.map(parameter.type()),
+				builder::ConversionPlan::Context::Argument}.emit(
+					_ctx.buildExpr(*operand), _loc);
+		}, false);
+		// Capture an earlier operand before lowering the next one's effects.
+		// Operators only take value types, so this cannot break reference aliases.
+		auto value = _ctx.emitSequencedOperand(std::move(lowered.effects),
+			std::move(lowered.value), index + 1 < _operands.size(), _loc);
+		awst::pushCallArg(call->args,
+			parameter.name().empty() ? "_param" + std::to_string(index) : parameter.name(),
+			std::move(value));
+		++index;
+	}
+	return call;
+}
 
 CallPlan CallResolver::plan(solidity::frontend::FunctionCall const& _call)
 {

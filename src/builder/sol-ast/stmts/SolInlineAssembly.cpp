@@ -5,6 +5,7 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/ProgramAnalysis.h"
 #include "builder/sol-types/SolcConstFold.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/storage/EvmLayoutMode.h"
@@ -197,61 +198,26 @@ std::map<std::string, AssemblyBuilder::StateVarSlot> collectStateVarSlots(
 	return stateVarSlots;
 }
 
-/// toAwst scan: struct-storage-ref locals bound from storage-ref-returning functions (modelled as biguint slot handles), and — in …
+/// Assembly slot references consume the bindings chosen by declaration/return planning.
 std::map<std::string, std::string> collectStructRefSlotLocals(
 	BlockContext& blk, InlineAssembly const& node,
-	std::map<std::string, VariableDeclaration const*> const& storageLocalAliases,
 	std::map<std::string, std::string>& constants)
 {
-	auto const& annotation = node.annotation();
-	std::map<std::string, std::string> structRefSlotLocals;
-	// --evm-storage-layout: EVERY storage-located local/param is a biguint slot
-	// variable — `x.slot` reads it, `x.slot := e` (StatementOps) writes it.
-	// `.offset` on storage refs is 0 (packed sub-word refs unsupported here).
-	if (blk.typeMapper().profile().evmStorageLayout)
-		for (auto const& [yulId, extInfo]: annotation.externalReferences)
-		{
-			if (!extInfo.declaration) continue;
-			auto const* vd = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
-			if (!vd || vd->isStateVariable()) continue;
-			if (vd->referenceLocation() != VariableDeclaration::Location::Storage) continue;
-			if (extInfo.suffix == "slot")
-				structRefSlotLocals[yulId->name.str()] = vd->name();
-			else if (extInfo.suffix == "offset")
-				constants[yulId->name.str()] = "0";
-		}
-	for (auto const& [yulId, extInfo]: annotation.externalReferences)
+	std::map<std::string, std::string> slots;
+	for (auto const& [yulId, reference]: node.annotation().externalReferences)
 	{
-		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
-		auto const* ptr = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
-		if (!ptr || !ptr->isLocalVariable()) continue;
-		if (storageLocalAliases.count(ptr->name())) continue; // handled as state-var alias
-		auto const* block = dynamic_cast<Block const*>(ptr->scope());
-		if (!block) continue;
-		for (auto const& stmt: block->statements())
-		{
-			auto const* vds = dynamic_cast<VariableDeclarationStatement const*>(stmt.get());
-			if (!vds || !vds->initialValue()) continue;
-			bool declaresVar = false;
-			for (auto const& vd: vds->declarations())
-				if (vd && vd->name() == ptr->name()) declaresVar = true;
-			if (!declaresVar) continue;
-			auto const* call = dynamic_cast<FunctionCall const*>(vds->initialValue());
-			if (call)
-			{
-				auto const* fd = dynamic_cast<FunctionDefinition const*>(
-					ASTNode::referencedDeclaration(call->expression()));
-				if (fd && !fd->returnParameters().empty()
-					&& fd->returnParameters()[0]->referenceLocation()
-						== VariableDeclaration::Location::Storage
-					&& blk.typeMapper().analysis().callablesWithInlineAssembly.count(
-						fd->id()))
-					structRefSlotLocals[yulId->name.str()] = ptr->name();
-			}
-			break;
-		}
+		auto const* vd = dynamic_cast<VariableDeclaration const*>(reference.declaration);
+		if (!vd || vd->isStateVariable()
+			|| vd->referenceLocation() != VariableDeclaration::Location::Storage)
+			continue;
+		if (!blk.typeMapper().profile().evmStorageLayout && !blk.findSlotStorageRef(vd->id()))
+			continue;
+		if (reference.suffix == "slot")
+			slots[yulId->name.str()] = vd->name();
+		else if (reference.suffix == "offset")
+			constants[yulId->name.str()] = "0";
 	}
-	return structRefSlotLocals;
+	return slots;
 }
 
 /// toAwst scan: compile-time slot routes + layout-derived slot/offset constants (StorageLayout of the current or declaring contract).
@@ -601,8 +567,6 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	contextName += "_" + std::to_string(m_blk.fn.callableId)
 		+ "_asm_" + std::to_string(m_node.id());
 
-	auto const& annotation = m_node.annotation();
-
 	auto constants = collectAsmConstants(m_node);
 
 	// Resolve a Solidity VariableDeclaration to its AWST name (Context::awstVarName:
@@ -621,7 +585,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	auto stateVarSlots = collectStateVarSlots(m_blk, m_node);
 
 	auto structRefSlotLocals = collectStructRefSlotLocals(
-		m_blk, m_node, storageLocalAliases, constants);
+		m_blk, m_node, constants);
 
 	std::map<std::string, AssemblyBuilder::SlotRoute> slotRoutes;
 	std::vector<AssemblyBuilder::SlotRoute> slotDataRegions;
@@ -652,8 +616,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setSelectorRoutes(
 		builder::SelectorSemantics::routes(m_blk.builderCtx()));
 	auto stmts = asmTranslator.buildBlock(
-		m_node.operations().root(),
-		m_node.dialect(),
+		*m_blk.typeMapper().analysis().preparedAssemblies.at(m_node.id()),
 		augmentedParams,
 		m_blk.fn.returnType,
 		constants,
@@ -663,7 +626,6 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		blobOffsetVars,
 		structRefSlotLocals,
 		stateVarSlots,
-		annotation.externalReferences,
 		declNameFn,
 		// Only the function's own params are real calldata args; externalReferences appended
 		// to augmentedParams above (return vars, outer locals) are NOT in the EVM calldata buffer.

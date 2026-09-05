@@ -24,6 +24,7 @@ single Python entry point — no compiler-side support code is needed.
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import tempfile
@@ -149,6 +150,14 @@ def split_multisource(
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy(src, dest)
                     all_sources.append(dest)
+                    # CLI paths are normalized by solc; direct import names
+                    # are not. Explicitly remap alternate spellings so an
+                    # import and --source identify the same source unit.
+                    canonical_alias = Path(
+                        os.path.relpath(dest.resolve(), tmp_dir.resolve())
+                    ).as_posix()
+                    if alias != canonical_alias:
+                        remappings.append(f"{alias}={canonical_alias}")
 
     if has_source:
         parts = re.split(r"^==== Source: (.+?) ====$", content, flags=re.MULTILINE)

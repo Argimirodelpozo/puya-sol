@@ -61,8 +61,7 @@ private:
 	// Phase 1: registerFunctionIds → m_functionSymbols.
 	// Phase 1.5: presetDispatchCref → fn-ptr dispatch cref (first deployable contract).
 	// Both defined in builder/FunctionIdRegistry.h.
-	void collectHostBoundFunctions(
-		solidity::frontend::CompilerStack& _compiler);
+	void collectHostBoundFunctions();
 
 	/// Phase 2: translate library functions into Subroutine root nodes.
 	void translateLibraryFunctions(
@@ -98,24 +97,8 @@ private:
 
 	// ── buildFreestandingSubroutine phases ──────────────────────────────
 	void buildFreestandingParams(
-		solidity::frontend::FunctionDefinition const& _func,
-		std::string const& _sourceFile,
-		awst::Subroutine& sub,
-		std::set<size_t> const& slotParams,
-		std::set<size_t>& mappingStorageParams,
-		std::set<size_t>& blobAggParams,
-		std::set<size_t>& evmSlotRefParams);
-	void collectFreestandingAugmentedParams(
-		solidity::frontend::FunctionDefinition const& _func,
-		std::set<size_t> const& mappingStorageParams,
-		std::set<size_t> const& blobAggParams,
-		std::vector<size_t>& storageParamIndices,
-		std::vector<size_t>& memoryRefParamIndices);
-	void computeFreestandingReturnType(
-		solidity::frontend::FunctionDefinition const& _func,
-		awst::Subroutine& sub,
-		std::vector<size_t> const& storageParamIndices,
-		std::vector<size_t> const& memoryRefParamIndices);
+		solidity::frontend::FunctionDefinition const& function,
+		std::string const& sourceFile, awst::Subroutine& sub);
 	void registerFreestandingParamContext(
 		solidity::frontend::FunctionDefinition const& _func,
 		sol_ast::FunctionContext& fnCtx,

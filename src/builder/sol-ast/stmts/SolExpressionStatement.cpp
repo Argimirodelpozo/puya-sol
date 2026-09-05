@@ -180,7 +180,8 @@ bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 	std::shared_ptr<awst::ReturnStatement>& stmt,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
-	if (!blk.typeMapper().profile().evmStorageLayout)
+	if (!blk.typeMapper().profile().evmStorageLayout
+		&& blk.fn.returnType != awst::WType::biguintType())
 		return false;
 	auto const* retAnn = dynamic_cast<ReturnAnnotation const*>(&node.annotation());
 	if (!retAnn || !retAnn->functionReturnParameters)

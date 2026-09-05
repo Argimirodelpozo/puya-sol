@@ -13,6 +13,58 @@ from framework import as_int, as_bytes, as_signed_int
 from framework.compile import CompileError
 
 
+@pytest.mark.parametrize("via_ir", [False, True])
+def test_switch_termination_and_fallthrough(harness, via_ir):
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/switch_termination.sol", via_yul_behavior=via_ir)
+    for value, expected in [(0, 11), (1, 22)]:
+        assert as_int(harness.call(app, "exhaustive(uint256)", value).abi_return) == expected
+    for value, expected in [(0, 33), (1, 44)]:
+        assert as_int(harness.call(app, "nonExhaustive(uint256)", value).abi_return) == expected
+    for value, expected in [(0, 10), (1, 10), (2, 13)]:
+        assert as_int(harness.call(app, "loop(uint256)", value).abi_return) == expected
+
+
+def test_shared_return_signature_plan(harness):
+    app = harness.compile_and_deploy("puyasolRegression/contracts/shared_return_plan.sol")
+    for name in ("pair", "internalPair", "externalPair"):
+        for value in (-7, 5):
+            result = harness.call(app, f"{name}(int8)", value).abi_return
+            assert as_signed_int(result[0]) == value
+            assert as_int(result[1]) == 1 << 100
+    assert as_signed_int(harness.call(app, "wrapped(int16)", -123).abi_return) == -123
+    result = harness.call(app, "getterCalls()").abi_return
+    assert (as_signed_int(result[0]), as_signed_int(result[1]), as_int(result[2])) == (-7, -9, 1 << 100)
+
+
+def test_cached_callable_references(harness):
+    artifacts = harness.compile("puyasolRegression/contracts/cached_callable_references.sol")
+    roots = json.loads((harness.out_dir / "awst.json").read_text())
+    contracts = {root["name"]: root for root in roots if root.get("_type") == "Contract"}
+
+    def hosted_methods(name):
+        return [method for method in contracts[name]["methods"]
+                if method["member_name"].startswith("__hostfn_")]
+
+    assert hosted_methods("CallableHost")
+    assert not hosted_methods("UnrelatedHost")
+    host = harness.deploy(artifacts, "CallableHost")
+    unrelated = harness.deploy(artifacts, "UnrelatedHost")
+    assert as_int(harness.call(host, "run(uint64)", 9).abi_return) == 10
+    assert as_int(harness.call(host, "runOperators(uint64)", 9).abi_return) == 10
+    assert as_int(harness.call(unrelated, "run(uint64)", 9).abi_return) == 9
+    assert harness.call(host, "run(uint64)", 100, expect_revert=True).reverted
+    assert harness.call(host, "runOperators(uint64)", 100, expect_revert=True).reverted
+
+
+def test_inherited_public_function_pointer_host_identity(harness):
+    artifacts = harness.compile("puyasolRegression/contracts/function_pointer_host_identity.sol")
+    for name, expected in (("PointerFirst", 13), ("PointerSecond", 19)):
+        app = harness.deploy(artifacts, name)
+        assert as_int(harness.call(app, "run(bool,uint64)", True, 10).abi_return) == expected
+        assert as_int(harness.call(app, "run(bool,uint64)", False, 10).abi_return) == 15
+
+
 def test_checked_sub_evaluates_rhs_once(harness):
     """puyasolRegression/contracts/eval_once_sub.sol — NOT an o.g. semantic test.
 

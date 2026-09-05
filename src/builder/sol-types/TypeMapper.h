@@ -2,6 +2,8 @@
 
 #include "awst/WType.h"
 #include "builder/TargetProfile.h"
+#include "builder/ReturnWirePlan.h"
+#include "builder/CallBoundaryPlan.h"
 
 #include "builder/sol-types/SolcFwd.h"
 
@@ -46,6 +48,8 @@ public:
 		m_namedTypeCache.clear();
 		m_arc4Cache.clear();
 		m_solArc4Cache.clear();
+		m_returnPlans.clear();
+		m_callPlans.clear();
 		m_arc4ByteType = nullptr;
 		m_ownedTypes.clear();
 	}
@@ -53,6 +57,13 @@ public:
 	/// Map a Solidity type to an AWST WType.
 	/// Returns nullptr for unsupported types.
 	awst::WType const* map(solidity::frontend::Type const* _solType);
+
+	/// Native, internal-call, and ABI return forms from one resolved solc declaration.
+	FunctionReturnPlan const& functionReturnPlan(
+		solidity::frontend::FunctionDefinition const& _function);
+	CallBoundaryPlan const& callBoundaryPlan(
+		solidity::frontend::FunctionDefinition const& _function,
+		solidity::frontend::ContractDefinition const* _mostDerived = nullptr);
 
 	/// Get or create an ARC4Struct WType for a Solidity struct.
 	awst::WType const* mapStruct(solidity::frontend::StructType const* _structType);
@@ -80,6 +91,8 @@ private:
 	TargetProfile const& m_profile;
 	SourceMap const& m_sourceMap;
 	BuildArtifacts& m_artifacts;
+	std::map<int64_t, FunctionReturnPlan> m_returnPlans;
+	std::map<std::pair<int64_t, int64_t>, CallBoundaryPlan> m_callPlans;
 
 	/// Owns all dynamically-created WTypes.
 	std::vector<std::unique_ptr<awst::WType>> m_ownedTypes;

@@ -196,6 +196,8 @@ set(SOURCES
 	src/builder/CompilationSession.cpp
 	src/builder/EvmFeaturePolicy.cpp
 	src/builder/ProgramAnalysis.cpp
+	src/builder/ReturnWirePlan.cpp
+	src/builder/CallBoundaryPlan.cpp
 	src/builder/ParameterMutationAnalysis.cpp
 	src/builder/SolcFacts.cpp
 	src/builder/SelectorSemantics.cpp
@@ -307,6 +309,7 @@ set(SOURCES
 	src/builder/sol-ast/calls/SolArrayMethod.cpp
 	src/builder/sol-ast/calls/SolArrayMethodHandlers.cpp
 	src/builder/sol-ast/calls/SolInternalCall.cpp
+	src/builder/sol-ast/EffectScan.cpp
 	src/builder/sol-ast/calls/SolExternalCall.cpp
 	src/builder/sol-ast/calls/SolNewExpression.cpp
 	src/builder/sol-ast/calls/SolBytesConcat.cpp
@@ -428,6 +431,18 @@ add_custom_target(puya-sol-build-manifest ALL
 )
 
 if(BUILD_TESTING)
+	add_executable(puya-sol-termination-tests
+		tests/cpp/TerminationTests.cpp
+		src/awst/WType.cpp
+	)
+	target_include_directories(puya-sol-termination-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_test(NAME puya-sol-termination COMMAND puya-sol-termination-tests)
+	add_test(NAME puya-sol-source-identity
+		COMMAND ${CMAKE_COMMAND}
+			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
+			-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/source-identity-test-output
+			-P ${CMAKE_SOURCE_DIR}/tests/cmake/SourceIdentityTest.cmake)
+
 	add_executable(puya-sol-runner-tests
 		tests/cpp/PuyaRunnerTests.cpp
 		src/runner/PuyaRunner.cpp

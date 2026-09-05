@@ -31,7 +31,7 @@ void ContractBuilder::buildStorageDispatch(
 	}
 
 	auto const& layout = _storagePlan.solidityLayout;
-	std::string cref = m_sourceFile + "." + _contractName;
+	auto const& cref = m_contractId;
 	awst::SourceLocation loc;
 	loc.file = m_sourceFile;
 

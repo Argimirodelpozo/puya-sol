@@ -18,6 +18,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/itxn/CallResolver.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/Numeric.h>
@@ -708,6 +709,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 
 std::shared_ptr<awst::Expression> SolUnaryOperation::toAwst()
 {
+	if (auto const* function = *m_unaryOp.annotation().userDefinedFunction)
+		return eb::CallResolver::buildOperatorCall(m_ctx, *function,
+			{&m_unaryOp.subExpression()}, m_loc);
+
 	// The canonical constant path (fable-review item 1): solc folded the WHOLE
 	// expression (non-fractional rational annotation, e.g. `-2`, `~5`) → emit
 	// its value directly; never fold built AWST downstream. Runtime-typed

@@ -95,14 +95,14 @@ bool SolVariableDeclaration::trySlotModeStoragePointer(
 	// --evm-storage-layout: a storage-pointer local IS a biguint slot.
 	// Resolve the initializer's slot on the AST (building the aggregate
 	// value would be wrong/rejected) and bind `name = slot`.
-	if (m_blk.typeMapper().profile().evmStorageLayout
-		&& decl.referenceLocation() == VariableDeclaration::Location::Storage
-		&& initialValue)
+	if ((m_blk.typeMapper().profile().evmStorageLayout
+			|| m_blk.typeMapper().analysis().asmAssignedSlotDeclarations.contains(decl.id()))
+		&& decl.referenceLocation() == VariableDeclaration::Location::Storage)
 	{
 		auto loc = m_blk.makeLoc(decl.location());
 		EvmSlotLowering low(m_blk.builderCtx(), m_blk, loc);
-		auto addr = low.resolve(*initialValue);
-		if (!addr)
+		auto addr = initialValue ? low.resolve(*initialValue) : std::nullopt;
+		if (initialValue && !addr)
 			return true;   // error already logged
 		m_blk.setSlotStorageRef(decl.id(), awst::makeVarExpression(
 			decl.name(), awst::WType::biguintType(), loc));
@@ -111,7 +111,7 @@ bool SolVariableDeclaration::trySlotModeStoragePointer(
 			result.push_back(std::move(st));
 		result.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(decl.name(), awst::WType::biguintType(), loc),
-			addr->slot, loc));
+			addr ? addr->slot : awst::makeIntegerConstant("0", loc, awst::WType::biguintType()), loc));
 		for (auto& st: m_blk.builderCtx().takePostEffects())
 			result.push_back(std::move(st));
 		return true;

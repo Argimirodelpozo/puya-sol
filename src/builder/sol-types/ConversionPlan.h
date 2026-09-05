@@ -9,12 +9,12 @@
 namespace puyasol::builder
 {
 
-/// Semantic implicit conversion selected from solc types, kept separate from
+/// Semantic conversion selected from solc types, kept separate from
 /// the AWST representation operations used to emit it.
 class ConversionPlan
 {
 public:
-	enum class Context { Assignment, Initialization, Argument, Return, AbiArgument };
+	enum class Context { Assignment, Initialization, Argument, Return, AbiArgument, ExplicitInteger };
 
 	ConversionPlan(
 		solidity::frontend::Type const* _source,

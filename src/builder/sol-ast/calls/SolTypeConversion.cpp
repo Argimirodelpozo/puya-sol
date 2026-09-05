@@ -4,6 +4,7 @@
 #include "builder/sol-ast/calls/SolTypeConversion.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
 
 #include <libsolidity/ast/TypeProvider.h>
 
@@ -42,78 +43,17 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 	// Enum range check: EnumType(x) must assert x < numMembers
 	if (dynamic_cast<solidity::frontend::EnumType const*>(m_call.annotation().type))
 		return handleEnumConversion();
+	if (dynamic_cast<solidity::frontend::IntegerType const*>(m_call.annotation().type))
+		return ConversionPlan{m_call.arguments()[0]->annotation().type,
+			m_call.annotation().type, targetType, ConversionPlan::Context::ExplicitInteger}.emit(
+				buildExpr(*m_call.arguments()[0]), m_loc);
 
-	// Try TypeConversionRegistry first (handles integer, bool, address, fixedbytes, enum)
-	{
-		auto argExpr = buildExpr(*m_call.arguments()[0]);
-		eb::TypeConversionRegistry registry;
-		auto converted = registry.tryConvert(
-			m_ctx, m_call.annotation().type, targetType,
-			argExpr, m_loc);
-		if (converted)
-		{
-			auto result = converted->resolve();
-			// Narrowing mask: Solidity truncates to target width regardless of sign.
-			// Sign-extension on subsequent widening reads from the source-width MSB.
-			result = applyNarrowingMask(std::move(result), targetType);
-
-			// Signed sub-word widen (e.g. int128(someInt24)): registry uses
-			// zero-extension (drops sign: -60 int24 → +16777156). Re-extend from
-			// SOURCE width via signExtendToUint256 (masks to N bits first; safe
-			// whether uint64 is raw sub-word or already sign-extended).
-			if (auto const* srcInt = dynamic_cast<solidity::frontend::IntegerType const*>(
-					m_call.arguments()[0]->annotation().type))
-			{
-				auto const* tgtInt = dynamic_cast<solidity::frontend::IntegerType const*>(
-					m_call.annotation().type);
-				if (tgtInt && result->wtype == awst::WType::biguintType())
-				{
-					if (srcInt->isSigned()
-						&& srcInt->numBits() <= 64 && tgtInt->numBits() > 64)
-					{
-						result = TypeCoercion::signExtendToUint256(
-							std::move(result), srcInt->numBits(), m_loc);
-					}
-					else if (tgtInt->isSigned() && srcInt->numBits() > 64
-						&& tgtInt->numBits() > 64 && tgtInt->numBits() < 256)
-					{
-						// biguint→signed intN (e.g. `int128(int256)`, SafeCast.toIntN):
-						// mask already gave low N bits; sign-extend to 256-bit two's-complement
-						// so negatives round-trip and biguint widen is re-canonicalised.
-						result = TypeCoercion::signExtendToUint256(
-							std::move(result), tgtInt->numBits(), m_loc);
-					}
-				}
-				else if (tgtInt && result->wtype == awst::WType::uint64Type()
-					&& srcInt->isSigned() && tgtInt->isSigned()
-					&& srcInt->numBits() < tgtInt->numBits())
-				{
-					// Signed sub-word -> WIDER sub-word (both <=64-bit, uint64-backed): the registry
-					// zero-extends (drops the sign, e.g. int16(int8(-1)) -> 255). Re-extend from the
-					// SOURCE width so the value stays signed-correct.
-					result = TypeCoercion::signExtendToUint64(
-						std::move(result), srcInt->numBits(), m_loc);
-				}
-			}
-
-			// Final canonicalisation: any signed sub-word (<64-bit, uint64-backed)
-			// target must be sign-extended from its OWN width, so the low-N-bits
-			// narrowing mask becomes a canonical 64-bit two's-complement. Covers
-			// constant/Rational sources (srcInt is null above, e.g. int8(-1) -> 0xff,
-			// which then mis-compared `== int8(-1)` and broke raw-value consumers)
-			// and narrowing casts the source-width branch skips. signExtendToUint64
-			// masks first, so it is idempotent when the value is already canonical.
-			if (auto const* tgtInt = dynamic_cast<solidity::frontend::IntegerType const*>(
-					m_call.annotation().type))
-			{
-				if (tgtInt->isSigned() && tgtInt->numBits() < 64
-					&& result->wtype == awst::WType::uint64Type())
-					result = TypeCoercion::signExtendToUint64(
-						std::move(result), tgtInt->numBits(), m_loc);
-			}
-			return result;
-		}
-	}
+	// Build once: an unsupported registry category must not re-evaluate
+	// its source (and duplicate queued effects) in the fallback.
+	auto argument = buildExpr(*m_call.arguments()[0]);
+	eb::TypeConversionRegistry registry;
+	if (auto converted = registry.tryConvert(m_ctx, m_call.annotation().type, targetType, argument, m_loc))
+		return converted->resolve();
 
 	// address(0) special constant
 	if (targetType == awst::WType::accountType())
@@ -123,7 +63,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 
 		// address(integer) / address(bytes) — TypeConversion registry should handle these,
 		// but if not, fall through to generic conversion below.
-		auto argExpr = buildExpr(*m_call.arguments()[0]);
+		auto argExpr = std::move(argument);
 
 		// address(application) → app address via app_params_get AppAddress
 		if (argExpr->wtype == awst::WType::applicationType())
@@ -149,7 +89,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 		return addrCast;
 	}
 
-	return handleGenericConversion(targetType);
+	return handleGenericConversion(std::move(argument), targetType);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -201,17 +141,14 @@ std::shared_ptr<awst::Expression> SolTypeConversion::tryAddressZeroConstant()
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Generic conversion: narrowing casts, bytes conversions, etc.
+// Representation-specific conversion fallbacks.
 // ─────────────────────────────────────────────────────────────────────
 
 std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
+	std::shared_ptr<awst::Expression> converted,
 	awst::WType const* _targetType)
 {
-	auto converted = buildExpr(*m_call.arguments()[0]);
 	converted = TypeCoercion::implicitNumericCast(std::move(converted), _targetType, m_loc);
-
-	// Apply narrowing mask for integer casts
-	converted = applyNarrowingMask(std::move(converted), _targetType);
 
 	if (_targetType == converted->wtype)
 		return converted;
@@ -389,68 +326,6 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleGenericConversion(
 	// Default: ReinterpretCast
 	auto cast = awst::makeReinterpretCast(std::move(converted), _targetType, m_loc);
 	return cast;
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// Narrowing mask helper
-// ─────────────────────────────────────────────────────────────────────
-
-std::shared_ptr<awst::Expression> SolTypeConversion::applyNarrowingMask(
-	std::shared_ptr<awst::Expression> _expr, awst::WType const* _targetType)
-{
-	auto const* solTargetType = m_call.annotation().type;
-	auto const* solSourceType = m_call.arguments()[0]->annotation().type;
-	auto const* targetIntType = dynamic_cast<solidity::frontend::IntegerType const*>(solTargetType);
-	if (!targetIntType) return _expr;
-
-	unsigned targetBits = targetIntType->numBits();
-
-	// uint64 narrowing: also covers signed→unsigned at same width
-	// (e.g. int8→uint8: uint64(-2)=2^64-2, must mask to 8 bits → 254).
-	if (_targetType == awst::WType::uint64Type() && _expr->wtype == awst::WType::uint64Type())
-	{
-		unsigned sourceBits = 64;
-		bool sourceIsSigned = false;
-		if (auto const* srcInt = dynamic_cast<solidity::frontend::IntegerType const*>(solSourceType))
-		{
-			sourceBits = srcInt->numBits();
-			sourceIsSigned = srcInt->isSigned();
-		}
-		if (targetBits < 64 && (targetBits < sourceBits || (sourceIsSigned && !targetIntType->isSigned())))
-		{
-			auto mask = awst::makeIntegerConstant((uint64_t(1) << targetBits) - 1, m_loc);
-			auto bitAnd = awst::makeUInt64BinOp(std::move(_expr), awst::UInt64BinaryOperator::BitAnd, std::move(mask), m_loc);
-			return bitAnd;
-		}
-	}
-
-	// biguint narrowing
-	if (_targetType == awst::WType::biguintType() && _expr->wtype == awst::WType::biguintType())
-	{
-		unsigned sourceBits = 256;
-		bool sourceIsSigned = false;
-		if (auto const* srcInt = dynamic_cast<solidity::frontend::IntegerType const*>(solSourceType))
-		{
-			sourceBits = srcInt->numBits();
-			sourceIsSigned = srcInt->isSigned();
-		}
-		// Mask to the target width when narrowing OR when dropping a SIGNED source's sign-extension
-		// into an UNSIGNED target at the same width: int128(-1) is canonically 2^256-1, but
-		// uint128(int128(-1)) is 2^128-1, not 2^256-1 — else checked consumers (`** 1`, `* 1`, `+ 0`)
-		// and `<= uintN.max` see a non-canonical value (false revert / wrong compare). Mirrors the
-		// uint64 same-width signed→unsigned case above. uint256 (targetBits==256) keeps the full width:
-		// uint256(int256(-1)) IS 2^256-1. Found by the differential fuzzer.
-		bool signedToUnsigned = sourceIsSigned && !targetIntType->isSigned();
-		if ((targetBits < sourceBits || signedToUnsigned) && targetBits < 256)
-		{
-			// `value mod 2^targetBits` via the shared helper. (It uses `b%`, not `b&`: AVM `b&` returns
-			// max(len(a),len(b)) bytes with no leading-zero strip, so a 32-byte ARC4 value & a 16-byte
-			// mask stays 32 bytes and fails the `to_fixed_size` len check; `b%` gives the minimal width.)
-			return TypeCoercion::maskUnsignedToWidth(std::move(_expr), targetBits, m_loc);
-		}
-	}
-
-	return _expr;
 }
 
 // ─────────────────────────────────────────────────────────────────────

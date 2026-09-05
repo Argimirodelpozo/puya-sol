@@ -5,6 +5,7 @@
 
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -80,8 +81,11 @@ solidity::frontend::FileReader setupFileReader(
 	// User-specified import paths.
 	for (auto const& ip: _opts.importPaths)
 	{
-		fs::path absIp = fs::absolute(ip);
-		fileReader.addIncludePath(absIp);
+		auto absIp = solidity::frontend::FileReader::normalizeCLIPathForVFS(ip);
+		if (absIp != fileReader.basePath()
+			&& std::find(fileReader.includePaths().begin(),
+				fileReader.includePaths().end(), absIp) == fileReader.includePaths().end())
+			fileReader.addIncludePath(absIp);
 		fileReader.allowDirectory(absIp);
 	}
 

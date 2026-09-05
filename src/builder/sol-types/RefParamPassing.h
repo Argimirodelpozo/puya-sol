@@ -17,16 +17,7 @@
 namespace puyasol::builder
 {
 
-enum class RefParamPassing
-{
-	SlotHandle,     ///< --evm-storage-layout storage ref: biguint slot number
-	BoxKeyPrefix,   ///< box-keyed storage ref (mapping/struct/asm .slot): bytes key prefix
-	BlobOffset,     ///< >4KB memory aggregate: uint64 blob base offset (pointer model)
-	Value,          ///< everything else: the mapped value type
-};
-
-/// Classify one param. `_isAsmSlotRef` = the caller's slotParams lookup
-/// (structRefParamsUsedAsAsmSlot by index, or asmSlotParamIds by decl id).
+/// Classify from the declaration and cached source facts.
 inline RefParamPassing classifyRefParamPassing(
 	TypeMapper& _tm,
 	solidity::frontend::VariableDeclaration const& _param,
@@ -38,6 +29,7 @@ inline RefParamPassing classifyRefParamPassing(
 		return RefParamPassing::SlotHandle;
 	if (_param.referenceLocation() == Loc::Storage
 		&& (isBoxKeyedStorageRef(_param.type(), _tm.analysis())
+			|| _tm.analysis().structRefOffsetParams.contains(_param.id())
 			|| _isAsmSlotRef)) // widened: plain structs + asm .slot refs
 		return RefParamPassing::BoxKeyPrefix;
 	if (_param.referenceLocation() == Loc::Memory

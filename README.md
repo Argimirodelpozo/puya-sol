@@ -112,6 +112,14 @@ build/puya-sol \
 
 For multi-source projects (e.g., contracts with imports), pass each `--source` repeatedly. Outputs land in the `--output-dir` as `<Contract>.approval.teal`, `<Contract>.clear.teal`, `<Contract>.arc56.json`, plus `awst.json` for debugging.
 
+Use `--import-path` for the source root so explicit files and imports share
+solc's normalized source-unit names. For intentional alternate import spellings,
+use `--remapping alias=canonical-name` to select the same source unit explicitly.
+AWST contract IDs use solc's fully qualified `source-unit:Contract` identity.
+Artifact filenames retain the short contract name; distinct deployable
+contracts with the same name are rejected
+with a collision diagnostic instead of silently overwriting one another.
+
 Every successful frontend run also writes `artifact-manifest.json`, with the
 byte length and SHA-256 digest of each recorded compiler artifact. A
 `backend-complete` phase is the commit marker for a successful, validated
@@ -199,10 +207,12 @@ Run the full suite (requires AlgoKit localnet running):
 
 ```bash
 cd tests/solidity-semantic-tests
-python3 run_tests.py                           # all categories, ~45 min
-python3 run_tests.py --category storage         # one category
-python3 run_tests.py --file tests/foo/bar.sol   # single file
+PUYASOL_LOCALNET_RESET=0 pytest tests/ -n 2     # all categories
+PUYASOL_LOCALNET_RESET=0 pytest tests/conversions/ -q
+PUYASOL_LOCALNET_RESET=0 pytest tests/puyasolRegression/test_builder_findings.py -q -n 2
 ```
+
+`PUYASOL_LOCALNET_RESET=0` preserves the existing LocalNet ledger during tests.
 
 WIP/examples/ ports each have their own `pytest` suite under `<example>/test/`:
 

@@ -464,7 +464,7 @@ SolAssignment::tryHandleBoxedAggregatePathWrite()
 	// This is the last point where the handler can still decline; building the
 	// RHS any earlier would double-evaluate it in the caller.
 	auto rhs = buildExpr(m_assignment.rightHandSide());
-	if (rhs && EffectScan::mayWrite(m_assignment.rightHandSide()))
+	if (rhs && EffectScan::mayWrite(m_assignment.rightHandSide(), m_ctx, m_scope))
 	{
 		std::string pinName = "__boxref_rhs_" + std::to_string(
 			awst::NameGen::next("SolAssignment.boxedPathRhs"));
@@ -594,7 +594,7 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 	// snapshot, and the whole-struct write-back clobbered the callee's
 	// writes (`s.f += bump(s)` lost bump's `s.g += 1`; probe gave g==0).
 	auto rhs = buildExpr(m_assignment.rightHandSide());
-	if (rhs && EffectScan::mayWrite(m_assignment.rightHandSide()))
+	if (rhs && EffectScan::mayWrite(m_assignment.rightHandSide(), m_ctx, m_scope))
 	{
 		std::string pinName = "__osref_rhs_" + std::to_string(
 			awst::NameGen::next("SolAssignment.offsetStructRhs"));

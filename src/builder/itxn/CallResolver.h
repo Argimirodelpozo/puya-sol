@@ -8,6 +8,7 @@
 #include "builder/sol-types/SolcFwd.h"
 
 #include <memory>
+#include <initializer_list>
 #include <optional>
 #include <string>
 #include <variant>
@@ -53,6 +54,14 @@ public:
 	/// Classify an already type-checked call as an internal/subroutine path or
 	/// an external inner-transaction path.
 	static CallPlan plan(solidity::frontend::FunctionCall const& _call);
+
+	/// Solc-resolved user operators are ordinary free-function calls, including
+	/// host-bound targets. Both solc pipelines evaluate their operands left-first.
+	static std::shared_ptr<awst::Expression> buildOperatorCall(
+		ContractContext& _ctx,
+		solidity::frontend::FunctionDefinition const& _function,
+		std::initializer_list<solidity::frontend::Expression const*> _operands,
+		awst::SourceLocation const& _loc);
 
 	/// Try to resolve a function call from an Identifier callee; nullopt on failure.
 	static std::optional<ResolvedCall> resolveFromIdentifier(

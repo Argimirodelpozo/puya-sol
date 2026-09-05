@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -23,6 +24,8 @@ class FunctionDefinition;
 
 namespace puyasol::builder
 {
+
+struct PreparedAssembly;
 
 /// Stable boundary around semantic facts supplied by the vendored solc.
 ///
@@ -46,15 +49,9 @@ public:
 		bool usesStorage = false;
 	};
 
-	/// Analyze a disambiguated inline-assembly block with solc's own Yul
-	/// collectors, call graph, recursion detector, and side-effect propagator.
-	static YulAnalysis analyzeYul(
-		solidity::yul::Block const& _block,
-		solidity::yul::Dialect const& _dialect);
-
-	/// True when the inline assembly either references a Solidity `.slot` or
-	/// reachable Yul code reads/writes EVM storage.
-	static bool usesStorage(
+	/// Disambiguate once using solc's lexical scopes, remap external references,
+	/// then run the Yul analyses against the exact tree lowering will consume.
+	static std::shared_ptr<PreparedAssembly const> prepareAssembly(
 		solidity::frontend::InlineAssembly const& _assembly);
 
 	/// Solidity's canonical four-byte function/error selector. The FunctionType
@@ -70,6 +67,11 @@ public:
 	/// solc's EIP-165 interface ID for the exact interface declaration.
 	static std::vector<uint8_t> interfaceId(
 		solidity::frontend::ContractDefinition const& _contract);
+
+private:
+	static YulAnalysis analyzeYul(
+		solidity::yul::Block const& _block,
+		solidity::yul::Dialect const& _dialect);
 };
 
 } // namespace puyasol::builder

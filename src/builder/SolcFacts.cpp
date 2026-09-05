@@ -1,4 +1,5 @@
 #include "builder/SolcFacts.h"
+#include "builder/PreparedAssembly.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/CommonData.h>
@@ -9,6 +10,8 @@
 #include <libyul/Dialect.h>
 #include <libyul/SideEffects.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
@@ -48,28 +51,17 @@ SolcFacts::YulAnalysis SolcFacts::analyzeYul(
 	for (auto const& name: assignedVariableNames(_block))
 		result.assignedVariables.insert(nameString(name));
 
-	// SSAValueTracker asserts each name is declared once ("Source needs to be
-	// disambiguated") — sibling scopes reusing a `let` name are ordinary in
-	// hand-written assembly. The values are an optimisation input, so an
-	// ambiguous block yields none rather than failing the compile.
-	try
+	SSAValueTracker ssaValues;
+	ssaValues(_block);
+	for (auto const& [name, value]: ssaValues.values())
 	{
-		SSAValueTracker ssaValues;
-		ssaValues(_block);
-		for (auto const& [name, value]: ssaValues.values())
-		{
-			if (!value)
-				continue;
-			auto const* literal = std::get_if<Literal>(value);
-			if (!literal || literal->kind != LiteralKind::Number)
-				continue;
-			result.constantValues.emplace(
-				nameString(name), literal->value.value().str());
-		}
-	}
-	catch (solidity::util::Exception const&)
-	{
-		result.constantValues.clear();
+		if (!value)
+			continue;
+		auto const* literal = std::get_if<Literal>(value);
+		if (!literal || literal->kind != LiteralKind::Number)
+			continue;
+		result.constantValues.emplace(
+			nameString(name), literal->value.value().str());
 	}
 
 	auto graph = CallGraphGenerator::callGraph(_block);
@@ -137,13 +129,51 @@ SolcFacts::YulAnalysis SolcFacts::analyzeYul(
 	return result;
 }
 
-bool SolcFacts::usesStorage(solidity::frontend::InlineAssembly const& _assembly)
+std::shared_ptr<PreparedAssembly const> SolcFacts::prepareAssembly(
+	solidity::frontend::InlineAssembly const& _assembly)
 {
-	for (auto const& [_, reference]: _assembly.annotation().externalReferences)
-		if (reference.suffix == "slot")
-			return true;
-	return analyzeYul(
-		_assembly.operations().root(), _assembly.dialect()).usesStorage;
+	using Info = solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo;
+	std::set<YulName> reserved;
+	std::map<YulName, Info> externalByName;
+	for (auto const& [identifier, info]: _assembly.annotation().externalReferences)
+	{
+		reserved.insert(identifier->name);
+		externalByName.emplace(identifier->name, info);
+	}
+	auto result = std::make_shared<PreparedAssembly>();
+	Disambiguator disambiguator(
+		_assembly.dialect(), *_assembly.annotation().analysisInfo, reserved);
+	result->block = disambiguator.translate(_assembly.operations().root());
+
+	// External names are reserved, so every such name still denotes its solc
+	// declaration. Re-key metadata with the COPIED identifiers, not stale pointers.
+	struct Remap: ASTWalker
+	{
+		std::map<YulName, Info> const& byName;
+		PreparedAssembly& out;
+		Remap(std::map<YulName, Info> const& names, PreparedAssembly& assembly)
+			: byName(names), out(assembly) {}
+		void operator()(Identifier const& identifier) override
+		{
+			if (auto found = byName.find(identifier.name); found != byName.end())
+				out.externalReferences.emplace(&identifier, found->second);
+		}
+		void operator()(Assignment const& assignment) override
+		{
+			ASTWalker::operator()(assignment);
+			for (auto const& identifier: assignment.variableNames)
+				if (auto found = out.externalReferences.find(&identifier);
+					found != out.externalReferences.end()
+					&& found->second.suffix == "slot" && found->second.declaration)
+					out.assignedSlotDeclarations.insert(found->second.declaration->id());
+		}
+	};
+	Remap remap(externalByName, *result);
+	static_cast<ASTWalker&>(remap)(result->block);
+	result->facts = analyzeYul(result->block, _assembly.dialect());
+	for (auto const& [_, reference]: result->externalReferences)
+		result->facts.usesStorage |= reference.suffix == "slot";
+	return result;
 }
 
 std::vector<uint8_t> SolcFacts::externalSelector(

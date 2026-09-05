@@ -1,10 +1,7 @@
 /// @file PostInitBuilder.cpp
 /// Synthesises the deferred-constructor `__postInit` ABI method.
 ///
-/// Extracted verbatim from ContractBuilder::buildApprovalProgram, which was
-/// 1,159 lines and carried this whole second method inline. The body below is
-/// unchanged -- as a member function `method`, `explicitBaseArgs` and every
-/// m_* member resolve exactly as they did as locals of the caller.
+/// Deployment framing surrounds the same constructor schedule as inline creation.
 
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/StateVarWalker.h"
@@ -30,9 +27,6 @@ void ContractBuilder::buildPostInitMethod(
 	std::string const& _contractName,
 	awst::ContractMethod& method,
 	std::shared_ptr<awst::Block> const& createBlock,
-	std::map<solidity::frontend::ContractDefinition const*,
-		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
-		const& explicitBaseArgs,
 	std::function<void(solidity::frontend::ContractDefinition const&,
 		std::vector<std::shared_ptr<awst::Statement>>&)> const& emitStateVarInit)
 {
@@ -52,7 +46,7 @@ void ContractBuilder::buildPostInitMethod(
 		awst::ContractMethod postInit;
 		postInit.sourceLocation = method.sourceLocation;
 		postInit.returnType = awst::WType::voidType();
-		postInit.cref = m_sourceFile + "." + _contractName;
+		postInit.cref = m_contractId;
 		postInit.memberName = "__postInit";
 
 		// Mirror constructor params on __postInit so the caller passes the same values.
@@ -225,141 +219,7 @@ void ContractBuilder::buildPostInitMethod(
 
 		emitBoxCreateForStateVars(*postInitBody, method.sourceLocation);
 
-		// State var defaults. LEGACY: all levels' initializers run before any
-		// ctor arg evaluation (create-path parity; dedup set makes the
-		// interleaved re-emission below a no-op). viaIR: interleaved with the
-		// ctor bodies below so derived initializers (`uint y = f()`) observe
-		// BASE ctor state — the all-up-front order returned pre-ctor values.
-		if (!m_viaIR)
-		{
-			auto const& lin = _contract.annotation().linearizedBaseContracts;
-			for (auto it2 = lin.rbegin(); it2 != lin.rend(); ++it2)
-				emitStateVarInit(**it2, postInitBody->body);
-		}
-
-		// Base constructor parameter assignments — DERIVED-FIRST, all before any
-		// body is inlined. An explicit arg for base B is written by a MORE
-		// DERIVED contract and may read that contract's ctor params (`D is C is
-		// A`, `C(uint y) A(y+1)`), so C's params must be assigned before A's
-		// args are evaluated. The old base-first interleaved loop evaluated
-		// `y+1` before `y = 5` (and skipped args entirely for empty-bodied
-		// ctors); the non-postInit path's Phase 1/2 fixed exactly this, the
-		// postInit twin never did.
-		auto const& linearized = _contract.annotation().linearizedBaseContracts;
-		for (auto it = linearized.begin(); it != linearized.end(); ++it)
-		{
-			auto const* base = *it;
-			if (base == &_contract)
-				continue;
-
-			auto const* baseCtor = base->constructor();
-			if (!baseCtor)
-				continue;
-
-			auto argIt = explicitBaseArgs.find(base);
-			if (argIt == explicitBaseArgs.end() || !argIt->second || argIt->second->empty())
-				continue;
-
-			auto const& args = *(argIt->second);
-			auto const& params = baseCtor->parameters();
-			for (size_t i = 0; i < args.size() && i < params.size(); ++i)
-			{
-				// --evm-storage-layout: storage-ref args bind as runtime
-				// SLOT HANDLES. Resolve the SOURCE (m[1] etc.) instead of
-				// building it — a value build would materialise (or refuse:
-				// mapping-typed elements are uncopyable by construction).
-				if (m_typeMapper.profile().evmStorageLayout
-					&& params[i]->referenceLocation()
-						== solidity::frontend::VariableDeclaration::Location::Storage)
-				{
-					sol_ast::EvmSlotLowering low(
-						*m_exprBuilder, *m_exprBuilder->currentScope,
-						makeLoc(args[i]->location()));
-					if (auto addr = low.resolve(*args[i]))
-					{
-						for (auto& pst: m_exprBuilder->takePreEffects())
-							postInitBody->body.push_back(std::move(pst));
-						postInitBody->body.push_back(
-							awst::makeAssignmentStatement(
-								awst::makeVarExpression(params[i]->name(),
-									awst::WType::biguintType(),
-									makeLoc(args[i]->location())),
-								addr->slot, makeLoc(args[i]->location())));
-					}
-					continue;   // resolve failure already logged
-				}
-
-				auto argExpr = m_exprBuilder->buildExpr(*args[i]);
-				if (!argExpr)
-					continue;
-
-				// Storage-pointer params: alias, don't copy — writes inside the
-					// base ctor must reach the underlying storage (mirrors
-					// modifier-chain storage argument handling).
-				if (params[i]->referenceLocation()
-					== solidity::frontend::VariableDeclaration::Location::Storage)
-				{
-					sol_ast::StorageAlias alias =
-						sol_ast::StorageAlias::classify(std::move(argExpr));
-					m_tr->setStorageAlias(params[i]->id(), std::move(alias));
-					continue;
-				}
-
-				auto target = awst::makeVarExpression(params[i]->name(), m_typeMapper.map(params[i]->type()), makeLoc(args[i]->location()));
-
-				argExpr = TypeCoercion::implicitNumericCast(
-					std::move(argExpr), target->wtype, target->sourceLocation
-				);
-
-				// Drain the build's pre-statements (ternary/short-circuit temp
-				// assignments) before the binding (see the create-path twin).
-				m_exprBuilder->appendEffectsTo(postInitBody->body);
-
-				auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), target->sourceLocation);
-				postInitBody->body.push_back(std::move(assignment));
-			}
-		}
-
-		// Inline base constructor bodies into __postInit (base-first MRO
-		// order), interleaving each level's state-var initializers before its
-		// body (viaIR; legacy already emitted them above, dedup no-ops here).
-		for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
-		{
-			auto const* base = *it;
-			emitStateVarInit(*base, postInitBody->body);
-			if (base == &_contract)
-				continue;
-
-			auto const* baseCtor = base->constructor();
-			if (!baseCtor || !baseCtor->isImplemented())
-				continue;
-			if (baseCtor->body().statements().empty())
-				continue;
-
-			m_functionCtx->inConstructor = true;
-			m_functionCtx->callableId = baseCtor->id();
-			auto baseBody = buildBlock(baseCtor->body());
-			m_functionCtx->inConstructor = false;
-			m_functionCtx->callableId = 0;
-			buildConstructorModifierChain(*baseCtor, baseBody, _contractName);
-			for (auto& stmt: baseBody->body)
-				postInitBody->body.push_back(std::move(stmt));
-		}
-
-		// Main constructor body
-		if (constructor && constructor->body().statements().size() > 0)
-		{
-			m_tr->setInConstructor(true);
-			m_functionCtx->inConstructor = true;
-			m_functionCtx->callableId = constructor->id();
-			auto ctorBody = buildBlock(constructor->body());
-			m_functionCtx->inConstructor = false;
-			m_functionCtx->callableId = 0;
-			buildConstructorModifierChain(*constructor, ctorBody, _contractName);
-			m_tr->setInConstructor(false);
-			for (auto& stmt: ctorBody->body)
-				postInitBody->body.push_back(std::move(stmt));
-		}
+		emitConstructorPlan(_contract, postInitBody, emitStateVarInit);
 
 		// `--ensure-budget __postInit:N`: __postInit is built here, not
 		// through FunctionBuilder's per-method path, so budget injection

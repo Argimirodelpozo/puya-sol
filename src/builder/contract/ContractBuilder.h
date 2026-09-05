@@ -143,6 +143,8 @@ private:
 	StorageMapper& m_storageMapper;
 	eb::FunctionPointerRegistry& m_functionPointers;
 	std::string m_sourceFile;
+	/// solc source-unit-qualified declaration identity, independent of display paths.
+	std::string m_contractId;
 	FunctionSymbolTable const& m_functionSymbols;
 	uint64_t m_opupBudget = 0;
 	std::map<std::string, uint64_t> m_ensureBudget;
@@ -275,13 +277,7 @@ private:
 	void buildMethodSignature(
 		awst::ContractMethod& method,
 		solidity::frontend::FunctionDefinition const& _func,
-		std::string const& _contractName,
-		std::string const& _nameOverride,
-		std::set<int64_t> const& asmSlotParamIds);
-	void computeMethodReturnType(
-		awst::ContractMethod& method,
-		solidity::frontend::FunctionDefinition const& _func,
-		bool funcHasInlineAssembly);
+		std::string const& _nameOverride);
 	void setupBodyParamContext(
 		awst::ContractMethod const& method,
 		solidity::frontend::FunctionDefinition const& _func);
@@ -428,23 +424,15 @@ private:
 		std::shared_ptr<awst::Block> const& createBlock,
 		bool needsPostInit,
 		awst::SourceLocation const& loc);
-	std::map<solidity::frontend::ContractDefinition const*,
-		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
-	collectExplicitBaseArgs(
-		solidity::frontend::ContractDefinition const& _contract);
 	void bindBaseCtorArgs(
 		solidity::frontend::FunctionDefinition const& baseCtor,
 		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const& args,
 		std::shared_ptr<awst::Block> const& createBlock);
-	void emitInlineCtorPath(
+	void emitConstructorPlan(
 		solidity::frontend::ContractDefinition const& _contract,
-		solidity::frontend::FunctionDefinition const* constructor,
-		awst::ContractMethod& method,
 		std::shared_ptr<awst::Block> const& createBlock,
-		std::map<solidity::frontend::ContractDefinition const*,
-			std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
-			const& explicitBaseArgs,
-		std::set<int64_t>& stateVarInitialized);
+		std::function<void(solidity::frontend::ContractDefinition const&,
+			std::vector<std::shared_ptr<awst::Statement>>&)> const& emitStateVarInit);
 	void emitTransientBlobInit(
 		awst::Block& body, awst::SourceLocation const& loc);
 	void emitMemoryBlobInit(
@@ -455,9 +443,6 @@ private:
 		std::string const& _contractName,
 		awst::ContractMethod& method,
 		std::shared_ptr<awst::Block> const& createBlock,
-		std::map<solidity::frontend::ContractDefinition const*,
-			std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
-			const& explicitBaseArgs,
 		std::function<void(solidity::frontend::ContractDefinition const&,
 			std::vector<std::shared_ptr<awst::Statement>>&)> const& emitStateVarInit);
 

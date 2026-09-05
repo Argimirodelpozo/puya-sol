@@ -3,6 +3,7 @@
 #include "builder/CompilationSession.h"
 #include "builder/BuildArtifacts.h"
 #include "builder/SolcFacts.h"
+#include "builder/PreparedAssembly.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
 
@@ -97,8 +98,7 @@ AssemblyBuilder::AssemblyBuilder(
 // ─── Public entry point ─────────────────────────────────────────────────────
 
 std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
-	solidity::yul::Block const& _block,
-	solidity::yul::Dialect const& _dialect,
+	PreparedAssembly const& _assembly,
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 	awst::WType const* _returnType,
 	std::map<std::string, std::string> const& _constants,
@@ -108,12 +108,11 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	std::map<std::string, std::string> const& _blobOffsetVars,
 	std::map<std::string, std::string> const& _structRefSlotLocals,
 	std::map<std::string, StateVarSlot> const& _stateVarSlots,
-	std::map<solidity::yul::Identifier const*,
-		solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> const& _externalRefs,
 	std::function<std::string(solidity::frontend::VariableDeclaration const&)> _declName,
 	size_t _numCalldataParams
 )
 {
+	auto const& _block = _assembly.block;
 	m_returnType = _returnType;
 	m_locals.clear();
 	m_localConstants.clear();
@@ -123,7 +122,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_fmpStaysAligned = false;
 	m_localSlotConstants.clear();
 	m_reassignedLocals.clear();
-	auto const yulFacts = SolcFacts::analyzeYul(_block, _dialect);
+	auto const& yulFacts = _assembly.facts;
 	m_reassignedLocals = yulFacts.assignedVariables;
 	m_yulConstantValues = yulFacts.constantValues;
 	m_calldataParamNames.clear();
@@ -142,7 +141,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_blobOffsetVars = _blobOffsetVars;
 	m_structRefSlotLocals = _structRefSlotLocals;
 	m_stateVarSlots = _stateVarSlots;
-	m_externalRefs = _externalRefs;
+	m_externalRefs = _assembly.externalReferences;
 	m_declName = std::move(_declName);
 	m_arrayParamName.clear();
 	m_arrayParamType = nullptr;

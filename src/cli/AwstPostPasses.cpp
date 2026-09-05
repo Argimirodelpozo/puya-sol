@@ -7,6 +7,7 @@
 #include <cctype>
 #include <cstdint>
 #include <iterator>
+#include <map>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <set>
@@ -77,15 +78,16 @@ constexpr std::uintmax_t c_approvalBytes = c_programPageBytes * 2;
 struct BackendTarget
 {
 	std::string stem;
+	std::string id;
 	bool logicSig;
 };
 
 std::optional<BackendTarget> backendTarget(awst::RootNode const& _root)
 {
 	if (auto const* contract = dynamic_cast<awst::Contract const*>(&_root))
-		return BackendTarget{contract->name, false};
+		return BackendTarget{contract->name, contract->id, false};
 	if (auto const* logicSig = dynamic_cast<awst::LogicSignature const*>(&_root))
-		return BackendTarget{logicSig->shortName, true};
+		return BackendTarget{logicSig->shortName, logicSig->id, true};
 	return std::nullopt;
 }
 
@@ -204,7 +206,7 @@ bool prepareBackendTargetArtifacts(
 	AwstRoots const& _roots,
 	std::string& _error)
 {
-	std::set<std::string> stems;
+	std::map<std::string, std::string> stems;
 	for (auto const& root: _roots)
 		if (auto target = backendTarget(*root))
 		{
@@ -213,9 +215,12 @@ bool prepareBackendTargetArtifacts(
 				_error = "invalid backend artifact target name: " + target->stem;
 				return false;
 			}
-			// Repeated AWST ids from explicit/import aliases are coalesced by puya;
-			// it still rejects distinct targets that would share this filename.
-			stems.insert(target->stem);
+			if (auto [it, inserted] = stems.emplace(target->stem, target->id); !inserted)
+			{
+				_error = "backend artifact name collision: " + target->stem
+					+ " (" + it->second + " and " + target->id + ")";
+				return false;
+			}
 		}
 
 	auto const outputDir = fs::path(_outputDir);
@@ -226,8 +231,8 @@ bool prepareBackendTargetArtifacts(
 	{
 		auto const fileName = it->path().filename().string();
 		if (std::none_of(stems.begin(), stems.end(),
-			[&](std::string const& stem) {
-				return belongsToTarget(fileName, stem);
+			[&](auto const& target) {
+				return belongsToTarget(fileName, target.first);
 			}))
 			continue;
 		stalePaths.push_back(it->path());

@@ -39,6 +39,8 @@ class Dialect;
 namespace puyasol::builder
 {
 
+struct PreparedAssembly;
+
 /// Builds AWST nodes from Yul inline assembly blocks.
 ///
 /// Translates EVM Yul opcodes to equivalent AVM operations using biguint arithmetic
@@ -146,8 +148,7 @@ public:
 	void setFrameIsProgram(bool _v) { m_frameIsProgram = _v; }
 
 	std::vector<std::shared_ptr<awst::Statement>> buildBlock(
-		solidity::yul::Block const& _block,
-		solidity::yul::Dialect const& _dialect,
+		PreparedAssembly const& _assembly,
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 		awst::WType const* _returnType,
 		std::map<std::string, std::string> const& _constants = {},
@@ -157,8 +158,6 @@ public:
 		std::map<std::string, std::string> const& _blobOffsetVars = {},
 		std::map<std::string, std::string> const& _structRefSlotLocals = {},
 		std::map<std::string, StateVarSlot> const& _stateVarSlots = {},
-		std::map<solidity::yul::Identifier const*,
-			solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> const& _externalRefs = {},
 		std::function<std::string(solidity::frontend::VariableDeclaration const&)> _declName = {},
 		/// Number of leading _params that are the function's real CALLDATA args (the rest are
 		/// external refs / return vars appended by SolInlineAssembly). The synthetic calldata

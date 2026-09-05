@@ -16,6 +16,7 @@
 #include <libsolutil/Numeric.h>
 
 #include <sstream>
+#include "builder/itxn/CallResolver.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -35,19 +36,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryUserDefinedOp()
 {
 	auto const* userFunc = *m_binOp.annotation().userDefinedFunction;
 	if (!userFunc) return nullptr;
-
-	auto const* symbol = m_ctx.functionSymbols.resolve(userFunc->id());
-	if (!symbol)
-		return nullptr;
-
-	auto left = buildExpr(m_binOp.leftExpression());
-	auto right = buildExpr(m_binOp.rightExpression());
-	auto* resultType = m_ctx.typeMapper.map(m_binOp.annotation().type);
-
-	auto call = awst::makeSubroutineCall(awst::SubroutineID{*symbol}, resultType, m_loc);
-	awst::pushCallArg(call->args, userFunc->parameters()[0]->name(), std::move(left));
-	awst::pushCallArg(call->args, userFunc->parameters()[1]->name(), std::move(right));
-	return call;
+	return eb::CallResolver::buildOperatorCall(m_ctx, *userFunc,
+		{&m_binOp.leftExpression(), &m_binOp.rightExpression()}, m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolBinaryOperation::tryConstantFold()
@@ -307,23 +297,17 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 	auto right = std::move(loweredRight.value);
 	auto ld = std::move(loweredLeft.effects);
 	auto rd = std::move(loweredRight.effects);
+	bool const staticNeed = builder::EffectScan::mayWrite(m_binOp.leftExpression(), m_ctx, m_scope)
+		|| builder::EffectScan::mayWrite(m_binOp.rightExpression(), m_ctx, m_scope);
 	if (m_ctx.viaIRSequencing)
 	{
-		// via-IR evaluates left-to-right == build order: keep everything put.
-		m_ctx.restoreOperandDeltas(std::move(ld));
+		// The earlier value must be consumed before later queued/inline writes.
+		bool const pin = !rd.empty() || !ld.post.empty() || staticNeed;
+		left = m_ctx.emitSequencedOperand(std::move(ld), std::move(left), pin, m_loc);
 		m_ctx.restoreOperandDeltas(std::move(rd));
 	}
 	else
 	{
-		// Static scan: calls that write state DIRECTLY (handle-model storage
-		// params) execute inline and queue nothing — pin the right operand so
-		// it still evaluates before them. Skipped when the other side only
-		// reads locals (nothing inline effects can disturb).
-		bool staticNeed =
-			(builder::EffectScan::mayWrite(m_binOp.leftExpression())
-				&& !builder::onlyLocalPure(m_binOp.rightExpression()))
-			|| (builder::EffectScan::mayWrite(m_binOp.rightExpression())
-				&& !builder::onlyLocalPure(m_binOp.leftExpression()));
 		bool reorder = !ld.empty() || !rd.post.empty() || staticNeed;
 		right = m_ctx.emitSequencedOperand(std::move(rd), std::move(right), reorder, m_loc);
 		// Left evaluates inline after all re-emitted effects; its own

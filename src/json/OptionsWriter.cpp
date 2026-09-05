@@ -59,8 +59,11 @@ bool OptionsWriter::write(
 			_error = "options compilation target name cannot be empty";
 			return false;
 		}
-		// Explicit/import aliases can repeat an AWST id; one compilation entry
-		// is the backend's canonical representation.
+		if (opts["compilation_set"].contains(name))
+		{
+			_error = "duplicate compilation target: " + name;
+			return false;
+		}
 		opts["compilation_set"][name] = _outputDir;
 	}
 	opts["output_teal"] = true;

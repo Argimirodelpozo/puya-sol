@@ -34,7 +34,7 @@ void ContractBuilder::buildModifierChain(
 
 	std::string baseName = _method.memberName.empty()
 		? _func.name() : _method.memberName;
-	std::string cref = m_sourceFile + "." + _contractName;
+	auto const& cref = m_contractId;
 
 	// Return-parameter THREADING (mirrors solc IR). A modifier arg or the body may
 	// READ/WRITE the named return vars — `mod2(r)`, `m1(x = 2)`, or `r += 1` accumulating
@@ -419,7 +419,7 @@ void ContractBuilder::buildConstructorModifierChain(
 
 	awst::ContractMethod constructor;
 	constructor.sourceLocation = makeLoc(_func.location());
-	constructor.cref = m_sourceFile + "." + _contractName;
+	constructor.cref = m_contractId;
 	constructor.memberName = "__ctor_" + std::to_string(_func.id());
 	constructor.returnType = awst::WType::voidType();
 	constructor.body = std::move(_body);
@@ -431,9 +431,11 @@ void ContractBuilder::buildConstructorModifierChain(
 		if (parameter->name().empty())
 			continue;
 		constructor.args.push_back({
-			parameter->name(),
+			m_tr->awstVarName(*parameter),
 			makeLoc(parameter->location()),
-			m_typeMapper.map(parameter->type())});
+			m_typeMapper.profile().evmStorageLayout
+				&& parameter->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+				? awst::WType::biguintType() : m_typeMapper.map(parameter->type())});
 	}
 
 	auto const* savedReturnType = m_functionCtx->returnType;

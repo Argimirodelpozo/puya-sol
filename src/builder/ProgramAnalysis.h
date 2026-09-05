@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <set>
 #include <utility>
 
@@ -12,10 +13,22 @@ class CompilerStack;
 class ContractDefinition;
 class FunctionCall;
 class FunctionDefinition;
+class IndexAccess;
 }
 
 namespace puyasol::builder
 {
+
+struct PreparedAssembly;
+
+/// Source provenance for a single storage reference return. AVM carrier types
+/// are selected by TypeMapper; these facts are independent of the call site.
+struct StorageReferenceReturnFacts
+{
+	solidity::frontend::IndexAccess const* indexedReturn = nullptr;
+	bool bytesKeyed = false;
+	bool slotHandle = false;
+};
 
 /// Source-level reference effects for one callable body in one concrete
 /// contract context. Parameter POSITIONS are stable across virtual overrides;
@@ -40,6 +53,10 @@ struct ProgramAnalysis
 	std::set<int64_t> reassignedMemoryLocals;
 	std::set<int64_t> structRefOffsetParams;
 	std::set<int64_t> callablesWithInlineAssembly;
+	std::map<int64_t, std::shared_ptr<PreparedAssembly const>> preparedAssemblies;
+	/// Declaration IDs actually assigned via `.slot`, not merely mentioned in Yul.
+	std::set<int64_t> asmAssignedSlotDeclarations;
+	std::map<int64_t, StorageReferenceReturnFacts> storageReferenceReturns;
 	/// Callables whose parsed Yul contains sload/sstore or exposes a `.slot`
 	/// handle that can be dereferenced by later Solidity expressions.
 	std::set<int64_t> callablesWithStorageAssembly;
@@ -62,6 +79,14 @@ struct ProgramAnalysis
 	bool hasReachabilityGraphs = false;
 	std::set<int64_t> reachableFunctionIds;
 	std::set<int64_t> reachableCallableIds;
+	/// Cached from solc's library graphs and resolved declaration references. Complements the
+	/// context-specific creation/deployed graphs, which can stop at library
+	/// entrypoints. Includes modifier bodies and function-pointer references.
+	std::map<int64_t, std::set<int64_t>> callableReferences;
+	std::map<int64_t, std::set<int64_t>> callableCallers;
+
+	/// Close a seed set over the cached source-reference edges, without AST walks.
+	void closeCallableReferences(std::set<int64_t>& _ids) const;
 
 	bool isCalledInternally(int64_t _contractId, int64_t _functionId) const
 	{

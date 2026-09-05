@@ -1,4 +1,5 @@
 #include "builder/ProgramAnalysis.h"
+#include "builder/CallTarget.h"
 
 #include "builder/sol-ast/AsmScan.h"
 
@@ -65,11 +66,13 @@ FunctionDefinition const* referencedFunction(FunctionCall const& _call)
 	return dynamic_cast<FunctionDefinition const*>(declaration);
 }
 
+} // namespace
+
 /// Resolve the exact implementation used by this call site. This deliberately
 /// mirrors solc's own lookup split: Static keeps an explicit Base.f target,
 /// Super starts at the lexical contract's successor, and Virtual searches from
 /// the most-derived contract.
-FunctionDefinition const* resolveCallTarget(
+FunctionDefinition const* resolveReferenceCallTarget(
 	ContractDefinition const* _mostDerived,
 	FunctionDefinition const* _caller,
 	FunctionCall const& _call)
@@ -127,6 +130,9 @@ FunctionDefinition const* resolveCallTarget(
 
 	return &declaration->resolveVirtual(*_mostDerived);
 }
+
+namespace
+{
 
 bool isReferenceParameter(VariableDeclaration const& _parameter)
 {
@@ -204,7 +210,7 @@ public:
 				recordRoots(&member->expression(),
 					m_facts.direct.mutatedParameterIndices);
 
-		auto const* target = resolveCallTarget(
+		auto const* target = resolveReferenceCallTarget(
 			m_mostDerived, &m_caller, _call);
 		if (!target)
 			return true;
@@ -408,7 +414,7 @@ ParameterMutationSummary const* ProgramAnalysis::parameterMutationsForCall(
 	if (auto found = functionDeclarations.find(_callerCallableId);
 		found != functionDeclarations.end())
 		caller = found->second;
-	auto const* target = resolveCallTarget(_mostDerived, caller, _call);
+	auto const* target = resolveReferenceCallTarget(_mostDerived, caller, _call);
 	return target ? &parameterMutations(_mostDerived, *target) : nullptr;
 }
 

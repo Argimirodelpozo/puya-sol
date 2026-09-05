@@ -6,9 +6,9 @@
 /// such functions return only the uint64 index; call sites reconstitute
 /// `IndexExpression(<stateVar>, <call>)` as the lvalue.
 
-#include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/Types.h>
 #include "builder/sol-types/SolcFwd.h"
-#include <libsolidity/ast/ASTVisitor.h>
 
 #include "builder/ProgramAnalysis.h"
 
@@ -58,12 +58,11 @@ inline bool typeContains(
 /// storageRefPointerReturn, or callee writes land under the wrong key.
 /// Defined here (lowest storage-ref header); AWSTBuilder.h re-exports it.
 inline bool containsMappingType(
-	solidity::frontend::Type const* _t,
-	std::set<int64_t>* _visiting = nullptr)
+	solidity::frontend::Type const* _t)
 {
-	return typeContains(_t, [](solidity::frontend::Type const* t) {
-		return dynamic_cast<solidity::frontend::MappingType const*>(t) != nullptr;
-	}, _visiting);
+	// Solc's predicate requires a nameable type. Literal/magic types can
+	// reach conversion checks too, but cannot contain stored mappings.
+	return _t && _t->nameable() && _t->containsNestedMapping();
 }
 
 /// True if `_t` is an INTERNAL function pointer, or any array/struct that
@@ -135,107 +134,15 @@ inline bool isBoxKeyedStorageRef(
 	return false;
 }
 
-/// If `_func` is a storage-ref pointer function — an implemented internal
-/// function returning a single `T storage` via `return <holder>[<idx>]` or
-/// (mapping-of-struct) a named-return assignment, with no `.slot :=` assembly —
-/// returns the IndexAccess. The holder may be a state variable (array/slot:
-/// call site reconstitutes IndexExpression) or a `storage` param (mapping:
-/// box-key pass-through). Returns nullptr otherwise.
+/// Cached provenance; no repeated AST scans at signatures, returns or callers.
 inline solidity::frontend::IndexAccess const* storageRefPointerReturn(
-	solidity::frontend::FunctionDefinition const* _func)
+	solidity::frontend::FunctionDefinition const* _func,
+	ProgramAnalysis const& _analysis)
 {
-	using namespace solidity::frontend;
-	if (!_func || !_func->isImplemented())
-		return nullptr;
-	if (_func->returnParameters().size() != 1)
-		return nullptr;
-	if (_func->returnParameters()[0]->referenceLocation()
-		!= VariableDeclaration::Location::Storage)
-		return nullptr;
-
-	// Collect every `return` statement and note any inline assembly.
-	struct ReturnFinder: ASTConstVisitor
-	{
-		std::vector<Return const*> returns;
-		bool sawAssembly = false;
-		bool visit(Return const& _r) override
-		{
-			returns.push_back(&_r);
-			return true;
-		}
-		bool visit(InlineAssembly const&) override
-		{
-			sawAssembly = true;
-			return true;
-		}
-	} finder;
-	_func->body().accept(finder);
-
-	// `.slot :=` assembly variant handled elsewhere (returns biguint slot).
-	// Require exactly one return — branching returns can't reduce to one base.
-	if (finder.sawAssembly)
-		return nullptr;
-
-	// `<holder>[<index>]` comes from an explicit return or a named-return
-	// assignment (V4 shape: `position = self[positionKey]` with no return stmt).
-	Expression const* refExpr = nullptr;
-	bool namedReturnForm = false;
-	if (finder.returns.size() == 1 && finder.returns[0]->expression())
-		refExpr = finder.returns[0]->expression();
-	else if (finder.returns.empty() && !_func->returnParameters()[0]->name().empty())
-	{
-		struct AssignFinder: ASTConstVisitor
-		{
-			VariableDeclaration const* target = nullptr;
-			Expression const* rhs = nullptr;
-			bool visit(Assignment const& _a) override
-			{
-				if (auto const* lhs =
-						dynamic_cast<Identifier const*>(&_a.leftHandSide()))
-					if (lhs->annotation().referencedDeclaration == target)
-						rhs = &_a.rightHandSide();
-				return true;
-			}
-		} af;
-		af.target = _func->returnParameters()[0].get();
-		_func->body().accept(af);
-		refExpr = af.rhs;
-		namedReturnForm = true;
-	}
-	if (!refExpr)
-		return nullptr;
-
-	auto const* indexAccess = dynamic_cast<IndexAccess const*>(refExpr);
-	if (!indexAccess)
-		return nullptr;
-
-	// Mapping holder → element is box-keyed (callee yields bytes key, no reconstitution).
-	// Array/slot holder → returns uint64 index; caller reconstitutes IndexExpression.
-	bool const holderIsMapping = dynamic_cast<MappingType const*>(
-		indexAccess->baseExpression().annotation().type) != nullptr;
-
-	auto const* baseId = dynamic_cast<Identifier const*>(
-		&indexAccess->baseExpression());
-	if (!baseId)
-		return nullptr;
-	auto const* baseVar = dynamic_cast<VariableDeclaration const*>(
-		baseId->annotation().referencedDeclaration);
-	if (!baseVar)
-		return nullptr;
-
-	// Named-return form is supported only for a mapping holder (box-key
-	// pass-through); array/slot reconstitution needs an explicit return.
-	if (namedReturnForm)
-		return holderIsMapping ? indexAccess : nullptr;
-
-	// Explicit return: state-var holder → array/slot reconstitution or direct mapping.
-	// Non-state-var holder only accepted when it's a mapping (e.g. `return self[k]`
-	// where `self` is a `mapping(K=>V) storage` param — box-key pass-through).
-	if (baseVar->isStateVariable())
-		return indexAccess;
-	if (holderIsMapping)
-		return indexAccess;
-	return nullptr;
+	auto found = _func ? _analysis.storageReferenceReturns.find(_func->id())
+		: _analysis.storageReferenceReturns.end();
+	return found == _analysis.storageReferenceReturns.end()
+		? nullptr : found->second.indexedReturn;
 }
 
 /// True if the storage-ref pointer function's return is box-keyed (bytes prefix)
@@ -244,15 +151,21 @@ inline solidity::frontend::IndexAccess const* storageRefPointerReturn(
 /// gate stood so plain-struct mapping elements (e.g. V4 Position.State) are
 /// still box-keyed.
 inline bool storageRefReturnIsBytesKeyed(
-	solidity::frontend::FunctionDefinition const* _func)
+	solidity::frontend::FunctionDefinition const* _func,
+	ProgramAnalysis const& _analysis)
 {
-	using namespace solidity::frontend;
-	auto const* ix = storageRefPointerReturn(_func);
-	if (!ix)
-		return false;
-	if (dynamic_cast<MappingType const*>(ix->baseExpression().annotation().type))
-		return true;
-	return containsMappingType(_func->returnParameters()[0]->type());
+	auto found = _func ? _analysis.storageReferenceReturns.find(_func->id())
+		: _analysis.storageReferenceReturns.end();
+	return found != _analysis.storageReferenceReturns.end() && found->second.bytesKeyed;
+}
+
+inline bool storageRefReturnUsesSlot(
+	solidity::frontend::FunctionDefinition const* _func,
+	ProgramAnalysis const& _analysis)
+{
+	auto found = _func ? _analysis.storageReferenceReturns.find(_func->id())
+		: _analysis.storageReferenceReturns.end();
+	return found != _analysis.storageReferenceReturns.end() && found->second.slotHandle;
 }
 
 } // namespace puyasol::builder

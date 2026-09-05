@@ -8,22 +8,38 @@
 /// `removeDeadCode` is required for puya backend acceptance (puya 5.8.0+
 /// rejects unreachable code with a compile error).
 
-#include "awst/Node.h"
+#include "awst/StatementWalk.h"
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
 namespace puyasol::awst
 {
 
+inline bool blockAlwaysTerminates(Block const& _block);
+
 namespace termination_detail
 {
-// True if this statement always terminates control flow on every path
-// (a `return` or an `assert(false)` produced by `revert`/`require(false)`).
+// No fallthrough in the current block. Loop transfers terminate their body,
+// not the enclosing loop: loops themselves remain conservatively fallthrough.
 inline bool statementAlwaysTerminates(Statement const& _stmt)
 {
-	if (dynamic_cast<ReturnStatement const*>(&_stmt))
+	if (dynamic_cast<ReturnStatement const*>(&_stmt)
+		|| dynamic_cast<LoopExit const*>(&_stmt)
+		|| dynamic_cast<LoopContinue const*>(&_stmt))
 		return true;
+	if (auto const* block = dynamic_cast<Block const*>(&_stmt))
+		return blockAlwaysTerminates(*block);
+	if (auto const* branch = dynamic_cast<IfElse const*>(&_stmt))
+		return branch->ifBranch && branch->elseBranch
+			&& blockAlwaysTerminates(*branch->ifBranch)
+			&& blockAlwaysTerminates(*branch->elseBranch);
+	if (auto const* branch = dynamic_cast<Switch const*>(&_stmt))
+		return branch->defaultCase && blockAlwaysTerminates(*branch->defaultCase)
+			&& std::all_of(branch->cases.begin(), branch->cases.end(), [](auto const& item) {
+				return item.second && blockAlwaysTerminates(*item.second);
+			});
 	// assert(false) from revert/require
 	if (auto const* exprStmt = dynamic_cast<ExpressionStatement const*>(&_stmt))
 	{
@@ -42,79 +58,30 @@ inline bool statementAlwaysTerminates(Statement const& _stmt)
 }
 } // namespace termination_detail
 
-/// True if every path through this block reaches a terminator.
-/// Recurses through nested blocks and `if/else` where both arms terminate.
+/// True if every path exits this block, including before an unpruned tail.
 inline bool blockAlwaysTerminates(Block const& _block)
 {
-	if (_block.body.empty())
-		return false;
-	auto const& last = _block.body.back();
-	if (termination_detail::statementAlwaysTerminates(*last))
-		return true;
-	// Last statement is an if/else with both branches terminating
-	if (auto const* ifElse = dynamic_cast<IfElse const*>(last.get()))
-	{
-		if (!ifElse->elseBranch)
-			return false;
-		return blockAlwaysTerminates(*ifElse->ifBranch)
-			&& blockAlwaysTerminates(*ifElse->elseBranch);
-	}
-	// Brace-less branches wrap their single stmt in a Block — recurse.
-	if (auto const* inner = dynamic_cast<Block const*>(last.get()))
-		return blockAlwaysTerminates(*inner);
-	return false;
+	return std::any_of(_block.body.begin(), _block.body.end(), [](auto const& statement) {
+		return termination_detail::statementAlwaysTerminates(*statement);
+	});
 }
 
 /// Remove unreachable statements that follow a guaranteed terminator inside
-/// a block body — recursively into nested blocks, ifs, while/for loops.
+/// a block body, with container coverage supplied by the shared AWST walker.
 inline void removeDeadCode(std::vector<std::shared_ptr<Statement>>& _body)
 {
 	using termination_detail::statementAlwaysTerminates;
 	for (size_t i = 0; i < _body.size(); ++i)
 	{
-		// Recurse into nested blocks first.
-		if (auto* ifElse = dynamic_cast<IfElse*>(_body[i].get()))
-		{
-			if (ifElse->ifBranch) removeDeadCode(ifElse->ifBranch->body);
-			if (ifElse->elseBranch) removeDeadCode(ifElse->elseBranch->body);
-		}
-		else if (auto* block = dynamic_cast<Block*>(_body[i].get()))
-			removeDeadCode(block->body);
-		else if (auto* whileLoop = dynamic_cast<WhileLoop*>(_body[i].get()))
-		{
-			if (whileLoop->loopBody) removeDeadCode(whileLoop->loopBody->body);
-		}
-		else if (auto* forLoop = dynamic_cast<ForInLoop*>(_body[i].get()))
-		{
-			if (forLoop->loopBody) removeDeadCode(forLoop->loopBody->body);
-		}
+		forEachChildBlock(*_body[i], [](Block& block, bool) {
+			removeDeadCode(block.body);
+		});
 
 		// If this statement always terminates, drop everything after it.
 		if (statementAlwaysTerminates(*_body[i]) && i + 1 < _body.size())
 		{
 			_body.erase(_body.begin() + i + 1, _body.end());
 			break;
-		}
-		// IfElse where both branches terminate → drop following statements.
-		if (auto const* ifElse = dynamic_cast<IfElse const*>(_body[i].get()))
-		{
-			if (ifElse->ifBranch && ifElse->elseBranch
-				&& blockAlwaysTerminates(*ifElse->ifBranch)
-				&& blockAlwaysTerminates(*ifElse->elseBranch)
-				&& i + 1 < _body.size())
-			{
-				_body.erase(_body.begin() + i + 1, _body.end());
-				break;
-			}
-		}
-		// Nested block that terminates → drop following statements.
-		if (auto const* inner = dynamic_cast<Block const*>(_body[i].get()))
-		{
-			if (blockAlwaysTerminates(*inner) && i + 1 < _body.size())
-			{
-				_body.erase(_body.begin() + i + 1, _body.end());
-				break;
-			}
 		}
 	}
 }

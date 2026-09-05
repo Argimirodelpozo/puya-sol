@@ -213,38 +213,13 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 			auto const* nat = tupleType->types()[i];
 			Type const* solField = (solTuple && i < solTuple->components().size())
 				? solTuple->components()[i] : nullptr;
-			auto si = solField ? builder::SolIntType::fromSolOrEnum(solField) : std::nullopt;
-			awst::WType const* arc4 = nullptr;
-			awst::WType const* dec = nat;   // default: puya decodes to the native return type
-			if (si && isSignedIntReturn(solField))
-			{
-				// SIGNED intN: wire is a 32-byte sign-extended uint256 (Pass 4). puya's
-				// ARC4Decode of arc4.uint256 yields a BIGUINT holding that 256-bit value;
-				// int128/256 want biguint directly, but a signed int8..64 wants a 64-bit
-				// native — decoding straight to uint64 REVERTS on negatives (2^256-|x| ≫
-				// 2^64). So decode to biguint here and narrow to uint64 in the rebuild.
-				arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(256);
-				if (nat == awst::WType::uint64Type())
-				{
-					dec = awst::WType::biguintType();
-					narrowIdx[i] = true;
-					anyNarrow = true;
-				}
-			}
-			else if (si)
-			{
-				// Unsigned: uint8..64 / enum → 8B (arc4.uint64); uint65..256 at its
-				// natural declared width (uint128 → 16B, uint256 → 32B).
-				if (si->bits <= 64)
-					arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(64);
-				else
-					arc4 = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(si->bits));
-			}
-			else
-				arc4 = m_ctx.typeMapper.mapToARC4Type(nat);   // bool/address/bytesN/dynamic/nested
-
-			wireElems.push_back(arc4);
-			decodeElems.push_back(dec);
+			auto element = planReturnElement(m_ctx.typeMapper, solField,
+				solField ? abiReturnNativeType(m_ctx.typeMapper, solField) : nat);
+			// Decode signed narrow values as biguint first, then narrow below.
+			narrowIdx[i] = element.isSigned && nat == awst::WType::uint64Type();
+			anyNarrow |= narrowIdx[i];
+			wireElems.push_back(m_ctx.typeMapper.mapToARC4Type(element.wireType));
+			decodeElems.push_back(narrowIdx[i] ? awst::WType::biguintType() : nat);
 		}
 		auto const* arc4TupleType =
 			m_ctx.typeMapper.createType<awst::ARC4Tuple>(std::move(wireElems));

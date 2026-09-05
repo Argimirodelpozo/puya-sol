@@ -112,6 +112,12 @@ int main()
 		"an empty compilation set must be rejected");
 	ok &= require(readText(optionsPath) == optionsBefore,
 		"invalid options must not replace the last valid file");
+	error.clear();
+	ok &= require(!puyasol::json::OptionsWriter::write(
+		optionsPath, {"a.C", "a.C"}, tempDir.string(), 1, false, {}, {}, optionsDigest, error),
+		"duplicate compilation identities must not silently coalesce");
+	ok &= require(readText(optionsPath) == optionsBefore,
+		"duplicate identities must preserve the last valid options");
 
 	auto const approvalPath = tempDir / "Child.approval.bin";
 	auto const clearPath = tempDir / "Child.clear.bin";
@@ -171,6 +177,14 @@ int main()
 		"Target.approval.bin", "Target.clear.bin", "Target.approval.teal",
 		"Target.clear.teal", "Target.arc56.json", "Target.000.ssa.ir"})
 		writeText(tempDir / name, "stale");
+	auto colliding = std::make_shared<puyasol::awst::Contract>(*contract);
+	colliding->id = "other.Target";
+	error.clear();
+	ok &= require(!puyasol::cli::prepareBackendTargetArtifacts(
+		tempDir.string(), {contract, colliding}, error),
+		"distinct identities must not share an artifact stem");
+	ok &= require(readText(tempDir / "Target.approval.bin") == "stale",
+		"collision validation must precede backend artifact deletion");
 	error.clear();
 	ok &= require(puyasol::cli::prepareBackendTargetArtifacts(
 		tempDir.string(), roots, error),

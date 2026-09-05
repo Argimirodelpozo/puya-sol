@@ -1,21 +1,19 @@
 #pragma once
 
 /// @file ReturnWirePlan.h
-/// The per-return-element ABI wire plan — shared between the function builder
-/// (which computes it and stashes it in FunctionContext) and SolReturnStatement
-/// (which applies it when building each `return`). Neutral location under
-/// builder/ so both sol-ast/ and contract/ can include it without a cycle.
-///
-/// Design note (fable-review-2 D2, build-time-return-encoding): the ABI wire
-/// encoding of a return value belongs at the point the ReturnStatement is built
-/// (we hold the value + know the declared return types from solc), NOT in a
-/// post-hoc walk over already-built AWST. This struct carries the decision so
-/// the builder can act on it directly.
+/// Return representations derived from solc declarations. TypeMapper owns one
+/// immutable signature plan per function; body builders and call sites share it.
+/// Element planning is also shared with generated getters and ABI decoding.
 
-#include "awst/Node.h"
+#include <vector>
+
+namespace solidity::frontend { class Type; }
+namespace puyasol::awst { class WType; }
 
 namespace puyasol::builder
 {
+
+class TypeMapper;
 
 struct ReturnWireElem
 {
@@ -26,5 +24,22 @@ struct ReturnWireElem
 	bool encoded = false;                      // biguint/array element → needs ARC4Encode
 	bool masked = false;                       // unsigned sub-word (uint64 native) → mask to `bits`
 };
+
+struct FunctionReturnPlan
+{
+	awst::WType const* nativeType = nullptr;   // body / modifier-chain representation
+	awst::WType const* internalType = nullptr; // caller representation (blob returns use offsets)
+	awst::WType const* wireType = nullptr;     // outer ABI method representation
+	std::vector<ReturnWireElem> elements;
+};
+
+ReturnWireElem planReturnElement(
+	TypeMapper& _types,
+	solidity::frontend::Type const* _solType,
+	awst::WType const* _nativeType);
+
+/// ABI return integers use canonical 256-bit two's complement when signed.
+awst::WType const* abiReturnNativeType(
+	TypeMapper& _types, solidity::frontend::Type const* _solType);
 
 } // namespace puyasol::builder

@@ -162,9 +162,8 @@ bool EvmSlotLowering::isSlotHandleRef(
 			&& isStorageTypedRoot(*cur);
 	}
 
-	// A storage-returning helper is represented by a slot exactly when its
-	// callable uses inline assembly (`r.slot := ...`) or the whole compilation
-	// uses EVM storage layout.  Inspect the referenced declaration rather than
+	// Use the same return provenance as the callee signature. Inspect the
+	// referenced declaration rather than
 	// the final element type, so every array rank and aggregate shape follows
 	// the same route.
 	if (auto const* call = dynamic_cast<FunctionCall const*>(cur))
@@ -192,8 +191,7 @@ bool EvmSlotLowering::isSlotHandleRef(
 			// the alias shape and keep the slot-handle route.
 			if (storagePointerAliasParam(*fd))
 				return false;
-			return _ctx.typeMapper.analysis()
-				.callablesWithInlineAssembly.count(fd->id()) != 0;
+			return storageRefReturnUsesSlot(fd, _ctx.typeMapper.analysis());
 		}
 	}
 
@@ -464,8 +462,10 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIdentifier(
 	{
 		// Storage-located local/param: the variable holds the biguint slot
 		// (bound at declaration / by the call convention / asm `.slot :=`).
-		auto slot = awst::makeVarExpression(
-			vd->name(), awst::WType::biguintType(), m_loc);
+		auto slot = m_scope.findSlotStorageRef(vd->id());
+		if (!slot || !dynamic_cast<awst::VarExpression const*>(slot.get()))
+			slot = awst::makeVarExpression(
+				vd->name(), awst::WType::biguintType(), m_loc);
 		return makeLeafAddr(std::move(slot), nullptr,
 			vd->type() ? vd->type()->storageBytes() : 32, /*alone*/ true,
 			vd->type());

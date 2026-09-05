@@ -123,9 +123,8 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 					lhsPlainLocal = lvd->isLocalVariable()
 						&& !lvd->type()->dataStoredIn(DataLocation::Storage);
 			bool staticNeed =
-				(builder::EffectScan::mayWrite(m_assignment.rightHandSide()) && !lhsPlainLocal)
-				|| (builder::EffectScan::mayWrite(m_assignment.leftHandSide())
-					&& !builder::onlyLocalPure(m_assignment.rightHandSide()));
+				(builder::EffectScan::mayWrite(m_assignment.rightHandSide(), m_ctx, m_scope) && !lhsPlainLocal)
+				|| builder::EffectScan::mayWrite(m_assignment.leftHandSide(), m_ctx, m_scope);
 			bool reorder = !lhsD.empty() || !rhsD.post.empty() || staticNeed;
 			value = m_ctx.emitSequencedOperand(std::move(rhsD), std::move(value), reorder, m_loc);
 			for (auto& s: lhsD.pre)

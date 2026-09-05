@@ -8,9 +8,9 @@ namespace puyasol::builder::sol_ast
 
 /// Type conversion calls: uint256(x), address(y), bytes32(z), etc.
 ///
-/// Dispatches to TypeConversionRegistry for most conversions. Falls back to
-/// inline handling for edge cases (address(0) constant, complex bytes
-/// conversions, narrowing casts with masking).
+/// Integer conversions use source/target solc facts in ConversionPlan; enum
+/// conversions remain checked. Other categories use TypeConversionRegistry
+/// and representation-specific fallbacks, sharing the once-lowered operand.
 class SolTypeConversion: public SolFunctionCall
 {
 public:
@@ -24,15 +24,12 @@ private:
 	/// Handle enum range check: assert(x < numMembers)
 	std::shared_ptr<awst::Expression> handleEnumConversion();
 
-	/// Try TypeConversionRegistry, then inline fallbacks.
-	std::shared_ptr<awst::Expression> handleGenericConversion(awst::WType const* _targetType);
+	/// Representation-specific fallback after category dispatch.
+	std::shared_ptr<awst::Expression> handleGenericConversion(
+		std::shared_ptr<awst::Expression> _value, awst::WType const* _targetType);
 
 	/// address(0) → zero address constant
 	std::shared_ptr<awst::Expression> tryAddressZeroConstant();
-
-	/// Narrowing integer casts: mask to target bit width.
-	std::shared_ptr<awst::Expression> applyNarrowingMask(
-		std::shared_ptr<awst::Expression> _expr, awst::WType const* _targetType);
 
 	/// Integer → bytes[N] conversion via itob + padding/truncation.
 	std::shared_ptr<awst::Expression> handleIntToBytes(

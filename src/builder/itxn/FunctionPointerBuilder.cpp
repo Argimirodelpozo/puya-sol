@@ -20,6 +20,7 @@
 #include "builder/sol-ast/calls/RevertBlob.h"
 #include "Logger.h"
 
+#include <algorithm>
 #include <cctype>
 #include "builder/itxn/InnerCallHandlers.h"
 
@@ -31,12 +32,11 @@ using namespace solidity::frontend;
 namespace
 {
 
-/// True when translating a library subroutine (InstanceMethodTarget would fail).
-bool inLibraryContext(ContractContext const& _ctx, std::string const& _currentCref)
+/// Freestanding bodies cannot use InstanceMethodTarget. The resolved host
+/// declaration is authoritative; display-name substring matching is not.
+bool inRootContext(ContractContext const& _ctx)
 {
-	return !_ctx.contractName.empty()
-		&& !_currentCref.empty()
-		&& _currentCref.find("." + _ctx.contractName) == std::string::npos;
+	return !_ctx.currentContract && !_ctx.functionPointers.currentCref.empty();
 }
 
 } // namespace
@@ -51,7 +51,7 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 	auto& registry = _ctx.functionPointers;
 	std::string dname = dispatchName(_funcType);
 	registry.neededDispatches[dname] = _funcType;
-	bool const rootContext = inLibraryContext(_ctx, registry.currentCref);
+	bool const rootContext = inRootContext(_ctx);
 	if (rootContext)
 		registry.neededRootDispatches.insert(dname);
 
@@ -346,7 +346,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		auto& registry = _ctx.functionPointers;
 		std::string const dname = dispatchName(_funcType);
 		registry.neededDispatches[dname] = _funcType;
-		bool const rootContext = inLibraryContext(_ctx, registry.currentCref);
+		bool const rootContext = inRootContext(_ctx);
 		if (rootContext)
 			registry.neededRootDispatches.insert(dname);
 
@@ -527,11 +527,8 @@ namespace dispatch_detail
 /// demanded by call sites but with no surviving targets keep an EMPTY group
 /// (the dispatch subroutine must still exist so references resolve).
 std::map<std::string, std::vector<FuncPtrEntry const*>> collectDispatchGroups(
-	FunctionPointerRegistry const& _registry, std::string const& _contractName)
+	FunctionPointerRegistry const& _registry, ContractDefinition const* _contract)
 {
-	auto funcScopeContract = [](FunctionDefinition const* fd) -> ContractDefinition const* {
-		return fd ? fd->annotation().contract : nullptr;
-	};
 	std::map<std::string, std::vector<FuncPtrEntry const*>> groups;
 	for (auto const& [key, entry] : _registry.targets)
 	{
@@ -540,23 +537,19 @@ std::map<std::string, std::vector<FuncPtrEntry const*>> collectDispatchGroups(
 		// call or external self-call records the signature in neededDispatches.
 		if (!_registry.neededDispatches.count(dname))
 			continue;
-		// Skip foreign targets (different non-library, non-base contract).
-		// Keep if: awstName starts with __super_, subroutineId is set,
-		// or the function is in the current contract or a library.
-		auto const* fdContract = funcScopeContract(entry.funcDef);
-		bool foreignNonResolvable = fdContract
-			&& !_contractName.empty()
-			&& fdContract->name() != _contractName
+		// Use solc's declaration identity and C3 hierarchy, not parsed cref or
+		// short-name equality. Inherited public targets belong to this host too.
+		auto const* fdContract = entry.funcDef ? entry.funcDef->annotation().contract : nullptr;
+		bool inHierarchy = false;
+		if (_contract)
+		{
+			auto const& bases = _contract->annotation().linearizedBaseContracts;
+			inHierarchy = std::find(bases.begin(), bases.end(), fdContract) != bases.end();
+		}
+		if (fdContract && _contract && !inHierarchy
 			&& !fdContract->isLibrary()
 			&& entry.subroutineId.empty()
-			&& entry.name.find("__super_") == std::string::npos;
-		if (foreignNonResolvable)
-		{
-			// Internal/private base-contract fn: keep — InstanceMethodTarget resolves via MRO.
-			if (!entry.funcDef->isPartOfExternalInterface())
-				foreignNonResolvable = false;
-		}
-		if (foreignNonResolvable)
+			&& entry.name.find("__super_") == std::string::npos)
 			continue;
 		groups[dname].push_back(&entry);
 	}
@@ -677,123 +670,29 @@ std::shared_ptr<awst::Block> buildDispatchEntryArm(
 		auto call = awst::makeSubroutineCall(
 			std::move(target), dispatch.returnType, _loc);
 
-		bool isPublic = entry->funcDef
-			&& entry->funcDef->isPartOfExternalInterface();
-
+		bool const isPublic = targetMethod && targetMethod->arc4MethodConfig.has_value();
+		auto const* plan = entry->funcDef
+			? &_ctx.typeMapper.callBoundaryPlan(*entry->funcDef, _ctx.currentContract) : nullptr;
 		for (size_t i = 0; i < funcType->parameterTypes().size(); ++i)
 		{
 			awst::CallArg arg;
-			auto var = awst::makeVarExpression("__arg" + std::to_string(i), dispatch.args[i + 2].wtype, _loc);
-
-			// Use the target's param name; fall back to _paramN for unnamed
-			// params (matches AWSTBuilder's synthesised naming).
-			std::string paramName = "__arg" + std::to_string(i);
-			if (entry->funcDef && i < entry->funcDef->parameters().size())
+			arg.value = awst::makeVarExpression("__arg" + std::to_string(i), dispatch.args[i + 2].wtype, _loc);
+			if (plan)
 			{
-				paramName = entry->funcDef->parameters()[i]->name();
-				if (paramName.empty())
-					paramName = "_param" + std::to_string(i);
+				auto const& parameter = plan->parameters.at(i);
+				arg.name = isPublic ? parameter.wireName() : parameter.name;
+				if (isPublic) arg.value = parameter.encodeArgument(std::move(arg.value), _loc);
+				else arg.value = TypeCoercion::coerceForAssignment(std::move(arg.value), parameter.type, _loc);
 			}
-
-			awst::WType const* arc4Type = isPublic
-				? dispatchPublicArgArc4Type(
-					_ctx.typeMapper, var->wtype, funcType->parameterTypes()[i])
-				: nullptr;
-
-			if (arc4Type && arc4Type != var->wtype)
-			{
-				auto encode = awst::makeARC4Encode(std::move(var), arc4Type, _loc);
-
-				arg.name = "__arc4_" + paramName;
-				arg.value = std::move(encode);
-			}
-			else
-			{
-				arg.name = paramName;
-				arg.value = std::move(var);
-			}
+			if (targetMethod)
+				arg.name = targetMethod->args.at(i).name;
 			call->args.push_back(std::move(arg));
 		}
-
-		// Public MULTI-return target: the callee's translated method carries
-		// the GROUND-TRUTH wire tuple (whichever encoder produced it —
-		// build-time, chain-dispatch, or post-pass). Type the call with it
-		// and adapt each element back to native: ARC4 uints decode through
-		// biguint (narrowed to the uint64 carrier when native), ARC4
-		// aggregates ConvertArray back; untouched elements are native.
-		if (auto const* natTuple =
-				dynamic_cast<awst::WTuple const*>(dispatch.returnType);
-			natTuple && isPublic && targetMethod)
-		{
-			auto const* wireTuple = dynamic_cast<awst::WTuple const*>(
-				targetMethod->returnType);
-			if (wireTuple
-				&& wireTuple->types().size() == natTuple->types().size())
-			{
-				call->wtype = targetMethod->returnType;
-				auto se = awst::makeEvalOnce(std::move(call), _loc);
-				auto tuple = awst::makeTupleExpression(nullptr, _loc);
-				for (size_t i = 0; i < natTuple->types().size(); ++i)
-				{
-					auto const* wire = wireTuple->types()[i];
-					auto const* native = natTuple->types()[i];
-					std::shared_ptr<awst::Expression> item =
-						awst::makeTupleItem(se, static_cast<int>(i), wire, _loc);
-					if (wire != native)
-					{
-						if (dynamic_cast<awst::ARC4UIntN const*>(wire))
-						{
-							item = awst::makeARC4Decode(std::move(item),
-								awst::WType::biguintType(), _loc);
-							if (native != awst::WType::biguintType())
-								item = builder::TypeCoercion::implicitNumericCast(
-									std::move(item), native, _loc);
-						}
-						else
-							item = awst::makeConvertArray(
-								std::move(item), native, _loc);
-					}
-					tuple->items.push_back(std::move(item));
-				}
-				tuple->wtype = dispatch.returnType;
-				ifBlock->body.push_back(
-					awst::makeReturnStatement(std::move(tuple), _loc));
-				return ifBlock;
-			}
-		}
-
-		// Public targets return WIRE-encoded values (build-time
-		// return encoding): adapt back to the native dispatch return.
-		bool retIsSignedNarrow = false;
-		if (funcType->returnParameterTypes().size() == 1)
-			if (auto it = builder::SolIntType::fromSol(
-					funcType->returnParameterTypes()[0]);
-				it && it->isSigned && it->bits <= 64)
-				retIsSignedNarrow = true;
-		if (isPublic && dispatch.returnType == awst::WType::biguintType())
-			call->wtype = _ctx.typeMapper.createType<awst::ARC4UIntN>(256); // arc4.uint256
-		else if (isPublic && retIsSignedNarrow
-			&& dispatch.returnType == awst::WType::uint64Type())
-			// Signed narrow publishes as uint256 on the wire.
-			call->wtype = _ctx.typeMapper.createType<awst::ARC4UIntN>(256);
-		// (public multi-return handled by the entry skip in the caller)
+		if (isPublic) call->wtype = targetMethod->returnType;
 
 		if (dispatch.returnType != awst::WType::voidType())
 		{
-			std::shared_ptr<awst::Expression> retValue = std::move(call);
-			if (isPublic && retValue->wtype != dispatch.returnType)
-			{
-				// ARC4 wire → biguint, then narrow to the native
-				// carrier when needed (canonical 256-bit TC's low 8
-				// bytes ARE the 64-bit-TC carrier for signed narrow).
-				std::shared_ptr<awst::Expression> decoded =
-					awst::makeARC4Decode(std::move(retValue),
-						awst::WType::biguintType(), _loc);
-				if (dispatch.returnType != awst::WType::biguintType())
-					decoded = builder::TypeCoercion::implicitNumericCast(
-						std::move(decoded), dispatch.returnType, _loc);
-				retValue = std::move(decoded);
-			}
+			auto retValue = decodeCallResult(std::move(call), dispatch.returnType, _loc);
 			auto ret = awst::makeReturnStatement(std::move(retValue), _loc);
 			ifBlock->body.push_back(std::move(ret));
 		}
@@ -898,13 +797,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 	if (registry.neededDispatches.empty())
 		return methods;
 
-	// Extract contract name from _cref (last "."-separated segment).
-	std::string contractName;
-	auto dotPos = _cref.find_last_of('.');
-	if (dotPos != std::string::npos)
-		contractName = _cref.substr(dotPos + 1);
-
-	auto groups = collectDispatchGroups(registry, contractName);
+	auto groups = collectDispatchGroups(registry, _ctx.currentContract);
 
 	for (auto const& [dname, entries] : groups)
 	{

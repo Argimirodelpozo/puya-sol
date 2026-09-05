@@ -5,6 +5,7 @@
 #include "builder/sol-types/RefParamPassing.h"
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/ProgramAnalysis.h"
+#include "builder/CallTarget.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-ast/MappingPrefix.h"
 #include "builder/storage/EvmLayoutMode.h"
@@ -92,65 +93,7 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 {
 	if (!_funcDef)
 		return m_ctx.typeMapper.map(m_call.annotation().type);
-	if (_funcDef->returnParameters().empty())
-		return awst::WType::voidType();
-
-	// Unwrap UDVT / enum to locate a signed integer type for biguint promotion.
-	// ContractBuilder upgrades signed int ≤64 bit returns to biguint so sign
-	// extension works — but only at the ABI boundary (public/external). For
-	// private/internal callees the target retains its native uint64 return,
-	// so the call-site wtype must match.
-	bool isAbiBoundary = _funcDef->isPartOfExternalInterface();
-	auto mapReturnType = [&](solidity::frontend::Type const* solType) -> awst::WType const* {
-		auto* mapped = m_ctx.typeMapper.map(solType);
-		auto intInfo = builder::SolIntType::fromSolOrEnum(solType);
-		if (intInfo && intInfo->isSigned && intInfo->bits <= 64 && isAbiBoundary)
-			return awst::WType::biguintType();
-		return mapped;
-	};
-
-	if (_funcDef->returnParameters().size() == 1)
-	{
-		// --evm-storage-layout: ANY storage ref return is a biguint slot.
-		if (m_ctx.typeMapper.profile().evmStorageLayout
-			&& _funcDef->returnParameters()[0]->referenceLocation()
-				== VariableDeclaration::Location::Storage)
-			return awst::WType::biguintType();
-		// Storage reference return with .slot assembly → biguint (slot number)
-		if (_funcDef->returnParameters()[0]->referenceLocation() == VariableDeclaration::Location::Storage
-			&& m_ctx.typeMapper.analysis().callablesWithInlineAssembly.count(
-				_funcDef->id()))
-			return awst::WType::biguintType();
-		// Storage-ref pointer: subroutine returns uint64 index;
-		// buildSubroutineCall wraps in IndexExpression to reconstitute the ref.
-		if (builder::storageRefPointerReturn(_funcDef))
-			// Box-keyed (e.g. `return _pools[id]` → `Pool.State storage`):
-			// returns bytes box-key prefix; array/slot refs return uint64 index.
-			return builder::storageRefReturnIsBytesKeyed(_funcDef)
-				? awst::WType::bytesType()
-				: awst::WType::uint64Type();
-		// Blob-backed >4KB memory return: subroutine returns the uint64 base
-		// offset (pointer model); the caller binds it (SolVariableDeclaration).
-		{
-			auto const& rp0 = _funcDef->returnParameters()[0];
-			if (!rp0->name().empty()
-				&& rp0->referenceLocation() == VariableDeclaration::Location::Memory
-				&& builder::memoryUsesBlob(mapReturnType(rp0->type())))
-				return awst::WType::uint64Type();
-		}
-		return mapReturnType(_funcDef->returnParameters()[0]->type());
-	}
-
-	std::vector<awst::WType const*> retTypes;
-	for (auto const& param: _funcDef->returnParameters())
-	{
-		if (m_ctx.typeMapper.profile().evmStorageLayout
-			&& param->referenceLocation() == VariableDeclaration::Location::Storage)
-			retTypes.push_back(awst::WType::biguintType());   // slot handle
-		else
-			retTypes.push_back(mapReturnType(param->type()));
-	}
-	return m_ctx.typeMapper.createType<awst::WTuple>(std::move(retTypes), std::nullopt);
+	return m_ctx.typeMapper.functionReturnPlan(*_funcDef).internalType;
 }
 
 namespace
@@ -253,100 +196,7 @@ void applyAliasingGuard(
 	}
 }
 
-/// Storage write-back scope: AWSTBuilder augments non-private, non-pure/view library/free functions to thread the modified storage …
-std::vector<size_t> collectStorageWriteBackParams(
-	eb::ContractContext& ctx,
-	FunctionDefinition const* _funcDef,
-	size_t argCount)
-{
-	std::vector<size_t> storageParamIndices;
-	bool calleeIsLibrary = false;
-	bool calleeIsPrivate = false;
-	bool calleeIsFree = false;
-	if (_funcDef)
-	{
-		calleeIsPrivate = _funcDef->visibility() == Visibility::Private;
-		calleeIsFree = _funcDef->isFree();
-		if (auto const* contractDef = _funcDef->annotation().contract)
-			calleeIsLibrary = contractDef->isLibrary();
-	}
-	if (_funcDef
-		&& !ctx.typeMapper.profile().evmStorageLayout   // slot handles write through — no write-back
-		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree)
-		&& _funcDef->stateMutability() != StateMutability::View
-		&& _funcDef->stateMutability() != StateMutability::Pure)
-	{
-		// Same asm-.slot widening as the box-key param type (above / AWSTBuilder):
-		// such params travel as a box-key handle and write directly to the box, so
-		// they get NO write-back slot — the callee is void, and a write-back
-		// assignment of a void call asserts in puya.
-		auto wbSlotParams = builder::structRefParamsUsedAsAsmSlot(*_funcDef);
-		for (size_t pi = 0; pi < _funcDef->parameters().size() && pi < argCount; ++pi)
-		{
-			auto const& p = _funcDef->parameters()[pi];
-			if (p->referenceLocation() != VariableDeclaration::Location::Storage)
-				continue;
-			// Exclude box-keyed refs (mappings, mapping-carrying structs/arrays,
-			// plain structs like `Pool.State`): travel as bytes key-prefix,
-			// write directly to box, no write-back slot. Must match callee
-			// predicate (AWSTBuilder.cpp `isBoxKeyedStorageRef`) or arity diverges.
-			if (builder::isBoxKeyedStorageRef(
-					p->type(), ctx.typeMapper.analysis()) || wbSlotParams.count(pi)) // widened: plain structs + asm .slot refs
-				continue;
-			storageParamIndices.push_back(pi);
-		}
-	}
-	return storageParamIndices;
-}
 
-/// Memory-ref params: same library/free scope; `pure` NOT excluded (Solidity pure can mutate memory).
-std::vector<size_t> collectMemoryWriteBackParams(
-	eb::ContractContext& _ctx,
-	FunctionDefinition const* _funcDef,
-	size_t argCount,
-	ParameterMutationSummary const* mutations)
-{
-	std::vector<size_t> memoryRefParamIndices;
-	bool calleeIsLibrary = false;
-	bool calleeIsPrivate = false;
-	bool calleeIsFree = false;
-	if (_funcDef)
-	{
-		calleeIsPrivate = _funcDef->visibility() == Visibility::Private;
-		calleeIsFree = _funcDef->isFree();
-		if (auto const* contractDef = _funcDef->annotation().contract)
-			calleeIsLibrary = contractDef->isLibrary();
-	}
-	// Internal contract methods are now augmented too (FunctionBuilder), matching library/free.
-	bool calleeIsInternalMethod = _funcDef && !calleeIsLibrary && !calleeIsFree
-		&& _funcDef->visibility() == Visibility::Internal;
-	if (_funcDef && _funcDef->isImplemented()
-		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree || calleeIsInternalMethod))
-	{
-		auto isMemRefType = builder::isMemoryRefWriteBackType;
-		for (size_t pi = 0; pi < _funcDef->parameters().size() && pi < argCount; ++pi)
-		{
-			auto const& p = _funcDef->parameters()[pi];
-			if (p->referenceLocation() != VariableDeclaration::Location::Memory)
-				continue;
-			if (!p->type() || !isMemRefType(p->type()))
-				continue;
-			if (!mutations || !mutations->mutates(pi))
-				continue;  // read-only — callee didn't augment it either
-			// Blob-backed (>4KB) aggregate: a LIBRARY/FREE callee writes
-			// through the shared blob and does NOT thread it back
-			// (AWSTBuilder excludes it) — expecting a tuple slot here made
-			// `L.f(bigStruct)` die on a bare puya AssertionError. Internal
-			// contract methods DO thread the offset (FunctionBuilder); keep
-			// that pairing.
-			if (!calleeIsInternalMethod
-				&& builder::memoryUsesBlob(_ctx.typeMapper.map(p->type())))
-				continue;
-			memoryRefParamIndices.push_back(pi);
-		}
-	}
-	return memoryRefParamIndices;
-}
 
 /// Per-storage-arg root tracing.
 struct StorageRoot {
@@ -450,6 +300,7 @@ std::shared_ptr<awst::Expression> emitAugmentedCallWriteBacks(
 	std::shared_ptr<awst::SubroutineCallExpression> const& call,
 	std::vector<StorageRoot> const& roots,
 	std::vector<size_t> const& memoryRefParamIndices,
+	CallBoundaryPlan const& plan,
 	awst::SourceLocation const& m_loc)
 {
 	// AWSTBuilder augments return type when storage/memory-ref params exist:
@@ -463,26 +314,13 @@ std::shared_ptr<awst::Expression> emitAugmentedCallWriteBacks(
 		? nullptr
 		: dynamic_cast<awst::WTuple const*>(origRetType);
 
-	std::vector<awst::WType const*> tupleTypes;
-	if (!voidReturn)
-	{
-		if (origRetTuple)
-			for (auto const* t: origRetTuple->types()) tupleTypes.push_back(t);
-		else
-			tupleTypes.push_back(origRetType);
-	}
-	for (auto const& sr: roots) tupleTypes.push_back(sr.storageArgType);
-	for (size_t pi: memoryRefParamIndices)
-		tupleTypes.push_back(call->args[pi].value->wtype);
 	size_t origRetCount = voidReturn
 		? 0
 		: (origRetTuple ? origRetTuple->types().size() : 1);
 
 	// 1 element → bare type (puya doesn't wrap single-elem returns);
 	// 2+ → WTuple.
-	awst::WType const* callTupleType =
-		tupleTypes.size() == 1 ? tupleTypes[0]
-			: ctx.typeMapper.createType<awst::WTuple>(std::move(tupleTypes));
+	auto const* callTupleType = plan.augmentReturn(ctx.typeMapper, origRetType);
 	call->wtype = callTupleType;
 
 	std::string tempName = "__storage_wb_" + std::to_string(awst::NameGen::next("SolInternalCall.storageWriteBackCounter"));
@@ -599,7 +437,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::wrapStorageRefResult(
 	// IndexExpression reconstitution.
 	if (m_ctx.typeMapper.profile().evmStorageLayout)
 		return _result;
-	auto const* indexAccess = builder::storageRefPointerReturn(_funcDef);
+	auto const* indexAccess = builder::storageRefPointerReturn(_funcDef, m_ctx.typeMapper.analysis());
 	if (!indexAccess)
 		return _result;
 	// Box-keyed mapping-of-struct storage ref: the callee already returns the
@@ -607,7 +445,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::wrapStorageRefResult(
 	// it through unchanged — the caller binds it as a struct-storage-ref
 	// (SolVariableDeclaration) — rather than reconstituting an IndexExpression,
 	// which here would be the invalid `bytes[idx] -> Struct`.
-	if (builder::storageRefReturnIsBytesKeyed(_funcDef))
+	if (builder::storageRefReturnIsBytesKeyed(_funcDef, m_ctx.typeMapper.analysis()))
 		return _result;
 	auto base = m_ctx.buildExpr(indexAccess->baseExpression());
 	auto* elemType = m_ctx.typeMapper.map(
@@ -623,23 +461,11 @@ void SolInternalCall::collectSubroutineParamTypes(
 	std::set<size_t>& evmSlotRefParamIndices,
 	std::set<size_t>& blobOffsetParamIndices)
 {
-	// The shared travel rule (RefParamPassing.h) — MUST classify exactly as
-	// FunctionBuilder/AWSTBuilder did on the callee side, or args mismatch.
-	auto slotParams = builder::structRefParamsUsedAsAsmSlot(_funcDef);
-	for (size_t pi = 0; pi < _funcDef.parameters().size(); ++pi)
-	{
-		auto const& param = _funcDef.parameters()[pi];
-		auto passing = builder::classifyRefParamPassing(
-			m_ctx.typeMapper, *param, slotParams.count(pi) != 0);
-		paramTypes.push_back(
-			builder::refParamWType(passing, m_ctx.typeMapper, *param));
-		if (passing == builder::RefParamPassing::SlotHandle)
-			evmSlotRefParamIndices.insert(pi);
-		else if (passing == builder::RefParamPassing::BoxKeyPrefix)
-			mappingStorageParamIndices.insert(pi);
-		else if (passing == builder::RefParamPassing::BlobOffset)
-			blobOffsetParamIndices.insert(pi);
-	}
+	auto const& plan = m_ctx.typeMapper.callBoundaryPlan(_funcDef, m_ctx.currentContract);
+	for (auto const& parameter: plan.parameters) paramTypes.push_back(parameter.type);
+	mappingStorageParamIndices = plan.keyParams;
+	evmSlotRefParamIndices = plan.slotParams;
+	blobOffsetParamIndices = plan.blobParams;
 }
 
 // For a mapping/storage-ref param: extract the box-key prefix;
@@ -739,7 +565,21 @@ void SolInternalCall::buildSequencedArgs(
 	// itself executes. Capture each arg's queued effects; re-emitted in order
 	// below once all args are built.
 	std::vector<eb::ContractContext::OperandDeltas> argDeltas;
-	std::vector<bool> argMayWrite, argLocalPure;
+	std::vector<bool> argMayWrite;
+	auto const* plan = _funcDef ? &m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract) : nullptr;
+	std::map<size_t, std::shared_ptr<awst::Expression>> offsets;
+	auto keyArgument = [&](Expression const& expression, size_t pi) {
+		auto key = extractMappingKeyPrefix(expression);
+		if (plan && std::find(plan->offsetParams.begin(), plan->offsetParams.end(), pi) != plan->offsetParams.end())
+		{
+			auto offset = offsetForArg(&expression);
+			auto name = "__call_offset_" + std::to_string(awst::NameGen::next("SolInternalCall.offset"));
+			auto variable = awst::makeVarExpression(name, awst::WType::uint64Type(), m_loc);
+			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(variable, std::move(offset), m_loc));
+			offsets.emplace(pi, std::move(variable));
+		}
+		return key;
+	};
 
 	// For using-for calls, prepend receiver as first arg
 	if (_isUsingForCall)
@@ -756,7 +596,7 @@ void SolInternalCall::buildSequencedArgs(
 					return addr ? addr->slot : nullptr;
 				}
 				if (mappingStorageParamIndices.count(0))
-					return extractMappingKeyPrefix(memberAccess->expression());
+					return keyArgument(memberAccess->expression(), 0);
 				if (blobOffsetParamIndices.count(0))
 					if (auto off = SolIndexAccess::resolveBlobOffset(
 							m_ctx, m_scope, memberAccess->expression(), m_loc))
@@ -769,8 +609,7 @@ void SolInternalCall::buildSequencedArgs(
 			}, /*_conditional=*/false);
 			ca.value = std::move(lowered.value);
 			argDeltas.push_back(std::move(lowered.effects));
-			argMayWrite.push_back(builder::EffectScan::mayWrite(memberAccess->expression()));
-			argLocalPure.push_back(builder::onlyLocalPure(memberAccess->expression()));
+			argMayWrite.push_back(builder::EffectScan::mayWrite(memberAccess->expression(), m_ctx, m_scope));
 			call->args.push_back(std::move(ca));
 		}
 	}
@@ -789,7 +628,7 @@ void SolInternalCall::buildSequencedArgs(
 				return addr ? addr->slot : nullptr;
 			}
 			if (mappingStorageParamIndices.count(paramIdx))
-				return extractMappingKeyPrefix(*sortedArgs[i]);
+				return keyArgument(*sortedArgs[i], paramIdx);
 			// Blob param (>4KB memory aggregate): the callee takes the uint64
 			// base offset (pointer model). Building the VALUE materialized the
 			// whole struct and fed an ARC4Struct into the uint64 param —
@@ -823,8 +662,7 @@ void SolInternalCall::buildSequencedArgs(
 		}, /*_conditional=*/false);
 		ca.value = std::move(lowered.value);
 		argDeltas.push_back(std::move(lowered.effects));
-		argMayWrite.push_back(builder::EffectScan::mayWrite(*sortedArgs[i]));
-		argLocalPure.push_back(builder::onlyLocalPure(*sortedArgs[i]));
+		argMayWrite.push_back(builder::EffectScan::mayWrite(*sortedArgs[i], m_ctx, m_scope));
 		call->args.push_back(std::move(ca));
 	}
 
@@ -832,8 +670,9 @@ void SolInternalCall::buildSequencedArgs(
 	// direct-state-writing args this restores the pre-statements
 	// byte-identically. Otherwise each arg's write-backs hoist to pre-position
 	// (so later args and the callee observe them), and an earlier arg whose
-	// value a LATER arg's effects could disturb is pinned first (locals-only
-	// values are immune and skip it). Mutable-wtype values are never pinned —
+	// value a LATER arg's effects could disturb is pinned first. Local reads
+	// are not exempt: a later argument can assign or increment them.
+	// Mutable-wtype values are never pinned —
 	// a pin temp would defeat the aliasing guard below.
 	{
 		for (size_t ai = 0; ai < argDeltas.size(); ++ai)
@@ -841,8 +680,8 @@ void SolInternalCall::buildSequencedArgs(
 			bool laterEffects = false;
 			for (size_t aj = ai + 1; aj < argDeltas.size(); ++aj)
 				laterEffects = laterEffects
-					|| !argDeltas[aj].post.empty() || argMayWrite[aj];
-			bool pin = laterEffects && !argLocalPure[ai]
+					|| !argDeltas[aj].empty() || argMayWrite[aj];
+			bool pin = (laterEffects || !argDeltas[ai].post.empty())
 				&& call->args[ai].value
 				&& call->args[ai].value->wtype
 				&& call->args[ai].value->wtype->immutable();
@@ -850,6 +689,9 @@ void SolInternalCall::buildSequencedArgs(
 				std::move(argDeltas[ai]), std::move(call->args[ai].value), pin, m_loc);
 		}
 	}
+	if (plan)
+		for (auto pi: plan->offsetParams)
+			call->args.push_back({std::nullopt, offsets.at(pi)});
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::offsetForArg(
@@ -941,34 +783,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::offsetForArg(
 	return awst::makeIntegerConstant(0, m_loc); // whole-box → offset 0
 }
 
-// Handle-model dual handle: append a uint64 OFFSET arg for each offset-convention struct-ref
-// param (FunctionBuilder declared the matching `name__off` param). Array-element args (`arr[i]`)
-// pass the element byte offset (len header + i*elemSize); whole-box args pass 0. Order mirrors
-// the param iteration so caller/callee align by position.
-void SolInternalCall::appendStructRefOffsetArgs(
-	std::shared_ptr<awst::SubroutineCallExpression> const& call,
-	FunctionDefinition const& _funcDef,
-	bool _isUsingForCall)
-{
-	auto const sortedArgs = m_call.sortedArguments();
-	for (size_t pi = 0; pi < _funcDef.parameters().size(); ++pi)
-	{
-		if (!m_ctx.typeMapper.analysis().structRefOffsetParams.count(
-				_funcDef.parameters()[pi]->id()))
-			continue;
-		Expression const* argExpr = nullptr;
-		if (_isUsingForCall)
-		{
-			if (pi >= 1 && (pi - 1) < sortedArgs.size())
-				argExpr = sortedArgs[pi - 1].get();
-		}
-		else if (pi < sortedArgs.size())
-			argExpr = sortedArgs[pi].get();
-		awst::CallArg offCa;
-		offCa.value = offsetForArg(argExpr);
-		call->args.push_back(std::move(offCa));
-	}
-}
+
 
 std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	awst::SubroutineTarget _target,
@@ -979,10 +794,22 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	// External fn-ptr params use the profile-selected dual-purpose byte layout;
 	// dispatch handles them.
 
-	auto call = awst::makeSubroutineCall(std::move(_target), _returnType, m_loc);
 	ParameterMutationSummary const* mutations = nullptr;
 	if (_funcDef)
 	{
+		// The source can name a base declaration while the selected method is
+		// an override with different write-back requirements and parameter names.
+		// Use the same solc lookup as mutation analysis before planning its ABI.
+		auto const& analysis = m_ctx.typeMapper.analysis();
+		FunctionDefinition const* caller = nullptr;
+		if (auto found = analysis.functionDeclarations.find(enclosingCallableId(m_scope));
+			found != analysis.functionDeclarations.end())
+			caller = found->second;
+		if (auto const* concrete = resolveReferenceCallTarget(m_ctx.currentContract, caller, m_call))
+		{
+			_funcDef = concrete;
+			_returnType = returnTypeFrom(concrete);
+		}
 		mutations = m_ctx.typeMapper.analysis().parameterMutationsForCall(
 			m_ctx.currentContract, enclosingCallableId(m_scope), m_call);
 		// A locally resolved function-pointer target is not visible in the call
@@ -992,6 +819,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			mutations = &m_ctx.typeMapper.analysis().parameterMutations(
 				m_ctx.currentContract, *_funcDef);
 	}
+	auto call = awst::makeSubroutineCall(std::move(_target), _returnType, m_loc);
 
 	// Collect param types for coercion; detect mapping storage-ref params.
 	std::vector<awst::WType const*> paramTypes;
@@ -1009,22 +837,31 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		blobOffsetParamIndices);
 
 	if (_funcDef)
-		appendStructRefOffsetArgs(call, *_funcDef, _isUsingForCall);
-
-	if (_funcDef)
 		applyAliasingGuard(*call, _funcDef, mutations, m_loc);
 
-	auto storageParamIndices = collectStorageWriteBackParams(
-		m_ctx, _funcDef, call->args.size());
-	auto memoryRefParamIndices = collectMemoryWriteBackParams(
-		m_ctx, _funcDef, call->args.size(), mutations);
-
-	if (!storageParamIndices.empty() || !memoryRefParamIndices.empty())
+	if (_funcDef)
 	{
-		auto roots = traceStorageRoots(*call, storageParamIndices);
-		auto origRet = emitAugmentedCallWriteBacks(
-			m_ctx, call, roots, memoryRefParamIndices, m_loc);
-		return wrapStorageRefResult(std::move(origRet), _funcDef);
+		auto const& plan = m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract);
+		if (!plan.writeBackParams.empty())
+		{
+			auto roots = traceStorageRoots(*call, plan.storageWriteBackParams);
+			auto origRet = emitAugmentedCallWriteBacks(
+				m_ctx, call, roots, plan.memoryWriteBackParams, plan, m_loc);
+			return wrapStorageRefResult(std::move(origRet), _funcDef);
+		}
+		auto const* target = std::get_if<awst::InstanceMethodTarget>(&call->target);
+		if (_funcDef->isPartOfExternalInterface() && target
+			&& target->memberName == eb::CallResolver::resolveMethodName(m_ctx, *_funcDef))
+		{
+			for (size_t pi = 0; pi < plan.parameters.size(); ++pi)
+			{
+				auto const& parameter = plan.parameters[pi];
+				call->args[pi].value = parameter.encodeArgument(std::move(call->args[pi].value), m_loc);
+				call->args[pi].name = parameter.wireName();
+			}
+			call->wtype = m_ctx.typeMapper.functionReturnPlan(*_funcDef).wireType;
+			return decodeCallResult(call, _returnType, m_loc);
+		}
 	}
 
 	return wrapStorageRefResult(call, _funcDef);

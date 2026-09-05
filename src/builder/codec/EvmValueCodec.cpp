@@ -174,9 +174,10 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 							awst::WType::biguintType()), loc),
 					loc, "invalid EVM ABI bool"), loc));
 		}
-		auto value = awst::makeWord32ToUInt64(fullWord, loc);
+		auto value = awst::makeAsBiguint(fullWord, loc);
 		return awst::makeNumericCompare(
-			value, awst::NumericComparison::Ne, awst::makeZero(loc), loc);
+			value, awst::NumericComparison::Ne,
+			awst::makeZero(loc, awst::WType::biguintType()), loc);
 	}
 	if (auto const* fixed = dynamic_cast<FixedBytesType const*>(type))
 	{

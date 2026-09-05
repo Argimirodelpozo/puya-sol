@@ -106,25 +106,21 @@ int main(int _argc, char* _argv[])
 	// overshoots the root and the import is "not found". When an explicit
 	// --import-path CONTAINS the source, that root is the answer — prefer the
 	// shallowest such path. Falls back to the old guess when none applies.
-	fs::path projectRoot = sourceDir.parent_path(); // contracts/ → project root
+	std::optional<fs::path> importRoot;
 	for (auto const& ip: opts.importPaths)
 	{
 		fs::path absIp = fs::absolute(ip).lexically_normal();
 		auto rel = sourceAbsPath.lexically_normal().lexically_relative(absIp);
 		if (rel.empty() || *rel.begin() == "..")
 			continue;                                  // source is not under it
-		// Only override when the guess would actually TRUNCATE, i.e. the source
-		// sits more than one directory below the root. When it is at the root or
-		// one level down (the flat temp tree the multisource splitter writes),
-		// the old derivation is already right and changing it would renumber
-		// every source-unit name for no gain.
-		if (std::distance(rel.begin(), rel.end()) <= 2)
-			continue;
-		if (projectRoot == sourceDir.parent_path()
+		// This also applies to flat projects: explicit B.sol and an import of
+		// "B.sol" must enter solc's VFS under the SAME source-unit name.
+		if (!importRoot
 			|| std::distance(absIp.begin(), absIp.end())
-				< std::distance(projectRoot.begin(), projectRoot.end()))
-			projectRoot = absIp;
+				< std::distance(importRoot->begin(), importRoot->end()))
+			importRoot = absIp;
 	}
+	fs::path projectRoot = importRoot.value_or(sourceDir.parent_path());
 	auto fileReader = setupFileReader(opts, sourceDir, projectRoot);
 
 	auto rawMainSourceOpt = readSourceFile(sourceFile);

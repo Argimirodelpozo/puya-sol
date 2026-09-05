@@ -64,15 +64,8 @@ private:
 	/// Companion byte offset for an offset-convention struct-ref argument.
 	std::shared_ptr<awst::Expression> offsetForArg(
 		solidity::frontend::Expression const* argExpr);
-	/// Append the companion uint64 offset args (handle-model dual handle).
-	void appendStructRefOffsetArgs(
-		std::shared_ptr<awst::SubroutineCallExpression> const& call,
-		solidity::frontend::FunctionDefinition const& _funcDef,
-		bool _isUsingForCall);
+	awst::WType const* returnTypeFrom(solidity::frontend::FunctionDefinition const* _funcDef);
 
-	/// Helper to build return type from a FunctionDefinition.
-	awst::WType const* returnTypeFrom(
-		solidity::frontend::FunctionDefinition const* _funcDef);
 };
 
 } // namespace puyasol::builder::sol_ast

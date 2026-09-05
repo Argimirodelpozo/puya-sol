@@ -1,6 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
 #include "awst/NameGen.h"
-#include "awst/StatementWalk.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "Logger.h"
@@ -23,17 +22,6 @@ solidity::frontend::Type const* unwrapUDVT(solidity::frontend::Type const* t)
 	if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(t))
 		return &udvt->underlyingType();
 	return t;
-}
-
-// WType for a getter return/tuple element: a signed sub-256 integer becomes a 256-bit
-// two's-complement biguint (matching FunctionBuilder's signed-return lowering, so the
-// ABI element is uint256-on-wire and reads back signed) — in lockstep with the
-// signExtendToUint256 projectStructFields applies to the VALUE. Everything else maps natively.
-awst::WType const* getterElementWType(TypeMapper& tm, solidity::frontend::Type const* solType)
-{
-	if (auto it = builder::SolIntType::fromSol(solType); it && it->isSigned && it->bits < 256)
-		return awst::WType::biguintType();
-	return tm.map(solType);
 }
 
 // Project a Solidity struct value into its public-accessor field list:
@@ -82,7 +70,7 @@ std::vector<std::shared_ptr<awst::Expression>> projectStructFields(
 			// int{N} patch reads it signed). A raw ARC4Decode is the unsigned N-bit value
 			// (int128 INT128_MIN → +2^127); a 64-bit-only extension would still leave a
 			// sub-64 field (int16) uint64-shaped in the ABI tuple. No-op unsigned / int256.
-			// The tuple element WType is set to biguint in lockstep (getterElementWType).
+			// The tuple element WType uses the shared ABI return representation.
 			if (auto const* fieldInt = dynamic_cast<solidity::frontend::IntegerType const*>(
 					unwrapUDVT(member.type)))
 				if (fieldInt->isSigned() && fieldInt->numBits() < 256)
@@ -844,45 +832,6 @@ void remapGetterParamsToArc4(
 
 }
 
-/// Remap a biguint getter return to ARC4UIntN so the ABI selector says "uintN" not "uint512" (puya's router would otherwise publish …
-void remapGetterReturnToArc4(
-	TypeMapper& tm,
-	awst::ContractMethod& getter,
-	solidity::frontend::TypePointers const& solReturnTypes,
-	awst::SourceLocation const& loc)
-{
-	// Remap biguint return to ARC4UIntN: ABI selector "uintN" not "uint512".
-	// Without this puya's router publishes `received()uint512` while callers
-	// and the arc56 spec compute `received()uint256` — the inner call then
-	// falls to the callee's FALLBACK (silent wrong path; empty return log).
-	// Unsigned: declared width. Signed: canonical 256-bit TC, so encode at
-	// 256 bits always — a sign-extended negative doesn't fit arc4.uintN for
-	// N<256 (matches FunctionBuilder's signed-return promotion).
-	bool isIntReturn = false;
-	unsigned retBits = 256;
-	if (getter.returnType == awst::WType::biguintType()
-		&& solReturnTypes.size() == 1)
-	{
-		if (auto intInfo = builder::SolIntType::fromSol(solReturnTypes[0]))
-		{
-			isIntReturn = true;
-			retBits = intInfo->isSigned ? 256 : intInfo->bits;
-		}
-	}
-	if (isIntReturn)
-	{
-		auto const* arc4RetType = tm.createType<awst::ARC4UIntN>(static_cast<int>(retBits));
-		awst::forEachReturnStatement(getter.body->body, [&](awst::ReturnStatement& ret) {
-			if (ret.value && ret.value->wtype == awst::WType::biguintType()) {
-				auto retLoc = ret.value->sourceLocation;
-				ret.value = arc4UintCodec(std::move(ret.value), arc4RetType, /*isEncode=*/true, retLoc);
-			}
-		});
-		getter.returnType = arc4RetType;
-	}
-
-}
-
 } // namespace
 
 void ContractBuilder::buildPublicStateVariableGetters(
@@ -912,7 +861,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 		awst::ContractMethod getter;
 		getter.sourceLocation = loc;
-		getter.cref = m_sourceFile + "." + contractName;
+		getter.cref = m_contractId;
 		getter.memberName = var->name();
 		getter.pure = var->isConstant();
 
@@ -940,10 +889,10 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 		auto const& solReturnTypes = getterFuncType->returnParameterTypes();
 		auto const& solReturnNames = getterFuncType->returnParameterNames();
-		unsigned signedGetterBits = 0; // >0 for signed ≤64-bit returns
+		unsigned signedGetterBits = 0; // >0 for signed sub-256-bit returns
 		if (solReturnTypes.size() == 1)
 		{
-			getter.returnType = m_typeMapper.map(solReturnTypes[0]);
+			getter.returnType = abiReturnNativeType(m_typeMapper, solReturnTypes[0]);
 			if (auto intInfo = builder::SolIntType::fromSol(solReturnTypes[0]))
 			{
 				// ANY signed sub-256 return must sign-extend to canonical 256-bit
@@ -956,10 +905,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				// already-canonical scalar case too. Found by the corpus-mutation
 				// fuzzer (userDefinedValueType/memory_to_storage uint16->int72).
 				if (intInfo->isSigned && intInfo->bits < 256)
-				{
-					getter.returnType = awst::WType::biguintType();
 					signedGetterBits = intInfo->bits;
-				}
 			}
 		}
 		else if (solReturnTypes.size() > 1)
@@ -970,7 +916,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			{
 				// Signed sub-256 elements → biguint (256-bit), matching the value
 				// projectStructFields produces and an explicit signed tuple return.
-				tupleTypes.push_back(getterElementWType(m_typeMapper, solReturnTypes[i]));
+				tupleTypes.push_back(abiReturnNativeType(m_typeMapper, solReturnTypes[i]));
 				tupleNames.push_back(i < solReturnNames.size() ? solReturnNames[i] : "");
 			}
 			getter.returnType = m_typeMapper.createType<awst::WTuple>(
@@ -1023,14 +969,20 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 		prependGetterAbiChecks(_contract, solParamTypes, solParamNames, *body, loc);
 
+		if (solReturnTypes.size() == 1)
+		{
+			auto element = planReturnElement(m_typeMapper, solReturnTypes[0], getter.returnType);
+			element.isSigned = false; // getter reads already sign-extend
+			readExpr = TypeCoercion::encodeReturnElement(std::move(readExpr), element, loc);
+			getter.returnType = element.wireType;
+		}
+
 		auto ret = awst::makeReturnStatement(std::move(readExpr), loc);
 		body->body.push_back(std::move(ret));
 
 		getter.body = body;
 
 		remapGetterParamsToArc4(m_typeMapper, getter, solParamTypes, loc);
-
-		remapGetterReturnToArc4(m_typeMapper, getter, solReturnTypes, loc);
 
 		prependNonPayableCheck(getter); // getters are always view/non-payable
 

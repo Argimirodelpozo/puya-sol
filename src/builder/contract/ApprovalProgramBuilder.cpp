@@ -11,6 +11,7 @@
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "Logger.h"
 
@@ -528,251 +529,146 @@ void ContractBuilder::emitCtorParamDecode(
 
 }
 
-/// buildApprovalProgram phase: solc pre-populates baseConstructorArguments (InheritanceSpecifier or ModifierInvocation → args) — no …
-std::map<solidity::frontend::ContractDefinition const*,
-	std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
-ContractBuilder::collectExplicitBaseArgs(
-	solidity::frontend::ContractDefinition const& _contract)
-{
-	std::map<solidity::frontend::ContractDefinition const*,
-		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
-		explicitBaseArgs;
-	for (auto const& [baseCtor, argNode] : _contract.annotation().baseConstructorArguments)
-	{
-		auto const* baseContract = baseCtor->annotation().contract;
-		if (!baseContract) continue;
-		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const* args = nullptr;
-		if (auto const* mod = dynamic_cast<solidity::frontend::ModifierInvocation const*>(argNode))
-			args = mod->arguments();
-		else if (auto const* spec = dynamic_cast<solidity::frontend::InheritanceSpecifier const*>(argNode))
-			args = spec->arguments();
-		if (args && !args->empty())
-			explicitBaseArgs[baseContract] = args;
-	}
-	return explicitBaseArgs;
-}
 
-/// buildApprovalProgram phase: bind one base constructor's explicit args to its params in the create block — slot-mode storage refs …
+/// Bind each argument at its evaluation position, before later arguments can mutate it.
 void ContractBuilder::bindBaseCtorArgs(
-	solidity::frontend::FunctionDefinition const& baseCtor,
+	solidity::frontend::FunctionDefinition const& constructor,
 	std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const& args,
-	std::shared_ptr<awst::Block> const& createBlock)
+	std::shared_ptr<awst::Block> const& body)
 {
-	auto const& params = baseCtor.parameters();
-	for (size_t i = 0; i < args.size() && i < params.size(); ++i)
+	using solidity::frontend::VariableDeclaration;
+	auto const& params = constructor.parameters();
+	for (size_t i = 0; i < args.size(); ++i)
 	{
-		if (params[i]->referenceLocation()
-			== solidity::frontend::VariableDeclaration::Location::Storage)
-		{
-			if (m_typeMapper.profile().evmStorageLayout)
-			{
-				sol_ast::EvmSlotLowering low(
-					*m_exprBuilder, *m_exprBuilder->currentScope,
-					makeLoc(args[i]->location()));
-				if (auto addr = low.resolve(*args[i]))
-				{
-					for (auto& pst: m_exprBuilder->takePreEffects())
-						createBlock->body.push_back(std::move(pst));
-					createBlock->body.push_back(awst::makeAssignmentStatement(
-						awst::makeVarExpression(params[i]->name(),
-							awst::WType::biguintType(), makeLoc(args[i]->location())),
-						addr->slot, makeLoc(args[i]->location())));
-				}
-				continue;
-			}
-		}
-		auto argExpr = m_exprBuilder->buildExpr(*args[i]);
-		if (!argExpr)
+		auto const& parameter = *params.at(i);
+		auto loc = makeLoc(args[i]->location());
+		bool storage = parameter.referenceLocation() == VariableDeclaration::Location::Storage;
+		bool slot = storage && m_typeMapper.profile().evmStorageLayout;
+		auto const* type = slot ? awst::WType::biguintType() : m_typeMapper.map(parameter.type());
+		auto operand = m_exprBuilder->lowerOperand([&]() {
+			if (!slot)
+				return m_exprBuilder->buildExpr(*args[i]);
+			sol_ast::EvmSlotLowering low(*m_exprBuilder, *m_exprBuilder->currentScope, loc);
+			auto address = low.resolve(*args[i]);
+			return address ? address->slot : nullptr;
+		}, true);
+		bool const pin = !operand.effects.post.empty();
+		auto value = m_exprBuilder->emitSequencedOperand(
+			std::move(operand.effects), std::move(operand.value), pin, loc);
+		if (!value)
 			continue;
-		if (params[i]->referenceLocation()
-			== solidity::frontend::VariableDeclaration::Location::Storage)
+		if (storage && !slot)
 		{
-			sol_ast::StorageAlias alias =
-						sol_ast::StorageAlias::classify(std::move(argExpr));
-			m_tr->setStorageAlias(params[i]->id(), std::move(alias));
+			m_tr->setStorageAlias(parameter.id(), sol_ast::StorageAlias::classify(std::move(value)));
+			m_exprBuilder->appendEffectsTo(body->body);
 			continue;
 		}
-		auto* targetType = m_typeMapper.map(params[i]->type());
-		argExpr = TypeCoercion::implicitNumericCast(
-			std::move(argExpr), targetType, makeLoc(args[i]->location()));
-
-		// Drain the build's pre-statements (ternary/short-circuit temp
-			// assignments) BEFORE the param binding — same fix as the
-			// modifier-chain argument path, which this site missed.
-		m_exprBuilder->appendEffectsTo(createBlock->body);
-
-		auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
-
-		auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), target->sourceLocation);
-		createBlock->body.push_back(std::move(assignment));
+		if (!slot)
+			value = ConversionPlan{args[i]->annotation().type, parameter.type(), type,
+				ConversionPlan::Context::Argument}.emit(std::move(value), loc);
+		auto target = awst::makeVarExpression(m_tr->awstVarName(parameter), type, loc);
+		if (slot)
+			m_tr->setSlotStorageRef(parameter.id(), target);
+		m_exprBuilder->appendEffectsTo(body->body);
+		body->body.push_back(awst::makeAssignmentStatement(target, std::move(value), loc));
 	}
 }
 
-/// buildApprovalProgram phase: the no-postInit path — inline base ctor bodies + the main ctor into the bool-returning approval …
-void ContractBuilder::emitInlineCtorPath(
+/// Shared creation/post-init schedule, using solc's effective argument nodes and C3 order.
+void ContractBuilder::emitConstructorPlan(
 	solidity::frontend::ContractDefinition const& _contract,
-	solidity::frontend::FunctionDefinition const* constructor,
-	awst::ContractMethod& method,
-	std::shared_ptr<awst::Block> const& createBlock,
-	std::map<solidity::frontend::ContractDefinition const*,
-		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
-		const& explicitBaseArgs,
-	std::set<int64_t>& stateVarInitialized)
+	std::shared_ptr<awst::Block> const& body,
+	std::function<void(solidity::frontend::ContractDefinition const&,
+		std::vector<std::shared_ptr<awst::Statement>>&)> const& emitStateVarInit)
 {
-	// Inline ctor into the bool-returning approval program.
-	// Assembly return() must emit bool (AssemblyBuilder::handleReturn when
-	// m_returnType is bool) — set returnType accordingly.
-	auto const* savedReturnType = m_functionCtx->returnType;
-	m_functionCtx->returnType = awst::WType::boolType();
-
-	// Legacy (compileViaYul:false): all state var inits before any ctor arg eval.
-	// `constructor_inheritance_init_order_3_legacy`: A's `uint x = 2` runs first,
-	// THEN B's `A(f())` evaluates f() (sets x=4) — final x=4. emitStateVarInitFor
-	// deduplicates via stateVarInitialized so the interleaved loop below is safe.
-	// viaIR: keep interleaved order (derived inits observe base ctor state).
-	if (!m_viaIR)
-	{
-		auto const& linEarly = _contract.annotation().linearizedBaseContracts;
-		for (auto itEarly = linEarly.rbegin(); itEarly != linEarly.rend(); ++itEarly)
-			emitStateVarInitFor(**itEarly, createBlock->body,
-				stateVarInitialized, method.sourceLocation);
-	}
-
-	// Pre-evaluate ctor args in dependency order (viaIR only).
-	// For D→C→A, C's params must be assigned first so A's args (from C's modifier)
-	// see C's param values. Phase 1: direct args. Phase 2: transitive args.
-	std::map<solidity::frontend::ContractDefinition const*,
-		std::vector<std::shared_ptr<awst::Expression>>> preEvaluatedArgs;
-	{
-		// Direct bases: ModifierInvocation on derived ctor or InheritanceSpecifier
-		// on the contract itself.
-		std::vector<solidity::frontend::ContractDefinition const*> directBases;
-		std::set<int64_t> seenDirectBaseIds;
-		auto recordBase = [&](solidity::frontend::Declaration const* _ref) {
-			if (auto const* bc = dynamic_cast<solidity::frontend::ContractDefinition const*>(_ref))
-				if (seenDirectBaseIds.insert(bc->id()).second)
-					directBases.push_back(bc);
-		};
-		if (constructor)
-			for (auto const& mod: constructor->modifiers())
-				recordBase(mod->name().annotation().referencedDeclaration);
-		for (auto const& baseSpec: _contract.baseContracts())
-			recordBase(baseSpec->name().annotation().referencedDeclaration);
-
-		// Phase 1: Assign direct base ctor params into createBlock
-		// (so transitive args can reference them)
-		for (auto const* directBase: directBases)
-		{
-			auto argIt = explicitBaseArgs.find(directBase);
-			if (argIt == explicitBaseArgs.end() || !argIt->second || argIt->second->empty())
-				continue;
-			auto const* baseCtor = directBase->constructor();
-			if (!baseCtor)
-				continue;
-
-			bindBaseCtorArgs(*baseCtor, *(argIt->second), createBlock);
-		}
-
-		// Phase 2: Transitive args in derived-first order so intermediates are
-		// assigned before deeper transitives reference them.
-		// E.g. Final→Derived→Base1→Base: assign Base1.k first (from Derived.i),
-		// then evaluate Base.j (from Base1.k).
-		auto const& lin = _contract.annotation().linearizedBaseContracts;
-		for (auto it = lin.begin(); it != lin.end(); ++it)
-		{
-			auto const* base = *it;
-			if (base == &_contract)
-				continue;
-			if (seenDirectBaseIds.count(base->id()))
-				continue;
-
-			auto argIt = explicitBaseArgs.find(base);
-			if (argIt == explicitBaseArgs.end() || !argIt->second || argIt->second->empty())
-				continue;
-			auto const* baseCtor = base->constructor();
-			if (!baseCtor)
-				continue;
-
-			// Assign these params into createBlock NOW (so deeper transitives can see them)
-			bindBaseCtorArgs(*baseCtor, *(argIt->second), createBlock);
-
-			// Mark these params as pre-evaluated (empty vector = already assigned)
-			preEvaluatedArgs[base] = {};
-		}
-	}
-
-	// Interleave state var init with ctor bodies (base-first MRO order) so
-	// derived initializers (e.g. `uint y = f()`) observe base ctor state (viaIR).
+	using namespace solidity::frontend;
 	auto const& linearized = _contract.annotation().linearizedBaseContracts;
-	for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
+	// Argument nodes are not Scopable. Index their lexical owners once; solc's
+	// baseConstructorArguments still decides which node supplies each base.
+	std::map<ASTNode const*, ContractDefinition const*> owners;
+	std::vector<int64_t> remappedParams;
+	for (auto const* level: linearized)
 	{
-		auto const* base = *it;
-
-		emitStateVarInitFor(*base, createBlock->body,
-			stateVarInitialized, method.sourceLocation);
-
-		if (base == &_contract)
-			continue; // Main ctor handled separately below
-
-		auto const* baseCtor = base->constructor();
-		if (!baseCtor || !baseCtor->isImplemented())
-			continue;
-		if (baseCtor->body().statements().empty())
-			continue;
-
-		// Direct base params were assigned in Phase 1; transitive use pre-evaluated.
-		auto preIt = preEvaluatedArgs.find(base);
-		if (preIt != preEvaluatedArgs.end())
+		for (auto const& spec: level->baseContracts())
+			owners.emplace(spec.get(), level);
+		if (auto const* ctor = level->constructor())
 		{
-			auto const& evaledArgs = preIt->second;
-			auto const& params = baseCtor->parameters();
-			for (size_t i = 0; i < evaledArgs.size() && i < params.size(); ++i)
-			{
-				if (!evaledArgs[i])
-					continue;
-
-				auto target = awst::makeVarExpression(params[i]->name(), m_typeMapper.map(params[i]->type()), method.sourceLocation);
-
-				auto assignment = awst::makeAssignmentStatement(target, evaledArgs[i], method.sourceLocation);
-				createBlock->body.push_back(std::move(assignment));
-			}
+			for (auto const& invocation: ctor->modifiers())
+				owners.emplace(invocation.get(), level);
+			if (level != &_contract)
+				for (auto const& param: ctor->parameters())
+				{
+					auto const* type = m_typeMapper.profile().evmStorageLayout
+						&& param->referenceLocation() == VariableDeclaration::Location::Storage
+						? awst::WType::biguintType() : m_typeMapper.map(param->type());
+					m_tr->setParamRemap(param->id(), sol_ast::ParamRemap{
+						"__ctor_param_" + std::to_string(param->id()), type});
+					remappedParams.push_back(param->id());
+				}
 		}
-
-		// Translate the base constructor body and lower its modifiers as calls.
-		m_functionCtx->inConstructor = true;
-		m_functionCtx->callableId = baseCtor->id();
-		auto baseBody = buildBlock(baseCtor->body());
-		m_functionCtx->inConstructor = false;
-		m_functionCtx->callableId = 0;
-		buildConstructorModifierChain(*baseCtor, baseBody, _contract.name());
-		for (auto& stmt: baseBody->body)
-			createBlock->body.push_back(std::move(stmt));
 	}
-
-	if (constructor && constructor->body().statements().size() > 0)
+	struct Arguments {
+		ContractDefinition const* owner;
+		std::vector<ASTPointer<Expression>> const* expressions;
+	};
+	std::map<ContractDefinition const*, Arguments> arguments;
+	for (auto const& [ctor, node]: _contract.annotation().baseConstructorArguments)
 	{
-		// Restore super targets (super.f() in ctor body) + per-ctor MRO overrides.
+		auto const* expressions = dynamic_cast<ModifierInvocation const*>(node)
+			? static_cast<ModifierInvocation const*>(node)->arguments()
+			: static_cast<InheritanceSpecifier const*>(node)->arguments();
+		if (expressions && !expressions->empty())
+			arguments.emplace(ctor->annotation().contract, Arguments{owners.at(node), expressions});
+	}
+	auto activate = [&](FunctionDefinition const* ctor) {
+		m_tr->clearSuperTargets();
 		for (auto const& [id, name]: m_allSuperTargetNames)
 			m_tr->setSuperTarget(id, name);
-		{
-			auto pfit = m_perFuncSuperOverrides.find(constructor->id());
-			if (pfit != m_perFuncSuperOverrides.end())
-				for (auto const& [targetId, superName]: pfit->second)
-					m_tr->setSuperTarget(targetId, superName);
-		}
-		m_tr->setInConstructor(true);
+		if (ctor)
+			if (auto it = m_perFuncSuperOverrides.find(ctor->id()); it != m_perFuncSuperOverrides.end())
+				for (auto const& [id, name]: it->second)
+					m_tr->setSuperTarget(id, name);
 		m_functionCtx->inConstructor = true;
-		m_functionCtx->callableId = constructor->id();
-		auto ctorBody = buildBlock(constructor->body());
-		m_functionCtx->inConstructor = false;
-		m_functionCtx->callableId = 0;
-		buildConstructorModifierChain(*constructor, ctorBody, _contract.name());
-		m_tr->setInConstructor(false);
-		m_tr->clearSuperTargets();
-		for (auto& stmt: ctorBody->body)
-			createBlock->body.push_back(std::move(stmt));
+		m_functionCtx->callableId = ctor ? ctor->id() : 0;
+	};
+
+	// Legacy initializes all state before evaluating base arguments. Via-IR
+	// initializes each level immediately before executing its constructor.
+	if (!m_viaIR)
+		for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
+			emitStateVarInit(**it, body->body);
+
+	// Legacy visits base constructors in C3 order. IR evaluates each owner's
+	// explicit argument expressions first, sorted by the same inheritance order.
+	for (auto const* level: linearized)
+	{
+		activate(level->constructor());
+		for (auto const* target: linearized)
+			if (auto it = arguments.find(target); it != arguments.end()
+				&& (m_viaIR ? it->second.owner == level : target == level))
+			{
+				activate(it->second.owner->constructor());
+				bindBaseCtorArgs(*target->constructor(), *it->second.expressions, body);
+			}
 	}
-	m_functionCtx->returnType = savedReturnType;
+	for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
+	{
+		auto const* ctor = (*it)->constructor();
+		activate(ctor);
+		emitStateVarInit(**it, body->body);
+		if (!ctor || !ctor->isImplemented())
+			continue;
+		// An empty body can still have an effectful modifier chain.
+		auto ctorBody = buildBlock(ctor->body());
+		buildConstructorModifierChain(*ctor, ctorBody, _contract.name());
+		for (auto& statement: ctorBody->body)
+			body->body.push_back(std::move(statement));
+	}
+	m_functionCtx->inConstructor = false;
+	m_functionCtx->callableId = 0;
+	m_tr->clearSuperTargets();
+	for (auto id: remappedParams)
+		m_tr->eraseParamRemap(id);
 }
 
 /// buildApprovalProgram phase: init the transient-storage blob (transient scratch slot) BEFORE the create/dispatch split so the …
@@ -839,7 +735,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	awst::ContractMethod method;
 	method.sourceLocation = makeLoc(_contract.location());
 	method.returnType = awst::WType::boolType();
-	method.cref = m_sourceFile + "." + _contractName;
+	method.cref = m_contractId;
 	method.memberName = "approval_program";
 
 	auto body = awst::makeBlock(method.sourceLocation);
@@ -879,21 +775,18 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			emitCtorParamDecode(
 				*constructor, createBlock, needsPostInit, method.sourceLocation);
 
-		auto explicitBaseArgs = collectExplicitBaseArgs(_contract);
-
 		if (needsPostInit)
 		{
-			// ~330 lines: an entire second ABI method (argument mirroring,
-			// biguint->ARC4 remap, pending-flag guard, creator-only auth, MRO
-			// base-ctor binding, body inlining, budget pump) synthesised inside
-			// the approval-program builder. It only ever needed `method` and
-			// `explicitBaseArgs` from this scope.
 			buildPostInitMethod(_contract, _contractName, method, createBlock,
-				explicitBaseArgs, emitStateVarInit);
+				emitStateVarInit);
 		}
 		else
-			emitInlineCtorPath(_contract, constructor, method, createBlock,
-				explicitBaseArgs, stateVarInitialized);
+		{
+			auto const* savedReturnType = m_functionCtx->returnType;
+			m_functionCtx->returnType = awst::WType::boolType();
+			emitConstructorPlan(_contract, createBlock, emitStateVarInit);
+			m_functionCtx->returnType = savedReturnType;
+		}
 
 		// Return true to complete the create transaction
 		auto createReturn = awst::makeReturnStatement(awst::makeTrue(method.sourceLocation), method.sourceLocation);

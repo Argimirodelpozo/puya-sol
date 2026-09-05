@@ -40,7 +40,7 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 	awst::ContractMethod method;
 	method.sourceLocation = makeLoc(_contract.location());
 	method.returnType = awst::WType::boolType();
-	method.cref = m_sourceFile + "." + _contractName;
+	method.cref = m_contractId;
 	method.memberName = "clear_state_program";
 
 	auto body = awst::makeBlock(method.sourceLocation);
@@ -55,53 +55,6 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 }
 
 namespace {
-
-std::vector<ReturnWireElem> computeReturnPlan(
-	solidity::frontend::FunctionDefinition const& function,
-	awst::WType const* returnType,
-	TypeMapper& typeMapper)
-{
-	auto const& returnParams = function.returnParameters();
-	auto const* tuple = returnType
-		&& returnType->kind() == awst::WTypeKind::WTuple
-		? static_cast<awst::WTuple const*>(returnType) : nullptr;
-	std::vector<ReturnWireElem> plan;
-	for (size_t i = 0; i < returnParams.size(); ++i)
-	{
-		ReturnWireElem item;
-		item.nativeType = tuple
-			? (i < tuple->types().size() ? tuple->types()[i] : nullptr)
-			: returnType;
-		item.wireType = item.nativeType;
-		auto integer = SolIntType::fromSolOrEnum(returnParams[i]->type());
-		if (item.nativeType == awst::WType::biguintType())
-		{
-			item.isSigned = integer && integer->isSigned;
-			item.bits = integer ? integer->bits : 256u;
-			unsigned const wireWidth = item.isSigned ? 256u : item.bits;
-			item.wireType = typeMapper.createType<awst::ARC4UIntN>(
-				static_cast<int>(wireWidth));
-			item.encoded = true;
-		}
-		else if (integer && !integer->isSigned && integer->bits < 64)
-		{
-			item.masked = true;
-			item.bits = integer->bits;
-		}
-		else if (item.nativeType
-			&& item.nativeType->kind() == awst::WTypeKind::ReferenceArray)
-		{
-			auto const* arc4 = typeMapper.mapToARC4Type(item.nativeType);
-			if (arc4 != item.nativeType)
-			{
-				item.wireType = arc4;
-				item.encoded = true;
-			}
-		}
-		plan.push_back(item);
-	}
-	return plan;
-}
 
 void transformReturnValues(
 	std::vector<std::shared_ptr<awst::Statement>>& statements,
@@ -187,24 +140,6 @@ void normalizeNativeReturns(
 	walk(method.body->body);
 }
 
-void promoteReturnType(
-	awst::ContractMethod& method,
-	std::vector<ReturnWireElem> const& plan,
-	TypeMapper& typeMapper)
-{
-	if (plan.empty()) return;
-	if (plan.size() == 1)
-		method.returnType = plan[0].wireType;
-	else
-	{
-		std::vector<awst::WType const*> wireTypes;
-		for (auto const& item: plan)
-			wireTypes.push_back(item.wireType);
-		method.returnType = typeMapper.createType<awst::WTuple>(
-			std::move(wireTypes));
-	}
-}
-
 // Value-model reference parameters need an explicit post-call value. Contract
 // internal methods only need this for mutated memory structs; host-bound
 // library/free functions also mirror the storage write-backs of root
@@ -214,8 +149,7 @@ std::vector<size_t> augmentMethodForReferenceParams(
 	solidity::frontend::FunctionDefinition const& func,
 	TypeMapper& typeMapper,
 	solidity::frontend::ContractDefinition const* mostDerived,
-	bool asInternalCopy,
-	std::set<int64_t> const& asmSlotParamIds)
+	bool asInternalCopy)
 {
 	using namespace solidity::frontend;
 	if (!func.isImplemented() || !method.body) return {};
@@ -229,90 +163,15 @@ std::vector<size_t> augmentMethodForReferenceParams(
 	if (!isInternalMethod && !isHostedFreestanding)
 		return {};
 
-	std::vector<size_t> writeBackParams;
-	if (isHostedFreestanding
-		&& !typeMapper.profile().evmStorageLayout
-		&& func.stateMutability() != StateMutability::View
-		&& func.stateMutability() != StateMutability::Pure)
-		for (size_t pi = 0;
-			pi < func.parameters().size() && pi < method.args.size(); ++pi)
-		{
-			auto const& parameter = func.parameters()[pi];
-			if (parameter->referenceLocation()
-					!= VariableDeclaration::Location::Storage)
-				continue;
-			auto const passing = classifyRefParamPassing(
-				typeMapper, *parameter,
-				asmSlotParamIds.count(parameter->id()) != 0);
-			if (passing == RefParamPassing::Value)
-				writeBackParams.push_back(pi);
-		}
-
-	auto isMemRefType = isMemoryRefWriteBackType;
-	auto const& mutations = typeMapper.analysis().parameterMutations(
-		isFreestanding ? nullptr : mostDerived, func);
-
-	for (size_t pi = 0; pi < func.parameters().size() && pi < method.args.size(); ++pi)
-	{
-		auto const& p = func.parameters()[pi];
-		if (p->referenceLocation() != VariableDeclaration::Location::Memory) continue;
-		if (!p->type() || !isMemRefType(p->type())) continue;
-		if (!mutations.mutates(pi)) continue;
-		// Root library/free subroutines pass large aggregates by shared blob
-		// offset, so their host-bound equivalents must not add a tuple slot.
-		if (isFreestanding && memoryUsesBlob(typeMapper.map(p->type()))) continue;
-		writeBackParams.push_back(pi);
-	}
+	auto const& plan = typeMapper.callBoundaryPlan(func, mostDerived);
+	auto const& writeBackParams = plan.writeBackParams;
 	if (writeBackParams.empty()) return {};
-
 	auto const& loc = method.sourceLocation;
-
-	// Augment the return type: original values (flattened), then storage and
-	// memory reference parameters in the order expected by SolInternalCall.
-	std::vector<awst::WType const*> types;
-	bool origVoid = (method.returnType == awst::WType::voidType());
-	auto const* origTuple = origVoid ? nullptr
-		: dynamic_cast<awst::WTuple const*>(method.returnType);
-	if (!origVoid)
-	{
-		if (origTuple) for (auto const* t : origTuple->types()) types.push_back(t);
-		else types.push_back(method.returnType);
-	}
-	for (size_t idx : writeBackParams) types.push_back(method.args[idx].wtype);
-	awst::WType const* newRetType =
-		types.size() == 1 ? types[0] : typeMapper.createType<awst::WTuple>(std::move(types));
+	auto const* newRetType = plan.augmentReturn(typeMapper, method.returnType);
 	method.returnType = newRetType;
-	bool newIsTuple = (dynamic_cast<awst::WTuple const*>(newRetType) != nullptr);
+	bool newIsTuple = dynamic_cast<awst::WTuple const*>(newRetType) != nullptr;
 
-	// Walk existing returns; append the reference-param vars to match the new shape.
-	// forEachReturnStatement covers ALL nesting (if/else, nested blocks,
-	// loops, switch) — the old hand-rolled walk recursed only IfElse, so an
-	// early `return` inside a for loop kept its unaugmented value and puya
-	// rejected valid Solidity with a return-type mismatch.
-	awst::forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
-		if (!newIsTuple)
-		{
-			if (!ret.value && writeBackParams.size() == 1)
-				ret.value = awst::makeVarExpression(
-					method.args[writeBackParams[0]].name,
-					method.args[writeBackParams[0]].wtype,
-					ret.sourceLocation);
-		}
-		else
-		{
-			auto tuple = awst::makeTupleExpression(newRetType, ret.sourceLocation);
-			if (ret.value)
-			{
-				if (auto* ot = dynamic_cast<awst::TupleExpression*>(ret.value.get()))
-					for (auto& it : ot->items) tuple->items.push_back(it);
-				else tuple->items.push_back(ret.value);
-			}
-			for (size_t idx : writeBackParams)
-				tuple->items.push_back(awst::makeVarExpression(
-					method.args[idx].name, method.args[idx].wtype, ret.sourceLocation));
-			ret.value = std::move(tuple);
-		}
-	});
+	plan.augmentReturns(*method.body, newRetType);
 
 	// Fall-through: only void methods reach here un-terminated (buildFunction
 	// already synthesized non-void returns). Return the reference params.
@@ -344,72 +203,24 @@ namespace
 /// prologue must emit. Pure extraction from buildFunction — the returned list
 /// feeds the decode-rename loop and the entry checks exactly as before.
 std::vector<ParamDecode> collectArc4ParamRemaps(
-	TypeMapper& _typeMapper,
-	solidity::frontend::FunctionDefinition const& _func,
-	awst::ContractMethod& method,
-	bool funcHasInlineAssembly)
+	TypeMapper& types, solidity::frontend::FunctionDefinition const& function,
+	awst::ContractMethod& method, bool assembly)
 {
-std::vector<ParamDecode> paramDecodes;
-// Detect inline assembly (at ANY depth — `unchecked { assembly {..} }` counts):
-// skip ARC4 param wrapping (would break asm var refs).
-// Self-recursive callsubs are rewritten post-translation to wrap biguint args
-// in ARC4Encode (see wrap pass below) — self-recursion no longer gates the remap.
-if (method.arc4MethodConfig.has_value())
-{
-	auto const& solParams = _func.parameters();
-	for (size_t pi = 0; pi < method.args.size(); ++pi)
+	std::vector<ParamDecode> decodes;
+	if (!method.arc4MethodConfig) return decodes;
+	auto const& plan = types.callBoundaryPlan(function);
+	for (size_t pi = 0; pi < plan.parameters.size(); ++pi)
 	{
+		auto const& parameter = plan.parameters[pi];
+		if (parameter.type == parameter.wireType) continue;
 		auto& arg = method.args[pi];
-
-		// Remap biguint → ARC4UIntN(N): without this puya uses uint512 (AVM max),
-		// breaking ABI selectors. Skipped for asm bodies (would break Yul refs).
-		if (arg.wtype == awst::WType::biguintType() && pi < solParams.size())
-		{
-			auto intInfo = builder::SolIntType::fromSol(solParams[pi]->annotation().type);
-			unsigned bits = intInfo ? intInfo->bits : 256;
-			auto const* arc4Type = _typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-			// Signed sub-256 (64<N<256) decodes to N-bit two's complement; sign-extend
-			// to 256-bit so downstream ops (compare, negate) see the correct sign.
-			// int256 is already canonical; ≤64-bit is uint64-backed (buildABIEntryChecks).
-			unsigned signedBits =
-				(intInfo && intInfo->isSigned && bits > 64 && bits < 256) ? bits : 0;
-			paramDecodes.push_back({pi, arg.name, arg.wtype, arc4Type,
-				arg.sourceLocation, signedBits});
-			// Asm bodies are built (buildBlock) AFTER this loop; defer the ABI wtype change so the Yul
-			// body builds against the native biguint type (set in the decode rename loop below).
-			if (!funcHasInlineAssembly)
-				arg.wtype = arc4Type;
-			continue;
-		}
-
-		// Remap aggregate types and profile-sized external fn-ptrs to ARC4.
-		// General bytes/bytes[N] params are NOT remapped.
-		bool isAggregate = arg.wtype
-			&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
-				|| arg.wtype->kind() == awst::WTypeKind::ARC4StaticArray
-				|| arg.wtype->kind() == awst::WTypeKind::ARC4DynamicArray
-				|| arg.wtype->kind() == awst::WTypeKind::WTuple);
-		if (!isAggregate && pi < solParams.size()) // external fn-ptr bytes[N]
-		{
-			if (dynamic_cast<solidity::frontend::FunctionType const*>(solParams[pi]->type())
-				&& arg.wtype && arg.wtype->kind() == awst::WTypeKind::Bytes)
-				isAggregate = true;
-		}
-		// Skip remap for asm bodies: decode is also suppressed there, so remapping
-		// without a decode would leave the body reading ARC4 where it expects native.
-		if (!isAggregate || funcHasInlineAssembly)
-			continue;
-
-		awst::WType const* arc4Type = _typeMapper.mapToARC4Type(arg.wtype);
-		if (arc4Type != arg.wtype)
-		{
-			paramDecodes.push_back(
-				{pi, arg.name, arg.wtype, arc4Type, arg.sourceLocation});
-			arg.wtype = arc4Type;
-		}
+		decodes.push_back({pi, arg.name, arg.wtype, parameter.wireType,
+			arg.sourceLocation, parameter.signedDecodeBits});
+		// Yul is built against native parameter names/types; wire renames
+		// are applied after body construction.
+		if (!assembly) arg.wtype = parameter.wireType;
 	}
-}
-	return paramDecodes;
+	return decodes;
 }
 } // namespace
 
@@ -467,47 +278,7 @@ void applyParamDecodeNames(
 	}
 }
 
-// No-modifier-chain buildFunction phase: insert the deferred ARC4 decodes at
-// the top of the method body, then wrap self-recursive callsub args whose
-// positions were remapped. Caller guards non-empty deferredDecodes.
-void insertDeferredDecodes(
-	awst::ContractMethod& method,
-	solidity::frontend::FunctionDefinition const& _func,
-	std::vector<std::shared_ptr<awst::Statement>>& deferredDecodes,
-	std::vector<ParamDecode> const& paramDecodes,
-	eb::ContractContext& contractCtx)
-{
-	method.body->body.insert(
-		method.body->body.begin(),
-		std::make_move_iterator(deferredDecodes.begin()),
-		std::make_move_iterator(deferredDecodes.end()));
 
-	// Self-recursive callsub fix-up: after param remap, internal f(...) calls
-	// still pass biguint args; wrap each remapped position in ARC4Encode.
-	std::string thisName = eb::CallResolver::resolveMethodName(
-		contractCtx, _func);
-	awst::visitExpressions(*method.body, [&](awst::Expression& expression) {
-		auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&expression);
-		if (!call)
-			return;
-		auto const* target = std::get_if<awst::InstanceMethodTarget>(
-			&call->target);
-		if (!target || target->memberName != thisName)
-			return;
-		for (auto const& pd: paramDecodes)
-		{
-			if (pd.argIndex >= call->args.size()) continue;
-			auto& arg = call->args[pd.argIndex];
-			if (!arg.value || arg.value->wtype == pd.arc4Type)
-				continue;
-			if (arg.value->wtype != awst::WType::biguintType())
-				continue;
-			auto loc = arg.value->sourceLocation;
-			arg.value = awst::makeARC4Encode(
-				std::move(arg.value), pd.arc4Type, loc);
-		}
-	});
-}
 
 } // anonymous namespace
 
@@ -547,12 +318,10 @@ ContractBuilder::makeParamDecodeStatements(
 void ContractBuilder::buildMethodSignature(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func,
-	std::string const& _contractName,
-	std::string const& _nameOverride,
-	std::set<int64_t> const& asmSlotParamIds)
+	std::string const& _nameOverride)
 {
 	method.sourceLocation = makeLoc(_func.location());
-	method.cref = m_sourceFile + "." + _contractName;
+	method.cref = m_contractId;
 	if (!_nameOverride.empty())
 	{
 		method.memberName = _nameOverride;
@@ -576,124 +345,15 @@ void ContractBuilder::buildMethodSignature(
 	if (_func.documentation())
 		method.documentation.description = *_func.documentation()->text();
 
-	// Parameters
-	int paramIndex = 0;
-	for (auto const& param: _func.parameters())
+	auto const& plan = m_typeMapper.callBoundaryPlan(_func, m_currentContract);
+	for (auto const& parameter: plan.parameters)
+		method.args.push_back({parameter.name, makeLoc(parameter.declaration->location()), parameter.type});
+	for (auto pi: plan.offsetParams)
 	{
-		awst::SubroutineArgument arg;
-		if (param->name().empty())
-			arg.name = "_param" + std::to_string(paramIndex);
-		else
-			arg.name = param->name();
-		arg.sourceLocation = makeLoc(param->location());
-		// Slot handle / box-key prefix / blob offset / value — the shared
-		// travel rule (RefParamPassing.h); call sites classify identically.
-		arg.wtype = refParamWType(
-			classifyRefParamPassing(
-				m_typeMapper, *param, asmSlotParamIds.count(param->id()) != 0),
-			m_typeMapper, *param);
-		method.args.push_back(std::move(arg));
-		paramIndex++;
+		auto const& parameter = plan.parameters[pi];
+		method.args.push_back({parameter.offsetName(),
+			makeLoc(parameter.declaration->location()), awst::WType::uint64Type()});
 	}
-
-	// Handle-model dual handle: offset-convention struct-ref params (those that receive an
-	// array-element ref `f(arr[i])` somewhere) get a companion uint64 OFFSET param, appended
-	// after all regular params. The caller appends matching offset args in the same order; the
-	// body's `s.field` writes target the element slice via box_replace(key, offset+fieldOff).
-	for (auto const& param: _func.parameters())
-		if (!m_typeMapper.profile().evmStorageLayout   // slot handles carry the element position directly
-			&& param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& !param->name().empty()
-			&& m_typeMapper.analysis().structRefOffsetParams.count(param->id()))
-		{
-			awst::SubroutineArgument offArg;
-			offArg.name = param->name() + "__off";
-			offArg.sourceLocation = makeLoc(param->location());
-			offArg.wtype = awst::WType::uint64Type();
-			method.args.push_back(std::move(offArg));
-		}
-
-}
-
-/// buildFunction phase: native return type mapping (single or tuple), including
-/// the biguint promotion required at signed ABI boundaries.
-void ContractBuilder::computeMethodReturnType(
-	awst::ContractMethod& method,
-	solidity::frontend::FunctionDefinition const& _func,
-	bool funcHasInlineAssembly)
-{
-	auto const& returnParams = _func.returnParameters();
-
-	if (returnParams.empty())
-		method.returnType = awst::WType::voidType();
-	else if (returnParams.size() == 1)
-	{
-		method.returnType = m_typeMapper.map(returnParams[0]->type());
-		// --evm-storage-layout: ANY storage ref return is a biguint slot.
-		if (m_typeMapper.profile().evmStorageLayout
-			&& returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
-			method.returnType = awst::WType::biguintType();
-		// .slot assembly storage ref: return biguint (slot number).
-		else if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& funcHasInlineAssembly)
-			method.returnType = awst::WType::biguintType();
-		// Storage-ref pointer (`return _pools[id]`): return uint64 index or bytes box-key.
-		// Box-keyed when the holder is a mapping (storageRefReturnIsBytesKeyed),
-		// even for plain-struct elements with no nested mappings (V4 Position.State).
-		else if (storageRefPointerReturn(&_func))
-			method.returnType = storageRefReturnIsBytesKeyed(&_func)
-				? awst::WType::bytesType()
-				: awst::WType::uint64Type();
-		// Signed ≤64-bit returns → biguint for proper 256-bit two's complement ARC4 encoding.
-		auto intInfo = builder::SolIntType::fromSolOrEnum(returnParams[0]->type());
-		// Biguint promotion only at ABI boundary; private/internal keep uint64
-		// so `return IntegerConstant(uint64,…)` matches declared type.
-		bool isAbiBoundary = _func.isPartOfExternalInterface();
-		if (intInfo && intInfo->isSigned)
-		{
-			if (intInfo->bits <= 64 && isAbiBoundary)
-				method.returnType = awst::WType::biguintType();
-		}
-	}
-	else
-	{
-		// Multiple returns → tuple
-		std::vector<awst::WType const*> types;
-		std::vector<std::string> names;
-		bool hasNames = false;
-		for (size_t ri = 0; ri < returnParams.size(); ++ri)
-		{
-			auto const& rp = returnParams[ri];
-			auto* mappedType = m_typeMapper.map(rp->type());
-			if (m_typeMapper.profile().evmStorageLayout
-				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
-				mappedType = awst::WType::biguintType();
-			auto intInfo = builder::SolIntType::fromSolOrEnum(rp->type());
-			bool isAbiBoundary = _func.isPartOfExternalInterface();
-			if (intInfo)
-			{
-				if (intInfo->isSigned)
-				{
-					if (intInfo->bits <= 64 && isAbiBoundary)
-						mappedType = awst::WType::biguintType();
-				}
-			}
-			types.push_back(mappedType);
-			names.push_back(rp->name());
-			if (!rp->name().empty())
-				hasNames = true;
-		}
-		if (hasNames)
-		{
-			// Suffix "Return" to avoid ARC56 collision across methods.
-			std::string tupleName = _func.name() + "Return";
-			method.returnType = m_typeMapper.createType<awst::WTuple>(
-				std::move(types), std::move(names), std::move(tupleName));
-		}
-		else
-			method.returnType = m_typeMapper.createType<awst::WTuple>(std::move(types));
-	}
-
 }
 
 /// buildFunction phase: seed the assembly-translation function context from the (ARC4-remapped) method args plus sub-64-bit widths …
@@ -754,17 +414,19 @@ void ContractBuilder::registerBodyRefParams(
 				|| asmSlotParamIds.count(p->id()))
 			&& !p->name().empty();
 	};
-	for (auto const& p: _func.parameters())
-		if (isMappingStorageRef(p.get()))
-			mappingKeyParamDecls.push_back(p.get());
+	auto const& callPlan = m_typeMapper.callBoundaryPlan(_func, m_currentContract);
+	for (auto pi: callPlan.keyParams)
+		mappingKeyParamDecls.push_back(callPlan.parameters[pi].declaration);
+	bool const slotReturns = m_typeMapper.profile().evmStorageLayout
+		|| storageRefReturnUsesSlot(&_func, m_typeMapper.analysis());
 	for (auto const& rp: returnParams)
 		// Also register box-keyed storage-ref named returns (e.g. V4 Position.State
 		// storage): storageRefReturnIsBytesKeyed catches the mapping-holder case
 		// that containsMappingType misses for plain-struct elements.
-		if (isMappingStorageRef(rp.get())
+		if (!slotReturns && (isMappingStorageRef(rp.get())
 			|| (rp->referenceLocation()
 					== solidity::frontend::VariableDeclaration::Location::Storage
-				&& !rp->name().empty() && storageRefReturnIsBytesKeyed(&_func)))
+				&& !rp->name().empty() && storageRefReturnIsBytesKeyed(&_func, m_typeMapper.analysis()))))
 			mappingKeyParamDecls.push_back(rp.get());
 	setMappingKeyParams(mappingKeyParamDecls);
 	for (auto const& p: _func.parameters())
@@ -782,6 +444,9 @@ void ContractBuilder::registerBodyRefParams(
 			if (p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				&& !p->name().empty())
 				slotRefParamDecls.push_back(p.get());
+	}
+	if (slotReturns)
+	{
 		for (auto const& rp: returnParams)
 			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				&& !rp->name().empty())
@@ -822,10 +487,10 @@ void ContractBuilder::prependNamedReturnInits(
 				continue;
 			// Box-keyed storage-ref named returns hold a bytes box-key, not a struct — skip zero-init.
 			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& storageRefReturnIsBytesKeyed(&_func))
+				&& storageRefReturnIsBytesKeyed(&_func, m_typeMapper.analysis()))
 				continue;
 			// --evm-storage-layout: the named return holds a biguint slot.
-			if (m_typeMapper.profile().evmStorageLayout
+			if ((m_typeMapper.profile().evmStorageLayout || storageRefReturnUsesSlot(&_func, m_typeMapper.analysis()))
 				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
 			{
 				inits.push_back(awst::makeAssignmentStatement(
@@ -1120,9 +785,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		if (m_typeMapper.analysis().asmSlotReferenceDeclarations.count(param->id()))
 			asmSlotParamIds.insert(param->id());
 
-	buildMethodSignature(method, _func, _contractName, _nameOverride, asmSlotParamIds);
+	buildMethodSignature(method, _func, _nameOverride);
 
-	computeMethodReturnType(method, _func, funcHasInlineAssembly);
+	auto const& signature = m_typeMapper.functionReturnPlan(_func);
+	method.returnType = signature.nativeType;
 
 	// Solidity `pure` must NOT map to puya `pure`. They are different contracts:
 	// Solidity's means "reads/writes no state" — the function can still REVERT
@@ -1163,8 +829,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// ABI return encoding belongs at construction time. Plain methods encode
 		// each source return immediately; modifier methods first normalize native
 		// values for chain threading, then encode only the outer wrapper return.
-		std::vector<ReturnWireElem> returnPlan =
-			computeReturnPlan(_func, method.returnType, m_typeMapper);
+		auto const& returnPlan = signature.elements;
 		bool anyWork = false;
 		for (auto const& p: returnPlan)
 			if (p.encoded || p.masked) { anyWork = true; break; }
@@ -1207,7 +872,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		prependNamedReturnInits(method, _func);
 
-		if (storageRefPointerReturn(&_func))
+		if (storageRefPointerReturn(&_func, m_typeMapper.analysis()))
 			rewriteStorageRefReturnIndices(method);
 
 		synthesizeImplicitReturn(
@@ -1216,7 +881,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Plain-method return sites are already encoded. Modifier chains must keep
 		// native values until every before/after-placeholder action has run.
 		if (encodeReturnsAtBuildTime)
-			promoteReturnType(method, returnPlan, m_typeMapper);
+			method.returnType = signature.wireType;
 		else
 			normalizeNativeReturns(
 				method, _func, m_typeMapper, returnPlan,
@@ -1233,7 +898,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// captures and forwards the updated parameter values.
 		auto writeBackParams = augmentMethodForReferenceParams(
 			method, _func, m_typeMapper, m_currentContract,
-			_asInternalCopy, asmSlotParamIds);
+			_asInternalCopy);
 
 		// Transient blob init is in the approval-program preamble (transient slot);
 		// per-method init would reset it mid-dispatch, clobbering earlier writes.
@@ -1263,15 +928,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				transformReturnValues(
 					method.body->body, m_typeMapper, dispatchPlan,
 					/*asmWrap=*/false, /*wire=*/true);
-				promoteReturnType(method, returnPlan, m_typeMapper);
+				method.returnType = signature.wireType;
 			}
 		}
 		else
 			deferredDecodes = makeParamDecodeStatements(paramDecodes);
 
 		if (!deferredDecodes.empty())
-			insertDeferredDecodes(
-				method, _func, deferredDecodes, paramDecodes, m_tr->contractCtx);
+			method.body->body.insert(method.body->body.begin(),
+				std::make_move_iterator(deferredDecodes.begin()),
+				std::make_move_iterator(deferredDecodes.end()));
 
 		prependEnsureBudget(method, _func);
 

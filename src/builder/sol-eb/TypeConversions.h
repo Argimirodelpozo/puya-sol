@@ -11,8 +11,8 @@
 namespace puyasol::builder::eb
 {
 
-/// Dispatches Solidity type conversions (address(x), uint64(x), bytes32(x), etc.)
-/// by target type category.
+/// Dispatches non-integer Solidity conversions by target type category.
+/// Integer conversions use the source-aware ConversionPlan.
 class TypeConversionRegistry
 {
 public:
@@ -26,7 +26,7 @@ public:
 	TypeConversionRegistry();
 
 	/// Try to handle a type conversion.
-	/// Returns nullptr if not handled (fall through to old code).
+	/// Returns nullptr if not handled by these category-specific handlers.
 	std::unique_ptr<InstanceBuilder> tryConvert(
 		ContractContext& _ctx,
 		solidity::frontend::Type const* _targetSolType,
@@ -40,13 +40,6 @@ private:
 	void registerHandler(solidity::frontend::Type::Category _cat, ConvertHandler _handler);
 
 	// Handlers
-	static std::unique_ptr<InstanceBuilder> convertToInteger(
-		ContractContext& _ctx,
-		solidity::frontend::Type const* _targetSolType,
-		awst::WType const* _targetWType,
-		std::shared_ptr<awst::Expression> _arg,
-		awst::SourceLocation const& _loc);
-
 	static std::unique_ptr<InstanceBuilder> convertToBool(
 		ContractContext& _ctx,
 		solidity::frontend::Type const* _targetSolType,
@@ -62,13 +55,6 @@ private:
 		awst::SourceLocation const& _loc);
 
 	static std::unique_ptr<InstanceBuilder> convertToFixedBytes(
-		ContractContext& _ctx,
-		solidity::frontend::Type const* _targetSolType,
-		awst::WType const* _targetWType,
-		std::shared_ptr<awst::Expression> _arg,
-		awst::SourceLocation const& _loc);
-
-	static std::unique_ptr<InstanceBuilder> convertToEnum(
 		ContractContext& _ctx,
 		solidity::frontend::Type const* _targetSolType,
 		awst::WType const* _targetWType,

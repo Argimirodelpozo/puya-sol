@@ -53,7 +53,6 @@ void registerFunctionIds(
 
 void presetDispatchCref(
 	solidity::frontend::CompilerStack& _compiler,
-	std::string const& _sourceFile,
 	eb::FunctionPointerRegistry& _functionPointers)
 {
 	// Set fn-ptr dispatch cref to the first deployable contract so library
@@ -66,7 +65,7 @@ void presetDispatchCref(
 		{
 			if (!c->isLibrary() && !c->abstract() && !c->isInterface())
 			{
-				_functionPointers.currentCref = _sourceFile + "." + c->name();
+				_functionPointers.currentCref = c->fullyQualifiedName();
 				return;
 			}
 		}

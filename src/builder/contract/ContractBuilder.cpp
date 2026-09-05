@@ -528,7 +528,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_currentContract = &_contract;
 	m_boxArrayVars.clear();
 	std::string contractName = _contract.name();
-	std::string contractId = m_sourceFile + "." + contractName;
+	m_contractId = _contract.fullyQualifiedName();
+	auto const& contractId = m_contractId;
 
 	// Reset the generated-name counters: a contract's temp/subroutine names
 	// (`__mod_retval_N`, `f__mod0_N`, …) must depend only on its own content,
@@ -655,7 +656,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	{
 		if (base != &_contract)
 			contract->methodResolutionOrder.push_back(
-				m_sourceFile + "." + base->name()
+				base->fullyQualifiedName()
 			);
 	}
 
@@ -873,7 +874,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		eb::FunctionPointerBuilder::setSubroutineIds(
 			*m_exprBuilder, m_functionSymbols);
 
-		std::string cref = m_sourceFile + "." + contractName;
+		auto const& cref = m_contractId;
 		awst::SourceLocation loc;
 		loc.file = m_sourceFile;
 		auto& dispCtx = *m_exprBuilder;

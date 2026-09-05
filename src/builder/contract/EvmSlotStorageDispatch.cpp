@@ -1177,7 +1177,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	// (AWSTBuilder pre-scans and sets the flags before any contract builds).
 	bool const denseOnly = m_typeMapper.profile().denseOnlyStorage;
 
-	std::string cref = m_sourceFile + "." + _contractName;
+	auto const& cref = m_contractId;
 	awst::SourceLocation loc;
 	loc.file = m_sourceFile;
 
