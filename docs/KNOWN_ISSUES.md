@@ -11,11 +11,6 @@ for production funds.
   current full-suite result are in the [semantic test guide](../tests/solidity-semantic-tests/README.md).
   Keep that failure visible until the backend fix is available in the pinned
   dependency; it is not an accepted divergence.
-- **Native-payment policy coverage:** high-level `selfdestruct` and
-  value-bearing Yul `call` construct payments outside the shared receiver/policy
-  boundary. The ordinary high-level payment path checks divergence acceptance
-  and xchain mapping, but those other paths do not. See the
-  [address/value-transfer limitations](../EVM_DIVERGENCE.md).
 - **Continuous semantic evidence:** clean-build/native CI exists, but scheduled
   LocalNet semantic/differential gates, sanitizer/fuzz coverage, and review of
   non-strict xpasses remain follow-ups. Publish results against exact root and
@@ -24,11 +19,6 @@ for production funds.
   root Python test dependencies and LocalNet environment need a declared,
   reproducible setup. Artifact reproducibility checks and dependency/SBOM
   reporting remain separate from the existing build manifest.
-- **Generated-output hygiene:** many historical compiler artifacts outside the
-  removed example collections are still tracked. Stop tracking them in a
-  separately scoped cleanup, retaining only deliberate golden fixtures and
-  external test evidence. Removing files now does not shrink existing Git
-  history; a history rewrite would require a separate decision.
 - **Project metadata:** the root still needs an owner-selected license,
   vulnerability-reporting policy, and contribution/release ownership guidance.
   Dependency licenses do not substitute for first-party project metadata.

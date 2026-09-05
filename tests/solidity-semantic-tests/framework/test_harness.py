@@ -28,9 +28,10 @@ def test_each_compile_gets_an_isolated_output_directory(tmp_path, monkeypatch):
         output / "compile-0002",
     ]
 
-    legacy_artifact = output / "legacy-tracked-artifact"
-    legacy_artifact.write_text("preserve me\n")
+    diagnostic = output / "diagnostic.log"
+    diagnostic.write_text("preserve me\n")
     harness.cleanup()
 
-    assert legacy_artifact.exists()
+    assert diagnostic.exists()
+    assert (output / "artifact").read_text() == "generated\n"
     assert all(not compile_dir.exists() for compile_dir in seen_output_dirs)

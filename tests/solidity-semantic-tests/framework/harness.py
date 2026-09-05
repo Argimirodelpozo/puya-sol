@@ -103,10 +103,9 @@ class Harness:
 
         Each compile gets an isolated compile-NNNN dir so the compile cache
         never captures a previous compile's artifacts (cache stores copy the
-        whole directory). The final artifacts are ALSO mirrored to the test's
-        out dir top level: the harness fixture wipes that dir at setup, and
-        this mirror is what refreshes the repo's tracked out/ artifacts —
-        without it every test run just deletes them.
+        whole directory). Final artifacts are also mirrored to the test's
+        output root for diagnostics and consumers that inspect awst.json or
+        compiler logs there. Both locations are generated, untracked outputs.
         """
         resolved = self.resolve_sol_path(sol_path)
         self._compile_count += 1
@@ -216,6 +215,6 @@ class Harness:
         return _call_raw(self.localnet, app, None, **opts)
 
     def cleanup(self) -> None:
-        """Remove isolated compile outputs while preserving legacy tracked files."""
+        """Remove isolated compile directories; retain top-level diagnostics."""
         for compile_dir in self._compile_dirs:
             shutil.rmtree(compile_dir, ignore_errors=True)

@@ -8,24 +8,28 @@ not as an active test runner.
 
 ## Recorded baseline
 
-Full LocalNet run on **2026-09-05**, compiler and tests committed as
-`d3668ac0ff` (static-call warning follow-up to `9d74611bb0`):
+Full LocalNet run on **2026-09-05**. The tested compiler and regression sources
+are committed as `0d035ea53d` (shared native-payment handling and
+transfer/send receive/fallback dispatch):
 
 | Result | Count |
 |---|---:|
-| Passed | 1,623 |
+| Passed | 1,688 |
 | Failed | 1 |
-| Expected failure (xfail) | 101 |
-| Unexpected pass (xpass) | 39 |
-| Total | 1,764 |
+| Expected failure (xfail) | 102 |
+| Unexpected pass (xpass) | 38 |
+| Total | 1,829 |
 
-The run took 1,071.96 seconds with two workers. Dependencies were pinned to
+The run took 817.07 seconds with two workers. Dependencies were pinned to
 Solidity `a99b6d8c0cbf9eddbac104e8e4e16545db7d3d8d` and Puya
 `27751c364229ae3cd0334fe4071e61690b6879e4` (5.10.1). Native CTest coverage passed
-16/16; the focused static-call and builder regression selection passed 42/42.
+16/16; the focused payment/receive/call selection passed 79/79, and the
+harness/cache unit tests passed 4/4. The full run includes 65 new native-payment
+cases. Its local JUnit report is `/tmp/puyasol-native-payment-full-v2.xml`.
 These are results for that revision and local environment, not a guarantee
 about future commits or arbitrary contracts. Xpasses are non-strict in this
-run and need review; they are not folded into the ordinary pass count.
+run and are not folded into the ordinary pass count. Existing XPASS/xfail
+markers were left unchanged; their review remains deferred.
 
 The remaining failure is
 `puyasolRegression/test_puyasol_regression.py::test_dce_reverting_subexpr_literal_folds`:
@@ -56,6 +60,7 @@ PUYASOL_LOCALNET_RESET=0 pytest tests/ -q -n 2 --tb=short \
 
 # Focused compiler regressions.
 PUYASOL_LOCALNET_RESET=0 pytest tests/puyasolRegression/test_builder_findings.py -q -n 2
+PUYASOL_LOCALNET_RESET=0 pytest tests/puyasolRegression/test_native_payments.py -q -n 2
 PUYASOL_LOCALNET_RESET=0 pytest tests/smoke/ -q
 
 # Harness/cache units, without deploying contracts.
@@ -74,11 +79,12 @@ enables legacy source rewriting and eligible divergence policies for corpus
 research. This differs from an ordinary compiler invocation.
 
 Compile caches live in `.compile_cache/`, with per-test artifacts under `out/`.
-Some legacy output files are still tracked: inspect Git status after a run and
-do not commit incidental regenerated artifacts. Historical result snapshots and
-the old append-only status report were removed; their tracked versions remain
-available in Git history. Record future results with the tested commit,
-dependency revisions, command, and a retained JUnit artifact.
+These generated directories and historical run logs are untracked and ignored;
+the harness still mirrors current artifacts for diagnostics and tests that
+inspect compiler output. Untracking preserved existing local files and did not
+rewrite Git history. Intentional source fixtures remain tracked. Record future
+results with the tested commit, dependency revisions, command, and a retained
+JUnit artifact outside the checkout.
 
 ## Adding tests
 

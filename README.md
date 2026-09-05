@@ -28,8 +28,8 @@ The pipeline:
 
 ## Status
 
-The full semantic run on **2026-09-05** recorded **1,623 passed, 1 failed,
-101 xfailed, and 39 xpassed**. All **16 native tests** passed. The remaining
+The full semantic run on **2026-09-05** recorded **1,688 passed, 1 failed,
+102 xfailed, and 38 xpassed**. All **16 native tests** passed. The remaining
 failure is a known backend optimization bug that drops a required
 divide-by-zero revert; the suite is **not fully green**. See the
 [test guide and revision-specific baseline](tests/solidity-semantic-tests/README.md).

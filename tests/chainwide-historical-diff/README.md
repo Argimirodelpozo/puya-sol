@@ -7,6 +7,11 @@ profiles, not a fresh run against the current compiler. See the
 [semantic baseline](../solidity-semantic-tests/README.md) for current compiler
 test results and [proxy.md](../../proxy.md) for supported proxy adaptations.
 
+Generated `cctp*_report.json` reports are local, ignored outputs; existing copies
+were preserved when untracked. Regenerate them with the replay commands below.
+The case corpus, joint configuration, and curated receipt corrections remain
+tracked inputs.
+
 Replay the **real historical transaction sequence** of a deployed (verified)
 contract against two local legs, in lockstep from contract creation, and diff
 them:
