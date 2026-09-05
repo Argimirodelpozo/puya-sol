@@ -1,4 +1,4 @@
-# Proxy patterns on the AVM — analysis and implementation directions
+# Proxy patterns on the AVM — implementation boundaries and directions
 
 Every EVM proxy pattern is a workaround for one protocol fact: **deployed EVM
 bytecode is immutable**. The AVM does not share that fact — an application's
@@ -12,6 +12,10 @@ rejects by policy — no shared-storage code borrowing exists on the AVM), we
 This document goes pattern by pattern. "Replay support" refers to the
 chainwide-historical-diff harness; "compile support" refers to lowering
 user-written proxy code.
+
+Documentation reconciled with the in-tree lowerings on 2026-09-05. Replay
+figures below are historical observations, not a fresh validation of this
+revision. The main branch has no automatic contract splitter.
 
 Status legend: ✅ implemented · 🔶 designed, not built · 💭 direction only.
 
@@ -65,6 +69,7 @@ because storage through a derived slot value is NOT mapped to the lowerings
 below and splits from them. Admin-slot uses reached through a **library or
 free function** attach the gate to every contract whose call graph reaches
 that function (not to whichever contract compiles first).
+
 - **admin slot** reads/writes lower to a synthesized biguint app global
   `__erc1967_admin` (unset reads 0, EVM semantics), and any contract that
   touches it grows an ARC-4 `__erc1967_update()` method — declared in
@@ -91,13 +96,11 @@ that function (not to whichever contract compiles first).
   transaction itself, submitted by the admin with the new program bytes.
 - **beacon slot** reads/writes trap at runtime (see §4).
 
-⚠️ A contract that touches ONLY the implementation slot (the UUPS §3 shape —
-no admin-slot use anywhere in its call graph) gets **no** update gate: native
-updates stay rejected, i.e. the app is permanently un-updatable. This is
-deliberate fail-closed behaviour — synthesizing an open or implicit gate
-would be worse — but it means a UUPS-style "upgradeable" contract compiled
-today is only upgradeable once it also touches the admin slot (or once the
-§3 `_authorizeUpgrade` mapping lands).
+An implementation-slot-only contract gets no EIP-1967 admin gate. Native
+updates remain rejected unless another recognized gate is synthesized:
+concrete OZ UUPS implementations with `_authorizeUpgrade` now receive the
+separate §3 update method. An arbitrary implementation-slot write is not
+enough to authorize updates.
 
 Guard: `puyasolRegression/test_erc1967.py` — full flow (fail-closed update,
 admin round-trip, upgradeTo trap, admin-signed native update preserving
@@ -155,6 +158,7 @@ minimal); `upgradeTo` writes the 1967 slot "from the inside" and is guarded
 by `onlyProxy`/`notDelegated` checks via the immutable `__self` address.
 
 **AVM mapping.** Same collapse as §1, with two extra details:
+
 - `__self`-based checks (`address(this) != __self`) compare the executing
   address against the deploy-time one. On the AVM there is no
   delegated-vs-direct distinction, so the honest lowering is
@@ -169,6 +173,7 @@ by `onlyProxy`/`notDelegated` checks via the immutable `__self` address.
 **Replay: ✅** mechanically identical to §1 (the latch patch IS the UUPS
 artifact). **Compile: ✅** (`src/builder/proxies/UupsLowering`). Recognized-
 idiom folds over the OZ artifacts, by defining-contract name:
+
 - `UUPSUpgradeable._checkProxy/_checkNotDelegated` → no-op (checks pass);
   `upgradeTo(AndCall)/_upgradeToAndCallUUPS` → runtime trap. Trapping the
   upgrade family also cuts UUPSUpgradeable's poison out of the demand graph
@@ -212,7 +217,8 @@ indirection. Honest options, in order of fidelity:
 
 **Replay: 💭** fetchable today per-proxy via §1 (each beacon proxy is just a
 proxy whose implementation pointer lives elsewhere — `--source-from` still
-works); the beacon-upgrade-mid-history case is the §1 "not covered" item.
+works). Generic mid-history program replacement exists (§1), but discovering
+and applying a beacon upgrade to all affected instances is not implemented.
 **Compile: 💭** option 2 is a design decision per protocol, not a compiler
 transform.
 
@@ -253,19 +259,16 @@ facets are separate contracts delegatecalled per selector. Mostly a
 24KB-code-limit escape hatch, secondarily modular upgrades
 (`diamondCut` replaces individual selectors).
 
-**AVM mapping.** The AVM sibling already exists in this repo: the **uros
-splitter** — one logical contract compiled into a main program + helper
-programs with a program-swap dance — is a diamond in everything but name,
-built for the same reason (program-size ceiling, 8KB→16KB on AVM). The
-honest lowering of a diamond is therefore: flatten all facets into one
-logical contract; if it fits 16KB, it is just an app (diamondCut degenerates
-to a whole-program update); if it does not fit, the splitter takes over.
-Per-selector upgrade granularity survives as "recompile + update" — the
-routing table is the compiler's problem, not on-chain state.
+**AVM direction.** A possible approach is to flatten all facets into one
+logical contract and replace `diamondCut` with a whole-program update. This
+is not implemented. The resulting app must fit the target's program-size
+limit: the earlier experimental splitter is not available on `main`, and
+there is no automatic fallback for an oversized program. Update permission,
+storage compatibility, and the changed upgrade granularity would all need
+explicit treatment.
 
 **Replay: 💭** needs facet-set flattening at fetch time (source-from per
-facet, merged); no case has demanded it yet. **Compile: 💭** flatten +
-existing splitter.
+facet, merged). **Compile: 💭** no diamond-specific lowering.
 
 ---
 
@@ -275,13 +278,13 @@ existing splitter.
 at the SAME address. Effectively deprecated on Ethereum (post-Cancun
 `selfdestruct` no longer clears code except same-txn).
 
-**AVM mapping.** None, and none warranted: CREATE2 address derivation and
-`selfdestruct` are both already hard errors by design. An app that wants
-different code at the same identity is… an app update (§1). Keep as a
-documented divergence; the pattern is dead upstream anyway.
-
-**Replay/compile: ✅ as hard errors** (existing policy; `selfdestruct`
-xfails, CREATE2 counted skip class).
+**AVM mapping.** There is no CREATE2 address-preserving redeployment model.
+CREATE2 and Yul `selfdestruct` are rejected. High-level Solidity
+`selfdestruct(beneficiary)` has a different lowering: it transfers the balance
+and halts, without deleting or recreating the application. Its payment-policy
+coverage gap is recorded in [EVM_DIVERGENCE.md](EVM_DIVERGENCE.md). Code replacement
+at a stable application identity requires an authorized native update (§1),
+not this metamorphic pattern.
 
 ---
 
@@ -301,5 +304,5 @@ xfails, CREATE2 counted skip class).
 - **The replay harness's proxy playbook** (implemented, CCTP v2):
   `--source-from` split fetch · direct implementation deploy ·
   `_disableInitializers` neutralization · creation-trace config-era harvest
-  (`gen_v2_config.py`) · proxy-admin selector skip list. Mid-history
-  upgrades are the known gap (§1).
+  (`gen_v2_config.py`) · proxy-admin selector skip list · explicit mid-history
+  upgrades in the joint replay (§1). Beacon-wide upgrades remain separate work.

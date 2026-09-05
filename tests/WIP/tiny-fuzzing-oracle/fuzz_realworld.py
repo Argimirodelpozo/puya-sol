@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Differential-fuzz REAL-WORLD contracts (WIP/examples) against live solc+EVM.
+"""Differential-fuzz user-supplied real-world contracts against live solc+EVM.
 
 The mutation/generator corpus is the Solidity isoltest fixtures — small + targeted.
 This points the stateful differential oracle at self-contained real contracts
@@ -7,7 +7,8 @@ This points the stateful differential oracle at self-contained real contracts
 EVM ground truth — coverage their fixed-vector suites never exercise.
 
 Usage: python fuzz_realworld.py <list-file> [--max-per-fn N] [--start K] [--limit M]
-  <list-file>: one .sol path per line (absolute or repo-relative).
+  <list-file>: one .sol path per line (absolute or working-directory-relative).
+  Sources may live in an external checkout; no in-tree example corpus is required.
 """
 import sys
 import time

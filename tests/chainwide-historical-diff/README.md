@@ -1,5 +1,12 @@
 # chainwide-historical-diff
 
+This replayer remains in-tree; removing the example-port collections does not
+move it or change its case corpus. Usage notes were reconciled on 2026-09-05.
+Campaign figures below are historical observations under their recorded
+profiles, not a fresh run against the current compiler. See the
+[semantic baseline](../solidity-semantic-tests/README.md) for current compiler
+test results and [proxy.md](../../proxy.md) for supported proxy adaptations.
+
 Replay the **real historical transaction sequence** of a deployed (verified)
 contract against two local legs, in lockstep from contract creation, and diff
 them:
@@ -48,13 +55,14 @@ python3 replay.py usde --evm-storage-layout
 python3 replay.py morpho --evm-storage-layout
 python3 batch.py --evm-storage-layout --max-txns 200 --only usde,degen
 
-# Before a batch: rewind LocalNet's clock. Each replay ratchets it forward by
+# LocalNet clock note: each replay ratchets it forward by
 # that window's span and it never comes back, so a long batch drifts years into
 # the future (see the clock note under "Scope & constraints"). A fresh reset
 # replays the true historical epoch; an already-advanced LocalNet applies one
-# shared positive shift while preserving every historical delta. Nothing in
-# this suite persists on LocalNet.
-algokit localnet reset
+# shared positive shift while preserving every historical delta. Resetting
+# deletes ALL existing LocalNet apps and state, including unrelated work.
+# Do not reset a shared ledger; use a disposable LocalNet if a fresh epoch
+# is needed, and obtain explicit approval before discarding an existing one.
 
 # INTERNAL (contract-to-contract) CALLS merged into the stream — for a
 # router-traded token this is most of the real traffic (see below).
@@ -95,6 +103,10 @@ This is a research harness, so its AVM compilations explicitly opt into
 `--legacy-source-rewrite` and retain `source-rewrite-manifest.json`. Inspect
 that record for the exact before/after text; results from a changed source are
 not evidence about compilation of the original source bytes.
+
+Static calls warn about the accepted lack of cross-contract read-only
+enforcement; the warning does not mean that AVM enforces the EVM guarantee.
+Other call adaptations retain their own policy requirements.
 
 ## Oracle-backed joint CCTP replay
 
@@ -483,11 +495,14 @@ validity while explicitly giving up bytecode fidelity and pre-0.8 unchecked-
 arithmetic fidelity. Any resulting historical-status flips remain closed-world
 skips and must be reported separately.
 
-**Architecturally out of reach** (no compiler work changes these):
+**Source and platform limits:**
 
-- **Proxies.** Any EIP-1967 proxy is delegatecall, which cannot exist on the
-  AVM — Lido, Compound III, most vaults. Measured over the top 40 protocols by
-  TVL: 10 proxies, 11 pre-0.8, 13 viable.
+- **Proxy execution.** Arbitrary delegatecall is unavailable, but this does
+  not rule out replaying a proxy's implementation. `--source-from` and the
+  explicit initializer/upgrade handling described above support direct
+  implementation replay. Recognized EIP-1967 and UUPS native-update lowerings
+  are documented in [proxy.md](../../proxy.md); runtime proxy factories and
+  arbitrary foreign-code execution remain outside that support.
 
   "Aave (all of it)" used to be on that list and was **wrong**: only its CORE
   is proxied (the Pool address resolves to
@@ -501,15 +516,13 @@ skips and must be reported separately.
   compiler's arithmetic semantics.
 - **Unmodellable opcodes** — `codesize`, `extcodehash`/`.codehash` for a
   non-`this` address (its EVM value is a hash of EVM bytecode, meaningless
-  across VMs), `tx.origin`. `extcodesize` is NOT among them: both it and
-  `address(x).code` resolve the app id from the address's last 8 bytes — this
-  compiler's contract-value convention — and read the real approval program via
-  `app_params_get`, so `.code.length > 0` and OZ's assembly `Address.isContract`
-  both answer correctly.
+  across VMs), `tx.origin`. Known application identities can support AVM
+  program inspection, but arbitrary EVM address/code introspection is not
+  equivalent. See [the code-introspection policy](../../EVM_DIVERGENCE.md).
 - **16 KiB program cap** (1 base + 7 extra pages × 2048 B under consensus
   v42). Morpho Blue now fits at 13741 B; UniV4 PoolManager at 30751 B still
-  needs the uros splitter. Permit2 (6218 B) and Euler EUL (10604 B) both fit
-  and replay.
+  exceeds that profile's limit. There is no automatic splitter on `main`.
+  Permit2 (6218 B) and Euler EUL (10604 B) fit in those recorded runs.
 - **256 inner txns per top-level txn.** A Solidity loop of external calls
   (batch airdrop, multicall, liquidation sweep) has a ceiling the EVM lacks;
   verified on LocalNet at exactly 256 ok / 257 `too many inner transactions`.
@@ -638,19 +651,21 @@ this table twice (see below).
 
 ### Open
 
-Nothing in the corpus currently shows a divergence. What remains is structural:
+The recorded campaigns above reported no divergences in their exercised
+windows. This is not a current all-corpus result; known limits and follow-ups
+include:
 
 - **16 KiB program cap** — consensus v42 removed the former size blocker for
   8–16 KiB contracts. Larger programs such as UniV4 PoolManager (30751 B)
-  remain splitter territory, not compiler bugs.
-- **Raft protocol** (RToken, PositionManager, ERC20Indexable, 0.8.19): the
-  harness ladder works end-to-end — PriceFeed dep falls back to a stand-in,
-  four tapes load, the missing-ctor ABI gets synthesized — and every contract
-  then dies on ONE compile error: OZ `Address.functionDelegateCall`, vendored
+  require source reduction/refactoring; no splitter is available on `main`.
+- **Raft protocol** (RToken, PositionManager, ERC20Indexable, 0.8.19): in the
+  earlier run, PriceFeed fell back to a stand-in, four tapes loaded, and the
+  missing-ctor ABI was synthesized. Each contract then failed compilation on
+  OZ `Address.functionDelegateCall`, vendored
   DEAD library code nothing ever calls (its only caller is its own overload).
-  Same class as fbtc/gbp. **The unlock is reachability-gated delegatecall
-  errors** (dead-function elimination before the hard error): five known
-  contracts free on that single compiler change. Designed, not built.
+  The compiler now gates delegatecall diagnostics on solc call-graph
+  reachability. That earlier blocker is not an unimplemented feature anymore;
+  the complete Raft replay still needs a fresh run before claiming it passes.
 - `wld` — constructor payload is 4276 B; the AVM caps create-txn app args at
   2048 B. Platform class (fix = bake ctor args into the program), counted.
 - `blur` — 17-file multifile with `@openzeppelin` package imports; the EVM leg
@@ -762,19 +777,20 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | `WrappedTokenGatewayV3` | ✅ | ✅ **replays 148/200, zero divergences** — the self-address stub lets its Pool calls answer, so the ETH-wrapping (msg.value) path replays end-to-end |
 | `PoolAddressesProvider` | ✅ replays | ❌ architectural — it deploys proxies via `new`, so `delegatecall` + `extcodehash` |
 | `ACLManager` | ❌ ctor calls the provider (a stand-in ERC-20 has no `getACLAdmin()`) | — |
-| Pool, aTokens, debt tokens | — | EIP-1967 proxies, out of reach |
+| Pool, aTokens, debt tokens | — | Proxy implementations require explicit source/initializer handling; not validated by this historical table |
 
-The gateway's 1/200 is not a compiler result: **153 of its transactions carry
-ETH value** and the replay model skips those (`msg.value == 0` only), which is
-inherent to a contract whose whole job is wrapping ETH. It found a real
+The earlier gateway result of 1/200 predates value-bearing replay. At that
+time **153 of its transactions carried ETH value**, which the old model
+skipped; the later 148/200 result above uses the value-handling model. It found a real
 compiler bug on the way in — `switch returndatasize()` in Gnosis
 `GPv2SafeERC20` (vendored by Aave *and* CoW) hit a Yul-switch type mismatch.
 
 ### What these numbers do not cover
 
 The corpus is what the constraints above admit, and the selection is visibly
-biased by them: no proxies (so no Aave/Lido/Compound), only opt-in source-level
-coverage for pre-0.8, and nothing over the 8 KB program cap without the splitter.
+biased by them: proxy implementations need explicit handling rather than
+native delegatecall, pre-0.8 coverage requires opt-in source rewriting, and
+programs must fit the configured AVM limit without an automatic splitter.
 Coverage per case varies by two
 orders of magnitude (1/200 to 1441/1500) and is dominated by how much of a
 contract's traffic depends on external state we cannot reconstruct — deploying

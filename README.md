@@ -3,13 +3,13 @@
 > [!CAUTION]
 > **AI-assisted proof-of-concept. Side project. NOT production-ready.**
 >
-> This is an experimental compiler being built largely through pair-programming with AI coding assistants (Claude). It is:
+> This is an experimental compiler being built largely through pair-programming with AI coding assistants. It is:
 >
 > - **Not audited.** No security review has been performed on any part of the toolchain — neither the compiler itself nor any TEAL it emits.
 > - **Not officially supported** by the Algorand Foundation or any other organization. This is a personal side project.
 > - **Maintained on a best-effort basis.** No guaranteed release cadence. Identified bugs may sit unfixed for long periods of time. That said, Pull requests, issue reports, feature requests, questions, etc. are welcome and encouraged!
 > - **A research/PoC effort**, not a stable release. APIs, AWST shapes, codegen patterns, output formats, and even successful test counts can change between commits without notice.
-> - **Likely to mis-compile contracts in subtle ways.** ~18% of the upstream Solidity semantic tests still fail or compile-error, and some real-world ports rely on workarounds, in-tree test patches, or features that diverge from EVM semantics (e.g., ARC4 selectors by default and always at the AVM routing boundary, AVM box layout instead of EVM storage slots, no try/catch).
+> - **Likely to mis-compile contracts in subtle ways.** A known backend failure and expected failures remain in the semantic suite; passing tests do not establish EVM equivalence. Research runs explicitly accept adaptations such as non-enforced static calls, uncatchable inner-call failures, and AVM-specific address and storage conventions.
 > - **Not production money safe.** Do not deploy compiler output to MainNet, do not handle real funds with anything emitted by this tool, and do not assume security properties of the original Solidity contracts carry over to the TEAL output.
 >
 > Use at your own risk. Use this for experimentation, prototyping, or research. Do not use it for anything that touches user funds, real assets, or production systems.
@@ -28,19 +28,17 @@ The pipeline:
 
 ## Status
 
-**1083 / 1322 (82%)** Solidity semantic tests passing as of the latest version. See [`tests/solidity-semantic-tests/`](tests/solidity-semantic-tests/).
+The full semantic run on **2026-09-05** recorded **1,623 passed, 1 failed,
+101 xfailed, and 39 xpassed**. All **16 native tests** passed. The remaining
+failure is a known backend optimization bug that drops a required
+divide-by-zero revert; the suite is **not fully green**. See the
+[test guide and revision-specific baseline](tests/solidity-semantic-tests/README.md).
 
-Real-world ports compiling and running on AVM localnet (under [`WIP/examples/`](WIP/examples/)):
-
-- **Uniswap V2** (full AMM) and **V4** (361/411 tests passing)
-- **OpenZeppelin** v5.0.0 — ERC20/721/1155, AccessControl, Ownable, Pausable, governance, vesting, and ~140 contracts in total
-- **AAVE V4** — 32/36 contracts compile
-- **Solmate** — ERC20/721/1155/6909, RolesAuthority
-- **Morpho Blue** — singleton lending market (111 tests, 4 xfail)
-- **SushiSwap V2** — Uniswap V2 fork DEX (32 tests, 1 xfail)
-- **Compound V2** — money-market core (23 tests, 5 xfail)
-- **MakerDAO Dai**, **Compound Timelock**, **Synthetix StakingRewards**, **Tornado Cash**, **PRB-Math UD60x18**, **WETH9**, **DappHub DSToken/DSGuard**
-- **Custom small contracts** — Governance, Timelock, MultiSig, Vesting, Staking pools (each with their own pytest suite)
+This repository focuses on the compiler and regression tests. The example-port
+collections have been removed in preparation for a separate repository; no
+replacement repository is published here yet. Token experiments remain under
+[`WIP/tokens/`](WIP/tokens/), and the
+[historical replayer](tests/chainwide-historical-diff/README.md) remains in-tree.
 
 ## Building
 
@@ -177,7 +175,7 @@ when encoding a literal at a particular width.
 
 EVM-only environment values are never supplied as unexplained test constants.
 `block.chainid` defaults to the Algorand `GenesisHash` interpreted as a
-`uint256`, and `block.gaslimit` defaults to the current AVM opcode budget. For
+`uint256`, and `block.gaslimit` defaults to the group's pooled app-call opcode budget. For
 historical replay or EVM-domain compatibility, override them with
 `--evm-chain-id <uint256>` and `--evm-block-gas-limit <uint256>`.
 `block.coinbase` has no AVM analogue and is a compile error unless an explicit
@@ -208,7 +206,14 @@ that exceed AVM program-size limits must currently be reduced or refactored.
 
 ## Testing
 
-The Solidity semantic-test corpus (~1322 tests imported from `solidity/test/libsolidity/semanticTests/`) drives most of the regression coverage. Each iteration's results are captured in [`tests/solidity-semantic-tests/results_v<N>.txt`](tests/solidity-semantic-tests/) so regressions are caught test-by-test. This research harness explicitly opts into the legacy source rewrite and every policy-listed AVM adaptation so it can measure and classify those differences; ordinary compiler invocations preserve source text and apply the fidelity policy above.
+The Solidity semantic-test corpus, imported from
+`solidity/test/libsolidity/semanticTests/` and extended with local regressions,
+drives most of the coverage. This research harness explicitly opts into the
+legacy source rewrite and every policy-listed AVM adaptation so it can measure
+and classify those differences; ordinary compiler invocations preserve source
+text and apply the fidelity policy above. The
+[test guide](tests/solidity-semantic-tests/README.md) records the current baseline,
+harness setup, and how to retain a machine-readable result for each run.
 
 Run the full suite (requires AlgoKit localnet running):
 
@@ -221,44 +226,42 @@ PUYASOL_LOCALNET_RESET=0 pytest tests/puyasolRegression/test_builder_findings.py
 
 `PUYASOL_LOCALNET_RESET=0` preserves the existing LocalNet ledger during tests.
 
-WIP/examples/ ports each have their own `pytest` suite under `<example>/test/`:
-
-```bash
-python3 -m pytest WIP/examples/uniswap-v2/test/
-python3 -m pytest WIP/examples/openzeppelin/test/
-```
-
-Some example suites depend on pre-compiled `out/` artifacts — re-run their compile script (where present) to regenerate.
-
 ## Repository layout
 
 | Path | Purpose |
 |---|---|
-| [`src/`](src/) | C++ frontend (~54 K lines) — Solidity AST → AWST builder, runner, JSON serializer |
-| [`tests/solidity-semantic-tests/`](tests/solidity-semantic-tests/) | Solidity semantic-test harness + per-version `results_v<N>.txt` |
-| [`WIP/examples/`](WIP/examples/) | Real-world ecosystem ports (Uniswap, OZ, AAVE, …) used for end-to-end coverage |
+| [`src/`](src/) | C++ frontend — Solidity AST → AWST builder, runner, JSON serializer |
+| [`src/libs/AVM.sol`](src/libs/AVM.sol) | Bundled Solidity facade for Algorand-native operations |
+| [`tests/solidity-semantic-tests/`](tests/solidity-semantic-tests/) | Solidity semantic-test harness and compiler regressions |
+| [`tests/avm-stdlib/`](tests/avm-stdlib/) | Algorand-native standard-library regressions |
+| [`tests/chainwide-historical-diff/`](tests/chainwide-historical-diff/) | Historical EVM/AVM differential replayer |
+| [`WIP/tokens/`](WIP/tokens/) | Retained token experiments |
 | [`solidity/`](solidity/) | Submodule — Solidity compiler frontend (AST + type checker) |
 | [`puya/`](puya/) | Submodule — Python AWST → TEAL backend |
 | [`build/`](build/) | CMake build output (gitignored) |
 
-The `WIP/` prefix marks code that's exercised but still iterating — examples that compile and pass tests but where the surface area is broader than what the upstream `solidity/test/libsolidity/semanticTests/` corpus covers.
+The `WIP/` directories contain experiments, not supported compiler interfaces.
 
 ## Architecture notes
 
 > Not exhaustive! these are a handful of the load-bearing decisions that shape the codebase. Plenty of other compiler-level conventions (ARC4 selector encoding, modifier inlining, fn-ptr dispatch tables, free-memory-pointer simulation, transient storage layout, etc.) live only in the source. Documenting these is a WIP.
 
 - **AWST is the contract** — puya-sol's job is to emit a well-typed AWST JSON that puya accepts. Test failures often come down to the wrong AWST shape rather than wrong semantics; the AWST round-trip is the primary debugging surface.
-- **Storage maps to box state** — Solidity mappings/arrays/structs live in AVM **boxes** (one box per top-level state var, with sha256-derived keys for mapping entries). See `src/builder/storage/StorageMapper.cpp`.
+- **Storage uses AVM state** — the default named-cell model uses app globals and boxes, including hashed keys for mapping entries. `--evm-storage-layout` instead selects EVM slot-based storage backed by boxes. See `src/builder/storage/StorageMapper.cpp`.
 - **Nested-storage keys aren't EVM slot arithmetic** — EVM derives the slot for `m[k1][k2]` via repeated `keccak256(k . slot)`. puya-sol walks the declared type outer-to-inner and classifies each `[i]` level: a **mapping** level — or an **array level whose element type contains a mapping** — contributes a bytes part to a single composite `sha256(...)` box key; an **array level whose element type is "flat"** (no mapping below) becomes an `IndexExpression` applied to the box value after the read. So `mapping(K=>T[N]) q` stores one `T[N]` box per `k` and indexes `i` inside it (1 key part: `k`); `mapping(K=>Y)[N] n` stores one `Y` box per `(i, k)` pair (2 key parts: both `i` and `k`). Per-level encoding is canonical: array-level keys always encode as `itob(uint64)`, mapping-level keys encode as the declared `keyType` (`uint256` → 32-byte left-padded biguint, `uint8`/`uint64` → `itob`, `address`/`bytes` → reinterpret-as-bytes). The auto-getter (`PublicGetterBuilder.cpp`) and the lvalue path (`SolIndexAccessHandlers.cpp::handleMappingAccess`) share this classification so a write through the constructor reads back through the public getter; both sides agree on key bytes even when the call sites pass differently-typed indices. See `src/builder/sol-ast/exprs/SolIndexAccessHandlers.cpp` and `src/builder/contract/PublicGetterBuilder.cpp`.
-- **Memory is a scratch-slot blob** — EVM's `memory` model is simulated via a 4096-byte byte-blob in scratch slot 0; `mload` / `mstore` lower to `extract3` / `replace3` against that blob. See `src/builder/assembly/MemoryHelpers.cpp`.
-- **Inline assembly is supported but limited** — Yul blocks (`assembly { ... }`) lower opcode-by-opcode where there's a sensible AVM mapping (`mload`/`mstore`, `keccak256`, `sload`/`sstore` for static slots, `add`/`mul`/`shl`/`shr`/signed ops, `caller`/`origin`/`selfbalance`, the precompile addresses, etc.) and several Yul-specific patterns (fn-ptr `.selector`/`.address`, free-memory-pointer arithmetic, storage-pointer aliasing, recursive Yul user functions promoted to subroutines) have explicit codegen. But coverage is far from complete: dynamic-offset `keccak256`, raw `delegatecall`, EVM-storage-slot arithmetic on mapping/array layouts, low-level `create`/`create2`, and several precompiles are stubbed or unsupported. Anything beyond the patterns the upstream `inlineAssembly/` semantic tests exercise is best treated as untested. See `src/builder/assembly/`.
+- **Assembly memory spans scratch slots** — byte ranges and words can cross 4,096-byte slot boundaries. `--evm-memory-slots` controls the bounded region (default: five slots, 20 KiB). This is not a universal EVM memory model for all Solidity values. See `src/builder/ScratchLayout.h` and `src/builder/assembly/MemoryHelpers.cpp`.
+- **Inline assembly is supported but limited** — Yul memory/storage operations, arithmetic, user functions, and recognized precompile calls have explicit lowerings in `src/builder/assembly/`. Supported storage behavior depends on the selected profile. EVM-only operations are subject to the same documented fidelity policy; accepting an assembly block does not establish arbitrary EVM equivalence.
 - **Contract size limit** — AVM program-size limits still apply, and the main branch has no automatic contract-splitting pass.
-- **Inheritance is flattened** — Solidity's C3 linearization is collapsed at compile time so the emitted contract has all base methods inlined under their MRO names; no runtime delegatecall.
-- **No try/catch** — AVM has no analogue for EVM revert-bubbling, so the entire `tryCatch/` semantic-test cluster (20 tests) is currently unsupported.
+- **Solc facts drive lowering** — resolved declarations and types, linearized bases, and call-graph reachability come from solc. Shared builder helpers consume those facts for call dispatch, parameter conventions, and storage access rather than independently re-resolving Solidity semantics.
+- **Inheritance is flattened** — the emitted contract includes the required base implementations as subroutines; this does not require runtime delegatecall.
+- **No catchable inner-call failures** — try/catch success paths can run with the explicit `try-catch` adaptation, but a failed inner transaction aborts the whole AVM transaction, so catch clauses cannot recover.
 - **No CREATE2** — Salted deploys (`new C{salt: …}(…)`) have no AVM analogue (app IDs are assigned by the protocol at create time, not derived from salt+initcode hash) and the entire `saltedCreate/` cluster is unsupported. Plain `new C(...)` works via inner-txn app-create.
 - **Delegate calls are unsupported** — AVM has no equivalent of “execute foreign code in my storage context.” Runtime `address(...).delegatecall(bytes)` therefore fails compilation unless its deliberate runtime-failure emulation is explicitly acknowledged; the library-attached form (`using L for *`) works because it resolves to a compile-time subroutine call.
-- **Tokens compile to apps, not ASAs (for now)** — ERC20/721/1155 contracts are translated faithfully into AVM smart-contract apps with their own balance maps and transfer logic, the same way they live on EVM. This makes the upstream tests round-trip cleanly but ignores Algorand's biggest token-related feature: **ASAs** (Algorand Standard Assets) are first-class tokens at the protocol level, so things like balance lookups, transfers, freeze/clawback, and opt-in flows are all single opcodes / inner-txn fields rather than app calls. A future version will have native ERC20/721/1155 support and lower them onto an ASA created by the constructor; `transfer`/`balanceOf`/etc. become inner asset transfers and `acct_params_get AcctAssetBalance` reads, which is cheaper, composes natively with wallets and DEXes, and gets the security/UX properties of native assets for free. The smart-contract path stays as the fallback for tokens that need behavior ASAs don't expose (e.g. arbitrary `_beforeTokenTransfer` hooks, custom voting/snapshot logic).
+- **Tokens compile to apps, not automatically to ASAs** — ERC20/721/1155 logic retains its own state and methods in an AVM application. Algorand-native asset operations are available explicitly through the bundled standard library; there is no general ERC-to-ASA translation pass.
 
 ## Related docs
 
-- [`tests/solidity-semantic-tests/CURRENT.md`](tests/solidity-semantic-tests/CURRENT.md): living per-version progress log of the semantic testsuite.
+- [Semantic test guide and baseline](tests/solidity-semantic-tests/README.md)
+- [Accepted EVM divergences](EVM_DIVERGENCE.md)
+- [Proxy lowering and remaining design work](proxy.md)
+- [Open engineering follow-ups](docs/KNOWN_ISSUES.md)

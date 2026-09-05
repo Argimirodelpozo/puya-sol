@@ -1,7 +1,8 @@
 # `tests/avm-stdlib/` — Solidity ↔ AVM stdlib regression suite
 
 End-to-end tests for the Solidity-callable AVM standard library
-exposed at [`WIP/tokens/AVM.sol`](../../WIP/tokens/AVM.sol).
+exposed at [`src/libs/AVM.sol`](../../src/libs/AVM.sol), imported by user
+contracts as `libs/AVM.sol`.
 
 Each test compiles a small fixture that imports a subset of the
 stdlib's libraries (`AVM`, `Crypto`, `Group`, `Txn`, `Global`), deploys
@@ -33,28 +34,27 @@ intentionally AVM-only behavior.
 
 ```bash
 # From repo root, with localnet running:
-python3 -m pytest -p no:cacheprovider tests/avm-stdlib/ -v
+PUYASOL_LOCALNET_RESET=0 python3 -m pytest -p no:cacheprovider tests/avm-stdlib/ -v
 ```
 
 xdist works: `-n auto` runs tests in parallel under separate output dirs.
 
 ## Adding a new intrinsic
 
-1. Add the Solidity stub to [`WIP/tokens/AVM.sol`](../../WIP/tokens/AVM.sol)
+1. Add the Solidity stub to [`src/libs/AVM.sol`](../../src/libs/AVM.sol)
    under the right library (`AVM`, `Crypto`, `Group`, `Txn`, `Global`).
    Body should revert as a safety net — the compiler intercept replaces
    the call before the body runs.
 2. Add a dispatch handler in
-   [`src/builder/sol-eb/AsaIntrinsics.cpp`](../../src/builder/sol-eb/AsaIntrinsics.cpp)
+   [`src/builder/itxn/AsaIntrinsics.cpp`](../../src/builder/itxn/AsaIntrinsics.cpp)
    under the matching `dispatchX` (or `handleAsaXxx` for ASA).
 3. Add a test fixture + test here. Reuse the existing
    `==== Source: AVM.sol ====` + `==== Source: contract.sol ====`
    pattern so fixtures are self-contained.
 
-## Status
+## Coverage limits
 
-17 baseline tests + 3 ASA-lifecycle = 20 total (as of the AVM-stdlib
-commit landing the Crypto/Group/Txn/Global extension). All passing on
-v12 localnet. Falcon test exercises the "wrong pubkey size" revert
-path because there's no Falcon-512 keygen library readily importable
-from Python.
+The Falcon test exercises the wrong-public-key-size revert path, not a valid
+Falcon-512 signature. A successful run therefore does not establish that full
+verification path. Use the current pytest output for test counts; the removed
+result snapshot was a historical run, not a current baseline.
