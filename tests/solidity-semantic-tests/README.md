@@ -8,24 +8,28 @@ not as an active test runner.
 
 ## Recorded baseline
 
-Full LocalNet run on **2026-09-05**. The tested compiler and regression sources
-are committed as `0d035ea53d` (shared native-payment handling and
-transfer/send receive/fallback dispatch):
+Full LocalNet semantic and harness/cache run on **2026-09-06**. The tested
+compiler and regression sources are committed as `45ecf7139c` (completed
+`rev-2` sol-types/storage fixes and refactors):
 
 | Result | Count |
 |---|---:|
-| Passed | 1,688 |
+| Passed | 1,847 |
 | Failed | 1 |
-| Expected failure (xfail) | 102 |
-| Unexpected pass (xpass) | 38 |
-| Total | 1,829 |
+| Expected failure (xfail) | 101 |
+| Unexpected pass (xpass) | 39 |
+| Total | 1,988 |
 
-The run took 817.07 seconds with two workers. Dependencies were pinned to
+The run took 328.12 seconds with two workers. Dependencies were pinned to
 Solidity `a99b6d8c0cbf9eddbac104e8e4e16545db7d3d8d` and Puya
 `27751c364229ae3cd0334fe4071e61690b6879e4` (5.10.1). Native CTest coverage passed
-16/16; the focused payment/receive/call selection passed 79/79, and the
-harness/cache unit tests passed 4/4. The full run includes 65 new native-payment
-cases. Its local JUnit report is `/tmp/puyasol-native-payment-full-v2.xml`.
+19/19; the final focused holder/builder selection passed 98/98. Harness/cache
+unit tests are included in the full count. Its local JUnit report is
+`/tmp/puyasol-rev-2-final-semantic-v2.xml`; the focused report is
+`/tmp/puyasol-rev-2-holders-final-focused.xml`. The compiler stayed fixed during
+the run, and LocalNet was not reset. See the
+[completed audit record](../../docs/rev-2-results.md) for exact commands,
+binary identity, solc oracle settings and fresh-deployment-only format changes.
 These are results for that revision and local environment, not a guarantee
 about future commits or arbitrary contracts. Xpasses are non-strict in this
 run and are not folded into the ordinary pass count. Existing XPASS/xfail
