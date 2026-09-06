@@ -77,6 +77,17 @@ private:
 		std::shared_ptr<awst::Expression> _callValue,
 		awst::SourceLocation const& _loc);
 
+	/// Shared tail of every inner app call: the appl itxn (ApplicationArgs =
+	/// `_argsTuple`, omitted when null so the callee sees empty calldata)
+	/// grouped behind the optional payment, submitted as a pre-effect; result
+	/// = (true, LastLog[4:]).
+	static std::unique_ptr<InstanceBuilder> submitAppCall(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _receiver,
+		std::shared_ptr<awst::Expression> _argsTuple,
+		std::shared_ptr<awst::Expression> _callValue,
+		awst::SourceLocation const& _loc);
+
 	/// .call{value:V}(rawBytes) → inner app call; splits [selector, rest] as ApplicationArgs.
 	/// The three abi.encode* self-call forms, normalised: fnName + optional full signature string (encodeWithSignature), optional …
 	struct SelfEncodeForm

@@ -57,13 +57,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::negate256(
 	return wrapMod256(std::move(sum), _loc);
 }
 
-std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(
+std::shared_ptr<awst::Expression> AssemblyBuilder::buildSignedDivMod(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
-	awst::SourceLocation const& _loc
+	char const* _name, bool _isDiv, awst::SourceLocation const& _loc
 )
 {
-	// sdiv(a, b): signed division; result sign = sign(a) XOR sign(b). sdiv(a,0)=0.
-	if (!checkArity(_args, 2, "sdiv", _loc))
+	// sdiv(a, b) / smod(a, b): |a| op |b|, then re-apply the sign — sign(a) XOR
+	// sign(b) for the quotient, sign(a) for the remainder. sdiv(a,0) = smod(a,0) = 0.
+	if (!checkArity(_args, 2, _name, _loc))
 		return nullptr;
 
 	auto a = ensureBiguint(_args[0], _loc);
@@ -73,17 +74,24 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(
 		isNegative256(a, _loc), negate256(a, _loc), a, awst::WType::biguintType(), _loc);
 	auto absB = awst::makeConditional(
 		isNegative256(b, _loc), negate256(b, _loc), b, awst::WType::biguintType(), _loc);
-	auto quotient = makeBigUIntBinOp(absA, awst::BigUIntBinaryOperator::FloorDiv, absB, _loc);
+	auto magnitude = makeBigUIntBinOp(
+		absA,
+		_isDiv ? awst::BigUIntBinaryOperator::FloorDiv : awst::BigUIntBinaryOperator::Mod,
+		absB, _loc);
 
-	// resultNeg = aNeg XOR bNeg
-	auto xorResult = awst::makeNumericCompare(
-		ensureBiguint(isNegative256(a, _loc), _loc), awst::NumericComparison::Ne,
-		ensureBiguint(isNegative256(b, _loc), _loc), _loc);
+	std::shared_ptr<awst::Expression> resultNeg;
+	if (_isDiv)
+		// resultNeg = aNeg XOR bNeg
+		resultNeg = awst::makeNumericCompare(
+			ensureBiguint(isNegative256(a, _loc), _loc), awst::NumericComparison::Ne,
+			ensureBiguint(isNegative256(b, _loc), _loc), _loc);
+	else
+		resultNeg = isNegative256(a, _loc);
 	auto signedResult = awst::makeConditional(
-		std::move(xorResult), negate256(quotient, _loc), quotient,
+		std::move(resultNeg), negate256(magnitude, _loc), magnitude,
 		awst::WType::biguintType(), _loc);
 
-	// b==0 guard: AVM b/ panics; the conditional only evaluates the taken branch.
+	// b==0 guard: AVM b/ and b% panic; the conditional only evaluates the taken branch.
 	auto bNonZero = awst::makeNumericCompare(
 		b, awst::NumericComparison::Ne, awst::makeBiguintConstant("0", _loc), _loc);
 	return awst::makeConditional(
@@ -91,33 +99,20 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(
 		awst::makeBiguintConstant("0", _loc), awst::WType::biguintType(), _loc);
 }
 
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleSdiv(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	return buildSignedDivMod(_args, "sdiv", /*_isDiv=*/true, _loc);
+}
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleSmod(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc
 )
 {
-	// smod(a, b): sign of result = sign of a. smod(a,0)=0.
-	if (!checkArity(_args, 2, "smod", _loc))
-		return nullptr;
-
-	auto a = ensureBiguint(_args[0], _loc);
-	auto b = ensureBiguint(_args[1], _loc);
-
-	auto absA = awst::makeConditional(
-		isNegative256(a, _loc), negate256(a, _loc), a, awst::WType::biguintType(), _loc);
-	auto absB = awst::makeConditional(
-		isNegative256(b, _loc), negate256(b, _loc), b, awst::WType::biguintType(), _loc);
-	auto remainder = makeBigUIntBinOp(absA, awst::BigUIntBinaryOperator::Mod, absB, _loc);
-	auto signedResult = awst::makeConditional(
-		isNegative256(a, _loc), negate256(remainder, _loc), remainder,
-		awst::WType::biguintType(), _loc);
-
-	// b==0 guard: AVM b% panics.
-	auto bNonZero = awst::makeNumericCompare(
-		b, awst::NumericComparison::Ne, awst::makeBiguintConstant("0", _loc), _loc);
-	return awst::makeConditional(
-		std::move(bNonZero), std::move(signedResult),
-		awst::makeBiguintConstant("0", _loc), awst::WType::biguintType(), _loc);
+	return buildSignedDivMod(_args, "smod", /*_isDiv=*/false, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(

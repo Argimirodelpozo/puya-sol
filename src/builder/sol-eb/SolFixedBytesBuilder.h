@@ -41,4 +41,16 @@ private:
 	unsigned m_numBytes;
 };
 
+/// EVM bytesN compares 32-byte LEFT-ALIGNED words: bytes3("abc")==bytes4("abc")
+/// is true and "b" > "aa" (0x62.. > 0x6161..). AVM operands are N raw bytes, so
+/// right-pad the shorter side to the common declared width — constants fold at
+/// compile time (BytesConstant, or the bare 2-byte StringConstant a string
+/// literal arrives as); RUNTIME operands pad too, since solc legally widens
+/// bytesM→bytesN (`bytes2 a == bytes4 b`). No-op unless a side has a declared
+/// width. Shared by SolFixedBytesBuilder::compare and buildBinaryOp.
+void padBytesOperandsToCommonWidth(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression>& _lhs,
+	std::shared_ptr<awst::Expression>& _rhs);
+
 } // namespace puyasol::builder::eb

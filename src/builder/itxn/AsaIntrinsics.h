@@ -59,28 +59,16 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
-	static std::shared_ptr<awst::Expression> handleAsaTotalSupply(
-		ContractContext& _ctx,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
-	static std::shared_ptr<awst::Expression> handleAsaDecimals(
-		ContractContext& _ctx,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
-	static std::shared_ptr<awst::Expression> handleAsaUnitName(
-		ContractContext& _ctx,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
-	static std::shared_ptr<awst::Expression> handleAsaName(
-		ContractContext& _ctx,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
 	static std::shared_ptr<awst::Expression> handleAsaTransfer(
 		ContractContext& _ctx,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	// Table-driven `asset_params_get` readers (asaTotalSupply / asaDecimals /
+	// asaUnitName / asaName); nullopt when `_method` is none of them.
+	static std::optional<std::shared_ptr<awst::Expression>> dispatchAsaParam(
+		ContractContext& _ctx,
+		std::string const& _method,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 

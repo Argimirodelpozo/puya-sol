@@ -159,28 +159,7 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSelector(
 
 	std::vector<std::shared_ptr<awst::Expression>> parts;
 	parts.push_back(std::move(selector));
-	std::vector<solidity::frontend::Type const*> types;
-	std::vector<std::shared_ptr<awst::Expression>> values;
-	for (size_t i = 1; i < args.size(); ++i)
-	{
-		auto const* sourceType = args[i]->annotation().type;
-		auto const* type = sourceType;
-		if (type)
-			if (auto const* mobile = type->mobileType())
-				type = mobile;
-		types.push_back(type);
-		auto value = _ctx.buildExpr(*args[i]);
-		if (type)
-			if (auto const* target = _ctx.typeMapper.map(type);
-				target && value->wtype != target)
-				value = builder::ConversionPlan{
-					sourceType, type, target,
-					builder::ConversionPlan::Context::AbiArgument}.emit(
-						std::move(value), _loc);
-		values.push_back(std::move(value));
-	}
-	parts.push_back(AbiEncoderBuilder::encodeValuesAsEvmAbi(
-		_ctx, types, std::move(values), _loc));
+	parts.push_back(AbiEncoderBuilder::encodeArgsAsEvmAbi(_ctx, args, 1, _loc));
 	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 }
 
@@ -219,28 +198,7 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
 	if (args.size() == 1)
 		return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 
-	std::vector<solidity::frontend::Type const*> types;
-	std::vector<std::shared_ptr<awst::Expression>> values;
-	for (size_t i = 1; i < args.size(); ++i)
-	{
-		auto const* sourceType = args[i]->annotation().type;
-		auto const* type = sourceType;
-		if (type)
-			if (auto const* mobile = type->mobileType())
-				type = mobile;
-		types.push_back(type);
-		auto value = _ctx.buildExpr(*args[i]);
-		if (type)
-			if (auto const* target = _ctx.typeMapper.map(type);
-				target && value->wtype != target)
-				value = builder::ConversionPlan{
-					sourceType, type, target,
-					builder::ConversionPlan::Context::AbiArgument}.emit(
-						std::move(value), _loc);
-		values.push_back(std::move(value));
-	}
-	parts.push_back(AbiEncoderBuilder::encodeValuesAsEvmAbi(
-		_ctx, types, std::move(values), _loc));
+	parts.push_back(AbiEncoderBuilder::encodeArgsAsEvmAbi(_ctx, args, 1, _loc));
 	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 }
 

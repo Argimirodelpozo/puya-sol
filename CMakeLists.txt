@@ -304,7 +304,6 @@ set(SOURCES
 	src/builder/sol-ast/calls/SolTypeConversion.cpp
 	src/builder/sol-ast/calls/SolWrapUnwrap.cpp
 	src/builder/sol-ast/calls/SolStructConstruction.cpp
-	src/builder/sol-ast/calls/SolTransferSend.cpp
 	src/builder/sol-ast/calls/SolBareCall.cpp
 	src/builder/sol-ast/calls/SolAbiEncode.cpp
 	src/builder/sol-ast/calls/SolAbiDecode.cpp
