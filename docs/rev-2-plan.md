@@ -1,9 +1,11 @@
 # rev-2: sol-types and storage implementation plan
 
 Status: in progress. F1, F2, F4, F5, F7, F9, R1 and R2 are implemented and checkpoint-test
-verified. The first full-suite run reopened F9; its premature huge-array
-diagnostics are now fixed in focused tests. Remaining findings/refactors and
-final full-suite verification are pending.
+verified. R3's binding/lifecycle portion is implemented. The latest full suite
+has no failures beyond the known Puya DCE divide-by-zero bug; F9's premature
+huge-array diagnostics are resolved. F3, F6, F8 and the remaining R3 codec cleanup
+await the compatibility/native-representation decisions below and implementation.
+Final verification remains pending until those changes are complete.
 
 Branch: `rev-2`, based on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`.
 Scope: all nine correctness findings from the sol-types/storage audit, plus
@@ -513,6 +515,20 @@ recursive multi-box struct and direct compound-update regressions pass as part
 of the broader selection. Slot mode retains its explicit 64-element whole-array
 delete limit; the new large-array lifecycle fixture cannot run there and is
 covered by a capacity diagnostic rather than an xfail.
+
+The full suite against `b3f596cc11` finished with **1,768 passed, 1 failed,
+102 xfailed and 38 xpassed**, in 353.52 seconds. Report:
+`/tmp/puyasol-rev-2-lazy-full.xml`. The sole failure remains
+`test_dce_reverting_subexpr_literal_folds`: `divdivShl(uint256)(0)` returns zero
+instead of reverting. There are no additional failures at this checkpoint, but
+the suite is not all green. All 19 native CTests also passed in 1.93 seconds.
+The compiler binary remained fixed throughout the full semantic run, using:
+
+```bash
+PUYASOL_LOCALNET_RESET=0 pytest framework/test_compile_cache.py \
+  framework/test_harness.py tests/ -q -n 2 --tb=short \
+  --junitxml=/tmp/puyasol-rev-2-lazy-full.xml
+```
 
 At this checkpoint the branch has 241 fewer net source lines than its base;
 the bounded-read correctness work adds code while the earlier conversion,
