@@ -35,6 +35,7 @@ std::vector<std::shared_ptr<awst::Expression>> projectStructFields(
 	solidity::frontend::StructType const* solStruct,
 	awst::ARC4Struct const* arc4Struct,
 	std::shared_ptr<awst::Expression> const& base,
+	std::vector<std::shared_ptr<awst::Statement>>& pre,
 	awst::SourceLocation const& loc)
 {
 	std::vector<std::shared_ptr<awst::Expression>> items;
@@ -55,9 +56,11 @@ std::vector<std::shared_ptr<awst::Expression>> projectStructFields(
 					break;
 				}
 
-		auto fieldExpr = awst::makeFieldExpression(
+		std::shared_ptr<awst::Expression> fieldExpr = awst::makeFieldExpression(
 			base, member.name,
 			arc4FieldType ? arc4FieldType : typeMapper.map(member.type), loc);
+		fieldExpr = StorageMapper::makePartialBoxReadWithDefault(
+			typeMapper, std::move(fieldExpr), pre, loc);
 
 		auto* nativeType = typeMapper.map(member.type);
 		if (arc4FieldType && arc4FieldType != nativeType)
@@ -295,6 +298,7 @@ std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 	awst::ContractMethod const& getter,
 	size_t returnTypeCount,
 	unsigned signedGetterBits,
+	awst::Block& body,
 	awst::SourceLocation const& loc)
 {
 	auto const* var = &_var;
@@ -312,7 +316,7 @@ std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 		auto fullStruct = sm.createStateRead(binding, loc);
 
 		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
-		auto items = projectStructFields(tm, solStructType, arc4Struct, fullStruct, loc);
+		auto items = projectStructFields(tm, solStructType, arc4Struct, fullStruct, body.body, loc);
 
 		// One returnable field keeps the scalar return type; >1 packs a tuple.
 		// Either way each field is sign-extended inside projectStructFields.
@@ -374,19 +378,20 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	// at that offset and answers (Privacy Pools' associationSets(uint256)
 	// returned values where the EVM reverted); it only appeared to revert when
 	// the offset happened to fall outside the backing box.
-	// Materialise the value once — the length and the index both read it.
-	std::string arrTmp = "__getter_arr_"
-		+ std::to_string(awst::NameGen::next("PublicGetterBuilder.flatArr"));
-	auto arrTmpVar = awst::makeVarExpression(arrTmp, arrWType, loc);
-	body.body.push_back(
-		awst::makeAssignmentStatement(arrTmpVar, std::move(arrayRead), loc));
-	arrayRead = awst::makeVarExpression(arrTmp, arrWType, loc);
-
 	std::shared_ptr<awst::Expression> arrLength;
 	if (arrType->isDynamicallySized())
+	{
+		// Dynamic lengths consume the value; fixed lengths are solc facts and
+		// must not materialize a possibly oversized backing box.
+		std::string arrTmp = "__getter_arr_"
+			+ std::to_string(awst::NameGen::next("PublicGetterBuilder.flatArr"));
+		auto arrTmpVar = awst::makeVarExpression(arrTmp, arrWType, loc);
+		body.body.push_back(
+			awst::makeAssignmentStatement(arrTmpVar, std::move(arrayRead), loc));
+		arrayRead = awst::makeVarExpression(arrTmp, arrWType, loc);
 		arrLength = awst::makeArrayLength(
-			awst::makeVarExpression(arrTmp, arrWType, loc),
-			awst::WType::uint64Type(), loc);
+			arrayRead, awst::WType::uint64Type(), loc);
+	}
 	else
 		arrLength = awst::makeIntegerConstant(
 			arrType->length().str(), loc, awst::WType::uint64Type());
@@ -397,11 +402,16 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 			loc, "array out-of-bounds"),
 		loc));
 
-	auto indexExpr = awst::makeIndexExpression(std::move(arrayRead), std::move(idx), elemARC4, loc);
-
 	// Decode ARC4 element to native type (e.g. arc4.uint256 → biguint).
 	auto* nativeElem = tm.map(arrType->baseType());
-	std::shared_ptr<awst::Expression> result = std::move(indexExpr);
+	std::shared_ptr<awst::Expression> result;
+	if (StorageMapper::isMultiBoxArray(arrWType))
+	{
+		auto page = StorageMapper::arrayPageForIndex(binding.name, arrWType, idx, body.body, loc);
+		result = StorageMapper::makeBoxWindowRead(tm, page.key, page.offset, page.elementType, loc);
+	}
+	else
+		result = awst::makeIndexExpression(std::move(arrayRead), std::move(idx), elemARC4, loc);
 
 	// Struct element: decompose ARC4Struct into primitive-fields tuple
 	// (Solidity public-accessor skips mappings and non-bytes arrays).
@@ -411,12 +421,13 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(elemARC4);
 		auto tuple = awst::makeTupleExpression(getter.returnType, loc);
 
-		for (auto& item: projectStructFields(tm, solStructElem, arc4Struct, result, loc))
+		for (auto& item: projectStructFields(tm, solStructElem, arc4Struct, result, body.body, loc))
 			tuple->items.push_back(std::move(item));
 		readExpr = std::move(tuple);
 	}
 	else
 	{
+		result = StorageMapper::makePartialBoxReadWithDefault(tm, std::move(result), body.body, loc);
 		if (!awst::structurallyEquivalent(elemARC4, nativeElem))
 		{
 			auto decode = awst::makeARC4Decode(std::move(result), nativeElem, loc);
@@ -645,19 +656,18 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 			// (Privacy Pools' associationSets(uint256) answered where the EVM
 			// reverted). Only the KEY-arg levels above were checked; an index
 			// arg reads inside an already-loaded value and was not.
-			// Materialise the value once — the length and the index both read it.
-			std::string idxTmp = "__idx_bounds_" + std::to_string(
-				awst::NameGen::next("PublicGetterBuilder.idxBounds"));
-			auto idxTmpVar = awst::makeVarExpression(idxTmp, indexed->wtype, loc);
-			body.body.push_back(
-				awst::makeAssignmentStatement(idxTmpVar, std::move(indexed), loc));
-			indexed = awst::makeVarExpression(idxTmp, idxTmpVar->wtype, loc);
-
 			std::shared_ptr<awst::Expression> idxLength;
 			if (at->isDynamicallySized())
+			{
+				std::string idxTmp = "__idx_bounds_" + std::to_string(
+					awst::NameGen::next("PublicGetterBuilder.idxBounds"));
+				auto idxTmpVar = awst::makeVarExpression(idxTmp, indexed->wtype, loc);
+				body.body.push_back(
+					awst::makeAssignmentStatement(idxTmpVar, std::move(indexed), loc));
+				indexed = awst::makeVarExpression(idxTmp, idxTmpVar->wtype, loc);
 				idxLength = awst::makeArrayLength(
-					awst::makeVarExpression(idxTmp, idxTmpVar->wtype, loc),
-					awst::WType::uint64Type(), loc);
+					indexed, awst::WType::uint64Type(), loc);
+			}
 			else
 				idxLength = awst::makeIntegerConstant(
 					at->length().str(), loc, awst::WType::uint64Type());
@@ -684,7 +694,7 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 			auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(fullStruct->wtype);
 
 			auto items = projectStructFields(
-				tm, structType, arc4Struct, fullStruct, loc);
+				tm, structType, arc4Struct, fullStruct, body.body, loc);
 
 			if (items.size() == 1)
 			{
@@ -705,7 +715,7 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 	}
 	else
 	{
-		readExpr = std::move(indexed);
+		readExpr = StorageMapper::makePartialBoxReadWithDefault(tm, std::move(indexed), body.body, loc);
 
 		// Decode ARC4 element to native type (e.g. arc4.uint8 → uint64).
 		if (readExpr && readExpr->wtype && readExpr->wtype != getter.returnType)
@@ -927,7 +937,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 		else if (getter.args.empty())
 			readExpr = buildSimpleGetterRead(
 				m_typeMapper, m_storageMapper, m_transientStorage, *var,
-				getter, solReturnTypes.size(), signedGetterBits, loc);
+				getter, solReturnTypes.size(), signedGetterBits, *body, loc);
 		else if (dynamic_cast<solidity::frontend::ArrayType const*>(var->type())
 			&& !dynamic_cast<solidity::frontend::ArrayType const*>(var->type())->isByteArrayOrString()
 			&& getter.args.size() == 1)

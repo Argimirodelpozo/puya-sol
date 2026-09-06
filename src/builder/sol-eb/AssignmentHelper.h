@@ -71,6 +71,7 @@ public:
 		std::shared_ptr<awst::Expression> target;
 		std::shared_ptr<awst::Expression> value;
 		std::vector<std::pair<std::string, awst::WType const*>> fieldChain;
+		bool returnsField = false;
 	};
 
 	/// ARC4-encode `_value` for storage at `_target`'s wtype when needed:

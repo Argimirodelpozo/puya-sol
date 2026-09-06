@@ -6,6 +6,7 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/storage/SlotHandleAccess.h"
+#include "builder/storage/StorageMapper.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "Logger.h"
@@ -100,8 +101,12 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 		auto const* structType = static_cast<awst::ARC4Struct const*>(base->wtype);
 		awst::WType const* arc4FieldType = awst::structFieldType(structType, member);
 
-		auto field = awst::makeFieldExpression(std::move(base), member, arc4FieldType ? arc4FieldType
+		std::shared_ptr<awst::Expression> field = awst::makeFieldExpression(std::move(base), member, arc4FieldType ? arc4FieldType
 			: m_ctx.typeMapper.map(m_memberAccess.annotation().type), m_loc);
+		if (!m_memberAccess.annotation().willBeWrittenTo
+			&& m_memberAccess.annotation().type->isValueType())
+			field = StorageMapper::makePartialBoxReadWithDefault(
+				m_ctx.typeMapper, std::move(field), m_ctx.preEffects(), m_loc);
 
 		auto* nativeType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 		if (arc4FieldType && !awst::structurallyEquivalent(arc4FieldType, nativeType))

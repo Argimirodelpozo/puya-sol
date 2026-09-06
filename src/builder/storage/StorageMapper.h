@@ -135,6 +135,22 @@ public:
 	/// (`floor(BOX_VALUE_CAPACITY / element_size)`).
 	static unsigned elementsPerBox(awst::WType const* _type);
 
+	struct ArrayPage
+	{
+		std::shared_ptr<awst::Expression> key;
+		std::shared_ptr<awst::Expression> offset;
+		std::shared_ptr<awst::Expression> size;
+		awst::WType const* elementType;
+	};
+	/// Existing element-aligned page format. Pins/checks the index before any
+	/// page lookup, and computes the actual (possibly shorter) final-page size.
+	static ArrayPage arrayPageForIndex(std::string const& _name,
+		awst::WType const* _arrayType, std::shared_ptr<awst::Expression> _index,
+		std::vector<std::shared_ptr<awst::Statement>>& _pre,
+		awst::SourceLocation const& _loc);
+	static std::shared_ptr<awst::Statement> ensureArrayPage(
+		ArrayPage const& _page, awst::SourceLocation const& _loc);
+
 	/// Create a type-correct default value expression (0/false/empty) for the given wtype.
 	static std::shared_ptr<awst::Expression> makeDefaultValue(
 		awst::WType const* _type,
@@ -151,6 +167,23 @@ public:
 		awst::WType const* _type,
 		awst::SourceLocation const& _loc
 	);
+
+	/// Read a bounded projection of a large fixed box, defaulting only that
+	/// projection when absent. Keeps oversized intermediate aggregates as places.
+	/// Pins the key/indices and checks every fixed-array bound before existence.
+	/// Never call on an lvalue or a storage-reference binding.
+	static std::shared_ptr<awst::Expression> makePartialBoxReadWithDefault(
+		TypeMapper& _typeMapper,
+		std::shared_ptr<awst::Expression> _value,
+		std::vector<std::shared_ptr<awst::Statement>>& _pre,
+		awst::SourceLocation const& _loc);
+
+	/// A bounded encoded box window; callers validate logical bounds first.
+	/// Missing pages return the element's default without creating storage.
+	static std::shared_ptr<awst::Expression> makeBoxWindowRead(
+		TypeMapper& _typeMapper, std::shared_ptr<awst::Expression> _key,
+		std::shared_ptr<awst::Expression> _offset, awst::WType const* _type,
+		awst::SourceLocation const& _loc);
 
 	/// Slot argument for __storage_read/write: the FULL-WIDTH (biguint) slot.
 	/// (Historically truncated to the low 8 bytes — only sound under the

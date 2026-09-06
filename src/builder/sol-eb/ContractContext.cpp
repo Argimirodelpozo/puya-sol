@@ -7,6 +7,7 @@
 #include "builder/sol-ast/SolExpressionDispatch.h"
 #include "builder/sol-eb/BinaryOpBuilder.h"
 #include "builder/sol-eb/BuilderRegistry.h"
+#include "builder/storage/StorageMapper.h"
 // Uses solc AST/Type definitions directly; the hub headers only
 // forward-declare them now.
 #include <libsolidity/ast/AST.h>
@@ -47,7 +48,15 @@ awst::SourceLocation ContractContext::makeLoc(int _start, int _end) const
 std::shared_ptr<awst::Expression> ContractContext::buildValue(
 	solidity::frontend::Expression const& _expr)
 {
-	return sol_ast::buildExpression(*this, _expr);
+	auto value = sol_ast::buildExpression(*this, _expr);
+	// Aggregate storage expressions still denote places (including aliases).
+	// Only a scalar rvalue is necessarily a bounded read at this boundary.
+	if (!_expr.annotation().willBeWrittenTo && _expr.annotation().type
+		&& _expr.annotation().type->isValueType() && value)
+		value = StorageMapper::makePartialBoxReadWithDefault(
+			typeMapper, std::move(value), preEffects(), makeLoc(
+				_expr.location().start, _expr.location().end));
+	return value;
 }
 
 ContractContext::LoweredExpression ContractContext::build(

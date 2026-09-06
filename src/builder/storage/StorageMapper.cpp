@@ -6,12 +6,14 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-ast/StorageRefPointer.h"
+#include "awst/NameGen.h"
 
 #include "Logger.h"
 
 #include <liblangutil/SourceLocation.h>
 
 #include <algorithm>
+#include <functional>
 #include <set>
 
 namespace puyasol::builder
@@ -58,13 +60,14 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 	//       boxes grown past 4 KB.
 	// Bare BoxValueExpression is safe: puya lowers to BoxRead; add_box_extract_replace
 	// folds into box_extract (no full-box load, no large default). BoxRead asserts
-	// the box exists, so only eagerly-created boxes qualify:
-	//   (a) Statically oversized fixed types — always eagerly box_created.
+	// the box exists: fixed values must remain PLACES until a bounded read is
+	// guarded by makePartialBoxReadWithDefault. Size never proves existence.
+	//   (a) Statically oversized fixed types — default at the requested window.
 	//   (b) Top-level dynamic vars — eagerly created in __postInit.
-	//       Mapping values (key = runtime concat/hash) are lazy; they stay on StateGet.
+	//       Dynamic mapping values remain lazy and retain StateGet.
 	if (auto bv = std::dynamic_pointer_cast<awst::BoxValueExpression>(_field))
 	{
-		// (a) Statically oversized fixed types — always eagerly created.
+		// (a) Oversized fixed places; do not load or default the whole value.
 		if (builder::computeEncodedElementSize(_type).fixedBytes().value_or(0) > kAvmStackValueMax)
 			return _field;
 		// (b) Top-level dynamic state vars — eagerly created in __postInit.
@@ -73,6 +76,103 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 	}
 	auto def = makeDefaultValue(_type, _loc);
 	return awst::makeStateGet(std::move(_field), std::move(def), _type, _loc);
+}
+
+namespace
+{
+// Only address-preserving projections are transparent. A previously
+// materialized local is a value, not evidence of a backing box's existence.
+std::shared_ptr<awst::Expression> projectionBase(std::shared_ptr<awst::Expression> const& value)
+{
+	if (auto index = std::dynamic_pointer_cast<awst::IndexExpression>(value)) return index->base;
+	if (auto field = std::dynamic_pointer_cast<awst::FieldExpression>(value)) return field->base;
+	if (auto cast = std::dynamic_pointer_cast<awst::ReinterpretCast>(value)) return cast->expr;
+	if (auto decode = std::dynamic_pointer_cast<awst::ARC4Decode>(value)) return decode->value;
+	return nullptr;
+}
+
+std::shared_ptr<awst::Expression> defaultAbsentBox(
+	TypeMapper& mapper, std::shared_ptr<awst::Expression> key,
+	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc)
+{
+	auto* type = value->wtype;
+	auto exists = awst::makeTupleItem(
+		StorageMapper::makeBoxLenTuple(mapper, std::move(key), loc),
+		1, awst::WType::boolType(), loc);
+	return awst::makeConditional(std::move(exists), std::move(value),
+		StorageMapper::makeDefaultValue(type, loc), type, loc);
+}
+}
+
+std::shared_ptr<awst::Expression> StorageMapper::makePartialBoxReadWithDefault(
+	TypeMapper& _typeMapper, std::shared_ptr<awst::Expression> _value,
+	std::vector<std::shared_ptr<awst::Statement>>& _pre,
+	awst::SourceLocation const& _loc)
+{
+	auto root = _value;
+	while (auto base = projectionBase(root)) root = std::move(base);
+	auto box = std::dynamic_pointer_cast<awst::BoxValueExpression>(root);
+	if (!box) return _value;
+	auto rootSize = computeEncodedElementSize(box->wtype).fixedBytes().value_or(0);
+	if (rootSize <= kAvmStackValueMax)
+		return _value;
+	if (rootSize > BOX_VALUE_CAPACITY)
+		throw SizeError("multi-box storage access requires a supported paged declaration path");
+	auto size = computeEncodedElementSize(_value->wtype);
+	if (size.kind != EncodedSize::Kind::Packed
+		&& (!size.fixedBytes() || *size.fixedBytes() > kAvmStackValueMax))
+		return _value; // an intermediate place, not yet a bounded value
+
+	// Build a fresh projection: aliases may share the original tree. Bind
+	// only after selecting this strategy, so a declined match emits no effects.
+	auto pin = [&](std::shared_ptr<awst::Expression> value) {
+		auto temp = awst::makeVarExpression("__box_read_" + std::to_string(
+			awst::NameGen::next("StorageMapper.partialRead")), value->wtype, _loc);
+		_pre.push_back(awst::makeAssignmentStatement(temp, std::move(value), _loc));
+		return temp;
+	};
+	auto key = pin(box->key);
+	std::function<std::shared_ptr<awst::Expression>(std::shared_ptr<awst::Expression> const&)> clone;
+	clone = [&](std::shared_ptr<awst::Expression> const& value) -> std::shared_ptr<awst::Expression> {
+		if (value == root)
+		{
+			auto result = std::make_shared<awst::BoxValueExpression>(*box);
+			result->key = key;
+			return result;
+		}
+		auto base = clone(projectionBase(value));
+		if (auto index = std::dynamic_pointer_cast<awst::IndexExpression>(value))
+		{
+			auto const* array = dynamic_cast<awst::ARC4StaticArray const*>(index->base->wtype);
+			if (!array) throw SizeError("large fixed box projection requires a fixed-array stride");
+			auto idx = pin(TypeCoercion::checkedIndexToUint64(_pre, index->index, _loc));
+			_pre.push_back(awst::makeExpressionStatement(awst::makeAssert(
+				awst::makeNumericCompare(idx, awst::NumericComparison::Lt,
+					awst::makeIntegerConstant(array->arraySize(), _loc), _loc),
+				_loc, "array index out of bounds"), _loc));
+			return awst::makeIndexExpression(std::move(base), std::move(idx), value->wtype, _loc);
+		}
+		if (auto field = std::dynamic_pointer_cast<awst::FieldExpression>(value))
+			return awst::makeFieldExpression(std::move(base), field->name, value->wtype, _loc);
+		if (std::dynamic_pointer_cast<awst::ARC4Decode>(value))
+			return awst::makeARC4Decode(std::move(base), value->wtype, _loc);
+		return awst::makeReinterpretCast(std::move(base), value->wtype, _loc);
+	};
+	return defaultAbsentBox(_typeMapper, key, clone(_value), _loc);
+}
+
+std::shared_ptr<awst::Expression> StorageMapper::makeBoxWindowRead(
+	TypeMapper& _typeMapper, std::shared_ptr<awst::Expression> _key,
+	std::shared_ptr<awst::Expression> _offset, awst::WType const* _type,
+	awst::SourceLocation const& _loc)
+{
+	auto size = computeEncodedElementSize(_type).fixedBytes();
+	if (!size || *size > kAvmStackValueMax)
+		throw SizeError("box window exceeds the AVM stack-value capacity");
+	auto key = awst::makeEvalOnce(std::move(_key), _loc);
+	auto value = awst::makeReinterpretCast(awst::makeBoxExtract(
+		key, std::move(_offset), awst::makeIntegerConstant(*size, _loc), _loc), _type, _loc);
+	return defaultAbsentBox(_typeMapper, key, std::move(value), _loc);
 }
 
 std::shared_ptr<awst::BoxValueExpression> StorageMapper::makeTopLevelBoxExpr(
@@ -115,19 +215,23 @@ std::shared_ptr<awst::Statement> StorageMapper::makeEnsureRootBoxForWrite(
 	bool _isResize,
 	awst::SourceLocation const& _loc)
 {
-	// Walk to the root BoxValue through the read/write chain, noting whether an element INDEX is
-	// crossed (a partial write). StateGet wraps a read form; peel it. Index/Field lead to the root box.
+	// Walk to the root BoxValue, noting whether an element or field projection
+	// is crossed (a partial write). Read/decode wrappers do not change the root.
 	awst::Expression const* cur = _target.get();
-	bool hasIndex = false;
+	bool hasProjection = false;
 	awst::BoxValueExpression const* root = nullptr;
 	while (cur)
 	{
 		if (auto const* sg = dynamic_cast<awst::StateGet const*>(cur))
 			cur = sg->field.get();
 		else if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(cur))
-		{ hasIndex = true; cur = idx->base.get(); }
+		{ hasProjection = true; cur = idx->base.get(); }
 		else if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(cur))
-			cur = fe->base.get();
+		{ hasProjection = true; cur = fe->base.get(); }
+		else if (auto const* decode = dynamic_cast<awst::ARC4Decode const*>(cur))
+			cur = decode->value.get();
+		else if (auto const* cast = dynamic_cast<awst::ReinterpretCast const*>(cur))
+			cur = cast->expr.get();
 		else if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(cur))
 		{ root = bv; break; }
 		else
@@ -137,8 +241,10 @@ std::shared_ptr<awst::Statement> StorageMapper::makeEnsureRootBoxForWrite(
 		return nullptr;
 	// A whole-box assignment (`st = S(...)`, `arr = [...]`) creates its own box (box_put of the value);
 	// only a PARTIAL element write or a RESIZE (push/pop) needs the box pre-materialised.
-	if (!_isResize && !hasIndex)
+	if (!_isResize && !hasProjection)
 		return nullptr;
+	if (computeEncodedElementSize(root->wtype).fixedBytes().value_or(0) > BOX_VALUE_CAPACITY)
+		throw SizeError("multi-box storage write requires a supported paged declaration path");
 
 	auto enc = arc4DefaultEncoding(root->wtype);
 	if (!enc || enc->empty() || enc->size() > 32768)
@@ -167,6 +273,53 @@ std::shared_ptr<awst::Statement> StorageMapper::makeEnsureRootBoxForWrite(
 }
 
 // ── Multi-box helpers ──
+
+StorageMapper::ArrayPage StorageMapper::arrayPageForIndex(
+	std::string const& _name, awst::WType const* _arrayType,
+	std::shared_ptr<awst::Expression> _index,
+	std::vector<std::shared_ptr<awst::Statement>>& _pre,
+	awst::SourceLocation const& _loc)
+{
+	auto const* array = dynamic_cast<awst::ARC4StaticArray const*>(_arrayType);
+	unsigned const elementSize = arc4StaticArrayElementSize(_arrayType);
+	unsigned const perPage = elementsPerBox(_arrayType);
+	if (!array || !perPage || !elementSize || elementSize > kAvmStackValueMax)
+		throw SizeError("multi-box array element exceeds the supported fixed window capacity");
+	auto idx = awst::makeVarExpression("__page_index_" + std::to_string(
+		awst::NameGen::next("StorageMapper.arrayPage")), awst::WType::uint64Type(), _loc);
+	auto checked = TypeCoercion::checkedIndexToUint64(_pre, std::move(_index), _loc);
+	_pre.push_back(awst::makeAssignmentStatement(idx, std::move(checked), _loc));
+	_pre.push_back(awst::makeExpressionStatement(awst::makeAssert(
+		awst::makeNumericCompare(idx, awst::NumericComparison::Lt,
+			awst::makeIntegerConstant(array->arraySize(), _loc), _loc),
+		_loc, "array index out of bounds"), _loc));
+	auto page = awst::makeUInt64BinOp(idx, awst::UInt64BinaryOperator::FloorDiv,
+		awst::makeIntegerConstant(perPage, _loc), _loc);
+	auto key = awst::makeConcat(awst::makeUtf8BytesConstant(
+		_name, _loc, awst::WType::boxKeyType()), awst::makeItob(page, _loc), _loc);
+	key->wtype = awst::WType::boxKeyType();
+	auto offset = awst::makeUInt64BinOp(awst::makeUInt64BinOp(
+		idx, awst::UInt64BinaryOperator::Mod, awst::makeIntegerConstant(perPage, _loc), _loc),
+		awst::UInt64BinaryOperator::Mult, awst::makeIntegerConstant(elementSize, _loc), _loc);
+	std::shared_ptr<awst::Expression> size = awst::makeIntegerConstant(perPage * elementSize, _loc);
+	uint64_t const count = checkedSize<uint64_t>(array->arraySize(), "array length");
+	if (count % perPage)
+		size = awst::makeConditional(awst::makeNumericCompare(page, awst::NumericComparison::Eq,
+			awst::makeIntegerConstant(count / perPage, _loc), _loc),
+			awst::makeIntegerConstant((count % perPage) * elementSize, _loc),
+			std::move(size), awst::WType::uint64Type(), _loc);
+	return {std::move(key), std::move(offset), std::move(size), array->elementType()};
+}
+
+std::shared_ptr<awst::Statement> StorageMapper::ensureArrayPage(
+	ArrayPage const& _page, awst::SourceLocation const& _loc)
+{
+	auto encoded = arc4DefaultEncoding(_page.elementType);
+	if (!encoded || !std::all_of(encoded->begin(), encoded->end(), [](uint8_t b) { return b == 0; }))
+		throw SizeError("multi-box array requires a zero-initializable fixed element encoding");
+	// box_create is idempotent for an existing box of the requested size.
+	return awst::makeExpressionStatement(awst::makeBoxCreate(_page.key, _page.size, _loc), _loc);
+}
 
 // Multi-box pages are element-aligned. Any recursively fixed-width ARC4
 // element can use the same protocol; only variable-width and bit-packed bool

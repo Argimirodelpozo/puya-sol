@@ -1,6 +1,6 @@
 # rev-2: sol-types and storage implementation plan
 
-Status: in progress. F1, F2, F4, F7, F9, R1 and R2 are implemented and checkpoint-test
+Status: in progress. F1, F2, F4, F5, F7, F9, R1 and R2 are implemented and checkpoint-test
 verified. The first full-suite run reopened F9; its premature huge-array
 diagnostics are now fixed in focused tests. Remaining findings/refactors and
 final full-suite verification are pending.
@@ -140,16 +140,16 @@ runtime coverage now includes flat/nested arrays and indices before/after mappin
 
 ### F5 — Preserve zero defaults for absent large mapping values
 
-- [ ] Remove the assumption in
+- [x] Remove the assumption in
   [StorageMapper.cpp](../src/builder/storage/StorageMapper.cpp) that every large
   fixed-width box has already been created. Use explicit eager/lazy lifecycle
   information from R3, including after deletion.
-- [ ] Handle absent lazy storage at the requested element/window level, returning
+- [x] Handle absent lazy storage at the requested element/window level, returning
   the type-correct zero/default without materializing an oversized stack value.
   Reuse this behavior for explicit reads and generated getters.
-- [ ] Keep bounds validation independent of box existence. Reads must not create
+- [x] Keep bounds validation independent of box existence. Reads must not create
   boxes; first partial writes must create a valid backing representation.
-- [ ] Test unwritten, written and deleted values; scalar and aggregate elements;
+- [x] Test unwritten, written and deleted values; scalar and aggregate elements;
   stack-capacity boundaries; and supported multi-box boundaries. Reject any
   unsupported shape explicitly rather than treating it as initialized.
 
@@ -176,6 +176,15 @@ Acceptance: wrapped and unwrapped values round-trip consistently; assembly uses
 solc's logical slots/offsets; all supported native address bits survive. The
 audit confirmed a direct/wrapped address width mismatch in generated TEAL.
 Any unavoidable new non-exact behavior requires a separate policy decision.
+
+The proposed native-address adaptation needs confirmation: typed reads/writes
+preserve all 32 address bytes in separate scratch storage, while `tload`/`tstore`
+use solc's logical packed word. A raw `tstore` clears the extra native-only
+address bytes for declarations in the affected slot. This agrees with solc
+within its 160-bit address domain but changes raw-word round trips for full-width
+AVM addresses. No persistent cells or ledger migration are involved. Do not
+silently choose this policy or truncate native typed addresses; the adaptation
+and canonical transient-layout switch are not implemented yet.
 
 ### F7 — Exclude transient declarations from persistent initialization
 
@@ -281,8 +290,8 @@ Acceptance: the initial refactor preserves layout and behavior byte-for-byte;
 intentional fixes are separate, test-backed changes. Do not remove backend
 workarounds merely because they appear repetitive or reference stale documents.
 
-The binding/lifecycle portion is implemented; transient codec consolidation and
-its obsolete name index remain with F6. Fixed-width missing-box reads remain F5.
+The binding/lifecycle portion and fixed-width missing-box reads are implemented;
+transient codec consolidation and its obsolete name index remain with F6.
 
 ## Persisted-storage compatibility gate
 
@@ -303,6 +312,16 @@ deployment, even when the new behavior agrees better with Solidity.
 
 Unrelated fixes and the format design can proceed while this decision is pending.
 F3 is not complete merely because its design is written down.
+
+The outstanding user choice is a fresh-deployment-only format break versus an
+explicit compatibility/version path. F3 affects default-layout holder identities
+and their derived mapping boxes; F8 affects default-layout dynamic aggregates
+containing internal functions, moving their schema/initialization and reference
+handling from named globals to boxes where required. Neither fix requires
+changing EVM slot-mode keys. The candidate new holder format uses a domain/version
+marker, full solc root slots, and tagged member/array segments rather than AST IDs
+or concatenated source names. Detailed manifest comparison remains part of the
+implementation gate; no new persisted format has been selected or emitted.
 
 ## Verification and definition of done
 
@@ -450,7 +469,54 @@ now asserts that capacity diagnostic and explicitly uses slot mode for deploy
 and absent-record read assertions. No automatic backend switch or persisted
 format change is introduced, and no xfail or assertion was weakened.
 
-The full suite is rerun against this checkpoint before further compiler edits.
+The full suite against `bd1956b410` passed **1,752 tests**, with **1 failed**,
+102 existing xfails and 38 existing xpasses, in 311.41 seconds. Report:
+`/tmp/puyasol-rev-2-storage-facts-full.xml`. The sole failure is the unchanged
+Puya DCE divide-by-zero regression. There are no additional failures at this
+checkpoint; this is not a claim that all semantic tests are green. The compiler
+binary remained fixed for the complete run.
+
+### Checkpoint 7 — lazy fixed boxes and bounded projections
+
+All 19 native CTests passed. The focused lazy-storage runtime selection passed
+8 tests in 21.24 seconds, covering both ABI profiles; report:
+`/tmp/puyasol-rev-2-lazy-boxes-expanded.xml`. The final expanded selection passed
+**16 tests** in 22.12 seconds, covering both code-generation modes as well as
+both ABI profiles and four explicit diagnostic cases; report:
+`/tmp/puyasol-rev-2-lazy-boxes-profiles.xml`. The broader array/struct/storage/
+getter/function-type/regression selection passed **713 tests**, with 1 failed,
+7 existing xfails and 1 existing xpass, in 200.83 seconds. Report:
+`/tmp/puyasol-rev-2-lazy-storage-broad.xml`. The only failure is the unchanged
+Puya DCE divide-by-zero bug; markers are unchanged.
+
+Large fixed boxes remain addressable places until a bounded projection is read.
+The shared read guard pins keys and indices, checks bounds before existence, and
+defaults only the requested scalar/aggregate. Explicit reads, getters, memory
+initializers, copies, returns and value arguments share this rule. Oversized
+fixed-array reference parameters now carry a validated whole-box key rather than
+depending on backend inlining of a whole-value argument. Interior large-array
+references and unsupported mapping-value paging produce explicit diagnostics.
+
+Partial writes create valid defaults, including after deletion. Large struct
+field updates use projected lvalues instead of copying oversized siblings.
+Paged reads/writes/getters/element deletes share checked page addressing; root
+delete clears every page, absent reads and element deletes allocate nothing, and
+the short final page is recreated at its exact size. Existing page keys are
+unchanged. A missed declaration-origin factory for arrays containing mappings
+was also corrected.
+
+Tests cover 4 KB and 32 KB boundaries, nested bounds, signed/bool/bytes fields,
+aliases, effectful sources, independent mapping entries, aggregate copies,
+delete/reuse and paged boundaries. Expected new runtime sequences were confirmed
+with solc 0.8.34/Cancun, optimizer disabled, legacy pipeline. The existing
+recursive multi-box struct and direct compound-update regressions pass as part
+of the broader selection. Slot mode retains its explicit 64-element whole-array
+delete limit; the new large-array lifecycle fixture cannot run there and is
+covered by a capacity diagnostic rather than an xfail.
+
+At this checkpoint the branch has 241 fewer net source lines than its base;
+the bounded-read correctness work adds code while the earlier conversion,
+identity and storage-binding consolidations remove duplication.
 
 ### Baseline and remaining gates
 

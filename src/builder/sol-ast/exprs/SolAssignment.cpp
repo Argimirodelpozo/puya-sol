@@ -97,7 +97,13 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	{
 		eb::ContractContext::OperandDeltas lhsD, rhsD;
 		auto lhs = m_ctx.lower(m_assignment.leftHandSide(), false);
-		auto rhs = m_ctx.lower(m_assignment.rightHandSide(), false);
+		auto rhs = m_ctx.lowerOperand([&] {
+			auto value = buildExpr(m_assignment.rightHandSide());
+			if (m_assignment.leftHandSide().annotation().type->dataStoredIn(DataLocation::Memory))
+				value = StorageMapper::makePartialBoxReadWithDefault(
+					m_ctx.typeMapper, std::move(value), m_ctx.preEffects(), m_loc);
+			return value;
+		}, false);
 		target = std::move(lhs.value);
 		value = std::move(rhs.value);
 		lhsD = std::move(lhs.effects);

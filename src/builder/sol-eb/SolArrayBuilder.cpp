@@ -6,6 +6,7 @@
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/storage/StorageMapper.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -43,6 +44,20 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 	auto* elemType = elementType();
 	if (!elemType)
 		return nullptr;
+	if (m_arrayType && !m_arrayType->isDynamicallySized()
+		&& m_arrayType->dataStoredIn(solidity::frontend::DataLocation::Storage))
+	{
+		// Physical extraction is not a bounds check for nested arrays: an
+		// invalid inner index can still point inside the enclosing box.
+		auto pinned = awst::makeVarExpression("__fixed_storage_idx_" + std::to_string(
+			awst::NameGen::next("SolArrayBuilder.fixedStorageIndex")), index->wtype, _loc);
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(pinned, std::move(index), _loc));
+		index = pinned;
+		m_ctx.preEffects().push_back(awst::makeExpressionStatement(awst::makeAssert(
+			awst::makeNumericCompare(index, awst::NumericComparison::Lt,
+				awst::makeIntegerConstant(m_arrayType->length().str(), _loc), _loc),
+			_loc, "array index out of bounds"), _loc));
+	}
 
 	// CALLDATA arrays kept as ARC4 VALUES (asm-mode functions skip the native
 	// decode, so `s.m[i]` indexes the raw encoding): puya's IndexExpression
@@ -135,7 +150,13 @@ std::shared_ptr<awst::Expression> SolArrayBuilder::resolve()
 	// rvalue read: sign-extend a decoded signed sub-256 element to canonical
 	// 256-bit (no-op for unsigned / int256 / <=64-bit — see TypeCoercion).
 	if (m_signExtendElem)
-		return TypeCoercion::signExtendSignedElement(m_expr, m_signExtendElem, m_signExtendLoc);
+	{
+		auto value = m_expr;
+		if (m_signExtendElem->isValueType())
+			value = StorageMapper::makePartialBoxReadWithDefault(
+				m_ctx.typeMapper, std::move(value), m_ctx.preEffects(), m_signExtendLoc);
+		return TypeCoercion::signExtendSignedElement(std::move(value), m_signExtendElem, m_signExtendLoc);
+	}
 	return m_expr;
 }
 

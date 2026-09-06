@@ -381,53 +381,26 @@ bool SolUnaryOperation::clearMultiBoxElement(
 	if (!sa)
 		return false;
 
-	// Pin the index: page and offset each read it.
-	std::string idxName = "__mb_didx_"
-		+ std::to_string(awst::NameGen::next("SolUnaryOperation.multiBoxDelete"));
-	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc),
-		builder::TypeCoercion::implicitNumericCast(
-			_index, awst::WType::uint64Type(), m_loc), m_loc));
-	auto idx = [&]() {
-		return awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc);
-	};
-
-	m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-		awst::makeAssert(
-			awst::makeNumericCompare(idx(), awst::NumericComparison::Lt,
-				awst::makeIntegerConstant(
-					static_cast<uint64_t>(sa->arraySize()), m_loc), m_loc),
-			m_loc, "array index out of bounds"), m_loc));
-
-	auto key = awst::makeConcat(
-		awst::makeUtf8BytesConstant(
-			m_ctx.storageMapper.physicalBindingFor(_var).name,
-			m_loc, awst::WType::boxKeyType()),
-		awst::makeItob(
-			awst::makeUInt64BinOp(idx(), awst::UInt64BinaryOperator::FloorDiv,
-				awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc), m_loc),
-		m_loc);
-	key->wtype = awst::WType::boxKeyType();
-
-	auto offset = awst::makeUInt64BinOp(
-		awst::makeUInt64BinOp(idx(), awst::UInt64BinaryOperator::Mod,
-			awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc),
-		awst::UInt64BinaryOperator::Mult,
-		awst::makeIntegerConstant(elemSize, m_loc), m_loc);
+	auto page = StorageMapper::arrayPageForIndex(
+		m_ctx.storageMapper.physicalBindingFor(_var).name,
+		_arrWtype, _index, m_ctx.preEffects(), m_loc);
 
 	// The cleared element is its ARC-4 default, which for a fixed-width element
 	// is elemSize zero bytes — not necessarily all-zero for shapes carrying head
 	// offsets, so take the encoding rather than assuming.
 	auto encoded = builder::arc4DefaultEncoding(sa->elementType());
-	std::vector<uint8_t> zeros = encoded && encoded->size() == elemSize
-		? std::move(*encoded) : std::vector<uint8_t>(elemSize, 0);
+	if (!encoded || encoded->size() != elemSize)
+		throw SizeError("multi-box array element has no supported default encoding");
 
 	auto replace = awst::makeIntrinsicCall("box_replace", awst::WType::voidType(), m_loc);
-	replace->stackArgs.push_back(std::move(key));
-	replace->stackArgs.push_back(std::move(offset));
-	replace->stackArgs.push_back(awst::makeBytesConstant(std::move(zeros), m_loc));
-	m_ctx.postEffects().push_back(
-		awst::makeExpressionStatement(std::move(replace), m_loc));
+	replace->stackArgs.push_back(page.key);
+	replace->stackArgs.push_back(page.offset);
+	replace->stackArgs.push_back(awst::makeBytesConstant(std::move(*encoded), m_loc));
+	auto exists = awst::makeTupleItem(StorageMapper::makeBoxLenTuple(
+		m_ctx.typeMapper, page.key, m_loc), 1, awst::WType::boolType(), m_loc);
+	auto body = awst::makeBlock(m_loc);
+	body->body.push_back(awst::makeExpressionStatement(std::move(replace), m_loc));
+	m_ctx.postEffects().push_back(awst::makeIfElse(std::move(exists), std::move(body), nullptr, m_loc));
 	return true;
 }
 
@@ -454,6 +427,26 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 				m_scope.eraseFuncPtrTarget(varDecl->id());
 				return _operand;
 			}
+			if (varDecl->isStateVariable() && !varDecl->isConstant() && !varDecl->immutable()
+				&& !m_ctx.typeMapper.profile().evmStorageLayout)
+			{
+				auto const* type = m_ctx.typeMapper.map(varDecl->type());
+				if (StorageMapper::isMultiBoxArray(type))
+				{
+					auto count = StorageMapper::numBoxesForArray(type);
+					if (count > 4096) throw SizeError("multi-box delete exceeds the 4096-page unroll capacity");
+					auto name = m_ctx.storageMapper.physicalBindingFor(*varDecl).name;
+					for (unsigned page = 0; page < count; ++page)
+					{
+						auto key = awst::makeConcat(awst::makeUtf8BytesConstant(name, m_loc),
+							awst::makeItob(awst::makeIntegerConstant(page, m_loc), m_loc), m_loc);
+						key->wtype = awst::WType::boxKeyType();
+						m_ctx.queuePostExpression(awst::makeStateDelete(
+							awst::makeBoxValueExpression(std::move(key), awst::WType::bytesType(), m_loc), m_loc), m_loc);
+					}
+					return _operand;
+				}
+			}
 		}
 	}
 
@@ -474,8 +467,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 				&& !varDecl->isConstant() && !varDecl->immutable())
 			{
 				auto const* arrWtype = m_ctx.typeMapper.map(varDecl->type());
-				auto const* builtIndex =
-					dynamic_cast<awst::IndexExpression const*>(_operand.get());
+				auto indexed = _operand;
+				if (auto const* decode = dynamic_cast<awst::ARC4Decode const*>(indexed.get()))
+					indexed = decode->value;
+				auto const* builtIndex = dynamic_cast<awst::IndexExpression const*>(indexed.get());
 				if (builder::StorageMapper::isMultiBoxArray(arrWtype) && builtIndex
 					&& clearMultiBoxElement(*varDecl, arrWtype, builtIndex->index))
 					return _operand;

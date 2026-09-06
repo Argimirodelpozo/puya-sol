@@ -17,6 +17,15 @@
 namespace puyasol::builder
 {
 
+/// A fixed array too large to travel as one AVM value must pass its existing
+/// box, not rely on backend inlining to recover a storage reference later.
+inline bool isLargeFixedArrayRef(TypeMapper& _tm, solidity::frontend::Type const* _type)
+{
+	auto const* array = dynamic_cast<solidity::frontend::ArrayType const*>(_type);
+	return array && !array->isDynamicallySized()
+		&& computeEncodedElementSize(_tm.map(array)).fixedBytes().value_or(0) > 4096;
+}
+
 /// Classify from the declaration and cached source facts.
 inline RefParamPassing classifyRefParamPassing(
 	TypeMapper& _tm,
@@ -29,6 +38,7 @@ inline RefParamPassing classifyRefParamPassing(
 		return RefParamPassing::SlotHandle;
 	if (_param.referenceLocation() == Loc::Storage
 		&& (isBoxKeyedStorageRef(_param.type(), _tm.analysis())
+			|| isLargeFixedArrayRef(_tm, _param.type())
 			|| _tm.analysis().structRefOffsetParams.contains(_param.id())
 			|| _isAsmSlotRef)) // widened: plain structs + asm .slot refs
 		return RefParamPassing::BoxKeyPrefix;

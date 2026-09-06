@@ -156,6 +156,15 @@ AssignmentHelper::StructFieldCowStore AssignmentHelper::buildStructFieldCowStore
 	awst::WType const* arc4FieldType = awst::structFieldType(_structType, fieldName);
 	if (arc4FieldType && _fieldValue->wtype != arc4FieldType)
 		_fieldValue = awst::makeARC4Encode(std::move(_fieldValue), arc4FieldType, _loc);
+	if (computeEncodedElementSize(_structType).fixedBytes().value_or(0) > StorageMapper::kAvmStackValueMax)
+	{
+		// The backend supports a projected storage lvalue and can fold its
+		// update to box_replace. Rebuilding this struct would first load its
+		// potentially oversized siblings onto the stack.
+		auto target = awst::makeWritableTarget(std::make_shared<awst::FieldExpression>(*_fieldExpr));
+		ensureRootBoxPre(_ctx, target, _loc);
+		return {std::move(target), std::move(_fieldValue), {}, true};
+	}
 
 	auto newStruct = awst::makeStructWithReplacedField(
 		_structType, std::move(readBase), fieldName, std::move(_fieldValue), _loc);
@@ -170,7 +179,7 @@ AssignmentHelper::StructFieldCowStore AssignmentHelper::buildStructFieldCowStore
 	// Centralized box-lifecycle: the lazy mapping-entry box must exist before
 	// box_replace. Shared with maybePrePopulateBox / SolArrayMethod::emitEnsureBox.
 	if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
-			_ctx.typeMapper, target, /*isResize=*/false, _loc))
+			_ctx.typeMapper, std::make_shared<awst::FieldExpression>(*_fieldExpr), /*isResize=*/false, _loc))
 		_ctx.queuePreEffect(std::move(stmt));
 
 	return StructFieldCowStore{

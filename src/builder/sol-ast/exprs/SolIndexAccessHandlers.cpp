@@ -275,9 +275,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		Type const* walkContainer = ctx.rootMappingType;
 		std::shared_ptr<awst::Expression> currentArrayValue;
 		auto boxedArrayValue = [&](std::shared_ptr<awst::Expression> key,
-			ArrayType const* at) -> std::shared_ptr<awst::Expression> {
+			ArrayType const* at, bool declarationRoot = false) -> std::shared_ptr<awst::Expression> {
 			auto const* wt = m_ctx.typeMapper.map(at);
 			auto box = awst::makeBoxValueExpression(std::move(key), wt, m_loc);
+			box->isDeclarationRoot = declarationRoot;
 			return builder::StorageMapper::makeStateGetWithDefault(
 				std::move(box), wt, m_loc);
 		};
@@ -286,7 +287,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		// value walk from it reads a box nothing ever created.
 		if (auto const* rootArray = dynamic_cast<ArrayType const*>(walkContainer);
 			rootArray && ctx.rootIsStateVarBox)
-			currentArrayValue = boxedArrayValue(currentPrefix, rootArray);
+			currentArrayValue = boxedArrayValue(currentPrefix, rootArray, true);
 
 		for (size_t ki = 0; ki < indexExprs.size(); ++ki)
 		{
@@ -865,66 +866,12 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 	std::shared_ptr<awst::Expression> _idxExpr)
 {
 	using ::puyasol::builder::StorageMapper;
-
-	unsigned elemSize = StorageMapper::arc4StaticArrayElementSize(_arrWtype);
-	unsigned elemsPerBox = StorageMapper::elementsPerBox(_arrWtype);
-
-	// Coerce index to uint64 for arithmetic.
-	_idxExpr = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.preEffects(), std::move(_idxExpr), m_loc);
-
-	// Pin idx to a temp local so we can reference it twice (page + offset).
-	std::string idxVarName = "__mb_idx_" + std::to_string(awst::NameGen::next("SolIndexAccessHandlers.s_mbCounter"));
-	auto idxVar = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
-	m_ctx.preEffects().push_back(
-		awst::makeAssignmentStatement(idxVar, std::move(_idxExpr), m_loc));
-
-	// page = idx / elemsPerBox
-	auto idxRead1 = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
-	auto epbConst1 = awst::makeIntegerConstant(elemsPerBox, m_loc);
-	auto pageExpr = awst::makeUInt64BinOp(
-		std::move(idxRead1), awst::UInt64BinaryOperator::FloorDiv,
-		std::move(epbConst1), m_loc);
-
-	// inPageOffset = (idx % elemsPerBox) * elemSize
-	auto idxRead2 = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
-	auto epbConst2 = awst::makeIntegerConstant(elemsPerBox, m_loc);
-	auto remExpr = awst::makeUInt64BinOp(
-		std::move(idxRead2), awst::UInt64BinaryOperator::Mod,
-		std::move(epbConst2), m_loc);
-	auto elemSizeConst = awst::makeIntegerConstant(elemSize, m_loc);
-	auto offsetExpr = awst::makeUInt64BinOp(
-		std::move(remExpr), awst::UInt64BinaryOperator::Mult,
-		std::move(elemSizeConst), m_loc);
-
-	// boxKey = bytes(varName) ++ itob(page)
-	auto nameBytes = awst::makeUtf8BytesConstant(_varName, m_loc, awst::WType::boxKeyType());
-	auto pageItob = awst::makeItob(std::move(pageExpr), m_loc);
-	auto boxKey = awst::makeConcat(std::move(nameBytes), std::move(pageItob), m_loc);
-	boxKey->wtype = awst::WType::boxKeyType();
-
-	auto const* sa = static_cast<awst::ARC4StaticArray const*>(_arrWtype);
-	auto const* elemArc4Type = sa->elementType();
-
-	if (m_indexAccess.annotation().willBeWrittenTo)
-	{
-		// Write context: AWST has no writable box[offset] lvalue; SolAssignment
-		// handles multi-box writes via box_replace. Emit read path as fallback.
-		auto extract = awst::makeBoxExtract(
-			std::move(boxKey), std::move(offsetExpr),
-			awst::makeIntegerConstant(elemSize, m_loc), m_loc);
-		return awst::makeReinterpretCast(std::move(extract),
-			const_cast<awst::WType*>(elemArc4Type), m_loc);
-	}
-
-	// Read: box_extract → reinterpret as ARC4 type → optionally ARC4Decode.
-	auto extract = awst::makeBoxExtract(
-		std::move(boxKey), std::move(offsetExpr),
-		awst::makeIntegerConstant(elemSize, m_loc), m_loc);
-
+	auto page = StorageMapper::arrayPageForIndex(
+		_varName, _arrWtype, std::move(_idxExpr), m_ctx.preEffects(), m_loc);
+	auto cast = StorageMapper::makeBoxWindowRead(
+		m_ctx.typeMapper, page.key, page.offset, page.elementType, m_loc);
 	auto* expectedType = m_ctx.typeMapper.map(m_indexAccess.annotation().type);
-	auto* elemArc4 = const_cast<awst::WType*>(elemArc4Type);
-	auto cast = awst::makeReinterpretCast(std::move(extract), elemArc4, m_loc);
+	auto* elemArc4 = page.elementType;
 
 	if (expectedType && !awst::structurallyEquivalent(expectedType, elemArc4))
 	{

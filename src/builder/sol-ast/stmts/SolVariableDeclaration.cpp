@@ -155,6 +155,9 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 		}
 
 		value = m_blk.builderCtx().buildExpr(*initialValue);
+		if (decl.referenceLocation() != VariableDeclaration::Location::Storage)
+			value = StorageMapper::makePartialBoxReadWithDefault(
+				m_blk.typeMapper(), std::move(value), m_blk.builderCtx().preEffects(), m_loc);
 
 		// --evm-storage-layout: a storage-typed initializer builds to its
 		// biguint slot handle; a MEMORY struct local needs the VALUE —

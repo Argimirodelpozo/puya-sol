@@ -28,6 +28,7 @@
 #include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/StoragePlace.hpp"
 #include "Logger.h"
 
 #include <algorithm>
@@ -568,7 +569,18 @@ void SolInternalCall::buildSequencedArgs(
 	std::vector<bool> argMayWrite;
 	auto const* plan = _funcDef ? &m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract) : nullptr;
 	std::map<size_t, std::shared_ptr<awst::Expression>> offsets;
-	auto keyArgument = [&](Expression const& expression, size_t pi) {
+	auto keyArgument = [&](Expression const& expression, size_t pi) -> std::shared_ptr<awst::Expression> {
+		if (isLargeFixedArrayRef(m_ctx.typeMapper, expression.annotation().type))
+		{
+			if (auto const* id = dynamic_cast<Identifier const*>(&expression))
+				if (auto const* declaration = id->annotation().referencedDeclaration;
+					declaration && !m_scope.findMappingKeyParam(declaration->id()).empty())
+					return extractMappingKeyPrefix(expression);
+			auto place = StoragePlace::fromRead(buildExpr(expression));
+			if (!place || place->kind != StoragePlaceKind::Box)
+				throw SizeError("large fixed-array storage references require a whole-box root; interior slices are unsupported");
+			return awst::makeReinterpretCast(place->key, awst::WType::bytesType(), m_loc);
+		}
 		auto key = extractMappingKeyPrefix(expression);
 		if (plan && std::find(plan->offsetParams.begin(), plan->offsetParams.end(), pi) != plan->offsetParams.end())
 		{
@@ -639,6 +651,10 @@ void SolInternalCall::buildSequencedArgs(
 						m_ctx, m_scope, *sortedArgs[i], m_loc))
 					return off;
 			auto v = buildExpr(*sortedArgs[i]);
+			if (_funcDef && paramIdx < _funcDef->parameters().size()
+				&& _funcDef->parameters()[paramIdx]->referenceLocation() != VariableDeclaration::Location::Storage)
+				v = StorageMapper::makePartialBoxReadWithDefault(
+					m_ctx.typeMapper, std::move(v), m_ctx.preEffects(), m_loc);
 			// Slot mode: a storage-ref arg bound to a VALUE (memory) param
 			// materializes here — the slot handle can't coerce to the value
 			// type (it crashed field reads: "extraction end 8 beyond length").

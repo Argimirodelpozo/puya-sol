@@ -238,44 +238,12 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 		return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc)};
 	}
 
-	// Pin idx to a temp so page and offset can reference it without re-evaluating side effects.
-	auto idxExpr = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.preEffects(), buildExpr(*rootIndex->indexExpression()), m_loc);
-	std::string idxVarName = "__mb_widx_" + std::to_string(awst::NameGen::next("SolAssignmentEarlyOuts.s_mbWCounter"));
-	m_ctx.preEffects().push_back(
-		awst::makeAssignmentStatement(
-			awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc),
-			std::move(idxExpr), m_loc));
-	auto idxVar = [&]() {
-		return awst::makeVarExpression(
-			idxVarName, awst::WType::uint64Type(), m_loc);
-	};
-	m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-		awst::makeAssert(
-			awst::makeNumericCompare(idxVar(), awst::NumericComparison::Lt,
-				awst::makeIntegerConstant(
-					static_cast<uint64_t>(sa->arraySize()), m_loc), m_loc),
-			m_loc, "array index out of bounds"), m_loc));
-
-	auto makeBoxKey = [&]() {
-		auto page = awst::makeUInt64BinOp(
-			idxVar(), awst::UInt64BinaryOperator::FloorDiv,
-			awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc);
-		auto key = awst::makeConcat(
-			awst::makeUtf8BytesConstant(
-				m_ctx.storageMapper.physicalBindingFor(*varDecl).name,
-				m_loc, awst::WType::boxKeyType()),
-			awst::makeItob(std::move(page), m_loc), m_loc);
-		key->wtype = awst::WType::boxKeyType();
-		return key;
-	};
-	auto makeOffset = [&]() {
-		return awst::makeUInt64BinOp(
-			awst::makeUInt64BinOp(idxVar(), awst::UInt64BinaryOperator::Mod,
-				awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc),
-			awst::UInt64BinaryOperator::Mult,
-			awst::makeIntegerConstant(elemSize, m_loc), m_loc);
-	};
+	auto page = StorageMapper::arrayPageForIndex(
+		m_ctx.storageMapper.physicalBindingFor(*varDecl).name,
+		arrWtype, buildExpr(*rootIndex->indexExpression()), m_ctx.preEffects(), m_loc);
+	m_ctx.preEffects().push_back(StorageMapper::ensureArrayPage(page, m_loc));
+	auto makeBoxKey = [&]() { return page.key; };
+	auto makeOffset = [&]() { return page.offset; };
 
 	std::shared_ptr<awst::Expression> target;
 	std::string elemName;

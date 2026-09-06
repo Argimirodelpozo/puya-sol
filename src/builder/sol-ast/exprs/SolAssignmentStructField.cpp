@@ -100,6 +100,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 
 	if (arc4FieldType)
 	{
+		if (store.returnsField)
+			return awst::makeARC4Decode(std::move(e), m_ctx.typeMapper.map(m_assignment.annotation().type), m_loc);
 		std::shared_ptr<awst::Expression> extractBase = std::move(e);
 		for (auto it = fieldChain.rbegin(); it != fieldChain.rend(); ++it)
 		{

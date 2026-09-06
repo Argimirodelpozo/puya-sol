@@ -308,6 +308,9 @@ void convertSingleReturnValue(BlockContext& blk, Return const& node,
 {
 	auto const* targetSolType = retParams[0]->type();
 	auto const* targetWType = blk.typeMapper().map(targetSolType);
+	if (!targetSolType->dataStoredIn(DataLocation::Storage))
+		stmt.value = StorageMapper::makePartialBoxReadWithDefault(
+			blk.typeMapper(), std::move(stmt.value), blk.builderCtx().preEffects(), loc);
 	// Slot mode: `return <storage ref>` from a MEMORY-typed return
 	// materializes the aggregate (the storage-declared return case
 	// exited earlier with the raw slot).
