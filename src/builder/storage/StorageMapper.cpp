@@ -311,6 +311,13 @@ StorageMapper::PhysicalBinding StorageMapper::makeBinding(
 		? awst::AppStorageKind::Box : awst::AppStorageKind::AppGlobal;
 
 	auto const* type = binding.wtype;
+	if (!type)
+	{
+		if (_var.value())
+			binding.valueType(m_typeMapper); // explicit initialization needs a real value
+		binding.initialization = RootInitialization::Unmaterialized;
+		return binding;
+	}
 	if (profile().evmStorageLayout && binding.storageClass == StorageClass::Persistent)
 		binding.initialization = RootInitialization::Slot;
 	else if (binding.kind == awst::AppStorageKind::AppGlobal)
@@ -376,6 +383,15 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 		auto binding = physicalBindingFor(*var);
 		if (!binding.hasPersistentCell() || !seen.insert(var->id()).second)
 			return;
+		if (!binding.wtype)
+		{
+			Logger::instance().warning(
+				"oversized state declaration '" + var->name()
+				+ "' has no whole-value ARC-56 storage representation; its full solc layout and "
+				"fixed length remain available. Use --evm-storage-layout for sparse element access.",
+				makeLoc(var->location(), _sourceFile));
+			return;
+		}
 
 		awst::AppStorageDefinition def;
 		def.sourceLocation = makeLoc(var->location(), _sourceFile);

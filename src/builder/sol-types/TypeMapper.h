@@ -58,6 +58,11 @@ public:
 	/// Returns nullptr for unsupported types.
 	awst::WType const* map(solidity::frontend::Type const* _solType);
 
+	/// A logical storage declaration/address need not have a materializable
+	/// whole-value representation. Return nullptr on target capacity overflow;
+	/// value consumers must still use map() and retain its explicit diagnostic.
+	awst::WType const* tryMapStorageRepresentation(solidity::frontend::Type const* _solType);
+
 	/// Native, internal-call, and ABI return forms from one resolved solc declaration.
 	FunctionReturnPlan const& functionReturnPlan(
 		solidity::frontend::FunctionDefinition const& _function);

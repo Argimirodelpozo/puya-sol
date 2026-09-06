@@ -68,7 +68,12 @@ StorageRuntimePlan StorageRuntimePlan::analyze(
 	// Packed addresses use a keccak-derived shadow slot for their high bytes.
 	for (auto const& variable: result.solidityLayout.variables())
 	{
-		if (variable.slot >= solidity::u256(kEvmDenseSlotLimit))
+		// A fixed array can start in the dense region while its valid elements
+		// extend far beyond it. Solc's full-width storage span is authoritative;
+		// testing only the declaration's first slot wrongly removes the sparse path.
+		if (variable.slot >= solidity::u256(kEvmDenseSlotLimit)
+			|| (variable.solType && variable.solType->storageSize()
+				> solidity::u256(kEvmDenseSlotLimit) - variable.slot))
 			result.requiresSparseSlots = true;
 		if (variable.wtype == awst::WType::accountType() && variable.byteSize == 20)
 			if (auto const* slot = result.solidityLayout.getSlotInfo(variable.slot);

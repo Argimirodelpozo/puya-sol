@@ -49,7 +49,9 @@ void StorageLayout::computeLayout(
 		sv.slot = slot;
 		sv.byteOffset = offset;
 		sv.byteSize = decl->type()->storageBytes();
-		sv.wtype = _typeMapper.map(decl->type());
+		// Logical slot/length facts remain valid for huge sparse arrays even
+		// when no complete ARC4 buffer could represent their declared value.
+		sv.wtype = _typeMapper.tryMapStorageRepresentation(decl->type());
 		sv.solType = decl->type();
 		auto span = decl->type()->storageSize();
 		sv.isFullSlot = (sv.byteSize == 32) || span > 1;

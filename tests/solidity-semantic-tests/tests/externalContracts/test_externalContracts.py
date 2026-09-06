@@ -6,11 +6,19 @@ from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
 )
+from framework.compile import CompileError
 
 
-def test_FixedFeeRegistrar(harness):  # currently fails
-    """externalContracts/contracts/FixedFeeRegistrar.sol"""
-    app = harness.compile_and_deploy('externalContracts/contracts/FixedFeeRegistrar.sol')
+def test_FixedFeeRegistrar(harness):
+    """The enormous sparse Record array requires the explicit slot backend."""
+    fixture = 'externalContracts/contracts/FixedFeeRegistrar.sol'
+    with pytest.raises(CompileError, match="exceeds the compiler's addressable range"):
+        harness.compile(fixture)
+    app = harness.compile_and_deploy(fixture, extra_args=['--evm-storage-layout'])
+    boxes = harness.localnet.algod.application_boxes(app.app_id)
+    for name in ('absent', 'another absent record'):
+        assert as_bytes(harness.call(app, 'content(string)', name).abi_return) == bytes(32)
+    assert harness.localnet.algod.application_boxes(app.app_id) == boxes
 
 def test_base64(harness):
     """externalContracts/contracts/base64.sol

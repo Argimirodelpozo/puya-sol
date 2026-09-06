@@ -509,6 +509,16 @@ std::vector<std::pair<std::string, awst::WType const*>> collectAugmentedParams(
 		// .selector/.address, bare for .slot/.offset/.length + state vars.
 		std::string name = AssemblyBuilder::externalRefAwstName(
 			extInfo, yulId->name.str(), declNameFn);
+		// A storage coordinate is a full-width word, not the declaration's
+		// value. Huge arrays still expose solc's .slot/.offset facts even when
+		// their whole-value representation cannot fit on AVM.
+		if ((extInfo.suffix == "slot" || extInfo.suffix == "offset")
+			&& (varDecl->isStateVariable()
+				|| varDecl->referenceLocation() == VariableDeclaration::Location::Storage))
+		{
+			augmentedParams.emplace_back(name, awst::WType::biguintType());
+			continue;
+		}
 		if (varDecl->referenceLocation()
 				== solidity::frontend::VariableDeclaration::Location::CallData)
 		{
@@ -519,7 +529,6 @@ std::vector<std::pair<std::string, awst::WType const*>> collectAugmentedParams(
 				if (sfx == "offset" || sfx == "length")
 					base = base.substr(0, dot);
 			}
-			auto const* t = blk.typeMapper().map(varDecl->type());
 			// solc already owns the recursive ABI rule: a fixed array or struct is
 			// dynamic when any contained member is dynamic. Use that fact instead
 			// of enumerating WType shapes one level at a time.

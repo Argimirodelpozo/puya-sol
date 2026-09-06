@@ -300,7 +300,9 @@ EvmSlotLowering::Addr EvmSlotLowering::makeLeafAddr(
 	a.byteOffset = std::move(_byteOffset);
 	a.size = _size;
 	a.solType = _solType;
-	a.wtype = m_ctx.typeMapper.map(_solType);
+	// Address derivation uses solc slots/strides, not the size of a whole ARC4
+	// value. A sparse element can be addressable when its parent array is not.
+	a.wtype = m_ctx.typeMapper.tryMapStorageRepresentation(_solType);
 	// Full-slot AVM account: keep all 32 bytes so real addresses round-trip.
 	// (EVM's 20-byte packing survives only where the address shares its slot.)
 	if (a.wtype == awst::WType::accountType() && _aloneInSlot && !a.byteOffset)

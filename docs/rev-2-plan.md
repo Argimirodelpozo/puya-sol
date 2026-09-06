@@ -1,9 +1,9 @@
 # rev-2: sol-types and storage implementation plan
 
 Status: in progress. F1, F2, F4, F7, F9, R1 and R2 are implemented and checkpoint-test
-verified. The first full-suite run reopened F9: metadata-only huge storage arrays
-are rejected too early. That regression, remaining findings/refactors and final
-full-suite verification are pending.
+verified. The first full-suite run reopened F9; its premature huge-array
+diagnostics are now fixed in focused tests. Remaining findings/refactors and
+final full-suite verification are pending.
 
 Branch: `rev-2`, based on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`.
 Scope: all nine correctness findings from the sol-types/storage audit, plus
@@ -425,6 +425,32 @@ same-name storage, colliding aggregate names, array conversions and their slot
 mode counterpart. Snapshots: `/tmp/puyasol-rev-2-bindings-before` and
 `/tmp/puyasol-rev-2-bindings-after`. This includes app-state definitions/keys;
 no persisted-format switch was made. Full-suite F9 failures above remain pending.
+
+### Checkpoint 6 — full-width storage facts without whole-value materialization
+
+All 19 native CTests and 12 focused semantic tests passed (9.14 seconds).
+Report: `/tmp/puyasol-rev-2-huge-facts-verified.xml`. This includes all five
+additional full-suite failures identified above, plus both ABI/storage profiles
+for huge fixed lengths and assembly `.slot`, and full-width sparse array access.
+Reads leave box names unchanged; sparse entries remain isolated and invalid
+indices revert. Solc 0.8.34/Cancun confirmed the new layout and sparse-access
+expectations. The ERC-7201 builtins instead rely on the pinned development solc
+and their existing corpus expectations; 0.8.34 does not expose that builtin.
+
+Declaration bindings retain canonical solc facts when no whole-value WType is
+available. Actual value access/initialization still requests the strict checked
+representation. Partial failed struct mapping cannot poison the type cache.
+Sparse-runtime selection now checks the full solc storage span, not just the
+declaration's starting slot. Assembly coordinates no longer map the entire
+referenced array merely to expose its slot.
+
+`FixedFeeRegistrar` previously had only a default-layout compile/deploy smoke
+test; its huge sparse array cannot have a named-cell representation. The test
+now asserts that capacity diagnostic and explicitly uses slot mode for deploy
+and absent-record read assertions. No automatic backend switch or persisted
+format change is introduced, and no xfail or assertion was weakened.
+
+The full suite is rerun against this checkpoint before further compiler edits.
 
 ### Baseline and remaining gates
 

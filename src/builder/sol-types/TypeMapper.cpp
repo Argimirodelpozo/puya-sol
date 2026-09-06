@@ -5,6 +5,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolutil/Common.h>
 
 namespace puyasol::builder
 {
@@ -243,6 +244,12 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	return result;
 }
 
+awst::WType const* TypeMapper::tryMapStorageRepresentation(solidity::frontend::Type const* _solType)
+{
+	try { return map(_solType); }
+	catch (SizeError const&) { return nullptr; }
+}
+
 awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 {
 	if (!_type)
@@ -370,6 +377,7 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 		return proj;
 	}
 	m_inProgressStructs.insert(structDef.id());
+	solidity::ScopeGuard clearProgress([&] { m_inProgressStructs.erase(structDef.id()); });
 
 	std::vector<std::pair<std::string, awst::WType const*>> fields;
 
@@ -395,7 +403,6 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	);
 
 	m_namedTypeCache[cacheKey] = result;
-	m_inProgressStructs.erase(structDef.id());
 	return result;
 }
 

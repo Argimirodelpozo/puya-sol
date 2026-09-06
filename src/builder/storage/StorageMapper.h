@@ -23,7 +23,7 @@ public:
 	enum class StorageClass { Constant, Immutable, Persistent, Transient };
 	enum class RootInitialization
 	{
-		None, Slot, NamedCell, LazyBox, ExplicitBox, DeferredArrayBox, UnallocatedArrayBox
+		None, Slot, NamedCell, LazyBox, ExplicitBox, DeferredArrayBox, UnallocatedArrayBox, Unmaterialized
 	};
 
 	struct PhysicalBinding
@@ -42,6 +42,12 @@ public:
 		bool hasPersistentCell() const
 		{
 			return storageClass == StorageClass::Persistent || storageClass == StorageClass::Immutable;
+		}
+		awst::WType const* valueType(TypeMapper& _mapper) const
+		{
+			// An actual value access must diagnose an unavailable representation,
+			// never reinterpret nullptr as an empty/default byte value.
+			return wtype ? wtype : _mapper.map(declaration->type());
 		}
 	};
 
@@ -68,13 +74,13 @@ public:
 	std::shared_ptr<awst::Expression> createStateRead(
 		PhysicalBinding const& _binding, awst::SourceLocation const& _loc)
 	{
-		return createStateRead(_binding.name, _binding.wtype, _binding.kind, _loc);
+		return createStateRead(_binding.name, _binding.valueType(m_typeMapper), _binding.kind, _loc);
 	}
 	std::shared_ptr<awst::Expression> createStateWrite(
 		PhysicalBinding const& _binding, std::shared_ptr<awst::Expression> _value,
 		awst::SourceLocation const& _loc)
 	{
-		return createStateWrite(_binding.name, std::move(_value), _binding.wtype, _binding.kind, _loc);
+		return createStateWrite(_binding.name, std::move(_value), _binding.valueType(m_typeMapper), _binding.kind, _loc);
 	}
 
 	/// Explicit value view for promoted getter/slot types and synthetic cells.

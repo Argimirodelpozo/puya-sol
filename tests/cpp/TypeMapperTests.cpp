@@ -2,6 +2,7 @@
 #include "builder/BuildArtifacts.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/SourceLocConvert.h"
+#include "builder/sol-types/EncodedSize.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -100,6 +101,20 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 	require(mapper.map(TypeProvider::arraySlice(*calldataArray)) == awst::WType::bytesType(),
 		"calldata slice mapping attempted value-buffer relocation");
 
+	// Layout-only mapping must not poison the recursive cache when a nested
+	// value is too large. Actual materialization must still fail on every try.
+	auto const* hugeStruct = TypeProvider::structType(
+		declaration<StructDefinition>(a, "Huge"), DataLocation::Storage);
+	for (int attempt = 0; attempt < 2; ++attempt)
+	{
+		require(!mapper.tryMapStorageRepresentation(hugeStruct),
+			"oversized storage value acquired a guessed representation");
+		bool rejected = false;
+		try { mapper.map(hugeStruct); }
+		catch (builder::SizeError const&) { rejected = true; }
+		require(rejected, "layout-only mapping suppressed a later materialization error");
+	}
+
 	auto const* recursive = TypeProvider::structType(
 		declaration<StructDefinition>(a, "Node"), DataLocation::Storage);
 	for (int reset = 0; reset < 2; ++reset)
@@ -131,6 +146,7 @@ enum Choice { One, Two }
 type Value is uint16;
 contract Target {}
 struct Node { uint16 value; Node[] children; }
+struct Huge { uint256[134217728] values; }
 )"},
 			{"b.sol", R"(pragma solidity ^0.8.20;
 struct Item { uint16 first; bool second; }
