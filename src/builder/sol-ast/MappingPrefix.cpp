@@ -2,8 +2,6 @@
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-eb/ContractContext.h"
-#include "builder/sol-types/TypeCoercion.h"
-#include "builder/storage/StorageKey.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/StoragePlace.hpp"
 #include "awst/NameGen.h"
@@ -32,37 +30,15 @@ StorageHolder withValue(eb::ContractContext& ctx, std::shared_ptr<awst::Expressi
 {
 	key = pin(ctx, std::move(key), loc);
 	if (dynamic_cast<MappingType const*>(type)) return {key, key};
-	auto const* wt = ctx.typeMapper.map(type);
-	auto box = awst::makeBoxValueExpression(key, wt, loc);
-	return {key, StorageMapper::makeStateGetWithDefault(std::move(box), wt, loc)};
-}
-
-StorageHolder member(StorageHolder base, StructType const& type,
-	std::string const& name, awst::WType const* valueType, awst::SourceLocation const& loc)
-{
-	if (!base.key) return {};
-	if (transparentMappingWrapper(&type))
-		return base; // same represented fields and addressable data path
-	return {StorageKey::member(std::move(base.key), type, name, loc),
-		awst::makeFieldExpression(std::move(base.value), name, valueType, loc)};
+	return {key, StoragePathWalker::boxedValue(ctx.typeMapper, key, type, loc)};
 }
 
 StorageHolder element(eb::ContractContext& ctx, StorageHolder base, ArrayType const& type,
 	std::shared_ptr<awst::Expression> index, awst::SourceLocation const& loc)
 {
 	if (!base.key || !base.value) return {};
-	index = pin(ctx, TypeCoercion::checkedIndexToUint64(ctx.preEffects(), std::move(index), loc), loc);
-	std::shared_ptr<awst::Expression> bound;
-	if (type.isDynamicallySized())
-		bound = awst::makeArrayLength(base.value, awst::WType::uint64Type(), loc);
-	else
-		bound = awst::makeIntegerConstant(checkedSize<uint64_t>(type.length(), "holder array bound"), loc);
-	ctx.preEffects().push_back(awst::makeExpressionStatement(awst::makeAssert(
-		awst::makeNumericCompare(index, awst::NumericComparison::Lt, std::move(bound), loc),
-		loc, "array index out of bounds"), loc));
-	return {StorageKey::arrayElement(std::move(base.key), index, loc),
-		awst::makeIndexExpression(std::move(base.value), std::move(index),
-			ctx.typeMapper.mapSolTypeToARC4(type.baseType()), loc)};
+	return StoragePathWalker(ctx.typeMapper, StoragePathPolicy::holder(), &type, loc)
+		.step(std::move(base), std::move(index), ctx.preEffects());
 }
 }
 
@@ -103,7 +79,7 @@ StorageHolder resolveBuiltStorageHolder(eb::ContractContext& ctx,
 	{
 		auto const* type = dynamic_cast<StructType const*>(ctx.typeMapper.solcAggregateFor(field->base->wtype));
 		if (!type) throw SizeError("storage holder alias lacks solc struct facts");
-		return member(resolveBuiltStorageHolder(ctx, field->base, loc), *type, field->name, value->wtype, loc);
+		return StoragePathWalker::member(resolveBuiltStorageHolder(ctx, field->base, loc), *type, field->name, value->wtype, loc);
 	}
 	if (auto index = std::dynamic_pointer_cast<awst::IndexExpression>(value))
 	{
@@ -144,7 +120,7 @@ StorageHolder resolveStorageHolder(eb::ContractContext& ctx, Context& scope,
 	if (auto const* field = dynamic_cast<MemberAccess const*>(&expression))
 	{
 		if (auto const* type = dynamic_cast<StructType const*>(field->expression().annotation().type))
-			return member(resolveStorageHolder(ctx, scope, field->expression(), loc), *type,
+			return StoragePathWalker::member(resolveStorageHolder(ctx, scope, field->expression(), loc), *type,
 				field->memberName(), ctx.typeMapper.mapSolTypeToARC4(expression.annotation().type), loc);
 		// Qualified inherited declaration, e.g. Base.mappingVar.
 		if (auto const* var = dynamic_cast<VariableDeclaration const*>(field->annotation().referencedDeclaration);

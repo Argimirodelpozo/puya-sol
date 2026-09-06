@@ -1,5 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
-#include "builder/storage/StorageKey.h"
+#include "builder/storage/StoragePathWalker.h"
 #include "awst/NameGen.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
@@ -477,34 +477,26 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 	size_t indexArgCount = 0;
 	bool inIndexMode = false;
 	solidity::frontend::Type const* storedValueType = walkType;
-	// Per-key encoding: array-of-mapping levels use uint64 (itob 8B);
-	// mapping levels use declared keyType (biguint → 32B pad).
-	std::vector<awst::WType const*> keyArgEncodingType;
-		std::vector<uint64_t> keyArgStaticLen; // 0 = dynamic, >0 = static N
-		std::vector<bool> keyArgIsArrayLevel;
-		auto indexedPathReachesMapping = [](
-			solidity::frontend::Type const* type, size_t remainingArgs) {
-			for (size_t i = 0; i < remainingArgs && type; ++i)
-			{
-				if (dynamic_cast<solidity::frontend::MappingType const*>(type))
-					return true;
-				auto const* array = dynamic_cast<
-					solidity::frontend::ArrayType const*>(type);
-				if (!array || array->isByteArrayOrString())
-					return false;
-				type = array->baseType();
-			}
-			return false;
-		};
+	auto indexedPathReachesMapping = [](
+		solidity::frontend::Type const* type, size_t remainingArgs) {
+		for (size_t i = 0; i < remainingArgs && type; ++i)
+		{
+			if (dynamic_cast<solidity::frontend::MappingType const*>(type))
+				return true;
+			auto const* array = dynamic_cast<
+				solidity::frontend::ArrayType const*>(type);
+			if (!array || array->isByteArrayOrString())
+				return false;
+			type = array->baseType();
+		}
+		return false;
+	};
 
-		while (keyArgCount + indexArgCount < getter.args.size())
+	while (keyArgCount + indexArgCount < getter.args.size())
 	{
 		if (auto const* mt = dynamic_cast<solidity::frontend::MappingType const*>(walkType))
 		{
 			if (inIndexMode) break;
-			keyArgEncodingType.push_back(tm.map(mt->keyType()));
-			keyArgIsArrayLevel.push_back(false);
-			keyArgStaticLen.push_back(0);
 			keyArgCount++;
 			walkType = mt->valueType();
 			continue;
@@ -512,16 +504,10 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 		if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(walkType))
 		{
 			if (at->isByteArrayOrString()) break;
-				auto const consumed = keyArgCount + indexArgCount + 1;
-				auto const remaining = getter.args.size() - consumed;
-				if (!inIndexMode && indexedPathReachesMapping(
-					at->baseType(), remaining))
+			auto const consumed = keyArgCount + indexArgCount + 1;
+			auto const remaining = getter.args.size() - consumed;
+			if (!inIndexMode && indexedPathReachesMapping(at->baseType(), remaining))
 			{
-				keyArgEncodingType.push_back(awst::WType::uint64Type());
-				keyArgIsArrayLevel.push_back(true);
-				// Static: arraySize() = N; dynamic: 0 = look up length at bounds-check.
-				keyArgStaticLen.push_back(
-					at->isDynamicallySized() ? 0 : static_cast<uint64_t>(at->length()));
 				keyArgCount++;
 				walkType = at->baseType();
 				continue;
@@ -543,6 +529,9 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 	awst::WType const* storedWType = tm.map(storedValueType);
 	solidity::frontend::Type const* valueType = walkType; // deepest type, for struct decomposition
 
+	auto argRef = [&](size_t i) {
+		return awst::makeVarExpression(getter.args[i].name, getter.args[i].wtype, loc);
+	};
 	std::shared_ptr<awst::Expression> storageRead;
 	if (keyArgCount == 0)
 	{
@@ -552,155 +541,33 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 	}
 	else
 	{
-		// Per-layer hash (mirrors handleMappingAccess writer).
-		std::shared_ptr<awst::Expression> currentPrefix = awst::makeUtf8BytesConstant(
-			binding.key, loc, awst::WType::boxKeyType());
-		solidity::frontend::Type const* keyWalkType = var->type();
-		std::shared_ptr<awst::Expression> currentArrayValue;
+		// Per-layer hash (mirrors handleMappingAccess). Array-of-mapping levels
+		// are bounds-checked (Panic(0x32)); mapping levels return defaults.
+		StorageHolder holder{
+			awst::makeUtf8BytesConstant(binding.key, loc, awst::WType::boxKeyType()), nullptr};
 		if (auto const* rootArray = dynamic_cast<
-				solidity::frontend::ArrayType const*>(keyWalkType))
-			currentArrayValue = sm.createStateRead(
+				solidity::frontend::ArrayType const*>(var->type()))
+			holder.value = sm.createStateRead(
 				binding.key, tm.map(rootArray), binding.kind, loc);
-
+		StoragePathWalker keys(tm, StoragePathPolicy::getterKey(), var->type(), loc);
 		for (size_t i = 0; i < keyArgCount; ++i)
-		{
-		auto argRef = awst::makeVarExpression(getter.args[i].name, getter.args[i].wtype, loc);
-		auto const* encType = i < keyArgEncodingType.size() ? keyArgEncodingType[i] : argRef->wtype;
-		// Bounds-check array-of-non-flat levels (Panic(0x32) on OOB).
-		// Skip mapping levels — they return defaults, not revert.
-		bool isArrayLevel = i < keyArgIsArrayLevel.size() && keyArgIsArrayLevel[i];
-		std::shared_ptr<awst::Expression> encoded = isArrayLevel
-			? TypeCoercion::checkedIndexToUint64(body.body, std::move(argRef), loc)
-			: TypeCoercion::implicitNumericCast(std::move(argRef), encType, loc);
-		if (isArrayLevel)
-		{
-			uint64_t staticN = i < keyArgStaticLen.size() ? keyArgStaticLen[i] : 0;
+			holder = keys.step(std::move(holder), argRef(i), body.body);
 
-			std::shared_ptr<awst::Expression> lengthExpr;
-			if (staticN > 0)
-			{
-				// Static: compile-time length N.
-				lengthExpr = awst::makeIntegerConstant(std::to_string(staticN), loc, awst::WType::uint64Type());
-			}
-				else if (currentArrayValue)
-				{
-					// Consecutive array ranks live inside one serialized ARC4
-					// value. Read the length from that value, not from a
-					// synthetic `prefix ++ index` box.
-					lengthExpr = awst::makeArrayLength(
-						currentArrayValue, awst::WType::uint64Type(), loc);
-				}
-				else
-				{
-					// Dynamic: length in first 2 bytes of box (ARC4 header).
-				// Materialise prefix so bounds-check + next-layer hash don't re-emit.
-				std::string tempName = "__bounds_prefix_" + std::to_string(awst::NameGen::next("PublicGetterBuilder.s_boundsCounter"));
-				auto tempVar = awst::makeVarExpression(tempName, awst::WType::boxKeyType(), loc);
-				auto saveStmt = awst::makeAssignmentStatement(tempVar, std::move(currentPrefix), loc);
-				body.body.push_back(std::move(saveStmt));
-				currentPrefix = tempVar;
-
-				auto boxExpr = awst::makeBoxValueExpression(currentPrefix, awst::WType::bytesType(), loc);
-				std::vector<unsigned char> twoZeros{0, 0};
-				auto defaultBytes = awst::makeBytesConstant(std::move(twoZeros), loc);
-				auto stateGet = awst::makeStateGet(std::move(boxExpr), std::move(defaultBytes), awst::WType::bytesType(), loc);
-				lengthExpr = awst::makeExtractUInt16(
-					std::move(stateGet), awst::makeZero(loc), loc);
-			}
-
-			auto cmp = awst::makeNumericCompare(encoded, awst::NumericComparison::Lt, std::move(lengthExpr), loc);
-			auto assertExpr = awst::makeAssert(std::move(cmp), loc, "array out-of-bounds");
-			body.body.push_back(awst::makeExpressionStatement(std::move(assertExpr), loc));
-		}
-
-			auto const* arrayStep = dynamic_cast<
-				solidity::frontend::ArrayType const*>(keyWalkType);
-			auto const* mappingStep = dynamic_cast<
-				solidity::frontend::MappingType const*>(keyWalkType);
-			solidity::frontend::Type const* nextType = arrayStep
-				? arrayStep->baseType()
-				: mappingStep ? mappingStep->valueType() : nullptr;
-			if (arrayStep && currentArrayValue
-				&& dynamic_cast<solidity::frontend::ArrayType const*>(nextType))
-			{
-				currentArrayValue = awst::makeIndexExpression(
-					currentArrayValue, encoded,
-					tm.mapSolTypeToARC4(nextType), loc);
-			}
-			else
-				currentArrayValue = nullptr;
-
-			currentPrefix = arrayStep
-				? StorageKey::arrayElement(currentPrefix, std::move(encoded), loc)
-				: StorageKey::mappingEntry(currentPrefix, std::move(encoded), encType, loc);
-
-			if (mappingStep)
-				if (auto const* nextArray = dynamic_cast<
-						solidity::frontend::ArrayType const*>(nextType))
-				{
-					auto const* nextW = tm.map(nextArray);
-					auto box = awst::makeBoxValueExpression(
-						currentPrefix, nextW, loc);
-					currentArrayValue = StorageMapper::makeStateGetWithDefault(
-						std::move(box), nextW, loc);
-				}
-			keyWalkType = nextType;
-		}
-
-	// makeStateGetWithDefault: avoids StateGet for large/dynamic types (>4KB stack cap).
-	auto boxExpr = awst::makeBoxValueExpression(std::move(currentPrefix), storedWType, loc);
-	storageRead = StorageMapper::makeStateGetWithDefault(std::move(boxExpr), storedWType, loc);
-	} // end keyArgCount > 0 branch
+		// makeStateGetWithDefault: avoids StateGet for large/dynamic types (>4KB stack cap).
+		auto boxExpr = awst::makeBoxValueExpression(std::move(holder.key), storedWType, loc);
+		storageRead = StorageMapper::makeStateGetWithDefault(std::move(boxExpr), storedWType, loc);
+	}
 
 	// Index into any array dims inside the box value (e.g. mapping(K=>T[N]) → index T[N]).
-	std::shared_ptr<awst::Expression> indexed = std::move(storageRead);
-	{
-		solidity::frontend::Type const* walkType = storedValueType;
-		for (size_t i = 0; i < indexArgCount; ++i)
-		{
-			auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(walkType);
-			if (!at)
-				break;
-			auto* elemARC4 = tm.mapSolTypeToARC4(at->baseType());
-
-			auto idxRef = awst::makeVarExpression(
-				getter.args[keyArgCount + i].name,
-				getter.args[keyArgCount + i].wtype, loc);
-			auto idx = TypeCoercion::checkedIndexToUint64(body.body, std::move(idxRef), loc);
-
-			// Solidity panics 0x32 on an out-of-range index. Without this the
-			// getter decodes whatever bytes follow the array and returns them
-			// (Privacy Pools' associationSets(uint256) answered where the EVM
-			// reverted). Only the KEY-arg levels above were checked; an index
-			// arg reads inside an already-loaded value and was not.
-			std::shared_ptr<awst::Expression> idxLength;
-			if (at->isDynamicallySized())
-			{
-				std::string idxTmp = "__idx_bounds_" + std::to_string(
-					awst::NameGen::next("PublicGetterBuilder.idxBounds"));
-				auto idxTmpVar = awst::makeVarExpression(idxTmp, indexed->wtype, loc);
-				body.body.push_back(
-					awst::makeAssignmentStatement(idxTmpVar, std::move(indexed), loc));
-				indexed = awst::makeVarExpression(idxTmp, idxTmpVar->wtype, loc);
-				idxLength = awst::makeArrayLength(
-					indexed, awst::WType::uint64Type(), loc);
-			}
-			else
-				idxLength = awst::makeIntegerConstant(
-					at->length().str(), loc, awst::WType::uint64Type());
-			body.body.push_back(awst::makeExpressionStatement(
-				awst::makeAssert(
-					awst::makeNumericCompare(idx,
-						awst::NumericComparison::Lt, std::move(idxLength), loc),
-					loc, "array out-of-bounds"),
-				loc));
-
-			auto indexExpr = awst::makeIndexExpression(std::move(indexed), std::move(idx), elemARC4, loc);
-			indexed = std::move(indexExpr);
-
-			walkType = at->baseType();
-		}
-	}
+	// Solidity panics 0x32 on an out-of-range index; every rank is checked
+	// against the loaded value's length (Privacy Pools' associationSets(uint256)
+	// answered where the EVM reverted).
+	StorageHolder inlineHolder{nullptr, std::move(storageRead)};
+	StoragePathWalker ranks(tm, StoragePathPolicy::getterInline(), storedValueType, loc);
+	for (size_t i = 0; i < indexArgCount
+		&& dynamic_cast<solidity::frontend::ArrayType const*>(ranks.current()); ++i)
+		inlineHolder = ranks.step(std::move(inlineHolder), argRef(keyArgCount + i), body.body);
+	std::shared_ptr<awst::Expression> indexed = std::move(inlineHolder.value);
 
 	// Struct: project primitive fields flat (skip mappings/non-bytes arrays).
 	if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(valueType))

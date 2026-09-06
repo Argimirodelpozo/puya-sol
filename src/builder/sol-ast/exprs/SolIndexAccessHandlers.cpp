@@ -3,7 +3,7 @@
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/sol-ast/MappingPrefix.h"
-#include "builder/storage/StorageKey.h"
+#include "builder/storage/StoragePathWalker.h"
 #include "awst/NameGen.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-ast/members/SolLengthAccess.h"
@@ -15,7 +15,6 @@
 #include "awst/WType.h"
 
 #include <functional>
-#include <limits>
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -217,228 +216,50 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 
 	std::reverse(indexExprs.begin(), indexExprs.end());
 
-	auto declaredKeyWTypes = resolveKeyWTypes(rootMappingType, indexExprs.size());
-
-	// ARRAY levels in the chain (mapping(K=>V)[] a → a[i][k]) fold the element
-	// index into the derived box key. Collect the type at every level so fixed
-	// bounds use solc's declared length and dynamic bounds read the length from
-	// that level's current runtime prefix. This works identically for state
-	// roots, mapping values, aliases, and box-keyed storage-ref parameters.
-	std::vector<ArrayType const*> arrayLevels(indexExprs.size(), nullptr);
-	{
-		Type const* w = rootMappingType;
-		for (size_t i = 0; i < indexExprs.size() && w; ++i)
-		{
-			if (auto const* mt = dynamic_cast<MappingType const*>(w))
-				w = mt->valueType();
-			else if (auto const* at = dynamic_cast<ArrayType const*>(w))
-			{
-				arrayLevels[i] = at;
-				w = at->baseType();
-			}
-			else
-				break;
-		}
-	}
 	auto e = std::make_shared<awst::BoxValueExpression>();
 	e->sourceLocation = m_loc;
 	e->wtype = resolveValueWType(baseType);
 
-	auto prefix = std::move(holder.key);
-
 	if (!indexExprs.empty())
 	{
-		// Every mapping/array step uses the shared versioned, tagged encoder.
-		std::shared_ptr<awst::Expression> currentPrefix = std::move(prefix);
 		// A function-returned/otherwise computed storage prefix participates in
 		// both bounds checks and key derivation. Evaluate it once before walking
 		// the recursive container type.
-		if (currentPrefix
-			&& !dynamic_cast<awst::VarExpression const*>(currentPrefix.get())
-			&& !dynamic_cast<awst::BytesConstant const*>(currentPrefix.get()))
+		if (!dynamic_cast<awst::VarExpression const*>(holder.key.get())
+			&& !dynamic_cast<awst::BytesConstant const*>(holder.key.get()))
 		{
 			std::string name = "__sol_prefix_" + std::to_string(
 				awst::NameGen::next("SolIndexAccessHandlers.prefixTempCounter"));
-			auto const* prefixWType = currentPrefix->wtype;
+			auto const* prefixWType = holder.key->wtype;
 			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(name, prefixWType, m_loc),
-				std::move(currentPrefix), m_loc));
-			currentPrefix = awst::makeVarExpression(
-				name, prefixWType, m_loc);
+				std::move(holder.key), m_loc));
+			holder.key = awst::makeVarExpression(name, prefixWType, m_loc);
 		}
 
-		// Keep the actual serialized array value alongside the logical key.
-		// Nested arrays are encoded inside their parent box; a derived holder
-		// is an identity for descendant mapping boxes, not a standalone box that
-		// holds the nested array length. Walking the value tree makes bounds
-		// checks rank-independent without inventing boxes for inner arrays.
-		Type const* walkContainer = rootMappingType;
-		std::shared_ptr<awst::Expression> currentArrayValue;
-		auto boxedArrayValue = [&](std::shared_ptr<awst::Expression> key,
-			ArrayType const* at) -> std::shared_ptr<awst::Expression> {
-			auto const* wt = m_ctx.typeMapper.map(at);
-			auto box = awst::makeBoxValueExpression(std::move(key), wt, m_loc);
-			return builder::StorageMapper::makeStateGetWithDefault(
-				std::move(box), wt, m_loc);
-		};
-		if (dynamic_cast<ArrayType const*>(walkContainer))
-			currentArrayValue = std::move(holder.value);
-
-		for (size_t ki = 0; ki < indexExprs.size(); ++ki)
+		// ARRAY levels in the chain (mapping(K=>V)[] a → a[i][k]) fold the element
+		// index into the derived box key. The walker keeps the serialized array
+		// value alongside the logical key so dynamic bounds read that level's
+		// current value: nested arrays are encoded inside their parent box, and
+		// a derived holder is an identity for descendant mapping boxes, not a
+		// standalone box holding the nested length. Identical for state roots,
+		// mapping values, aliases, and box-keyed storage-ref parameters.
+		if (!dynamic_cast<ArrayType const*>(rootMappingType))
+			holder.value = nullptr;
+		StoragePathWalker walker(
+			m_ctx.typeMapper, StoragePathPolicy::indexAccess(), rootMappingType, m_loc);
+		for (auto const* indexExpr: indexExprs)
 		{
-			auto translated = buildExpr(*indexExprs[ki]);
-			awst::WType const* keyWType = (ki < declaredKeyWTypes.size() && declaredKeyWTypes[ki])
-				? declaredKeyWTypes[ki] : awst::WType::uint64Type();
-
-			// Materialise a SIDE-EFFECTING key to a temp BEFORE any coercion. The
-			// derived box key is referenced twice in a compound `m[k()] += x` /
-			// `delete m[k()]` (read current + write), so a side-effecting key (`k()`
-			// with cnt++) must evaluate ONCE. The guard is a bare AssignmentExpression,
-			// but a SIGNED sub-word key's implicitNumericCast (sign-extend) would WRAP
-			// that AssignmentExpression and hide it from the check — so the coercion
-			// must run AFTER the materialisation, not before. Unsigned keys matched the
-			// key type (no cast) and were already materialised; signed keys ran k()
-			// twice. Found by the corpus-mutation fuzzer (mapping_key_side_effect_once
-			// uint256->int48).
-			// A SIDE-EFFECTING key (`m[k()]` where k() bumps a counter) is embedded in
-			// the derived box key, which a compound `+= ` / `delete` references twice
-			// (read current + write). An AssignmentExpression key was materialised; a
-			// call-valued key (SubroutineCallExpression) was NOT — the unsigned case
-			// only survived because puya CSE-merged the two IDENTICAL derivations, but a
-			// SIGNED key's sign-extension makes them differ, defeating CSE, so k() ran
-			// twice. Materialise call-valued keys too, once, before coercion.
-			if (dynamic_cast<awst::AssignmentExpression const*>(translated.get())
-				|| dynamic_cast<awst::SubroutineCallExpression const*>(translated.get()))
-			{
-				std::string tempName = "__sol_idx_" + std::to_string(awst::NameGen::next("SolIndexAccessHandlers.idxTempCounter"));
-				auto tempVar = awst::makeVarExpression(tempName, translated->wtype, m_loc);
-				auto saveStmt = awst::makeAssignmentStatement(
-					tempVar, std::move(translated), m_loc);
-				m_ctx.preEffects().push_back(std::move(saveStmt));
-				translated = tempVar;
-			}
-
-			// ARRAY level: assert idx < length BEFORE the key-width coercion so a
-			// wide index is compared un-truncated. The idx is referenced by both
-			// the assert and the key layer — materialise to a temp unless it is
-			// already re-creatable (var / integer constant).
-			if (auto const* at = arrayLevels[ki])
-			{
-				std::shared_ptr<awst::Expression> bound;
-				if (!at->isDynamicallySized())
-				{
-					if (at->length() <= std::numeric_limits<uint64_t>::max())
-						bound = awst::makeIntegerConstant(at->length().str(), m_loc);
-				}
-				else if (currentArrayValue)
-					bound = awst::makeArrayLength(
-						currentArrayValue, awst::WType::uint64Type(), m_loc);
-				else
-					throw SizeError("dynamic mapping-holder array has no addressable length");
-				if (bound)
-				{
-					if (!dynamic_cast<awst::VarExpression const*>(translated.get())
-						&& !dynamic_cast<awst::IntegerConstant const*>(translated.get()))
-					{
-						std::string tempName = "__sol_idx_" + std::to_string(
-							awst::NameGen::next("SolIndexAccessHandlers.idxTempCounter"));
-						auto tempVar = awst::makeVarExpression(
-							tempName, translated->wtype, m_loc);
-						m_ctx.preEffects().push_back(
-							awst::makeAssignmentStatement(
-								tempVar, std::move(translated), m_loc));
-						translated = tempVar;
-					}
-					std::shared_ptr<awst::Expression> idxRef;
-					if (auto const* ve =
-							dynamic_cast<awst::VarExpression const*>(translated.get()))
-						idxRef = awst::makeVarExpression(ve->name, ve->wtype, m_loc);
-					else if (auto const* ic =
-							dynamic_cast<awst::IntegerConstant const*>(translated.get()))
-						idxRef = awst::makeIntegerConstant(ic->value, m_loc, ic->wtype);
-					if (idxRef)
-					{
-						if (bound->wtype != idxRef->wtype)
-							bound = builder::TypeCoercion::implicitNumericCast(
-								std::move(bound), idxRef->wtype, m_loc);
-						auto cmp = awst::makeNumericCompare(std::move(idxRef),
-							awst::NumericComparison::Lt, std::move(bound), m_loc);
-						m_ctx.preEffects().push_back(
-							awst::makeExpressionStatement(
-								awst::makeAssert(std::move(cmp), m_loc,
-									"array index out of bounds"),
-								m_loc));
-					}
-				}
-			}
-
-			if (keyWType != translated->wtype)
-				translated = builder::TypeCoercion::implicitNumericCast(
-					std::move(translated), keyWType, m_loc);
-
-			Type const* nextContainer = nullptr;
-			bool const arrayStep = dynamic_cast<ArrayType const*>(walkContainer);
-			if (auto const* at = dynamic_cast<ArrayType const*>(walkContainer))
-				nextContainer = at->baseType();
-			else if (auto const* mt = dynamic_cast<MappingType const*>(walkContainer))
-				nextContainer = mt->valueType();
-
-			if (arrayStep && currentArrayValue
-				&& dynamic_cast<ArrayType const*>(nextContainer))
-			{
-				auto const* childW = m_ctx.typeMapper.mapSolTypeToARC4(nextContainer);
-				currentArrayValue = awst::makeIndexExpression(
-					currentArrayValue, translated, childW, m_loc);
-			}
-			else
-				currentArrayValue = nullptr;
-
-			currentPrefix = arrayStep
-				? StorageKey::arrayElement(currentPrefix, translated, m_loc)
-				: StorageKey::mappingEntry(currentPrefix, translated, keyWType, m_loc);
-
-			// A mapping value starts a new serialized box. If that value is an
-			// array, resume value-directed traversal at the just-derived key;
-			// consecutive array levels remain inline and use IndexExpression above.
-			if (!arrayStep)
-				if (auto const* nextArray = dynamic_cast<ArrayType const*>(nextContainer))
-					currentArrayValue = boxedArrayValue(currentPrefix, nextArray);
-			walkContainer = nextContainer;
+			auto index = buildExpr(*indexExpr);
+			holder = walker.step(std::move(holder), std::move(index), m_ctx.preEffects());
 		}
-
-		e->key = std::move(currentPrefix);
 	}
-	else
-		e->key = std::move(prefix);
+	e->key = std::move(holder.key);
 
 	if (m_indexAccess.annotation().willBeWrittenTo)
 		return e;
 
 	return builder::StorageMapper::makeStateGetWithDefault(e, e->wtype, m_loc);
-}
-
-std::vector<awst::WType const*> SolIndexAccess::resolveKeyWTypes(
-	solidity::frontend::Type const* _rootType, size_t _numLevels)
-{
-	std::vector<awst::WType const*> result;
-	Type const* walkType = _rootType;
-	for (size_t i = 0; i < _numLevels; ++i)
-	{
-		if (auto const* mt = dynamic_cast<MappingType const*>(walkType))
-		{
-			result.push_back(m_ctx.typeMapper.map(mt->keyType()));
-			walkType = mt->valueType();
-		}
-		else
-		{
-			result.push_back(nullptr);
-			if (auto const* at = dynamic_cast<ArrayType const*>(walkType))
-				walkType = at->baseType();
-			else
-				break;
-		}
-	}
-	return result;
 }
 
 awst::WType const* SolIndexAccess::resolveValueWType(solidity::frontend::Type const* _baseType)
