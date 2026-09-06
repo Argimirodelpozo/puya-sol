@@ -8,233 +8,261 @@ namespace puyasol::awst
 namespace
 {
 
-void visitExpr(Expression const* _expression, ExpressionVisitor const& _visitor);
-void visitStmt(Statement const* _statement, ExpressionVisitor const& _visitor);
+void visitExpr(Expression const* _node, ExpressionVisitor const& _visitor);
+void visitStmt(Statement const* _node, ExpressionVisitor const& _visitor);
 
-void visitExpr(Expression const* _expression, ExpressionVisitor const& _visitor)
+// Per-node child traversal (one overload per PUYASOL_AWST_*_NODES entry).
+// Leaves.
+void visitChildren(IntegerConstant const&, ExpressionVisitor const&) {}
+void visitChildren(BoolConstant const&, ExpressionVisitor const&) {}
+void visitChildren(BytesConstant const&, ExpressionVisitor const&) {}
+void visitChildren(StringConstant const&, ExpressionVisitor const&) {}
+void visitChildren(VoidConstant const&, ExpressionVisitor const&) {}
+void visitChildren(VarExpression const&, ExpressionVisitor const&) {}
+void visitChildren(TemplateVar const&, ExpressionVisitor const&) {}
+void visitChildren(MethodConstant const&, ExpressionVisitor const&) {}
+void visitChildren(AddressConstant const&, ExpressionVisitor const&) {}
+void visitChildren(ARC4Router const&, ExpressionVisitor const&) {}
+
+void visitChildren(UInt64BinaryOperation const& _n, ExpressionVisitor const& _v)
 {
-	if (!_expression)
-		return;
-	_visitor(*_expression);
+	visitExpr(_n.left.get(), _v);
+	visitExpr(_n.right.get(), _v);
+}
+void visitChildren(BigUIntBinaryOperation const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.left.get(), _v);
+	visitExpr(_n.right.get(), _v);
+}
+void visitChildren(BytesBinaryOperation const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.left.get(), _v);
+	visitExpr(_n.right.get(), _v);
+}
+void visitChildren(BooleanBinaryOperation const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.left.get(), _v);
+	visitExpr(_n.right.get(), _v);
+}
+void visitChildren(NumericComparisonExpression const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.lhs.get(), _v);
+	visitExpr(_n.rhs.get(), _v);
+}
+void visitChildren(BytesComparisonExpression const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.lhs.get(), _v);
+	visitExpr(_n.rhs.get(), _v);
+}
 
-	// Leaves.
-	if (dynamic_cast<IntegerConstant const*>(_expression)) return;
-	if (dynamic_cast<BoolConstant const*>(_expression)) return;
-	if (dynamic_cast<BytesConstant const*>(_expression)) return;
-	if (dynamic_cast<StringConstant const*>(_expression)) return;
-	if (dynamic_cast<VoidConstant const*>(_expression)) return;
-	if (dynamic_cast<VarExpression const*>(_expression)) return;
-	if (dynamic_cast<TemplateVar const*>(_expression)) return;
-	if (dynamic_cast<MethodConstant const*>(_expression)) return;
-	if (dynamic_cast<AddressConstant const*>(_expression)) return;
-	if (dynamic_cast<ARC4Router const*>(_expression)) return;
+void visitChildren(BytesUnaryOperation const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.expr.get(), _v);
+}
+void visitChildren(Not const& _n, ExpressionVisitor const& _v) { visitExpr(_n.expr.get(), _v); }
+void visitChildren(ReinterpretCast const& _n, ExpressionVisitor const& _v) { visitExpr(_n.expr.get(), _v); }
+void visitChildren(ConvertArray const& _n, ExpressionVisitor const& _v) { visitExpr(_n.expr.get(), _v); }
+void visitChildren(CheckedMaybe const& _n, ExpressionVisitor const& _v) { visitExpr(_n.expr.get(), _v); }
+void visitChildren(Copy const& _n, ExpressionVisitor const& _v) { visitExpr(_n.value.get(), _v); }
+void visitChildren(SingleEvaluation const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.source.get(), _v);
+}
+void visitChildren(ARC4Encode const& _n, ExpressionVisitor const& _v) { visitExpr(_n.value.get(), _v); }
+void visitChildren(ARC4Decode const& _n, ExpressionVisitor const& _v) { visitExpr(_n.value.get(), _v); }
+void visitChildren(ARC4FromBytes const& _n, ExpressionVisitor const& _v) { visitExpr(_n.value.get(), _v); }
+void visitChildren(Emit const& _n, ExpressionVisitor const& _v) { visitExpr(_n.value.get(), _v); }
+void visitChildren(ArrayLength const& _n, ExpressionVisitor const& _v) { visitExpr(_n.array.get(), _v); }
+void visitChildren(ArrayPop const& _n, ExpressionVisitor const& _v) { visitExpr(_n.base.get(), _v); }
+void visitChildren(TupleItemExpression const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.base.get(), _v);
+}
+void visitChildren(FieldExpression const& _n, ExpressionVisitor const& _v) { visitExpr(_n.base.get(), _v); }
+void visitChildren(AssertExpression const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.condition.get(), _v);
+}
 
-	auto one = [&](auto const* _node, auto const& _child) {
-		if (!_node) return false;
-		visitExpr((_node->*_child).get(), _visitor);
-		return true;
-	};
-	auto two = [&](auto const* _node, auto const& _left, auto const& _right) {
-		if (!_node) return false;
-		visitExpr((_node->*_left).get(), _visitor);
-		visitExpr((_node->*_right).get(), _visitor);
-		return true;
-	};
+void visitChildren(IndexExpression const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.base.get(), _v);
+	visitExpr(_n.index.get(), _v);
+}
+void visitChildren(ArrayConcat const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.left.get(), _v);
+	visitExpr(_n.right.get(), _v);
+}
+void visitChildren(ArrayExtend const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.base.get(), _v);
+	visitExpr(_n.other.get(), _v);
+}
+void visitChildren(AssignmentExpression const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.target.get(), _v);
+	visitExpr(_n.value.get(), _v);
+}
 
-	if (two(dynamic_cast<UInt64BinaryOperation const*>(_expression),
-		&UInt64BinaryOperation::left, &UInt64BinaryOperation::right)) return;
-	if (two(dynamic_cast<BigUIntBinaryOperation const*>(_expression),
-		&BigUIntBinaryOperation::left, &BigUIntBinaryOperation::right)) return;
-	if (two(dynamic_cast<BytesBinaryOperation const*>(_expression),
-		&BytesBinaryOperation::left, &BytesBinaryOperation::right)) return;
-	if (two(dynamic_cast<BooleanBinaryOperation const*>(_expression),
-		&BooleanBinaryOperation::left, &BooleanBinaryOperation::right)) return;
-	if (two(dynamic_cast<NumericComparisonExpression const*>(_expression),
-		&NumericComparisonExpression::lhs, &NumericComparisonExpression::rhs)) return;
-	if (two(dynamic_cast<BytesComparisonExpression const*>(_expression),
-		&BytesComparisonExpression::lhs, &BytesComparisonExpression::rhs)) return;
+void visitChildren(ConditionalExpression const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.condition.get(), _v);
+	visitExpr(_n.trueExpr.get(), _v);
+	visitExpr(_n.falseExpr.get(), _v);
+}
 
-	if (one(dynamic_cast<BytesUnaryOperation const*>(_expression), &BytesUnaryOperation::expr)) return;
-	if (one(dynamic_cast<Not const*>(_expression), &Not::expr)) return;
-	if (one(dynamic_cast<ReinterpretCast const*>(_expression), &ReinterpretCast::expr)) return;
-	if (one(dynamic_cast<ConvertArray const*>(_expression), &ConvertArray::expr)) return;
-	if (one(dynamic_cast<CheckedMaybe const*>(_expression), &CheckedMaybe::expr)) return;
-	if (one(dynamic_cast<Copy const*>(_expression), &Copy::value)) return;
-	if (one(dynamic_cast<SingleEvaluation const*>(_expression), &SingleEvaluation::source)) return;
-	if (one(dynamic_cast<ARC4Encode const*>(_expression), &ARC4Encode::value)) return;
-	if (one(dynamic_cast<ARC4Decode const*>(_expression), &ARC4Decode::value)) return;
-	if (one(dynamic_cast<ARC4FromBytes const*>(_expression), &ARC4FromBytes::value)) return;
-	if (one(dynamic_cast<Emit const*>(_expression), &Emit::value)) return;
-	if (one(dynamic_cast<ArrayLength const*>(_expression), &ArrayLength::array)) return;
-	if (one(dynamic_cast<ArrayPop const*>(_expression), &ArrayPop::base)) return;
-	if (one(dynamic_cast<TupleItemExpression const*>(_expression), &TupleItemExpression::base)) return;
-	if (one(dynamic_cast<FieldExpression const*>(_expression), &FieldExpression::base)) return;
-	if (one(dynamic_cast<AssertExpression const*>(_expression), &AssertExpression::condition)) return;
+void visitChildren(TupleExpression const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& item: _n.items) visitExpr(item.get(), _v);
+}
+void visitChildren(NewArray const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& value: _n.values) visitExpr(value.get(), _v);
+}
+void visitChildren(IntrinsicCall const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& arg: _n.stackArgs) visitExpr(arg.get(), _v);
+}
+void visitChildren(CommaExpression const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& item: _n.expressions) visitExpr(item.get(), _v);
+}
+void visitChildren(SubmitInnerTransaction const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& txn: _n.itxns) visitExpr(txn.get(), _v);
+}
+void visitChildren(SubroutineCallExpression const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& arg: _n.args) visitExpr(arg.value.get(), _v);
+}
+void visitChildren(PuyaLibCall const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& arg: _n.args) visitExpr(arg.value.get(), _v);
+}
 
-	if (two(dynamic_cast<IndexExpression const*>(_expression),
-		&IndexExpression::base, &IndexExpression::index)) return;
-	if (two(dynamic_cast<ArrayConcat const*>(_expression),
-		&ArrayConcat::left, &ArrayConcat::right)) return;
-	if (two(dynamic_cast<ArrayExtend const*>(_expression),
-		&ArrayExtend::base, &ArrayExtend::other)) return;
-	if (two(dynamic_cast<AssignmentExpression const*>(_expression),
-		&AssignmentExpression::target, &AssignmentExpression::value)) return;
+void visitChildren(NewStruct const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& [_, value]: _n.values) visitExpr(value.get(), _v);
+}
+void visitChildren(NamedTupleExpression const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& [_, value]: _n.values) visitExpr(value.get(), _v);
+}
+void visitChildren(CreateInnerTransaction const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& [_, value]: _n.fields) visitExpr(value.get(), _v);
+}
 
-	if (auto const* node = dynamic_cast<ConditionalExpression const*>(_expression))
+void visitChildren(AppStateExpression const& _n, ExpressionVisitor const& _v) { visitExpr(_n.key.get(), _v); }
+void visitChildren(AppAccountStateExpression const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.key.get(), _v);
+	visitExpr(_n.account.get(), _v);
+}
+void visitChildren(BoxValueExpression const& _n, ExpressionVisitor const& _v) { visitExpr(_n.key.get(), _v); }
+void visitChildren(StateGet const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.field.get(), _v);
+	visitExpr(_n.defaultValue.get(), _v);
+}
+void visitChildren(StateGetEx const& _n, ExpressionVisitor const& _v) { visitExpr(_n.field.get(), _v); }
+void visitChildren(StateExists const& _n, ExpressionVisitor const& _v) { visitExpr(_n.field.get(), _v); }
+void visitChildren(StateDelete const& _n, ExpressionVisitor const& _v) { visitExpr(_n.field.get(), _v); }
+void visitChildren(InnerTransactionField const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.itxn.get(), _v);
+	visitExpr(_n.arrayIndex.get(), _v);
+}
+
+void visitChildren(Block const& _n, ExpressionVisitor const& _v)
+{
+	for (auto const& statement: _n.body) visitStmt(statement.get(), _v);
+}
+void visitChildren(ExpressionStatement const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.expr.get(), _v);
+}
+void visitChildren(ReturnStatement const& _n, ExpressionVisitor const& _v) { visitExpr(_n.value.get(), _v); }
+void visitChildren(AssignmentStatement const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.target.get(), _v);
+	visitExpr(_n.value.get(), _v);
+}
+void visitChildren(IfElse const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.condition.get(), _v);
+	visitStmt(_n.ifBranch.get(), _v);
+	visitStmt(_n.elseBranch.get(), _v);
+}
+void visitChildren(WhileLoop const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.condition.get(), _v);
+	visitStmt(_n.loopBody.get(), _v);
+}
+void visitChildren(ForInLoop const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.sequence.get(), _v);
+	visitExpr(_n.items.get(), _v);
+	visitStmt(_n.loopBody.get(), _v);
+}
+void visitChildren(Switch const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.value.get(), _v);
+	for (auto const& [value, block]: _n.cases)
 	{
-		visitExpr(node->condition.get(), _visitor);
-		visitExpr(node->trueExpr.get(), _visitor);
-		visitExpr(node->falseExpr.get(), _visitor);
-		return;
+		visitExpr(value.get(), _v);
+		visitStmt(block.get(), _v);
+	}
+	visitStmt(_n.defaultCase.get(), _v);
+}
+void visitChildren(UInt64AugmentedAssignment const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.target.get(), _v);
+	visitExpr(_n.value.get(), _v);
+}
+void visitChildren(BigUIntAugmentedAssignment const& _n, ExpressionVisitor const& _v)
+{
+	visitExpr(_n.target.get(), _v);
+	visitExpr(_n.value.get(), _v);
+}
+void visitChildren(Goto const&, ExpressionVisitor const&) {}
+void visitChildren(LoopExit const&, ExpressionVisitor const&) {}
+void visitChildren(LoopContinue const&, ExpressionVisitor const&) {}
+
+#define PUYASOL_AWST_VISIT_ARM(Node) \
+	if (auto const* node = dynamic_cast<Node const*>(_node)) \
+	{ \
+		visitChildren(*node, _visitor); \
+		return; \
 	}
 
-	if (auto const* node = dynamic_cast<TupleExpression const*>(_expression))
-	{
-		for (auto const& item: node->items) visitExpr(item.get(), _visitor);
+void visitExpr(Expression const* _node, ExpressionVisitor const& _visitor)
+{
+	if (!_node)
 		return;
-	}
-	if (auto const* node = dynamic_cast<NewArray const*>(_expression))
-	{
-		for (auto const& value: node->values) visitExpr(value.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<IntrinsicCall const*>(_expression))
-	{
-		for (auto const& arg: node->stackArgs) visitExpr(arg.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<CommaExpression const*>(_expression))
-	{
-		for (auto const& item: node->expressions) visitExpr(item.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<SubmitInnerTransaction const*>(_expression))
-	{
-		for (auto const& txn: node->itxns) visitExpr(txn.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<SubroutineCallExpression const*>(_expression))
-	{
-		for (auto const& arg: node->args) visitExpr(arg.value.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<PuyaLibCall const*>(_expression))
-	{
-		for (auto const& arg: node->args) visitExpr(arg.value.get(), _visitor);
-		return;
-	}
+	_visitor(*_node);
 
-	if (auto const* node = dynamic_cast<NewStruct const*>(_expression))
-	{
-		for (auto const& [_, value]: node->values) visitExpr(value.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<NamedTupleExpression const*>(_expression))
-	{
-		for (auto const& [_, value]: node->values) visitExpr(value.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<CreateInnerTransaction const*>(_expression))
-	{
-		for (auto const& [_, value]: node->fields) visitExpr(value.get(), _visitor);
-		return;
-	}
-
-	if (one(dynamic_cast<AppStateExpression const*>(_expression), &AppStateExpression::key)) return;
-	if (two(dynamic_cast<AppAccountStateExpression const*>(_expression),
-		&AppAccountStateExpression::key, &AppAccountStateExpression::account)) return;
-	if (one(dynamic_cast<BoxValueExpression const*>(_expression), &BoxValueExpression::key)) return;
-	if (two(dynamic_cast<BoxPrefixedKeyExpression const*>(_expression),
-		&BoxPrefixedKeyExpression::prefix, &BoxPrefixedKeyExpression::key)) return;
-	if (two(dynamic_cast<StateGet const*>(_expression),
-		&StateGet::field, &StateGet::defaultValue)) return;
-	if (one(dynamic_cast<StateGetEx const*>(_expression), &StateGetEx::field)) return;
-	if (one(dynamic_cast<StateExists const*>(_expression), &StateExists::field)) return;
-	if (one(dynamic_cast<StateDelete const*>(_expression), &StateDelete::field)) return;
-	if (two(dynamic_cast<InnerTransactionField const*>(_expression),
-		&InnerTransactionField::itxn, &InnerTransactionField::arrayIndex)) return;
+	PUYASOL_AWST_EXPRESSION_NODES(PUYASOL_AWST_VISIT_ARM)
 
 	throw std::logic_error(
 		std::string("unhandled AWST expression in const visitor: ")
-		+ typeid(*_expression).name());
+		+ typeid(*_node).name());
 }
 
-void visitStmt(Statement const* _statement, ExpressionVisitor const& _visitor)
+void visitStmt(Statement const* _node, ExpressionVisitor const& _visitor)
 {
-	if (!_statement)
+	if (!_node)
 		return;
-	if (auto const* node = dynamic_cast<Block const*>(_statement))
-	{
-		for (auto const& statement: node->body) visitStmt(statement.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<ExpressionStatement const*>(_statement))
-	{
-		visitExpr(node->expr.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<ReturnStatement const*>(_statement))
-	{
-		visitExpr(node->value.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<AssignmentStatement const*>(_statement))
-	{
-		visitExpr(node->target.get(), _visitor);
-		visitExpr(node->value.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<IfElse const*>(_statement))
-	{
-		visitExpr(node->condition.get(), _visitor);
-		visitStmt(node->ifBranch.get(), _visitor);
-		visitStmt(node->elseBranch.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<WhileLoop const*>(_statement))
-	{
-		visitExpr(node->condition.get(), _visitor);
-		visitStmt(node->loopBody.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<ForInLoop const*>(_statement))
-	{
-		visitExpr(node->sequence.get(), _visitor);
-		visitExpr(node->items.get(), _visitor);
-		visitStmt(node->loopBody.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<Switch const*>(_statement))
-	{
-		visitExpr(node->value.get(), _visitor);
-		for (auto const& [value, block]: node->cases)
-		{
-			visitExpr(value.get(), _visitor);
-			visitStmt(block.get(), _visitor);
-		}
-		visitStmt(node->defaultCase.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<UInt64AugmentedAssignment const*>(_statement))
-	{
-		visitExpr(node->target.get(), _visitor);
-		visitExpr(node->value.get(), _visitor);
-		return;
-	}
-	if (auto const* node = dynamic_cast<BigUIntAugmentedAssignment const*>(_statement))
-	{
-		visitExpr(node->target.get(), _visitor);
-		visitExpr(node->value.get(), _visitor);
-		return;
-	}
-	if (dynamic_cast<Goto const*>(_statement)) return;
-	if (dynamic_cast<LoopExit const*>(_statement)) return;
-	if (dynamic_cast<LoopContinue const*>(_statement)) return;
+
+	PUYASOL_AWST_STATEMENT_NODES(PUYASOL_AWST_VISIT_ARM)
 
 	throw std::logic_error(
 		std::string("unhandled AWST statement in const visitor: ")
-		+ typeid(*_statement).name());
+		+ typeid(*_node).name());
 }
+
+#undef PUYASOL_AWST_VISIT_ARM
 
 } // namespace
 

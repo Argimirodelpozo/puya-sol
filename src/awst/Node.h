@@ -4,10 +4,12 @@
 #include "awst/WType.h"
 #include "Logger.h"
 
+#include <initializer_list>
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
@@ -191,6 +193,25 @@ struct Expression
 	WType const* wtype = WType::voidType();
 };
 
+// Allocate a node at `loc`; the second overload also sets `wtype`. Every
+// factory below starts here, so location and type are assigned first (in this
+// order) before the node-specific fields.
+template<typename T>
+std::shared_ptr<T> makeNode(SourceLocation loc)
+{
+	auto node = std::make_shared<T>();
+	node->sourceLocation = std::move(loc);
+	return node;
+}
+
+template<typename T>
+std::shared_ptr<T> makeNode(SourceLocation loc, WType const* wtype)
+{
+	auto node = makeNode<T>(std::move(loc));
+	node->wtype = wtype;
+	return node;
+}
+
 struct IntegerConstant: Expression
 {
 	std::string nodeType() const override { return "IntegerConstant"; }
@@ -203,9 +224,7 @@ inline std::shared_ptr<IntegerConstant> makeIntegerConstant(
 	SourceLocation loc,
 	WType const* wtype = WType::uint64Type())
 {
-	auto node = std::make_shared<IntegerConstant>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<IntegerConstant>(std::move(loc), wtype);
 	node->value = std::move(value);
 	return node;
 }
@@ -248,9 +267,7 @@ struct BoolConstant: Expression
 inline std::shared_ptr<BoolConstant> makeBoolConstant(
 	bool value, SourceLocation loc, WType const* wtype = WType::boolType())
 {
-	auto node = std::make_shared<BoolConstant>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<BoolConstant>(std::move(loc), wtype);
 	node->value = value;
 	return node;
 }
@@ -279,9 +296,7 @@ inline std::shared_ptr<BytesConstant> makeBytesConstant(
 	BytesEncoding encoding = BytesEncoding::Base16,
 	WType const* wtype = WType::bytesType())
 {
-	auto node = std::make_shared<BytesConstant>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<BytesConstant>(std::move(loc), wtype);
 	node->encoding = encoding;
 	node->value = std::move(value);
 	return node;
@@ -309,9 +324,7 @@ struct StringConstant: Expression
 inline std::shared_ptr<StringConstant> makeStringConstant(
 	std::string value, SourceLocation loc)
 {
-	auto node = std::make_shared<StringConstant>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::stringType();
+	auto node = makeNode<StringConstant>(std::move(loc), WType::stringType());
 	node->value = std::move(value);
 	return node;
 }
@@ -324,10 +337,7 @@ struct VoidConstant: Expression
 // void value (unit type). Always typed voidType().
 inline std::shared_ptr<VoidConstant> makeVoidConstant(SourceLocation loc)
 {
-	auto node = std::make_shared<VoidConstant>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::voidType();
-	return node;
+	return makeNode<VoidConstant>(std::move(loc), WType::voidType());
 }
 
 struct VarExpression: Expression
@@ -342,9 +352,7 @@ inline std::shared_ptr<VarExpression> makeVarExpression(
 	WType const* wtype,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<VarExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<VarExpression>(std::move(loc), wtype);
 	node->name = std::move(name);
 	return node;
 }
@@ -364,9 +372,7 @@ inline std::shared_ptr<UInt64BinaryOperation> makeUInt64BinOp(
 	std::shared_ptr<Expression> right,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<UInt64BinaryOperation>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::uint64Type();
+	auto node = makeNode<UInt64BinaryOperation>(std::move(loc), WType::uint64Type());
 	node->left = std::move(left);
 	node->op = op;
 	node->right = std::move(right);
@@ -388,9 +394,7 @@ inline std::shared_ptr<BigUIntBinaryOperation> makeBigUIntBinOp(
 	std::shared_ptr<Expression> right,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<BigUIntBinaryOperation>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::biguintType();
+	auto node = makeNode<BigUIntBinaryOperation>(std::move(loc), WType::biguintType());
 	node->left = std::move(left);
 	node->op = op;
 	node->right = std::move(right);
@@ -411,9 +415,7 @@ inline std::shared_ptr<BytesBinaryOperation> makeBytesBinOp(
 	std::shared_ptr<Expression> right,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<BytesBinaryOperation>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::bytesType();
+	auto node = makeNode<BytesBinaryOperation>(std::move(loc), WType::bytesType());
 	node->left = std::move(left);
 	node->op = op;
 	node->right = std::move(right);
@@ -435,9 +437,7 @@ struct BytesUnaryOperation: Expression
 inline std::shared_ptr<BytesUnaryOperation> makeBitInvert(
 	std::shared_ptr<Expression> expr, WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<BytesUnaryOperation>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<BytesUnaryOperation>(std::move(loc), wtype);
 	node->op = BytesUnaryOperator::BitInvert;
 	node->expr = std::move(expr);
 	return node;
@@ -458,9 +458,7 @@ inline std::shared_ptr<NumericComparisonExpression> makeNumericCompare(
 	std::shared_ptr<Expression> rhs,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<NumericComparisonExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::boolType();
+	auto node = makeNode<NumericComparisonExpression>(std::move(loc), WType::boolType());
 	node->lhs = std::move(lhs);
 	node->op = op;
 	node->rhs = std::move(rhs);
@@ -482,9 +480,7 @@ inline std::shared_ptr<BytesComparisonExpression> makeBytesComparison(
 	std::shared_ptr<Expression> rhs,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<BytesComparisonExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::boolType();
+	auto node = makeNode<BytesComparisonExpression>(std::move(loc), WType::boolType());
 	node->lhs = std::move(lhs);
 	node->op = op;
 	node->rhs = std::move(rhs);
@@ -504,9 +500,7 @@ inline std::shared_ptr<BooleanBinaryOperation> makeBoolBinOp(
 	std::shared_ptr<Expression> left, BinaryBooleanOperator op,
 	std::shared_ptr<Expression> right, SourceLocation loc)
 {
-	auto node = std::make_shared<BooleanBinaryOperation>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::boolType();
+	auto node = makeNode<BooleanBinaryOperation>(std::move(loc), WType::boolType());
 	node->left = std::move(left);
 	node->op = op;
 	node->right = std::move(right);
@@ -523,9 +517,7 @@ struct Not: Expression
 inline std::shared_ptr<Not> makeNot(
 	std::shared_ptr<Expression> expr, SourceLocation loc)
 {
-	auto node = std::make_shared<Not>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::boolType();
+	auto node = makeNode<Not>(std::move(loc), WType::boolType());
 	node->expr = std::move(expr);
 	return node;
 }
@@ -544,16 +536,13 @@ struct AssertExpression: Expression
 	bool isExplicit = true;
 };
 
-// wtype defaults to voidType(); splitter uses boolType() for helper-group flags.
+// wtype is voidType().
 inline std::shared_ptr<AssertExpression> makeAssert(
 	std::shared_ptr<Expression> condition,
 	SourceLocation loc,
-	std::optional<std::string> errorMessage = std::nullopt,
-	WType const* wtype = WType::voidType())
+	std::optional<std::string> errorMessage = std::nullopt)
 {
-	auto node = std::make_shared<AssertExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<AssertExpression>(std::move(loc), WType::voidType());
 	node->condition = std::move(condition);
 	node->errorMessage = std::move(errorMessage);
 	return node;
@@ -595,9 +584,7 @@ inline std::shared_ptr<AssignmentExpression> makeAssignmentExpression(
 	WType const* wtype = nullptr)
 {
 	if (!wtype && target) wtype = target->wtype;
-	auto node = std::make_shared<AssignmentExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<AssignmentExpression>(std::move(loc), wtype);
 	node->target = std::move(target);
 	node->value = std::move(value);
 	checkAssignableTarget(node->target.get(), node->sourceLocation);
@@ -625,9 +612,7 @@ inline std::shared_ptr<SubroutineCallExpression> makeSubroutineCall(
 	WType const* returnType,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<SubroutineCallExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = returnType;
+	auto node = makeNode<SubroutineCallExpression>(std::move(loc), returnType);
 	node->target = std::move(target);
 	return node;
 }
@@ -668,20 +653,42 @@ inline std::shared_ptr<IntrinsicCall> makeIntrinsicCall(
 	WType const* wtype,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<IntrinsicCall>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<IntrinsicCall>(std::move(loc), wtype);
 	node->opCode = std::move(opCode);
 	return node;
+}
+
+// Same with the immediates and stack args given up front (operand order).
+// initializer_list, not vector: `{int}` would also match vector's size ctor
+// and make the two overloads ambiguous.
+inline std::shared_ptr<IntrinsicCall> makeIntrinsicCall(
+	std::string opCode,
+	WType const* wtype,
+	SourceLocation loc,
+	std::initializer_list<std::variant<std::string, int>> immediates,
+	std::initializer_list<std::shared_ptr<Expression>> stackArgs = {})
+{
+	auto node = makeIntrinsicCall(std::move(opCode), wtype, std::move(loc));
+	node->immediates = immediates;
+	node->stackArgs = stackArgs;
+	return node;
+}
+
+// Same, stack args only.
+inline std::shared_ptr<IntrinsicCall> makeIntrinsicCall(
+	std::string opCode,
+	WType const* wtype,
+	SourceLocation loc,
+	std::initializer_list<std::shared_ptr<Expression>> stackArgs)
+{
+	return makeIntrinsicCall(std::move(opCode), wtype, std::move(loc), {}, stackArgs);
 }
 
 // `itob(uint64Expr)` → 8-byte big-endian bytes.
 inline std::shared_ptr<IntrinsicCall> makeItob(
 	std::shared_ptr<Expression> uint64Expr, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("itob", WType::bytesType(), std::move(loc));
-	node->stackArgs.push_back(std::move(uint64Expr));
-	return node;
+	return makeIntrinsicCall("itob", WType::bytesType(), std::move(loc), {std::move(uint64Expr)});
 }
 
 // `btoi(bytesExpr)` → uint64 (bytesExpr must be ≤8 bytes).
@@ -689,19 +696,15 @@ inline std::shared_ptr<IntrinsicCall> makeBtoi(
 	std::shared_ptr<Expression> bytesExpr, SourceLocation loc,
 	WType const* wtype = nullptr)
 {
-	auto node = makeIntrinsicCall(
-		"btoi", wtype ? wtype : WType::uint64Type(), std::move(loc));
-	node->stackArgs.push_back(std::move(bytesExpr));
-	return node;
+	return makeIntrinsicCall(
+		"btoi", wtype ? wtype : WType::uint64Type(), std::move(loc), {std::move(bytesExpr)});
 }
 
 // `len(bytesExpr)` → uint64.
 inline std::shared_ptr<IntrinsicCall> makeLen(
 	std::shared_ptr<Expression> bytesExpr, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("len", WType::uint64Type(), std::move(loc));
-	node->stackArgs.push_back(std::move(bytesExpr));
-	return node;
+	return makeIntrinsicCall("len", WType::uint64Type(), std::move(loc), {std::move(bytesExpr)});
 }
 
 // `concat(left, right)` → bytes. Two-arg form; callers wanting N-way concat
@@ -711,47 +714,38 @@ inline std::shared_ptr<IntrinsicCall> makeConcat(
 	std::shared_ptr<Expression> right,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("concat", WType::bytesType(), std::move(loc));
-	node->stackArgs.push_back(std::move(left));
-	node->stackArgs.push_back(std::move(right));
-	return node;
+	return makeIntrinsicCall(
+		"concat", WType::bytesType(), std::move(loc), {std::move(left), std::move(right)});
 }
 
 // `global <field>` — read a global field (e.g. "CurrentApplicationID", "LatestTimestamp").
 inline std::shared_ptr<IntrinsicCall> makeGlobal(
 	std::string field, WType const* wtype, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("global", wtype, std::move(loc));
-	node->immediates = {std::move(field)};
-	return node;
+	return makeIntrinsicCall("global", wtype, std::move(loc), {std::move(field)});
 }
 
 // `txn <field>` — read current-transaction field.
 inline std::shared_ptr<IntrinsicCall> makeTxn(
 	std::string field, WType const* wtype, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("txn", wtype, std::move(loc));
-	node->immediates = {std::move(field)};
-	return node;
+	return makeIntrinsicCall("txn", wtype, std::move(loc), {std::move(field)});
 }
 
 // `txna ApplicationArgs <i>` — read app arg as bytes; override wtype for fixed-width view.
 inline std::shared_ptr<IntrinsicCall> makeAppArg(
 	int i, SourceLocation loc, WType const* wtype = nullptr)
 {
-	auto node = makeIntrinsicCall(
-		"txna", wtype ? wtype : WType::bytesType(), std::move(loc));
-	node->immediates = {std::string("ApplicationArgs"), i};
-	return node;
+	return makeIntrinsicCall(
+		"txna", wtype ? wtype : WType::bytesType(), std::move(loc),
+		{std::string("ApplicationArgs"), i});
 }
 
 // `itxn <field>` — read a field of the most recent inner txn (e.g. "LastLog").
 inline std::shared_ptr<IntrinsicCall> makeItxn(
 	std::string field, WType const* wtype, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("itxn", wtype, std::move(loc));
-	node->immediates = {std::move(field)};
-	return node;
+	return makeIntrinsicCall("itxn", wtype, std::move(loc), {std::move(field)});
 }
 
 // `block <field> <roundExpr>` — read a past-block field (BlkSeed, BlkTimestamp);
@@ -760,10 +754,8 @@ inline std::shared_ptr<IntrinsicCall> makeBlock(
 	std::string field, std::shared_ptr<Expression> roundExpr,
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("block", wtype, std::move(loc));
-	node->immediates = {std::move(field)};
-	node->stackArgs.push_back(std::move(roundExpr));
-	return node;
+	return makeIntrinsicCall(
+		"block", wtype, std::move(loc), {std::move(field)}, {std::move(roundExpr)});
 }
 
 // `app_params_get <field> <appId>` → (value, exists) tuple.
@@ -771,10 +763,8 @@ inline std::shared_ptr<IntrinsicCall> makeAppParamsGet(
 	std::string field, std::shared_ptr<Expression> appId,
 	WType const* tupleType, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("app_params_get", tupleType, std::move(loc));
-	node->immediates = {std::move(field)};
-	node->stackArgs.push_back(std::move(appId));
-	return node;
+	return makeIntrinsicCall(
+		"app_params_get", tupleType, std::move(loc), {std::move(field)}, {std::move(appId)});
 }
 
 // `asset_params_get <field> <assetId>` → (value, exists) tuple.
@@ -782,10 +772,8 @@ inline std::shared_ptr<IntrinsicCall> makeAssetParamsGet(
 	std::string field, std::shared_ptr<Expression> assetId,
 	WType const* tupleType, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("asset_params_get", tupleType, std::move(loc));
-	node->immediates = {std::move(field)};
-	node->stackArgs.push_back(std::move(assetId));
-	return node;
+	return makeIntrinsicCall(
+		"asset_params_get", tupleType, std::move(loc), {std::move(field)}, {std::move(assetId)});
 }
 
 // `gtxns <field> <groupIdx>` — read a group txn field by index.
@@ -793,29 +781,23 @@ inline std::shared_ptr<IntrinsicCall> makeGtxns(
 	std::string field, std::shared_ptr<Expression> groupIdx,
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("gtxns", wtype, std::move(loc));
-	node->immediates = {std::move(field)};
-	node->stackArgs.push_back(std::move(groupIdx));
-	return node;
+	return makeIntrinsicCall(
+		"gtxns", wtype, std::move(loc), {std::move(field)}, {std::move(groupIdx)});
 }
 
 // `load <slot>` → bytes. Used for EVM memory / transient-storage blobs.
 inline std::shared_ptr<IntrinsicCall> makeLoadSlot(
 	int slot, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("load", WType::bytesType(), std::move(loc));
-	node->immediates = {slot};
-	return node;
+	return makeIntrinsicCall("load", WType::bytesType(), std::move(loc), {slot});
 }
 
 // `store <slot> <value>` — write to a scratch slot.
 inline std::shared_ptr<IntrinsicCall> makeStoreSlot(
 	int slot, std::shared_ptr<Expression> value, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("store", WType::voidType(), std::move(loc));
-	node->immediates = {slot};
-	node->stackArgs.push_back(std::move(value));
-	return node;
+	return makeIntrinsicCall(
+		"store", WType::voidType(), std::move(loc), {slot}, {std::move(value)});
 }
 
 // `box_put key value` — box size must equal len(value); resize with box_del first.
@@ -824,10 +806,8 @@ inline std::shared_ptr<IntrinsicCall> makeBoxPut(
 	std::shared_ptr<Expression> value,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("box_put", WType::voidType(), std::move(loc));
-	node->stackArgs.push_back(std::move(key));
-	node->stackArgs.push_back(std::move(value));
-	return node;
+	return makeIntrinsicCall(
+		"box_put", WType::voidType(), std::move(loc), {std::move(key), std::move(value)});
 }
 
 // `box_create key size` → bool (true if new, false if existed).
@@ -836,10 +816,8 @@ inline std::shared_ptr<IntrinsicCall> makeBoxCreate(
 	std::shared_ptr<Expression> size,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("box_create", WType::boolType(), std::move(loc));
-	node->stackArgs.push_back(std::move(key));
-	node->stackArgs.push_back(std::move(size));
-	return node;
+	return makeIntrinsicCall(
+		"box_create", WType::boolType(), std::move(loc), {std::move(key), std::move(size)});
 }
 
 // `box_len key` → (length: uint64, exists: bool) tuple.
@@ -848,9 +826,7 @@ inline std::shared_ptr<IntrinsicCall> makeBoxLen(
 	WType const* tupleType,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("box_len", tupleType, std::move(loc));
-	node->stackArgs.push_back(std::move(key));
-	return node;
+	return makeIntrinsicCall("box_len", tupleType, std::move(loc), {std::move(key)});
 }
 
 // `box_extract key offset length` → bytes slice (faults if absent or overflow).
@@ -860,11 +836,9 @@ inline std::shared_ptr<IntrinsicCall> makeBoxExtract(
 	std::shared_ptr<Expression> length,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("box_extract", WType::bytesType(), std::move(loc));
-	node->stackArgs.push_back(std::move(key));
-	node->stackArgs.push_back(std::move(offset));
-	node->stackArgs.push_back(std::move(length));
-	return node;
+	return makeIntrinsicCall(
+		"box_extract", WType::bytesType(), std::move(loc),
+		{std::move(key), std::move(offset), std::move(length)});
 }
 
 // `box_replace key offset value` → void. Overwrites len(value) bytes at `offset`
@@ -876,20 +850,16 @@ inline std::shared_ptr<IntrinsicCall> makeBoxReplace(
 	std::shared_ptr<Expression> value,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("box_replace", WType::voidType(), std::move(loc));
-	node->stackArgs.push_back(std::move(key));
-	node->stackArgs.push_back(std::move(offset));
-	node->stackArgs.push_back(std::move(value));
-	return node;
+	return makeIntrinsicCall(
+		"box_replace", WType::voidType(), std::move(loc),
+		{std::move(key), std::move(offset), std::move(value)});
 }
 
 // `box_del key` → bool (existed). Most callers discard the result.
 inline std::shared_ptr<IntrinsicCall> makeBoxDel(
 	std::shared_ptr<Expression> key, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("box_del", WType::boolType(), std::move(loc));
-	node->stackArgs.push_back(std::move(key));
-	return node;
+	return makeIntrinsicCall("box_del", WType::boolType(), std::move(loc), {std::move(key)});
 }
 
 // `app_global_put key value` — write to a global state slot.
@@ -898,10 +868,8 @@ inline std::shared_ptr<IntrinsicCall> makeAppGlobalPut(
 	std::shared_ptr<Expression> value,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("app_global_put", WType::voidType(), std::move(loc));
-	node->stackArgs.push_back(std::move(key));
-	node->stackArgs.push_back(std::move(value));
-	return node;
+	return makeIntrinsicCall(
+		"app_global_put", WType::voidType(), std::move(loc), {std::move(key), std::move(value)});
 }
 
 // `extract <offset> <length>; <bytesExpr>` — 2-immediate form for constant
@@ -915,10 +883,8 @@ inline std::shared_ptr<IntrinsicCall> makeExtract(
 	int offset, int length,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("extract", WType::bytesType(), std::move(loc));
-	node->immediates = {offset, length};
-	node->stackArgs.push_back(std::move(bytesExpr));
-	return node;
+	return makeIntrinsicCall(
+		"extract", WType::bytesType(), std::move(loc), {offset, length}, {std::move(bytesExpr)});
 }
 
 // Wrap expr in a SingleEvaluation (unique id). Pure leaves pass through.
@@ -938,18 +904,11 @@ inline std::shared_ptr<IntrinsicCall> makeExtractLastN(
 	auto nStr = std::to_string(n);
 	auto lenCall = makeLen(bytesExpr, loc);
 	auto nConstOffset = makeIntegerConstant(nStr, loc);
-	auto offset = std::make_shared<UInt64BinaryOperation>();
-	offset->sourceLocation = loc;
-	offset->wtype = WType::uint64Type();
-	offset->left = std::move(lenCall);
-	offset->op = UInt64BinaryOperator::Sub;
-	offset->right = std::move(nConstOffset);
+	auto offset = makeUInt64BinOp(
+		std::move(lenCall), UInt64BinaryOperator::Sub, std::move(nConstOffset), loc);
 	auto nConstWidth = makeIntegerConstant(std::move(nStr), loc);
-	auto extract = makeIntrinsicCall("extract3", WType::bytesType(), std::move(loc));
-	extract->stackArgs.push_back(bytesExpr);
-	extract->stackArgs.push_back(std::move(offset));
-	extract->stackArgs.push_back(std::move(nConstWidth));
-	return extract;
+	return makeIntrinsicCall("extract3", WType::bytesType(), std::move(loc),
+		{bytesExpr, std::move(offset), std::move(nConstWidth)});
 }
 
 // `setbit(bytes, bitIdx, value)` → bytes with bit set/cleared.
@@ -959,11 +918,9 @@ inline std::shared_ptr<IntrinsicCall> makeSetbit(
 	std::shared_ptr<Expression> value,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("setbit", WType::bytesType(), std::move(loc));
-	node->stackArgs.push_back(std::move(bytes));
-	node->stackArgs.push_back(std::move(bitIdx));
-	node->stackArgs.push_back(std::move(value));
-	return node;
+	return makeIntrinsicCall(
+		"setbit", WType::bytesType(), std::move(loc),
+		{std::move(bytes), std::move(bitIdx), std::move(value)});
 }
 
 // `getbit(bytes, bitIdx)` → uint64 (0 or 1).
@@ -972,10 +929,8 @@ inline std::shared_ptr<IntrinsicCall> makeGetbit(
 	std::shared_ptr<Expression> bitIdx,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("getbit", WType::uint64Type(), std::move(loc));
-	node->stackArgs.push_back(std::move(bytes));
-	node->stackArgs.push_back(std::move(bitIdx));
-	return node;
+	return makeIntrinsicCall(
+		"getbit", WType::uint64Type(), std::move(loc), {std::move(bytes), std::move(bitIdx)});
 }
 
 // `extract_uint64(bytes, offset)` → uint64.
@@ -984,11 +939,9 @@ inline std::shared_ptr<IntrinsicCall> makeExtractUInt64(
 	std::shared_ptr<Expression> offset,
 	SourceLocation loc, WType const* wtype = nullptr)
 {
-	auto node = makeIntrinsicCall(
-		"extract_uint64", wtype ? wtype : WType::uint64Type(), std::move(loc));
-	node->stackArgs.push_back(std::move(bytes));
-	node->stackArgs.push_back(std::move(offset));
-	return node;
+	return makeIntrinsicCall(
+		"extract_uint64", wtype ? wtype : WType::uint64Type(), std::move(loc),
+		{std::move(bytes), std::move(offset)});
 }
 
 // `extract_uint16(bytes, offset)` → uint64 (ARC4 length prefix reads).
@@ -997,11 +950,9 @@ inline std::shared_ptr<IntrinsicCall> makeExtractUInt16(
 	std::shared_ptr<Expression> offset,
 	SourceLocation loc, WType const* wtype = nullptr)
 {
-	auto node = makeIntrinsicCall(
-		"extract_uint16", wtype ? wtype : WType::uint64Type(), std::move(loc));
-	node->stackArgs.push_back(std::move(bytes));
-	node->stackArgs.push_back(std::move(offset));
-	return node;
+	return makeIntrinsicCall(
+		"extract_uint16", wtype ? wtype : WType::uint64Type(), std::move(loc),
+		{std::move(bytes), std::move(offset)});
 }
 
 // `extract3(bytes, offset, length)` → bytes slice.
@@ -1012,12 +963,9 @@ inline std::shared_ptr<IntrinsicCall> makeExtract3(
 	SourceLocation loc,
 	WType const* wtype = nullptr)
 {
-	auto node = makeIntrinsicCall(
-		"extract3", wtype ? wtype : WType::bytesType(), std::move(loc));
-	node->stackArgs.push_back(std::move(bytes));
-	node->stackArgs.push_back(std::move(offset));
-	node->stackArgs.push_back(std::move(length));
-	return node;
+	return makeIntrinsicCall(
+		"extract3", wtype ? wtype : WType::bytesType(), std::move(loc),
+		{std::move(bytes), std::move(offset), std::move(length)});
 }
 
 // 2-byte big-endian (ARC4 uint16) encoding: extract3(itob(value), 6, 2).
@@ -1040,20 +988,16 @@ inline std::shared_ptr<IntrinsicCall> makeReplace3(
 	std::shared_ptr<Expression> replacement,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("replace3", WType::bytesType(), std::move(loc));
-	node->stackArgs.push_back(std::move(bytes));
-	node->stackArgs.push_back(std::move(offset));
-	node->stackArgs.push_back(std::move(replacement));
-	return node;
+	return makeIntrinsicCall(
+		"replace3", WType::bytesType(), std::move(loc),
+		{std::move(bytes), std::move(offset), std::move(replacement)});
 }
 
 // `bzero(count)` → `count` zero bytes, with a runtime-evaluated count.
 inline std::shared_ptr<IntrinsicCall> makeBzero(
 	std::shared_ptr<Expression> count, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("bzero", WType::bytesType(), std::move(loc));
-	node->stackArgs.push_back(std::move(count));
-	return node;
+	return makeIntrinsicCall("bzero", WType::bytesType(), std::move(loc), {std::move(count)});
 }
 
 // `bzero(count)` → `count` zero bytes, with a compile-time-constant count.
@@ -1092,10 +1036,8 @@ inline std::shared_ptr<IntrinsicCall> makeBytesOr(
 	std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs,
 	SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("b|", WType::bytesType(), std::move(loc));
-	node->stackArgs.push_back(std::move(lhs));
-	node->stackArgs.push_back(std::move(rhs));
-	return node;
+	return makeIntrinsicCall(
+		"b|", WType::bytesType(), std::move(loc), {std::move(lhs), std::move(rhs)});
 }
 
 // `concat(bzero(padBytes), value)` — zero-extend `value` on the left to
@@ -1135,20 +1077,16 @@ inline std::shared_ptr<IntrinsicCall> makeLeftPadToN(
 	auto offset = makeUInt64BinOp(makeLen(padded, loc),
 		UInt64BinaryOperator::Sub,
 		makeIntegerConstant(static_cast<uint64_t>(n), loc), loc);
-	auto extract = makeIntrinsicCall("extract3", WType::bytesType(), loc);
-	extract->stackArgs.push_back(std::move(padded));
-	extract->stackArgs.push_back(std::move(offset));
-	extract->stackArgs.push_back(makeIntegerConstant(static_cast<uint64_t>(n), std::move(loc)));
-	return extract;
+	auto width = makeIntegerConstant(static_cast<uint64_t>(n), loc);
+	return makeIntrinsicCall("extract3", WType::bytesType(), std::move(loc),
+		{std::move(padded), std::move(offset), std::move(width)});
 }
 
 // `keccak256(bytes)` → 32-byte hash.
 inline std::shared_ptr<IntrinsicCall> makeKeccak256(
 	std::shared_ptr<Expression> input, SourceLocation loc)
 {
-	auto node = makeIntrinsicCall("keccak256", WType::bytesType(), std::move(loc));
-	node->stackArgs.push_back(std::move(input));
-	return node;
+	return makeIntrinsicCall("keccak256", WType::bytesType(), std::move(loc), {std::move(input)});
 }
 
 // `assert(value < numMembers)` — the EVM Panic(0x21) enum-range check.
@@ -1174,9 +1112,7 @@ inline std::shared_ptr<ConditionalExpression> makeConditional(
 	WType const* wtype,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<ConditionalExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<ConditionalExpression>(std::move(loc), wtype);
 	node->condition = std::move(condition);
 	node->trueExpr = std::move(trueExpr);
 	node->falseExpr = std::move(falseExpr);
@@ -1207,10 +1143,7 @@ struct TupleExpression: Expression
 inline std::shared_ptr<TupleExpression> makeTupleExpression(
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<TupleExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
-	return node;
+	return makeNode<TupleExpression>(std::move(loc), wtype);
 }
 
 struct TupleItemExpression: Expression
@@ -1225,9 +1158,7 @@ inline std::shared_ptr<FieldExpression> makeFieldExpression(
 	std::shared_ptr<Expression> base, std::string name,
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<FieldExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<FieldExpression>(std::move(loc), wtype);
 	node->base = std::move(base);
 	node->name = std::move(name);
 	return node;
@@ -1238,9 +1169,7 @@ inline std::shared_ptr<IndexExpression> makeIndexExpression(
 	std::shared_ptr<Expression> base, std::shared_ptr<Expression> index,
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<IndexExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<IndexExpression>(std::move(loc), wtype);
 	node->base = std::move(base);
 	node->index = std::move(index);
 	return node;
@@ -1251,9 +1180,7 @@ inline std::shared_ptr<TupleItemExpression> makeTupleItem(
 	std::shared_ptr<Expression> base, int index,
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<TupleItemExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<TupleItemExpression>(std::move(loc), wtype);
 	node->base = std::move(base);
 	node->index = index;
 	return node;
@@ -1278,9 +1205,7 @@ struct ARC4Decode: Expression
 inline std::shared_ptr<ARC4Decode> makeARC4Decode(
 	std::shared_ptr<Expression> value, WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<ARC4Decode>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<ARC4Decode>(std::move(loc), wtype);
 	node->value = std::move(value);
 	return node;
 }
@@ -1295,9 +1220,7 @@ struct ARC4FromBytes: Expression
 inline std::shared_ptr<ARC4FromBytes> makeARC4FromBytes(
 	std::shared_ptr<Expression> value, WType const* wtype, SourceLocation loc, bool validate = false)
 {
-	auto node = std::make_shared<ARC4FromBytes>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<ARC4FromBytes>(std::move(loc), wtype);
 	node->value = std::move(value);
 	node->validate = validate;
 	return node;
@@ -1310,10 +1233,7 @@ struct ARC4Router: Expression
 
 inline std::shared_ptr<ARC4Router> makeARC4Router(WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<ARC4Router>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
-	return node;
+	return makeNode<ARC4Router>(std::move(loc), wtype);
 }
 
 struct ReinterpretCast: Expression
@@ -1328,9 +1248,7 @@ inline std::shared_ptr<ReinterpretCast> makeReinterpretCast(
 	WType const* targetType,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<ReinterpretCast>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = targetType;
+	auto node = makeNode<ReinterpretCast>(std::move(loc), targetType);
 	node->expr = std::move(expr);
 	return node;
 }
@@ -1405,9 +1323,7 @@ inline std::shared_ptr<ARC4Encode> makeARC4Encode(
 			}
 		}
 
-	auto node = std::make_shared<ARC4Encode>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<ARC4Encode>(std::move(loc), wtype);
 	node->value = std::move(value);
 	return node;
 }
@@ -1445,9 +1361,7 @@ inline std::shared_ptr<Expression> makeKeyBytes(
 	if (encType == WType::stringType() || encType == WType::bytesType())
 	{
 		auto raw = makeReinterpretCast(std::move(value), WType::bytesType(), loc);
-		auto hashed = makeIntrinsicCall("sha256", WType::bytesType(), std::move(loc));
-		hashed->stackArgs.push_back(std::move(raw));
-		return hashed;
+		return makeIntrinsicCall("sha256", WType::bytesType(), std::move(loc), {std::move(raw)});
 	}
 	return makeReinterpretCast(std::move(value), WType::bytesType(), std::move(loc));
 }
@@ -1459,9 +1373,8 @@ inline std::shared_ptr<IntrinsicCall> makeBiguintToUInt64(
 {
 	auto cast = makeReinterpretCast(std::move(value), WType::bytesType(), loc);
 	auto cat = makeLeftPad(std::move(cast), 8, loc);
-	auto start = makeIntrinsicCall("-", WType::uint64Type(), loc);
-	start->stackArgs.push_back(makeLen(cat, loc));
-	start->stackArgs.push_back(makeIntegerConstant("8", loc));
+	auto start = makeIntrinsicCall("-", WType::uint64Type(), loc,
+		{makeLen(cat, loc), makeIntegerConstant("8", loc)});
 	return makeExtractUInt64(cat, std::move(start), std::move(loc));
 }
 
@@ -1485,9 +1398,7 @@ struct TemplateVar: Expression
 inline std::shared_ptr<TemplateVar> makeTemplateVar(
 	std::string name, WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<TemplateVar>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<TemplateVar>(std::move(loc), wtype);
 	node->name = std::move(name);
 	return node;
 }
@@ -1508,9 +1419,7 @@ struct SingleEvaluation: Expression
 inline std::shared_ptr<SingleEvaluation> makeSingleEvaluation(
 	std::shared_ptr<Expression> source, WType const* wtype, int id, SourceLocation loc)
 {
-	auto node = std::make_shared<SingleEvaluation>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<SingleEvaluation>(std::move(loc), wtype);
 	node->source = std::move(source);
 	node->id = id;
 	return node;
@@ -1570,9 +1479,7 @@ struct Emit: Expression
 inline std::shared_ptr<Emit> makeEmit(
 	std::string signature, std::shared_ptr<Expression> value, SourceLocation loc)
 {
-	auto node = std::make_shared<Emit>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::voidType();
+	auto node = makeNode<Emit>(std::move(loc), WType::voidType());
 	node->signature = std::move(signature);
 	node->value = std::move(value);
 	return node;
@@ -1588,10 +1495,7 @@ struct NewArray: Expression
 inline std::shared_ptr<NewArray> makeNewArray(
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<NewArray>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
-	return node;
+	return makeNode<NewArray>(std::move(loc), wtype);
 }
 
 struct ArrayLength: Expression
@@ -1603,9 +1507,7 @@ struct ArrayLength: Expression
 inline std::shared_ptr<ArrayLength> makeArrayLength(
 	std::shared_ptr<Expression> array, WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<ArrayLength>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<ArrayLength>(std::move(loc), wtype);
 	node->array = std::move(array);
 	return node;
 }
@@ -1619,9 +1521,7 @@ struct ArrayPop: Expression
 inline std::shared_ptr<ArrayPop> makeArrayPop(
 	std::shared_ptr<Expression> base, WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<ArrayPop>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<ArrayPop>(std::move(loc), wtype);
 	node->base = std::move(base);
 	return node;
 }
@@ -1643,9 +1543,7 @@ struct ArrayExtend: Expression
 inline std::shared_ptr<ArrayExtend> makeArrayExtend(
 	std::shared_ptr<Expression> base, std::shared_ptr<Expression> other, SourceLocation loc)
 {
-	auto node = std::make_shared<ArrayExtend>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::voidType();
+	auto node = makeNode<ArrayExtend>(std::move(loc), WType::voidType());
 	node->base = std::move(base);
 	node->other = std::move(other);
 	return node;
@@ -1679,9 +1577,7 @@ struct ConvertArray: Expression
 inline std::shared_ptr<ConvertArray> makeConvertArray(
 	std::shared_ptr<Expression> expr, WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<ConvertArray>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<ConvertArray>(std::move(loc), wtype);
 	node->expr = std::move(expr);
 	return node;
 }
@@ -1696,10 +1592,7 @@ struct NewStruct: Expression
 inline std::shared_ptr<NewStruct> makeNewStruct(
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<NewStruct>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
-	return node;
+	return makeNode<NewStruct>(std::move(loc), wtype);
 }
 
 // Rebuild an ARC4Struct with one field replaced (copy-on-write; struct is immutable bytes).
@@ -1731,9 +1624,7 @@ inline std::shared_ptr<NamedTupleExpression> makeNamedTupleExpression(
 	WType const* wtype, std::map<std::string, std::shared_ptr<Expression>> values,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<NamedTupleExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<NamedTupleExpression>(std::move(loc), wtype);
 	node->values = std::move(values);
 	return node;
 }
@@ -1751,9 +1642,7 @@ inline std::shared_ptr<StateGet> makeStateGet(
 	std::shared_ptr<Expression> defaultValue,
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<StateGet>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<StateGet>(std::move(loc), wtype);
 	node->field = std::move(field);
 	node->defaultValue = std::move(defaultValue);
 	return node;
@@ -1783,9 +1672,7 @@ struct StateDelete: Expression
 inline std::shared_ptr<StateDelete> makeStateDelete(
 	std::shared_ptr<Expression> field, SourceLocation loc)
 {
-	auto node = std::make_shared<StateDelete>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::boolType();
+	auto node = makeNode<StateDelete>(std::move(loc), WType::boolType());
 	node->field = std::move(field);
 	return node;
 }
@@ -1801,9 +1688,7 @@ inline std::shared_ptr<Expression> makeWritableTarget(
 		auto newBase = makeWritableTarget(ie->base);
 		if (newBase.get() == ie->base.get())
 			return e;
-		auto ne = std::make_shared<IndexExpression>();
-		ne->sourceLocation = ie->sourceLocation;
-		ne->wtype = ie->wtype;
+		auto ne = makeNode<IndexExpression>(ie->sourceLocation, ie->wtype);
 		ne->base = std::move(newBase);
 		ne->index = ie->index;
 		return ne;
@@ -1813,9 +1698,7 @@ inline std::shared_ptr<Expression> makeWritableTarget(
 		auto newBase = makeWritableTarget(fe->base);
 		if (newBase.get() == fe->base.get())
 			return e;
-		auto ne = std::make_shared<FieldExpression>();
-		ne->sourceLocation = fe->sourceLocation;
-		ne->wtype = fe->wtype;
+		auto ne = makeNode<FieldExpression>(fe->sourceLocation, fe->wtype);
 		ne->base = std::move(newBase);
 		ne->name = fe->name;
 		return ne;
@@ -1844,9 +1727,7 @@ struct AppStateExpression: Expression
 inline std::shared_ptr<AppStateExpression> makeAppStateExpression(
 	std::shared_ptr<Expression> key, WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<AppStateExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<AppStateExpression>(std::move(loc), wtype);
 	node->key = std::move(key);
 	return node;
 }
@@ -1858,24 +1739,6 @@ struct AppAccountStateExpression: Expression
 	std::shared_ptr<Expression> account;
 	std::optional<std::string> existsAssertionMessage;
 };
-
-struct BoxPrefixedKeyExpression: Expression
-{
-	std::string nodeType() const override { return "BoxPrefixedKeyExpression"; }
-	std::shared_ptr<Expression> prefix;
-	std::shared_ptr<Expression> key;
-};
-
-inline std::shared_ptr<BoxPrefixedKeyExpression> makeBoxPrefixedKey(
-	std::shared_ptr<Expression> prefix, std::shared_ptr<Expression> key, SourceLocation loc)
-{
-	auto node = std::make_shared<BoxPrefixedKeyExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::boxKeyType();
-	node->prefix = std::move(prefix);
-	node->key = std::move(key);
-	return node;
-}
 
 struct BoxValueExpression: Expression
 {
@@ -1890,9 +1753,7 @@ struct BoxValueExpression: Expression
 inline std::shared_ptr<BoxValueExpression> makeBoxValueExpression(
 	std::shared_ptr<Expression> key, WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<BoxValueExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<BoxValueExpression>(std::move(loc), wtype);
 	node->key = std::move(key);
 	return node;
 }
@@ -1915,10 +1776,7 @@ struct CreateInnerTransaction: Expression
 inline std::shared_ptr<CreateInnerTransaction> makeCreateInnerTransaction(
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<CreateInnerTransaction>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
-	return node;
+	return makeNode<CreateInnerTransaction>(std::move(loc), wtype);
 }
 
 struct SubmitInnerTransaction: Expression
@@ -1931,10 +1789,7 @@ struct SubmitInnerTransaction: Expression
 inline std::shared_ptr<SubmitInnerTransaction> makeSubmitInnerTransaction(
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<SubmitInnerTransaction>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
-	return node;
+	return makeNode<SubmitInnerTransaction>(std::move(loc), wtype);
 }
 
 struct InnerTransactionField: Expression
@@ -1955,10 +1810,7 @@ struct CommaExpression: Expression
 inline std::shared_ptr<CommaExpression> makeCommaExpression(
 	WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<CommaExpression>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
-	return node;
+	return makeNode<CommaExpression>(std::move(loc), wtype);
 }
 
 struct MethodConstant: Expression
@@ -1970,9 +1822,7 @@ struct MethodConstant: Expression
 inline std::shared_ptr<MethodConstant> makeMethodConstant(
 	std::string value, WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<MethodConstant>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<MethodConstant>(std::move(loc), wtype);
 	node->value = std::move(value);
 	return node;
 }
@@ -1987,9 +1837,7 @@ struct AddressConstant: Expression
 inline std::shared_ptr<AddressConstant> makeAddressConstant(
 	std::string value, SourceLocation loc)
 {
-	auto node = std::make_shared<AddressConstant>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = WType::accountType();
+	auto node = makeNode<AddressConstant>(std::move(loc), WType::accountType());
 	node->value = std::move(value);
 	return node;
 }
@@ -2004,9 +1852,7 @@ struct PuyaLibCall: Expression
 inline std::shared_ptr<PuyaLibCall> makePuyaLibCall(
 	std::string func, std::vector<CallArg> args, WType const* wtype, SourceLocation loc)
 {
-	auto node = std::make_shared<PuyaLibCall>();
-	node->sourceLocation = std::move(loc);
-	node->wtype = wtype;
+	auto node = makeNode<PuyaLibCall>(std::move(loc), wtype);
 	node->func = std::move(func);
 	node->args = std::move(args);
 	return node;
@@ -2032,9 +1878,7 @@ struct Block: Statement
 // Empty Block at `loc`. Caller appends to `body`.
 inline std::shared_ptr<Block> makeBlock(SourceLocation loc)
 {
-	auto node = std::make_shared<Block>();
-	node->sourceLocation = std::move(loc);
-	return node;
+	return makeNode<Block>(std::move(loc));
 }
 
 struct ExpressionStatement: Statement
@@ -2048,8 +1892,7 @@ inline std::shared_ptr<ExpressionStatement> makeExpressionStatement(
 	std::shared_ptr<Expression> expr,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<ExpressionStatement>();
-	node->sourceLocation = std::move(loc);
+	auto node = makeNode<ExpressionStatement>(std::move(loc));
 	node->expr = std::move(expr);
 	return node;
 }
@@ -2065,8 +1908,7 @@ inline std::shared_ptr<ReturnStatement> makeReturnStatement(
 	std::shared_ptr<Expression> value,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<ReturnStatement>();
-	node->sourceLocation = std::move(loc);
+	auto node = makeNode<ReturnStatement>(std::move(loc));
 	node->value = std::move(value);
 	return node;
 }
@@ -2086,8 +1928,7 @@ inline std::shared_ptr<IfElse> makeIfElse(
 	std::shared_ptr<Block> elseBranch,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<IfElse>();
-	node->sourceLocation = std::move(loc);
+	auto node = makeNode<IfElse>(std::move(loc));
 	node->condition = std::move(condition);
 	node->ifBranch = std::move(ifBranch);
 	node->elseBranch = std::move(elseBranch);
@@ -2107,8 +1948,7 @@ inline std::shared_ptr<WhileLoop> makeWhileLoop(
 	std::shared_ptr<Block> loopBody,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<WhileLoop>();
-	node->sourceLocation = std::move(loc);
+	auto node = makeNode<WhileLoop>(std::move(loc));
 	node->condition = std::move(condition);
 	node->loopBody = std::move(loopBody);
 	return node;
@@ -2122,9 +1962,7 @@ struct LoopExit: Statement
 // `break;` statement.
 inline std::shared_ptr<LoopExit> makeLoopExit(SourceLocation loc)
 {
-	auto node = std::make_shared<LoopExit>();
-	node->sourceLocation = std::move(loc);
-	return node;
+	return makeNode<LoopExit>(std::move(loc));
 }
 
 struct LoopContinue: Statement
@@ -2135,9 +1973,7 @@ struct LoopContinue: Statement
 // `continue;` statement.
 inline std::shared_ptr<LoopContinue> makeLoopContinue(SourceLocation loc)
 {
-	auto node = std::make_shared<LoopContinue>();
-	node->sourceLocation = std::move(loc);
-	return node;
+	return makeNode<LoopContinue>(std::move(loc));
 }
 
 struct AssignmentStatement: Statement
@@ -2153,8 +1989,7 @@ inline std::shared_ptr<AssignmentStatement> makeAssignmentStatement(
 	std::shared_ptr<Expression> value,
 	SourceLocation loc)
 {
-	auto node = std::make_shared<AssignmentStatement>();
-	node->sourceLocation = std::move(loc);
+	auto node = makeNode<AssignmentStatement>(std::move(loc));
 	node->target = std::move(target);
 	node->value = std::move(value);
 	checkAssignableTarget(node->target.get(), node->sourceLocation);
@@ -2287,8 +2122,7 @@ inline std::shared_ptr<Subroutine> makeSubroutine(
 	std::string id, std::string name, std::vector<SubroutineArgument> args,
 	WType const* returnType, std::shared_ptr<Block> body, bool pure, SourceLocation loc)
 {
-	auto node = std::make_shared<Subroutine>();
-	node->sourceLocation = std::move(loc);
+	auto node = makeNode<Subroutine>(std::move(loc));
 	node->id = std::move(id);
 	node->name = std::move(name);
 	node->args = std::move(args);
@@ -2311,6 +2145,94 @@ struct LogicSignature: RootNode
 	std::optional<int> avmVersion;
 	std::optional<bool> validateEncoding;
 };
+
+// ─── Node lists ─────────────────────────────────────────────────────────────
+
+// Every concrete Expression / Statement node, in serializer dispatch order.
+// Visit.cpp and AWSTSerializer.cpp expand these for their dynamic_cast
+// ladders, so a node added here without a per-node arm in each fails to
+// build instead of silently falling through. No node derives from another
+// node, so the order only has to be stable, not topological.
+#define PUYASOL_AWST_EXPRESSION_NODES(X) \
+	X(IntegerConstant) \
+	X(BoolConstant) \
+	X(BytesConstant) \
+	X(StringConstant) \
+	X(VoidConstant) \
+	X(VarExpression) \
+	X(UInt64BinaryOperation) \
+	X(BigUIntBinaryOperation) \
+	X(BytesBinaryOperation) \
+	X(BytesUnaryOperation) \
+	X(NumericComparisonExpression) \
+	X(BytesComparisonExpression) \
+	X(BooleanBinaryOperation) \
+	X(Not) \
+	X(AssertExpression) \
+	X(AssignmentExpression) \
+	X(ConditionalExpression) \
+	X(SubroutineCallExpression) \
+	X(IntrinsicCall) \
+	X(FieldExpression) \
+	X(IndexExpression) \
+	X(TupleExpression) \
+	X(TupleItemExpression) \
+	X(ARC4Encode) \
+	X(ARC4Decode) \
+	X(ARC4FromBytes) \
+	X(ARC4Router) \
+	X(ReinterpretCast) \
+	X(TemplateVar) \
+	X(Copy) \
+	X(SingleEvaluation) \
+	X(CheckedMaybe) \
+	X(Emit) \
+	X(AppStateExpression) \
+	X(AppAccountStateExpression) \
+	X(BoxValueExpression) \
+	X(StateGet) \
+	X(StateExists) \
+	X(StateDelete) \
+	X(StateGetEx) \
+	X(NewArray) \
+	X(ArrayLength) \
+	X(ArrayPop) \
+	X(ArrayConcat) \
+	X(ArrayExtend) \
+	X(ConvertArray) \
+	X(NewStruct) \
+	X(NamedTupleExpression) \
+	X(CreateInnerTransaction) \
+	X(SubmitInnerTransaction) \
+	X(InnerTransactionField) \
+	X(CommaExpression) \
+	X(MethodConstant) \
+	X(AddressConstant) \
+	X(PuyaLibCall)
+
+#define PUYASOL_AWST_STATEMENT_NODES(X) \
+	X(Block) \
+	X(ExpressionStatement) \
+	X(ReturnStatement) \
+	X(IfElse) \
+	X(WhileLoop) \
+	X(LoopExit) \
+	X(LoopContinue) \
+	X(AssignmentStatement) \
+	X(Goto) \
+	X(Switch) \
+	X(ForInLoop) \
+	X(UInt64AugmentedAssignment) \
+	X(BigUIntAugmentedAssignment)
+
+#define PUYASOL_AWST_CHECK_NODE(Base, Node) static_assert(std::is_base_of_v<Base, Node>);
+#define PUYASOL_AWST_CHECK_EXPRESSION_NODE(Node) PUYASOL_AWST_CHECK_NODE(Expression, Node)
+#define PUYASOL_AWST_CHECK_STATEMENT_NODE(Node) PUYASOL_AWST_CHECK_NODE(Statement, Node)
+PUYASOL_AWST_EXPRESSION_NODES(PUYASOL_AWST_CHECK_EXPRESSION_NODE)
+PUYASOL_AWST_STATEMENT_NODES(PUYASOL_AWST_CHECK_STATEMENT_NODE)
+#undef PUYASOL_AWST_CHECK_STATEMENT_NODE
+#undef PUYASOL_AWST_CHECK_EXPRESSION_NODE
+#undef PUYASOL_AWST_CHECK_NODE
 
 // Defined here — after every constant node type is complete (declaration
 // beside checkAssignableTarget, which the assignment factories call).

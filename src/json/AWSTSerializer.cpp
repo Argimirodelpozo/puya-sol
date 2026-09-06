@@ -253,408 +253,456 @@ njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 	j["source_location"] = serializeSourceLocation(_expr.sourceLocation);
 	j["wtype"] = serializeWType(_expr.wtype);
 
-	// Shared serialization for StateGet / StateExists / StateGetEx: their wtype is
-	// init=False in Puya (derived from field.wtype), so drop it and emit the field.
-	// StateGet additionally carries a "default"; the others are identical to this.
-	auto emitStateField = [&](awst::Expression const& field)
-	{
-		j.erase("wtype");
-		j["field"] = serializeExpression(field);
-	};
-
-	if (auto const* e = dynamic_cast<awst::IntegerConstant const*>(&_expr))
-	{
-		// Stored as string for biguint; detect hex prefix so stoll handles 0x literals.
-		std::string const& s = e->value;
-		bool neg = !s.empty() && s[0] == '-';
-		size_t off = neg ? 1 : 0;
-		bool isHex = s.size() > off + 2 && s[off] == '0' && (s[off + 1] == 'x' || s[off + 1] == 'X');
-		try
-		{
-			if (isHex)
-			{
-				// Parse as hex; stoll with base 16 needs the prefix stripped.
-				long long val = std::stoll(s.substr(off + 2), nullptr, 16);
-				j["value"] = neg ? -val : val;
-			}
-			else
-				j["value"] = std::stoll(s);
-		}
-		catch (...)
-		{
-			if (isHex)
-			{
-				// Hex too large for int64: convert to decimal string.
-				std::string hex = s.substr(off + 2);
-				// Big-integer decimal from hex via repeated base-10 division.
-				std::vector<unsigned> digits; // big-endian hex digits
-				digits.reserve(hex.size());
-				for (char c : hex)
-				{
-					unsigned d = 0;
-					if (c >= '0' && c <= '9') d = c - '0';
-					else if (c >= 'a' && c <= 'f') d = 10 + (c - 'a');
-					else if (c >= 'A' && c <= 'F') d = 10 + (c - 'A');
-					else { digits.clear(); break; }
-					digits.push_back(d);
-				}
-				std::string dec;
-				if (digits.empty())
-					dec = "0";
-				else
-				{
-					while (!digits.empty())
-					{
-						unsigned rem = 0;
-						std::vector<unsigned> next;
-						next.reserve(digits.size());
-						for (unsigned d : digits)
-						{
-							unsigned cur = rem * 16 + d;
-							unsigned q = cur / 10;
-							rem = cur % 10;
-							if (!next.empty() || q) next.push_back(q);
-						}
-						dec.push_back(char('0' + rem));
-						digits = std::move(next);
-					}
-					std::reverse(dec.begin(), dec.end());
-				}
-				if (neg) dec.insert(dec.begin(), '-');
-				j["value"] = dec;
-			}
-			else
-				j["value"] = s;
-		}
-		j["teal_alias"] = nullptr;
+#define PUYASOL_AWST_SERIALIZE_ARM(Node) \
+	if (auto const* node = dynamic_cast<awst::Node const*>(&_expr)) \
+	{ \
+		serializeFields(*node, j); \
+		return j; \
 	}
-	else if (auto const* e = dynamic_cast<awst::BoolConstant const*>(&_expr))
-	{
-		j["value"] = e->value;
-	}
-	else if (auto const* e = dynamic_cast<awst::BytesConstant const*>(&_expr))
-	{
-		j["value"] = base85Encode(e->value);
-		j["encoding"] = bytesEncodingToString(e->encoding);
-	}
-	else if (auto const* e = dynamic_cast<awst::StringConstant const*>(&_expr))
-	{
-		j["value"] = e->value;
-	}
-	else if (dynamic_cast<awst::VoidConstant const*>(&_expr))
-	{
-		// no extra fields
-	}
-	else if (auto const* e = dynamic_cast<awst::VarExpression const*>(&_expr))
-	{
-		j["name"] = e->name;
-	}
-	else if (auto const* e = dynamic_cast<awst::UInt64BinaryOperation const*>(&_expr))
-	{
-		j["left"] = serializeExpression(*e->left);
-		j["op"] = uint64BinOpToString(e->op);
-		j["right"] = serializeExpression(*e->right);
-	}
-	else if (auto const* e = dynamic_cast<awst::BigUIntBinaryOperation const*>(&_expr))
-	{
-		j["left"] = serializeExpression(*e->left);
-		j["op"] = bigUIntBinOpToString(e->op);
-		j["right"] = serializeExpression(*e->right);
-	}
-	else if (auto const* e = dynamic_cast<awst::BytesBinaryOperation const*>(&_expr))
-	{
-		j["left"] = serializeExpression(*e->left);
-		j["op"] = bytesBinOpToString(e->op);
-		j["right"] = serializeExpression(*e->right);
-	}
-	else if (auto const* e = dynamic_cast<awst::BytesUnaryOperation const*>(&_expr))
-	{
-		j["op"] = "~";
-		j["expr"] = serializeExpression(*e->expr);
-	}
-	else if (auto const* e = dynamic_cast<awst::NumericComparisonExpression const*>(&_expr))
-	{
-		j["lhs"] = serializeExpression(*e->lhs);
-		j["operator"] = numericCompToString(e->op);
-		j["rhs"] = serializeExpression(*e->rhs);
-	}
-	else if (auto const* e = dynamic_cast<awst::BytesComparisonExpression const*>(&_expr))
-	{
-		j["lhs"] = serializeExpression(*e->lhs);
-		j["operator"] = equalityCompToString(e->op);
-		j["rhs"] = serializeExpression(*e->rhs);
-	}
-	else if (auto const* e = dynamic_cast<awst::BooleanBinaryOperation const*>(&_expr))
-	{
-		j["left"] = serializeExpression(*e->left);
-		j["op"] = boolBinOpToString(e->op);
-		j["right"] = serializeExpression(*e->right);
-	}
-	else if (auto const* e = dynamic_cast<awst::Not const*>(&_expr))
-	{
-		j["expr"] = serializeExpression(*e->expr);
-	}
-	else if (auto const* e = dynamic_cast<awst::AssertExpression const*>(&_expr))
-	{
-		j["condition"] = e->condition ? serializeExpression(*e->condition) : njson(nullptr);
-		j["error_message"] = e->errorMessage.has_value()
-			? njson(e->errorMessage.value())
-			: njson(nullptr);
-		j["comment"] = e->errorMessage.has_value()
-			? njson(e->errorMessage.value())
-			: njson(nullptr);
-		j["explicit"] = e->isExplicit;
-	}
-	else if (auto const* e = dynamic_cast<awst::AssignmentExpression const*>(&_expr))
-	{
-		j["target"] = serializeExpression(*e->target);
-		j["value"] = serializeExpression(*e->value);
-	}
-	else if (auto const* e = dynamic_cast<awst::ConditionalExpression const*>(&_expr))
-	{
-		j["condition"] = serializeExpression(*e->condition);
-		j["true_expr"] = serializeExpression(*e->trueExpr);
-		j["false_expr"] = serializeExpression(*e->falseExpr);
-	}
-	else if (auto const* e = dynamic_cast<awst::SubroutineCallExpression const*>(&_expr))
-	{
-		j["target"] = serializeSubroutineTarget(e->target);
-		njson args = njson::array();
-		for (auto const& arg: e->args)
-			args.push_back(serializeCallArg(arg));
-		j["args"] = args;
-	}
-	else if (auto const* e = dynamic_cast<awst::IntrinsicCall const*>(&_expr))
-	{
-		j["op_code"] = e->opCode;
-		njson imms = njson::array();
-		for (auto const& imm: e->immediates)
-		{
-			if (auto const* s = std::get_if<std::string>(&imm))
-				imms.push_back(*s);
-			else if (auto const* i = std::get_if<int>(&imm))
-				imms.push_back(*i);
-		}
-		j["immediates"] = imms;
-		njson sargs = njson::array();
-		for (auto const& sa: e->stackArgs)
-			sargs.push_back(serializeExpression(*sa));
-		j["stack_args"] = sargs;
-	}
-	else if (auto const* e = dynamic_cast<awst::FieldExpression const*>(&_expr))
-	{
-		j["base"] = serializeExpression(*e->base);
-		j["name"] = e->name;
-	}
-	else if (auto const* e = dynamic_cast<awst::IndexExpression const*>(&_expr))
-	{
-		j["base"] = serializeExpression(*e->base);
-		j["index"] = serializeExpression(*e->index);
-	}
-	else if (auto const* e = dynamic_cast<awst::TupleExpression const*>(&_expr))
-	{
-		njson items = njson::array();
-		for (auto const& item: e->items)
-			items.push_back(serializeExpression(*item));
-		j["items"] = items;
-	}
-	else if (auto const* e = dynamic_cast<awst::TupleItemExpression const*>(&_expr))
-	{
-		j["base"] = serializeExpression(*e->base);
-		j["index"] = e->index;
-	}
-	else if (auto const* e = dynamic_cast<awst::ARC4Encode const*>(&_expr))
-	{
-		j["value"] = serializeExpression(*e->value);
-		j["error_message"] = nullptr;
-	}
-	else if (auto const* e = dynamic_cast<awst::ARC4Decode const*>(&_expr))
-	{
-		j["value"] = serializeExpression(*e->value);
-		j["error_message"] = nullptr;
-	}
-	else if (auto const* e = dynamic_cast<awst::ARC4FromBytes const*>(&_expr))
-	{
-		j["value"] = serializeExpression(*e->value);
-		j["validate"] = e->validate;
-	}
-	else if (dynamic_cast<awst::ARC4Router const*>(&_expr))
-	{
-		// no extra fields
-	}
-	else if (auto const* e = dynamic_cast<awst::ReinterpretCast const*>(&_expr))
-	{
-		j["expr"] = serializeExpression(*e->expr);
-	}
-	else if (auto const* e = dynamic_cast<awst::TemplateVar const*>(&_expr))
-	{
-		j["name"] = e->name;
-	}
-	else if (auto const* e = dynamic_cast<awst::Copy const*>(&_expr))
-	{
-		j["value"] = serializeExpression(*e->value);
-	}
-	else if (auto const* e = dynamic_cast<awst::SingleEvaluation const*>(&_expr))
-	{
-		j["source"] = serializeExpression(*e->source);
-		// cattrs keys on `_id`, not `id` — emit `_id` so the single-eval cache
-		// actually deduplicates. Emitting `id` left `_id` at id(self) each time.
-		j["_id"] = e->id;
-	}
-	else if (auto const* e = dynamic_cast<awst::CheckedMaybe const*>(&_expr))
-	{
-		j["expr"] = serializeExpression(*e->expr);
-		j["comment"] = e->comment;
-	}
-	else if (auto const* e = dynamic_cast<awst::Emit const*>(&_expr))
-	{
-		j["signature"] = e->signature;
-		j["value"] = serializeExpression(*e->value);
-	}
-	else if (auto const* e = dynamic_cast<awst::BoxPrefixedKeyExpression const*>(&_expr))
-	{
-		// puya 5.x dropped BoxPrefixedKeyExpression; lower to concat(prefix, key).
-		// (Port of polymarket-experiment e293832fe.)
-		j["_type"] = "IntrinsicCall";
-		j["op_code"] = "concat";
-		j["immediates"] = njson::array();
-		njson sargs = njson::array();
-		sargs.push_back(serializeExpression(*e->prefix));
-		sargs.push_back(serializeExpression(*e->key));
-		j["stack_args"] = std::move(sargs);
-	}
-	else if (auto const* e = dynamic_cast<awst::AppStateExpression const*>(&_expr))
-	{
-		j["key"] = serializeExpression(*e->key);
-		j["exists_assertion_message"] = e->existsAssertionMessage.has_value()
-			? njson(e->existsAssertionMessage.value())
-			: njson(nullptr);
-	}
-	else if (auto const* e = dynamic_cast<awst::AppAccountStateExpression const*>(&_expr))
-	{
-		j["key"] = serializeExpression(*e->key);
-		j["account"] = serializeExpression(*e->account);
-		j["exists_assertion_message"] = e->existsAssertionMessage.has_value()
-			? njson(e->existsAssertionMessage.value())
-			: njson(nullptr);
-	}
-	else if (auto const* e = dynamic_cast<awst::BoxValueExpression const*>(&_expr))
-	{
-		j["key"] = serializeExpression(*e->key);
-		j["exists_assertion_message"] = e->existsAssertionMessage.has_value()
-			? njson(e->existsAssertionMessage.value())
-			: njson(nullptr);
-	}
-	else if (auto const* e = dynamic_cast<awst::StateGet const*>(&_expr))
-	{
-		emitStateField(*e->field);
-		j["default"] = serializeExpression(*e->defaultValue);
-	}
-	else if (auto const* e = dynamic_cast<awst::StateExists const*>(&_expr))
-	{
-		emitStateField(*e->field);
-	}
-	else if (auto const* e = dynamic_cast<awst::StateDelete const*>(&_expr))
-	{
-		j["field"] = serializeExpression(*e->field);
-	}
-	else if (auto const* e = dynamic_cast<awst::StateGetEx const*>(&_expr))
-	{
-		emitStateField(*e->field);
-	}
-	else if (auto const* e = dynamic_cast<awst::NewArray const*>(&_expr))
-	{
-		njson values = njson::array();
-		for (auto const& v: e->values)
-			values.push_back(serializeExpression(*v));
-		j["values"] = values;
-	}
-	else if (auto const* e = dynamic_cast<awst::ArrayLength const*>(&_expr))
-	{
-		j["array"] = serializeExpression(*e->array);
-	}
-	else if (auto const* e = dynamic_cast<awst::ArrayPop const*>(&_expr))
-	{
-		j["base"] = serializeExpression(*e->base);
-	}
-	else if (auto const* e = dynamic_cast<awst::ArrayConcat const*>(&_expr))
-	{
-		j["left"] = serializeExpression(*e->left);
-		j["right"] = serializeExpression(*e->right);
-	}
-	else if (auto const* e = dynamic_cast<awst::ArrayExtend const*>(&_expr))
-	{
-		j["base"] = serializeExpression(*e->base);
-		j["other"] = serializeExpression(*e->other);
-	}
-	else if (auto const* e = dynamic_cast<awst::ConvertArray const*>(&_expr))
-	{
-		j["expr"] = serializeExpression(*e->expr);
-	}
-	else if (auto const* e = dynamic_cast<awst::NewStruct const*>(&_expr))
-	{
-		njson vals = njson::object();
-		for (auto const& [k, v]: e->values)
-			vals[k] = serializeExpression(*v);
-		j["values"] = vals;
-	}
-	else if (auto const* e = dynamic_cast<awst::NamedTupleExpression const*>(&_expr))
-	{
-		njson vals;
-		for (auto const& [k, v]: e->values)
-			vals[k] = serializeExpression(*v);
-		j["values"] = vals;
-	}
-	else if (auto const* e = dynamic_cast<awst::CreateInnerTransaction const*>(&_expr))
-	{
-		njson fields;
-		for (auto const& [k, v]: e->fields)
-			fields[k] = serializeExpression(*v);
-		j["fields"] = fields;
-	}
-	else if (auto const* e = dynamic_cast<awst::SubmitInnerTransaction const*>(&_expr))
-	{
-		njson itxns = njson::array();
-		for (auto const& itxn: e->itxns)
-			itxns.push_back(serializeExpression(*itxn));
-		j["itxns"] = itxns;
-	}
-	else if (auto const* e = dynamic_cast<awst::InnerTransactionField const*>(&_expr))
-	{
-		j["itxn"] = serializeExpression(*e->itxn);
-		j["field"] = e->field;
-		j["array_index"] = e->arrayIndex ? serializeExpression(*e->arrayIndex) : njson(nullptr);
-	}
-	else if (auto const* e = dynamic_cast<awst::CommaExpression const*>(&_expr))
-	{
-		njson exprs = njson::array();
-		for (auto const& ex: e->expressions)
-			exprs.push_back(serializeExpression(*ex));
-		j["expressions"] = exprs;
-	}
-	else if (auto const* e = dynamic_cast<awst::MethodConstant const*>(&_expr))
-	{
-		njson methodSig;
-		methodSig["_type"] = "MethodSignatureString";
-		methodSig["source_location"] = serializeSourceLocation(e->sourceLocation);
-		methodSig["value"] = e->value;
-		j["value"] = std::move(methodSig);
-	}
-	else if (auto const* e = dynamic_cast<awst::AddressConstant const*>(&_expr))
-	{
-		j["value"] = e->value;
-	}
-	else if (auto const* e = dynamic_cast<awst::PuyaLibCall const*>(&_expr))
-	{
-		j.erase("wtype");
-		j["func"] = e->func;
-		njson args = njson::array();
-		for (auto const& arg: e->args)
-			args.push_back(serializeCallArg(arg));
-		j["args"] = args;
-	}
+	PUYASOL_AWST_EXPRESSION_NODES(PUYASOL_AWST_SERIALIZE_ARM)
+#undef PUYASOL_AWST_SERIALIZE_ARM
 
 	return j;
+}
+
+void AWSTSerializer::emitStateField(awst::Expression const& _field, njson& _json)
+{
+	_json.erase("wtype");
+	_json["field"] = serializeExpression(_field);
+}
+
+void AWSTSerializer::serializeFields(awst::IntegerConstant const& _node, njson& _json)
+{
+	// Stored as string for biguint; detect hex prefix so stoll handles 0x literals.
+	std::string const& s = _node.value;
+	bool neg = !s.empty() && s[0] == '-';
+	size_t off = neg ? 1 : 0;
+	bool isHex = s.size() > off + 2 && s[off] == '0' && (s[off + 1] == 'x' || s[off + 1] == 'X');
+	try
+	{
+		if (isHex)
+		{
+			// Parse as hex; stoll with base 16 needs the prefix stripped.
+			long long val = std::stoll(s.substr(off + 2), nullptr, 16);
+			_json["value"] = neg ? -val : val;
+		}
+		else
+			_json["value"] = std::stoll(s);
+	}
+	catch (...)
+	{
+		if (isHex)
+		{
+			// Hex too large for int64: convert to decimal string.
+			std::string hex = s.substr(off + 2);
+			// Big-integer decimal from hex via repeated base-10 division.
+			std::vector<unsigned> digits; // big-endian hex digits
+			digits.reserve(hex.size());
+			for (char c : hex)
+			{
+				unsigned d = 0;
+				if (c >= '0' && c <= '9') d = c - '0';
+				else if (c >= 'a' && c <= 'f') d = 10 + (c - 'a');
+				else if (c >= 'A' && c <= 'F') d = 10 + (c - 'A');
+				else { digits.clear(); break; }
+				digits.push_back(d);
+			}
+			std::string dec;
+			if (digits.empty())
+				dec = "0";
+			else
+			{
+				while (!digits.empty())
+				{
+					unsigned rem = 0;
+					std::vector<unsigned> next;
+					next.reserve(digits.size());
+					for (unsigned d : digits)
+					{
+						unsigned cur = rem * 16 + d;
+						unsigned q = cur / 10;
+						rem = cur % 10;
+						if (!next.empty() || q) next.push_back(q);
+					}
+					dec.push_back(char('0' + rem));
+					digits = std::move(next);
+				}
+				std::reverse(dec.begin(), dec.end());
+			}
+			if (neg) dec.insert(dec.begin(), '-');
+			_json["value"] = dec;
+		}
+		else
+			_json["value"] = s;
+	}
+	_json["teal_alias"] = nullptr;
+}
+
+void AWSTSerializer::serializeFields(awst::BoolConstant const& _node, njson& _json)
+{
+	_json["value"] = _node.value;
+}
+
+void AWSTSerializer::serializeFields(awst::BytesConstant const& _node, njson& _json)
+{
+	_json["value"] = base85Encode(_node.value);
+	_json["encoding"] = bytesEncodingToString(_node.encoding);
+}
+
+void AWSTSerializer::serializeFields(awst::StringConstant const& _node, njson& _json)
+{
+	_json["value"] = _node.value;
+}
+
+void AWSTSerializer::serializeFields(awst::VoidConstant const&, njson&)
+{
+	// no extra fields
+}
+
+void AWSTSerializer::serializeFields(awst::VarExpression const& _node, njson& _json)
+{
+	_json["name"] = _node.name;
+}
+
+void AWSTSerializer::serializeFields(awst::UInt64BinaryOperation const& _node, njson& _json)
+{
+	_json["left"] = serializeExpression(*_node.left);
+	_json["op"] = uint64BinOpToString(_node.op);
+	_json["right"] = serializeExpression(*_node.right);
+}
+
+void AWSTSerializer::serializeFields(awst::BigUIntBinaryOperation const& _node, njson& _json)
+{
+	_json["left"] = serializeExpression(*_node.left);
+	_json["op"] = bigUIntBinOpToString(_node.op);
+	_json["right"] = serializeExpression(*_node.right);
+}
+
+void AWSTSerializer::serializeFields(awst::BytesBinaryOperation const& _node, njson& _json)
+{
+	_json["left"] = serializeExpression(*_node.left);
+	_json["op"] = bytesBinOpToString(_node.op);
+	_json["right"] = serializeExpression(*_node.right);
+}
+
+void AWSTSerializer::serializeFields(awst::BytesUnaryOperation const& _node, njson& _json)
+{
+	_json["op"] = "~";
+	_json["expr"] = serializeExpression(*_node.expr);
+}
+
+void AWSTSerializer::serializeFields(awst::NumericComparisonExpression const& _node, njson& _json)
+{
+	_json["lhs"] = serializeExpression(*_node.lhs);
+	_json["operator"] = numericCompToString(_node.op);
+	_json["rhs"] = serializeExpression(*_node.rhs);
+}
+
+void AWSTSerializer::serializeFields(awst::BytesComparisonExpression const& _node, njson& _json)
+{
+	_json["lhs"] = serializeExpression(*_node.lhs);
+	_json["operator"] = equalityCompToString(_node.op);
+	_json["rhs"] = serializeExpression(*_node.rhs);
+}
+
+void AWSTSerializer::serializeFields(awst::BooleanBinaryOperation const& _node, njson& _json)
+{
+	_json["left"] = serializeExpression(*_node.left);
+	_json["op"] = boolBinOpToString(_node.op);
+	_json["right"] = serializeExpression(*_node.right);
+}
+
+void AWSTSerializer::serializeFields(awst::Not const& _node, njson& _json)
+{
+	_json["expr"] = serializeExpression(*_node.expr);
+}
+
+void AWSTSerializer::serializeFields(awst::AssertExpression const& _node, njson& _json)
+{
+	_json["condition"] = _node.condition ? serializeExpression(*_node.condition) : njson(nullptr);
+	_json["error_message"] = _node.errorMessage.has_value()
+		? njson(_node.errorMessage.value())
+		: njson(nullptr);
+	_json["comment"] = _node.errorMessage.has_value()
+		? njson(_node.errorMessage.value())
+		: njson(nullptr);
+	_json["explicit"] = _node.isExplicit;
+}
+
+void AWSTSerializer::serializeFields(awst::AssignmentExpression const& _node, njson& _json)
+{
+	_json["target"] = serializeExpression(*_node.target);
+	_json["value"] = serializeExpression(*_node.value);
+}
+
+void AWSTSerializer::serializeFields(awst::ConditionalExpression const& _node, njson& _json)
+{
+	_json["condition"] = serializeExpression(*_node.condition);
+	_json["true_expr"] = serializeExpression(*_node.trueExpr);
+	_json["false_expr"] = serializeExpression(*_node.falseExpr);
+}
+
+void AWSTSerializer::serializeFields(awst::SubroutineCallExpression const& _node, njson& _json)
+{
+	_json["target"] = serializeSubroutineTarget(_node.target);
+	njson args = njson::array();
+	for (auto const& arg: _node.args)
+		args.push_back(serializeCallArg(arg));
+	_json["args"] = args;
+}
+
+void AWSTSerializer::serializeFields(awst::IntrinsicCall const& _node, njson& _json)
+{
+	_json["op_code"] = _node.opCode;
+	njson imms = njson::array();
+	for (auto const& imm: _node.immediates)
+	{
+		if (auto const* s = std::get_if<std::string>(&imm))
+			imms.push_back(*s);
+		else if (auto const* i = std::get_if<int>(&imm))
+			imms.push_back(*i);
+	}
+	_json["immediates"] = imms;
+	njson sargs = njson::array();
+	for (auto const& sa: _node.stackArgs)
+		sargs.push_back(serializeExpression(*sa));
+	_json["stack_args"] = sargs;
+}
+
+void AWSTSerializer::serializeFields(awst::FieldExpression const& _node, njson& _json)
+{
+	_json["base"] = serializeExpression(*_node.base);
+	_json["name"] = _node.name;
+}
+
+void AWSTSerializer::serializeFields(awst::IndexExpression const& _node, njson& _json)
+{
+	_json["base"] = serializeExpression(*_node.base);
+	_json["index"] = serializeExpression(*_node.index);
+}
+
+void AWSTSerializer::serializeFields(awst::TupleExpression const& _node, njson& _json)
+{
+	njson items = njson::array();
+	for (auto const& item: _node.items)
+		items.push_back(serializeExpression(*item));
+	_json["items"] = items;
+}
+
+void AWSTSerializer::serializeFields(awst::TupleItemExpression const& _node, njson& _json)
+{
+	_json["base"] = serializeExpression(*_node.base);
+	_json["index"] = _node.index;
+}
+
+void AWSTSerializer::serializeFields(awst::ARC4Encode const& _node, njson& _json)
+{
+	_json["value"] = serializeExpression(*_node.value);
+	_json["error_message"] = nullptr;
+}
+
+void AWSTSerializer::serializeFields(awst::ARC4Decode const& _node, njson& _json)
+{
+	_json["value"] = serializeExpression(*_node.value);
+	_json["error_message"] = nullptr;
+}
+
+void AWSTSerializer::serializeFields(awst::ARC4FromBytes const& _node, njson& _json)
+{
+	_json["value"] = serializeExpression(*_node.value);
+	_json["validate"] = _node.validate;
+}
+
+void AWSTSerializer::serializeFields(awst::ARC4Router const&, njson&)
+{
+	// no extra fields
+}
+
+void AWSTSerializer::serializeFields(awst::ReinterpretCast const& _node, njson& _json)
+{
+	_json["expr"] = serializeExpression(*_node.expr);
+}
+
+void AWSTSerializer::serializeFields(awst::TemplateVar const& _node, njson& _json)
+{
+	_json["name"] = _node.name;
+}
+
+void AWSTSerializer::serializeFields(awst::Copy const& _node, njson& _json)
+{
+	_json["value"] = serializeExpression(*_node.value);
+}
+
+void AWSTSerializer::serializeFields(awst::SingleEvaluation const& _node, njson& _json)
+{
+	_json["source"] = serializeExpression(*_node.source);
+	// cattrs keys on `_id`, not `id` — emit `_id` so the single-eval cache
+	// actually deduplicates. Emitting `id` left `_id` at id(self) each time.
+	_json["_id"] = _node.id;
+}
+
+void AWSTSerializer::serializeFields(awst::CheckedMaybe const& _node, njson& _json)
+{
+	_json["expr"] = serializeExpression(*_node.expr);
+	_json["comment"] = _node.comment;
+}
+
+void AWSTSerializer::serializeFields(awst::Emit const& _node, njson& _json)
+{
+	_json["signature"] = _node.signature;
+	_json["value"] = serializeExpression(*_node.value);
+}
+
+void AWSTSerializer::serializeFields(awst::AppStateExpression const& _node, njson& _json)
+{
+	_json["key"] = serializeExpression(*_node.key);
+	_json["exists_assertion_message"] = _node.existsAssertionMessage.has_value()
+		? njson(_node.existsAssertionMessage.value())
+		: njson(nullptr);
+}
+
+void AWSTSerializer::serializeFields(awst::AppAccountStateExpression const& _node, njson& _json)
+{
+	_json["key"] = serializeExpression(*_node.key);
+	_json["account"] = serializeExpression(*_node.account);
+	_json["exists_assertion_message"] = _node.existsAssertionMessage.has_value()
+		? njson(_node.existsAssertionMessage.value())
+		: njson(nullptr);
+}
+
+void AWSTSerializer::serializeFields(awst::BoxValueExpression const& _node, njson& _json)
+{
+	_json["key"] = serializeExpression(*_node.key);
+	_json["exists_assertion_message"] = _node.existsAssertionMessage.has_value()
+		? njson(_node.existsAssertionMessage.value())
+		: njson(nullptr);
+}
+
+void AWSTSerializer::serializeFields(awst::StateGet const& _node, njson& _json)
+{
+	emitStateField(*_node.field, _json);
+	_json["default"] = serializeExpression(*_node.defaultValue);
+}
+
+void AWSTSerializer::serializeFields(awst::StateExists const& _node, njson& _json)
+{
+	emitStateField(*_node.field, _json);
+}
+
+void AWSTSerializer::serializeFields(awst::StateDelete const& _node, njson& _json)
+{
+	_json["field"] = serializeExpression(*_node.field);
+}
+
+void AWSTSerializer::serializeFields(awst::StateGetEx const& _node, njson& _json)
+{
+	emitStateField(*_node.field, _json);
+}
+
+void AWSTSerializer::serializeFields(awst::NewArray const& _node, njson& _json)
+{
+	njson values = njson::array();
+	for (auto const& v: _node.values)
+		values.push_back(serializeExpression(*v));
+	_json["values"] = values;
+}
+
+void AWSTSerializer::serializeFields(awst::ArrayLength const& _node, njson& _json)
+{
+	_json["array"] = serializeExpression(*_node.array);
+}
+
+void AWSTSerializer::serializeFields(awst::ArrayPop const& _node, njson& _json)
+{
+	_json["base"] = serializeExpression(*_node.base);
+}
+
+void AWSTSerializer::serializeFields(awst::ArrayConcat const& _node, njson& _json)
+{
+	_json["left"] = serializeExpression(*_node.left);
+	_json["right"] = serializeExpression(*_node.right);
+}
+
+void AWSTSerializer::serializeFields(awst::ArrayExtend const& _node, njson& _json)
+{
+	_json["base"] = serializeExpression(*_node.base);
+	_json["other"] = serializeExpression(*_node.other);
+}
+
+void AWSTSerializer::serializeFields(awst::ConvertArray const& _node, njson& _json)
+{
+	_json["expr"] = serializeExpression(*_node.expr);
+}
+
+void AWSTSerializer::serializeFields(awst::NewStruct const& _node, njson& _json)
+{
+	njson vals = njson::object();
+	for (auto const& [k, v]: _node.values)
+		vals[k] = serializeExpression(*v);
+	_json["values"] = vals;
+}
+
+void AWSTSerializer::serializeFields(awst::NamedTupleExpression const& _node, njson& _json)
+{
+	njson vals;
+	for (auto const& [k, v]: _node.values)
+		vals[k] = serializeExpression(*v);
+	_json["values"] = vals;
+}
+
+void AWSTSerializer::serializeFields(awst::CreateInnerTransaction const& _node, njson& _json)
+{
+	njson fields;
+	for (auto const& [k, v]: _node.fields)
+		fields[k] = serializeExpression(*v);
+	_json["fields"] = fields;
+}
+
+void AWSTSerializer::serializeFields(awst::SubmitInnerTransaction const& _node, njson& _json)
+{
+	njson itxns = njson::array();
+	for (auto const& itxn: _node.itxns)
+		itxns.push_back(serializeExpression(*itxn));
+	_json["itxns"] = itxns;
+}
+
+void AWSTSerializer::serializeFields(awst::InnerTransactionField const& _node, njson& _json)
+{
+	_json["itxn"] = serializeExpression(*_node.itxn);
+	_json["field"] = _node.field;
+	_json["array_index"] = _node.arrayIndex ? serializeExpression(*_node.arrayIndex) : njson(nullptr);
+}
+
+void AWSTSerializer::serializeFields(awst::CommaExpression const& _node, njson& _json)
+{
+	njson exprs = njson::array();
+	for (auto const& ex: _node.expressions)
+		exprs.push_back(serializeExpression(*ex));
+	_json["expressions"] = exprs;
+}
+
+void AWSTSerializer::serializeFields(awst::MethodConstant const& _node, njson& _json)
+{
+	njson methodSig;
+	methodSig["_type"] = "MethodSignatureString";
+	methodSig["source_location"] = serializeSourceLocation(_node.sourceLocation);
+	methodSig["value"] = _node.value;
+	_json["value"] = std::move(methodSig);
+}
+
+void AWSTSerializer::serializeFields(awst::AddressConstant const& _node, njson& _json)
+{
+	_json["value"] = _node.value;
+}
+
+void AWSTSerializer::serializeFields(awst::PuyaLibCall const& _node, njson& _json)
+{
+	_json.erase("wtype");
+	_json["func"] = _node.func;
+	njson args = njson::array();
+	for (auto const& arg: _node.args)
+		args.push_back(serializeCallArg(arg));
+	_json["args"] = args;
 }
 
 njson AWSTSerializer::serializeStatement(awst::Statement const& _stmt)
@@ -663,80 +711,101 @@ njson AWSTSerializer::serializeStatement(awst::Statement const& _stmt)
 	j["_type"] = _stmt.nodeType();
 	j["source_location"] = serializeSourceLocation(_stmt.sourceLocation);
 
-	if (auto const* s = dynamic_cast<awst::Block const*>(&_stmt))
-	{
-		return serializeBlock(*s);
+#define PUYASOL_AWST_SERIALIZE_ARM(Node) \
+	if (auto const* node = dynamic_cast<awst::Node const*>(&_stmt)) \
+	{ \
+		serializeFields(*node, j); \
+		return j; \
 	}
-	else if (auto const* s = dynamic_cast<awst::ExpressionStatement const*>(&_stmt))
-	{
-		j["expr"] = serializeExpression(*s->expr);
-	}
-	else if (auto const* s = dynamic_cast<awst::ReturnStatement const*>(&_stmt))
-	{
-		j["value"] = s->value ? serializeExpression(*s->value) : njson(nullptr);
-	}
-	else if (auto const* s = dynamic_cast<awst::IfElse const*>(&_stmt))
-	{
-		j["condition"] = serializeExpression(*s->condition);
-		j["if_branch"] = serializeBlock(*s->ifBranch);
-		j["else_branch"] = s->elseBranch ? serializeBlock(*s->elseBranch) : njson(nullptr);
-	}
-	else if (auto const* s = dynamic_cast<awst::WhileLoop const*>(&_stmt))
-	{
-		j["condition"] = serializeExpression(*s->condition);
-		j["loop_body"] = serializeBlock(*s->loopBody);
-	}
-	else if (dynamic_cast<awst::LoopExit const*>(&_stmt))
-	{
-		// no extra fields
-	}
-	else if (dynamic_cast<awst::LoopContinue const*>(&_stmt))
-	{
-		// no extra fields
-	}
-	else if (auto const* s = dynamic_cast<awst::AssignmentStatement const*>(&_stmt))
-	{
-		j["target"] = serializeExpression(*s->target);
-		j["value"] = serializeExpression(*s->value);
-	}
-	else if (auto const* s = dynamic_cast<awst::Goto const*>(&_stmt))
-	{
-		j["target"] = s->target;
-	}
-	else if (auto const* s = dynamic_cast<awst::Switch const*>(&_stmt))
-	{
-		j["value"] = serializeExpression(*s->value);
-		njson cases = njson::array();
-		for (auto const& [expr, block]: s->cases)
-		{
-			njson c = njson::array();
-			c.push_back(serializeExpression(*expr));
-			c.push_back(serializeBlock(*block));
-			cases.push_back(c);
-		}
-		j["cases"] = cases;
-		j["default_case"] = s->defaultCase ? serializeBlock(*s->defaultCase) : njson(nullptr);
-	}
-	else if (auto const* s = dynamic_cast<awst::ForInLoop const*>(&_stmt))
-	{
-		j["sequence"] = serializeExpression(*s->sequence);
-		j["items"] = serializeExpression(*s->items);
-		j["loop_body"] = serializeBlock(*s->loopBody);
-	}
-	else if (auto const* s = dynamic_cast<awst::UInt64AugmentedAssignment const*>(&_stmt))
-	{
-		j["target"] = serializeExpression(*s->target);
-		j["op"] = uint64BinOpToString(s->op);
-		j["value"] = serializeExpression(*s->value);
-	}
-	else if (auto const* s = dynamic_cast<awst::BigUIntAugmentedAssignment const*>(&_stmt))
-	{
-		j["target"] = serializeExpression(*s->target);
-		j["op"] = bigUIntBinOpToString(s->op);
-		j["value"] = serializeExpression(*s->value);
-	}
+	PUYASOL_AWST_STATEMENT_NODES(PUYASOL_AWST_SERIALIZE_ARM)
+#undef PUYASOL_AWST_SERIALIZE_ARM
 
 	return j;
+}
+
+void AWSTSerializer::serializeFields(awst::Block const& _node, njson& _json)
+{
+	_json = serializeBlock(_node);
+}
+
+void AWSTSerializer::serializeFields(awst::ExpressionStatement const& _node, njson& _json)
+{
+	_json["expr"] = serializeExpression(*_node.expr);
+}
+
+void AWSTSerializer::serializeFields(awst::ReturnStatement const& _node, njson& _json)
+{
+	_json["value"] = _node.value ? serializeExpression(*_node.value) : njson(nullptr);
+}
+
+void AWSTSerializer::serializeFields(awst::IfElse const& _node, njson& _json)
+{
+	_json["condition"] = serializeExpression(*_node.condition);
+	_json["if_branch"] = serializeBlock(*_node.ifBranch);
+	_json["else_branch"] = _node.elseBranch ? serializeBlock(*_node.elseBranch) : njson(nullptr);
+}
+
+void AWSTSerializer::serializeFields(awst::WhileLoop const& _node, njson& _json)
+{
+	_json["condition"] = serializeExpression(*_node.condition);
+	_json["loop_body"] = serializeBlock(*_node.loopBody);
+}
+
+void AWSTSerializer::serializeFields(awst::LoopExit const&, njson&)
+{
+	// no extra fields
+}
+
+void AWSTSerializer::serializeFields(awst::LoopContinue const&, njson&)
+{
+	// no extra fields
+}
+
+void AWSTSerializer::serializeFields(awst::AssignmentStatement const& _node, njson& _json)
+{
+	_json["target"] = serializeExpression(*_node.target);
+	_json["value"] = serializeExpression(*_node.value);
+}
+
+void AWSTSerializer::serializeFields(awst::Goto const& _node, njson& _json)
+{
+	_json["target"] = _node.target;
+}
+
+void AWSTSerializer::serializeFields(awst::Switch const& _node, njson& _json)
+{
+	_json["value"] = serializeExpression(*_node.value);
+	njson cases = njson::array();
+	for (auto const& [expr, block]: _node.cases)
+	{
+		njson c = njson::array();
+		c.push_back(serializeExpression(*expr));
+		c.push_back(serializeBlock(*block));
+		cases.push_back(c);
+	}
+	_json["cases"] = cases;
+	_json["default_case"] = _node.defaultCase ? serializeBlock(*_node.defaultCase) : njson(nullptr);
+}
+
+void AWSTSerializer::serializeFields(awst::ForInLoop const& _node, njson& _json)
+{
+	_json["sequence"] = serializeExpression(*_node.sequence);
+	_json["items"] = serializeExpression(*_node.items);
+	_json["loop_body"] = serializeBlock(*_node.loopBody);
+}
+
+void AWSTSerializer::serializeFields(awst::UInt64AugmentedAssignment const& _node, njson& _json)
+{
+	_json["target"] = serializeExpression(*_node.target);
+	_json["op"] = uint64BinOpToString(_node.op);
+	_json["value"] = serializeExpression(*_node.value);
+}
+
+void AWSTSerializer::serializeFields(awst::BigUIntAugmentedAssignment const& _node, njson& _json)
+{
+	_json["target"] = serializeExpression(*_node.target);
+	_json["op"] = bigUIntBinOpToString(_node.op);
+	_json["value"] = serializeExpression(*_node.value);
 }
 
 njson AWSTSerializer::serializeSourceLocation(awst::SourceLocation const& _loc)

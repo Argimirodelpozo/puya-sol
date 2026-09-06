@@ -12,8 +12,8 @@
 ///   3. a separate `paramBitWidths` map threaded through the contexts.
 ///
 /// `SolIntType` is the one carrier that names {bits, isSigned} explicitly, with
-/// the width-tier / native-WType / modulus queries the arithmetic and coercion
-/// layers repeatedly need. Construct it from whichever representation you have
+/// the width-tier / modulus queries the arithmetic and coercion layers
+/// repeatedly need. Construct it from whichever representation you have
 /// (`fromSol` / `fromArc4`) and query it instead of re-deriving.
 
 #include "awst/WType.h"
@@ -37,13 +37,6 @@ struct SolIntType
 	/// True when this integer is backed by `biguint` (N>64) rather than `uint64`.
 	/// This is the boundary the arithmetic paths branch on ("needs the biguint path").
 	bool biguintBacked() const { return bits > 64; }
-
-	/// The native AWST WType a value of this integer type carries: `uint64` for
-	/// N<=64, `biguint` for N>64. (Signedness is not represented in the WType.)
-	awst::WType const* nativeWType() const
-	{
-		return biguintBacked() ? awst::WType::biguintType() : awst::WType::uint64Type();
-	}
 
 	/// {2^bits, 2^(bits-1)} as decimal strings — the two's-complement wrap modulus
 	/// and the sign-bit / INT_MIN boundary. Delegates to the centralised

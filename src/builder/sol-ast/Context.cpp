@@ -1,7 +1,7 @@
 /// @file Context.cpp
 /// All decl-id-keyed mutators are inline in the header now (direct
-/// hashmap ops on the shared ScopeState). Only the lexical-scope walks
-/// that need to find the right typed ancestor remain here.
+/// hashmap ops on the shared ScopeState). Only the solc-AST-dependent
+/// naming remains here.
 
 #include "builder/sol-ast/Context.h"
 // solc AST nodes used completely (dynamic_cast / member access); the hub
@@ -10,24 +10,6 @@
 
 namespace puyasol::builder::sol_ast
 {
-
-namespace
-{
-FunctionContext* nearestFunction(Context* _ctx)
-{
-	for (Context* c = _ctx; c; c = c->parent())
-		if (auto* fn = dynamic_cast<FunctionContext*>(c))
-			return fn;
-	return nullptr;
-}
-
-}
-
-void Context::setInConstructor(bool _flag)
-{
-	if (auto* fn = nearestFunction(this))
-		fn->inConstructor = _flag;
-}
 
 std::string Context::awstVarName(solidity::frontend::VariableDeclaration const& _vd) const
 {
