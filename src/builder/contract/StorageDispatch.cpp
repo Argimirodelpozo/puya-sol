@@ -47,7 +47,7 @@ void ContractBuilder::buildStorageDispatch(
 		if (!variable)
 			return std::string{};
 		return variable->declaration
-			? m_storageMapper.physicalBindingFor(*variable->declaration).name
+			? m_storageMapper.physicalBindingFor(*variable->declaration).key
 			: variable->name;
 	};
 	auto usesBoxStorage = [&](SlotVariable const* variable) {

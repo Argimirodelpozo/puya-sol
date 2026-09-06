@@ -382,7 +382,7 @@ bool SolUnaryOperation::clearMultiBoxElement(
 		return false;
 
 	auto page = StorageMapper::arrayPageForIndex(
-		m_ctx.storageMapper.physicalBindingFor(_var).name,
+		m_ctx.storageMapper.physicalBindingFor(_var).key,
 		_arrWtype, _index, m_ctx.preEffects(), m_loc);
 
 	// The cleared element is its ARC-4 default, which for a fixed-width element
@@ -435,7 +435,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 				{
 					auto count = StorageMapper::numBoxesForArray(type);
 					if (count > 4096) throw SizeError("multi-box delete exceeds the 4096-page unroll capacity");
-					auto name = m_ctx.storageMapper.physicalBindingFor(*varDecl).name;
+					auto name = m_ctx.storageMapper.physicalBindingFor(*varDecl).key;
 					for (unsigned page = 0; page < count; ++page)
 					{
 						auto key = awst::makeConcat(awst::makeUtf8BytesConstant(name, m_loc),

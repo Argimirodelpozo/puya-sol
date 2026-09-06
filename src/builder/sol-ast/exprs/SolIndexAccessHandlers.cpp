@@ -3,6 +3,7 @@
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/sol-ast/MappingPrefix.h"
+#include "builder/storage/StorageKey.h"
 #include "awst/NameGen.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-ast/members/SolLengthAccess.h"
@@ -66,7 +67,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 			auto boxName = ident->name();
 			if (auto const* stateVar = dynamic_cast<VariableDeclaration const*>(decl);
 				stateVar && stateVar->isStateVariable())
-				boxName = m_ctx.storageMapper.physicalBindingFor(*stateVar).name;
+				boxName = m_ctx.storageMapper.physicalBindingFor(*stateVar).key;
 			boxExpr = builder::StorageMapper::makeTopLevelBoxExpr(boxName, arrWType, m_loc);
 		}
 	}
@@ -112,7 +113,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 					&& !decl->immutable())
 					length = SolLengthAccess::stateDynArrayLength(
 						m_ctx,
-						m_ctx.storageMapper.physicalBindingFor(*decl).name,
+						m_ctx.storageMapper.physicalBindingFor(*decl).key,
 						arrType, m_loc);
 				if (!length)
 					return awst::makeZero(m_loc);
@@ -180,7 +181,6 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 
 	std::vector<Expression const*> indexExprs;
 	Expression const* cursor = &m_indexAccess;
-	std::string varName = "map";
 
 	while (auto const* idxAccess = dynamic_cast<IndexAccess const*>(cursor))
 	{
@@ -210,13 +210,14 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		break;
 	}
 
-	auto ctx = resolveCursorContext(cursor);
-	if (!ctx.varName.empty())
-		varName = ctx.varName;
+	auto holder = resolveStorageHolder(m_ctx, m_scope, *cursor, m_loc);
+	if (!holder.key)
+		throw SizeError("mapping access requires a resolved storage holder");
+	auto const* rootMappingType = cursor->annotation().type;
 
 	std::reverse(indexExprs.begin(), indexExprs.end());
 
-	auto declaredKeyWTypes = resolveKeyWTypes(ctx.rootMappingType, indexExprs.size());
+	auto declaredKeyWTypes = resolveKeyWTypes(rootMappingType, indexExprs.size());
 
 	// ARRAY levels in the chain (mapping(K=>V)[] a → a[i][k]) fold the element
 	// index into the derived box key. Collect the type at every level so fixed
@@ -225,7 +226,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	// roots, mapping values, aliases, and box-keyed storage-ref parameters.
 	std::vector<ArrayType const*> arrayLevels(indexExprs.size(), nullptr);
 	{
-		Type const* w = ctx.rootMappingType;
+		Type const* w = rootMappingType;
 		for (size_t i = 0; i < indexExprs.size() && w; ++i)
 		{
 			if (auto const* mt = dynamic_cast<MappingType const*>(w))
@@ -243,12 +244,11 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	e->sourceLocation = m_loc;
 	e->wtype = resolveValueWType(baseType);
 
-	auto prefix = buildInitialPrefix(cursor, varName, ctx.aliasOverridePrefix);
+	auto prefix = std::move(holder.key);
 
 	if (!indexExprs.empty())
 	{
-		// Per-layer hash derivation (Solidity-style): start with the initial
-		// prefix and apply `sha256(keyBytes ++ currentPrefix)` per layer.
+		// Every mapping/array step uses the shared versioned, tagged encoder.
 		std::shared_ptr<awst::Expression> currentPrefix = std::move(prefix);
 		// A function-returned/otherwise computed storage prefix participates in
 		// both bounds checks and key derivation. Evaluate it once before walking
@@ -268,26 +268,21 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		}
 
 		// Keep the actual serialized array value alongside the logical key.
-		// Nested arrays are encoded inside their parent box; `prefix ++ index`
+		// Nested arrays are encoded inside their parent box; a derived holder
 		// is an identity for descendant mapping boxes, not a standalone box that
 		// holds the nested array length. Walking the value tree makes bounds
 		// checks rank-independent without inventing boxes for inner arrays.
-		Type const* walkContainer = ctx.rootMappingType;
+		Type const* walkContainer = rootMappingType;
 		std::shared_ptr<awst::Expression> currentArrayValue;
 		auto boxedArrayValue = [&](std::shared_ptr<awst::Expression> key,
-			ArrayType const* at, bool declarationRoot = false) -> std::shared_ptr<awst::Expression> {
+			ArrayType const* at) -> std::shared_ptr<awst::Expression> {
 			auto const* wt = m_ctx.typeMapper.map(at);
 			auto box = awst::makeBoxValueExpression(std::move(key), wt, m_loc);
-			box->isDeclarationRoot = declarationRoot;
 			return builder::StorageMapper::makeStateGetWithDefault(
 				std::move(box), wt, m_loc);
 		};
-		// Only a genuine state-var box holds its array at its own key. An alias
-		// or storage-ref prefix names a DESCENDANT mapping box, so seeding the
-		// value walk from it reads a box nothing ever created.
-		if (auto const* rootArray = dynamic_cast<ArrayType const*>(walkContainer);
-			rootArray && ctx.rootIsStateVarBox)
-			currentArrayValue = boxedArrayValue(currentPrefix, rootArray, true);
+		if (dynamic_cast<ArrayType const*>(walkContainer))
+			currentArrayValue = std::move(holder.value);
 
 		for (size_t ki = 0; ki < indexExprs.size(); ++ki)
 		{
@@ -338,16 +333,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				else if (currentArrayValue)
 					bound = awst::makeArrayLength(
 						currentArrayValue, awst::WType::uint64Type(), m_loc);
-				else if (ctx.rootIsStateVarBox)
-					bound = SolLengthAccess::stateDynArrayLengthForKey(
-						m_ctx, currentPrefix, at, m_loc);
-				// else: no length is addressable from this prefix. Reading one
-				// anyway box_extracts a box that was never created — for
-				// `mapping(uint=>uint)[] storage b = a[i]; b[b.length-1][k] = v`
-				// it looked for a box named after the LOCAL, while that array's
-				// length lives inside box `a`, and the whole call died on "no
-				// such box 0x62". Skipping the assert only loses an EVM Panic
-				// 0x32 on a shape that never had one.
+				else
+					throw SizeError("dynamic mapping-holder array has no addressable length");
 				if (bound)
 				{
 					if (!dynamic_cast<awst::VarExpression const*>(translated.get())
@@ -406,8 +393,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			else
 				currentArrayValue = nullptr;
 
-			currentPrefix = awst::makeMappingKeyLayer(
-				translated, keyWType, currentPrefix, m_loc);
+			currentPrefix = arrayStep
+				? StorageKey::arrayElement(currentPrefix, translated, m_loc)
+				: StorageKey::mappingEntry(currentPrefix, translated, keyWType, m_loc);
 
 			// A mapping value starts a new serialized box. If that value is an
 			// array, resume value-directed traversal at the just-derived key;
@@ -453,193 +441,6 @@ std::vector<awst::WType const*> SolIndexAccess::resolveKeyWTypes(
 	return result;
 }
 
-SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
-	solidity::frontend::Expression const* _cursor)
-{
-	CursorContext out;
-
-	if (auto const* ident = dynamic_cast<Identifier const*>(_cursor))
-	{
-		out.varName = ident->name();
-		out.rootMappingType = ident->annotation().type;
-
-		// Storage alias `mapping storage m = m1`: box prefix must track the
-		// underlying state var, not the local name, or writes land wrong.
-		if (auto const* decl = ident->annotation().referencedDeclaration)
-		{
-			// State vars key by their PHYSICAL binding name (declaration
-			// identity): colliding inherited names get disambiguated, and the
-			// public getter seeds its hash chain from the same binding.
-			if (auto const* stateVar = dynamic_cast<VariableDeclaration const*>(decl);
-				stateVar && stateVar->isStateVariable()
-				&& !stateVar->isConstant() && !stateVar->immutable())
-			{
-				out.varName = m_ctx.storageMapper.physicalBindingFor(*stateVar).name;
-				out.rootIsStateVarBox = true;
-			}
-			auto const* alias = m_scope.findStorageAlias(decl->id());
-			if (alias)
-			{
-				// An alias re-roots the chain at somebody else's box. The
-				// shared resolver COLLECTS the field names the alias walked —
-				// the old inline peel dropped them, so `Inner storage p =
-				// st.a; p.m[k]` keyed utf8(st)++"m" (losing "a") and read a
-				// different box than st.a.m[k].
-				out.rootIsStateVarBox = false;
-				if (auto holder = resolveHolderRoot(m_ctx, m_scope, *ident, m_loc))
-					out.aliasOverridePrefix = awst::makeReinterpretCast(
-						std::move(holder), awst::WType::boxKeyType(), m_loc);
-			}
-		}
-	}
-	else if (auto const* ma = dynamic_cast<MemberAccess const*>(_cursor))
-	{
-		out.varName = ma->memberName();
-		out.rootMappingType = ma->annotation().type;
-
-		// One rule covers every "mapping reached through struct fields" shape:
-		// walk the MemberAccess chain base.f1...fn down to its ROOT, resolve the
-		// root's holder prefix, then append each field name. Without the holder
-		// prefix the derivation started at bare utf8(fn), which collapsed every
-		// container element / same-typed holder onto ONE box — silent
-		// cross-element data corruption (night-3 campaign). Roots:
-		//   - registered storage-ref param (V4 `self.inner[k]`): the runtime
-		//     bytes value the caller passed (selfPrefix convention);
-		//   - storage ALIAS (`S storage p = mm[a];` / base-ctor `A(m[1])`):
-		//     the aliased holder's box/appstate key;
-		//   - plain struct STATE VAR: utf8(name);
-		//   - mapping element `mm[a]`: its derived box key — exactly what
-		//     SolInternalCall::extractMappingKeyPrefix lifts, so direct and
-		//     ref-param access key the same boxes;
-		//   - storage-array element `arr[i]`: utf8(name) ++ itob(i), with an
-		//     EVM-style bounds assert (Panic 0x32) on i.
-		// Unmatched roots (function calls, memory bases) keep the legacy
-		// bare-field prefix.
-		std::vector<std::string> fields{ma->memberName()};
-		Expression const* rootE = &ma->expression();
-		while (auto const* innerMa = dynamic_cast<MemberAccess const*>(rootE))
-		{
-			fields.push_back(innerMa->memberName());
-			rootE = &innerMa->expression();
-		}
-		std::reverse(fields.begin(), fields.end());
-
-		std::shared_ptr<awst::Expression> holder;
-		if (auto const* baseIdx = dynamic_cast<IndexAccess const*>(rootE))
-		{
-			// Peel every array index to the declaration root. The holder identity
-			// is structural: root key ++ itob(i0) ++ ... ++ itob(iN). The previous
-			// direct-base match handled arr[i].m but collapsed arr[i][j].m (and all
-			// deeper forms) onto the bare field key.
-			std::vector<IndexAccess const*> arrayPath;
-			Expression const* arrayRoot = baseIdx;
-			while (auto const* index = dynamic_cast<IndexAccess const*>(arrayRoot))
-			{
-				if (!index->indexExpression())
-					break;
-				arrayPath.push_back(index);
-				arrayRoot = &index->baseExpression();
-			}
-			std::reverse(arrayPath.begin(), arrayPath.end());
-			auto const* arrId = dynamic_cast<Identifier const*>(arrayRoot);
-			auto const* arrDecl = arrId ? dynamic_cast<VariableDeclaration const*>(
-				arrId->annotation().referencedDeclaration) : nullptr;
-			if (arrDecl && arrDecl->isStateVariable() && !arrayPath.empty()
-				&& dynamic_cast<ArrayType const*>(arrDecl->type()))
-			{
-				auto const binding =
-					m_ctx.storageMapper.physicalBindingFor(*arrDecl).name;
-				holder = awst::makeUtf8BytesConstant(binding, m_loc);
-				Type const* walk = arrDecl->type();
-				auto const* rootW = m_ctx.typeMapper.map(walk);
-				auto rootBox = builder::StorageMapper::makeTopLevelBoxExpr(
-					binding, rootW, m_loc);
-				std::shared_ptr<awst::Expression> arrayValue =
-					builder::StorageMapper::makeStateGetWithDefault(
-						std::move(rootBox), rootW, m_loc);
-				for (size_t depth = 0; depth < arrayPath.size(); ++depth)
-				{
-					auto const* arrType = dynamic_cast<ArrayType const*>(walk);
-					if (!arrType)
-					{
-						holder = nullptr;
-						break;
-					}
-					auto idx = builder::TypeCoercion::checkedIndexToUint64(
-						m_ctx.preEffects(),
-						buildExpr(*arrayPath[depth]->indexExpression()), m_loc);
-					std::string tmpName = "__sol_arridx_" + std::to_string(
-						awst::NameGen::next("SolIndexAccessHandlers.arrIdxCounter"));
-					auto tmpVar = [&]() {
-						return awst::makeVarExpression(
-							tmpName, awst::WType::uint64Type(), m_loc);
-					};
-					m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-						tmpVar(), std::move(idx), m_loc));
-
-					// Fixed bounds come from solc. A dynamic level's length lives at
-					// the current holder prefix, before this level appends its index.
-					std::shared_ptr<awst::Expression> bound;
-					if (!arrType->isDynamicallySized()
-						&& arrType->length() <= std::numeric_limits<uint64_t>::max())
-						bound = awst::makeIntegerConstant(arrType->length().str(), m_loc);
-					else if (arrayValue)
-						bound = awst::makeArrayLength(
-							arrayValue, awst::WType::uint64Type(), m_loc);
-					if (bound)
-					{
-						auto cmp = awst::makeNumericCompare(
-							tmpVar(), awst::NumericComparison::Lt,
-							std::move(bound), m_loc);
-						m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-							awst::makeAssert(std::move(cmp), m_loc,
-								"array index out of bounds"), m_loc));
-					}
-					holder = awst::makeConcat(
-						std::move(holder), awst::makeItob(tmpVar(), m_loc), m_loc);
-					walk = arrType->baseType();
-					if (dynamic_cast<ArrayType const*>(walk) && arrayValue)
-						arrayValue = awst::makeIndexExpression(
-							arrayValue, tmpVar(),
-							m_ctx.typeMapper.mapSolTypeToARC4(walk), m_loc);
-					else
-						arrayValue = nullptr;
-				}
-			}
-			else if (dynamic_cast<MappingType const*>(
-				baseIdx->baseExpression().annotation().type))
-			{
-				auto built = awst::unwrapStateGet(buildExpr(*rootE));
-				if (auto const* box =
-						dynamic_cast<awst::BoxValueExpression const*>(built.get()))
-					holder = box->key;
-			}
-		}
-		else
-			// Identifier roots (mapping-key param / storage alias incl. the
-			// field names the alias walked / state var) — the SHARED
-			// derivation, so direct access and ref-param arguments cannot
-			// key different boxes (MappingPrefix.h).
-			holder = resolveHolderRoot(m_ctx, m_scope, *rootE, m_loc);
-
-		if (holder)
-		{
-			for (auto const& f: fields)
-				holder = awst::makeConcat(std::move(holder),
-					awst::makeUtf8BytesConstant(f, m_loc), m_loc);
-			out.aliasOverridePrefix = awst::makeReinterpretCast(
-				std::move(holder), awst::WType::boxKeyType(), m_loc);
-		}
-	}
-	// `f()[k]`: call returns bytes = holder name = runtime key prefix.
-	else if (dynamic_cast<solidity::frontend::FunctionCall const*>(_cursor))
-	{
-		out.rootMappingType = _cursor->annotation().type;
-	}
-
-	return out;
-}
-
 awst::WType const* SolIndexAccess::resolveValueWType(solidity::frontend::Type const* _baseType)
 {
 	if (auto const* mappingType = dynamic_cast<MappingType const*>(_baseType))
@@ -650,42 +451,6 @@ awst::WType const* SolIndexAccess::resolveValueWType(solidity::frontend::Type co
 		return m_ctx.typeMapper.map(vt);
 	}
 	return m_ctx.typeMapper.map(m_indexAccess.annotation().type);
-}
-
-std::shared_ptr<awst::Expression> SolIndexAccess::buildInitialPrefix(
-	solidity::frontend::Expression const* _cursor,
-	std::string const& _varName,
-	std::shared_ptr<awst::Expression> _aliasOverridePrefix)
-{
-	// 1. Mapping-storage-ref param: prefix is the runtime bytes value the
-	//    caller passed (its state-var holder name encoded as bytes).
-	if (auto const* ident = dynamic_cast<Identifier const*>(_cursor))
-		if (auto const* decl = ident->annotation().referencedDeclaration)
-		{
-			auto const& mappingKeyParam = m_scope.findMappingKeyParam(decl->id());
-			if (!mappingKeyParam.empty())
-				return awst::makeVarExpression(
-					mappingKeyParam, awst::WType::bytesType(), m_loc);
-		}
-
-	// 2. `f()[k]`: evaluate the call; its bytes return is the prefix.
-	if (dynamic_cast<solidity::frontend::FunctionCall const*>(_cursor))
-	{
-		auto p = buildExpr(*_cursor);
-		if (p && p->wtype != awst::WType::bytesType())
-			p = builder::TypeCoercion::coerceForAssignment(
-				std::move(p), awst::WType::bytesType(), m_loc);
-		return p;
-	}
-
-	// 3. Alias-override prefix: the alias's box-key expression IS the
-	//    slot pointer at that level (set by the cursor-resolution block
-	//    above when the cursor identifier is a storage alias).
-	if (_aliasOverridePrefix)
-		return _aliasOverridePrefix;
-
-	// 4. Plain state variable: utf8 bytes of the var name.
-	return awst::makeUtf8BytesConstant(_varName, m_loc, awst::WType::boxKeyType());
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
@@ -719,7 +484,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 					? buildExpr(*m_indexAccess.indexExpression()) : nullptr;
 				if (idxExpr)
 					return buildMultiBoxAccess(
-						m_ctx.storageMapper.physicalBindingFor(*varDecl).name,
+						m_ctx.storageMapper.physicalBindingFor(*varDecl).key,
 						baseWtype, std::move(idxExpr));
 			}
 		}

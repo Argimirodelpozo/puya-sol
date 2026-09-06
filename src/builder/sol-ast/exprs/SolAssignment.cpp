@@ -445,7 +445,8 @@ SolAssignment::tryHandleEvmStorageWrite()
 					{
 						EvmSlotLowering low(m_ctx, m_scope, m_loc);
 						auto r = low.resolve(m_assignment.rightHandSide());
-						if (!r)
+						auto l = low.resolve(lhsExpr);
+						if (!r || !l)
 							return std::shared_ptr<awst::Expression>{
 								awst::makeZero(m_loc, awst::WType::biguintType())};
 						// PRE-pending, and the expression VALUE is the pointer:
@@ -454,12 +455,9 @@ SolAssignment::tryHandleEvmStorageWrite()
 						// mapping!), and a post-queued rebind ran after it.
 						m_ctx.preEffects().push_back(
 							awst::makeAssignmentStatement(
-								awst::makeVarExpression(lvd->name(),
-									awst::WType::biguintType(), m_loc),
+								l->slot,
 								r->slot, m_loc));
-						return std::shared_ptr<awst::Expression>{
-							awst::makeVarExpression(lvd->name(),
-								awst::WType::biguintType(), m_loc)};
+						return l->slot;
 					}
 				}
 

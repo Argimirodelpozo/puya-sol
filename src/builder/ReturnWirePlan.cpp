@@ -66,9 +66,10 @@ FunctionReturnPlan const& TypeMapper::functionReturnPlan(
 		bool const storage = parameter->referenceLocation() == VariableDeclaration::Location::Storage;
 		if (storage && (profile().evmStorageLayout || storageRefReturnUsesSlot(&function, analysis())))
 			native = awst::WType::biguintType();
+		else if (storage && storageRefReturnIsBytesKeyed(&function, analysis()))
+			native = awst::WType::bytesType();
 		else if (returns.size() == 1 && storageRefPointerReturn(&function, analysis()))
-			native = storageRefReturnIsBytesKeyed(&function, analysis())
-				? awst::WType::bytesType() : awst::WType::uint64Type();
+			native = awst::WType::uint64Type();
 		plan.elements.push_back(planReturnElement(*this, parameter->type(), native));
 		nativeTypes.push_back(native);
 		wireTypes.push_back(plan.elements.back().wireType);

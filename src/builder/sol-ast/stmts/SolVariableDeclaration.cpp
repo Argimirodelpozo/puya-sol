@@ -5,6 +5,7 @@
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/AWSTBuilder.h" // containsMappingType
+#include "builder/sol-ast/MappingPrefix.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/StoragePlace.hpp"
@@ -104,13 +105,14 @@ bool SolVariableDeclaration::trySlotModeStoragePointer(
 		auto addr = initialValue ? low.resolve(*initialValue) : std::nullopt;
 		if (initialValue && !addr)
 			return true;   // error already logged
-		m_blk.setSlotStorageRef(decl.id(), awst::makeVarExpression(
-			decl.name(), awst::WType::biguintType(), loc));
+		auto target = awst::makeVarExpression(
+			m_blk.awstVarName(decl), awst::WType::biguintType(), loc);
+		m_blk.setSlotStorageRef(decl.id(), target);
 		// pre-statements (bounds asserts, key pins) BEFORE the binding
 		for (auto& st: m_blk.builderCtx().takePreEffects())
 			result.push_back(std::move(st));
 		result.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(decl.name(), awst::WType::biguintType(), loc),
+			std::move(target),
 			addr ? addr->slot : awst::makeIntegerConstant("0", loc, awst::WType::biguintType()), loc));
 		for (auto& st: m_blk.builderCtx().takePostEffects())
 			result.push_back(std::move(st));
@@ -231,19 +233,34 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 	// Storage pointer alias
 	if (decl.referenceLocation() == VariableDeclaration::Location::Storage && initialValue)
 	{
-		// `mapping storage m = m1;`: BytesConstant is the holder name;
-		// register alias so SolIndexAccess resolves `m[k]` to the state-var prefix.
-		if (dynamic_cast<awst::BytesConstant const*>(value.get())
-			&& decl.type()
+		// A mapping value is its logical holder, never its internal placeholder.
+		// Bind it once, including member paths and runtime-selected holders.
+		if (!m_blk.builderCtx().typeMapper.profile().evmStorageLayout && decl.type()
 			&& decl.type()->category() == solidity::frontend::Type::Category::Mapping)
 		{
-			m_blk.setStorageAlias(decl.id(), StorageAlias::mappingHolder(value));
+			auto holder = resolveBuiltStorageHolder(m_blk.builderCtx(), value, m_loc);
+			if (!holder.key) throw SizeError("mapping alias requires a resolved storage holder");
+			auto const name = m_blk.awstVarName(decl);
+			m_blk.setMappingKeyParam(decl.id(), name);
 			m_blk.builderCtx().appendEffectsTo(result);
+			result.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(name, awst::WType::bytesType(), m_loc),
+				awst::makeAsBytes(std::move(holder.key), m_loc), m_loc));
 			return true;
 		}
+		if (!m_blk.builderCtx().typeMapper.profile().evmStorageLayout
+			&& containsMappingType(decl.type())
+			&& (dynamic_cast<awst::StateGet const*>(value.get()) || awst::isRawStorageRead(value.get())
+				|| dynamic_cast<awst::FieldExpression const*>(value.get())
+				|| dynamic_cast<awst::IndexExpression const*>(value.get())
+				|| dynamic_cast<awst::ReinterpretCast const*>(value.get())))
+		{
+			auto holder = resolveBuiltStorageHolder(m_blk.builderCtx(), value, m_loc);
+			if (!holder.key) throw SizeError("aggregate alias requires a resolved storage holder");
+			value = std::move(holder.value);
+		}
 
-		if (dynamic_cast<awst::StateGet const*>(value.get())
-			|| awst::isRawStorageRead(value.get()))
+		if (StoragePlace::fromRead(value))
 		{
 			// Raw box/app-state reads need StateGet-with-default so the alias
 			// evaluates identically to a direct read; StateGet passes through.
@@ -270,7 +287,6 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 			m_blk.builderCtx().appendEffectsTo(result);
 			return true;
 		}
-
 		// Ternary init `T storage p = c ? a1 : a2;` — no single compile-time
 		// root. Bind a runtime-selected STORAGE KEY instead: pin
 		// `c ? key(a1) : key(a2)` into a bytes local AT DECL TIME (mutating
@@ -280,28 +296,11 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 		// into a materialized copy (formerly a documented known-gap).
 		// Families: box roots (dynamic arrays; bytes/string, whose branches
 		// are the raw box key under a cast), app-global roots (structs,
-		// fixed arrays), and mappings (runtime holder name →
-		// mappingKeyParam). Mixed/unrecognized branch shapes (nested
+		// fixed arrays). Mappings use the holder binding above.
+		// Mixed/unrecognized branch shapes (nested
 		// ternaries, mixed kinds) keep the value-copy fallback.
 		if (auto const* condE = dynamic_cast<awst::ConditionalExpression const*>(value.get()))
 		{
-			// `mapping storage m = c ? m1 : m2`: branches are holder-NAME
-			// constants — bind the runtime holder via mappingKeyParam (the
-			// same route `m = someMappingFn()` takes).
-			if (decl.type()
-				&& decl.type()->category() == solidity::frontend::Type::Category::Mapping
-				&& dynamic_cast<awst::BytesConstant const*>(condE->trueExpr.get())
-				&& dynamic_cast<awst::BytesConstant const*>(condE->falseExpr.get()))
-			{
-				m_blk.setMappingKeyParam(decl.id(), decl.name());
-				auto var = awst::makeVarExpression(
-					decl.name(), awst::WType::bytesType(), m_loc);
-				result.push_back(awst::makeAssignmentStatement(
-					std::move(var), value, m_loc));
-				m_blk.builderCtx().appendEffectsTo(result);
-				return true;
-			}
-
 			auto truePlace = StoragePlace::fromRead(condE->trueExpr);
 			auto falsePlace = StoragePlace::fromRead(condE->falseExpr);
 			if (truePlace && falsePlace && truePlace->hasSameShape(*falsePlace))
@@ -347,26 +346,31 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 						&& value->wtype == awst::WType::bytesType()));
 			if (isMappingPtr && value->wtype == awst::WType::bytesType())
 			{
-				m_blk.setMappingKeyParam(decl.id(), decl.name());
-				// Plain bytes assignment so `m` holds the holder name at runtime;
+				auto const name = m_blk.awstVarName(decl);
+				m_blk.setMappingKeyParam(decl.id(), name);
+				// Plain bytes assignment so `m` holds the holder key at runtime;
 				// `m = otherMapping` updates which mapping `m` points to.
-				auto var = awst::makeVarExpression(decl.name(), awst::WType::bytesType(), m_loc);
+				auto var = awst::makeVarExpression(name, awst::WType::bytesType(), m_loc);
 				auto assign = awst::makeAssignmentStatement(std::move(var), std::move(value), m_loc);
+				for (auto& effect: m_blk.builderCtx().takePreEffects())
+					result.push_back(std::move(effect));
 				result.push_back(std::move(assign));
-
-				m_blk.builderCtx().appendEffectsTo(result);
+				for (auto& effect: m_blk.builderCtx().takePostEffects())
+					result.push_back(std::move(effect));
 				return true;
 			}
 
-			m_blk.setSlotStorageRef(decl.id(), value);
 			// Emit the call as an assignment; slot var wtype must match the return wtype.
 			auto* slotWType = value->wtype ? value->wtype : awst::WType::biguintType();
-			auto slotVar = awst::makeVarExpression(decl.name(), slotWType, m_loc);
+			auto slotVar = awst::makeVarExpression(m_blk.awstVarName(decl), slotWType, m_loc);
+			m_blk.setSlotStorageRef(decl.id(), slotVar);
 
 			auto assign = awst::makeAssignmentStatement(std::move(slotVar), std::move(value), m_loc);
+			for (auto& effect: m_blk.builderCtx().takePreEffects())
+				result.push_back(std::move(effect));
 			result.push_back(std::move(assign));
-
-			m_blk.builderCtx().appendEffectsTo(result);
+			for (auto& effect: m_blk.builderCtx().takePostEffects())
+				result.push_back(std::move(effect));
 			return true;
 		}
 	}
@@ -673,16 +677,14 @@ void SolVariableDeclaration::buildTupleDestructuring(
 		{
 			type = awst::WType::biguintType();
 			m_blk.setSlotStorageRef(decl.id(), awst::makeVarExpression(
-				decl.name(), awst::WType::biguintType(),
+				m_blk.awstVarName(decl), type,
 				m_blk.makeLoc(decl.location())));
 		}
 
 		// Shadow-safe name: `uint a=100; { (uint a,)=f(); } return a;`
-		// without mangling, inner `a` overwrites the outer one. Slot
-		// handles use the PLAIN name — that is what isSlotHandleLocal
-		// reads resolve to (same convention as the single-decl binding).
+		// Storage handles use the same declaration binding as ordinary locals.
 		auto target = awst::makeVarExpression(
-			slotHandle ? decl.name() : m_blk.awstVarName(decl), type,
+			m_blk.awstVarName(decl), type,
 			m_blk.makeLoc(decl.location()));
 
 		// Extract with the slot's ACTUAL wtype (the RHS element type), then

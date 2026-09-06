@@ -177,7 +177,7 @@ void ContractBuilder::emitStateVarInitFor(
 			for (auto& postStmt: m_exprBuilder->takePostEffects())
 				targetBody.push_back(std::move(postStmt));
 			auto boxKey = awst::makeUtf8BytesConstant(
-				binding.name, loc);
+				binding.key, loc);
 			auto put = awst::makeIntrinsicCall(
 				"box_put", awst::WType::voidType(), loc);
 			put->stackArgs.push_back(std::move(boxKey));
@@ -190,7 +190,7 @@ void ContractBuilder::emitStateVarInitFor(
 		if (kind != awst::AppStorageKind::AppGlobal)
 			continue;
 
-		auto key = awst::makeUtf8BytesConstant(binding.name, loc);
+		auto key = awst::makeUtf8BytesConstant(binding.key, loc);
 
 		std::shared_ptr<awst::Expression> defaultVal;
 		if (var->value())
@@ -212,7 +212,7 @@ void ContractBuilder::emitStateVarInitFor(
 				else
 					zeroVal = StorageMapper::makeDefaultValue(wtype, loc);
 				auto preKey = awst::makeUtf8BytesConstant(
-					binding.name, loc);
+					binding.key, loc);
 				auto prePut = awst::makeAppGlobalPut(
 					preKey, std::move(zeroVal), loc);
 				targetBody.push_back(
@@ -780,7 +780,7 @@ void ContractBuilder::emitBoxCreateForStateVars(
 		if (!var)
 			continue;
 		auto binding = m_storageMapper.physicalBindingFor(*var);
-		auto const& varName = binding.name;
+		auto const& varName = binding.key;
 		auto boxKey = awst::makeUtf8BytesConstant(varName, _loc);
 
 		// Dynamic bytes without init: box_create(size=0). Raw content has no length

@@ -4112,15 +4112,18 @@ def test_evm_layout_arrays_and_structs(harness):
 
 def test_evm_layout_default_mode_untouched(harness):
     """No-regression guard: the same fixture compiled WITHOUT the flag keeps
-    the named-cell model (per-var ARC-56 state declarations present)."""
+    per-var ARC-56 state declarations, including exact format-2 mapping roots."""
     import json as _json
     arts = harness.compile(_EVM_SOL)
     arc56 = _json.loads(arts.by_contract["EvmFull"]["arc56"].read_text())
     keys = arc56.get("state", {}).get("keys", {}).get("global", {})
     maps = arc56.get("state", {}).get("maps", {}).get("box", {})
+    boxes = arc56["state"]["keys"]["box"]
     assert "a" in keys or "a" in arc56.get("state", {}).get("keys", {}).get("box", {}), \
         "default mode should still declare per-var state"
-    assert "bal" in maps
+    assert "bal" in boxes
+    assert "holder format 2" in boxes["bal"]["desc"]
+    assert "bal" not in maps  # hash-derived entries are not literal prefix maps
 
 
 def test_evm_layout_strings(harness):

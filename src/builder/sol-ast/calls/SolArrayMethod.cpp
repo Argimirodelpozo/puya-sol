@@ -544,7 +544,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryStateBytesPushPop(
 		if (arrType2 && arrType2->isByteArrayOrString() && memberName == "pop")
 		{
 			auto binding = m_ctx.storageMapper.physicalBindingFor(*varDecl);
-			std::string varName = binding.name;
+			std::string varName = binding.key;
 			auto loc = m_loc;
 			auto kind = binding.kind;
 
@@ -597,7 +597,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryStateBytesPushPop(
 		if (arrType && arrType->isByteArrayOrString() && memberName == "push")
 		{
 			auto binding = m_ctx.storageMapper.physicalBindingFor(*varDecl);
-			std::string varName = binding.name;
+			std::string varName = binding.key;
 			auto loc = m_loc;
 			auto kind = binding.kind;
 

@@ -1474,20 +1474,6 @@ inline std::shared_ptr<IntrinsicCall> makeWord32ToUInt64(
 	return makeBtoi(std::move(last8), std::move(loc));
 }
 
-// One Solidity storage-key layer: sha256(keyBytes(value, encType) ++ prefix).
-inline std::shared_ptr<IntrinsicCall> makeMappingKeyLayer(
-	std::shared_ptr<Expression> value,
-	WType const* encType,
-	std::shared_ptr<Expression> prefix,
-	SourceLocation loc)
-{
-	auto keyBytes = makeKeyBytes(std::move(value), encType, loc);
-	auto concat = makeConcat(std::move(keyBytes), std::move(prefix), loc);
-	auto hash = makeIntrinsicCall("sha256", WType::boxKeyType(), std::move(loc));
-	hash->stackArgs.push_back(std::move(concat));
-	return hash;
-}
-
 /// A placeholder for a value not known at compile time — substituted
 /// before deployment. Compiles to `pushbytes TMPL_<name>` in TEAL.
 struct TemplateVar: Expression

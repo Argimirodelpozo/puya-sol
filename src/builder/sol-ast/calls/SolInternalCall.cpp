@@ -144,7 +144,7 @@ std::shared_ptr<awst::Expression> boxedArrayKey(
 		auto binding = ctx.storageMapper.physicalBindingFor(*path.declaration);
 		if (binding.kind == awst::AppStorageKind::Box)
 			return awst::makeUtf8BytesConstant(
-				binding.name, loc, awst::WType::bytesType());
+				binding.key, loc, awst::WType::bytesType());
 	}
 	return nullptr;
 }
@@ -475,6 +475,8 @@ void SolInternalCall::collectSubroutineParamTypes(
 std::shared_ptr<awst::Expression> SolInternalCall::extractMappingKeyPrefix(
 	Expression const& argExpr)
 {
+	if (containsMappingType(argExpr.annotation().type))
+		return storageReferenceKey(m_ctx, m_scope, argExpr, m_loc);
 	// Any-rank array element path rooted in one physical box keeps that
 	// root key. A companion byte offset identifies the selected struct.
 	if (auto path = boxedArrayPath(argExpr))
@@ -498,7 +500,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::extractMappingKeyPrefix(
 			}
 
 	// IndexAccess storage-ref: prefix must be the RUNTIME box key
-	// (`_pools ++ hash(id)`), not a static name (all keys would alias).
+	// (the derived mapping-entry hash), not a static name (all keys would alias).
 	// Build the element access, lift its box key; callee reinterprets it.
 	if (dynamic_cast<IndexAccess const*>(&argExpr))
 	{
@@ -508,49 +510,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::extractMappingKeyPrefix(
 				box->key, awst::WType::bytesType(), m_loc);
 	}
 
-	std::string name;
-	if (auto const* ident = dynamic_cast<Identifier const*>(&argExpr))
-	{
-		name = ident->name();
-		// If registered as a mapping-key ref, runtime box-key lives in the
-		// variable's VALUE — e.g. V4 `pool` holds sha256(id++"_pools").
-		// Reading the var keys on the real element. Unregistered bare state
-		// mappings fall through to the constant-name prefix.
-		if (auto const* d = ident->annotation().referencedDeclaration;
-			d && !m_scope.findMappingKeyParam(d->id()).empty())
-			return awst::makeVarExpression(name, awst::WType::bytesType(), m_loc);
-		// A storage-ref LOCAL (`P storage allowed = allowance[a][b][c];`)
-		// carries its element's box key in its ALIAS — the shared
-		// resolver lifts it, INCLUDING any field names the alias walked
-		// (the old inline peel handled ReinterpretCast wrappers but
-		// dropped FieldExpression names; the direct-access peel had the
-		// opposite gap — MappingPrefix.h). The name fallback below
-		// literally named a box after the local, so every entry the
-		// callee wrote through such a param COLLAPSED into one shared
-		// "allowed" box (Permit2's allowance).
-		if (auto const* d = ident->annotation().referencedDeclaration)
-			if (m_scope.findStorageAlias(d->id()))
-				if (auto holder = sol_ast::resolveHolderRoot(
-						m_ctx, m_scope, argExpr, m_loc))
-					return awst::makeReinterpretCast(
-						std::move(holder), awst::WType::bytesType(), m_loc);
-	}
-	else if (auto const* ma = dynamic_cast<MemberAccess const*>(&argExpr))
-	{
-		// Full-depth field-chain derivation shared with direct access
-		// (resolveCursorContext): root holder ++ utf8(f) per level. The
-		// old inline version resolved DEPTH-1 only, so `f(st.a.m)` keyed
-		// bare utf8("m") while st.a.m[k] keyed utf8(st)++"a"++"m" —
-		// split-brain state between direct and ref-param access.
-		if (auto prefix = sol_ast::resolveMappingHolderPrefix(
-				m_ctx, m_scope, argExpr, m_loc))
-			return awst::makeReinterpretCast(
-				std::move(prefix), awst::WType::bytesType(), m_loc);
-		name = ma->memberName();
-	}
-	if (name.empty())
-		name = "map"; // fallback
-	return awst::makeUtf8BytesConstant(name, m_loc);
+	return storageReferenceKey(m_ctx, m_scope, argExpr, m_loc);
 }
 
 void SolInternalCall::buildSequencedArgs(

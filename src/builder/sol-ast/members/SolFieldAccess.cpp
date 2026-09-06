@@ -2,6 +2,8 @@
 /// Struct field access (ARC4Struct, WTuple).
 
 #include "builder/sol-ast/members/SolFieldAccess.h"
+#include "builder/sol-ast/MappingPrefix.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
@@ -94,7 +96,19 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 								}
 							}
 
+	if (dynamic_cast<solidity::frontend::MappingType const*>(m_memberAccess.annotation().type))
+	{
+		auto holder = resolveStorageHolder(m_ctx, m_scope, m_memberAccess, m_loc);
+		if (!holder.key) throw SizeError("mapping field requires a resolved storage holder");
+		return awst::makeAsBytes(std::move(holder.key), m_loc);
+	}
+
 	auto base = buildExpr(baseExpression());
+	if (!m_ctx.typeMapper.profile().evmStorageLayout
+		&& transparentMappingWrapper(baseExpression().annotation().type))
+		// The represented fields are already the inner struct's. Preserve the
+		// place: an aggregate reinterpret cast is neither valid AWST nor an lvalue.
+		return base;
 
 	if (base->wtype && base->wtype->kind() == awst::WTypeKind::ARC4Struct)
 	{

@@ -4,6 +4,7 @@
 #include "builder/sol-ast/exprs/SolAssignment.h"
 #include "awst/NameGen.h"
 #include "builder/sol-ast/EffectScan.h"
+#include "builder/sol-ast/MappingPrefix.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageBackend.h"
@@ -90,8 +91,12 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 	// Mapping-key-param locals hold the box-key prefix as a runtime bytes value.
 	// Must do a real bytes write; compile-time alias path (VoidConstant) would lose
 	// mutations like `r = a; r[k] = v; r = b; r[k] = v`.
-	if (!m_scope.findMappingKeyParam(lhsDecl->id()).empty())
+	if (auto const& keyParam = m_scope.findMappingKeyParam(lhsDecl->id()); !keyParam.empty())
 	{
+		if (!m_ctx.typeMapper.profile().evmStorageLayout && containsMappingType(lhsDecl->type()))
+			return awst::makeAssignmentExpression(
+				awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
+				storageReferenceKey(m_ctx, m_scope, m_assignment.rightHandSide(), m_loc), m_loc);
 		auto rhsExpr = buildExpr(m_assignment.rightHandSide());
 		// RHS storage-ref element read (`self[k]` → StateGet(BoxValueExpression)):
 		// lift the box KEY, not decoded value (mirrors SolInternalCall::extractMappingKeyPrefix).
@@ -105,7 +110,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 				std::move(rhsExpr), awst::WType::bytesType(), m_loc);
 		}
 		auto var = awst::makeVarExpression(
-			lhsIdent->name(), awst::WType::bytesType(), m_loc);
+			keyParam, awst::WType::bytesType(), m_loc);
 		return awst::makeAssignmentExpression(std::move(var), std::move(rhsExpr), m_loc);
 	}
 
@@ -122,6 +127,12 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 			"reassignment, or select at initialization "
 			"(`T storage p = cond ? a : b;`).", m_loc);
 	auto rhsExpr = buildExpr(m_assignment.rightHandSide());
+	if (!m_ctx.typeMapper.profile().evmStorageLayout && containsMappingType(lhsDecl->type()))
+	{
+		auto holder = resolveBuiltStorageHolder(m_ctx, rhsExpr, m_loc);
+		if (!holder.key) throw SizeError("aggregate alias requires a resolved storage holder");
+		rhsExpr = std::move(holder.value);
+	}
 	auto aliasExpr = rhsExpr;
 	if (awst::isRawStorageRead(rhsExpr.get()))
 		aliasExpr = StorageMapper::makeStateGetWithDefault(rhsExpr, rhsExpr->wtype, m_loc);
@@ -239,7 +250,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	}
 
 	auto page = StorageMapper::arrayPageForIndex(
-		m_ctx.storageMapper.physicalBindingFor(*varDecl).name,
+		m_ctx.storageMapper.physicalBindingFor(*varDecl).key,
 		arrWtype, buildExpr(*rootIndex->indexExpression()), m_ctx.preEffects(), m_loc);
 	m_ctx.preEffects().push_back(StorageMapper::ensureArrayPage(page, m_loc));
 	auto makeBoxKey = [&]() { return page.key; };
@@ -378,7 +389,9 @@ SolAssignment::tryHandleBoxedAggregatePathWrite()
 			ma && dynamic_cast<StructType const*>(
 				ma->expression().annotation().type))
 		{
-			path.push_back(cursor);
+			if (m_ctx.typeMapper.profile().evmStorageLayout
+				|| !transparentMappingWrapper(ma->expression().annotation().type))
+				path.push_back(cursor);
 			cursor = &ma->expression();
 			continue;
 		}
@@ -405,7 +418,8 @@ SolAssignment::tryHandleBoxedAggregatePathWrite()
 	// aggregate box value.
 	if (!m_scope.findStructRefOffset(vd->id()).empty())
 		return std::nullopt;
-	auto binding = m_ctx.storageMapper.physicalBindingFor(*vd);
+	auto binding = vd->isStateVariable() ? m_ctx.storageMapper.physicalBindingFor(*vd)
+		: StorageMapper::PhysicalBinding{};
 	bool const directBox = vd->isStateVariable()
 		&& binding.kind == awst::AppStorageKind::Box;
 	if (keyParam.empty() && !directBox)
@@ -452,7 +466,7 @@ SolAssignment::tryHandleBoxedAggregatePathWrite()
 				awst::WType::boxKeyType(), m_loc);
 		else
 			key = awst::makeUtf8BytesConstant(
-				binding.name, m_loc, awst::WType::boxKeyType());
+				binding.key, m_loc, awst::WType::boxKeyType());
 		auto box = awst::makeBoxValueExpression(std::move(key), rootW, m_loc);
 		box->isDeclarationRoot = keyParam.empty();
 		return box;

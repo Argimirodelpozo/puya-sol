@@ -1,8 +1,8 @@
 #pragma once
 
 /// @file Base85.hpp
-/// RFC1924 base85 encode/decode — header-only (single consumer:
-/// AWSTSerializer's byte-payload compaction).
+/// RFC1924 base85 encoding, shared by AWST byte-payload compaction and
+/// the versioned default storage root coordinate format.
 
 #include <algorithm>
 #include <cstdint>

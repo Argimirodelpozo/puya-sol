@@ -25,7 +25,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 {
 	std::string fieldName = _fieldAccess.memberName();
 	auto binding = m_ctx.storageMapper.physicalBindingFor(_structVar);
-	std::string varName = binding.name;
+	std::string varName = binding.key;
 	auto loc = m_loc;
 
 	// Determine the field's array type and element type.
@@ -125,8 +125,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 
 	// Physical binding, not the raw source name — matches every other
 	// box-key derivation for this declaration (colliding names diverge).
-	std::string arrayVarName =
-		m_ctx.storageMapper.physicalBindingFor(_varDecl).name;
+	std::string arrayVarName = _runtimeKey ? std::string{}
+		: m_ctx.storageMapper.physicalBindingFor(_varDecl).key;
 
 	// `mapping(K=>V)[] a`: no element bytes inline; array box is just a
 	// 2-byte length header. `a[i][k]` boxes are derived from `a`+`i`+sha256(k)

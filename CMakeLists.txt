@@ -252,6 +252,7 @@ set(SOURCES
 	src/builder/proxies/Erc1967Lowering.cpp
 	src/builder/proxies/UupsLowering.cpp
 	src/builder/storage/StorageMapper.cpp
+	src/builder/storage/StorageKey.cpp
 	src/builder/storage/StorageLayout.cpp
 	src/builder/storage/StorageRuntimePlan.cpp
 	src/builder/storage/SlotHandleAccess.cpp

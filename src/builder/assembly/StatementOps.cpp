@@ -447,30 +447,13 @@ void AssemblyBuilder::buildAssignment(
 		}
 	}
 
-	if (name.find(".slot") != std::string::npos)
+	if (name.ends_with(".slot"))
 	{
-		std::string baseName = name.substr(0, name.find(".slot"));
-		if (!baseName.empty() && _assign.value)
+		if (_assign.value)
 		{
-			auto slotExpr = buildExpression(*_assign.value);
-			if (slotExpr)
-			{
-				drainPendingStatements(_out); // early-return bypasses normal drain
-				if (slotExpr->wtype == awst::WType::uint64Type())
-				{
-					auto itob = awst::makeItob(std::move(slotExpr), loc);
-					slotExpr = awst::makeAsBiguint(std::move(itob), loc);
-				}
-				else if (slotExpr->wtype != awst::WType::biguintType())
-				{
-					slotExpr = awst::makeAsBiguint(std::move(slotExpr), loc);
-				}
-
-				auto target = awst::makeVarExpression(baseName, awst::WType::biguintType(), loc);
-
-				auto assign = awst::makeAssignmentStatement(std::move(target), std::move(slotExpr), loc);
-				_out.push_back(std::move(assign));
-			}
+			auto value = buildExpression(*_assign.value);
+			drainPendingStatements(_out);
+			emitPlainYulAssignment(std::move(name), std::move(value), loc, _out);
 		}
 		return;
 	}
@@ -495,7 +478,7 @@ void AssemblyBuilder::buildAssignment(
 
 /// One plain-name Yul write (`x := V`), applying every representation
 /// redirect a Solidity-backed name may carry — signed shadow, blob-backed
-/// pointer, static calldata pointer — plus target-typed coercion. Shared by
+/// pointer, static calldata pointer, storage slot — plus target-typed coercion. Shared by
 /// the single-var fallback and the multi-var return loop so the redirects
 /// cannot diverge between them again (the multi-var arm previously wrote raw
 /// biguint locals, silently bypassing all three).
@@ -506,6 +489,26 @@ void AssemblyBuilder::emitPlainYulAssignment(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
+	// `.slot` writes and reads must use the same declaration binding, including
+	// shadowed locals and multi-return Yul assignments.
+	if (name.ends_with(".slot"))
+	{
+		if (!value) return;
+		auto binding = m_structRefSlotLocals.find(name);
+		name = binding != m_structRefSlotLocals.end()
+			? binding->second : name.substr(0, name.size() - 5);
+		// Default-layout identity aliases may carry a native storage sentinel
+		// (e.g. string storage), not an arithmetic operand for ensureBiguint.
+		if (value->wtype == awst::WType::uint64Type())
+			value = awst::makeItob(std::move(value), loc);
+		if (value->wtype != awst::WType::biguintType())
+			value = awst::makeAsBiguint(std::move(value), loc);
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(name, awst::WType::biguintType(), loc),
+			std::move(value), loc));
+		return;
+	}
+
 	// Bare STATIC calldata pointer: repoint through its mutable offset local.
 	if (m_useSyntheticCalldata && m_calldataStaticPtrNames.count(name))
 	{

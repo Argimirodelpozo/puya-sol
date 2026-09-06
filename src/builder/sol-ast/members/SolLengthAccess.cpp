@@ -327,7 +327,7 @@ std::shared_ptr<awst::Expression> tryBoxStateArrayLength(
 	// Key by the physical binding, matching the write paths —
 	// colliding inherited declarations diverge from the raw name.
 	auto const boxName =
-		ctx.storageMapper.physicalBindingFor(varDecl).name;
+		ctx.storageMapper.physicalBindingFor(varDecl).key;
 	if (arrType->isByteArrayOrString())
 	{
 		auto boxKey = awst::makeUtf8BytesConstant(boxName, loc);

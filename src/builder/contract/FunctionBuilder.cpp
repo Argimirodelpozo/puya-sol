@@ -602,11 +602,11 @@ void ContractBuilder::synthesizeImplicitReturn(
 					for (auto& st: reads)
 						method.body->body.push_back(std::move(st));
 				}
-				else if (m_typeMapper.profile().evmStorageLayout
-					&& retParams[0]->referenceLocation()
+				else if (retParams[0]->referenceLocation()
 						== solidity::frontend::VariableDeclaration::Location::Storage)
 					retStmt->value = awst::makeVarExpression(
-						retParams[0]->name(), awst::WType::biguintType(), method.sourceLocation);
+						retParams[0]->name(), m_typeMapper.functionReturnPlan(_func).nativeType,
+						method.sourceLocation);
 				else
 					retStmt->value = awst::makeVarExpression(
 						retParams[0]->name(), m_typeMapper.map(retParams[0]->type()), method.sourceLocation);

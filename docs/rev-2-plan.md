@@ -1,11 +1,12 @@
 # rev-2: sol-types and storage implementation plan
 
-Status: in progress. F1, F2, F4, F5, F6, F7, F8, F9 and R1–R3 are implemented and checkpoint-test
-verified. The latest full suite
-has no failures beyond the known Puya DCE divide-by-zero bug; F9's premature
-huge-array diagnostics are resolved. F3 remains to be implemented under the
-approved fresh-deployment-only compatibility decision below.
-Final verification remains pending until those changes are complete.
+Status: F1–F9 and R1–R3 are implemented and verified with no new full-suite
+failures. Final results are 1,847 passed, 1 failed, 101 xfailed and 39 xpassed;
+all 19 native tests and 98 focused regressions pass. The sole failure remains
+the known Puya DCE divide-by-zero bug, so the suite is not fully green.
+F3/F8 use the approved fresh-deployment-only compatibility boundary; F6 uses
+the approved native-address transient shadow policy. Documentation retirement
+and branch publication are the remaining handoff steps.
 
 Branch: `rev-2`, based on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`.
 Scope: all nine correctness findings from the sol-types/storage audit, plus
@@ -106,24 +107,34 @@ The audit confirmed disagreement between emitted TEAL and solc-generated IR.
 
 ### F3 — Make mapping-holder paths unambiguous
 
-- [ ] Replace unseparated root/member-name concatenation in
+- [x] Replace unseparated root/member-name concatenation in
   [MappingPrefix.cpp](../src/builder/sol-ast/MappingPrefix.cpp) with one structured
   holder-path representation and one unambiguous encoder.
-- [ ] Derive logical identity from solc-resolved declarations, root slots and
+- [x] Derive logical identity from solc-resolved declarations, root slots and
   member offsets. Encode segment kinds/boundaries explicitly where paths remain
   structured. Compilation-local AST IDs must not become persisted keys.
-- [ ] Route direct accesses, storage aliases, internal/library reference
+- [x] Route direct accesses, storage aliases, internal/library reference
   parameters, nested mappings and getters through that same encoding rule.
   Keep ARC-56 descriptions and test-harness key construction consistent.
-- [ ] Test distinct holder paths for isolation and equivalent alias paths for
+- [x] Test distinct holder paths for isolation and equivalent alias paths for
   identity; preserve existing dynamic mapping-key hashing regressions.
-- [ ] Resolve and document the persisted-key compatibility gate below before
+- [x] Resolve and document the persisted-key compatibility gate below before
   changing the default physical format.
 
 Acceptance: holder-path identity is independent of ambiguous name concatenation,
 and every consumer agrees on the physical key. The remaining audit finding is
 holder-path framing, not the dynamic string/bytes key hashing already present.
 This finding was source-traced, not runtime-confirmed in the audit.
+
+The implementation separates a logical holder key from its serialized data
+path. Key-only parameters/returns of mapping-containing aggregates require a
+whole-box root (including a mapping-entry box); unsupported interior handles
+diagnose instead of losing the parent data path. Direct updates, local aliases,
+mapping-field references and passing the whole enclosing aggregate are covered.
+Solc-confirmed nonrecursive single-struct wrappers at coordinate `(0, 0)` with
+the same storage extent are represented transparently: their sole member keeps
+the same data path and holder, without an extra ARC4 wrapper header. This allows
+whole-box references through wrappers while preserving nominal type identity.
 
 ### F4 — Validate getter indices before narrowing
 
@@ -302,8 +313,8 @@ F3 changes physical keys. F8 and any revised placement estimates can move state
 between global cells and boxes. Neither is a harmless refactor for an existing
 deployment, even when the new behavior agrees better with Solidity.
 
-- [ ] Inventory affected layouts and compare representative pre/post manifests.
-- [ ] Propose an explicit format/version boundary and fresh-deployment behavior.
+- [x] Inventory affected layouts and compare representative pre/post manifests.
+- [x] Propose an explicit format/version boundary and fresh-deployment behavior.
   Prefer stable identities derived from solc logical layout, not source spelling
   or AST numbering. Solc-compatible layout changes still require compatibility
   review when applied to existing contracts.
@@ -311,20 +322,21 @@ deployment, even when the new behavior agrees better with Solidity.
   fresh-deployment-only release, or an explicitly versioned compatibility path.
   Do not silently reinterpret old keys or automatically read ambiguous legacy
   locations. Any migration of deployed state is a separate authorized task.
-- [ ] Update ARC-56 metadata, related tooling and documentation with the decision.
-
-F3 is not complete merely because its design is written down.
+- [x] Update ARC-56 metadata, related tooling and documentation with the decision.
 
 On 2026-09-06 the user approved a fresh-deployment-only format break. Existing
 deployments must retain their original compiler/artifacts; no automatic legacy
-fallback or state migration will be added. F3 affects default-layout holder identities
-and their derived mapping boxes; F8 affects default-layout dynamic aggregates
+fallback or state migration will be added. F3 affects default-layout holder identities,
+their derived mapping boxes, and the encoded payload of transparent wrappers;
+F8 affects default-layout dynamic aggregates
 containing internal functions, moving their schema/initialization and reference
 handling from named globals to boxes where required. Neither fix requires
-changing EVM slot-mode keys. The candidate new holder format uses a domain/version
-marker, full solc root slots, and tagged member/array segments rather than AST IDs
-or concatenated source names. Detailed manifest comparison remains part of the
-implementation gate; no new persisted format has been emitted yet.
+changing EVM slot-mode keys. The implementation selects
+[holder format 2](storage-format.md): a printable, versioned full-width solc root
+coordinate and framed/tagged member, array and mapping hash steps. Names remain
+artifact labels, not key inputs. ARC-56 describes exact roots instead of
+pretending hash-derived entries are prefix maps. Checkpoint 10 records runtime,
+metadata and manifest-comparison evidence for this boundary.
 
 ## Verification and definition of done
 
@@ -604,6 +616,138 @@ the redundant transient read-type argument, the final rebuilt checkpoint passed
 all 19 native tests (4.42 seconds) and **59 semantic tests**, including public
 getters, in 100.77 seconds; report: `/tmp/puyasol-rev-2-transient-cleanup.xml`.
 
+### Checkpoint 10 — versioned solc-coordinate storage holders
+
+One shared resolver retains logical holder identity separately from the
+serialized data path. A reserved, printable 54-byte root encodes the full solc
+slot/offset; framed SHA-256 segments distinguish struct members, array indices
+and declared-type mapping keys. All descendant keys are 32 bytes. Root/member
+names and AST IDs no longer participate in mapping-holder identity. Superseded
+cursor/prefix reconstruction and the old generic mapping-key-layer helper are
+removed; TypeMapper retains session-local solc aggregate provenance for aliases.
+
+The initial 17-case runtime/metadata selection passed in 33.82 seconds; report:
+`/tmp/puyasol-rev-2-storage-holders-second.xml`. Expanded coverage passed
+**44 tests** in 44.10 seconds, including both ABI/storage/code-generation
+profiles, exact-schema deployments, runtime box-key checks, reference lifetime,
+full-width invalid indices and explicit interior-handle diagnostics. Report:
+`/tmp/puyasol-rev-2-holders-extended-first.xml`. All 19 native CTests passed in
+1.46 seconds, including solc-provenance/reset checks.
+
+The first broader selection exposed two regressions and one stale format
+assertion, alongside the known Puya DCE failure (396 passed, 4 failed,
+6 xfailed, 2 xpassed; 136.21 seconds;
+`/tmp/puyasol-rev-2-holders-broad-first.xml`). The two regressions are fixed:
+reference-call pre-effects now precede returned-key binding, and child-constructor
+placement classification no longer requests a physical key from the parent's
+layout. The metadata assertion now verifies an exact format-2 mapping root,
+not the removed, inaccurate prefix-map declaration. All three passed in the
+44-test rerun; the subsequent full run is recorded in checkpoint 11.
+
+Solc 0.8.34/Cancun, legacy pipeline and optimizer disabled, confirmed the new
+stateful value/isolation/evaluation-once expectations and the validity of the
+interior-reference fixtures. Slot mode executes those interior references;
+default layout diagnoses the unsupported richer-handle requirement. Unsupported
+shapes are not silently lowered to the parent box or a made-up child data box.
+The existing nested library reference regression additionally runs through all
+eight profiles and matches the solc oracle's 42/99/0/0 read sequence.
+
+Pre/post AWST manifests under
+`/tmp/puyasol-rev-2-format-before.eL6NrY/holders-format-fixture` and
+`holders-format-after-second` show 14 mapping-containing roots across four
+contracts switching keys, with placement unchanged. Five direct mapping roots
+stop advertising their entries as prefix maps and instead describe the actual
+root bytes placeholder. In that fixture, aggregate data representations, ordinary named cells
+and constructor-pending flags are unchanged. Original/renamed declarations
+have identical new roots, including separately deployed runtime box checks.
+The `holders-slot-before` and `holders-slot-after` **complete AWST files compare
+byte-for-byte equal**, not merely their state declarations. Existing artifacts
+and LocalNet state were preserved; no legacy fallback or migration was added.
+
+### Checkpoint 11 — holder reference coherence and transparent wrappers
+
+The first combined full run recorded **1,829 passed, 3 failed, 101 xfailed and
+39 xpassed**, in 394.10 seconds; report:
+`/tmp/puyasol-rev-2-holders-full-first.xml`. Alongside the unchanged Puya DCE
+failure, it exposed two regressions: EnumerableSet's single-member wrapper was
+rejected as an interior reference, and mapping-local tuple assignment did not
+update its runtime binding. Both are fixed and pass unchanged assertions.
+
+The expanded holder selection now passes **51 tests** in 27.19 seconds, including
+the two existing regressions; report:
+`/tmp/puyasol-rev-2-holders-wrappers-third.xml`. All **19 native tests** pass in
+1.42 seconds. New coverage exercises tuple swaps, conditional rebinding and
+shadowed locals in both storage/ABI/code-generation profiles, plus transparent
+wrappers through direct access, mapping and array elements, library calls,
+anonymous/named reference returns, deletion and reuse. Expected stateful results
+were confirmed by solc 0.8.34/Cancun, legacy pipeline, optimizer disabled.
+
+Runtime storage handles use their registered, shadow-safe declaration bindings
+for reads, assignment and assembly. Tuple RHS runtime keys/slots are pinned before
+component writes. Reference-return planning now gives non-indexed
+mapping-containing returns the same key representation as their callers and
+implicit named returns. Reference-call effects precede the returned-handle
+binding rather than using uninitialized argument pins.
+
+Transparent wrappers retain distinct nominal WTypes but use the innermost
+represented fields and holder. The solc recursive-type accessor, member offsets
+and storage extent decide eligibility; recursive wrappers and slot-mode
+representations remain unchanged. Access preserves the addressable expression
+instead of emitting an invalid aggregate-to-aggregate AWST cast.
+
+Pre/post manifests in `wrappers-format-before` and `wrappers-format-final`, under
+`/tmp/puyasol-rev-2-format-before.eL6NrY/`, show the additional wrapper payload
+normalization explicitly: `Wrapped` and `Deep`, including array elements, expose
+`tag/items/values` directly instead of nested `inner` headers. The mapping root
+describes its actual bytes placeholder rather than an entry type. Constructor
+flags remain unchanged. Runtime box reads independently verify the documented
+key derivation from solc root slots `0/3/6/7` and member slot `2`, omitting both
+transparent wrapper ranks.
+
+The next full run recorded **1,837 passed, 3 failed, 101 xfailed and 39 xpassed**
+in 369.02 seconds (`/tmp/puyasol-rev-2-holders-full-second.xml`). The two additional
+failures were `test_storage_return_facts` in both storage modes: assembly `.slot`
+assignment still wrote the unmangled local name while reads used its registered
+binding. Single- and multi-return Yul assignments now share the same storage-slot
+redirect. The rebuilt holder/builder selection passes **97 tests** in 29.49 seconds
+(`/tmp/puyasol-rev-2-holders-slot-bindings.xml`), and all **19 native tests** pass
+in 1.22 seconds. New shadowed-local and multi-return `.slot` cases run in all eight
+storage/ABI/code-generation profiles and agree with solc 0.8.34/Cancun,
+legacy pipeline, optimizer disabled.
+
+The following full sweep recorded **1,846 passed, 2 failed, 101 xfailed and
+39 xpassed** in 322.17 seconds (`/tmp/puyasol-rev-2-final-semantic.xml`). Besides
+the known DCE failure, the shared `.slot` path had incorrectly applied arithmetic
+operand validation to the native string-storage identity sentinel used by
+`test_storage_slot_write_through`. Keeping the original slot conversion behavior
+alongside the shared binding redirect restores that existing regression. The
+final focused selection passes **98 tests** in 27.54 seconds
+(`/tmp/puyasol-rev-2-holders-final-focused.xml`); all **19 native tests** pass in
+1.21 seconds. No test markers or existing runtime assertions were weakened.
+
+### Checkpoint 12 — final combined verification
+
+The final full run on 2026-09-06 recorded **1,847 passed, 1 failed, 101 xfailed
+and 39 xpassed** (1,988 total) in 328.12 seconds. Report:
+`/tmp/puyasol-rev-2-final-semantic-v2.xml`. The sole failure is the unchanged
+`test_dce_reverting_subexpr_literal_folds`: `divdivShl(uint256)(0)` returns zero
+instead of reverting. There are no additional failures; the suite is not fully
+green. XPASS/xfail markers were not reclassified.
+
+```bash
+PUYASOL_LOCALNET_RESET=0 pytest framework/test_compile_cache.py \
+  framework/test_harness.py tests/ -q -n 2 --tb=short \
+  --junitxml=/tmp/puyasol-rev-2-final-semantic-v2.xml
+```
+
+The compiler stayed fixed throughout the run, with SHA-256
+`15f5ab2383f56310a07058bbe78fd99b6d91259afc0aa58466573ea5c9a729f5`.
+All 19 native CTests and the 98-case focused selection above used that build.
+The complete branch has **471 fewer net lines in `src/`** than its base,
+including the new 102-line storage-key helper. Solc/Puya pins, generated artifacts
+and LocalNet ledger state were preserved; no dependency update, CI work, migration
+or test-marker review was included.
+
 ### Baseline and remaining gates
 
 The recorded pre-branch semantic baseline is 1,688 passed, 1 failed, 102 xfailed,
@@ -622,20 +766,20 @@ size-helper probe, an in-process solc/EVM comparison, and five focused CTests.
 The attempted local AVM dry-run endpoint returned HTTP 404. That is not AVM
 runtime confirmation and does not justify calling these fixes verified.
 
-- [ ] Add focused regressions under the existing semantic categories and native
+- [x] Add focused regressions under the existing semantic categories and native
   tests for pure type/layout/size logic. Keep expectations explicit and derived
   from solc; record the oracle compiler, optimization and EVM settings.
-- [ ] Exercise both storage modes and both ABI profiles where supported. For
+- [x] Exercise both storage modes and both ABI profiles where supported. For
   native-only representations outside the EVM domain, assert preservation and
   invariants directly rather than claiming an impossible EVM byte-for-byte match.
-- [ ] Verify runtime results, not just compilation or TEAL shape; test exact
+- [x] Verify runtime results, not just compilation or TEAL shape; test exact
   deployment schemas and check that read-only default handling adds no state.
-- [ ] Build and run all native tests after shared-helper changes. Run focused
+- [x] Build and run all native tests after shared-helper changes. Run focused
   semantic groups after each fix and full semantic coverage at storage/refactor
   checkpoints and once more on the final compiler, without rebuilding mid-run.
-- [ ] Never reset LocalNet. Always use `PUYASOL_LOCALNET_RESET=0`; preserve existing
+- [x] Never reset LocalNet. Always use `PUYASOL_LOCALNET_RESET=0`; preserve existing
   artifacts and ledger state. Keep generated reports untracked/outside the repo.
-- [ ] Report every failure separately. The existing
+- [x] Report every failure separately. The existing
   `test_dce_reverting_subexpr_literal_folds` failure remains visible; no new xfail
   or weakened assertion may disguise it or a branch regression. A run with that
   failure is not all green, even if this branch adds no regressions.

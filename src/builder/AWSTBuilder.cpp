@@ -595,10 +595,9 @@ void AWSTBuilder::synthesizeFreestandingImplicitReturn(
 			else if (returnParams.size() == 1 && totalAugmented2 == 0)
 			{
 				auto const* rp0W = m_session.typeMapper.map(returnParams[0]->type());
-				if (m_session.profile.evmStorageLayout
-					&& returnParams[0]->referenceLocation()
+				if (returnParams[0]->referenceLocation()
 						== solidity::frontend::VariableDeclaration::Location::Storage)
-					rp0W = awst::WType::biguintType();   // slot handle
+					rp0W = m_session.typeMapper.functionReturnPlan(_func).nativeType;
 				// Blob-backed >4KB → return uint64 base offset.
 				if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 					&& memoryUsesBlob(rp0W))

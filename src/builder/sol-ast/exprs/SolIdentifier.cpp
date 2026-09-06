@@ -88,10 +88,10 @@ std::shared_ptr<awst::Expression> tryBlobAggregateValue(
 // resolve to a box-backed struct keyed by the runtime prefix so ARC4Struct
 // field machinery handles member access. Other uses bypass this:
 // function-pass → SolInternalCall::extractMappingKeyPrefix;
-// `self.nestedMap[k]` → SolIndexAccess::buildInitialPrefix.
+// nested mapping access → resolveStorageHolder.
 std::shared_ptr<awst::Expression> tryStructRefParamValue(
 	eb::ContractContext& ctx, Context& scope,
-	VariableDeclaration const& varDecl, std::string const& name,
+	VariableDeclaration const& varDecl,
 	awst::SourceLocation const& loc)
 {
 	if (scope.findMappingKeyParam(varDecl.id()).empty()
@@ -99,7 +99,7 @@ std::shared_ptr<awst::Expression> tryStructRefParamValue(
 		|| varDecl.type()->category() != solidity::frontend::Type::Category::Struct)
 		return nullptr;
 	auto* structType = ctx.typeMapper.map(varDecl.type());
-	auto key = awst::makeVarExpression(name, awst::WType::bytesType(), loc);
+	auto key = awst::makeVarExpression(scope.findMappingKeyParam(varDecl.id()), awst::WType::bytesType(), loc);
 	auto boxKey = awst::makeReinterpretCast(
 		std::move(key), awst::WType::boxKeyType(), loc);
 	auto boxExpr = awst::makeBoxValueExpression(std::move(boxKey), structType, loc);
@@ -219,12 +219,12 @@ std::shared_ptr<awst::Expression> buildStateVarRead(
 		return buildSlotModeStateRead(ctx, scope, ident, varDecl, name, loc);
 
 	// Mapping used as a VALUE (`r = a;` where r is a storage-pointer alias):
-	// return its name as bytes so the alias holds the box-key prefix.
-	// Mapping has no own value; SolIndexAccess still builds box access from the name.
+	// return its canonical holder, not the internal bytes placeholder.
 	if (varDecl.type()
 		&& varDecl.type()->category() == solidity::frontend::Type::Category::Mapping)
 	{
-		return awst::makeUtf8BytesConstant(name, loc, awst::WType::bytesType());
+		return awst::makeUtf8BytesConstant(ctx.storageMapper.physicalBindingFor(varDecl).key,
+			loc, awst::WType::bytesType());
 	}
 
 	// Transient state vars: packed blob in the transient scratch slot
@@ -251,7 +251,7 @@ std::shared_ptr<awst::Expression> buildStateVarRead(
 		return ctx.buildExpr(*varDecl.value());
 
 	return ctx.storageMapper.createStateRead(
-		binding.name, type, binding.kind, loc);
+		binding.key, type, binding.kind, loc);
 }
 
 // Dynamic CALLDATA param with LIVE pointer locals (an assembly block seeded or
@@ -329,13 +329,21 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
 		if (isSlotStorageLocal(m_ctx, *varDecl))
+		{
+			if (auto slot = m_scope.findSlotStorageRef(varDecl->id()))
+				return slot;
 			return awst::makeVarExpression(
-				varDecl->name(), awst::WType::biguintType(), m_loc);
+				m_scope.awstVarName(*varDecl), awst::WType::biguintType(), m_loc);
+		}
 
 		if (auto blobValue = tryBlobAggregateValue(m_ctx, m_scope, *varDecl, m_loc))
 			return blobValue;
 
-		if (auto refValue = tryStructRefParamValue(m_ctx, m_scope, *varDecl, name, m_loc))
+		if (dynamic_cast<MappingType const*>(varDecl->type()))
+			if (auto const& keyParam = m_scope.findMappingKeyParam(varDecl->id()); !keyParam.empty())
+				return awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc);
+
+		if (auto refValue = tryStructRefParamValue(m_ctx, m_scope, *varDecl, m_loc))
 			return refValue;
 
 		if (varDecl->isConstant() && varDecl->value())

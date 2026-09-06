@@ -34,6 +34,7 @@ public:
 		SlotVariable const* logicalSlot = nullptr;
 		awst::WType const* wtype = nullptr;
 		std::string name;
+		std::string key; ///< Physical cell / logical holder key; name is only a label.
 		awst::AppStorageKind kind = awst::AppStorageKind::AppGlobal;
 		/// Declaration-root initialization only. Mapping entries remain lazy;
 		/// neither initialization nor a constant key proves current existence.
@@ -64,23 +65,21 @@ public:
 		std::string const& _sourceFile
 	);
 
-	/// Physical named-cell binding for a logical Solidity declaration. Slot and
-	/// offset placement deliberately do not participate in this decision. Names
-	/// are disambiguated when distinct inherited declarations share one source
-	/// name; the first retains the legacy key.
+	/// Physical binding for a logical declaration. Mapping-containing roots
+	/// use versioned solc coordinates; ordinary cells retain their named keys.
 	PhysicalBinding physicalBindingFor(
 		solidity::frontend::VariableDeclaration const& _var) const;
 
 	std::shared_ptr<awst::Expression> createStateRead(
 		PhysicalBinding const& _binding, awst::SourceLocation const& _loc)
 	{
-		return createStateRead(_binding.name, _binding.valueType(m_typeMapper), _binding.kind, _loc);
+		return createStateRead(_binding.key, _binding.valueType(m_typeMapper), _binding.kind, _loc);
 	}
 	std::shared_ptr<awst::Expression> createStateWrite(
 		PhysicalBinding const& _binding, std::shared_ptr<awst::Expression> _value,
 		awst::SourceLocation const& _loc)
 	{
-		return createStateWrite(_binding.name, std::move(_value), _binding.valueType(m_typeMapper), _binding.kind, _loc);
+		return createStateWrite(_binding.key, std::move(_value), _binding.valueType(m_typeMapper), _binding.kind, _loc);
 	}
 
 	/// Explicit value view for promoted getter/slot types and synthetic cells.

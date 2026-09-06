@@ -7,6 +7,7 @@
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageBackend.h"
+#include "builder/storage/StorageMapper.h"
 #include "Logger.h"
 #include <libsolidity/ast/AST.h>
 
@@ -52,6 +53,9 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 					return bytesLike ? low.readBytesValue(*addr) : low.readValue(*addr);
 				}
 			}
+			if (dynamic_cast<solidity::frontend::MappingType const*>(varDecl->type()))
+				return awst::makeUtf8BytesConstant(
+					m_ctx.storageMapper.physicalBindingFor(*varDecl).key, m_loc);
 			return m_ctx.storageBackend->emitReadForVar(*varDecl, m_loc);
 		}
 	}

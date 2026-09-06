@@ -1042,7 +1042,7 @@ def test_storage_ref_returned_nested(harness):
     The V4 Position shape with a NESTED mapping field: a getter on `self.inner`
     (a mapping field of an outer struct held in a mapping element) returns an
     element storage ref that is then mutated via a method. The returned ref must
-    key off the nested box (self_value ++ "inner" ++ k), so the mutation persists.
+    use the nested holder/member/mapping key derivation, so the mutation persists.
     """
     app = harness.compile_and_deploy("storage/contracts/storage_ref_returned_nested.sol")
 

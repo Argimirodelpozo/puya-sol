@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/storage/StorageKey.h"
 #include "awst/NameGen.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
@@ -344,7 +345,7 @@ std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 		}
 		if (!readExpr)
 			readExpr = sm.createStateRead(
-				binding.name, readType, binding.kind, loc
+				binding.key, readType, binding.kind, loc
 			);
 	}
 	return readExpr;
@@ -407,7 +408,7 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	std::shared_ptr<awst::Expression> result;
 	if (StorageMapper::isMultiBoxArray(arrWType))
 	{
-		auto page = StorageMapper::arrayPageForIndex(binding.name, arrWType, idx, body.body, loc);
+		auto page = StorageMapper::arrayPageForIndex(binding.key, arrWType, idx, body.body, loc);
 		result = StorageMapper::makeBoxWindowRead(tm, page.key, page.offset, page.elementType, loc);
 	}
 	else
@@ -532,19 +533,19 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 	{
 		// No mapping keys: plain multi-dim array; read the whole value.
 		storageRead = sm.createStateRead(
-			binding.name, storedWType, binding.kind, loc);
+			binding.key, storedWType, binding.kind, loc);
 	}
 	else
 	{
 		// Per-layer hash (mirrors handleMappingAccess writer).
 		std::shared_ptr<awst::Expression> currentPrefix = awst::makeUtf8BytesConstant(
-			binding.name, loc, awst::WType::boxKeyType());
+			binding.key, loc, awst::WType::boxKeyType());
 		solidity::frontend::Type const* keyWalkType = var->type();
 		std::shared_ptr<awst::Expression> currentArrayValue;
 		if (auto const* rootArray = dynamic_cast<
 				solidity::frontend::ArrayType const*>(keyWalkType))
 			currentArrayValue = sm.createStateRead(
-				binding.name, tm.map(rootArray), binding.kind, loc);
+				binding.key, tm.map(rootArray), binding.kind, loc);
 
 		for (size_t i = 0; i < keyArgCount; ++i)
 		{
@@ -614,8 +615,9 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 			else
 				currentArrayValue = nullptr;
 
-			currentPrefix = awst::makeMappingKeyLayer(
-				std::move(encoded), encType, currentPrefix, loc);
+			currentPrefix = arrayStep
+				? StorageKey::arrayElement(currentPrefix, std::move(encoded), loc)
+				: StorageKey::mappingEntry(currentPrefix, std::move(encoded), encType, loc);
 
 			if (mappingStep)
 				if (auto const* nextArray = dynamic_cast<

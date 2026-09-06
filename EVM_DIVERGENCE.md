@@ -138,5 +138,8 @@ slots 0–127. These are target capacities, not changes to solc's packing rules.
   callee's `receive()`/`fallback()` like solc (zero-arg app call).
   `{value:}` + empty calldata stays a bare payment: the receive BODY does
   not run (see the value-transfer section above).
-- Indexed DYNAMIC event params, ARC-56 mapping-prefix, selector-includes-
-  returns: documented wire-level divergences.
+- Default-layout storage uses [versioned holder keys](docs/storage-format.md),
+  not EVM slot arithmetic. ARC-56 records exact roots, not prefix maps for
+  hash-derived entries. Existing deployments require their original artifacts.
+- Indexed DYNAMIC event params and selectors including returns are documented
+  wire-level divergences.

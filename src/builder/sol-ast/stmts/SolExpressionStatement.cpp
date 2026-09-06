@@ -4,6 +4,7 @@
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
 #include "builder/SelectorSemantics.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/sol-ast/MappingPrefix.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/AWSTBuilder.h" // containsMappingType
 #include "builder/sol-ast/calls/RevertBlob.h"
@@ -284,6 +285,13 @@ bool tryBoxKeyedRefReturn(BlockContext& blk, Return const& node,
 					rps[0]->type(), blk.typeMapper().analysis())) // widened: plain structs too
 				storageRefMapReturn = true;
 		}
+	if (storageRefMapReturn && containsMappingType(node.expression()->annotation().type))
+	{
+		stmt->value = storageReferenceKey(blk.builderCtx(), blk, *node.expression(), loc);
+		blk.builderCtx().appendEffectsTo(result);
+		result.push_back(std::move(stmt));
+		return true;
+	}
 	if (!storageRefMapReturn
 		|| !dynamic_cast<solidity::frontend::IndexAccess const*>(node.expression()))
 		return false;

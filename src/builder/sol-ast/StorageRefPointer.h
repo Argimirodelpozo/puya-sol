@@ -65,6 +65,26 @@ inline bool containsMappingType(
 	return _t && _t->nameable() && _t->containsNestedMapping();
 }
 
+/// A nonrecursive, storage-only wrapper with exactly one struct member has
+/// the same solc storage extent as that member at (0, 0). Default holder format
+/// 2 represents that wrapper transparently: it adds neither an ARC4 offset
+/// header nor a logical holder step. Nominal WType identities remain distinct.
+inline solidity::frontend::StructType const* transparentMappingWrapper(
+	solidity::frontend::Type const* _type)
+{
+	using namespace solidity::frontend;
+	auto const* outer = dynamic_cast<StructType const*>(_type);
+	if (!outer || outer->recursive()
+		|| !containsMappingType(outer)) return nullptr;
+	auto const& members = outer->structDefinition().members();
+	if (members.size() != 1) return nullptr;
+	auto const* inner = dynamic_cast<StructType const*>(members.front()->type());
+	if (!inner) return nullptr;
+	auto const& [slot, offset] = outer->storageOffsetsOfMember(members.front()->name());
+	return slot == 0 && offset == 0 && outer->storageSize() == inner->storageSize()
+		? inner : nullptr;
+}
+
 /// A variable-size array anywhere in the stored aggregate makes its serialized
 /// value dynamic. Use solc's array/member facts without asking for an ABI type:
 /// structs containing internal functions have no ABI interface. Mappings have

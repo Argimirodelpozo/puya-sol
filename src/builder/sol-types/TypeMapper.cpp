@@ -1,6 +1,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/FunctionPointerKind.h"
 #include "builder/sol-types/Arc4Defaults.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -237,7 +238,12 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	}
 
 	if (result)
+	{
 		m_solTypeCache[cacheKey] = result;
+		if (_solType->category() == Type::Category::Array
+			&& !static_cast<ArrayType const*>(_solType)->isByteArrayOrString())
+			m_aggregateSources.emplace(result, _solType);
+	}
 	else
 		result = awst::WType::voidType();
 
@@ -374,10 +380,20 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 		auto* proj = createType<awst::ARC4Struct>(name + "__rec", std::move(projFields),
 			/*_frozen=*/false);
 		m_namedTypeCache[projKey] = proj;
+		m_aggregateSources.emplace(proj, _structType);
 		return proj;
 	}
 	m_inProgressStructs.insert(structDef.id());
 	solidity::ScopeGuard clearProgress([&] { m_inProgressStructs.erase(structDef.id()); });
+	if (!profile().evmStorageLayout)
+		if (auto const* inner = transparentMappingWrapper(_structType))
+		{
+			auto const* innerType = dynamic_cast<awst::ARC4Struct const*>(mapStruct(inner));
+			auto* result = createType<awst::ARC4Struct>(name, innerType->fields(), false);
+			m_namedTypeCache[cacheKey] = result;
+			m_aggregateSources.emplace(result, solcAggregateFor(innerType));
+			return result;
+		}
 
 	std::vector<std::pair<std::string, awst::WType const*>> fields;
 
@@ -403,6 +419,7 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	);
 
 	m_namedTypeCache[cacheKey] = result;
+	m_aggregateSources.emplace(result, _structType);
 	return result;
 }
 

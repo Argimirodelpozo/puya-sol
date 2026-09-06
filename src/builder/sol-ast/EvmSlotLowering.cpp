@@ -467,7 +467,7 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIdentifier(
 		auto slot = m_scope.findSlotStorageRef(vd->id());
 		if (!slot || !dynamic_cast<awst::VarExpression const*>(slot.get()))
 			slot = awst::makeVarExpression(
-				vd->name(), awst::WType::biguintType(), m_loc);
+				m_scope.awstVarName(*vd), awst::WType::biguintType(), m_loc);
 		return makeLeafAddr(std::move(slot), nullptr,
 			vd->type() ? vd->type()->storageBytes() : 32, /*alone*/ true,
 			vd->type());

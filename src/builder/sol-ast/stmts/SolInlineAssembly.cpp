@@ -191,7 +191,7 @@ std::map<std::string, AssemblyBuilder::StateVarSlot> collectStateVarSlots(
 		auto const* intType = dynamic_cast<IntegerType const*>(varDecl->type());
 		if (!intType || intType->isSigned() || intType->numBits() != 256) continue;
 		stateVarSlots[yulId->name.str()] =
-			{blk.builderCtx().storageMapper.physicalBindingFor(*varDecl).name,
+			{blk.builderCtx().storageMapper.physicalBindingFor(*varDecl).key,
 				blk.typeMapper().map(varDecl->type())};
 	}
 
@@ -213,7 +213,11 @@ std::map<std::string, std::string> collectStructRefSlotLocals(
 		if (!blk.typeMapper().profile().evmStorageLayout && !blk.findSlotStorageRef(vd->id()))
 			continue;
 		if (reference.suffix == "slot")
-			slots[yulId->name.str()] = vd->name();
+		{
+			auto binding = blk.findSlotStorageRef(vd->id());
+			auto const* local = dynamic_cast<awst::VarExpression const*>(binding.get());
+			slots[yulId->name.str()] = local ? local->name : blk.awstVarName(*vd);
+		}
 		else if (reference.suffix == "offset")
 			constants[yulId->name.str()] = "0";
 	}
@@ -235,7 +239,7 @@ void registerStateVarSlotRoutes(
 		auto const* vi = layout.getVarInfoById(svDecl->id());
 		if (!vi) return;
 		auto physicalName =
-			blk.builderCtx().storageMapper.physicalBindingFor(*svDecl).name;
+			blk.builderCtx().storageMapper.physicalBindingFor(*svDecl).key;
 		auto const* arrT = dynamic_cast<solidity::frontend::ArrayType const*>(svDecl->type());
 		if (arrT && arrT->isDynamicallySized() && !arrT->isByteArrayOrString()
 			&& blk.builderCtx().storageMapper.shouldUseBoxStorage(*svDecl))
@@ -329,7 +333,7 @@ void registerMemberArrayRoutes(
 		AssemblyBuilder::SlotRoute r;
 		r.kind = AssemblyBuilder::SlotRoute::Kind::StructMemberArrayRoot;
 		r.varName =
-			blk.builderCtx().storageMapper.physicalBindingFor(*structVar).name;
+			blk.builderCtx().storageMapper.physicalBindingFor(*structVar).key;
 		r.fieldName = fieldName;
 		r.wtype = structWType;
 		r.elementSize = builder::computeEncodedElementSize(
@@ -414,7 +418,7 @@ void registerLayoutConstants(
 		{
 			constants[yulName] = slotStr;
 			storageSlotVars[yulName] =
-				blk.builderCtx().storageMapper.physicalBindingFor(*varDecl).name;
+				blk.builderCtx().storageMapper.physicalBindingFor(*varDecl).key;
 		}
 		else if (suffix == "offset")
 		{

@@ -111,10 +111,12 @@ std::shared_ptr<awst::Expression> SolAssignment::pinLiteralTupleRhs(
 			auto const* decl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
 				id->annotation().referencedDeclaration);
 			if (!decl) return false;
-			// Storage-pointer local: the alias branch owns it.
+			// Only compile-time aliases stay in place. Runtime slot/holder
+			// pointers must be snapshotted before any tuple component is stored.
 			if (decl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				&& !decl->isStateVariable())
-				return true;
+				return !m_ctx.typeMapper.profile().evmStorageLayout
+					&& m_scope.findMappingKeyParam(decl->id()).empty();
 			// Whole aggregate state var receiving a plain storage read.
 			if (decl->isStateVariable() && comp->annotation().type
 				&& !comp->annotation().type->isValueType())
@@ -169,7 +171,6 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 	std::shared_ptr<awst::Expression> const& _value,
 	solidity::frontend::TupleExpression const* _sourceLhs)
 {
-	(void) item;
 	// Storage-pointer in tuple `(m, v) = (m2, 21)`: the AWST target resolves
 	// to the current alias (not a runtime lvalue). Update compile-time alias
 	// and skip the assignment; mirrors the simple `m = m2` path.
@@ -185,6 +186,19 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 				&& lhsDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				&& !lhsDecl->isStateVariable())
 			{
+				auto const& keyParam = m_scope.findMappingKeyParam(lhsDecl->id());
+				if (!m_ctx.typeMapper.profile().evmStorageLayout && !keyParam.empty())
+				{
+					auto const* tuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
+					auto const* componentType = tuple && i < tuple->types().size() ? tuple->types()[i] : nullptr;
+					if (componentType != awst::WType::bytesType() && componentType != awst::WType::boxKeyType())
+						throw SizeError("tuple storage-reference assignment requires a runtime holder key");
+					m_ctx.postEffects().push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
+						awst::makeAsBytes(awst::makeTupleItem(_value, static_cast<int>(i), componentType, m_loc), m_loc),
+						m_loc));
+					return TupleComponentAction::Handled;
+				}
 				// Slot mode: the local IS a runtime biguint slot handle, so a
 				// tuple component re-points it with an ordinary assignment —
 				// the compile-time alias below never fires there (slot-handle
@@ -202,8 +216,7 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 						// the scoped frame and is reversed with them below.
 						m_ctx.postEffects().push_back(
 							awst::makeAssignmentStatement(
-								awst::makeVarExpression(lhsDecl->name(),
-									awst::WType::biguintType(), m_loc),
+								item,
 								awst::makeTupleItem(_value, static_cast<int>(i),
 									compW, m_loc),
 								m_loc));

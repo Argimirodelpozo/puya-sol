@@ -48,6 +48,7 @@ public:
 		m_namedTypeCache.clear();
 		m_arc4Cache.clear();
 		m_solArc4Cache.clear();
+		m_aggregateSources.clear();
 		m_returnPlans.clear();
 		m_callPlans.clear();
 		m_arc4ByteType = nullptr;
@@ -72,6 +73,14 @@ public:
 
 	/// Get or create an ARC4Struct WType for a Solidity struct.
 	awst::WType const* mapStruct(solidity::frontend::StructType const* _structType);
+
+	/// Solc aggregate facts behind a mapped value/projection. Invocation-local;
+	/// used to recover logical member offsets and array bounds through aliases.
+	solidity::frontend::Type const* solcAggregateFor(awst::WType const* _type) const
+	{
+		auto it = m_aggregateSources.find(_type);
+		return it == m_aggregateSources.end() ? nullptr : it->second;
+	}
 
 	/// Map a raw WType to its ARC4 equivalent for storage encoding.
 	/// Types already in ARC4 form pass through unchanged.
@@ -111,6 +120,7 @@ private:
 		m_solTypeCache;
 	/// Synthetic keys used only for struct recursion projections.
 	std::map<std::string, awst::WType const*> m_namedTypeCache;
+	std::unordered_map<awst::WType const*, solidity::frontend::Type const*> m_aggregateSources;
 
 	/// Session-local interning for the two ARC4 conversion entry points.
 	/// Input WType and solc Type objects are stable for the compiler session.

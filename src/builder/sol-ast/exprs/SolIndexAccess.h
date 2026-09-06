@@ -60,18 +60,6 @@ private:
 		awst::WType const* _arrWtype,
 		std::shared_ptr<awst::Expression> _idxExpr);
 
-	/// Phase-extract of `handleMappingAccess`: builds the initial bytes
-	/// prefix that the per-layer sha256 chain starts from. Picks among
-	/// four sources in priority order:
-	///   1. mapping-storage-ref param  → runtime VarExpression(<paramName>)
-	///   2. `f()[k]` call cursor       → result of the call, coerced to bytes
-	///   3. alias-override prefix      → key of the aliased state slot
-	///   4. plain state var            → `BytesConstant(varName)` (literal)
-	std::shared_ptr<awst::Expression> buildInitialPrefix(
-		solidity::frontend::Expression const* _cursor,
-		std::string const& _varName,
-		std::shared_ptr<awst::Expression> _aliasOverridePrefix);
-
 	/// Walk the root mapping/array type for `_numLevels` index steps,
 	/// returning the declared key wtype at each level (nullptr at array
 	/// levels). Used to coerce each runtime index expression to the
@@ -84,30 +72,7 @@ private:
 	/// type-mapped wtype of the index expression itself.
 	awst::WType const* resolveValueWType(solidity::frontend::Type const* _baseType);
 
-	/// Result of `resolveCursorContext`: the metadata needed by
-	/// `handleMappingAccess` to derive the initial storage-key prefix
-	/// from the cursor expression (after wrapper peeling).
-	struct CursorContext
-	{
-		std::string varName;                       // Identifier/MemberAccess name
-		solidity::frontend::Type const* rootMappingType = nullptr;
-		std::shared_ptr<awst::Expression> aliasOverridePrefix;  // alias's slot key, when applicable
-		/// The chain starts at a plain state-variable box, so the
-		/// `utf8(name)`-keyed length-box convention holds and a DYNAMIC array
-		/// length can be read from the derived prefix. False for aliases,
-		/// storage-ref params and mapping-returning calls: their inner arrays
-		/// are encoded inside a parent box, and `prefix ++ index` names a
-		/// descendant mapping box, never a box holding that array's length.
-		bool rootIsStateVarBox = false;
-	};
 
-	/// Phase-extract of `handleMappingAccess`: given the cursor
-	/// expression (already peeled of Assignment/TupleExpression
-	/// wrappers), classify it as Identifier (possibly aliased),
-	/// MemberAccess, or mapping-returning FunctionCall, and return
-	/// the per-shape context the prefix builder needs.
-	CursorContext resolveCursorContext(
-		solidity::frontend::Expression const* _cursor);
 };
 
 /// arr[start:end] range access.

@@ -475,11 +475,17 @@ ProgramAnalysis ProgramAnalysis::analyze(
 		auto& facts = result.storageReferenceReturns[id];
 		facts.slotHandle = slotSources.count(id) != 0;
 		if (!facts.slotHandle)
+		{
 			facts.indexedReturn = indexedStorageReturn(*function);
+			auto const& returns = function->returnParameters();
+			facts.bytesKeyed = returns.size() == 1
+				&& returns[0]->referenceLocation() == VariableDeclaration::Location::Storage
+				&& containsMappingType(returns[0]->type());
+		}
 		if (facts.indexedReturn)
 		{
 			result.storageRefPointerReturnAccesses.insert(facts.indexedReturn->id());
-			facts.bytesKeyed = dynamic_cast<MappingType const*>(
+			facts.bytesKeyed = facts.bytesKeyed || dynamic_cast<MappingType const*>(
 				facts.indexedReturn->baseExpression().annotation().type)
 				|| function->returnParameters()[0]->type()->containsNestedMapping();
 		}

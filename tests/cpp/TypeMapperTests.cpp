@@ -85,6 +85,31 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 		&& mappedA->fields().size() == 1 && mappedB->fields().size() == 2,
 		"nominal struct field layouts were lost");
 	require(mapper.map(memA) == mappedA, "struct location normalization changed identity");
+	auto const* sourceA = dynamic_cast<StructType const*>(mapper.solcAggregateFor(mappedA));
+	require(sourceA && &sourceA->structDefinition() == &structA->structDefinition(),
+		"mapped struct lost its canonical solc member facts");
+	require(!mapper.solcAggregateFor(awst::WType::bytesType()),
+		"bytes placeholder acquired a guessed aggregate identity");
+	auto const* wrapper = TypeProvider::structType(
+		declaration<StructDefinition>(a, "Wrapper"), DataLocation::Storage);
+	auto const* inner = builder::transparentMappingWrapper(wrapper);
+	require(inner && !builder::transparentMappingWrapper(structA),
+		"transparent wrapper classification ignored solc storage-only shape");
+	auto const* wrapperW = dynamic_cast<awst::ARC4Struct const*>(mapper.map(wrapper));
+	auto const* innerW = dynamic_cast<awst::ARC4Struct const*>(mapper.map(inner));
+	require(wrapperW && innerW && wrapperW != innerW && wrapperW->fields() == innerW->fields(),
+		"transparent wrapper lost nominal identity or changed the inner representation");
+	require(mapper.solcAggregateFor(wrapperW) == mapper.solcAggregateFor(innerW),
+		"transparent wrapper did not retain its represented member facts");
+	{
+		auto slotProfile = _profile;
+		slotProfile.evmStorageLayout = true;
+		builder::TypeMapper slotMapper(analysis, slotProfile, sources, artifacts);
+		auto const* slotWrapper = dynamic_cast<awst::ARC4Struct const*>(slotMapper.map(wrapper));
+		require(slotWrapper && slotWrapper->fields().size() == 1
+			&& slotWrapper->fields().front().first == "inner",
+			"default wrapper normalization changed slot-mode representation");
+	}
 
 	// Callable locations are semantic signature facts, not buffer locations.
 	auto const* calldataA = TypeProvider::withLocationIfReference(DataLocation::CallData, structA);
@@ -118,6 +143,10 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 
 	auto const* recursive = TypeProvider::structType(
 		declaration<StructDefinition>(a, "Node"), DataLocation::Storage);
+	auto const* recursiveWrapper = TypeProvider::structType(
+		declaration<StructDefinition>(a, "RecursiveWrapper"), DataLocation::Storage);
+	require(!builder::transparentMappingWrapper(recursiveWrapper),
+		"recursive wrapper was treated as a transparent finite value");
 	require(builder::hasDynamicStorageShape(recursive), "recursive array shape was lost");
 	auto const* fixedCallback = TypeProvider::structType(
 		declaration<StructDefinition>(a, "FixedCallback"), DataLocation::Storage);
@@ -141,9 +170,12 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 		require(projection && projection->fields().size() == 2
 			&& projection->fields()[1].second == awst::WType::bytesType(),
 			"recursive projection is not finite and field-preserving");
+		require(mapper.solcAggregateFor(projection) && mapper.solcAggregateFor(children),
+			"recursive alias projection lost solc aggregate facts");
 		require(mapper.map(TypeProvider::withLocationIfReference(DataLocation::Memory, recursive)) == mapped,
 			"recursive root has a location-dependent projection");
 		mapper.reset();
+		require(!mapper.solcAggregateFor(mapped), "reset retained stale solc aggregate facts");
 	}
 }
 }
@@ -163,6 +195,10 @@ struct Node { uint16 value; Node[] children; }
 struct Huge { uint256[134217728] values; }
 struct FixedCallback { uint16 tag; function() internal returns (uint256) callback; }
 struct DynamicCallback { function() internal returns (uint256)[] callbacks; }
+struct Holder { uint256[] values; mapping(uint256 => uint256) entries; }
+struct Wrapper { Holder inner; }
+struct RecursiveHolder { RecursiveWrapper[] children; mapping(uint256 => uint256) entries; }
+struct RecursiveWrapper { RecursiveHolder inner; }
 )"},
 			{"b.sol", R"(pragma solidity ^0.8.20;
 struct Item { uint16 first; bool second; }

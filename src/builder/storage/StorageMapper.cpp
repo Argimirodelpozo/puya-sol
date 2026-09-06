@@ -1,4 +1,5 @@
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/StorageKey.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/SourceLocConvert.h"
 #include "builder/contract/StateVarWalker.h"
@@ -448,8 +449,15 @@ StorageMapper::PhysicalBinding StorageMapper::makeBinding(
 	binding.logicalSlot = _logicalSlot;
 	binding.wtype = _logicalSlot ? _logicalSlot->wtype : m_typeMapper.map(_var.type());
 	binding.name = std::move(_name);
+	binding.key = binding.name;
 	if (!binding.hasPersistentCell())
 		return binding;
+	if (!profile().evmStorageLayout && containsMappingType(_var.type()))
+	{
+		if (!_logicalSlot)
+			throw SizeError("mapping holder requires a solc logical storage coordinate");
+		binding.key = StorageKey::root(_logicalSlot->slot, _logicalSlot->byteOffset);
+	}
 	binding.kind = classifyBoxStorage(_var, binding.name)
 		? awst::AppStorageKind::Box : awst::AppStorageKind::AppGlobal;
 
@@ -541,22 +549,18 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 		def.memberName = binding.name;
 		def.storageKind = binding.kind;
 		def.storageWType = binding.wtype;
-		// A declaration-root mapping has only a prefix. Its manifest describes
-		// the eventual entry value, not the root's internal bytes placeholder.
-		if (auto const* mapping = dynamic_cast<solidity::frontend::MappingType const*>(var->type()))
-		{
-			auto const* valueType = mapping->valueType();
-			while (auto const* nested = dynamic_cast<solidity::frontend::MappingType const*>(valueType))
-				valueType = nested->valueType();
-			def.storageWType = m_typeMapper.map(valueType);
-			def.isMap = true;
-		}
+		// Hash-derived entries are not ARC-56 prefix maps. Describe the actual
+		// root cell, including a mapping's internal bytes placeholder, honestly.
+		if (containsMappingType(var->type()))
+			def.description = "puya-sol holder format 2; solc root coordinate; "
+				"descendant keys use tagged SHA-256 derivation, not ARC-56 prefix maps. "
+				"See docs/storage-format.md. Fresh deployments only.";
 		else if (binding.kind == awst::AppStorageKind::AppGlobal
 			&& binding.wtype == awst::WType::stringType())
 			Logger::instance().info(
 				"string state variable '" + var->name()
 				+ "' uses Algorand global state (limited to ~64 bytes)");
-		def.key = makeKeyExpr(binding.name, def.sourceLocation, binding.kind);
+		def.key = makeKeyExpr(binding.key, def.sourceLocation, binding.kind);
 		defs.push_back(std::move(def));
 	});
 	return defs;
@@ -591,7 +595,11 @@ StorageMapper::PhysicalBinding StorageMapper::physicalBindingFor(
 
 bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var) const
 {
-	return physicalBindingFor(_var).kind == awst::AppStorageKind::Box;
+	if (auto it = m_bindings.find(_var.id()); it != m_bindings.end())
+		return it->second.kind == awst::AppStorageKind::Box;
+	// Child-constructor planning queries placement before entering the child's
+	// contract context. Classification needs no physical key or parent layout.
+	return classifyBoxStorage(_var, _var.name());
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
