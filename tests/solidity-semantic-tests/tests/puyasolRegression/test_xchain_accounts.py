@@ -121,3 +121,34 @@ def test_xchain_accounts(harness):
     other = bytes.fromhex("99" * 20)
     with pytest.raises(Exception):
         lsig_app_call(sel("whoami()"), b"", claim=other)
+
+
+def test_xchain_library_msg_sender(harness):
+    """puyasolRegression/contracts/xchain_library_sender.sol
+
+    A library that reads msg.sender under the xchain profile must inline the
+    claim check: root subroutines cannot call the memoized __evm_sender
+    instance method (puya: "invocation of instance method outside of a
+    contract method" — the Permit2 chainwide regression). Library and
+    contract-method readers must agree on the sender.
+    """
+    client = harness.localnet.algod
+    acct = harness.localnet.account
+    template = base64.b64decode(client.compile(TOY_TEMPLATE_TEAL)["result"])
+    arts = harness.compile(
+        "puyasolRegression/contracts/xchain_library_sender.sol",
+        extra_args=["--contract-abi", "evm",
+                    "--xchain-template", template.hex(),
+                    "--xchain-placeholder", PLACEHOLDER.hex()])
+    app = harness.deploy(arts, "LibSender")
+
+    r = harness.call_raw(app, sel("libSender()"), extra_args=(b"",), extra_fee=10_000)
+    assert not r.reverted, r.fail_message
+    # No claim presented: the unclaimed-caller shim is the raw sender's low 20 bytes.
+    assert evm_ret(r)[-20:] == decode_address(acct.address)[-20:]
+
+    body = evm_abi_encode(["uint256"], [7])
+    via_lib = harness.call_raw(app, sel("libTag(uint256)"), extra_args=(body,), extra_fee=10_000)
+    via_own = harness.call_raw(app, sel("ownTag(uint256)"), extra_args=(body,), extra_fee=10_000)
+    assert not via_lib.reverted and not via_own.reverted
+    assert evm_ret(via_lib) == evm_ret(via_own)

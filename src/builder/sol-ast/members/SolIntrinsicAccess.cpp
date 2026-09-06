@@ -53,6 +53,12 @@ std::shared_ptr<awst::Expression> buildEvmMsgSender(
 	// unclaimed-caller compatibility shim (deploy/creator paths).
 	if (auto const& xc = ctx.typeMapper.profile().xchainAccounts)
 	{
+		// Root subroutines (library / free functions, currentContract unset)
+		// cannot invoke a contract instance method: inline the claim check
+		// there (Permit2's PermitHash library reads msg.sender). Contract
+		// methods share the memoized __evm_sender below.
+		if (!ctx.currentContract)
+			return buildEvmMsgSenderInline(ctx, *xc, loc);
 		// One contract method per contract: the claim check (two app-arg
 		// reads, a sha512_256, a compare) was inlined at EVERY msg.sender use
 		// — 39 copies in CTFExchange.
