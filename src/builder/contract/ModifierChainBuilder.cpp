@@ -16,6 +16,8 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 
+#include <map>
+
 namespace puyasol::builder
 {
 
@@ -93,22 +95,80 @@ private:
 	int64_t m_declId;
 };
 
-bool rebindsParameter(
+/// How a modifier body treats a memory parameter as a whole.
+struct RebindFacts
+{
+	bool any = false;            ///< some whole rebind (or asm reference) exists
+	bool nested = false;         ///< a rebind sits inside a branch/loop/tuple
+	bool mutatesMember = false;  ///< `c.f = …` writes through the object
+	/// Top-level `c = …;` statements, in body order.
+	std::vector<solidity::frontend::Statement const*> topLevel;
+};
+
+RebindFacts rebindFacts(
 	solidity::frontend::ModifierDefinition const& _modifier,
 	solidity::frontend::VariableDeclaration const& _param)
 {
+	RebindFacts facts;
 	if (!_modifier.isImplemented())
-		return false;
+		return facts;
 	WholeRebindScanner scanner(_param.id());
 	_modifier.body().accept(scanner);
-	if (scanner.found && scanner.mutatesMember)
+	facts.any = scanner.found;
+	facts.mutatesMember = scanner.mutatesMember;
+	if (!facts.any)
+		return facts;
+	size_t rebinds = 0;
+	{
+		// Count every whole rebind, then subtract the top-level ones.
+		struct Counter: solidity::frontend::ASTConstVisitor
+		{
+			explicit Counter(int64_t _id): id(_id) {}
+			int64_t id; size_t count = 0; bool asmRef = false;
+			bool visit(solidity::frontend::Assignment const& _a) override
+			{
+				if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(
+						&_a.leftHandSide()))
+					if (auto const* d = ident->annotation().referencedDeclaration; d && d->id() == id)
+						++count;
+				if (dynamic_cast<solidity::frontend::TupleExpression const*>(&_a.leftHandSide()))
+					++count; // conservatively nested (not split-able)
+				return true;
+			}
+			bool visit(solidity::frontend::InlineAssembly const& _asm) override
+			{
+				for (auto const& [identifier, info]: _asm.annotation().externalReferences)
+					if (info.declaration && info.declaration->id() == id)
+						asmRef = true;
+				return true;
+			}
+		} counter(_param.id());
+		_modifier.body().accept(counter);
+		rebinds = counter.count;
+		if (counter.asmRef)
+			facts.nested = true;
+	}
+	for (auto const& statement: _modifier.body().statements())
+		if (auto const* exprStmt =
+				dynamic_cast<solidity::frontend::ExpressionStatement const*>(statement.get()))
+			if (auto const* assignment = dynamic_cast<solidity::frontend::Assignment const*>(
+					&exprStmt->expression()))
+				if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(
+						&assignment->leftHandSide()))
+					if (auto const* d = ident->annotation().referencedDeclaration;
+						d && d->id() == _param.id())
+						facts.topLevel.push_back(statement.get());
+	if (facts.topLevel.size() < rebinds)
+		facts.nested = true;
+	if (facts.nested && facts.mutatesMember)
 		Logger::instance().warning(
 			"modifier `" + _modifier.name() + "` both writes through and rebinds its "
-			"memory parameter `" + _param.name() + "`; the parameter is bound by value, "
-			"so member writes made before the rebind are not visible to the wrapped "
-			"function (Solidity shares the object until the rebind)",
+			"memory parameter `" + _param.name() + "` inside a branch, loop, tuple or "
+			"assembly; the parameter is bound by value, so member writes made before the "
+			"rebind are not visible to the wrapped function (Solidity shares the object "
+			"until the rebind)",
 			awst::SourceLocation{});
-	return scanner.found;
+	return facts;
 }
 
 } // namespace
@@ -309,6 +369,9 @@ void ContractBuilder::buildModifierChain(
 
 		auto const* args = modInvocation->arguments();
 		auto const& params = modDef->parameters();
+		// Top-level whole rebinds of aliased memory params → (param, type).
+		std::map<solidity::frontend::Statement const*,
+			std::pair<solidity::frontend::VariableDeclaration const*, awst::WType const*>> rebindPlans;
 		std::vector<int64_t> remappedDeclIds;
 
 		if (args && !args->empty())
@@ -354,19 +417,29 @@ void ContractBuilder::buildModifierChain(
 				// new value into the wrapped function through the alias; bind such
 				// params by value instead (solc: the rebind moves only the
 				// modifier's pointer).
+				// Alias when the body never rebinds the parameter, or rebinds it
+				// only in top-level statements: those statements then bind a
+				// fresh local and switch the remap (statement hook below), so
+				// member writes before the rebind still reach the caller's object
+				// and the rebind stays local, both as in Solidity.
 				if (param->referenceLocation()
-						== solidity::frontend::VariableDeclaration::Location::Memory
-					&& !rebindsParameter(*modDef, *param))
+						== solidity::frontend::VariableDeclaration::Location::Memory)
 				{
-					m_exprBuilder->appendEffectsTo(modBody->body);
-					if (auto const* variable =
-						dynamic_cast<awst::VarExpression const*>(argExpr.get());
-						variable && variable->wtype == paramType)
+					auto facts = rebindFacts(*modDef, *param);
+					if (!facts.any || !facts.nested)
 					{
-						m_tr->setParamRemap(param->id(), sol_ast::ParamRemap{
-							variable->name, paramType});
-						remappedDeclIds.push_back(param->id());
-						continue;
+						m_exprBuilder->appendEffectsTo(modBody->body);
+						if (auto const* variable =
+							dynamic_cast<awst::VarExpression const*>(argExpr.get());
+							variable && variable->wtype == paramType)
+						{
+							m_tr->setParamRemap(param->id(), sol_ast::ParamRemap{
+								variable->name, paramType});
+							remappedDeclIds.push_back(param->id());
+							for (auto const* statement: facts.topLevel)
+								rebindPlans[statement] = {param.get(), paramType};
+							continue;
+						}
 					}
 				}
 
@@ -429,7 +502,33 @@ void ContractBuilder::buildModifierChain(
 		};
 
 		setPlaceholderFactory(std::move(makePlaceholder));
+		if (!rebindPlans.empty())
+			m_functionCtx->statementHook =
+				[this, &rebindPlans](solidity::frontend::Statement const& statement,
+					std::vector<std::shared_ptr<awst::Statement>>& out) -> bool
+				{
+					auto found = rebindPlans.find(&statement);
+					if (found == rebindPlans.end())
+						return false;
+					auto const* param = found->second.first;
+					auto const* type = found->second.second;
+					auto const& exprStmt =
+						static_cast<solidity::frontend::ExpressionStatement const&>(statement);
+					auto const& assignment =
+						static_cast<solidity::frontend::Assignment const&>(exprStmt.expression());
+					auto loc = makeLoc(statement.location());
+					auto value = m_exprBuilder->buildExpr(assignment.rightHandSide());
+					value = TypeCoercion::coerceForAssignment(std::move(value), type, loc);
+					m_exprBuilder->appendEffectsTo(out);
+					std::string fresh = "__mod_" + param->name() + "_rebound_"
+						+ std::to_string(awst::NameGen::next("ModifierChainBuilder.rebound"));
+					out.push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(fresh, type, loc), std::move(value), loc));
+					m_tr->setParamRemap(param->id(), sol_ast::ParamRemap{fresh, type});
+					return true;
+				};
 		auto translatedBody = buildBlock(modDef->body());
+		m_functionCtx->statementHook = {};
 		setPlaceholderFactory({});
 
 		if (translatedBody)

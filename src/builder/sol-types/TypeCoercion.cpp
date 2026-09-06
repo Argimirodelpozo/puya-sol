@@ -155,10 +155,15 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnElement(
 		return _value;
 	if (_plan.masked)
 	{
-		// Unsigned sub-word: mask the native uint64 to the declared width (Pass 5).
+		// Unsigned sub-word: mask the native uint64 to the declared width (Pass 5),
+		// then at the wire boundary encode it as arc4.uint<bits>.
 		uint64_t mask = (uint64_t(1) << _plan.bits) - 1;
-		return awst::makeUInt64BinOp(std::move(_value), awst::UInt64BinaryOperator::BitAnd,
+		_value = awst::makeUInt64BinOp(std::move(_value), awst::UInt64BinaryOperator::BitAnd,
 			awst::makeIntegerConstant(mask, _loc), _loc);
+		if (!_wire || !_plan.encoded || !_plan.wireType
+			|| _plan.wireType == _plan.nativeType)
+			return _value;
+		return awst::makeARC4Encode(std::move(_value), _plan.wireType, _loc);
 	}
 	if (!_plan.encoded)
 		return _value;
@@ -192,6 +197,12 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnElement(
 				std::move(_value), _plan.nativeType, _loc);
 		return _value;
 	}
+	// Sub-word unsigned already masked by the native pass (dispatch plan clears
+	// `masked`): only the arc4.uint<bits> encode remains.
+	if (_value->wtype == awst::WType::uint64Type() && _plan.wireType
+		&& _plan.wireType != _plan.nativeType
+		&& _plan.wireType->kind() == awst::WTypeKind::ARC4UIntN)
+		return awst::makeARC4Encode(std::move(_value), _plan.wireType, _loc);
 	// Unsigned biguint: ARC4-encode to arc4.uintN, guarded on biguint like Pass 2
 	// (the expectedType coercion at the return site makes it biguint in practice).
 	if (_value->wtype == awst::WType::biguintType())
@@ -868,8 +879,12 @@ std::optional<std::string> TypeCoercion::intSelectorReturnName(
 		// intSelectorName.
 		if (it->isSigned)
 			return std::string("uint256");
-		return it->bits <= 64 ? std::string("uint64") : ("uint" + std::to_string(it->bits));
+		// Unsigned returns publish the declared width (params keep the
+		// uint64 collapse for sub-word types).
+		return "uint" + std::to_string(it->bits);
 	}
+	if (auto en = SolIntType::fromSolOrEnum(_type); en && !en->isSigned)
+		return "uint" + std::to_string(en->bits);
 	return std::nullopt;
 }
 

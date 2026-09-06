@@ -3,6 +3,7 @@
 #include <map>
 
 #include "awst/Node.h"
+#include "builder/BuildArtifacts.h"
 #include "builder/CompilationSession.h"
 #include "builder/contract/ContractBuilder.h"
 #include "builder/storage/StorageMapper.h"
@@ -97,7 +98,8 @@ private:
 		std::string const& _sourceFile,
 		std::string const& _qualifiedName,
 		std::string const& _subroutineId,
-		std::string const& _libraryName);
+		std::string const& _libraryName,
+		BuildArtifacts::PathSpecialization const* _pathSpec = nullptr);
 
 	// ── buildFreestandingSubroutine phases ──────────────────────────────
 	void buildFreestandingParams(

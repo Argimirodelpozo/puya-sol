@@ -96,7 +96,7 @@ def test_calldata_too_short_v1(harness):
     # d(bytes) — ARC4 byte[] = u16 length + N bytes. Claim 0xffff but no data.
     _assert_malformed_reverts(
         harness, "revertStrings/contracts/calldata_too_short_v1.sol",
-        "d(byte[])uint64", (0xffff).to_bytes(2, "big"))
+        "d(byte[])uint8", (0xffff).to_bytes(2, "big"))
 
 def test_called_contract_has_code(harness):
     """revertStrings/contracts/called_contract_has_code.sol"""
@@ -160,7 +160,7 @@ def test_invalid_abi_decoding_calldata_v1(harness):
     """revertStrings/contracts/invalid_abi_decoding_calldata_v1.sol"""
     _assert_malformed_reverts(
         harness, "revertStrings/contracts/invalid_abi_decoding_calldata_v1.sol",
-        "d(byte[])uint64", (0xffff).to_bytes(2, "big"))
+        "d(byte[])uint8", (0xffff).to_bytes(2, "big"))
 
 @pytest.mark.xfail(reason="ACCEPTED LIMIT (callsub self-call model): this.dyn() lowers to callsub (AVM prohibits self inner-txn calls), so the callee's asm return(ptr,x) halts the WHOLE program instead of ending a callee frame whose malformed returndata the caller then fails to ABI-decode. Emulating needs real frame isolation for self-calls.", strict=False)
 def test_invalid_abi_decoding_memory_v1(harness):

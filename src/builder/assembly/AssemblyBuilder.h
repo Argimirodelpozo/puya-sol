@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "awst/Node.h"
+#include "builder/ReturnWirePlan.h"
 #include "builder/ScratchLayout.h"
 #include "builder/SelectorSemantics.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -147,6 +148,14 @@ public:
 	/// When true, EVM `return(o,s)` lowers as a program halt (internal/private frame).
 	/// For public/external functions it lowers as a subroutine return (caller continues).
 	void setFrameIsProgram(bool _v) { m_frameIsProgram = _v; }
+	/// The enclosing ABI method's return wire plan (null when returns stay
+	/// native, e.g. modifier chains): `return(ptr, len)` values pass through it
+	/// so they match the method's wire return type.
+	void setReturnWirePlan(std::vector<builder::ReturnWireElem> const* _plan, bool _asmWrap)
+	{
+		m_returnWirePlan = _plan;
+		m_returnAsmWrap = _asmWrap;
+	}
 
 	std::vector<std::shared_ptr<awst::Statement>> buildBlock(
 		PreparedAssembly const& _assembly,
@@ -1212,6 +1221,13 @@ private:
 	/// True after a halt (return/revert): skip trailing flush + coercions (else puya: unreachable).
 	bool m_haltEmitted = false;
 	bool m_frameIsProgram = false;
+	std::vector<builder::ReturnWireElem> const* m_returnWirePlan = nullptr;
+	bool m_returnAsmWrap = false;
+	/// Encode a frame return value through m_returnWirePlan (spills go to _out).
+	std::shared_ptr<awst::Expression> encodeFrameReturn(
+		std::shared_ptr<awst::Expression> _value,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
 
 	std::map<std::string, awst::WType const*> m_locals;
 	/// Locals upgraded uint64→biguint; maps name to original type for block-end coercion.

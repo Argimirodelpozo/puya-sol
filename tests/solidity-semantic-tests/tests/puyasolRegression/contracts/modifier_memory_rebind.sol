@@ -12,11 +12,24 @@ contract ModifierMemoryRebind {
 
     modifier rebind(Cell memory c) { c = Cell(5); _; }
     modifier mutate(Cell memory c) { c.value += 10; _; seen = c.value; }
+    // Writes through, THEN rebinds at top level: the write reaches the caller's
+    // object, the rebind stays local (a fresh local from that statement on).
+    modifier both(Cell memory c) { c.value += 1; c = Cell(5); require(c.value == 5); _; }
+    // Rebind inside a branch: bound by value (documented residual).
+    modifier nested(Cell memory c) { if (c.value > 0) { c = Cell(5); } _; }
 
     function g(Cell memory c) internal rebind(c) returns (uint256) { return c.value; }
     function h(Cell memory c) internal mutate(c) returns (uint256) { return c.value; }
+    function k(Cell memory c) internal both(c) returns (uint256) { return c.value; }
+    function n(Cell memory c) internal nested(c) returns (uint256) { return c.value; }
 
     function callG() external returns (uint256) { Cell memory x = Cell(1); return g(x); }
+    function callK() external returns (uint256) {
+        Cell memory x = Cell(2001);
+        uint256 r = k(x);
+        return r * 10000 + x.value;
+    }
+    function callN() external returns (uint256) { Cell memory x = Cell(1); return n(x); }
     function callH() external returns (uint256) {
         Cell memory x = Cell(1);
         uint256 r = h(x);

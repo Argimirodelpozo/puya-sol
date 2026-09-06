@@ -5340,7 +5340,7 @@ def test_struct_getter_wire_widths(harness):
     returns = {m["name"]: m["returns"]["type"] for m in spec["methods"]}
     assert returns["plain"] == "(uint128,uint128)"
     assert returns["withmap"] == "(uint128,uint128)"
-    assert returns["withmap64"] == "(uint64,uint64,bool)"
+    assert returns["withmap64"] == "(uint64,uint32,bool)"
     assert returns["withaddr"] == "(uint256,address)"
     app = harness.deploy(arts, "StructGetterWidths", fund_wei=5_000_000)
     harness.call(app, "set(uint256)", 1, extra_fee=10_000)
@@ -5359,14 +5359,18 @@ def test_modifier_memory_param_rebind(harness):
     A modifier that REBINDS its memory parameter (`c = Cell(5)`) must not leak
     the new object into the wrapped function (solc: 1, the alias model gave 5),
     while a modifier that writes THROUGH the parameter keeps sharing the
-    caller's object (11 both inside and after the call). A body that does both
-    is bound by value with a compile-time warning (member writes before the
-    rebind are lost); that residual is intentionally not asserted here.
+    caller's object (11 both inside and after the call). A body that writes
+    through and then rebinds at top level keeps both semantics: the parameter
+    aliases the caller's object until the rebind statement, which binds a fresh
+    local (callK: 2002 inside, 2002 after). Only a rebind nested in a branch,
+    loop, tuple or assembly falls back to binding by value (callN: 1).
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/modifier_memory_rebind.sol")
     assert as_int(harness.call(app, "callG()", extra_fee=10_000).abi_return) == 1
     assert as_int(harness.call(app, "callH()", extra_fee=10_000).abi_return) == 11011
     assert as_int(harness.call(app, "seen()").abi_return) == 11
+    assert as_int(harness.call(app, "callK()", extra_fee=10_000).abi_return) == 2002 * 10000 + 2002
+    assert as_int(harness.call(app, "callN()", extra_fee=10_000).abi_return) == 1
 
 
 def test_storage_ref_call_member_write(harness):
@@ -5426,3 +5430,54 @@ def test_push_returns_element_reference_on_every_path(harness, slot_layout):
     assert as_int(harness.call(app, "alias_()", extra_fee=10_000).abi_return) == 8
     assert as_int(harness.call(app, "chained(uint256)", 1, extra_fee=10_000).abi_return) == 9
     assert as_int(harness.call(app, "popAlias()", extra_fee=10_000).abi_return) == 0
+
+
+def test_interior_storage_reference_paths(harness):
+    """puyasolRegression/contracts/interior_storage_ref_paths.sol — NOT an o.g. semantic test.
+
+    OpenZeppelin Checkpoints/EnumerableMap shapes: a library receives `Trace
+    storage` / `Map storage` and passes the INTERIOR `self._checkpoints`
+    (dynamic array) or `map._keys` (mapping-holding struct member) to another
+    library function by reference. Default mode rejected both ("... require a
+    whole-box root"); the callee is now specialized on the field path under the
+    enclosing box, so its writes land where direct access reads them.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/interior_storage_ref_paths.sol")
+    opts = {"extra_fee": 10_000}
+    push = "push(uint256,uint32,uint224)"
+    assert [as_int(v) for v in harness.call(app, push, 1, 1, 10, **opts).abi_return] == [0, 10]
+    assert [as_int(v) for v in harness.call(app, push, 1, 2, 20, **opts).abi_return] == [10, 20]
+    assert [as_int(v) for v in harness.call(app, push, 1, 2, 25, **opts).abi_return] == [25, 25]
+    assert as_int(harness.call(app, "latest(uint256)", 1).abi_return) == 25
+    assert as_int(harness.call(app, "len(uint256)", 1).abi_return) == 2
+    assert as_int(harness.call(app, "total()").abi_return) == 50
+    assert as_int(harness.call(app, "totalLen()").abi_return) == 2
+    k1, k2 = b"\x01" * 32, b"\x02" * 32
+    assert as_int(harness.call(app, "put(bytes32,uint256)", k1, 7, **opts).abi_return) == 1
+    assert as_int(harness.call(app, "put(bytes32,uint256)", k1, 8, **opts).abi_return) == 0
+    assert as_int(harness.call(app, "put(bytes32,uint256)", k2, 9, **opts).abi_return) == 1
+    assert as_int(harness.call(app, "get(bytes32)", k1).abi_return) == 8
+    assert as_int(harness.call(app, "size()").abi_return) == 2
+    assert as_int(harness.call(app, "directSize()").abi_return) == 2
+    assert as_int(harness.call(app, "putIn(uint256,bytes32,uint256)", 3, k1, 1, **opts).abi_return) == 1
+    assert as_int(harness.call(app, "putIn(uint256,bytes32,uint256)", 3, k2, 2, **opts).abi_return) == 1
+    assert as_int(harness.call(app, "sizeIn(uint256)", 3).abi_return) == 2
+    assert as_int(harness.call(app, "sizeIn(uint256)", 4).abi_return) == 0
+
+
+def test_this_call_return_widths(harness):
+    """puyasolRegression/contracts/this_call_return_widths.sol — NOT an o.g. semantic test.
+
+    `this.f()` is a subroutine call to the ABI method, whose return is the wire
+    shape: arc4.uint8/uint16 for sub-word returns (solc widths since the return
+    plan publishes them), arc4.uint128 for wide unsigned, arc4 tuples for struct
+    getters. The caller decodes each numeric element back to native (uint128
+    and struct getters mis-typed the result before: "incompatible types").
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/this_call_return_widths.sol")
+    opts = {"extra_fee": 10_000}
+    assert as_int(harness.call(app, "wide()", **opts).abi_return) == 6
+    assert as_int(harness.call(app, "narrow()", **opts).abi_return) == 8
+    assert as_int(harness.call(app, "structGetter()", **opts).abi_return) == 3
+    assert as_int(harness.call(app, "explicitSub()", **opts).abi_return) == 65536
+    assert as_int(harness.call(app, "tuple()", **opts).abi_return) == 34

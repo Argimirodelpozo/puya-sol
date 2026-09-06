@@ -12,6 +12,8 @@
 #include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/AWSTBuilder.h"
+#include "builder/BuildArtifacts.h"
+#include "builder/ReturnWirePlan.h"
 #include "builder/sol-ast/EffectScan.h"
 #include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/StorageRefPointer.h"
@@ -543,12 +545,71 @@ void SolInternalCall::buildSequencedArgs(
 				if (auto const* declaration = id->annotation().referencedDeclaration;
 					declaration && !m_scope.findMappingKeyParam(declaration->id()).empty())
 					return extractMappingKeyPrefix(expression);
-			auto place = StoragePlace::fromRead(buildExpr(expression));
+			auto built = buildExpr(expression);
+			auto place = StoragePlace::fromRead(built);
 			if (!place || place->kind != StoragePlaceKind::Box)
-				throw SizeError(largeFixed
+			{
+				// Interior dynamic array of a box-stored aggregate (`self._checkpoints`
+				// with `self` a box-keyed struct): pass the enclosing box key and
+				// specialize the library/free callee on the field path.
+				std::vector<std::string> path;
+				std::shared_ptr<awst::Expression> cursor = awst::unwrapStateGet(built);
+				while (auto const* field = dynamic_cast<awst::FieldExpression const*>(cursor.get()))
+				{
+					path.insert(path.begin(), field->name);
+					cursor = awst::unwrapStateGet(field->base);
+				}
+				auto const* box = dynamic_cast<awst::BoxValueExpression const*>(cursor.get());
+				auto const* scope = _funcDef ? _funcDef->annotation().contract : nullptr;
+				bool const specializable = _funcDef && box && box->key && !path.empty() && !largeFixed
+					&& (_funcDef->isFree() || (scope && scope->isLibrary()))
+					&& std::holds_alternative<awst::SubroutineID>(call->target);
+				if (specializable)
+				{
+					m_pathSpecs[pi] = {path, box->wtype};
+					return awst::makeReinterpretCast(box->key, awst::WType::bytesType(), m_loc);
+				}
+				// Host-bound callee (it or a callee of it uses inline assembly on
+				// storage, e.g. OpenZeppelin 5.x Checkpoints._unsafeAccess): the
+				// EVM slot arithmetic only exists under --evm-storage-layout.
+				bool const hostBound = _funcDef && box && !path.empty()
+					&& !std::holds_alternative<awst::SubroutineID>(call->target);
+				throw SizeError(std::string(largeFixed
 					? "large fixed-array storage references require a whole-box root; interior slices are unsupported"
-					: "dynamic-array storage references require a whole-box root; interior resize paths are unsupported");
+					: "dynamic-array storage references require a whole-box root; interior resize paths are unsupported")
+					+ (hostBound ? " (the callee is bound to the contract by inline assembly on storage; compile with --evm-storage-layout)" : ""));
+			}
 			return awst::makeReinterpretCast(place->key, awst::WType::bytesType(), m_loc);
+		}
+		// Interior mapping-containing struct member (`map._keys` of an
+		// EnumerableMap): the member has no whole box of its own on the direct
+		// access path, so specialize the library/free callee on the field path
+		// under the enclosing box instead of passing a key it cannot address.
+		// (Also an aliased parameter of a specialized callee handed onward.)
+		if (auto const* solType = expression.annotation().type;
+			containsMappingType(solType) && !dynamic_cast<MappingType const*>(solType)
+			&& _funcDef && std::holds_alternative<awst::SubroutineID>(call->target)
+			&& (_funcDef->isFree()
+				|| (_funcDef->annotation().contract && _funcDef->annotation().contract->isLibrary())))
+		{
+			auto holder = resolveStorageHolder(m_ctx, m_scope, expression, m_loc);
+			auto place = holder.value ? StoragePlace::fromRead(holder.value) : std::nullopt;
+			if (holder.key && !(place && place->kind == StoragePlaceKind::Box))
+			{
+				std::vector<std::string> path;
+				std::shared_ptr<awst::Expression> cursor = awst::unwrapStateGet(holder.value);
+				while (auto const* field = dynamic_cast<awst::FieldExpression const*>(cursor.get()))
+				{
+					path.insert(path.begin(), field->name);
+					cursor = awst::unwrapStateGet(field->base);
+				}
+				if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(cursor.get());
+					box && box->key && !path.empty())
+				{
+					m_pathSpecs[pi] = {path, box->wtype};
+					return awst::makeReinterpretCast(box->key, awst::WType::bytesType(), m_loc);
+				}
+			}
 		}
 		auto key = extractMappingKeyPrefix(expression);
 		if (plan && std::find(plan->offsetParams.begin(), plan->offsetParams.end(), pi) != plan->offsetParams.end())
@@ -820,6 +881,35 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		call, _funcDef, _isUsingForCall, paramTypes,
 		mappingStorageParamIndices, evmSlotRefParamIndices,
 		blobOffsetParamIndices);
+	if (!m_pathSpecs.empty())
+	{
+		// Retarget to the callee specialized on the interior field paths.
+		auto const* symbol = std::get_if<awst::SubroutineID>(&call->target);
+		if (!symbol || !_funcDef)
+			throw SizeError("dynamic-array storage references require a whole-box root; interior resize paths are unsupported");
+		auto& artifacts = m_ctx.typeMapper.artifacts();
+		builder::BuildArtifacts::PathSpecialization spec;
+		spec.function = _funcDef;
+		std::string key = symbol->target;
+		for (auto const& [index, pathAndType]: m_pathSpecs)
+		{
+			spec.params.push_back({index, pathAndType.first, pathAndType.second});
+			key += "|" + std::to_string(index) + ":";
+			for (auto const& member: pathAndType.first)
+				key += "." + member;
+			if (pathAndType.second)
+				key += "@" + pathAndType.second->name();
+		}
+		auto found = artifacts.pathSpecializationIds.find(key);
+		if (found == artifacts.pathSpecializationIds.end())
+		{
+			spec.id = symbol->target + "__path" + std::to_string(artifacts.pathSpecializationIds.size());
+			found = artifacts.pathSpecializationIds.emplace(key, spec.id).first;
+			artifacts.pendingPathSpecializations.push_back(std::move(spec));
+		}
+		call->target = awst::SubroutineID{found->second};
+		m_pathSpecs.clear();
+	}
 
 	if (_funcDef)
 		applyAliasingGuard(*call, _funcDef, mutations, m_loc);
@@ -1194,7 +1284,13 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 		return resolveIdentifierCall(*identifier);
 
 	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&funcExpr))
-		return resolveMemberAccessCall(*memberAccess);
+	{
+		auto result = resolveMemberAccessCall(*memberAccess);
+		if (auto const* base = dynamic_cast<Identifier const*>(&memberAccess->expression());
+			base && base->name() == "this")
+			result = decodeThisCallReturn(std::move(result));
+		return result;
+	}
 
 	// Generic fn-ptr call: evaluate expression to get pointer ID, dispatch.
 	// Before the cast resolver so `x()()` (nested fn-ptr) dispatches correctly.
@@ -1257,6 +1353,73 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
 	return buildSubroutineCall(
 		awst::InstanceMethodTarget{"unknown"}, retType, nullptr, false);
+}
+
+std::shared_ptr<awst::Expression> SolInternalCall::decodeThisCallReturn(
+	std::shared_ptr<awst::Expression> _call)
+{
+	auto* call = dynamic_cast<awst::SubroutineCallExpression*>(_call.get());
+	auto const* solType = m_call.annotation().type;
+	if (!call || !solType || !call->wtype || call->wtype == awst::WType::voidType())
+		return _call;
+	auto& tm = m_ctx.typeMapper;
+	auto decodable = [](ReturnWireElem const& _e, awst::WType const* _native) {
+		return _e.wireType && _native && _e.wireType != _native
+			&& _e.wireType->kind() == awst::WTypeKind::ARC4UIntN;
+	};
+	// Signed narrow ints travel as arc4.uint256: decode to biguint, then narrow
+	// to the 64-bit two's-complement form the native code expects.
+	auto decodeElem = [&](std::shared_ptr<awst::Expression> _value,
+		ReturnWireElem const& _e, awst::WType const* _native) -> std::shared_ptr<awst::Expression> {
+		if (_e.isSigned && _native == awst::WType::uint64Type())
+			return TypeCoercion::implicitNumericCast(
+				awst::makeARC4Decode(std::move(_value), awst::WType::biguintType(), m_loc),
+				awst::WType::uint64Type(), m_loc);
+		return awst::makeARC4Decode(std::move(_value), _native, m_loc);
+	};
+	auto const* solTuple = dynamic_cast<TupleType const*>(solType);
+	auto const* nativeTuple = dynamic_cast<awst::WTuple const*>(call->wtype);
+	if (solTuple && nativeTuple)
+	{
+		size_t const n = std::min(nativeTuple->types().size(), solTuple->components().size());
+		std::vector<ReturnWireElem> elems;
+		std::vector<awst::WType const*> wire;
+		bool any = false;
+		for (size_t i = 0; i < n; ++i)
+		{
+			auto const* field = solTuple->components()[i];
+			auto const* native = nativeTuple->types()[i];
+			elems.push_back(field
+				? planReturnElement(tm, field, abiReturnNativeType(tm, field)) : ReturnWireElem{});
+			bool const dec = decodable(elems.back(), native);
+			wire.push_back(dec ? elems.back().wireType : native);
+			any = any || dec;
+		}
+		if (!any || n != nativeTuple->types().size())
+			return _call;
+		auto const* nativeType = call->wtype;
+		call->wtype = tm.createType<awst::WTuple>(wire, std::nullopt);
+		auto pinned = awst::makeSingleEvaluation(_call, call->wtype, awst::nextSingleEvalId(), m_loc);
+		auto result = awst::makeTupleExpression(nativeType, m_loc);
+		for (size_t i = 0; i < n; ++i)
+		{
+			std::shared_ptr<awst::Expression> item =
+				awst::makeTupleItem(pinned, static_cast<int>(i), wire[i], m_loc);
+			if (decodable(elems[i], nativeTuple->types()[i]))
+				item = decodeElem(std::move(item), elems[i], nativeTuple->types()[i]);
+			result->items.push_back(std::move(item));
+		}
+		result->wtype = nativeType;
+		return result;
+	}
+	if (solTuple || nativeTuple)
+		return _call;
+	auto elem = planReturnElement(tm, solType, abiReturnNativeType(tm, solType));
+	auto const* native = call->wtype;
+	if (!decodable(elem, native))
+		return _call;
+	call->wtype = elem.wireType;
+	return decodeElem(_call, elem, native);
 }
 
 } // namespace puyasol::builder::sol_ast

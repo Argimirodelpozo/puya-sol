@@ -627,6 +627,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setSlotRoutes(std::move(slotRoutes), std::move(slotDataRegions));
 	asmTranslator.setSignedParamBits(std::move(signedParamBits));
 	asmTranslator.setReturnSolTypes(m_blk.fn.returnSolTypes);
+	asmTranslator.setReturnWirePlan(
+		m_blk.fn.encodeReturnsAtBuildTime ? &m_blk.fn.returnWirePlan : nullptr,
+		m_blk.fn.returnAsmWrap);
 	asmTranslator.setSelectorRoutes(
 		builder::SelectorSemantics::routes(m_blk.builderCtx()));
 	auto stmts = asmTranslator.buildBlock(

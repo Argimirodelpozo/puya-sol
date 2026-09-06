@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include "builder/sol-ast/SolFunctionCall.h"
 
 #include <set>
@@ -18,6 +20,9 @@ public:
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:
+	/// Interior field paths requested for reference params of THIS call
+	/// (param index → path, enclosing box wtype); see BuildArtifacts::PathSpecialization.
+	std::map<size_t, std::pair<std::vector<std::string>, awst::WType const*>> m_pathSpecs;
 	/// Resolve an identifier-based function call target.
 	std::shared_ptr<awst::Expression> resolveIdentifierCall(
 		solidity::frontend::Identifier const& _ident);
@@ -25,6 +30,12 @@ private:
 	/// Resolve a member-access-based function call target.
 	std::shared_ptr<awst::Expression> resolveMemberAccessCall(
 		solidity::frontend::MemberAccess const& _memberAccess);
+
+	/// `this.f()` calls the ABI method itself, whose return is the WIRE shape
+	/// (arc4.uint<bits> sub-words, sign-extended uint256 for signed ints,
+	/// arc4.uintN for wide unsigned); decode numeric elements back to native.
+	std::shared_ptr<awst::Expression> decodeThisCallReturn(
+		std::shared_ptr<awst::Expression> _call);
 
 	/// Resolve a function pointer cast pattern: _castToView(fn)(args).
 	std::shared_ptr<awst::Expression> resolveFunctionPointerCast(

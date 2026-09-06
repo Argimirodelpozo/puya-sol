@@ -1146,6 +1146,7 @@ void AssemblyBuilder::handleReturn(
 			return;
 		}
 		flushMemoryToScratch(_loc, _out);
+		returnValue = encodeFrameReturn(std::move(returnValue), _loc, _out);
 		_out.push_back(awst::makeReturnStatement(std::move(returnValue), _loc));
 		m_haltEmitted = true; // frame ends here (see the void arm)
 		return;
@@ -1199,8 +1200,24 @@ void AssemblyBuilder::handleReturn(
 	// Public/external frame: EVM return() ends this frame only — callers
 	// (router or `this.f()` callsub) continue. Plain subroutine return.
 	flushMemoryToScratch(_loc, _out);
+	returnValue = encodeFrameReturn(std::move(returnValue), _loc, _out);
 	_out.push_back(awst::makeReturnStatement(std::move(returnValue), _loc));
 	m_haltEmitted = true; // frame ends here (see the void arm)
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::encodeFrameReturn(
+	std::shared_ptr<awst::Expression> _value,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	if (!m_returnWirePlan || !_value)
+		return _value;
+	std::vector<std::shared_ptr<awst::Statement>> prepend;
+	_value = TypeCoercion::encodeReturnValue(
+		m_typeMapper, std::move(_value), *m_returnWirePlan, _loc, prepend, m_returnAsmWrap);
+	for (auto& statement: prepend)
+		_out.push_back(std::move(statement));
+	return _value;
 }
 
 void AssemblyBuilder::emitArc4ReturnHalt(
@@ -1219,7 +1236,9 @@ void AssemblyBuilder::emitArc4ReturnHalt(
 	// function happened to be the externally-called one.
 	flushMemoryToScratch(_loc, _out);
 
-	std::shared_ptr<awst::Expression> arc4Value = std::move(_value);
+	// The method's wire plan first (arc4.uint<bits> for sub-word returns), so
+	// the logged payload matches the published ARC-56 return type.
+	std::shared_ptr<awst::Expression> arc4Value = encodeFrameReturn(std::move(_value), _loc, _out);
 	bool const alreadyArc4 = isArc4EncodedType(arc4Value->wtype);
 	if (!alreadyArc4)
 	{

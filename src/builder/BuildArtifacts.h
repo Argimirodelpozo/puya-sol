@@ -14,6 +14,7 @@
 namespace solidity::frontend
 {
 class Type;
+class FunctionDefinition;
 }
 
 namespace puyasol::builder
@@ -41,6 +42,27 @@ struct BuildArtifacts
 	/// appended to the contract after dispatch is built. Per-contract.
 	std::map<std::string, std::string> evmDecodeStructMethods;
 	std::vector<awst::ContractMethod> pendingEvmDecodeMethods;
+
+	/// Interior aggregate storage references passed by reference (OpenZeppelin
+	/// `Checkpoints.push(Trace storage self)` → `_insert(self._checkpoints, …)`):
+	/// the library/free callee is specialized per (function, parameter field
+	/// paths) so the parameter aliases `FieldExpression(box(key), path…)` of the
+	/// enclosing box instead of a whole box. Requested at call sites, built
+	/// after translation (a specialized body may request more).
+	struct PathSpecialization
+	{
+		struct Param
+		{
+			size_t index = 0;
+			std::vector<std::string> path;
+			awst::WType const* enclosingWType = nullptr;
+		};
+		solidity::frontend::FunctionDefinition const* function = nullptr;
+		std::vector<Param> params;
+		std::string id;
+	};
+	std::map<std::string, std::string> pathSpecializationIds;
+	std::vector<PathSpecialization> pendingPathSpecializations;
 	bool needsRipemd160 = false;
 	/// An EIP-1967 admin-slot use was lowered while translating the CURRENT
 	/// contract's bodies: it gets the synthesized "__erc1967_admin" global and
@@ -74,6 +96,8 @@ struct BuildArtifacts
 		boxProvisionedChildren.clear();
 		evmDecodeStructMethods.clear();
 		pendingEvmDecodeMethods.clear();
+		pathSpecializationIds.clear();
+		pendingPathSpecializations.clear();
 		needsRipemd160 = false;
 		usesErc1967Admin = false;
 		currentFreestandingFunctionId = -1;

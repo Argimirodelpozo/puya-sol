@@ -27,6 +27,11 @@
 #include <vector>
 #include <unordered_set>
 
+namespace solidity::frontend
+{
+class Statement;
+}
+
 namespace puyasol::builder
 {
 namespace eb { class ContractContext; }
@@ -38,6 +43,14 @@ namespace puyasol::builder::sol_ast
 /// Builds one fresh modifier-placeholder replacement block. A modifier may
 /// contain several `_;` statements, so each expansion owns independent AWST nodes.
 using PlaceholderFactory = std::function<std::shared_ptr<awst::Block>()>;
+
+/// Modifier-chain statement hook: consulted for every statement of the
+/// modifier body before translation; returns true when it emitted the
+/// statement itself (a whole rebind of an aliased memory parameter becomes a
+/// fresh local and switches the parameter's remap for the rest of the body).
+using StatementHook = std::function<bool(
+	solidity::frontend::Statement const&,
+	std::vector<std::shared_ptr<awst::Statement>>&)>;
 
 /// Modifier-lowering param remap entry: when a modifier is applied
 /// multiple times in a single function, each instance's locals get a
@@ -439,6 +452,7 @@ struct FunctionContext: Context
 	std::vector<solidity::frontend::VariableDeclaration const*> blobAggParams;
 	std::vector<solidity::frontend::VariableDeclaration const*> slotRefParams;
 	PlaceholderFactory placeholder;
+	StatementHook statementHook;
 	solidity::frontend::ContractDefinition const* currentContract = nullptr;
 
 	/// Calldata params whose mutable (__cd_off_x, __cd_len_x) pointer locals are

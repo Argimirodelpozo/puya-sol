@@ -36,8 +36,12 @@ ReturnWireElem planReturnElement(
 	}
 	else if (integer && !integer->isSigned && integer->bits < 64)
 	{
+		// Unsigned sub-word: mask the native uint64 to the declared width and
+		// publish that width (arc4.uintN) like solc's ABI, instead of uint64.
 		item.masked = true;
 		item.bits = integer->bits;
+		item.wireType = types.createType<awst::ARC4UIntN>(static_cast<int>(item.bits));
+		item.encoded = true;
 	}
 	else if (nativeType && nativeType->kind() == awst::WTypeKind::ReferenceArray)
 	{

@@ -12,6 +12,7 @@
 #include "builder/builtin/Ripemd160Builder.h"
 #include "builder/itxn/AsaIntrinsics.h"
 #include "builder/sol-ast/StorageRefPointer.h"
+#include "builder/storage/StorageMapper.h"
 #include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/contract/ContractBuilder.h"
@@ -162,6 +163,17 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	translateLibraryFunctions(_compiler, _sourceFile, roots);
 	translateFreeFunctions(_compiler, _sourceFile, roots);
 	translateContracts(_compiler, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior, roots);
+
+	// Callees specialized on an interior field path (requested by call sites
+	// above; a specialized body may request further ones).
+	for (size_t i = 0; i < m_session.artifacts.pendingPathSpecializations.size(); ++i)
+	{
+		auto const spec = m_session.artifacts.pendingPathSpecializations[i];
+		auto const* scope = spec.function->annotation().contract;
+		std::string const libraryName = scope && scope->isLibrary() ? scope->name() : std::string{};
+		Logger::instance().debug("Translating path-specialized callee: " + spec.id);
+		roots.push_back(buildFreestandingSubroutine(*spec.function, _sourceFile, spec.id, spec.id, libraryName, &spec));
+	}
 
 	// Builtin helpers are requested by their lowering sites, so unused
 	// algorithms never enter the root set.
@@ -688,7 +700,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	std::string const& _sourceFile,
 	std::string const& _qualifiedName,
 	std::string const& _subroutineId,
-	std::string const& _libraryName)
+	std::string const& _libraryName,
+	BuildArtifacts::PathSpecialization const* _pathSpec)
 {
 	auto sub = std::make_shared<awst::Subroutine>();
 	sub->inlineOpt = false; // Prevent puya from inlining large subroutines
@@ -752,6 +765,30 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	auto blkGuard = exprBuilder.pushScopeRaii(&blk);
 
 	registerFreestandingReturnParams(_func, fnCtx, blobAggParams);
+
+	// Path specialization: the reference param aliases the field path inside
+	// the enclosing box the caller passed (its key travels as the bytes param).
+	if (_pathSpec)
+		for (auto const& specParam: _pathSpec->params)
+		{
+			auto const& param = _func.parameters()[specParam.index];
+			auto keyExpr = awst::makeReinterpretCast(
+				awst::makeVarExpression(param->name(), awst::WType::bytesType(), loc),
+				awst::WType::boxKeyType(), loc);
+			std::shared_ptr<awst::Expression> cursor = StorageMapper::makeStateGetWithDefault(
+				awst::makeBoxValueExpression(std::move(keyExpr), specParam.enclosingWType, loc),
+				specParam.enclosingWType, loc);
+			for (auto const& member: specParam.path)
+			{
+				auto const* structType = dynamic_cast<awst::ARC4Struct const*>(cursor->wtype);
+				awst::WType const* fieldType = structType ? awst::structFieldType(structType, member) : nullptr;
+				if (!fieldType)
+					throw SizeError("path specialization: `" + member + "` is not a field of the enclosing storage struct");
+				cursor = awst::makeFieldExpression(std::move(cursor), member, fieldType, loc);
+			}
+			fnCtx.setMappingKeyParam(param->id(), std::string{});
+			blk.setStorageAlias(param->id(), sol_ast::StorageAlias::fieldPath(std::move(cursor)));
+		}
 
 	// Promote memory aggregates used as asm-pointers (bytes/string buffers in
 	// internal/library functions, e.g. OZ Strings.toString) to blob-backed before
