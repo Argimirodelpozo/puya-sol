@@ -481,20 +481,24 @@ def pre08_compat_teal(source: str) -> tuple[str, list[str]]:
     narrow and reported rather than pretending every pre-0.8 arithmetic expression has
     been reconstructed.
     """
+    # Constant spellings differ between compiler revisions (intc_N / intc N /
+    # pushint, with or without a comment) and rev-2 dropped the redundant
+    # frame_dig before the bounds assert; match the shape, not one rendering,
+    # and wrap with a literal 256 rather than assuming an intcblock index.
     pattern = re.compile(
-        r"(TypedMemView\.index_after_if_else@6:\n"
-        r"    frame_dig 1\n"
+        r"(TypedMemView\.index_after_if_else@\d+:\n"
+        r"(?:    frame_dig \d+\n)?"
         r"    assert // TypedMemView/index - Attempted to index more than 32 bytes\n"
         r"    frame_dig -1\n"
-        r"    intc_3 // 8\n"
+        r"    (?:intc_\d+ // 8|intc \d+ // 8|pushint 8(?: // 8)?)\n"
         r"    \*\n)"
         r"    dup\n"
-        r"    intc \d+ // 255\n"
+        r"    (?:intc_\d+ // 255|intc \d+ // 255|pushint 255(?: // 255)?)\n"
         r"    <=\n"
         r"    assert // overflow\n"
         r"(    frame_dig -3\n)"
     )
-    patched, count = pattern.subn(r"\1    intc 8 // 256\n    %\n\2", source)
+    patched, count = pattern.subn(r"\1    pushint 256\n    %\n\2", source)
     if count > 1:
         raise ValueError(f"expected at most one TypedMemView lowering, found {count}")
     applied = []
@@ -503,8 +507,10 @@ def pre08_compat_teal(source: str) -> tuple[str, list[str]]:
     else:
         patched = source
 
-    route = "main_receiveMessage_route@9:\n"
-    if route in patched:
+    # The router label's numeric suffix varies by compiler revision.
+    route_match = re.search(r"main_receiveMessage_route@\d+:\n", patched)
+    route = route_match.group(0) if route_match else None
+    if route:
         if "__historical_ensure_budget" in patched:
             raise ValueError("historical ensure-budget shim already exists")
         patched = patched.replace(
@@ -518,9 +524,10 @@ def pre08_compat_teal(source: str) -> tuple[str, list[str]]:
             + "    store 255\n",
             1,
         )
-        replace_route = "main_replaceMessage_route@7:\n"
-        if patched.count(replace_route) != 1:
+        replace_match = re.search(r"main_replaceMessage_route@\d+:\n", patched)
+        if not replace_match:
             raise ValueError("expected one replaceMessage route")
+        replace_route = replace_match.group(0)
         patched = patched.replace(
             replace_route,
             replace_route
@@ -534,33 +541,42 @@ def pre08_compat_teal(source: str) -> tuple[str, list[str]]:
             "    callsub Message._messageBody\n"
             "    callsub TypedMemView.clone\n"
         )
-        if patched.count(clone_lowering) != 1:
+        # Workaround for the pre-2026-08-19 blob-backed clone repoint bug; the
+        # compiler no longer emits this exact lowering, so apply only if present.
+        if patched.count(clone_lowering) == 1:
+            patched = patched.replace(
+                clone_lowering,
+                "    load 255\n    extract 116 0\n",
+                1,
+            )
+            applied.append("Message._messageBody clone lowering shim")
+        elif patched.count(clone_lowering) > 1:
             raise ValueError("expected one Message._messageBody clone lowering")
-        patched = patched.replace(
-            clone_lowering,
-            "    load 255\n    extract 116 0\n",
-            1,
+        # The historical sender word is a stack temp (`dig N`) or a frame slot
+        # (`frame_dig N`) depending on the compiler revision; compare the low
+        # 64 bits either way. Anchor on the replaceMessage body so the shim
+        # cannot land on another caller-app comparison.
+        caller_compare = re.compile(
+            r"(replaceMessage_after_if_else@\d+:\n(?:.*\n){0,40}?)"
+            r"    pushint 24\n"
+            r"    bzero\n"
+            r"    global CallerApplicationID\n"
+            r"    itob\n"
+            r"    concat\n"
+            r"    ((?:frame_)?dig \d+)\n"
+            r"    ==\n"
         )
-        caller_compare = (
-            "    pushint 24\n"
-            "    bzero\n"
-            "    global CallerApplicationID\n"
-            "    itob\n"
-            "    concat\n"
-            "    dig 36\n"
-            "    ==\n"
+        patched, compare_count = caller_compare.subn(
+            r"\1    global CallerApplicationID\n"
+            r"    \2\n"
+            r"    pushint 24\n"
+            r"    extract_uint64\n"
+            r"    ==\n",
+            patched,
+            count=1,
         )
-        if patched.count(caller_compare) != 1:
-            raise ValueError("expected one replaceMessage caller-app comparison")
-        patched = patched.replace(
-            caller_compare,
-            "    global CallerApplicationID\n"
-            "    dig 36\n"
-            "    pushint 24\n"
-            "    extract_uint64\n"
-            "    ==\n",
-            1,
-        )
+        if compare_count:
+            applied.append("replaceMessage caller-app comparison shim")
         patched += """
 
 // Historical replay resource shim. This is the same ephemeral-app OpUp strategy used
