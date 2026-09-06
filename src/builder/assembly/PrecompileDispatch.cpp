@@ -241,6 +241,11 @@ void AssemblyBuilder::handleAppCall(
 	Logger::instance().debug(
 		std::string(_isCall ? "call" : "staticcall") +
 		" to runtime address — lowering to inner app call", _loc);
+	// Yul `call` to a runtime address is the same low-level call adaptation
+	// Solidity's `.call` reports (staticcall reported at the dispatch site).
+	if (_isCall)
+		EvmFeaturePolicy::report(
+			EvmFeature::LowLevelCallOutcome, m_typeMapper.profile(), _loc);
 
 	// 1) Address → ApplicationID: puya-sol encodes as (\x00*24 ++ itob(app_id));
 	//    casting to uint64 recovers app_id (high bytes are zero).

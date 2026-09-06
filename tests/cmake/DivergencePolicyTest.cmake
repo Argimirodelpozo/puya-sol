@@ -67,6 +67,13 @@ run_frontend(
 run_frontend(
     address_balance_allowed AddressBalance.sol 0 ""
     --allow-divergence address-balance-units)
+# Yul balance()/selfbalance() are the same adaptation as address.balance.
+run_frontend(
+    assembly_balance_denied AssemblyBalance.sol 1
+    "--allow-divergence address-balance-units")
+run_frontend(
+    assembly_balance_allowed AssemblyBalance.sol 0 ""
+    --allow-divergence address-balance-units)
 
 run_frontend(
     native_value_denied NativeValueTransfer.sol 1
@@ -81,6 +88,12 @@ run_frontend(
 # including assembly words and selfdestruct's CloseRemainderTo beneficiary.
 set(payment_template "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
 foreach(payment_source NativeValueTransfer NativeValueSelfdestruct NativeValueAssembly)
+    # A Yul `call` to a runtime address is also the low-level call adaptation.
+    if(payment_source STREQUAL "NativeValueAssembly")
+        set(call_outcome --allow-divergence low-level-call-outcome)
+    else()
+        set(call_outcome "")
+    endif()
     run_frontend(
         ${payment_source}_denied ${payment_source}.sol 1
         "--allow-divergence native-value-transfer"
@@ -88,12 +101,12 @@ foreach(payment_source NativeValueTransfer NativeValueSelfdestruct NativeValueAs
     run_frontend(
         ${payment_source}_allowed ${payment_source}.sol 0
         "[allowed AVM adaptation: native value transfer]"
-        --contract-abi evm --allow-divergence native-value-transfer)
+        --contract-abi evm --allow-divergence native-value-transfer ${call_outcome})
     run_frontend(
-        ${payment_source}_native ${payment_source}.sol 0 "")
+        ${payment_source}_native ${payment_source}.sol 0 "" ${call_outcome})
     run_frontend(
         ${payment_source}_xchain ${payment_source}.sol 0 ""
-        --contract-abi evm --xchain-template "${payment_template}")
+        --contract-abi evm --xchain-template "${payment_template}" ${call_outcome})
     file(READ "${frontend_awst_path}" payment_awst)
     foreach(required_text "sha512_256" "payment target application does not exist")
         string(FIND "${payment_awst}" "${required_text}" found)
@@ -113,7 +126,12 @@ endforeach()
 
 # No payment is emitted for a constant-zero Yul call. Solc-typed application
 # calls and new-app funding have a proven native escrow, not a lossy account.
-run_frontend(native_zero_assembly NativeValueZeroAssembly.sol 0 "" --contract-abi evm)
+run_frontend(
+    native_zero_assembly_denied NativeValueZeroAssembly.sol 1
+    "--allow-divergence low-level-call-outcome" --contract-abi evm)
+run_frontend(
+    native_zero_assembly NativeValueZeroAssembly.sol 0 ""
+    --contract-abi evm --allow-divergence low-level-call-outcome)
 run_frontend(native_known_app NativeValueKnownApp.sol 0 "" --contract-abi evm)
 
 # Missing static-call write protection only warns. The independent low-level

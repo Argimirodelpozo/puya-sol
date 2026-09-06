@@ -723,6 +723,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleBalance(
 	// txn references (incl. address()/self) read meaningfully.
 	if (!checkArity(_args, 1, "balance", _loc, "address"))
 		return awst::makeZero(_loc, awst::WType::uint64Type());
+	// Same fail-closed adaptation as Solidity's `address.balance`.
+	EvmFeaturePolicy::report(
+		EvmFeature::AddressBalance, m_typeMapper.profile(), _loc);
 	auto acct = padTo32Bytes(ensureBiguint(_args[0], _loc), _loc);
 	auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), _loc);
 	bal->stackArgs.push_back(std::move(acct));
@@ -738,6 +741,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSelfbalance(
 	// rather than widening to biguint: the consumer coerces via
 	// ensureBiguint only when it needs a biguint (same natural-type
 	// convention as clz / the comparison handlers).
+	EvmFeaturePolicy::report(
+		EvmFeature::AddressBalance, m_typeMapper.profile(), _loc);
 	auto appAddr = awst::makeGlobal(std::string("CurrentApplicationAddress"), awst::WType::bytesType(), _loc);
 	auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), _loc);
 	bal->stackArgs.push_back(std::move(appAddr));
