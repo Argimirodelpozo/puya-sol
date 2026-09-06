@@ -29,7 +29,8 @@ public:
 
 	std::shared_ptr<awst::Expression> emit(
 		std::shared_ptr<awst::Expression> _value,
-		awst::SourceLocation const& _loc) const;
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>* _pre = nullptr) const;
 
 	solidity::frontend::Type const* sourceType() const { return m_source; }
 	solidity::frontend::Type const* targetType() const { return m_target; }

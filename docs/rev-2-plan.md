@@ -1,7 +1,7 @@
 # rev-2: sol-types and storage implementation plan
 
-Status: in progress. F2, F4, F7 and F9 are implemented and focused-test verified;
-the remaining findings/refactors and final full-suite verification are pending.
+Status: in progress. F1, F2, F4, F7, F9 and R1 are implemented and checkpoint-test
+verified; the remaining findings/refactors and final full-suite verification are pending.
 
 Branch: `rev-2`, based on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`.
 Scope: all nine correctness findings from the sol-types/storage audit, plus
@@ -68,15 +68,15 @@ source of truth alongside them.
 
 ### F1 — Aggregate widening must evaluate each source once
 
-- [ ] Fix the speculative widening path in
+- [x] Fix the speculative widening path in
   [SolAssignment.cpp](../src/builder/sol-ast/exprs/SolAssignment.cpp): classify
   whether the conversion is supported before emitting source bindings or loops.
-- [ ] Pin effectful source elements before using them for both sign inspection
+- [x] Pin effectful source elements before using them for both sign inspection
   and value construction. Cover static-to-static, static-to-dynamic and
   dynamic-to-dynamic integer widening through R1.
-- [ ] Use solc element types for signedness and widths, including supported
+- [x] Use solc element types for signedness and widths, including supported
   wrappers; do not infer signedness from ARC4's unsigned storage representation.
-- [ ] Test supported assignments, initializers, arguments and returns, with
+- [x] Test supported assignments, initializers, arguments and returns, with
   signed/unsigned boundary values and effectful producers, in both storage modes.
 
 Acceptance: solc-valid conversions compile, values match the solc oracle, and
@@ -232,13 +232,13 @@ directly confirmed a large fixed-array encoded size wrapping to zero.
 
 ### R1 — One aggregate conversion route
 
-- [ ] Extend the existing
+- [x] Extend the existing
   [ConversionPlan](../src/builder/sol-types/ConversionPlan.h), not a parallel
   framework: select semantic conversion from solc types before emitting effects.
-- [ ] Share scalar integer widening across supported array shapes. Give emission
+- [x] Share scalar integer widening across supported array shapes. Give emission
   explicit evaluation-once and loop-effect handling rather than speculative
   helper calls that mutate pre-effects and can then decline the conversion.
-- [ ] Route relevant assignment, initialization, argument and return consumers
+- [x] Route relevant assignment, initialization, argument and return consumers
   through it and remove duplicated signed/static/dynamic conversion branches.
 
 Keep unsupported Solidity conversions unsupported; this is consolidation and
@@ -328,6 +328,34 @@ a checked narrowing explicitly. Solc array lengths/member offsets/strides are
 checked before conversion, and default encoding is bounded before allocation.
 The redundant StorageMapper size forwarding API was removed. Builds use
 `CCACHE_DISABLE=1` where the configured cache directory is read-only.
+
+### Checkpoint 3 — evaluate-once aggregate conversions
+
+All 18 native CTests passed. The expanded array/storage/getter/UDVT/constructor/
+tuple selection passed 336 tests, with 23 existing xfails and 7 existing xpasses,
+in 40.51 seconds. Report: `/tmp/puyasol-rev-2-conversions-verified.xml`.
+The focused type/storage cases also passed independently (20 tests, 24.10
+seconds; `/tmp/puyasol-rev-2-conversions-fixed.xml`).
+
+One selected integer-array strategy now shares scalar widening for fixed/fixed,
+fixed/dynamic and dynamic/dynamic storage copies. Selection emits no effects on
+a declined match; accepted conversions bind their source once. Assignment,
+tuple, boxed-aggregate, struct-field and constructor routes share this conversion
+handling, removing roughly 500 net source lines of overlapping lowering.
+
+The runtime fixture covers both storage modes, ABI profiles and codegen modes,
+negative/positive boundaries, empty arrays, tuple/member stores, initializers,
+and producer calls through internal argument/return paths. Solc permits array
+element widening for storage copies, not arbitrary memory argument/return
+conversions (`ArrayType::isImplicitlyConvertibleTo`); no language rule was
+relaxed. A 257-element case exercises the fixed-array conversion loop in the
+default layout. Slot mode retains its existing explicit 64-element whole-fixed-
+array store limit, covered by a diagnostic assertion, not an xfail.
+
+Expected results were confirmed with an in-process solc 0.8.34/Cancun oracle,
+optimizer disabled and legacy pipeline. Intermediate runs exposed and fixed
+previously bypassed slot-constructor and boxed-aggregate conversion routes;
+those failures are resolved in the checkpoint result above.
 
 ### Baseline and remaining gates
 

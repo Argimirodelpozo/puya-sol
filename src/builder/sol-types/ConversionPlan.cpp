@@ -7,7 +7,8 @@ namespace puyasol::builder
 
 std::shared_ptr<awst::Expression> ConversionPlan::emit(
 	std::shared_ptr<awst::Expression> _value,
-	awst::SourceLocation const& _loc) const
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>* _pre) const
 {
 	if (!_value) return nullptr;
 	if (m_context == Context::ExplicitInteger)
@@ -50,7 +51,7 @@ std::shared_ptr<awst::Expression> ConversionPlan::emit(
 	}
 	TypeCoercion::assertImplicitlyConvertible(m_source, m_target, _loc, site);
 	_value = TypeCoercion::coerceForAssignment(
-		std::move(_value), m_targetRepresentation, _loc);
+		std::move(_value), m_targetRepresentation, _loc, _pre);
 	return TypeCoercion::signExtendSignedWiden(
 		std::move(_value), m_source, m_target, _loc);
 }

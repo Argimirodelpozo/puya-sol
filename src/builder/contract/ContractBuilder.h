@@ -407,6 +407,10 @@ private:
 	/// it populates this with an auto-generated __postInit method.
 	/// Synthesise the deferred-constructor `__postInit` method (PostInitBuilder.cpp).
 	// ── buildApprovalProgram phases (ApprovalProgramBuilder.cpp) ────────
+	std::shared_ptr<awst::Expression> lowerStateInitializer(
+		solidity::frontend::VariableDeclaration const& _var,
+		awst::WType const* _target,
+		awst::SourceLocation const& _loc);
 	void emitSlotModeStateVarInit(
 		solidity::frontend::VariableDeclaration const& _var,
 		std::vector<std::shared_ptr<awst::Statement>>& targetBody,

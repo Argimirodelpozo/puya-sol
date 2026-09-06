@@ -10,7 +10,6 @@
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/TypeCoercion.h"
 
 #include "Logger.h"
@@ -331,102 +330,17 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 	return TupleComponentAction::NotApplicable;
 }
 
-/// Coerce one tuple component's value to the target's wtype (string↔bytes reinterpret, numeric casts, ARC4 widen/narrow/encode).
+/// Tuple stores share the scalar/array representation conversion used by plain stores.
 void SolAssignment::coerceTupleComponentValue(
 	std::shared_ptr<awst::Expression> const& assignTarget,
 	std::shared_ptr<awst::Expression>& assignValue)
 {
-	// Coerce string↔bytes
-	if (assignTarget->wtype != assignValue->wtype)
-	{
-		bool srcIsStringOrBytes = assignValue->wtype == awst::WType::stringType()
-			|| assignValue->wtype == awst::WType::bytesType()
-			|| (assignValue->wtype && assignValue->wtype->kind() == awst::WTypeKind::Bytes);
-		bool tgtIsStringOrBytes = assignTarget->wtype == awst::WType::stringType()
-			|| assignTarget->wtype == awst::WType::bytesType()
-			|| (assignTarget->wtype && assignTarget->wtype->kind() == awst::WTypeKind::Bytes);
-		if (srcIsStringOrBytes && tgtIsStringOrBytes)
-		{
-			auto cast = awst::makeReinterpretCast(std::move(assignValue), assignTarget->wtype, m_loc);
-			assignValue = std::move(cast);
-		}
-		else
-		{
-			assignValue = builder::TypeCoercion::implicitNumericCast(
-				std::move(assignValue), assignTarget->wtype, m_loc);
-		}
-	}
-	if (assignTarget->wtype != assignValue->wtype)
-	{
-		bool const targetIsArc4 =
-			builder::isArc4EncodedType(assignTarget->wtype);
-		if (targetIsArc4)
-		{
-			assignValue = builder::TypeCoercion::stringToBytes(std::move(assignValue), m_loc);
-			bool handled = false;
-			// ARC4 array element widening (intM → intN, M<N): pin source bytes to
-			// a temp (helper reads them multiple times).
-			bool const sourceIsArc4Array =
-				assignValue->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-				|| assignValue->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
-			bool const targetIsArc4Array =
-				assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-				|| assignTarget->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
-			if (sourceIsArc4Array && targetIsArc4Array)
-			{
-				std::string tmpName = "__widen_src_h_" + std::to_string(awst::NameGen::next("SolAssignmentTuple.s_widCounter"));
-				auto srcAsBytes = awst::makeAsBytes(assignValue, m_loc);
-				auto tmpVar = awst::makeVarExpression(
-					tmpName, awst::WType::bytesType(), m_loc);
-				m_ctx.preEffects().push_back(
-					awst::makeAssignmentStatement(tmpVar, std::move(srcAsBytes), m_loc));
-				auto const* sourceType = assignValue->wtype;
-				auto mkSrc = [&]() {
-					return awst::makeVarExpression(
-						tmpName, awst::WType::bytesType(), m_loc);
-				};
-				std::shared_ptr<awst::Expression> widened;
-				if (assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
-				{
-					widened = builder::tryWidenArc4StaticArrayInt(
-						sourceType, assignTarget->wtype, mkSrc, m_loc);
-				}
-				else
-				{
-					widened = builder::tryWidenArc4DynamicArrayInt(
-						sourceType, assignTarget->wtype, mkSrc,
-						[this](std::shared_ptr<awst::Statement> _s) {
-							m_ctx.preEffects().push_back(std::move(_s));
-						},
-						m_loc);
-				}
-				if (widened)
-				{
-					assignValue = std::move(widened);
-					handled = true;
-				}
-			}
-			// Narrowing: uint64 → arc4.uintN where N < 64.
-			if (!handled)
-			{
-				if (auto narrowed = builder::tryNarrowUInt64ToArc4UIntN(
-						assignValue, assignTarget->wtype, m_loc))
-				{
-					assignValue = std::move(narrowed);
-					handled = true;
-				}
-			}
-			if (!handled)
-			{
-				auto encode = awst::makeARC4Encode(std::move(assignValue), assignTarget->wtype, m_loc);
-				assignValue = std::move(encode);
-			}
-		}
-		else
-			assignValue = builder::TypeCoercion::implicitNumericCast(
-				std::move(assignValue), assignTarget->wtype, m_loc);
-	}
-
+	assignValue = builder::TypeCoercion::implicitNumericCast(
+		std::move(assignValue), assignTarget->wtype, m_loc);
+	assignValue = eb::AssignmentHelper::arc4EncodeForTarget(
+		m_ctx, std::move(assignValue), assignTarget, m_loc);
+	assignValue = builder::TypeCoercion::coerceForAssignment(
+		std::move(assignValue), assignTarget->wtype, m_loc, &m_ctx.preEffects());
 }
 
 /// Emit one tuple component's write (post-effects; GroupMark closes the component's statement group even on early returns).

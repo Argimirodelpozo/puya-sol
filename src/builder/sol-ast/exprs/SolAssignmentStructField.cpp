@@ -6,6 +6,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -67,18 +68,17 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 	{
 		// Coerce to native type first (e.g. uint64 "2" → BytesConstant for bytes1 fields)
 		auto* nativeType = m_ctx.typeMapper.map(m_assignment.leftHandSide().annotation().type);
-		if (nativeType && _value->wtype != nativeType)
-			_value = builder::TypeCoercion::coerceForAssignment(std::move(_value), nativeType, m_loc);
-
-		// Signed sub-word → wider-signed implicit widen (`s.f = someInt8;` f:int16): re-extend
-		// from the RHS width before encoding (plain `=` only; compound already computed a typed value).
 		if (op == Token::Assign)
-			_value = builder::TypeCoercion::signExtendSignedWiden(
-				std::move(_value), m_assignment.rightHandSide().annotation().type,
-				m_assignment.leftHandSide().annotation().type, m_loc);
+			_value = builder::ConversionPlan{m_assignment.rightHandSide().annotation().type,
+				m_assignment.leftHandSide().annotation().type, nativeType,
+				builder::ConversionPlan::Context::Assignment}.emit(
+					std::move(_value), m_loc, &m_ctx.preEffects());
+		else if (nativeType && _value->wtype != nativeType)
+			_value = builder::TypeCoercion::coerceForAssignment(
+				std::move(_value), nativeType, m_loc, &m_ctx.preEffects());
 
-		auto encode = awst::makeARC4Encode(std::move(_value), arc4FieldType, m_loc);
-		_value = std::move(encode);
+		if (_value->wtype != arc4FieldType)
+			_value = awst::makeARC4Encode(std::move(_value), arc4FieldType, m_loc);
 	}
 
 	// Shared struct-field COW store (encode no-ops — value already encoded above).

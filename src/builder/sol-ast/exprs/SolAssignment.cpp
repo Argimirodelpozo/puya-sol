@@ -10,7 +10,6 @@
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/SolIntType.h"
-#include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/ConversionPlan.h"
@@ -632,26 +631,9 @@ SolAssignment::tryHandleEvmStorageWrite()
 				EvmSlotLowering::Addr la2 = *laddr;
 				la2.solType = lhsType;
 				la2.wtype = m_ctx.typeMapper.map(lhsType);
-				if (la2.wtype && value->wtype != la2.wtype
-					&& value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-					&& la2.wtype->kind() == awst::WTypeKind::ARC4StaticArray)
-				{
-					std::string wn = "__evm_fwsrc_" + std::to_string(
-						awst::NameGen::next("SolAssignment.evmFixedWidenSrc"));
-					m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-						awst::makeVarExpression(
-							wn, awst::WType::bytesType(), m_loc),
-						awst::makeAsBytes(value, m_loc), m_loc));
-					auto mkSrc = [&, wn]() {
-						return awst::makeVarExpression(
-							wn, awst::WType::bytesType(), m_loc);
-					};
-					if (auto widened = builder::tryWidenArc4StaticArrayInt(
-							value->wtype, la2.wtype, mkSrc, m_loc))
-						value = std::move(widened);
-				}
-				value = TypeCoercion::coerceForAssignment(
-					std::move(value), la2.wtype, m_loc);
+				value = builder::ConversionPlan{rhsExpr.annotation().type, lhsType,
+					la2.wtype, builder::ConversionPlan::Context::Assignment}.emit(
+						std::move(value), m_loc, &m_ctx.preEffects());
 				std::vector<std::shared_ptr<awst::Statement>> wsFD;
 				if (lowFD.writeArrayValue(la2, lat, std::move(value), wsFD))
 				{
@@ -764,44 +746,9 @@ SolAssignment::tryHandleEvmStorageWrite()
 		if (!value)
 			return std::shared_ptr<awst::Expression>{
 				awst::makeZero(m_loc, awst::WType::biguintType())};
-		// Element-type widening (int8[]→int16[]: per-element SIGN-extend) before
-		// the slot writer — its metrics come from the LHS type, so a narrower
-		// RHS mis-slices (dynarr) or zero-extends (fixed; chop_sign_bits).
-		// Widen helpers ONLY — the generic encode fallback would reject the
-		// same-width static→dynamic shape the writer already consumes natively
-		// (uint8[5] into uint8[] storage, inline_array_return).
-		if (auto const* tgtW = m_ctx.typeMapper.map(lhsType);
-			tgtW && value->wtype && value->wtype != tgtW
-			&& (value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-				|| value->wtype->kind() == awst::WTypeKind::ARC4DynamicArray))
-		{
-			// Pin FIRST: the dynamic widen emits its loop via pre-effects during
-			// the call, and those statements read the pinned source var.
-			std::string wn = "__evm_wsrc_"
-				+ std::to_string(awst::NameGen::next("SolAssignment.evmWidenSrc"));
-			m_ctx.preEffects().push_back(
-				awst::makeAssignmentStatement(
-					awst::makeVarExpression(wn, awst::WType::bytesType(), m_loc),
-					awst::makeAsBytes(value, m_loc), m_loc));
-			auto mkSrc = [&, wn]() {
-				return awst::makeVarExpression(wn, awst::WType::bytesType(), m_loc);
-			};
-			std::shared_ptr<awst::Expression> widened;
-			if (tgtW->kind() == awst::WTypeKind::ARC4StaticArray)
-				widened = builder::tryWidenArc4StaticArrayInt(
-					value->wtype, tgtW, mkSrc, m_loc);
-			else if (tgtW->kind() == awst::WTypeKind::ARC4DynamicArray)
-				widened = builder::tryWidenArc4DynamicArrayInt(
-					value->wtype, tgtW, mkSrc,
-					[this](std::shared_ptr<awst::Statement> _s) {
-						m_ctx.preEffects().push_back(std::move(_s));
-					},
-					m_loc);
-			if (widened)
-				value = std::move(widened);
-		}
-		value = TypeCoercion::coerceForAssignment(
-			std::move(value), m_ctx.typeMapper.map(lhsType), m_loc);
+		value = builder::ConversionPlan{rt, lhsType, m_ctx.typeMapper.map(lhsType),
+			builder::ConversionPlan::Context::Assignment}.emit(
+				std::move(value), m_loc, &m_ctx.preEffects());
 		addr->solType = lhsType;
 		addr->wtype = m_ctx.typeMapper.map(lhsType);
 		std::vector<std::shared_ptr<awst::Statement>> out;
@@ -1046,26 +993,10 @@ SolAssignment::trySlotBasedArrayWrite(
 	auto const* structElem = dynamic_cast<StructType const*>(elemType);
 	auto layout = builder::SlotHandleAccess::layoutFor(elemType);
 
-	// int8[2] memory → int16[2] storage: per-element SIGN-extend first — the
-	// packed writes below slice the value at the LHS element width, so a
-	// narrower source mis-slices / zero-extends (chop_sign_bits).
-	std::shared_ptr<awst::Expression> value = _value;
-	if (auto const* tgtW = m_ctx.typeMapper.map(arrType);
-		tgtW && value->wtype != tgtW
-		&& value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-		&& tgtW->kind() == awst::WTypeKind::ARC4StaticArray)
-	{
-		std::string wn = "__slotw_wsrc_" + std::to_string(m_assignment.id());
-		out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(wn, awst::WType::bytesType(), m_loc),
-			awst::makeAsBytes(value, m_loc), m_loc));
-		auto mkSrc = [&, wn]() {
-			return awst::makeVarExpression(wn, awst::WType::bytesType(), m_loc);
-		};
-		if (auto widened = builder::tryWidenArc4StaticArrayInt(
-				value->wtype, tgtW, mkSrc, m_loc))
-			value = std::move(widened);
-	}
+	// The declared conversion owns element widths before slot slicing.
+	auto value = builder::ConversionPlan{m_assignment.rightHandSide().annotation().type,
+		arrType, m_ctx.typeMapper.map(arrType), builder::ConversionPlan::Context::Assignment}.emit(
+			_value, m_loc, &out);
 
 	// bind target + value once
 	std::string tBase = "__slotw_base_" + std::to_string(m_assignment.id());
@@ -1353,7 +1284,7 @@ SolAssignment::applyAssignmentTypeCoercion(
 			m_assignment.leftHandSide().annotation().type,
 			_target->wtype,
 			builder::ConversionPlan::Context::Assignment}.emit(
-				std::move(_value), m_loc);
+				std::move(_value), m_loc, &m_ctx.preEffects());
 	else
 		_value = builder::TypeCoercion::coerceForAssignment(
 			std::move(_value), _target->wtype, m_loc);

@@ -29,6 +29,20 @@
 namespace puyasol::builder
 {
 
+std::shared_ptr<awst::Expression> ContractBuilder::lowerStateInitializer(
+	solidity::frontend::VariableDeclaration const& _var,
+	awst::WType const* _target,
+	awst::SourceLocation const& _loc)
+{
+	auto operand = m_exprBuilder->lower(*_var.value(), false);
+	bool const pin = !operand.effects.post.empty();
+	auto value = m_exprBuilder->emitSequencedOperand(
+		std::move(operand.effects), std::move(operand.value), pin, _loc);
+	return ConversionPlan{_var.value()->annotation().type, _var.type(), _target,
+		ConversionPlan::Context::Initialization}.emit(
+			std::move(value), _loc, &m_exprBuilder->preEffects());
+}
+
 /// buildApprovalProgram phase: slot-mode state-var init — the slot space zero-initialises for free (absent box = 0); only explicit …
 void ContractBuilder::emitSlotModeStateVarInit(
 	solidity::frontend::VariableDeclaration const& _var,
@@ -48,14 +62,11 @@ void ContractBuilder::emitSlotModeStateVarInit(
 			loc);
 		auto aggAddr = aggLow.addrForStateVar(*var);
 		auto aggVal = aggAddr
-			? m_exprBuilder->buildExpr(*var->value()) : nullptr;
+			? lowerStateInitializer(*var, aggAddr->wtype, loc) : nullptr;
 		bool done = false;
 		if (aggAddr && aggVal)
 		{
 			aggAddr->solType = t;
-			aggVal = TypeCoercion::coerceForAssignment(
-				std::move(aggVal), aggAddr->wtype,
-				loc);
 			std::vector<std::shared_ptr<awst::Statement>> aggOut;
 			if (sol_ast::EvmSlotLowering::isBytesLike(t))
 			{
@@ -106,11 +117,9 @@ void ContractBuilder::emitSlotModeStateVarInit(
 	auto addr = low.addrForStateVar(*var);
 	if (!addr)
 		return;
-	auto initVal = m_exprBuilder->buildExpr(*var->value());
+	auto initVal = lowerStateInitializer(*var, addr->wtype, loc);
 	if (!initVal)
 		return;
-	initVal = TypeCoercion::coerceForAssignment(
-		std::move(initVal), addr->wtype, loc);
 	for (auto& preStmt: m_exprBuilder->takePreEffects())
 		targetBody.push_back(std::move(preStmt));
 	for (auto& postStmt: m_exprBuilder->takePostEffects())
@@ -167,11 +176,9 @@ void ContractBuilder::emitStateVarInitFor(
 				&& wtype->kind() == awst::WTypeKind::ARC4Struct;
 			if (!isStructBox)
 				continue;
-			auto initVal = m_exprBuilder->buildExpr(*var->value());
+			auto initVal = lowerStateInitializer(*var, wtype, loc);
 			if (!initVal)
 				continue;
-			initVal = TypeCoercion::coerceForAssignment(
-				std::move(initVal), wtype, loc);
 			for (auto& preStmt: m_exprBuilder->takePreEffects())
 				targetBody.push_back(std::move(preStmt));
 			for (auto& postStmt: m_exprBuilder->takePostEffects())
@@ -219,10 +226,7 @@ void ContractBuilder::emitStateVarInitFor(
 					awst::makeExpressionStatement(std::move(prePut), loc));
 			}
 
-			defaultVal = m_exprBuilder->buildExpr(*var->value());
-			if (defaultVal)
-				defaultVal = TypeCoercion::coerceForAssignment(
-					std::move(defaultVal), wtype, loc);
+			defaultVal = lowerStateInitializer(*var, wtype, loc);
 			// Flush pre-effects (e.g. new C() inner-txn create+fund)
 			// before the state-var assignment uses __new_app_id_N.
 			for (auto& preStmt: m_exprBuilder->takePreEffects())
@@ -906,12 +910,9 @@ void ContractBuilder::emitBoxCreateForStateVars(
 			else if (arrType && arrType->isDynamicallySized()
 				&& !arrType->isByteArrayOrString())
 			{
-				auto initVal = m_exprBuilder->buildExpr(*var->value());
+				auto initVal = lowerStateInitializer(*var, varWtype, _loc);
 				if (initVal)
 				{
-					auto* tgtWtype = m_typeMapper.map(arrType);
-					initVal = TypeCoercion::coerceForAssignment(
-						std::move(initVal), tgtWtype, _loc);
 					// Materialise as bytes for box_put.
 					if (initVal->wtype != awst::WType::bytesType())
 						initVal = awst::makeAsBytes(std::move(initVal), _loc);
@@ -919,6 +920,8 @@ void ContractBuilder::emitBoxCreateForStateVars(
 				}
 			}
 		}
+
+		m_exprBuilder->appendEffectsTo(_postInitBody.body);
 
 		// Multi-box detection: if the var's ARC4StaticArray total size
 		// exceeds a single box's capacity, emit N box_create calls

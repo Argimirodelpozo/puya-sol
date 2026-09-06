@@ -11,6 +11,7 @@
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "Logger.h"
 
@@ -147,11 +148,13 @@ std::shared_ptr<awst::Expression> SolAssignment::computeAggregateStoreValue(
 			m_ctx, _op, _op, m_assignment.leftHandSide().annotation().type,
 			std::move(_current), std::move(_rhs), _nativeW, m_loc);
 	}
-	_rhs = builder::TypeCoercion::coerceForAssignment(
-		std::move(_rhs), _nativeW, m_loc);
-	return builder::TypeCoercion::signExtendSignedWiden(
-		std::move(_rhs), m_assignment.rightHandSide().annotation().type,
-		m_assignment.leftHandSide().annotation().type, m_loc);
+	if (_op == Token::Assign)
+		return builder::ConversionPlan{m_assignment.rightHandSide().annotation().type,
+			m_assignment.leftHandSide().annotation().type, _nativeW,
+			builder::ConversionPlan::Context::Assignment}.emit(
+				std::move(_rhs), m_loc, &m_ctx.preEffects());
+	return builder::TypeCoercion::coerceForAssignment(
+		std::move(_rhs), _nativeW, m_loc, &m_ctx.preEffects());
 }
 
 std::shared_ptr<awst::Expression> SolAssignment::emitAggregateLeafStore(

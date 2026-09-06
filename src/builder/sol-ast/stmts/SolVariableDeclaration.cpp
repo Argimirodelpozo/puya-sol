@@ -208,7 +208,7 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 			value = builder::ConversionPlan{
 				initialValue->annotation().type, decl.type(), type,
 				builder::ConversionPlan::Context::Initialization}.emit(
-					std::move(value), m_loc);
+					std::move(value), m_loc, &m_blk.builderCtx().preEffects());
 		else
 			value = builder::TypeCoercion::coerceForAssignment(
 				std::move(value), type, m_loc);

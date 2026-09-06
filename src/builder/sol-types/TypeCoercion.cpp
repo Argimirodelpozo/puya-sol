@@ -9,6 +9,7 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/Arc4Defaults.h"
+#include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/TypeMapper.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -1126,7 +1127,8 @@ std::vector<uint8_t> TypeCoercion::intLiteralToBytesN(std::string const& _decima
 std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::WType const* _targetType,
-	awst::SourceLocation const& _loc)
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>* _pre)
 {
 	if (!_expr || !_targetType || _expr->wtype == _targetType)
 		return _expr;
@@ -1174,286 +1176,59 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 		}
 	}
 
-	// ARC4StaticArray<T, N> → ARC4DynamicArray<T>: prepend 2-byte length header.
-	// Solidity allows implicit static→dynamic array conversions on assignment
-	// (e.g. `uint8[] storage x = new uint8[5]`). Puya's ARC4 pipeline keeps
-	// these as distinct types, so we materialise the conversion via a
-	// ConvertArray node — puya lowers it to the right header+body layout.
-	if (auto const* dynArr = dynamic_cast<awst::ARC4DynamicArray const*>(_targetType))
+	// One integer-array emitter handles every shape and shares the scalar
+	// conversion above. It classifies before touching _pre or evaluating _expr.
+	if (auto widened = tryWidenArc4ArrayInt(_expr, _targetType, _pre, _loc))
+		return widened;
+
+	// Other fixed-array copies recurse through the same scalar/aggregate
+	// conversion rules (not separate signed/unsigned literal special cases).
+	if (auto const* source = dynamic_cast<awst::ARC4StaticArray const*>(_expr->wtype))
 	{
-		if (auto const* statArr = dynamic_cast<awst::ARC4StaticArray const*>(_expr->wtype))
+		auto const* targetStatic = dynamic_cast<awst::ARC4StaticArray const*>(_targetType);
+		auto const* targetDynamic = dynamic_cast<awst::ARC4DynamicArray const*>(_targetType);
+		auto const* targetElem = targetStatic ? targetStatic->elementType()
+			: targetDynamic ? targetDynamic->elementType() : nullptr;
+		if (targetElem && (!targetStatic || source->arraySize() <= targetStatic->arraySize()))
 		{
-			if (awst::structurallyEquivalent(
-					statArr->elementType(), dynArr->elementType()))
-				return prependArc4LengthHeader(std::move(_expr), statArr->arraySize(), _targetType, _loc);
-
-			// Narrower inline array literal (e.g. `[7,8,9]` typed uint8[3])
-			// assigned into a wider-element dynamic target (e.g. `uint256[]`).
-			// Widen each element via decode+encode, concat the widened bytes,
-			// prepend the uint16 length header, reinterpret as the dynamic
-			// target. NewArray-only to avoid re-evaluating impure sources.
-			auto const* srcArc4 = dynamic_cast<awst::ARC4UIntN const*>(statArr->elementType());
-			auto const* tgtArc4 = dynamic_cast<awst::ARC4UIntN const*>(dynArr->elementType());
-			auto* newArr = dynamic_cast<awst::NewArray*>(_expr.get());
-			if (newArr && srcArc4 && tgtArc4
-				&& srcArc4->n() < tgtArc4->n()
-				&& srcArc4->arc4Alias().empty() && tgtArc4->arc4Alias().empty())
+			bool const sameElement = awst::structurallyEquivalent(source->elementType(), targetElem);
+			if (sameElement && targetDynamic)
 			{
-				// Decode to the SOURCE's native width (not hardcoded uint64): a >64-bit
-				// source element (e.g. uint128 in `uint256[] = [2**100]`) would otherwise
-				// be truncated to its low 64 bits. Then widen to the target's native width.
-				auto const* srcNative = srcArc4->n() <= 64
-					? awst::WType::uint64Type()
-					: awst::WType::biguintType();
-				auto const* widerNative = tgtArc4->n() <= 64
-					? awst::WType::uint64Type()
-					: awst::WType::biguintType();
-
-				std::shared_ptr<awst::Expression> bodyBytes;
-				for (auto const& elem : newArr->values)
-				{
-					auto decode = awst::makeARC4Decode(elem, srcNative, _loc);
-					std::shared_ptr<awst::Expression> nativeVal = std::move(decode);
-					if (widerNative != srcNative)
-						nativeVal = implicitNumericCast(std::move(nativeVal), widerNative, _loc);
-
-					auto encode = awst::makeARC4Encode(std::move(nativeVal), dynArr->elementType(), _loc);
-
-					auto encBytes = awst::makeAsBytes(std::move(encode), _loc);
-
-					if (!bodyBytes)
-						bodyBytes = std::move(encBytes);
-					else
-						bodyBytes = awst::makeConcat(std::move(bodyBytes), std::move(encBytes), _loc);
-				}
-
-				int N = static_cast<int>(statArr->arraySize());
-				auto header = awst::makeBytesConstant(
-					{static_cast<uint8_t>((N >> 8) & 0xFF),
-					 static_cast<uint8_t>(N & 0xFF)},
-					_loc);
-
-				auto withHeader = awst::makeConcat(std::move(header), std::move(bodyBytes), _loc);
-				return awst::makeReinterpretCast(std::move(withHeader), _targetType, _loc);
+				checkedSize<uint16_t>(source->arraySize(), "ARC4 array length");
+				return prependArc4LengthHeader(std::move(_expr), source->arraySize(), _targetType, _loc);
 			}
-
-			// Signed variant: `int8[K]` literal → `int16[]` (any signed
-			// widening). Sign-extend at byte level (prepend 0xFF/0x00 pad
-			// based on bit-7 of each element's first byte), concat into
-			// body bytes, prepend uint16 length header.
-			bool const srcSigned = srcArc4 && srcArc4->isSigned();
-			bool const tgtSigned = tgtArc4 && tgtArc4->isSigned();
-			if (newArr && srcArc4 && tgtArc4
-				&& srcArc4->n() < tgtArc4->n()
-				&& srcArc4->n() % 8 == 0 && tgtArc4->n() % 8 == 0
-				&& srcSigned && tgtSigned)
+			auto const sourceStride = computeEncodedElementSize(source->elementType()).fixedBytes<int>();
+			auto const targetStride = computeEncodedElementSize(targetElem).fixedBytes<int>();
+			if (sameElement && targetStatic && sourceStride)
 			{
-				int const padBytes = (tgtArc4->n() - srcArc4->n()) / 8;
-				std::shared_ptr<awst::Expression> bodyBytes;
-				for (auto const& elem : newArr->values)
-				{
-					auto elemBytes = awst::makeAsBytes(elem, _loc);
-					auto signByte = awst::makeExtract3(
-						elemBytes,
-						awst::makeIntegerConstant(0, _loc),
-						awst::makeIntegerConstant(1, _loc), _loc);
-					auto signByteVal = awst::makeBtoi(std::move(signByte), _loc);
-					auto isNeg = awst::makeNumericCompare(
-						std::move(signByteVal),
-						awst::NumericComparison::Gte,
-						awst::makeIntegerConstant(128, _loc), _loc);
-					std::vector<uint8_t> ffPad(padBytes, 0xFFu);
-					std::vector<uint8_t> zeroPad(padBytes, 0x00u);
-					auto prepend = awst::makeConditional(
-						std::move(isNeg),
-						awst::makeBytesConstant(std::move(ffPad), _loc),
-						awst::makeBytesConstant(std::move(zeroPad), _loc),
-						awst::WType::bytesType(), _loc);
-					auto widenedBytes = awst::makeConcat(
-						std::move(prepend), std::move(elemBytes), _loc);
-					if (!bodyBytes) bodyBytes = std::move(widenedBytes);
-					else bodyBytes = awst::makeConcat(
-						std::move(bodyBytes), std::move(widenedBytes), _loc);
-				}
-
-				int N = static_cast<int>(statArr->arraySize());
-				auto header = awst::makeBytesConstant(
-					{static_cast<uint8_t>((N >> 8) & 0xFF),
-					 static_cast<uint8_t>(N & 0xFF)},
-					_loc);
-				auto withHeader = awst::makeConcat(
-					std::move(header), std::move(bodyBytes), _loc);
-				return awst::makeReinterpretCast(std::move(withHeader), _targetType, _loc);
+				auto const padding = EncodedSize::fixed(*sourceStride)
+					.times(targetStatic->arraySize() - source->arraySize()).fixedBytes<int>().value();
+				return awst::makeReinterpretCast(
+					awst::makeRightPad(awst::makeAsBytes(std::move(_expr), _loc), padding, _loc),
+					_targetType, _loc);
 			}
-		}
-	}
-
-	// ARC4StaticArray<T, M> → ARC4StaticArray<T, N> with M < N: Solidity
-	// allows assigning a smaller fixed-size array into a larger one,
-	// zero-filling the trailing slots. Puya's encoder rejects the
-	// length-mismatched encoding outright, so we synthesise the wider
-	// encoded value as `concat(src_bytes, bzero(diff))` and reinterpret
-	// to the wider ARC4StaticArray type.
-	if (auto const* targetStat = dynamic_cast<awst::ARC4StaticArray const*>(_targetType))
-	{
-		if (auto const* srcStat = dynamic_cast<awst::ARC4StaticArray const*>(_expr->wtype))
-		{
-			if (awst::structurallyEquivalent(
-					srcStat->elementType(), targetStat->elementType())
-				&& srcStat->arraySize() < targetStat->arraySize())
+			if (sourceStride && targetStride && source->arraySize() <= 256)
 			{
-				int elemSize = computeEncodedElementSize(srcStat->elementType()).fixedBytes<int>().value_or(0);
-				if (elemSize > 0)
+				auto once = awst::makeEvalOnce(awst::makeAsBytes(std::move(_expr), _loc), _loc);
+				std::vector<uint8_t> header;
+				if (targetDynamic)
 				{
-					int64_t diffElems = targetStat->arraySize() - srcStat->arraySize();
-					int64_t diffBytes = diffElems * elemSize;
-
-					auto srcBytes = awst::makeAsBytes(std::move(_expr), _loc);
-					auto cat = awst::makeRightPad(std::move(srcBytes), diffBytes, _loc);
-					return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
+					auto const count = checkedSize<uint16_t>(source->arraySize(), "ARC4 array length");
+					header = {static_cast<uint8_t>(count >> 8), static_cast<uint8_t>(count)};
 				}
-			}
-
-			// Element-CONVERTING fixed→fixed copy from an arbitrary source value
-			// (`_y = _x` where `bytes8[9] _x; bytes17[10] _y;` — the upstream
-			// storage_packed_array_copy fixture). Mirrors solc's architecture:
-			// copyArrayToStorageFunction does not know about element kinds — it
-			// loops and delegates each element to the GENERAL conversion
-			// (updateStorageValueFunction(fromBase, toBase)). Same here: slice each
-			// encoded element, relabel it as the source element wtype, and recurse
-			// into coerceForAssignment; whatever the scalar layer can convert, an
-			// array of it now converts too. Missing tail elements zero-fill —
-			// solc only admits value-type element conversions, whose default
-			// encoding is all-zero. Without this the bare ARC4Encode reached puya
-			// as "cannot encode uint8[8][9] to uint8[17][10]".
-			{
-				int const srcElemSize = computeEncodedElementSize(srcStat->elementType()).fixedBytes<int>().value_or(0);
-				int const tgtElemSize = computeEncodedElementSize(targetStat->elementType()).fixedBytes<int>().value_or(0);
-				int64_t const srcCount = srcStat->arraySize();
-				int64_t const tgtCount = targetStat->arraySize();
-				if (!awst::structurallyEquivalent(
-						srcStat->elementType(), targetStat->elementType())
-					&& srcElemSize > 0 && tgtElemSize > 0
-					&& srcCount <= tgtCount && srcCount <= 256)
+				std::shared_ptr<awst::Expression> bytes = awst::makeBytesConstant(std::move(header), _loc);
+				for (int64_t i = 0; i < source->arraySize(); ++i)
 				{
-					// Pin the source: every element extract reads it.
-					auto src = awst::makeEvalOnce(_expr, _loc);
-					std::shared_ptr<awst::Expression> body;
-					bool allConverted = true;
-					for (int64_t i = 0; i < srcCount && allConverted; ++i)
-					{
-						auto elem = awst::makeReinterpretCast(
-							awst::makeExtract(
-								awst::makeAsBytes(src, _loc),
-								static_cast<int>(i) * srcElemSize, srcElemSize, _loc),
-							srcStat->elementType(), _loc);
-						auto converted = coerceForAssignment(
-							std::move(elem), targetStat->elementType(), _loc);
-						// The scalar layer signals "no rule" by returning the value
-						// unchanged; abandon and fall through to the encoder's error.
-						if (!converted || converted->wtype != targetStat->elementType())
-						{
-							allConverted = false;
-							break;
-						}
-						std::shared_ptr<awst::Expression> widened =
-							awst::makeAsBytes(std::move(converted), _loc);
-						if (body)
-							body = awst::makeConcat(std::move(body), std::move(widened), _loc);
-						else
-							body = std::move(widened);
-					}
-					if (allConverted && body)
-					{
-						if (tgtCount > srcCount)
-							body = awst::makeRightPad(
-								std::move(body), (tgtCount - srcCount) * tgtElemSize, _loc);
-						return awst::makeReinterpretCast(std::move(body), _targetType, _loc);
-					}
+					auto element = awst::makeReinterpretCast(
+						awst::makeExtract(once, checkedSize<int>(i * *sourceStride, "array element offset"),
+							*sourceStride, _loc), source->elementType(), _loc);
+					bytes = awst::makeConcat(std::move(bytes),
+						awst::makeAsBytes(coerceForAssignment(std::move(element), targetElem, _loc), _loc), _loc);
 				}
-			}
-
-			// Same-length inline array literal with narrower element type —
-			// Solidity infers the common-type of `[1,2,3,4]` as uint8[4],
-			// but the target (e.g. `uint256[4] storage`) is wider. Only the
-			// NewArray literal case is handled here to avoid re-evaluating
-			// impure source expressions; other sources fall through to the
-			// encoder which will fail with a clear type-mismatch error.
-			auto const* srcArc4 = dynamic_cast<awst::ARC4UIntN const*>(srcStat->elementType());
-			auto const* tgtArc4 = dynamic_cast<awst::ARC4UIntN const*>(targetStat->elementType());
-			auto* newArr = dynamic_cast<awst::NewArray*>(_expr.get());
-			if (newArr && srcArc4 && tgtArc4
-				&& srcStat->arraySize() == targetStat->arraySize()
-				&& srcArc4->n() < tgtArc4->n()
-				&& srcArc4->arc4Alias().empty() && tgtArc4->arc4Alias().empty())
-			{
-				auto const* srcNative = srcArc4->n() <= 64
-					? awst::WType::uint64Type()
-					: awst::WType::biguintType();
-				auto const* widerNative = tgtArc4->n() <= 64
-					? awst::WType::uint64Type()
-					: awst::WType::biguintType();
-
-				auto widened = awst::makeNewArray(_targetType, _loc);
-				for (auto const& elem : newArr->values)
-				{
-					// Decode to the SOURCE's native width (>64-bit source elements must
-					// not be truncated to uint64), then widen to the target's width.
-					auto decode = awst::makeARC4Decode(elem, srcNative, _loc);
-
-					std::shared_ptr<awst::Expression> nativeVal = std::move(decode);
-					if (widerNative != srcNative)
-						nativeVal = implicitNumericCast(std::move(nativeVal), widerNative, _loc);
-
-					auto encode = awst::makeARC4Encode(std::move(nativeVal), targetStat->elementType(), _loc);
-					widened->values.push_back(std::move(encode));
-				}
-				return widened;
-			}
-
-			// Signed version: `intM[K]` literal → `intN[K]` (M < N).
-			// puya's ARC4 encoder rejects uint64 > 2^N-1 for arc4.uintN
-			// targets, so we can't widen via uint64 sign-OR'ing. Instead,
-			// build the wider element bytes directly per slot: for each
-			// element, prepend (N-M)/8 sign bytes (0xFF or 0x00) to the
-			// source byte slice. Final concat → reinterpret as target.
-			bool const srcSigned = srcArc4 && srcArc4->isSigned();
-			bool const tgtSigned = tgtArc4 && tgtArc4->isSigned();
-			if (newArr && srcArc4 && tgtArc4
-				&& srcStat->arraySize() == targetStat->arraySize()
-				&& srcArc4->n() < tgtArc4->n()
-				&& srcArc4->n() % 8 == 0 && tgtArc4->n() % 8 == 0
-				&& srcSigned && tgtSigned)
-			{
-				int const padBytes = (tgtArc4->n() - srcArc4->n()) / 8;
-				std::shared_ptr<awst::Expression> result;
-				for (auto const& elem : newArr->values)
-				{
-					// elem is an arc4.intM literal (BytesConstant of srcBytes).
-					auto elemBytes = awst::makeAsBytes(elem, _loc);
-					// Sign-extend per element by inspecting bit 7 of byte 0.
-					auto signByte = awst::makeExtract3(
-						elemBytes,
-						awst::makeIntegerConstant(0, _loc),
-						awst::makeIntegerConstant(1, _loc), _loc);
-					auto signByteVal = awst::makeBtoi(std::move(signByte), _loc);
-					auto isNeg = awst::makeNumericCompare(
-						std::move(signByteVal),
-						awst::NumericComparison::Gte,
-						awst::makeIntegerConstant(128, _loc), _loc);
-					std::vector<uint8_t> ffPad(padBytes, 0xFFu);
-					std::vector<uint8_t> zeroPad(padBytes, 0x00u);
-					auto prepend = awst::makeConditional(
-						std::move(isNeg),
-						awst::makeBytesConstant(std::move(ffPad), _loc),
-						awst::makeBytesConstant(std::move(zeroPad), _loc),
-						awst::WType::bytesType(), _loc);
-					auto widenedBytes = awst::makeConcat(
-						std::move(prepend), std::move(elemBytes), _loc);
-					if (!result) result = std::move(widenedBytes);
-					else result = awst::makeConcat(std::move(result), std::move(widenedBytes), _loc);
-				}
-				return awst::makeReinterpretCast(std::move(result), _targetType, _loc);
+				if (targetStatic && targetStatic->arraySize() > source->arraySize())
+					bytes = awst::makeRightPad(std::move(bytes), EncodedSize::fixed(*targetStride)
+						.times(targetStatic->arraySize() - source->arraySize()).fixedBytes<int>().value(), _loc);
+				return awst::makeReinterpretCast(std::move(bytes), _targetType, _loc);
 			}
 		}
 	}

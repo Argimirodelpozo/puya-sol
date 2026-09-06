@@ -196,38 +196,15 @@ std::shared_ptr<awst::Expression> AssignmentHelper::arc4EncodeForTarget(
 
 	_value = builder::TypeCoercion::stringToBytes(std::move(_value), _loc);
 
-	// Array element-wise widening: arc4 array<intM> → arc4 array<intN> (M<N) has no
-	// puya codec. Pin source bytes to a temp and call the helper.
-	bool const sourceIsArc4Array =
-		_value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+	// Representation-only callers share the conversion emitter used by the
+	// typed ConversionPlan. No speculative source bindings on a failed match.
+	bool const sourceIsArray = _value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
 		|| _value->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
-	bool const targetIsArc4Array =
-		_target->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+	bool const targetIsArray = _target->wtype->kind() == awst::WTypeKind::ARC4StaticArray
 		|| _target->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
-	if (sourceIsArc4Array && targetIsArc4Array)
-	{
-		std::string tmpName = "__widen_src_" + std::to_string(awst::NameGen::next("SolAssignment.s_widCounter"));
-		auto srcAsBytes = awst::makeAsBytes(_value, _loc);
-		auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
-		_ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(tmpVar, std::move(srcAsBytes), _loc));
-		auto const* sourceType = _value->wtype;
-		auto mkSrc = [&]() {
-			return awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
-		};
-		std::shared_ptr<awst::Expression> widened;
-		if (_target->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
-			widened = builder::tryWidenArc4StaticArrayInt(
-				sourceType, _target->wtype, mkSrc, _loc);
-		else
-			widened = builder::tryWidenArc4DynamicArrayInt(
-				sourceType, _target->wtype, mkSrc,
-				[&_ctx](std::shared_ptr<awst::Statement> _s) {
-					_ctx.preEffects().push_back(std::move(_s));
-				},
-				_loc);
-		if (widened) return widened;
-	}
+	if (sourceIsArray && targetIsArray)
+		return builder::TypeCoercion::coerceForAssignment(
+			std::move(_value), _target->wtype, _loc, &_ctx.preEffects());
 
 	// Narrowing: uint64 → arc4.uintN (N < 64).
 	if (auto narrowed = builder::tryNarrowUInt64ToArc4UIntN(

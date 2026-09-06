@@ -305,7 +305,8 @@ public:
 	static std::shared_ptr<awst::Expression> coerceForAssignment(
 		std::shared_ptr<awst::Expression> _expr,
 		awst::WType const* _targetType,
-		awst::SourceLocation const& _loc
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>* _pre = nullptr
 	);
 
 	// ── ARC4 / ABI ───────────────────────────────────────────────
