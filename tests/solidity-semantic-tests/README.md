@@ -9,18 +9,19 @@ not as an active test runner.
 ## Recorded baseline
 
 Full LocalNet semantic and harness/cache run on **2026-09-06**. The tested
-compiler and regression sources are committed as `45ecf7139c` (completed
-`rev-2` sol-types/storage fixes and refactors):
+compiler and regression sources are committed as `f2a5338e5e` (rev-2 after the
+2026-09-06 fixes — solc return widths, split-at-rebind modifiers, path-specialized
+interior storage references — and the six byte-identical refactor merges):
 
 | Result | Count |
 |---|---:|
-| Passed | 1,847 |
+| Passed | 1,853 |
 | Failed | 1 |
 | Expected failure (xfail) | 101 |
-| Unexpected pass (xpass) | 39 |
-| Total | 1,988 |
+| Unexpected pass (xpass) | 38 |
+| Total | 1,993 |
 
-The run took 328.12 seconds with two workers. Dependencies were pinned to
+The run took 856.63 seconds with two workers. Dependencies were pinned to
 Solidity `a99b6d8c0cbf9eddbac104e8e4e16545db7d3d8d` and Puya
 `27751c364229ae3cd0334fe4071e61690b6879e4` (5.10.1). Native CTest coverage passed
 19/19; the final focused holder/builder selection passed 98/98. Harness/cache
