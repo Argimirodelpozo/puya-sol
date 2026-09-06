@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "awst/HelperMethod.h"
 #include "builder/abi/EvmAbiDecode.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/assembly/AssemblyBuilder.h"
@@ -689,13 +690,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	std::string const& _contractName
 )
 {
-	awst::ContractMethod method;
-	method.sourceLocation = makeLoc(_contract.location());
-	method.returnType = awst::WType::boolType();
-	method.cref = m_contractId;
-	method.memberName = "approval_program";
+	auto method = awst::makeHelperMethod(m_contractId, "approval_program",
+		awst::WType::boolType(), {}, makeLoc(_contract.location()));
 
-	auto body = awst::makeBlock(method.sourceLocation);
+	auto body = method.body;
 
 	// __postInit triggers: box writes, new C(), msg.*, or AVM stdlib calls.
 	bool needsPostInit = computeNeedsPostInit(_contract, m_storageMapper);
@@ -765,8 +763,6 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	// arms name generated methods, which are not built yet at this point.
 	// Nothing else touches the approval body in between, so the emitted
 	// statement order is unchanged.
-	method.body = body;
-
 	return method;
 }
 

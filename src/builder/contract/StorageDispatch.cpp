@@ -10,6 +10,7 @@
 #include <libsolidity/ast/Types.h>
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
+#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 
@@ -317,24 +318,13 @@ void ContractBuilder::buildStorageDispatch(
 
 	// ── __storage_read(slot: uint64) -> biguint ──
 	{
-		awst::ContractMethod readSub;
-		readSub.sourceLocation = loc;
-		readSub.cref = cref;
-		readSub.memberName = "__storage_read";
-		readSub.returnType = awst::WType::biguintType();
-		readSub.arc4MethodConfig = std::nullopt;
-		readSub.pure = false;
-
-		awst::SubroutineArgument slotArg;
-		slotArg.name = "__slot";
 		// FULL 256-bit slot: EVM slots are 2^256-wide (boundary fixtures probe
 		// sub(0,5) = 2^256-5; keccak-derived slots are arbitrary). The old uint64
 		// arg silently truncated them at every call site.
-		slotArg.wtype = awst::WType::biguintType();
-		slotArg.sourceLocation = loc;
-		readSub.args.push_back(slotArg);
+		auto readSub = awst::makeHelperMethod(cref, "__storage_read",
+			awst::WType::biguintType(), {{"__slot", awst::WType::biguintType()}}, loc);
 
-		auto body = awst::makeBlock(loc);
+		auto body = readSub.body;
 		body->body.push_back(makeSlotWrapStmt());
 
 		// Build if/else chain for known slots (bottom-up; default = dynamic fallback).
@@ -504,33 +494,18 @@ void ContractBuilder::buildStorageDispatch(
 		for (auto& stmt: elseBlock->body)
 			body->body.push_back(std::move(stmt));
 
-		readSub.body = body;
 		_contractNode->methods.push_back(std::move(readSub));
 	}
 
 	// ── __storage_write(slot: uint64, value: biguint) -> void ──
 	{
-		awst::ContractMethod writeSub;
-		writeSub.sourceLocation = loc;
-		writeSub.cref = cref;
-		writeSub.memberName = "__storage_write";
-		writeSub.returnType = awst::WType::voidType();
-		writeSub.arc4MethodConfig = std::nullopt;
-		writeSub.pure = false;
+		// full 256-bit slot (see __storage_read)
+		auto writeSub = awst::makeHelperMethod(cref, "__storage_write",
+			awst::WType::voidType(),
+			{{"__slot", awst::WType::biguintType()}, {"__value", awst::WType::biguintType()}},
+			loc);
 
-		awst::SubroutineArgument slotArg;
-		slotArg.name = "__slot";
-		slotArg.wtype = awst::WType::biguintType();   // full 256-bit slot (see __storage_read)
-		slotArg.sourceLocation = loc;
-		writeSub.args.push_back(slotArg);
-
-		awst::SubroutineArgument valArg;
-		valArg.name = "__value";
-		valArg.wtype = awst::WType::biguintType();
-		valArg.sourceLocation = loc;
-		writeSub.args.push_back(valArg);
-
-		auto body = awst::makeBlock(loc);
+		auto body = writeSub.body;
 		body->body.push_back(makeSlotWrapStmt());
 
 		auto defaultBlock = awst::makeBlock(loc);
@@ -717,7 +692,6 @@ void ContractBuilder::buildStorageDispatch(
 		for (auto& stmt: elseBlock->body)
 			body->body.push_back(std::move(stmt));
 
-		writeSub.body = body;
 		_contractNode->methods.push_back(std::move(writeSub));
 	}
 

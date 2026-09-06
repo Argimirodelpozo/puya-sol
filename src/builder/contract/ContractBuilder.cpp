@@ -5,6 +5,7 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/SelectorRouter.h"
 #include "builder/contract/EvmMemoryCodec.h"
+#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "awst/Visit.h"
 #include "builder/NatSpecTags.h"
@@ -44,23 +45,11 @@ static awst::ContractMethod makeProvisionChildProgMethod(
 	TypeMapper& _typeMapper, std::string const& _cref,
 	awst::SourceLocation const& _loc)
 {
-	awst::ContractMethod method;
-	method.sourceLocation = _loc;
-	method.cref = _cref;
-	method.memberName = "__provisionChildProg";
-	method.returnType = awst::WType::voidType();
-
-	auto addArg = [&](char const* name, awst::WType const* wtype) {
-		awst::SubroutineArgument arg;
-		arg.name = name;
-		arg.sourceLocation = _loc;
-		arg.wtype = wtype;
-		method.args.push_back(std::move(arg));
-	};
-	addArg("name", awst::WType::bytesType());
-	addArg("total", awst::WType::uint64Type());
-	addArg("offset", awst::WType::uint64Type());
-	addArg("chunk", awst::WType::bytesType());
+	auto method = awst::makeHelperMethod(_cref, "__provisionChildProg",
+		awst::WType::voidType(),
+		{{"name", awst::WType::bytesType()}, {"total", awst::WType::uint64Type()},
+			{"offset", awst::WType::uint64Type()}, {"chunk", awst::WType::bytesType()}},
+		_loc);
 
 	awst::ARC4ABIMethodConfig config;
 	config.name = "__provisionChildProg";
@@ -73,7 +62,7 @@ static awst::ContractMethod makeProvisionChildProgMethod(
 	auto arg = [&](char const* name, awst::WType const* wtype) {
 		return awst::makeVarExpression(name, wtype, _loc);
 	};
-	auto body = awst::makeBlock(_loc);
+	auto body = method.body;
 	{
 		auto sender = awst::makeAsBytes(
 			awst::makeTxn("Sender", awst::WType::accountType(), _loc), _loc);
@@ -119,7 +108,6 @@ static awst::ContractMethod makeProvisionChildProgMethod(
 			arg("offset", awst::WType::uint64Type()),
 			arg("chunk", awst::WType::bytesType()), _loc),
 		_loc));
-	method.body = std::move(body);
 	return method;
 }
 

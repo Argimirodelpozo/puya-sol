@@ -3,6 +3,7 @@
 /// inner app calls for external.
 
 #include "builder/itxn/FunctionPointerBuilder.h"
+#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/SelectorSemantics.h"
@@ -570,47 +571,26 @@ awst::ContractMethod buildDispatchSignature(
 	FunctionType const* _funcType,
 	awst::SourceLocation const& _loc)
 {
-	awst::ContractMethod dispatch;
-	dispatch.sourceLocation = _loc;
-	dispatch.cref = _cref;
-	dispatch.memberName = _dname;
-	dispatch.arc4MethodConfig = std::nullopt;
-	dispatch.pure = false;
-
 	// Return type: the SAME native mapping the call site uses
 	// (computeReturnType — single native type or WTuple for multi).
 	// The old mapDispatchType drifted from the call site (public signed
 	// ≤64 promoted to biguint vs uint64 at the call; multi-return was a
 	// silent void). Public targets return WIRE-encoded values — the
 	// per-entry body adapts them back to the native return.
-	dispatch.returnType = computeReturnType(_ctx, _funcType);
-
 	// Args: __funcptr_id first, then __static, then function params.
-	{
-		awst::SubroutineArgument idArg;
-		idArg.name = "__funcptr_id";
-		idArg.wtype = awst::WType::uint64Type();
-		idArg.sourceLocation = _loc;
-		dispatch.args.push_back(idArg);
-	}
-	{
-		awst::SubroutineArgument stArg;
-		stArg.name = "__static";
-		stArg.wtype = awst::WType::uint64Type();
-		stArg.sourceLocation = _loc;
-		dispatch.args.push_back(stArg);
-	}
+	auto dispatch = awst::makeHelperMethod(_cref, _dname,
+		computeReturnType(_ctx, _funcType),
+		{{"__funcptr_id", awst::WType::uint64Type()},
+			{"__static", awst::WType::uint64Type()}}, _loc);
 	for (size_t i = 0; i < _funcType->parameterTypes().size(); ++i)
 	{
-		awst::SubroutineArgument arg;
-		arg.name = "__arg" + std::to_string(i);
 		// The SAME native mapping the call site coerces to — the old
 		// mapDispatchType sent address/enum/struct/non-byte-array params
 		// to biguint while the call site passed account/uint64/array
 		// wtypes.
-		arg.wtype = _ctx.typeMapper.map(_funcType->parameterTypes()[i]);
-		arg.sourceLocation = _loc;
-		dispatch.args.push_back(arg);
+		dispatch.args.push_back(awst::makeHelperArg(
+			"__arg" + std::to_string(i),
+			_ctx.typeMapper.map(_funcType->parameterTypes()[i]), _loc));
 	}
 	return dispatch;
 }
@@ -716,22 +696,10 @@ awst::ContractMethod buildSelToIdMethod(
 	std::vector<FuncPtrEntry const*> const& entries,
 	awst::SourceLocation const& _loc)
 {
-	awst::ContractMethod selToId;
-	selToId.sourceLocation = _loc;
-	selToId.cref = _cref;
-	selToId.memberName = "__sel_to_id_" + dname;
-	selToId.arc4MethodConfig = std::nullopt;
-	selToId.pure = false;
-	selToId.returnType = awst::WType::uint64Type();
-	{
-		awst::SubroutineArgument selArg;
-		selArg.name = "__sel";
-		selArg.wtype = awst::WType::bytesType();
-		selArg.sourceLocation = _loc;
-		selToId.args.push_back(selArg);
-	}
+	auto selToId = awst::makeHelperMethod(_cref, "__sel_to_id_" + dname,
+		awst::WType::uint64Type(), {{"__sel", awst::WType::bytesType()}}, _loc);
 
-	auto selBody = awst::makeBlock(_loc);
+	auto selBody = selToId.body;
 
 	auto selDefault = awst::makeBlock(_loc);
 	{
@@ -777,7 +745,6 @@ awst::ContractMethod buildSelToIdMethod(
 	}
 	for (auto& stmt : selElse->body)
 		selBody->body.push_back(std::move(stmt));
-	selToId.body = selBody;
 	return selToId;
 }
 

@@ -5,6 +5,7 @@
 
 #include "builder/BuildArtifacts.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "awst/HelperMethod.h"
 #include "awst/Visit.h"
 #include "Logger.h"
 
@@ -330,13 +331,10 @@ awst::AppStorageDefinition Erc1967Lowering::adminStateDefinition(
 awst::ContractMethod Erc1967Lowering::updateGateMethod(
 	std::string const& _cref, awst::SourceLocation const& _loc)
 {
-	awst::ContractMethod method;
-	method.sourceLocation = _loc;
-	method.cref = _cref;
-	method.memberName = "__erc1967_update";
-	method.returnType = awst::WType::voidType();
+	auto method = awst::makeHelperMethod(
+		_cref, "__erc1967_update", awst::WType::voidType(), {}, _loc);
 
-	auto body = awst::makeBlock(_loc);
+	auto body = method.body;
 	auto adminVar = [&] {
 		return awst::makeVarExpression(
 			"__erc1967_gate_admin", awst::WType::biguintType(), _loc);
@@ -412,7 +410,6 @@ awst::ContractMethod Erc1967Lowering::updateGateMethod(
 		_loc));
 	body->body.push_back(upgradedEventStatement(_loc));
 	body->body.push_back(awst::makeReturnStatement(nullptr, _loc));
-	method.body = std::move(body);
 
 	// ABI (not bare) on purpose: puya aggregates ARC-56 events only from
 	// ABI methods (arc56.py filters isinstance ARC4ABIMethod), so bare would
