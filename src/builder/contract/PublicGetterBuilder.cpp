@@ -897,10 +897,14 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					signedGetterBits = intInfo->bits;
 			}
 		}
+		std::vector<awst::WType const*> tupleTypes;
+		std::vector<std::string> tupleNames;
+		if (solReturnTypes.size() == 1)
+		{
+			// handled above; the tuple vectors stay empty
+		}
 		else if (solReturnTypes.size() > 1)
 		{
-			std::vector<awst::WType const*> tupleTypes;
-			std::vector<std::string> tupleNames;
 			for (size_t i = 0; i < solReturnTypes.size(); ++i)
 			{
 				// Signed sub-256 elements → biguint (256-bit), matching the value
@@ -909,7 +913,8 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				tupleNames.push_back(i < solReturnNames.size() ? solReturnNames[i] : "");
 			}
 			getter.returnType = m_typeMapper.createType<awst::WTuple>(
-				std::move(tupleTypes), std::move(tupleNames)
+				std::vector<awst::WType const*>(tupleTypes),
+				std::vector<std::string>(tupleNames)
 			);
 		}
 		else
@@ -964,6 +969,30 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			element.isSigned = false; // getter reads already sign-extend
 			readExpr = TypeCoercion::encodeReturnElement(std::move(readExpr), element, loc);
 			getter.returnType = element.wireType;
+		}
+		else if (readExpr)
+		{
+			// Struct/tuple getters publish declared ABI widths per element, like
+			// the single-value path: a biguint-carried uint128 field was leaving
+			// as uint512 and a signed field as a 256-bit value inside a uint512.
+			std::vector<ReturnWireElem> plans;
+			for (size_t i = 0; i < solReturnTypes.size(); ++i)
+			{
+				auto element = planReturnElement(
+					m_typeMapper, solReturnTypes[i], tupleTypes[i]);
+				element.isSigned = false; // projected fields already sign-extend
+				plans.push_back(element);
+			}
+			std::vector<std::shared_ptr<awst::Statement>> prepend;
+			readExpr = TypeCoercion::encodeReturnValue(
+				m_typeMapper, std::move(readExpr), plans, loc, prepend);
+			for (auto& statement: prepend)
+				body->body.push_back(std::move(statement));
+			std::vector<awst::WType const*> wireTypes;
+			for (auto const& plan: plans)
+				wireTypes.push_back(plan.wireType);
+			getter.returnType = m_typeMapper.createType<awst::WTuple>(
+				std::move(wireTypes), std::vector<std::string>(tupleNames));
 		}
 
 		auto ret = awst::makeReturnStatement(std::move(readExpr), loc);

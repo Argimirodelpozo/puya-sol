@@ -8,6 +8,7 @@
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/StatementWalk.h"
 #include "awst/NameGen.h"
+#include "Logger.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -17,6 +18,100 @@
 
 namespace puyasol::builder
 {
+
+namespace
+{
+
+/// True when the modifier body assigns the parameter as a WHOLE (rebinding
+/// the memory pointer) or reaches it from inline assembly. Solidity memory
+/// params alias the argument's object, so member writes must stay visible,
+/// but a rebind only moves the modifier's own pointer.
+class WholeRebindScanner: public solidity::frontend::ASTConstVisitor
+{
+public:
+	explicit WholeRebindScanner(int64_t _declId): m_declId(_declId) {}
+	bool found = false;
+	bool mutatesMember = false;
+
+	bool visit(solidity::frontend::Assignment const& _assignment) override
+	{
+		checkTarget(_assignment.leftHandSide());
+		checkMemberTarget(_assignment.leftHandSide());
+		return true;
+	}
+	bool visit(solidity::frontend::InlineAssembly const& _assembly) override
+	{
+		for (auto const& [identifier, info]: _assembly.annotation().externalReferences)
+			if (info.declaration && info.declaration->id() == m_declId)
+				found = true;
+		return true;
+	}
+
+private:
+	void checkTarget(solidity::frontend::Expression const& _expression)
+	{
+		if (auto const* identifier =
+				dynamic_cast<solidity::frontend::Identifier const*>(&_expression))
+		{
+			auto const* declaration = identifier->annotation().referencedDeclaration;
+			if (declaration && declaration->id() == m_declId)
+				found = true;
+		}
+		else if (auto const* tuple =
+				dynamic_cast<solidity::frontend::TupleExpression const*>(&_expression))
+			for (auto const& component: tuple->components())
+				if (component)
+					checkTarget(*component);
+	}
+
+	/// `c.value = …` / `c.items[i] = …`: a write through the (aliased) object.
+	void checkMemberTarget(solidity::frontend::Expression const& _expression)
+	{
+		solidity::frontend::Expression const* base = &_expression;
+		while (true)
+		{
+			if (auto const* member =
+					dynamic_cast<solidity::frontend::MemberAccess const*>(base))
+				base = &member->expression();
+			else if (auto const* index =
+					dynamic_cast<solidity::frontend::IndexAccess const*>(base))
+				base = &index->baseExpression();
+			else
+				break;
+		}
+		if (base == &_expression)
+			return;
+		if (auto const* identifier =
+				dynamic_cast<solidity::frontend::Identifier const*>(base))
+		{
+			auto const* declaration = identifier->annotation().referencedDeclaration;
+			if (declaration && declaration->id() == m_declId)
+				mutatesMember = true;
+		}
+	}
+
+	int64_t m_declId;
+};
+
+bool rebindsParameter(
+	solidity::frontend::ModifierDefinition const& _modifier,
+	solidity::frontend::VariableDeclaration const& _param)
+{
+	if (!_modifier.isImplemented())
+		return false;
+	WholeRebindScanner scanner(_param.id());
+	_modifier.body().accept(scanner);
+	if (scanner.found && scanner.mutatesMember)
+		Logger::instance().warning(
+			"modifier `" + _modifier.name() + "` both writes through and rebinds its "
+			"memory parameter `" + _param.name() + "`; the parameter is bound by value, "
+			"so member writes made before the rebind are not visible to the wrapped "
+			"function (Solidity shares the object until the rebind)",
+			awst::SourceLocation{});
+	return scanner.found;
+}
+
+} // namespace
 
 void ContractBuilder::buildModifierChain(
 	solidity::frontend::FunctionDefinition const& _func,
@@ -255,8 +350,13 @@ void ContractBuilder::buildModifierChain(
 				// Solidity memory parameters alias an identifier argument. Remap the
 				// modifier declaration directly to that variable so writes before or
 				// after `_` remain visible to the wrapped body and its caller.
+				// A body that REBINDS the parameter (`c = Cell(5)`) would leak the
+				// new value into the wrapped function through the alias; bind such
+				// params by value instead (solc: the rebind moves only the
+				// modifier's pointer).
 				if (param->referenceLocation()
-						== solidity::frontend::VariableDeclaration::Location::Memory)
+						== solidity::frontend::VariableDeclaration::Location::Memory
+					&& !rebindsParameter(*modDef, *param))
 				{
 					m_exprBuilder->appendEffectsTo(modBody->body);
 					if (auto const* variable =

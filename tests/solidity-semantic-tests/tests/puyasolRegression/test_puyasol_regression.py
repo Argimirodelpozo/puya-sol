@@ -5322,3 +5322,48 @@ def test_evm_ctor_address_namespace(harness):
     body2 = evm_abi_encode(["uint256"], [100])
     r2 = harness.call_raw(app, sel("spend(uint256)"), extra_args=(body2,))
     assert not r2.reverted, r2.fail_message
+
+
+def test_struct_getter_wire_widths(harness):
+    """puyasolRegression/contracts/struct_getter_widths.sol — NOT an o.g. semantic test.
+
+    ARC-4 profile getters of struct-valued mappings published their elements at
+    the AVM carrier widths (`uint128` fields as `uint512`, signed fields as
+    256-bit values inside a uint512 slot) while single-value getters were
+    remapped to the declared ABI widths. Tuple getters now go through the same
+    per-element return plan: uint128 stays uint128 on the wire, signed elements
+    use the canonical uint256 two's-complement convention, sub-64 unsigned
+    elements keep the uint64 naming rule.
+    """
+    arts = harness.compile("puyasolRegression/contracts/struct_getter_widths.sol")
+    spec = json.loads(arts.by_contract["StructGetterWidths"]["arc56"].read_text())
+    returns = {m["name"]: m["returns"]["type"] for m in spec["methods"]}
+    assert returns["plain"] == "(uint128,uint128)"
+    assert returns["withmap"] == "(uint128,uint128)"
+    assert returns["withmap64"] == "(uint64,uint64,bool)"
+    assert returns["withaddr"] == "(uint256,address)"
+    app = harness.deploy(arts, "StructGetterWidths", fund_wei=5_000_000)
+    harness.call(app, "set(uint256)", 1, extra_fee=10_000)
+    assert [as_int(v) for v in harness.call(app, "plain(uint256)", 1).abi_return] == [1, 2]
+    assert [as_int(v) for v in harness.call(app, "withmap(uint256)", 1).abi_return] == [3, 4]
+    got = harness.call(app, "withmap64(uint256)", 1).abi_return
+    assert [as_int(got[0]), as_int(got[1]), bool(got[2])] == [5, 6, True]
+    signed, who = harness.call(app, "withaddr(uint256)", 1).abi_return
+    assert as_signed_int(signed) == -7
+    assert who == harness.localnet.account.address
+
+
+def test_modifier_memory_param_rebind(harness):
+    """puyasolRegression/contracts/modifier_memory_rebind.sol — NOT an o.g. semantic test.
+
+    A modifier that REBINDS its memory parameter (`c = Cell(5)`) must not leak
+    the new object into the wrapped function (solc: 1, the alias model gave 5),
+    while a modifier that writes THROUGH the parameter keeps sharing the
+    caller's object (11 both inside and after the call). A body that does both
+    is bound by value with a compile-time warning (member writes before the
+    rebind are lost); that residual is intentionally not asserted here.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/modifier_memory_rebind.sol")
+    assert as_int(harness.call(app, "callG()", extra_fee=10_000).abi_return) == 1
+    assert as_int(harness.call(app, "callH()", extra_fee=10_000).abi_return) == 11011
+    assert as_int(harness.call(app, "seen()").abi_return) == 11

@@ -22,6 +22,12 @@ for production funds.
 - **Project metadata:** the root still needs an owner-selected license,
   vulnerability-reporting policy, and contribution/release ownership guidance.
   Dependency licenses do not substitute for first-party project metadata.
+- **Modifier memory parameters that are both written through and rebound:**
+  a modifier body that mutates a member of a memory parameter and then
+  rebinds the parameter (`c.value += 1; c = Cell(7);`) binds the parameter by
+  value, so member writes made before the rebind are not visible to the
+  wrapped function; the compiler warns. Pure member writes alias the caller's
+  object and pure rebinds stay local, matching Solidity.
 - **Operational diagnostics:** the earlier audit identified unchecked log-file
   opening/source-read failures and warning-only invalid remappings. Revisit
   those entry points and filesystem exception handling with focused negative
