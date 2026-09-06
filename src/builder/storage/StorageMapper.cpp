@@ -390,20 +390,10 @@ bool StorageMapper::classifyBoxStorage(
 	if (containsMappingType(type))
 		return true;
 
-	// Function pointers are the OTHER family with no ABI interface type, so
-	// they abort solc's predicate the same way. Unlike mappings they are not a
-	// boxing reason on their own — a struct holding one is a fixed-size value —
-	// so fall through to the storage-size estimate below rather than answering
-	// here. `struct S { uint16 a; function() returns (uint) x; uint16 b; }` as a
-	// state var used to terminate the process on an uncaught InternalCompilerError.
-	bool const abiPredicateUnavailable = containsInternalFunctionType(type);
-
-	// Any recursively dynamic aggregate → box. solc owns the recursion rule,
-
-	// so arrays, fixed arrays containing dynamics, and structs containing any of
-	// those all follow one placement policy. Strings themselves retain the
-	// historical global-state choice because they are typically short.
-	if (!abiPredicateUnavailable && type->isDynamicallyEncoded())
+	// Shape is independent of ABI encodability: an internal function is fixed,
+	// but an array containing one may be dynamic. Share this query with handles.
+	// Strings retain their historical global-state placement.
+	if (hasDynamicStorageShape(type))
 	{
 		auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(type);
 		if (!arrType || !arrType->isString())

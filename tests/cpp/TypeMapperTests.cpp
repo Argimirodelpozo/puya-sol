@@ -3,6 +3,7 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/SourceLocConvert.h"
 #include "builder/sol-types/EncodedSize.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -117,6 +118,19 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 
 	auto const* recursive = TypeProvider::structType(
 		declaration<StructDefinition>(a, "Node"), DataLocation::Storage);
+	require(builder::hasDynamicStorageShape(recursive), "recursive array shape was lost");
+	auto const* fixedCallback = TypeProvider::structType(
+		declaration<StructDefinition>(a, "FixedCallback"), DataLocation::Storage);
+	auto const* dynamicCallback = TypeProvider::structType(
+		declaration<StructDefinition>(a, "DynamicCallback"), DataLocation::Storage);
+	require(!builder::hasDynamicStorageShape(fixedCallback), "a fixed callback is not dynamic");
+	require(builder::hasDynamicStorageShape(dynamicCallback), "dynamic callback array was treated as fixed");
+	require(builder::hasDynamicStorageShape(TypeProvider::array(DataLocation::Storage, dynamicCallback, 2)),
+		"a fixed container hid its dynamic element");
+	require(!builder::hasDynamicStorageShape(TypeProvider::array(DataLocation::Storage, fixedCallback, 2)),
+		"a fixed callback array was treated as dynamic");
+	require(builder::isBoxKeyedStorageRef(dynamicCallback, analysis), "dynamic struct handle disagrees with placement");
+	require(!builder::isBoxKeyedStorageRef(fixedCallback, analysis), "small fixed callback struct was forced to a box");
 	for (int reset = 0; reset < 2; ++reset)
 	{
 		auto const* mapped = dynamic_cast<awst::ARC4Struct const*>(mapper.map(recursive));
@@ -147,6 +161,8 @@ type Value is uint16;
 contract Target {}
 struct Node { uint16 value; Node[] children; }
 struct Huge { uint256[134217728] values; }
+struct FixedCallback { uint16 tag; function() internal returns (uint256) callback; }
+struct DynamicCallback { function() internal returns (uint256)[] callbacks; }
 )"},
 			{"b.sol", R"(pragma solidity ^0.8.20;
 struct Item { uint16 first; bool second; }

@@ -65,26 +65,16 @@ inline bool containsMappingType(
 	return _t && _t->nameable() && _t->containsNestedMapping();
 }
 
-/// True if `_t` is an INTERNAL function pointer, or any array/struct that
-/// (recursively) holds one. The other storage-only family: like mappings these
-/// have no ABI interface type, so solc's `isDynamicallyEncoded()` asserts
-/// rather than answering (`solAssert(interfaceType(false).get(), "")`,
-/// Types.cpp StructType::isDynamicallyEncoded).
-/// `struct S { function() returns (uint) x; }` held as a state var aborted the
-/// compiler outright until this was peeled.
-///
-/// Kind::External is deliberately EXCLUDED: those are the one function kind
-/// solc gives an interface type (FunctionType::interfaceType), they encode as a
-/// static 24-byte value, and the ABI predicate answers them fine. Matching them
-/// here would silently reclassify structs that merely hold a callback.
-inline bool containsInternalFunctionType(
-	solidity::frontend::Type const* _t,
-	std::set<int64_t>* _visiting = nullptr)
+/// A variable-size array anywhere in the stored aggregate makes its serialized
+/// value dynamic. Use solc's array/member facts without asking for an ABI type:
+/// structs containing internal functions have no ABI interface. Mappings have
+/// their own keyed representation and are handled by containsMappingType.
+inline bool hasDynamicStorageShape(solidity::frontend::Type const* _t)
 {
 	return typeContains(_t, [](solidity::frontend::Type const* t) {
-		auto const* fn = dynamic_cast<solidity::frontend::FunctionType const*>(t);
-		return fn && fn->kind() != solidity::frontend::FunctionType::Kind::External;
-	}, _visiting);
+		auto const* array = dynamic_cast<solidity::frontend::ArrayType const*>(t);
+		return array && array->isDynamicallySized();
+	});
 }
 
 /// True when the `T storage` ref must travel as a bytes box-key prefix (the handle):
@@ -109,6 +99,7 @@ inline bool isBoxKeyedStorageRef(
 	if (containsMappingType(_t)) return true;
 	if (auto const* s = dynamic_cast<solidity::frontend::StructType const*>(_t))
 	{
+		if (hasDynamicStorageShape(s)) return true;
 		auto id = s->structDefinition().id();
 		if (_analysis.boxKeyedStructs.count(id) > 0)
 			return true;
@@ -123,14 +114,10 @@ inline bool isBoxKeyedStorageRef(
 	}
 	// Every recursively dynamic non-bytes array is unconditionally box-backed
 	// by StorageMapper, so its storage-ref representation is the box key too.
-	// This uses solc's recursive ABI-shape fact and therefore covers scalar,
-	// struct, and mixed fixed/dynamic ranks without enumerating leaf shapes.
-	// Internal-fn-pointer check first: an element with no ABI interface type
-	// aborts isDynamicallyEncoded() instead of answering it, and such an array
-	// is fixed-size anyway, so it is not box-backed on this rule.
+	// The same shape query handles internal functions and mixed ranks without
+	// assuming ABI encodability or mistaking a dynamic head for its total size.
 	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
-		return !arr->isByteArrayOrString() && !containsInternalFunctionType(arr)
-			&& arr->isDynamicallyEncoded();
+		return !arr->isByteArrayOrString() && hasDynamicStorageShape(arr);
 	return false;
 }
 

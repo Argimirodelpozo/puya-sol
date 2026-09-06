@@ -570,7 +570,13 @@ void SolInternalCall::buildSequencedArgs(
 	auto const* plan = _funcDef ? &m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract) : nullptr;
 	std::map<size_t, std::shared_ptr<awst::Expression>> offsets;
 	auto keyArgument = [&](Expression const& expression, size_t pi) -> std::shared_ptr<awst::Expression> {
-		if (isLargeFixedArrayRef(m_ctx.typeMapper, expression.annotation().type))
+		auto const* array = dynamic_cast<ArrayType const*>(expression.annotation().type);
+		bool largeFixed = isLargeFixedArrayRef(m_ctx.typeMapper, expression.annotation().type);
+		// A key-only array parameter addresses the entire encoded box. An
+		// interior dynamic array also needs parent offset-table/resize metadata;
+		// passing just its parent's key silently writes the wrong array header.
+		bool dynamicValue = array && !containsMappingType(array) && hasDynamicStorageShape(array);
+		if (largeFixed || dynamicValue)
 		{
 			if (auto const* id = dynamic_cast<Identifier const*>(&expression))
 				if (auto const* declaration = id->annotation().referencedDeclaration;
@@ -578,7 +584,9 @@ void SolInternalCall::buildSequencedArgs(
 					return extractMappingKeyPrefix(expression);
 			auto place = StoragePlace::fromRead(buildExpr(expression));
 			if (!place || place->kind != StoragePlaceKind::Box)
-				throw SizeError("large fixed-array storage references require a whole-box root; interior slices are unsupported");
+				throw SizeError(largeFixed
+					? "large fixed-array storage references require a whole-box root; interior slices are unsupported"
+					: "dynamic-array storage references require a whole-box root; interior resize paths are unsupported");
 			return awst::makeReinterpretCast(place->key, awst::WType::bytesType(), m_loc);
 		}
 		auto key = extractMappingKeyPrefix(expression);

@@ -1,10 +1,11 @@
 # rev-2: sol-types and storage implementation plan
 
-Status: in progress. F1, F2, F4, F5, F7, F9, R1 and R2 are implemented and checkpoint-test
+Status: in progress. F1, F2, F4, F5, F7, F8, F9, R1 and R2 are implemented and checkpoint-test
 verified. R3's binding/lifecycle portion is implemented. The latest full suite
 has no failures beyond the known Puya DCE divide-by-zero bug; F9's premature
-huge-array diagnostics are resolved. F3, F6, F8 and the remaining R3 codec cleanup
-await the compatibility/native-representation decisions below and implementation.
+huge-array diagnostics are resolved. F3, F6 and the remaining R3 codec cleanup
+remain to be implemented under the approved compatibility/native-representation
+decisions below.
 Final verification remains pending until those changes are complete.
 
 Branch: `rev-2`, based on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`.
@@ -179,14 +180,14 @@ solc's logical slots/offsets; all supported native address bits survive. The
 audit confirmed a direct/wrapped address width mismatch in generated TEAL.
 Any unavoidable new non-exact behavior requires a separate policy decision.
 
-The proposed native-address adaptation needs confirmation: typed reads/writes
+The native-address adaptation was approved on 2026-09-06: typed reads/writes
 preserve all 32 address bytes in separate scratch storage, while `tload`/`tstore`
 use solc's logical packed word. A raw `tstore` clears the extra native-only
 address bytes for declarations in the affected slot. This agrees with solc
 within its 160-bit address domain but changes raw-word round trips for full-width
 AVM addresses. No persistent cells or ledger migration are involved. Do not
-silently choose this policy or truncate native typed addresses; the adaptation
-and canonical transient-layout switch are not implemented yet.
+truncate native typed addresses; the adaptation and canonical transient-layout
+switch are not implemented yet.
 
 ### F7 — Exclude transient declarations from persistent initialization
 
@@ -206,15 +207,15 @@ ARC-56 schema; the harness currently reserves spare cells and can hide this.
 
 ### F8 — Classify dynamic aggregates containing internal functions correctly
 
-- [ ] Replace the blanket ABI-predicate bypass with a storage-shape query over
+- [x] Replace the blanket ABI-predicate bypass with a storage-shape query over
   valid solc facts: dynamic array size, base types and struct member types.
   Reuse safe solc predicates where applicable; keep recursive-type traversal
   guarded and do not invoke ABI encoding queries on non-ABI types.
-- [ ] Share the classification between storage placement and reference/handle
+- [x] Share the classification between storage placement and reference/handle
   passing in [StorageRefPointer.h](../src/builder/sol-ast/StorageRefPointer.h).
-- [ ] Preserve legitimate small fixed aggregates as fixed values. A dynamic
+- [x] Preserve legitimate small fixed aggregates as fixed values. A dynamic
   array's one-slot solc storage head is not a bound on its serialized contents.
-- [ ] Test dynamic arrays, nested/fixed containers of dynamic arrays, structs,
+- [x] Test dynamic arrays, nested/fixed containers of dynamic arrays, structs,
   and fixed controls containing internal function pointers. Exercise mutation,
   reads, invocation and internal/library storage-reference paths where supported.
 
@@ -306,7 +307,7 @@ deployment, even when the new behavior agrees better with Solidity.
   Prefer stable identities derived from solc logical layout, not source spelling
   or AST numbering. Solc-compatible layout changes still require compatibility
   review when applied to existing contracts.
-- [ ] Obtain a decision before switching an existing persisted format: a breaking
+- [x] Obtain a decision before switching an existing persisted format: a breaking
   fresh-deployment-only release, or an explicitly versioned compatibility path.
   Do not silently reinterpret old keys or automatically read ambiguous legacy
   locations. Any migration of deployed state is a separate authorized task.
@@ -315,15 +316,16 @@ deployment, even when the new behavior agrees better with Solidity.
 Unrelated fixes and the format design can proceed while this decision is pending.
 F3 is not complete merely because its design is written down.
 
-The outstanding user choice is a fresh-deployment-only format break versus an
-explicit compatibility/version path. F3 affects default-layout holder identities
+On 2026-09-06 the user approved a fresh-deployment-only format break. Existing
+deployments must retain their original compiler/artifacts; no automatic legacy
+fallback or state migration will be added. F3 affects default-layout holder identities
 and their derived mapping boxes; F8 affects default-layout dynamic aggregates
 containing internal functions, moving their schema/initialization and reference
 handling from named globals to boxes where required. Neither fix requires
 changing EVM slot-mode keys. The candidate new holder format uses a domain/version
 marker, full solc root slots, and tagged member/array segments rather than AST IDs
 or concatenated source names. Detailed manifest comparison remains part of the
-implementation gate; no new persisted format has been selected or emitted.
+implementation gate; no new persisted format has been emitted yet.
 
 ## Verification and definition of done
 
@@ -533,6 +535,37 @@ PUYASOL_LOCALNET_RESET=0 pytest framework/test_compile_cache.py \
 At this checkpoint the branch has 241 fewer net source lines than its base;
 the bounded-read correctness work adds code while the earlier conversion,
 identity and storage-binding consolidations remove duplication.
+
+### Checkpoint 8 — dynamic storage shape without ABI predicates
+
+The shared storage-shape query walks solc array/member facts with a recursion
+guard. Internal functions remain fixed-size scalar values, but no longer hide
+dynamic arrays in their enclosing aggregates. Placement and storage-reference
+classification agree. Small fixed callback structs/arrays remain globals.
+
+All 19 native CTests passed (2.59 seconds). The function/array/struct selection,
+including 8 new runtime cases and 2 capacity-diagnostic cases, passed **164 tests**,
+with 5 existing xfails and 1 existing xpass in 50.98 seconds. Report:
+`/tmp/puyasol-rev-2-function-shape-broad.xml`. Runtime coverage exercises both ABI,
+storage and code-generation profiles, exact schemas, callback invocation,
+mutation, deletion/reuse, whole-box internal/library references and struct
+references. Solc 0.8.34/Cancun confirmed the stateful expectations (legacy
+pipeline, optimizer disabled).
+
+The initial run exposed unsupported interior dynamic-array parameters: their
+key-only handle lost the parent location and could corrupt the enclosing array
+header. Those calls now diagnose the unsupported interior resize path rather
+than passing the parent's box as if it were the whole array. Nested arrays and
+struct-held arrays remain usable through direct updates; callers may pass the
+enclosing struct as a reference. No existing test assertions or markers changed.
+
+Representative pre/post AWST manifests are preserved under
+`/tmp/puyasol-rev-2-format-before.eL6NrY/functions` and `functions-after`.
+The four dynamic callback aggregates move from named globals to same-named boxes;
+the two small fixed controls remain globals. A deferred-constructor flag is
+added where array-box initialization requires it. This is an approved
+fresh-deployment-only placement change, not an upgrade/migration path. EVM
+slot-mode persistent keys are unchanged.
 
 ### Baseline and remaining gates
 
