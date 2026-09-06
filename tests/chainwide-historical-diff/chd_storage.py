@@ -12,6 +12,8 @@ decoding, but it consumes the same ``KeyEvidence`` and path labels.
 """
 from __future__ import annotations
 
+import base64
+import hashlib
 import itertools
 import json
 import re
@@ -521,8 +523,65 @@ class EvmStorageReader:
         return {"scalars": scalars, "maps": maps}
 
 
+# ── Default holder format 2 (docs/storage-format.md) ──────────────────────
+# Re-implemented here rather than imported from framework.storage_keys so the
+# EVM leg's interpreter (no algosdk) can import this module too; a unit test
+# pins the two implementations to each other.
+HOLDER_ROOT_PREFIX = b"@puya-sol/2:"
+_OPAQUE_ARC_HINTS = ("AVMBytes", "AVMString", "AVMUint64")
+
+
+def _holder_coordinate(slot: int, offset: int) -> bytes:
+    if not 0 <= int(offset) < 32:
+        raise ValueError("invalid solc byte offset")
+    return int(slot).to_bytes(32, "big") + bytes([int(offset)])
+
+
+def holder_root(slot: int, offset: int = 0) -> bytes:
+    return HOLDER_ROOT_PREFIX + base64.b85encode(_holder_coordinate(slot, offset))
+
+
+def _holder_segment(tag: bytes, parent: bytes, payload: bytes) -> bytes:
+    return hashlib.sha256(b"puya-sol/2/" + tag + len(parent).to_bytes(8, "big")
+                          + parent + payload).digest()
+
+
+def holder_member(parent: bytes, slot: int, offset: int = 0) -> bytes:
+    return _holder_segment(b"s", parent, _holder_coordinate(slot, offset))
+
+
+def holder_array_element(parent: bytes, index: int) -> bytes:
+    return _holder_segment(b"a", parent, int(index).to_bytes(32, "big"))
+
+
+def holder_mapping_entry(parent: bytes, encoded_key: bytes) -> bytes:
+    return _holder_segment(b"m", parent, encoded_key)
+
+
 class NativeStorageReader:
-    """Recursive ARC-56/native-box twin of :class:`EvmStorageReader`."""
+    """Recursive ARC-56/native-box twin of :class:`EvmStorageReader`.
+
+    Two key schemes coexist and are told apart per root:
+
+    * **legacy** — the root is declared under ARC-56 ``state.maps.box`` and
+      named by its source spelling; entries chain ``sha256(key ‖ prefix)`` and
+      struct members chain by label;
+    * **holder format 2** (docs/storage-format.md) — every mapping-containing
+      root is declared under ``state.keys.box`` with a ``@puya-sol/2:`` key
+      encoding the solc root coordinate, and descendants chain through tagged
+      SHA-256 segments: struct member coordinate (``s``), checked array index
+      (``a``), encoded mapping key (``m``). A nonrecursive single-struct
+      wrapper at coordinate (0, 0) with the same extent is transparent: no
+      segment, and its box holds the inner struct's encoding. The ARC-56
+      ``structs`` table already lists the inner fields under the wrapper's
+      name, and mapping members appear as empty ``byte[]`` placeholders, so a
+      holder box is the ARC4 tuple of the solc members in declaration order.
+
+    Format-2 boxes are decoded with an ARC4 type derived from the solc layout
+    (the ARC-56 ``structs`` table is only a fallback): the deployed encoding
+    follows solc widths, and the ARC-56 table can name a struct ``tuple`` with
+    carrier widths (``uint512`` for a ``uint128`` member).
+    """
 
     def __init__(self, layout: dict, arc56: dict, box_values: dict[bytes, bytes],
                  evidence: KeyEvidence, sha256: Callable[[bytes], bytes], fold,
@@ -538,8 +597,12 @@ class NativeStorageReader:
         self.fold = fold
         self.max_mapping_paths = max_mapping_paths
         self.matched: set[bytes] = set()
+        self.format2_roots: dict[str, bytes] = {}
+        self.holder_mismatches: list[dict] = []
+        self._format2 = False
         self._paths = 0
 
+    # ── shared helpers ──────────────────────────────────────────────────
     def _struct_name(self, type_doc: dict) -> str | None:
         label = str(type_doc.get("label") or "")
         if not label.startswith("struct "):
@@ -669,6 +732,7 @@ class NativeStorageReader:
         return any(self._contains_mapping(member.get("type"), seen)
                    for member in type_doc.get("members") or [])
 
+    # ── legacy (state.maps.box) walk ────────────────────────────────────
     def _read_struct(self, prefix: bytes, type_id: str,
                      arc_hint: str | None, path: str) -> tuple[Any, bool]:
         type_doc = self.types.get(type_id, {})
@@ -708,6 +772,216 @@ class NativeStorageReader:
             return self._read_struct(prefix, type_id, arc_hint, path)
         return self._decode_box(prefix, type_id, arc_hint)
 
+    # ── holder format 2 walk ────────────────────────────────────────────
+    def _transparent_inner(self, type_doc: dict) -> str | None:
+        """The sole member's type id when `type_doc` is a transparent wrapper."""
+        members = type_doc.get("members") or []
+        if len(members) != 1:
+            return None
+        member = members[0]
+        if int(member.get("slot", 0)) != 0 or int(member.get("offset", 0)) != 0:
+            return None
+        inner_tid = member.get("type")
+        inner = self.types.get(inner_tid, {})
+        if not inner.get("members"):
+            return None
+        if str(inner.get("numberOfBytes")) != str(type_doc.get("numberOfBytes")):
+            return None
+        if not self._contains_mapping(inner_tid):
+            return None
+        return inner_tid
+
+    def _layout_arc_type(self, type_id: str, seen: set[str] | None = None) -> str | None:
+        """ARC4 type of a holder box from solc layout facts (mappings → byte[])."""
+        if not type_id or type_id in (seen or set()):
+            return None
+        seen = set(seen or ()) | {type_id}
+        doc = self.types.get(type_id, {})
+        label = str(doc.get("label") or "")
+        encoding = doc.get("encoding")
+        if encoding == "mapping":
+            return "byte[]"
+        if doc.get("members"):
+            inner = self._transparent_inner(doc)
+            if inner:
+                return self._layout_arc_type(inner, seen)
+            parts = [self._layout_arc_type(member.get("type"), seen)
+                     for member in doc["members"]]
+            if any(part is None for part in parts):
+                return None
+            return "(" + ",".join(parts) + ")"
+        if encoding == "dynamic_array" and doc.get("base"):
+            base = self._layout_arc_type(doc["base"], seen)
+            return base + "[]" if base else None
+        if encoding == "bytes":
+            return "string" if label == "string" else "byte[]"
+        length = self._array_length(doc)
+        if length is not None and doc.get("base"):
+            base = self._layout_arc_type(doc["base"], seen)
+            return f"{base}[{length}]" if base else None
+        if label == "address" or label.startswith("contract "):
+            return "byte[32]"
+        if label == "bool":
+            return "bool"
+        match = re.fullmatch(r"u?int(\d*)", label)
+        if match:
+            return f"uint{int(match.group(1) or 256)}"
+        if label.startswith("enum "):
+            return f"uint{int(doc.get('numberOfBytes', 1)) * 8}"
+        match = re.fullmatch(r"bytes(\d+)", label)
+        if match:
+            return f"byte[{match.group(1)}]"
+        return None
+
+    def _canon_layout(self, value: Any, type_id: str) -> Any:
+        """Canonical (differ-comparable) view of a decoded value, by solc type."""
+        if value is None:
+            return None
+        doc = self.types.get(type_id, {})
+        label = str(doc.get("label") or "")
+        encoding = doc.get("encoding")
+        if encoding == "mapping":
+            return None
+        if doc.get("members"):
+            inner = self._transparent_inner(doc)
+            if inner:
+                return [self._canon_layout(value, inner)]
+            items = list(value) if isinstance(value, (list, tuple)) else []
+            return [self._canon_layout(item, member.get("type"))
+                    for item, member in zip(items, doc["members"])]
+        if encoding == "dynamic_array" or (
+                self._array_length(doc) is not None and doc.get("base")):
+            return [self._canon_layout(item, doc.get("base"))
+                    for item in (value or [])]
+        if label == "address" or label.startswith("contract "):
+            return self.fold(bytes(value))
+        if re.fullmatch(r"bytes\d+", label):
+            raw = bytes(value)
+            if len(raw) == 32 and any(raw):
+                address_label = self.evidence.address_label(raw)
+                if address_label is not None:
+                    return address_label
+            return "0x" + raw.hex()
+        if label == "bool":
+            return bool(value)
+        if label.startswith("int"):
+            bits = int(re.match(r"^int(\d*)", label).group(1) or 256)
+            number = int(value)
+            if number >= (1 << (bits - 1)):
+                number -= 1 << bits
+            return number
+        if label.startswith(("uint", "enum ")):
+            return int(value)
+        if label == "string":
+            return value if isinstance(value, str) else bytes(value).decode("utf-8", "replace")
+        if label == "bytes":
+            return "0x" + bytes(value).hex()
+        return self._canon_arc(value, "")
+
+    def _decode_holder_box(self, name: bytes, type_id: str) -> tuple[Any, bool, bool]:
+        """(value, present, already_canonical) for a format-2 holder box."""
+        if name not in self.box_values:
+            return None, False, False
+        self.matched.add(name)
+        raw = self.box_values[name]
+        arc_type = self._layout_arc_type(type_id)
+        if arc_type and raw:
+            try:
+                from algosdk import abi
+                return abi.ABIType.from_string(arc_type).decode(raw), True, False
+            except Exception:
+                pass
+        value, hit = self._decode_box(name, type_id, None)
+        return value, hit, True
+
+    def _read_struct2(self, prefix: bytes, type_id: str, path: str,
+                      decoded: Any = None) -> tuple[Any, bool]:
+        doc = self.types.get(type_id, {})
+        inner = self._transparent_inner(doc)
+        if inner:
+            member_label = (doc.get("members") or [{}])[0].get("label")
+            value, hit = self._read_struct2(prefix, inner, f"{path}.{member_label}", decoded)
+            return [value], hit
+        members = doc.get("members") or []
+        canonical = False
+        if decoded is None:
+            raw, hit, canonical = self._decode_holder_box(prefix, type_id)
+        else:
+            raw, hit = decoded, True
+        values = (list(raw) if hit and isinstance(raw, (list, tuple))
+                  else [None] * len(members))
+        if len(values) < len(members):
+            values.extend([None] * (len(members) - len(values)))
+        present = hit
+        for index, member in enumerate(members):
+            member_tid = member.get("type")
+            member_doc = self.types.get(member_tid, {})
+            label = f"{path}.{member.get('label')}"
+            child = holder_member(prefix, int(member.get("slot", 0)),
+                                  int(member.get("offset", 0)))
+            if member_doc.get("encoding") == "mapping":
+                nested, mhit = self._read_mapping(child, member_doc, label)
+                values[index] = nested
+                present = present or mhit
+            elif self._contains_mapping(member_tid):
+                nested, mhit = self._read_value2(
+                    child, member_tid, label,
+                    decoded=values[index] if (hit and not canonical) else None)
+                values[index] = nested
+                present = present or mhit
+            elif hit and not canonical:
+                values[index] = self._canon_layout(values[index], member_tid)
+            if values[index] is not None:
+                self.evidence.add_runtime(member_doc, values[index])
+        return values, present
+
+    def _read_array2(self, prefix: bytes, type_id: str, path: str,
+                     decoded: Any = None) -> tuple[Any, bool]:
+        doc = self.types.get(type_id, {})
+        base_tid = doc.get("base")
+        canonical = False
+        if decoded is None:
+            raw, hit, canonical = self._decode_holder_box(prefix, type_id)
+        else:
+            raw, hit = decoded, True
+        elements = (list(raw) if hit and not canonical and isinstance(raw, (list, tuple))
+                    else [])
+        length = len(elements) if elements else (self._array_length(doc) or 0)
+        if length > 4096:
+            return f"<{length} elements>", True
+        values, present = [], hit
+        for index in range(length):
+            element = elements[index] if index < len(elements) else None
+            value, ehit = self._read_value2(
+                holder_array_element(prefix, index), base_tid,
+                f"{path}[{index}]", decoded=element)
+            values.append(value)
+            present = present or ehit
+        self.evidence.add_runtime(self.types.get(base_tid, {}), values)
+        return values, present
+
+    def _read_value2(self, prefix: bytes, type_id: str, path: str,
+                     decoded: Any = None) -> tuple[Any, bool]:
+        doc = self.types.get(type_id, {})
+        if doc.get("encoding") == "mapping":
+            return self._read_mapping(prefix, doc, path)
+        if doc.get("members"):
+            return self._read_struct2(prefix, type_id, path, decoded)
+        if doc.get("base") and self._contains_mapping(type_id):
+            return self._read_array2(prefix, type_id, path, decoded)
+        if decoded is not None:
+            return self._canon_layout(decoded, type_id), True
+        aggregate = bool(doc.get("base")) or doc.get("encoding") == "bytes"
+        if not aggregate:
+            # Scalars keep the native decode: a uint box is a minimal
+            # big-endian blob and a bool box is 0/1, not ARC4's 0x80.
+            return self._decode_box(prefix, type_id, None)
+        value, hit, canonical = self._decode_holder_box(prefix, type_id)
+        if hit and not canonical:
+            value = self._canon_layout(value, type_id)
+        return value, hit
+
+    # ── mapping walk (both schemes) ─────────────────────────────────────
     def _read_mapping(self, prefix: bytes, type_doc: dict, path: str,
                       arc_hint: str | None = None,
                       parts: tuple[KeyCandidate, ...] = ()) -> tuple[dict, bool]:
@@ -728,7 +1002,9 @@ class NativeStorageReader:
             self._paths += 1
             next_parts = parts + (candidate,)
             for encoded in avm_key_forms(candidate, key_type, self.sha256):
-                derived = self.sha256(encoded + prefix)
+                derived = (holder_mapping_entry(prefix, encoded) if self._format2
+                           else self.sha256(encoded + prefix))
+                label = f"{path}[{_path_label(next_parts)}]"
                 if value_type.get("encoding") == "mapping":
                     nested, hit = self._read_mapping(
                         derived, value_type, path, arc_hint, next_parts)
@@ -736,21 +1012,26 @@ class NativeStorageReader:
                         out.update(nested)
                         break
                     continue
-                value, hit = self._read_value(
-                    derived, value_tid, arc_hint,
-                    f"{path}[{_path_label(next_parts)}]")
+                if self._format2:
+                    value, hit = self._read_value2(derived, value_tid, label)
+                else:
+                    value, hit = self._read_value(derived, value_tid, arc_hint, label)
                 if hit:
                     out[_path_label(next_parts)] = value
                     break
         return out, bool(out)
 
     def read_maps(self) -> dict:
-        bmaps = (((self.arc56.get("state") or {}).get("maps") or {})
-                 .get("box") or {})
+        state = self.arc56.get("state") or {}
+        bmaps = (state.get("maps") or {}).get("box") or {}
+        box_keys = (state.get("keys") or {}).get("box") or {}
         entries = {entry.get("label"): entry
                    for entry in self.layout.get("storage") or []}
-        out: dict[str, Any] = {"__declared__": sorted(bmaps)}
+        out: dict[str, Any] = {}
+        declared: list[str] = []
         unsupported = []
+        # Legacy roots: source-named, declared as ARC-56 prefix maps.
+        self._format2 = False
         for name, spec in bmaps.items():
             entry = entries.get(name)
             if not entry:
@@ -760,12 +1041,51 @@ class NativeStorageReader:
             if type_doc.get("encoding") != "mapping":
                 unsupported.append(name)
                 continue
+            declared.append(name)
             self._paths = 0
             value, _ = self._read_mapping(
                 name.encode(), type_doc, name, spec.get("valueType"))
             out[name] = value
+        # Format-2 roots: coordinate-keyed, every mapping-containing aggregate.
+        self._format2 = True
+        for name, spec in box_keys.items():
+            try:
+                key = base64.b64decode(spec.get("key") or "")
+            except Exception:
+                continue
+            if not key.startswith(HOLDER_ROOT_PREFIX):
+                continue
+            self.format2_roots[name] = key
+            entry = entries.get(name)
+            if not entry:
+                unsupported.append(name)
+                continue
+            expected = holder_root(int(entry.get("slot", 0)), int(entry.get("offset", 0)))
+            if expected != key:
+                # The compiler's root coordinate disagrees with solc's layout
+                # for the same variable — a real derivation divergence, not a
+                # harness gap. Read the deployed key; report the disagreement.
+                self.holder_mismatches.append({
+                    "root": name, "arc56": key.decode("latin1"),
+                    "solc": expected.decode("latin1"),
+                    "slot": entry.get("slot"), "offset": entry.get("offset", 0)})
+            type_doc = self.types.get(entry.get("type"), {})
+            self._paths = 0
+            if type_doc.get("encoding") == "mapping":
+                declared.append(name)
+                value, _ = self._read_mapping(key, type_doc, name)
+                out[name] = value
+            else:
+                # Aggregate roots (struct/array around mappings) stay out of the
+                # name-keyed map diff, mirroring EvmStorageReader.read, but are
+                # walked so every descendant box is attributed for coverage.
+                self._read_value2(key, entry.get("type"), name)
+        self._format2 = False
+        out["__declared__"] = sorted(declared)
         if unsupported:
             out["__unsupported__"] = sorted(unsupported)
+        if self.holder_mismatches:
+            out["__holder_mismatch__"] = list(self.holder_mismatches)
         return out
 
 

@@ -40,6 +40,13 @@ contract StorageShapes {
     mapping(address => Counter) public nonces;               // struct
     mapping(address => Checkpoint[]) public ckpts;           // dynamic array
     uint256 public total;
+    // rev-2 holder format 2 shapes: a struct value that itself holds a
+    // mapping, and an EnumerableSet-style transparent wrapper inside a map.
+    struct Account { uint64 tag; mapping(address => uint256) sub; }
+    struct Set { bytes32[] _values; mapping(bytes32 => uint256) _positions; }
+    struct AddressSet { Set _inner; }
+    mapping(address => Account) internal accts;              // struct WITH mapping
+    mapping(uint256 => AddressSet) internal members;         // transparent wrapper
 
     function credit(address a, uint256 v) external { bal[a] += v; total += v; }
     function approve(address o, address s, uint256 v) external { allow[o][s] = v; }
@@ -49,6 +56,24 @@ contract StorageShapes {
     }
     function ckptLen(address a) external view returns (uint256) {
         return ckpts[a].length;
+    }
+    function tag(address a, uint64 t, address s, uint256 v) external {
+        accts[a].tag = t;
+        accts[a].sub[s] = v;
+    }
+    function join(uint256 g, address a) external {
+        AddressSet storage set = members[g];
+        bytes32 k = bytes32(uint256(uint160(a)));
+        if (set._inner._positions[k] == 0) {
+            set._inner._values.push(k);
+            set._inner._positions[k] = set._inner._values.length;
+        }
+    }
+    function memberCount(uint256 g) external view returns (uint256) {
+        return members[g]._inner._values.length;
+    }
+    function acctTag(address a) external view returns (uint64) {
+        return accts[a].tag;
     }
 }
 """
@@ -67,6 +92,11 @@ CALLS = [
     ("push(address,uint32,uint224)", [A1, 100, 1000]),
     ("push(address,uint32,uint224)", [A1, 200, 1250]),
     ("push(address,uint32,uint224)", [A2, 150, 250]),
+    ("tag(address,uint64,address,uint256)", [A1, 5, A2, 50]),
+    ("tag(address,uint64,address,uint256)", [A2, 6, A3, 60]),
+    ("join(uint256,address)", [1, A1]),
+    ("join(uint256,address)", [1, A2]),
+    ("join(uint256,address)", [2, A3]),
 ]
 
 
@@ -121,6 +151,8 @@ EXPECT = {
     "allow": 2,        # 2 (owner, spender) pairs
     "nonces": 2,       # struct-valued: A1 -> [2], A2 -> [1]
     "ckpts": 2,        # array-valued: A1 -> 2 elements, A2 -> 1
+    "accts": 2,        # struct holding a mapping: A1 -> [5, {A2: 50}]
+    "members": 2,      # transparent wrapper: 1 -> [[[A1, A2], {A1:1, A2:2}]]
 }
 
 

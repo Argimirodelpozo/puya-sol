@@ -208,7 +208,8 @@ def main():
                 "real_divergences": c["status_div"] + c["value_div"]
                                     + c["event_div"] + c["snapshot_div"]
                                     + c.get("storage_div", 0)
-                                    + c.get("storage_map_div", 0),
+                                    + c.get("storage_map_div", 0)
+                                    + c.get("storage_holder_mismatch", 0),
                 "counts": c,
             })
         except SystemExit as e:

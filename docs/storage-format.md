@@ -45,7 +45,14 @@ and is covered by the same fresh-deployment-only boundary. Tooling must omit
 these transparent steps when constructing paths from solc types/layout.
 
 Key-only aggregate reference parameters/returns must address a whole box,
-including a mapping-entry box. Passing or returning an interior struct/array
+including a mapping-entry box. In practice this rejects, in the default layout
+only, OpenZeppelin idioms that pass an interior aggregate by reference:
+`Checkpoints.push(Trace storage)` (ERC20Votes/Votes on OZ 5.x: `Trace208`
+lives inside the contract's storage and `_insert(self._checkpoints, …)` is an
+interior dynamic-array reference), `EnumerableMap.set` (`map._keys.add(key)`),
+and `f(pools[i])` where the element struct contains a mapping. Compile those
+contracts with `--evm-storage-layout`; the old default lowering silently wrote
+phantom boxes for these shapes. Passing or returning an interior struct/array
 containing mappings would lose either its data location or its holder identity;
 the compiler diagnoses that unsupported handle shape. Direct nested updates,
 local aliases, references to the mapping field itself, and references to the

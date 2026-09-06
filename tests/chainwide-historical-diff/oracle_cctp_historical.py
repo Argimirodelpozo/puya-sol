@@ -776,8 +776,7 @@ class Runner:
             )
             # method_for matches __postInit by arity, so the placeholder source types
             # above deliberately avoid duplicating Solidity-to-ARC widening logic.
-            final, record = self.api.run_with_resources(
-                self.client,
+            final, record = self._run_with_read_budget(
                 state,
                 f"initialize {name}",
                 artifact["source"],
@@ -802,11 +801,48 @@ class Runner:
         self.world.register_application(self.app_spec(app_id, artifact, creator))
         self.world.absorb_current_as(final, app_id)
 
+    def _run_with_read_budget(
+        self, state: Any, name: str, source: str, **fields: Any
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """run_with_resources, re-provisioning box READ budget on demand.
+
+        The prover enforces the chain's box I/O budget (2048 bytes per box
+        reference, consensus v41+): reading pre-existing boxes larger than the
+        referenced budget rejects with ``read budget exceeded (N > M)``. The
+        resource discovery loop only adds *named* references, so a call that
+        reads big boxes (puya-sol page/holder boxes) needs empty budget refs;
+        size them from the prover's own message and retry once.
+        """
+        response, record = self.api.run_with_resources(
+            self.client, state, name, source, **fields
+        )
+        error = str(response.get("error") or "")
+        match = re.search(r"read budget exceeded \((\d+) > (\d+)\)", error)
+        if response.get("result") == "PANIC" and match:
+            need = (int(match.group(1)) + 2047) // 2048 + 1
+            # Distinct dummy names: a reference to an absent box is legal and
+            # adds I/O budget, while the unified access list DEDUPS repeated
+            # empty names (four "" refs collapsed to one 2048-byte budget).
+            # Extend the STATE's tracked references — an explicit box_refs
+            # field would replace them in OracleState.request and hide the
+            # named boxes the discovery loop adds on later attempts.
+            extra = [("ff" * 7) + f"{index:02x}" for index in range(need)]
+            if "box_refs" in fields:
+                fields["box_refs"] = list(fields["box_refs"]) + extra
+            else:
+                for key in extra:
+                    if key not in state.box_refs:
+                        state.box_refs.append(key)
+            response, record = self.api.run_with_resources(
+                self.client, state, name, source, **fields
+            )
+            record["read_budget_refs"] = need
+        return response, record
+
     def run_resources(
         self, name: str, source: str, **fields: Any
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        response, record = self.api.run_with_resources(
-            self.client,
+        response, record = self._run_with_read_budget(
             self.world,
             name,
             source,
@@ -815,10 +851,10 @@ class Runner:
         )
         if (
             response.get("result") == "PANIC"
-            and "access list needs" in response.get("error", "").lower()
+            and ("access list needs" in response.get("error", "").lower()
+                 or "read budget exceeded" in response.get("error", ""))
         ):
-            response, record = self.api.run_with_resources(
-                self.client,
+            response, record = self._run_with_read_budget(
                 self.world,
                 name,
                 source,

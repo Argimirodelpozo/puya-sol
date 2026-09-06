@@ -474,6 +474,10 @@ def read_avm_maps(algod, app_id, arc56, layout, syms, fold, calls=None,
         layout, arc56, box_values, evidence,
         lambda data: hashlib.sha256(data).digest(), fold)
     out = reader.read_maps()
+    holder_mismatch = out.pop("__holder_mismatch__", None) or []
+    if holder_mismatch:
+        print("[avm] ⚠️  holder coordinate mismatch (ARC-56 root key ≠ solc "
+              f"layout): {[m['root'] for m in holder_mismatch][:6]}")
 
     raw_slots = {}
     raw_names = set()
@@ -520,6 +524,8 @@ def read_avm_maps(algod, app_id, arc56, layout, syms, fold, calls=None,
         "raw_slots": len(raw_names),
         "root_boxes": len(roots & set(box_values)),
         "unattributed": len(unexplained),
+        "holder_roots": len(reader.format2_roots),
+        "holder_mismatch": holder_mismatch,
     }
     return out
 

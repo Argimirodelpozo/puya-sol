@@ -42,7 +42,7 @@ _EPOCH_SHIFT_MAX = 365 * 24 * 3600
 # The buckets that mean "a real difference was observed".
 _REAL_BUCKETS = ("status_div", "value_div", "event_div", "snapshot_div",
                  "probe_div", "storage_div", "storage_map_div",
-                 "storage_raw_div")
+                 "storage_raw_div", "storage_holder_mismatch")
 
 _HEX_RE = re.compile(r"^\??0x[0-9a-fA-F]+$")
 
@@ -458,6 +458,14 @@ def diff_case(case_dir: Path) -> dict:
     stray_boxes = a_m.pop("__unattributed_boxes__", 0) or 0
     stray_groups = a_m.pop("__unattributed_box_groups__", {}) or {}
     unsupported = a_m.pop("__unsupported__", []) or []
+    # Holder format 2 keys encode the compiler's solc root coordinate; the AVM
+    # reader recomputes it from solc's own storageLayout. A disagreement is a
+    # derivation divergence in the compiler, not a harness gap.
+    holder_mismatch = (as_.get("coverage") or {}).get("holder_mismatch") or []
+    if holder_mismatch:
+        findings["storage_holder_mismatch"] = [
+            {**item, "note": "compiler root coordinate disagrees with solc storageLayout"}
+            for item in holder_mismatch]
     # COVERAGE, not correctness: a mapping the contract declares but that the EVM
     # side never read is compared against NOTHING, which would otherwise be
     # indistinguishable from "clean". op_gov/_balances and opmint9/_balances were

@@ -21,8 +21,12 @@ them:
 - **AVM leg** — the same source compiled by puya-sol, deployed on LocalNet,
   driven through the same decoded call sequence with the same (mapped) senders.
   Compilable in either storage model: the default **named-cell** model (each
-  state var in its own box/app-global, keys derived by hashing the variable
-  name) or, with `--evm-storage-layout`, the **EVM slot** model
+  state var in its own box/app-global; mapping-containing roots use
+  [holder format 2](../../docs/storage-format.md) — a `@puya-sol/2:` key
+  encoding the solc root coordinate, descendants derived through tagged
+  SHA-256 segments — which `chd_storage.NativeStorageReader` recomputes from
+  solc's own `storageLayout`, so a compiler/solc coordinate disagreement is
+  reported as `storage_holder_mismatch`) or, with `--evm-storage-layout`, the **EVM slot** model
   (`--evm-storage-layout`: one flat `uint256 slot → bytes32` space backed by
   boxes). The slot model makes the storage diff *slot-for-slot* — the same
   layout on both legs, so comparison stops being name-based alignment.
