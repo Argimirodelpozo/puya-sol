@@ -238,6 +238,31 @@ private:
 	/// pendingYulSubroutines. Runs only when no clear emission is in flight.
 	void synthesizePendingClearSubs();
 
+	/// Direction of a whole-array lowering. One layout computation (dynamic-
+	/// chain metrics, generic element shape, element addresses, unroll cap)
+	/// feeds both: reads materialise into `value` with temps queued to `out`
+	/// (= ctx.preEffects()); writes scatter `value` as statements into `out`.
+	struct ArrayDir
+	{
+		bool write;
+		std::shared_ptr<awst::Expression> value;
+		std::vector<std::shared_ptr<awst::Statement>>& out;
+	};
+	bool lowerArrayValue(
+		Addr const& _a, solidity::frontend::ArrayType const* _at, ArrayDir& _d);
+
+	/// Mixed aggregate tree (T[][2][], string[], struct-with-array[]): the
+	/// type-directed loop delegating each element to readAny/writeAny.
+	bool lowerDynArrayGeneric(
+		Addr const& _a,
+		solidity::frontend::ArrayType const* _at,
+		awst::WType const* _arrW,
+		ArrayDir& _d);
+
+	/// Fixed array (len<=64): unrolled per-element recursion off a pinned base.
+	bool lowerFixedArray(
+		Addr const& _a, solidity::frontend::ArrayType const* _at, ArrayDir& _d);
+
 	eb::ContractContext& m_ctx;
 	Context& m_scope;
 	awst::SourceLocation m_loc;
