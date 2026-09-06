@@ -52,10 +52,6 @@ public:
 	static WType const* boxKeyType();
 	static WType const* arc4BoolType();
 
-	/// Force this type to report as immutable, preventing puya's implicit
-	/// mutable arg threading. Used when we handle write-back explicitly.
-	void forceImmutable() { m_immutable = true; }
-
 protected:
 	WType(std::string _name, WTypeKind _kind, bool _immutable = true)
 		: m_name(std::move(_name)), m_kind(_kind), m_immutable(_immutable)

@@ -58,6 +58,20 @@ private:
 	nlohmann::ordered_json serializeCallArg(awst::CallArg const& _arg);
 	nlohmann::ordered_json serializeSubroutineArgument(awst::SubroutineArgument const& _arg);
 	nlohmann::ordered_json serializeBlock(awst::Block const& _block);
+
+	/// Per-node arms of serializeExpression / serializeStatement: fill the
+	/// node-specific fields of `_json`, which already carries the common head
+	/// (_type, source_location and, for expressions, wtype). One overload per
+	/// PUYASOL_AWST_*_NODES entry — the dispatch expands the same lists.
+#define PUYASOL_AWST_DECLARE_SERIALIZE_FIELDS(Node) \
+	void serializeFields(awst::Node const& _node, nlohmann::ordered_json& _json);
+	PUYASOL_AWST_EXPRESSION_NODES(PUYASOL_AWST_DECLARE_SERIALIZE_FIELDS)
+	PUYASOL_AWST_STATEMENT_NODES(PUYASOL_AWST_DECLARE_SERIALIZE_FIELDS)
+#undef PUYASOL_AWST_DECLARE_SERIALIZE_FIELDS
+
+	/// StateGet / StateExists / StateGetEx: their wtype is init=False in Puya
+	/// (derived from field.wtype), so drop it and emit the field.
+	void emitStateField(awst::Expression const& _field, nlohmann::ordered_json& _json);
 };
 
 } // namespace puyasol::json

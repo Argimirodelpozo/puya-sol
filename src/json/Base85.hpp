@@ -18,14 +18,6 @@ namespace puyasol::json
 inline constexpr char const* ALPHABET =
 	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~";
 
-inline int charIndex(char _c)
-{
-	char const* pos = std::find(ALPHABET, ALPHABET + 85, _c);
-	if (pos == ALPHABET + 85)
-		throw std::runtime_error("Invalid base85 character");
-	return static_cast<int>(pos - ALPHABET);
-}
-
 inline std::string base85Encode(std::vector<uint8_t> const& _data)
 {
 	if (_data.empty())
