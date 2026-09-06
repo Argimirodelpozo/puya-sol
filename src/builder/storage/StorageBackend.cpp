@@ -17,10 +17,10 @@ std::shared_ptr<awst::Expression> StorageBackend::emitReadForVar(
 	solidity::frontend::VariableDeclaration const& _var,
 	awst::SourceLocation const& _loc) const
 {
-	auto binding = m_mapper.physicalBindingFor(_var);
 	if (isTransient(_var))
-		return m_transient->buildRead(_var, binding.wtype, _loc);
+		return m_transient->buildRead(_var, _loc);
 
+	auto binding = m_mapper.physicalBindingFor(_var);
 	return m_mapper.createStateRead(binding, _loc);
 }
 

@@ -85,6 +85,22 @@ Residual edge: an EVM identity with 12 leading zero bytes is
 indistinguishable from the `bzero24 ++ appId` contract-value convention
 (probability ~2^-96; such a receiver is treated as a contract).
 
+## Transient words and native addresses
+
+Transient declarations use solc's logical slots and packed offsets. Typed
+address, address-UDVT and contract-value reads/writes preserve their full native
+32-byte representation: the upper 12 bytes are held in private scratch storage,
+outside the logical word. Raw Yul `tload` sees only the canonical packed word;
+`tstore` clears the native-only address bytes for declarations in that word,
+even if it writes back the same word. Other words retain their native bytes.
+This approved adaptation agrees within solc's 160-bit address domain, but a raw
+word round trip cannot preserve an arbitrary full-width AVM address.
+
+The logical blob and address shadow are initialized on every application call
+and shared by internal subroutine calls. They create no persistent cells.
+Declared transient state is limited to five logical words; raw Yul supports
+slots 0–127. These are target capacities, not changes to solc's packing rules.
+
 ## Other standing entries (summaries; see tests' xfail reasons)
 
 - `delegatecall`: rejected by default because there is no AVM analogue. A

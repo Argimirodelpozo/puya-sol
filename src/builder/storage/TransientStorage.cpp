@@ -1,10 +1,10 @@
 #include "builder/storage/TransientStorage.h"
-#include "builder/assembly/AssemblyBuilder.h"
-#include "builder/contract/StateVarWalker.h"
-#include "builder/sol-types/TypeCoercion.h"
-#include "builder/sol-types/SolIntType.h"
-#include "Logger.h"
+#include "builder/storage/SlotWordCodec.h"
+#include "builder/sol-types/EncodedSize.h"
+#include "awst/NameGen.h"
 
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 
 namespace puyasol::builder
@@ -12,117 +12,37 @@ namespace puyasol::builder
 
 using namespace solidity::frontend;
 
-void TransientStorage::collectVars(
-	solidity::frontend::ContractDefinition const& _contract,
-	TypeMapper& _typeMapper)
+void TransientStorage::collectVars(ContractDefinition const& _contract, TypeMapper& _typeMapper)
 {
 	m_scratchSlot = _typeMapper.profile().scratchLayout.transientSlot();
 	m_vars.clear();
-	m_varByName.clear();
 	m_varById.clear();
 	m_totalSlots = 0;
+	m_hasAddressShadow = false;
 
-	// Collect transient vars base-first. Identity is the declaration: two bases may
-	// legitimately declare same-named transient variables and Solidity resolves each
-	// reference to one exact declaration.
-	std::vector<VariableDeclaration const*> allVars;
-	std::set<int64_t> seenIds;
-	forEachStateVarReverse(_contract, [&](auto const* var)
+	for (auto const& [var, slot, offset]:
+		TypeProvider::contract(_contract)->linearizedStateVariables(DataLocation::Transient))
 	{
-		if (var->isConstant() || var->immutable())
-			return;
-		if (var->referenceLocation() != VariableDeclaration::Location::Transient)
-			return;
-		if (!seenIds.insert(var->id()).second)
-			return;
-		allVars.push_back(var);
-	});
-
-	unsigned currentSlot = 0;
-	unsigned currentOffset = 0;
-	bool overflowReported = false;
-	for (auto const* var: allVars)
-	{
-		auto const* solType = var->type();
-		unsigned byteSize = 32;
-		if (solType)
-			byteSize = solType->storageBytes();
-
-		bool isDynamic = false;
-		if (dynamic_cast<MappingType const*>(solType)
-			|| dynamic_cast<ArrayType const*>(solType))
-		{
-			isDynamic = true;
-			byteSize = 32;
-		}
-
-		// AVM addresses are 32-byte public keys (not EVM's 20-byte hashes).
-		// Store at 32B so acct_params_get/balance lookups round-trip;
-		// diverges from Solidity's 20-byte .slot/.offset packing.
-		auto* mappedType = _typeMapper.map(solType);
-		if (dynamic_cast<AddressType const*>(solType))
-			byteSize = 32;
-		// Function pointers: Solidity says 24B but AWST uses a profile-sized byte
-		// layout (external) or uint64 (internal); use AWST width so reads/writes match.
-		if (dynamic_cast<FunctionType const*>(solType))
-		{
-			if (auto const* bwt = dynamic_cast<awst::BytesWType const*>(mappedType))
-			{
-				if (bwt->length().has_value() && *bwt->length() > 0)
-					byteSize = static_cast<unsigned>(*bwt->length());
-			}
-			else if (mappedType == awst::WType::uint64Type())
-				byteSize = 8;
-		}
-
-		// Start a new slot for dynamic, oversized, or spilling vars.
-		if (isDynamic || byteSize > 32 || currentOffset + byteSize > 32)
-		{
-			if (currentOffset > 0)
-				currentSlot++;
-			currentOffset = 0;
-		}
-
-		if (currentSlot >= MAX_SLOTS)
-		{
-			// Transient state overflows the MAX_SLOTS scratch blob; must fail
-			// rather than silently drop vars (nullptr reads/writes = wrong code).
-			// Report once — slots only grow.
-			if (!overflowReported)
-			{
-				Logger::instance().error(
-					"too much transient state: '" + var->name() + "' overflows the "
-					+ std::to_string(MAX_SLOTS) + "-slot ("
-					+ std::to_string(MAX_SLOTS * SLOT_SIZE) + "-byte) transient scratch "
-					"blob. Reduce the number or width of `transient` state variables.");
-				overflowReported = true;
-			}
-			continue;
-		}
-
-		TransientVar tv;
-		tv.name = var->name();
-		tv.declId = var->id();
-		tv.slot = currentSlot;
-		tv.byteOffset = currentOffset;
-		tv.byteSize = byteSize;
-		tv.wtype = mappedType;
-		tv.solType = solType;
-
-		size_t idx = m_vars.size();
-		m_vars.push_back(tv);
-		m_varByName[tv.name] = idx;
-		m_varById[tv.declId] = idx;
-
-		currentOffset += byteSize;
-		if (isDynamic)
-		{
-			currentSlot++;
-			currentOffset = 0;
-		}
+		if (slot >= MAX_SLOTS)
+			throw SizeError("too much transient state: '" + var->name() + "' overflows the "
+				+ std::to_string(MAX_SLOTS) + "-slot transient declaration capacity");
+		auto const* type = var->type();
+		unsigned size = type->storageBytes();
+		if (!type->isValueType() || !size || size > SLOT_SIZE || offset > SLOT_SIZE - size)
+			throw SizeError("unsupported transient scalar layout for '" + var->name() + "'");
+		auto const* native = _typeMapper.map(type);
+		TransientVar info;
+		info.slot = checkedSize<unsigned>(slot, "transient logical slot");
+		info.byteOffset = offset;
+		info.byteSize = size;
+		info.wtype = native;
+		info.solType = type;
+		info.hasAddressShadow = native == awst::WType::accountType() && size == 20;
+		m_hasAddressShadow |= info.hasAddressShadow;
+		m_totalSlots = std::max(m_totalSlots, info.slot + 1);
+		m_varById.emplace(var->id(), m_vars.size());
+		m_vars.push_back(info);
 	}
-
-	m_totalSlots = (currentOffset > 0) ? currentSlot + 1 : currentSlot;
 }
 
 bool TransientStorage::isTransient(VariableDeclaration const& _var) const
@@ -133,141 +53,43 @@ bool TransientStorage::isTransient(VariableDeclaration const& _var) const
 TransientStorage::TransientVar const* TransientStorage::getVarInfoById(int64_t _declId) const
 {
 	auto it = m_varById.find(_declId);
-	return (it != m_varById.end()) ? &m_vars[it->second] : nullptr;
+	return it != m_varById.end() ? &m_vars[it->second] : nullptr;
 }
 
 namespace
 {
-	std::shared_ptr<awst::Expression> loadTransientBlob(
-		int _scratchSlot, awst::SourceLocation const& _loc)
-	{
-		return awst::makeLoadSlot(_scratchSlot, _loc);
-	}
+unsigned bytePosition(TransientStorage::TransientVar const& info)
+{
+	// Solc offsets start at the low end; each scratch word is big-endian.
+	return info.slot * 32 + 32 - info.byteOffset - info.byteSize;
+}
 
-	/// Extract byteSize bytes from the transient blob at absByte.
-	std::shared_ptr<awst::Expression> extractBytes(
-		int _scratchSlot, unsigned absByte, unsigned byteSize,
-		awst::SourceLocation const& _loc)
-	{
-		auto blob = loadTransientBlob(_scratchSlot, _loc);
-		return awst::makeExtract(
-			std::move(blob),
-			static_cast<int>(absByte), static_cast<int>(byteSize), _loc);
-	}
+std::shared_ptr<awst::Statement> replaceScratch(
+	int slot, unsigned offset, std::shared_ptr<awst::Expression> bytes,
+	awst::SourceLocation const& loc)
+{
+	auto replacement = awst::makeReplace3(awst::makeLoadSlot(slot, loc),
+		awst::makeIntegerConstant(offset, loc), std::move(bytes), loc);
+	return awst::makeExpressionStatement(awst::makeStoreSlot(slot, std::move(replacement), loc), loc);
+}
 }
 
 std::shared_ptr<awst::Expression> TransientStorage::buildRead(
-	VariableDeclaration const& _var, awst::WType const* _type,
+	VariableDeclaration const& _var,
 	awst::SourceLocation const& _loc) const
 {
 	auto const* info = getVarInfoById(_var.id());
-	if (!info)
-		return nullptr;
-
-	// byteOffset is from the low (LSB) end; blob stores slot S at big-endian
-	// bytes [S*32..S*32+32), so absByte = S*32 + (32 - byteOffset - byteSize).
-	unsigned absByte = info->slot * SLOT_SIZE + (SLOT_SIZE - info->byteOffset - info->byteSize);
-	unsigned sz = info->byteSize;
-
-	// uint64/bool: extract ≤8 bytes and btoi.
-	if (_type == awst::WType::uint64Type() || _type == awst::WType::boolType())
+	if (!info) return nullptr;
+	auto raw = awst::makeExtract(awst::makeLoadSlot(m_scratchSlot, _loc),
+		bytePosition(*info), info->byteSize, _loc);
+	if (info->hasAddressShadow)
 	{
-		unsigned readSize = sz <= 8 ? sz : 8;
-		auto raw = extractBytes(m_scratchSlot, absByte, readSize, _loc);
-		auto btoi = awst::makeBtoi(std::move(raw), _loc);
-		// bool: btoi gives uint64; compare != 0 for callers expecting bool (e.g. `!lock`).
-		if (_type == awst::WType::boolType())
-		{
-			auto zero = awst::makeZero(_loc);
-			return awst::makeNumericCompare(
-				std::move(btoi), awst::NumericComparison::Ne, std::move(zero), _loc);
-		}
-		// Sub-64 signed: the cell holds byteSize-truncated TC (write side
-		// truncates), but the uint64 carrier convention is 64-bit TC —
-		// re-extend from the declared width (same rule as SlotWordCodec;
-		// this branch previously returned the raw btoi, so a transient
-		// int32 x = -1 read back as +4294967295).
-		std::shared_ptr<awst::Expression> result = std::move(btoi);
-		if (auto it = SolIntType::fromSol(info->solType);
-			it && it->isSigned && it->bits < 64)
-			result = TypeCoercion::signExtendToUint64(std::move(result), it->bits, _loc);
-		return result;
+		auto high = awst::makeExtract(awst::makeLoadSlot(addressShadowSlot(), _loc),
+			info->slot * 12, 12, _loc);
+		return awst::makeAsAccount(awst::makeConcat(std::move(high), std::move(raw), _loc), _loc);
 	}
-
-	// biguint: extract sz bytes and reinterpret (leading-zero-invariant).
-	if (_type == awst::WType::biguintType())
-	{
-		auto raw = extractBytes(m_scratchSlot, absByte, sz, _loc);
-		std::shared_ptr<awst::Expression> bg = awst::makeAsBiguint(std::move(raw), _loc);
-		// Sign-extend signed sub-256 (e.g. int128) to canonical 256-bit on read.
-		// No-op for unsigned/int256/non-integer (see TypeCoercion).
-		return TypeCoercion::signExtendSignedElement(std::move(bg), info->solType, _loc);
-	}
-
-	// Account: stored as 20B (EVM layout), AVM needs 32B; left-pad 12 zeros.
-	if (_type == awst::WType::accountType() && sz < 32)
-	{
-		auto raw = extractBytes(m_scratchSlot, absByte, sz, _loc);
-		auto cat = awst::makeLeftPad(std::move(raw), 32 - sz, _loc);
-		return awst::makeAsAccount(std::move(cat), _loc);
-	}
-
-	// Default (e.g. bytesN): raw bytes; reinterpret to requested type.
-	auto raw = extractBytes(m_scratchSlot, absByte, sz, _loc);
-	if (_type && _type != awst::WType::bytesType())
-		return awst::makeReinterpretCast(std::move(raw), _type, _loc);
-	return raw;
-}
-
-namespace
-{
-	/// Truncate value to byteSize bytes for writing into a packed transient slot.
-	std::shared_ptr<awst::Expression> truncateToBytes(
-		std::shared_ptr<awst::Expression> _value,
-		unsigned byteSize,
-		awst::SourceLocation const& _loc)
-	{
-		bool isUint64 = (_value->wtype == awst::WType::uint64Type());
-		bool isBool = (_value->wtype == awst::WType::boolType());
-
-		std::shared_ptr<awst::Expression> raw;
-
-		if (isUint64 || isBool)
-		{
-			// itob → 8 big-endian bytes; pad or truncate to byteSize.
-			auto itob = awst::makeItob(std::move(_value), _loc);
-			if (byteSize >= 8)
-				raw = awst::makeLeftPad(std::move(itob), byteSize - 8, _loc);
-			else
-				raw = awst::makeExtract(std::move(itob),
-					static_cast<int>(8 - byteSize), static_cast<int>(byteSize), _loc);
-		}
-		else if (_value->wtype == awst::WType::biguintType())
-		{
-			// Pad to 32B (biguint may be shorter), then extract trailing byteSize bytes.
-			auto bytesView = awst::makeAsBytes(std::move(_value), _loc);
-			auto padded = awst::makeZeroExtendToN(std::move(bytesView), 32, _loc);
-			raw = awst::makeExtract(std::move(padded),
-				static_cast<int>(32 - byteSize), static_cast<int>(byteSize), _loc);
-		}
-		else if (_value->wtype == awst::WType::accountType() && byteSize < 32)
-		{
-			// AVM account is 32B; drop leading (32-byteSize) bytes to match EVM layout.
-			auto bytesView = awst::makeAsBytes(std::move(_value), _loc);
-			raw = awst::makeExtract(
-				std::move(bytesView),
-				static_cast<int>(32 - byteSize), static_cast<int>(byteSize), _loc);
-		}
-		else
-		{
-			// Already raw bytes (e.g. bytesN); reinterpret to bytes, assume width matches.
-			if (_value->wtype != awst::WType::bytesType())
-				_value = awst::makeAsBytes(std::move(_value), _loc);
-			raw = std::move(_value);
-		}
-
-		return raw;
-	}
+	return SlotWordCodec::packedBytesToNative(std::move(raw), info->wtype,
+		info->solType, info->byteSize, _loc);
 }
 
 std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
@@ -275,26 +97,39 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 	awst::SourceLocation const& _loc) const
 {
 	auto const* info = getVarInfoById(_var.id());
-	if (!info)
-		return nullptr;
+	if (!info) return nullptr;
+	auto body = awst::makeBlock(_loc);
+	if (info->hasAddressShadow)
+	{
+		// A typed address supplies two buffers; pin once even if the source is
+		// effectful. The shadow is private scratch, not a transient logical slot.
+		auto name = "__transient_address_" + std::to_string(awst::NameGen::next("TransientStorage.address"));
+		auto value = awst::makeVarExpression(name, info->wtype, _loc);
+		body->body.push_back(awst::makeAssignmentStatement(value, std::move(_value), _loc));
+		_value = value;
+		body->body.push_back(replaceScratch(addressShadowSlot(), info->slot * 12,
+			awst::makeExtract(awst::makeAsBytes(value, _loc), 0, 12, _loc), _loc));
+	}
+	body->body.push_back(replaceScratch(m_scratchSlot, bytePosition(*info),
+		SlotWordCodec::nativeToPackedBytes(std::move(_value), info->wtype, info->byteSize, _loc), _loc));
+	return body;
+}
 
-	// byteOffset is low-end; write to the tail of the slot (same offset formula as buildRead).
-	unsigned absByte = info->slot * SLOT_SIZE + (SLOT_SIZE - info->byteOffset - info->byteSize);
-
-	auto raw = truncateToBytes(std::move(_value), info->byteSize, _loc);
-
-	auto blobRead = loadTransientBlob(m_scratchSlot, _loc);
-
-	// replace2(blob, raw) with compile-time absByte immediate.
-	auto replace = awst::makeIntrinsicCall("replace2", awst::WType::bytesType(), _loc);
-	replace->immediates = {static_cast<int>(absByte)};
-	replace->stackArgs.push_back(std::move(blobRead));
-	replace->stackArgs.push_back(std::move(raw));
-
-	auto storeOp = awst::makeStoreSlot(
-		m_scratchSlot, std::move(replace), _loc);
-
-	return awst::makeExpressionStatement(std::move(storeOp), _loc);
+void TransientStorage::clearAddressShadowForWord(
+	std::shared_ptr<awst::Expression> const& _slot,
+	std::vector<std::shared_ptr<awst::Statement>>& _out,
+	awst::SourceLocation const& _loc) const
+{
+	for (auto const& info: m_vars)
+		if (info.hasAddressShadow)
+		{
+			auto matches = awst::makeNumericCompare(_slot, awst::NumericComparison::Eq,
+				awst::makeIntegerConstant(info.slot, _loc, awst::WType::biguintType()), _loc);
+			auto clear = awst::makeBlock(_loc);
+			clear->body.push_back(replaceScratch(addressShadowSlot(), info.slot * 12,
+				awst::makeBzero(12, _loc), _loc));
+			_out.push_back(awst::makeIfElse(std::move(matches), std::move(clear), nullptr, _loc));
+		}
 }
 
 } // namespace puyasol::builder

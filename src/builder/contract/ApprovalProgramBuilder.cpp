@@ -641,20 +641,11 @@ void ContractBuilder::emitConstructorPlan(
 void ContractBuilder::emitTransientBlobInit(
 	awst::Block& body, awst::SourceLocation const& loc)
 {
-{
-	unsigned blobBytes = m_transientStorage.blobSize();
-	if (blobBytes < AssemblyBuilder::SLOT_SIZE)
-		blobBytes = AssemblyBuilder::SLOT_SIZE;
-
-	auto storeOp = awst::makeStoreSlot(
-		m_typeMapper.profile().scratchLayout.transientSlot(),
-		awst::makeBzero(blobBytes, loc),
-		loc);
-
-	auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), loc);
-	body.body.push_back(std::move(exprStmt));
-}
-
+	body.body.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(
+		m_transientStorage.scratchSlot(), awst::makeBzero(AssemblyBuilder::SLOT_SIZE, loc), loc), loc));
+	if (auto size = m_transientStorage.addressShadowSize())
+		body.body.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(
+			m_transientStorage.addressShadowSlot(), awst::makeBzero(size, loc), loc), loc));
 }
 
 /// buildApprovalProgram phase: init EVM memory blobs BEFORE the create/dispatch split so ctor body's `T memory t;` locals (FMP …

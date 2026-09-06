@@ -191,9 +191,9 @@ def test_transient_state_variable_slot_inline_assembly(harness):
     # g() -> 1, 0
     r = harness.call(app, "g()")
     assert tuple(as_int(x) for x in r.abi_return) == (1, 0)
-    # h() -> 2, 0
+    # h() -> 1, 1: canonical solc layout; native address high bytes are separate.
     r = harness.call(app, "h()")
-    assert tuple(as_int(x) for x in r.abi_return) == (2, 0)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 1)
 
 def test_transient_state_variable_slots_and_offsets(harness):
     """variables/contracts/transient_state_variable_slots_and_offsets.sol"""

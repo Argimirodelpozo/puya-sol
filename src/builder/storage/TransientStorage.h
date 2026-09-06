@@ -19,44 +19,40 @@ namespace puyasol::builder
 /// AVM: packed into the scratch slot right after the memory pages (bzero'd
 /// in the approval preamble). Scratch is per-txn, so the blob clears
 /// between top-level app calls and persists across callsub within one call.
-/// Packing rules match StorageLayout.cpp (same slot-sharing / alignment).
+/// Logical slots/offsets come directly from solc's transient layout. Native
+/// address high bytes live in a separate shadow, never in a logical word.
 /// buildRead/buildWrite emit load/store intrinsics directly so writes
 /// aren't DCE'd and are visible to callsub frames within the same call.
 class TransientStorage
 {
 public:
 	static constexpr unsigned SLOT_SIZE = 32; // bytes per slot (EVM word)
-	static constexpr unsigned MAX_SLOTS = 5;  // blob = 5 * 32 = 160 bytes
+	static constexpr unsigned MAX_SLOTS = 5;  // declared logical words; raw Yul has 128
 
 	struct TransientVar
 	{
-		std::string name;
-		int64_t declId;
 		unsigned slot;       // transient-namespace slot (independent from regular storage)
 		unsigned byteOffset; // byte offset within the slot
 		unsigned byteSize;   // width in bytes
+		bool hasAddressShadow = false;
 		awst::WType const* wtype;
-		// Kept for buildRead sign-extension of signed sub-256 (e.g. int128).
+		// Canonical scalar facts for the shared word codec, including UDVTs.
 		// Owned by the Solidity AST (lifetime = compilation).
 		solidity::frontend::Type const* solType = nullptr;
 	};
 
-	/// Collect transient vars and compute packed layout. Also latches the
+	/// Collect solc's transient declarations and packed layout. Also latches the
 	/// scratch slot the blob lives in — the slot right after the memory pages,
 	/// so it depends on --evm-memory-slots (ScratchLayout::transientSlot).
 	void collectVars(solidity::frontend::ContractDefinition const& _contract, TypeMapper& _typeMapper);
 
 	/// Scratch slot holding the packed transient blob.
 	int scratchSlot() const { return m_scratchSlot; }
+	int addressShadowSlot() const { return ScratchLayout::transientAddressShadowSlot; }
+	unsigned addressShadowSize() const { return m_hasAddressShadow ? m_totalSlots * 12 : 0; }
 
 	/// True if the contract has any transient variables.
 	bool hasTransientVars() const { return !m_vars.empty(); }
-
-	/// Slot count (independent from regular storage).
-	unsigned totalSlots() const { return m_totalSlots; }
-
-	/// Blob size in bytes (totalSlots * 32).
-	unsigned blobSize() const { return m_totalSlots * SLOT_SIZE; }
 
 	/// True iff _var is a tracked transient state variable.
 	bool isTransient(solidity::frontend::VariableDeclaration const& _var) const;
@@ -69,7 +65,6 @@ public:
 	/// distinct transient variables with the same source name.
 	std::shared_ptr<awst::Expression> buildRead(
 		solidity::frontend::VariableDeclaration const& _var,
-		awst::WType const* _type,
 		awst::SourceLocation const& _loc) const;
 
 	/// Write statement for a transient variable (truncates to declared byte width).
@@ -78,12 +73,20 @@ public:
 		std::shared_ptr<awst::Expression> _value,
 		awst::SourceLocation const& _loc) const;
 
+	/// A raw word write replaces the complete logical slot, so any address in
+	/// it becomes a zero-extended EVM-domain address. Other slots keep their
+	/// native high bytes. `_slot` must already be pinned by the caller.
+	void clearAddressShadowForWord(
+		std::shared_ptr<awst::Expression> const& _slot,
+		std::vector<std::shared_ptr<awst::Statement>>& _out,
+		awst::SourceLocation const& _loc) const;
+
 private:
 	int m_scratchSlot = 5;
 	std::vector<TransientVar> m_vars;
-	std::map<std::string, size_t> m_varByName;
 	std::map<int64_t, size_t> m_varById;
 	unsigned m_totalSlots = 0;
+	bool m_hasAddressShadow = false;
 };
 
 } // namespace puyasol::builder

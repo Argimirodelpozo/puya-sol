@@ -340,7 +340,7 @@ std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 		if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
 			&& ts.isTransient(*var))
 		{
-			readExpr = ts.buildRead(*var, readType, loc);
+			readExpr = ts.buildRead(*var, loc);
 		}
 		if (!readExpr)
 			readExpr = sm.createStateRead(

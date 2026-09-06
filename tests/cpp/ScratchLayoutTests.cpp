@@ -46,6 +46,9 @@ int main()
 	ok &= require(maximum.memoryLast() == 87
 			&& maximum.flashLast() == 98,
 		"maximum CLI layout does not preserve its reserved slots");
+	ok &= require(ScratchLayout::transientAddressShadowSlot > maximum.flashLast()
+		&& ScratchLayout::transientAddressShadowSlot < 100,
+		"transient address shadow overlaps memory/flash or splitter slots");
 
 	for (int invalid: {0, 89})
 	{

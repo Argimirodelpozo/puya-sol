@@ -40,6 +40,7 @@ namespace puyasol::builder
 {
 
 struct PreparedAssembly;
+class TransientStorage;
 
 /// Builds AWST nodes from Yul inline assembly blocks.
 ///
@@ -188,6 +189,7 @@ public:
 	/// because the number now depends on --evm-memory-slots; the historical
 	/// FLASH_SCRATCH_* constants were consumed by nothing and are gone.
 	int transientSlot() const { return scratchLayout().transientSlot(); }
+	void setTransientStorage(TransientStorage const* _storage) { m_transientStorage = _storage; }
 
 	/// Share the enclosing FUNCTION's seeded-calldata-pointer set across this
 	/// function's per-block AssemblyBuilders (each block constructs a fresh
@@ -604,13 +606,13 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Yul tload(slot): load from transient storage → global state read.
+	/// Yul tload(slot): read a canonical word from transient scratch.
 	std::shared_ptr<awst::Expression> handleTload(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc
 	);
 
-	/// Yul tstore(slot, value): store to transient storage → global state write.
+	/// Yul tstore(slot, value): write transient scratch and invalidate its address shadow.
 	void handleTstore(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc,
@@ -1101,6 +1103,7 @@ public:
 	}
 
 private:
+	TransientStorage const* m_transientStorage = nullptr;
 	std::map<std::string, awst::WType const*> m_boxKeyStructParams;
 
 	solidity::frontend::Type const* calldataSolType(std::string const& _name) const

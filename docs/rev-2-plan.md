@@ -1,11 +1,10 @@
 # rev-2: sol-types and storage implementation plan
 
-Status: in progress. F1, F2, F4, F5, F7, F8, F9, R1 and R2 are implemented and checkpoint-test
-verified. R3's binding/lifecycle portion is implemented. The latest full suite
+Status: in progress. F1, F2, F4, F5, F6, F7, F8, F9 and R1–R3 are implemented and checkpoint-test
+verified. The latest full suite
 has no failures beyond the known Puya DCE divide-by-zero bug; F9's premature
-huge-array diagnostics are resolved. F3, F6 and the remaining R3 codec cleanup
-remain to be implemented under the approved compatibility/native-representation
-decisions below.
+huge-array diagnostics are resolved. F3 remains to be implemented under the
+approved fresh-deployment-only compatibility decision below.
 Final verification remains pending until those changes are complete.
 
 Branch: `rev-2`, based on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`.
@@ -162,16 +161,16 @@ box extraction with no existence/default handling in generated TEAL.
 
 ### F6 — Unify transient scalar representation and packing
 
-- [ ] Consume solc's transient logical layout, rather than independently
+- [x] Consume solc's transient logical layout, rather than independently
   reconstructing inheritance order and packed offsets in
   [TransientStorage.cpp](../src/builder/storage/TransientStorage.cpp).
-- [ ] Resolve UDVT underlying types consistently. Distinguish logical Solidity
+- [x] Resolve UDVT underlying types consistently. Distinguish logical Solidity
   width from native physical width for addresses, contract values and function
   pointers using the same representation facts as other storage backends.
-- [ ] Reuse [SlotWordCodec](../src/builder/storage/SlotWordCodec.h) for canonical
+- [x] Reuse [SlotWordCodec](../src/builder/storage/SlotWordCodec.h) for canonical
   word packing/unpacking. Keep any native-width/shadow adaptation explicit;
   blindly applying a 20-byte codec to a native address is not sufficient.
-- [ ] Test direct and wrapped values, signed widths, bytes alignment, inheritance,
+- [x] Test direct and wrapped values, signed widths, bytes alignment, inheritance,
   neighboring packed values, high-level/Yul agreement, and transient lifetime
   across supported call boundaries in both ABI profiles.
 
@@ -187,7 +186,7 @@ address bytes for declarations in the affected slot. This agrees with solc
 within its 160-bit address domain but changes raw-word round trips for full-width
 AVM addresses. No persistent cells or ledger migration are involved. Do not
 truncate native typed addresses; the adaptation and canonical transient-layout
-switch are not implemented yet.
+switch are implemented and covered by the tests in checkpoint 9.
 
 ### F7 — Exclude transient declarations from persistent initialization
 
@@ -284,17 +283,18 @@ types do not alias, and the handwritten identity-suffix recursion is removed.
 - [x] Have initialization, reads/writes, reference passing, getters and schema
   generation consume the same facts. Runtime mapping entries still carry their
   own keys and existence state; declaration metadata alone cannot prove existence.
-- [ ] Replace lifecycle guesses based on raw AWST expression shape where the
+- [x] Replace lifecycle guesses based on raw AWST expression shape where the
   new facts apply. Reuse the canonical word codec for transient operations.
-- [ ] Remove redundant name/type arguments, unused name-index maps and duplicate
+- [x] Remove redundant name/type arguments, unused name-index maps and duplicate
   default/packing logic once all affected consumers and tests are migrated.
 
 Acceptance: the initial refactor preserves layout and behavior byte-for-byte;
 intentional fixes are separate, test-backed changes. Do not remove backend
 workarounds merely because they appear repetitive or reference stale documents.
 
-The binding/lifecycle portion and fixed-width missing-box reads are implemented;
-transient codec consolidation and its obsolete name index remain with F6.
+Bindings, explicit declaration origins, fixed-width missing-box reads and
+transient codec consolidation are implemented. The transient name index,
+duplicate scalar codec and redundant read-type argument are removed.
 
 ## Persisted-storage compatibility gate
 
@@ -313,7 +313,6 @@ deployment, even when the new behavior agrees better with Solidity.
   locations. Any migration of deployed state is a separate authorized task.
 - [ ] Update ARC-56 metadata, related tooling and documentation with the decision.
 
-Unrelated fixes and the format design can proceed while this decision is pending.
 F3 is not complete merely because its design is written down.
 
 On 2026-09-06 the user approved a fresh-deployment-only format break. Existing
@@ -566,6 +565,44 @@ the two small fixed controls remain globals. A deferred-constructor flag is
 added where array-box initialization requires it. This is an approved
 fresh-deployment-only placement change, not an upgrade/migration path. EVM
 slot-mode persistent keys are unchanged.
+
+The subsequent regression/storage selection passed **563 tests**, with one
+failure and two existing xfails in 192.31 seconds. Report:
+`/tmp/puyasol-rev-2-function-shape-regressions.xml`. The only failure was the
+unchanged pinned-Puya DCE divide-by-zero regression.
+
+### Checkpoint 9 — canonical transient words with native address preservation
+
+Solc's transient layout now supplies inheritance order, full logical slots and
+packed offsets. Typed scalar reads/writes share `SlotWordCodec`; 32-byte native
+addresses (direct, UDVT and contract values) keep their high bytes in scratch 99,
+outside the logical word. Raw `tstore` pins its slot argument once and clears
+only the corresponding native shadow. The reservation is safe even at the
+maximum 88 memory pages and creates no persistent schema entries.
+
+State function-pointer calls and qualified state-value reads now use the normal
+storage dispatch, fixing transient callbacks that previously read absent globals.
+The existing transient inline-assembly fixture's address/bool layout expectation
+is restored from `(2, 0)` to solc's `(1, 1)`; no xfail/XPASS markers changed.
+
+All 19 native CTests passed (8.98 seconds). The transient/variable selection
+passed **35 tests** in 262.13 seconds; report:
+`/tmp/puyasol-rev-2-transient-words-second.xml`. The expanded assembly/function/
+variable/storage selection passed **193 tests**, with 8 existing xfails and
+3 existing xpasses, in 359.64 seconds; report:
+`/tmp/puyasol-rev-2-transient-words-broad.xml`.
+
+Runtime cases cover both ABI, storage and code-generation profiles, exact zero
+schemas, direct and wrapped addresses, signed widths, fixed bytes, internal and
+external function pointers, contract values, inherited layout, packed neighbors,
+raw word reads/writes, evaluation-once and reset across application calls.
+Solc 0.8.34/Cancun confirmed logical layout and EVM-domain runtime expectations,
+legacy pipeline with optimization disabled. Full native `Txn.sender` preservation
+and shadow invalidation are asserted directly on AVM in both ABI profiles, not
+claimed as an EVM byte-for-byte comparison. After removing unused metadata and
+the redundant transient read-type argument, the final rebuilt checkpoint passed
+all 19 native tests (4.42 seconds) and **59 semantic tests**, including public
+getters, in 100.77 seconds; report: `/tmp/puyasol-rev-2-transient-cleanup.xml`.
 
 ### Baseline and remaining gates
 

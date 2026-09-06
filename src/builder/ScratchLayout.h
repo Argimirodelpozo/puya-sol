@@ -37,6 +37,9 @@ public:
 	static constexpr int defaultMemorySlots = 5;
 	/// flashLast() must stay below the splitter's slot range (100).
 	static constexpr int maxMemorySlots = 88;
+	/// Separate native address high bytes; below splitter 100, above every
+	/// supported memory/transient/flash reservation. Reserved only when used.
+	static constexpr int transientAddressShadowSlot = 99;
 
 	explicit ScratchLayout(int _memorySlots = defaultMemorySlots)
 		: m_memorySlots(_memorySlots)

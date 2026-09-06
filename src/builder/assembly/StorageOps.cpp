@@ -7,6 +7,7 @@
 /// of SignedOps.cpp was storage rather than signed arithmetic.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/storage/TransientStorage.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -156,7 +157,9 @@ void AssemblyBuilder::handleTstore(
 	// replace3(transient blob, slot*32, zeroExtend(value, 32)).
 	if (_args.size() < 2) return;
 
-	auto slot = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
+	auto slot = awst::makeVarExpression("__tstore_slot_" + std::to_string(
+		awst::NameGen::next("AssemblyBuilder.tstoreSlot")), awst::WType::biguintType(), _loc);
+	_out.push_back(awst::makeAssignmentStatement(slot, ensureBiguint(_args[0], _loc), _loc));
 	emitTransientSlotBound(slot, _loc, _out);
 	auto value = ensureBiguint(_args[1], _loc);
 	auto slotU64 = safeBtoi(slot, _loc);
@@ -168,6 +171,8 @@ void AssemblyBuilder::handleTstore(
 	// Direct scratch write: side-effectful, can't be DCE'd, persists across callsub.
 	_out.push_back(awst::makeExpressionStatement(
 		awst::makeStoreSlot(transientSlot(), std::move(replace), _loc), _loc));
+	if (m_transientStorage)
+		m_transientStorage->clearAddressShadowForWord(slot, _out, _loc);
 }
 
 

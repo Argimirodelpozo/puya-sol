@@ -6,7 +6,7 @@
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
-#include "builder/storage/StorageMapper.h"
+#include "builder/storage/StorageBackend.h"
 #include "Logger.h"
 #include <libsolidity/ast/AST.h>
 
@@ -52,10 +52,7 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 					return bytesLike ? low.readBytesValue(*addr) : low.readValue(*addr);
 				}
 			}
-			auto* wtype = m_ctx.typeMapper.map(varDecl->type());
-			auto binding = m_ctx.storageMapper.physicalBindingFor(*varDecl);
-			return m_ctx.storageMapper.createStateRead(
-				binding.name, wtype, binding.kind, m_loc);
+			return m_ctx.storageBackend->emitReadForVar(*varDecl, m_loc);
 		}
 	}
 

@@ -669,6 +669,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// EVM-memory scratch slots (default 0-4; raisable via
 	// --evm-memory-slots) plus transient + flash-accounting slots.
 	contract->reservedScratchSpace = m_typeMapper.profile().scratchLayout.reservedSlots();
+	if (m_transientStorage.addressShadowSize())
+		contract->reservedScratchSpace.push_back(m_transientStorage.addressShadowSlot());
 
 	collectSuperCallMetadata(_contract);
 

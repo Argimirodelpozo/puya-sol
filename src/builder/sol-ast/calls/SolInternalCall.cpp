@@ -28,6 +28,7 @@
 #include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/StorageBackend.h"
 #include "builder/storage/StoragePlace.hpp"
 #include "Logger.h"
 
@@ -918,26 +919,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 
 				std::shared_ptr<awst::Expression> ptrExpr;
 				if (varDecl->isStateVariable())
-				{
-					// Slot mode: the write lowered to a slot, so the read must
-					// too (absent slot reads 0 → uninitialised-call panic, same
-					// as EVM). typeMapper maps FunctionType to ptrWType exactly.
-					if (m_ctx.typeMapper.profile().evmStorageLayout && !varDecl->isConstant()
-						&& !varDecl->immutable()
-						&& varDecl->referenceLocation()
-							!= VariableDeclaration::Location::Transient)
-					{
-						EvmSlotLowering low(m_ctx, m_scope, m_loc);
-						auto addr = low.addrForStateVar(*varDecl);
-						if (!addr)
-							return nullptr;
-						ptrExpr = low.readValue(*addr);
-					}
-					else
-						ptrExpr = m_ctx.storageMapper.createStateRead(
-							name, ptrWType,
-							awst::AppStorageKind::AppGlobal, m_loc);
-				}
+					// The normal identifier reader owns persistent/transient/slot
+					// dispatch and declaration identity; callable values are no exception.
+					ptrExpr = buildExpr(_ident);
 				else
 				{
 					// Read local by mangled AWST name (name__<declId>; bare reads
@@ -1113,13 +1097,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 							ptrExpr = low.readValue(*addr);
 						}
 						else
-						{
-							auto binding =
-								m_ctx.storageMapper.physicalBindingFor(*varDecl);
-							ptrExpr = m_ctx.storageMapper.createStateRead(
-								binding.name, awst::WType::uint64Type(),
-								binding.kind, m_loc);
-						}
+							ptrExpr = m_ctx.storageBackend->emitReadForVar(*varDecl, m_loc);
 
 						std::vector<std::shared_ptr<awst::Expression>> args;
 						for (auto const& arg : m_call.arguments())
