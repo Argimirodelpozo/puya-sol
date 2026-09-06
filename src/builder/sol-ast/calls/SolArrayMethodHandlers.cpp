@@ -187,8 +187,16 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		if (fromAssign)
 			return e;
 
-		m_ctx.queuePostExpression(std::move(e), m_loc);
-		return awst::makeVoidConstant(m_loc);
+		// The extend runs before the enclosing statement and the call yields
+		// the new element's reference, so `arr.push().field = v` works on a
+		// state-variable array as it does on the boxed/alias/chained paths.
+		m_ctx.queuePreExpression(std::move(e), m_loc);
+		auto lastIndex = awst::makeUInt64BinOp(
+			awst::makeArrayLength(writeExpr, awst::WType::uint64Type(), m_loc),
+			awst::UInt64BinaryOperator::Sub,
+			awst::makeIntegerConstant("1", m_loc),
+			m_loc);
+		return awst::makeIndexExpression(writeExpr, std::move(lastIndex), elemType, m_loc);
 	}
 	else if (_memberName == "pop")
 		return awst::makeArrayPopDecode(writeExpr, elemType, rawElemType, m_loc);

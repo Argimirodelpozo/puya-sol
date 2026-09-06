@@ -12,6 +12,7 @@
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "Logger.h"
+#include "awst/NameGen.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -103,7 +104,64 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 		return awst::makeAsBytes(std::move(holder.key), m_loc);
 	}
 
-	auto base = buildExpr(baseExpression());
+	std::shared_ptr<awst::Expression> base;
+	// `_p(id).n` where `_p` returns a mapping-value struct reference: the callee
+	// hands back the entry's BOX KEY (bytes-keyed storage-ref return). Wrap it
+	// as the box value `ps[id]` lowers to, so member reads and writes address
+	// the entry — bare bytes had no members (reads yielded nothing, writes
+	// were rejected as constants).
+	if (auto const* call = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpression());
+		call && !m_ctx.typeMapper.profile().evmStorageLayout)
+	{
+		solidity::frontend::FunctionDefinition const* callee = nullptr;
+		if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&call->expression()))
+			callee = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+				ident->annotation().referencedDeclaration);
+		if (callee && m_ctx.currentContract && callee->virtualSemantics()
+			&& !callee->isFree())
+			callee = &callee->resolveVirtual(*m_ctx.currentContract);
+		if (callee && builder::storageRefReturnIsBytesKeyed(callee, m_ctx.typeMapper.analysis()))
+		{
+			// Pin the returned key: a box key must be a plain value, not a call.
+			std::string keyName = "__ref_key_"
+				+ std::to_string(awst::NameGen::next("SolFieldAccess.refKey"));
+			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(keyName, awst::WType::bytesType(), m_loc),
+				buildExpr(baseExpression()), m_loc));
+			auto key = awst::makeReinterpretCast(
+				awst::makeVarExpression(keyName, awst::WType::bytesType(), m_loc),
+				awst::WType::boxKeyType(), m_loc);
+			auto const* wt = m_ctx.typeMapper.map(baseExpression().annotation().type);
+			base = awst::makeBoxValueExpression(std::move(key), wt, m_loc);
+			if (!m_memberAccess.annotation().willBeWrittenTo)
+				base = StorageMapper::makeStateGetWithDefault(std::move(base), wt, m_loc);
+		}
+	}
+	if (!base)
+	{
+		// A storage reference returned by a call that is NOT box-keyed (a
+		// top-level struct root) arrives as a value copy; writing through it
+		// would be dropped, and puya rejects the call as an lvalue base with an
+		// unreadable deserialization error. Fail loud with the working form.
+		// Only user functions: a builtin such as `arr.push()` also arrives as a
+		// FunctionCall and yields a real element reference.
+		auto const* call = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpression());
+		solidity::frontend::FunctionDefinition const* userCallee = nullptr;
+		if (call)
+			if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&call->expression()))
+				userCallee = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+					ident->annotation().referencedDeclaration);
+		if (userCallee && m_memberAccess.annotation().willBeWrittenTo
+			&& !m_ctx.typeMapper.profile().evmStorageLayout)
+			if (auto const* refType = dynamic_cast<solidity::frontend::ReferenceType const*>(
+					baseExpression().annotation().type);
+				refType && refType->location() == solidity::frontend::DataLocation::Storage)
+				Logger::instance().error(
+					"cannot write through a storage reference returned by a call to a "
+					"top-level state variable; bind it first (`T storage r = f(); r."
+					+ member + " = …`)", m_loc);
+		base = buildExpr(baseExpression());
+	}
 	if (!m_ctx.typeMapper.profile().evmStorageLayout
 		&& transparentMappingWrapper(baseExpression().annotation().type))
 		// The represented fields are already the inner struct's. Preserve the

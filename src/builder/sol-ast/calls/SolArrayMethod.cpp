@@ -266,6 +266,65 @@ std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeArrayPushPop(
 	return awst::makeZero(m_loc, awst::WType::biguintType());
 }
 
+/// Shared ARC4 dynamic-array push/pop for a writable storage base
+/// (BoxValueExpression / IndexExpression / FieldExpression): the boxed,
+/// storage-pointer-alias and chained-field paths used to carry three copies
+/// that disagreed (only the boxed one returned the new element reference, so
+/// `alias.push().f = v` and `m[k].arr.push().f = v` were compile errors; the
+/// alias copy hand-rolled the root-box check). One emitter: ensure the root
+/// box before any resize (an empty header, so a pop on it panics like
+/// Solidity's pop on an empty array), and a no-argument push returns the
+/// reference to the new element.
+std::shared_ptr<awst::Expression> SolArrayMethod::emitArc4PushPop(
+	std::string const& memberName,
+	std::shared_ptr<awst::Expression> baseAwst,
+	ArrayType const& solArrType)
+{
+	auto* rawElemType = m_ctx.typeMapper.map(solArrType.baseType());
+	auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(solArrType.baseType());
+	auto* arrWType = baseAwst->wtype
+		? baseAwst->wtype : m_ctx.typeMapper.map(&solArrType);
+
+	if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
+			m_ctx.typeMapper, baseAwst, /*isResize=*/true, m_loc))
+		m_ctx.queuePreEffect(std::move(stmt));
+
+	if (memberName == "pop")
+		return awst::makeArrayPopDecode(baseAwst, elemType, rawElemType, m_loc);
+
+	if (!m_call.arguments().empty())
+	{
+		auto val = buildExpr(*m_call.arguments()[0]);
+		auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
+		return awst::makeArrayPushOne(baseAwst, std::move(encoded), arrWType, m_loc);
+	}
+
+	std::shared_ptr<awst::Expression> elem;
+	bool const fromAssign = m_ctx.hasArrayAssignmentValue();
+	if (fromAssign)
+	{
+		auto coerced = builder::TypeCoercion::coerceForAssignment(
+			m_ctx.takeArrayAssignmentValue(), rawElemType, m_loc);
+		elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
+	}
+	else
+		elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
+
+	auto extend = awst::makeArrayPushOne(baseAwst, std::move(elem), arrWType, m_loc);
+	if (fromAssign)
+		return extend;
+
+	// The extend runs before the enclosing statement; `arr.push().field = v`
+	// then addresses ArrayLength-1.
+	m_ctx.queuePreExpression(std::move(extend), m_loc);
+	auto lastIndex = awst::makeUInt64BinOp(
+		awst::makeArrayLength(baseAwst, awst::WType::uint64Type(), m_loc),
+		awst::UInt64BinaryOperator::Sub,
+		awst::makeIntegerConstant("1", m_loc),
+		m_loc);
+	return awst::makeIndexExpression(baseAwst, std::move(lastIndex), elemType, m_loc);
+}
+
 /// `m[k].push()/.pop()`: IndexAccess base lowers to BoxValueExpression (wrapped in StateGet when read).
 std::shared_ptr<awst::Expression> SolArrayMethod::tryBoxedElementPushPop(
 	std::string const& memberName,
@@ -283,75 +342,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryBoxedElementPushPop(
 		auto baseAwst = buildExpr(baseExpr);
 		// Unwrap StateGet through the chain to the writable BoxValueExpression.
 		baseAwst = awst::makeWritableTarget(baseAwst);
-
 		if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
 			|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get())
 			|| dynamic_cast<awst::FieldExpression const*>(baseAwst.get()))
-		{
-			auto* rawElemType = m_ctx.typeMapper.map(innerArrType->baseType());
-			auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(
-				innerArrType->baseType());
-			auto* arrWType = baseAwst->wtype
-				? baseAwst->wtype : m_ctx.typeMapper.map(innerArrType);
-
-			// Ensure the per-entry box has the empty ARC4 dyn-array header
-			// (0x0000) before ArrayExtend/ArrayPop. Guarded by box_len.exists
-			// so subsequent pushes (box already >2 bytes) skip the create.
-			auto emitEnsureBox = [&]() {
-				// Centralized box-lifecycle: a push/pop RESIZE needs the root box (bare dyn-array box, or the
-				// STRUCT box for `m[k].arr.push()` reached through a FieldExpression) to exist first. Shared
-				// with maybePrePopulateBox / SolAssignmentStructField via makeEnsureRootBoxForWrite.
-				if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
-						m_ctx.typeMapper, baseAwst, /*isResize=*/true, m_loc))
-					m_ctx.queuePreEffect(std::move(stmt));
-			};
-
-			if (memberName == "push" && !m_call.arguments().empty())
-			{
-				emitEnsureBox();
-				auto val = buildExpr(*m_call.arguments()[0]);
-				auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
-				return awst::makeArrayPushOne(baseAwst, std::move(encoded), arrWType, m_loc);
-			}
-			if (memberName == "push" && m_call.arguments().empty())
-			{
-				emitEnsureBox();
-				std::shared_ptr<awst::Expression> elem;
-				bool fromAssign = m_ctx.hasArrayAssignmentValue();
-				if (fromAssign)
-				{
-					auto coerced = builder::TypeCoercion::coerceForAssignment(
-						m_ctx.takeArrayAssignmentValue(), rawElemType, m_loc);
-					elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
-				}
-				else
-					elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
-
-				auto e = awst::makeArrayPushOne(baseAwst, std::move(elem), arrWType, m_loc);
-
-				if (fromAssign)
-					return e;
-
-				// queuePreExpression: extend runs before the enclosing statement.
-				// `arr.push().field = v` reads ArrayLength-1 post-extend.
-				m_ctx.queuePreExpression(std::move(e), m_loc);
-
-				// `arr.push()` returns a ref to the new element as
-				// IndexExpression(arr, ArrayLength(arr)-1).
-				auto lenNode = awst::makeArrayLength(baseAwst, awst::WType::uint64Type(), m_loc);
-
-				auto lastIndex = awst::makeUInt64BinOp(
-					std::move(lenNode),
-					awst::UInt64BinaryOperator::Sub,
-					awst::makeIntegerConstant("1", m_loc),
-					m_loc);
-
-				auto idxExpr = awst::makeIndexExpression(baseAwst, std::move(lastIndex), elemType, m_loc);
-				return idxExpr;
-			}
-			if (memberName == "pop")
-				return awst::makeArrayPopDecode(baseAwst, elemType, rawElemType, m_loc);
-		}
+			return emitArc4PushPop(memberName, std::move(baseAwst), *innerArrType);
 	}
 	return nullptr;
 }
@@ -459,70 +453,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryStoragePointerPushPop(
 					if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
 						|| dynamic_cast<awst::IndexExpression const*>(aliasExpr.get())
 						|| dynamic_cast<awst::FieldExpression const*>(aliasExpr.get()))
-					{
-						auto* rawElemType = m_ctx.typeMapper.map(solArrType->baseType());
-						auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(solArrType->baseType());
-						auto* arrWType = aliasExpr->wtype
-							? aliasExpr->wtype
-							: m_ctx.typeMapper.map(solArrType);
-
-						// Same as emitEnsureBox above: ensure the aliased box has
-						// the 0x0000 header before ArrayExtend/ArrayPop. Without
-						// this, `A(state[k])` + push trips the box-exists assert.
-						auto emitEnsureAliasBox = [&]() {
-							auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get());
-							if (!bv || !bv->key)
-								return;
-							auto boxKey = bv->key;
-							auto boxLen = builder::StorageMapper::makeBoxLenTuple(
-								m_ctx.typeMapper, boxKey, m_loc);
-							auto existsVal = awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), m_loc);
-							auto notExists = awst::makeNot(std::move(existsVal), m_loc);
-							auto createCall = awst::makeBoxCreate(
-								boxKey, awst::makeIntegerConstant("2", m_loc), m_loc);
-							auto createStmt = awst::makeExpressionStatement(
-								std::move(createCall), m_loc);
-							auto ifBranch = awst::makeBlock(m_loc);
-							ifBranch->body.push_back(std::move(createStmt));
-							m_ctx.queuePreEffect(awst::makeIfElse(
-								std::move(notExists), std::move(ifBranch), nullptr, m_loc));
-						};
-
-						if (memberName == "push" && !m_call.arguments().empty())
-						{
-							emitEnsureAliasBox();
-							auto val = buildExpr(*m_call.arguments()[0]);
-							auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
-							return awst::makeArrayPushOne(aliasExpr, std::move(encoded), arrWType, m_loc);
-						}
-						if (memberName == "push" && m_call.arguments().empty())
-						{
-							emitEnsureAliasBox();
-							std::shared_ptr<awst::Expression> elem;
-							bool fromAssign = m_ctx.hasArrayAssignmentValue();
-							if (fromAssign)
-							{
-								auto coerced = builder::TypeCoercion::coerceForAssignment(
-									m_ctx.takeArrayAssignmentValue(), rawElemType, m_loc);
-								elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
-							}
-							else
-								elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
-
-							auto e = awst::makeArrayPushOne(aliasExpr, std::move(elem), arrWType, m_loc);
-
-							if (fromAssign)
-								return e;
-
-							m_ctx.queuePostExpression(std::move(e), m_loc);
-							return awst::makeVoidConstant(m_loc);
-						}
-						if (memberName == "pop")
-						{
-							emitEnsureAliasBox();
-							return awst::makeArrayPopDecode(aliasExpr, elemType, rawElemType, m_loc);
-						}
-					}
+						return emitArc4PushPop(memberName, std::move(aliasExpr), *solArrType);
 				}
 			}
 		}
@@ -684,59 +615,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryChainedFieldPushPop(
 	{
 		auto baseAwst = buildExpr(baseExpr);
 		baseAwst = awst::makeWritableTarget(baseAwst);
-
 		if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
 			|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get())
 			|| dynamic_cast<awst::FieldExpression const*>(baseAwst.get()))
-		{
-			auto* rawElemType = m_ctx.typeMapper.map(maType->baseType());
-			auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(
-				maType->baseType());
-			auto* arrWType = baseAwst->wtype
-				? baseAwst->wtype : m_ctx.typeMapper.map(maType);
-
-			// Chained mapping-entry push (`m[k].arr.push()`): the lazy per-entry
-			// STRUCT box holding the dyn-array field must be materialised (with a
-			// valid default struct encoding) before ArrayExtend's box_extract, else
-			// "no such box". Same prologue as the m[k].push() branch above.
-			if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
-					m_ctx.typeMapper, baseAwst, /*isResize=*/true, m_loc))
-				m_ctx.queuePreEffect(std::move(stmt));
-
-			if (memberName == "push" && !m_call.arguments().empty())
-			{
-				auto val = buildExpr(*m_call.arguments()[0]);
-				auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
-				return awst::makeArrayPushOne(
-					std::move(baseAwst), std::move(encoded), arrWType, m_loc);
-			}
-			if (memberName == "push" && m_call.arguments().empty())
-			{
-				std::shared_ptr<awst::Expression> elem;
-				bool fromAssign = m_ctx.hasArrayAssignmentValue();
-				if (fromAssign)
-				{
-					auto coerced = builder::TypeCoercion::coerceForAssignment(
-						m_ctx.takeArrayAssignmentValue(), rawElemType, m_loc);
-					elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
-				}
-				else
-				{
-					elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
-				}
-
-				auto extend = awst::makeArrayPushOne(baseAwst, std::move(elem), arrWType, m_loc);
-
-				if (fromAssign)
-					return extend;
-
-				m_ctx.queuePreExpression(std::move(extend), m_loc);
-				return awst::makeVoidConstant(m_loc);
-			}
-			if (memberName == "pop")
-				return awst::makeArrayPopDecode(
-					std::move(baseAwst), elemType, rawElemType, m_loc);
-		}
+			return emitArc4PushPop(memberName, std::move(baseAwst), *maType);
 	}
 	return nullptr;
 }

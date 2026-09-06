@@ -5367,3 +5367,62 @@ def test_modifier_memory_param_rebind(harness):
     assert as_int(harness.call(app, "callG()", extra_fee=10_000).abi_return) == 1
     assert as_int(harness.call(app, "callH()", extra_fee=10_000).abi_return) == 11011
     assert as_int(harness.call(app, "seen()").abi_return) == 11
+
+
+def test_storage_ref_call_member_write(harness):
+    """puyasolRegression/contracts/storage_ref_call_write.sol — NOT an o.g. semantic test.
+
+    `_p(id).n += 1` where `_p` returns a mapping-value struct reference: the
+    callee hands back the entry's box key, which had no members (reads of
+    `_p(id).n` produced nothing, writes failed "assignment target lowered to a
+    constant"). The call result is now wrapped as the entry's box value.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/storage_ref_call_write.sol")
+    for sig, args in (("bump(uint256)", (7,)), ("bump(uint256)", (7,)),
+                      ("set(uint256,uint256)", (7, 99)), ("bump(uint256)", (8,))):
+        r = harness.call(app, sig, *args, extra_fee=10_000)
+        assert not r.reverted, r.fail_message
+    assert [as_int(v) for v in harness.call(app, "read(uint256)", 7).abi_return] == [2, 99]
+    assert [as_int(v) for v in harness.call(app, "read(uint256)", 8).abi_return] == [1, 0]
+
+
+def test_literal_aggregate_fields_and_mapping_struct_array_getter(harness):
+    """puyasolRegression/contracts/literal_aggregate_fields.sol — NOT an o.g. semantic test.
+
+    Struct constructors and inline arrays with a bare bytesN/address literal
+    field (`S(0x010203)`, `[bytes3(0x010203), 0x040506]`) failed in the backend
+    ("cannot encode uint64 to uint8[3]"); the literal is coerced like an
+    assignment. `Pool[] public pools` whose element holds a mapping exposes ONE
+    field, and its getter decoded the whole element as that scalar (nothing
+    came back); the element is projected like multi-field structs. The
+    `pools.push().total = t` idiom exercises the state-array element reference.
+    """
+    app = harness.compile_and_deploy("puyasolRegression/contracts/literal_aggregate_fields.sol",
+                                     fund_wei=5_000_000)
+    assert [as_bytes(v) for v in [harness.call(app, "mk()").abi_return[0]]] == [b"\x01\x02\x03"]
+    assert as_int(harness.call(app, "mkNamed()").abi_return[1]) == 9
+    assert harness.call(app, "mkT()").abi_return[0] is not None
+    assert [as_bytes(v) for v in harness.call(app, "arr()").abi_return] == [b"\x01\x02\x03", b"\x04\x05\x06"]
+    harness.call(app, "store()", extra_fee=10_000)
+    assert as_bytes(harness.call(app, "s()").abi_return[0]) == b"\x0a\x0b\x0c"
+    harness.call(app, "addPool(uint256)", 42, extra_fee=10_000)
+    harness.call(app, "addPool(uint256)", 43, extra_fee=10_000)
+    assert as_int(harness.call(app, "pools(uint256)", 1, extra_fee=10_000).abi_return) == 43
+    assert as_int(harness.call(app, "poolTotal(uint256)", 1).abi_return) == 43
+
+
+@pytest.mark.parametrize("slot_layout", [False, True], ids=["named", "slots"])
+def test_push_returns_element_reference_on_every_path(harness, slot_layout):
+    """puyasolRegression/contracts/push_element_reference.sol — NOT an o.g. semantic test.
+
+    `arr.push().f = v` must work for a boxed mapping element, a storage-pointer
+    alias, a chained field path and a state-variable array: the three ARC4
+    push/pop copies disagreed (two returned void) and are now one emitter.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/push_element_reference.sol",
+        extra_args=["--evm-storage-layout"] if slot_layout else [], fund_wei=5_000_000)
+    assert as_int(harness.call(app, "boxed(uint256)", 1, extra_fee=10_000).abi_return) == 7
+    assert as_int(harness.call(app, "alias_()", extra_fee=10_000).abi_return) == 8
+    assert as_int(harness.call(app, "chained(uint256)", 1, extra_fee=10_000).abi_return) == 9
+    assert as_int(harness.call(app, "popAlias()", extra_fee=10_000).abi_return) == 0

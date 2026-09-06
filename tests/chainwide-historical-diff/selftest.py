@@ -47,6 +47,7 @@ contract StorageShapes {
     struct AddressSet { Set _inner; }
     mapping(address => Account) internal accts;              // struct WITH mapping
     mapping(uint256 => AddressSet) internal members;         // transparent wrapper
+    AddressSet internal topSet;                              // struct ROOT holding a mapping
 
     function credit(address a, uint256 v) external { bal[a] += v; total += v; }
     function approve(address o, address s, uint256 v) external { allow[o][s] = v; }
@@ -69,6 +70,14 @@ contract StorageShapes {
             set._inner._positions[k] = set._inner._values.length;
         }
     }
+    function joinTop(address a) external {
+        bytes32 k = bytes32(uint256(uint160(a)));
+        if (topSet._inner._positions[k] == 0) {
+            topSet._inner._values.push(k);
+            topSet._inner._positions[k] = topSet._inner._values.length;
+        }
+    }
+    function topCount() external view returns (uint256) { return topSet._inner._values.length; }
     function memberCount(uint256 g) external view returns (uint256) {
         return members[g]._inner._values.length;
     }
@@ -97,6 +106,8 @@ CALLS = [
     ("join(uint256,address)", [1, A1]),
     ("join(uint256,address)", [1, A2]),
     ("join(uint256,address)", [2, A3]),
+    ("joinTop(address)", [A1]),
+    ("joinTop(address)", [A3]),
 ]
 
 
@@ -153,6 +164,7 @@ EXPECT = {
     "ckpts": 2,        # array-valued: A1 -> 2 elements, A2 -> 1
     "accts": 2,        # struct holding a mapping: A1 -> [5, {A2: 50}]
     "members": 2,      # transparent wrapper: 1 -> [[[A1, A2], {A1:1, A2:2}]]
+    "topSet._inner._positions": 2,  # struct ROOT holding a mapping, flattened by label
 }
 
 

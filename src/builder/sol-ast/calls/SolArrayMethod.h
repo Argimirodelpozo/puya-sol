@@ -32,6 +32,10 @@ private:
 	std::shared_ptr<awst::Expression> tryStateBytesPushPop(
 		std::string const& memberName,
 		solidity::frontend::VariableDeclaration const& _varDecl);
+	std::shared_ptr<awst::Expression> emitArc4PushPop(
+		std::string const& memberName,
+		std::shared_ptr<awst::Expression> baseAwst,
+		solidity::frontend::ArrayType const& solArrType);
 	std::shared_ptr<awst::Expression> tryChainedFieldPushPop(
 		std::string const& memberName,
 		solidity::frontend::Expression const& baseExpr,

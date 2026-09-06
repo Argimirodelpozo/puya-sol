@@ -24,6 +24,18 @@ std::shared_ptr<awst::Expression> SolStructConstruction::toAwst()
 		for (size_t i = 0; i < args.size() && i < members.size(); ++i)
 		{
 			auto val = buildExpr(*args[i]);
+			// A bare literal (`S(0x010203)`, `T(0x1111…)`) stays an
+			// IntegerConstant here; assignments coerce it to the declared
+			// bytesN/address representation, so do the same before the
+			// numeric cast and the ARC4 wrap below.
+			if (dynamic_cast<awst::IntegerConstant const*>(val.get()))
+			{
+				auto const* nativeField = m_ctx.typeMapper.map(members[i]->type());
+				if (nativeField && nativeField != awst::WType::uint64Type()
+					&& nativeField != awst::WType::biguintType()
+					&& nativeField != awst::WType::boolType())
+					val = TypeCoercion::coerceForAssignment(std::move(val), nativeField, m_loc);
+			}
 			if (tupleType && i < tupleType->types().size())
 				val = TypeCoercion::implicitNumericCast(std::move(val), tupleType->types()[i], m_loc);
 			else if (arc4StructType && i < arc4StructType->fields().size())

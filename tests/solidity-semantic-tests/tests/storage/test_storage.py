@@ -996,12 +996,6 @@ def test_struct_storage_ref_local(harness):
     harness.call(app, "bumpLocal(uint256,uint256,uint256)", 9, 1, 1, expect_revert=True)
 
 
-@pytest.mark.xfail(reason="storage-ref-return through a getter on a TOP-LEVEL state-var "
-                   "mapping passed as a `mapping(K=>S) storage` PARAM: the box-key prefix the "
-                   "call site hands for the state-var mapping arg doesn't match the direct "
-                   "`_m[id]` element-key derivation, so the ref writes a different box. The "
-                   "V4-relevant NESTED shape (mapping as a struct FIELD, self.positions.get) "
-                   "works (see test_storage_ref_returned_nested). Separate key-derivation fix.")
 def test_storage_ref_returned(harness):
     """storage/contracts/storage_ref_returned.sol
 

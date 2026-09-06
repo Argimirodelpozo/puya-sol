@@ -367,7 +367,14 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
 	auto binding = sm.physicalBindingFor(*var);
 	auto* arrWType = binding.wtype;
+	// Decode elements with the STORED element type: a mapping-carrying struct
+	// element is encoded with byte[] placeholders for its mapping members (a
+	// dynamic tuple), which the plain ABI mapping of the struct does not have.
 	auto* elemARC4 = tm.mapSolTypeToARC4(arrType->baseType());
+	if (auto const* storedDyn = dynamic_cast<awst::ARC4DynamicArray const*>(arrWType))
+		elemARC4 = storedDyn->elementType();
+	else if (auto const* storedStatic = dynamic_cast<awst::ARC4StaticArray const*>(arrWType))
+		elemARC4 = storedStatic->elementType();
 
 	auto arrayRead = sm.createStateRead(binding, loc);
 
@@ -417,14 +424,22 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	// Struct element: decompose ARC4Struct into primitive-fields tuple
 	// (Solidity public-accessor skips mappings and non-bytes arrays).
 	auto const* solStructElem = dynamic_cast<solidity::frontend::StructType const*>(arrType->baseType());
-	if (solStructElem && returnTypeCount > 1)
+	if (solStructElem && returnTypeCount >= 1)
 	{
+		// A struct whose accessor exposes ONE field (the others are mappings or
+		// arrays) is still projected: decoding the whole placeholder-bearing
+		// element as that scalar returned nothing (`Pool[] public pools`).
 		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(elemARC4);
-		auto tuple = awst::makeTupleExpression(getter.returnType, loc);
-
-		for (auto& item: projectStructFields(tm, solStructElem, arc4Struct, result, body.body, loc))
-			tuple->items.push_back(std::move(item));
-		readExpr = std::move(tuple);
+		auto items = projectStructFields(tm, solStructElem, arc4Struct, result, body.body, loc);
+		if (items.size() == 1)
+			readExpr = std::move(items[0]);
+		else
+		{
+			auto tuple = awst::makeTupleExpression(getter.returnType, loc);
+			for (auto& item: items)
+				tuple->items.push_back(std::move(item));
+			readExpr = std::move(tuple);
+		}
 	}
 	else
 	{

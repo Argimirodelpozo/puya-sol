@@ -34,11 +34,24 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 			elementType = arc4Dyn->elementType();
 
 		auto e = awst::makeNewArray(wtype, m_loc);
+		auto const* solArrayType = dynamic_cast<solidity::frontend::ArrayType const*>(
+			m_tuple.annotation().type);
+		auto const* nativeElem = solArrayType
+			? m_ctx.typeMapper.map(solArrayType->baseType()) : nullptr;
 		for (auto const& comp: m_tuple.components())
 		{
 			if (comp)
 			{
 				auto val = buildExpr(*comp);
+				// `[bytes3(0x010203), 0x040506]`: a bare literal element is an
+				// IntegerConstant; coerce it to the element's declared
+				// bytesN/address representation like an assignment would.
+				if (nativeElem && dynamic_cast<awst::IntegerConstant const*>(val.get())
+					&& nativeElem != awst::WType::uint64Type()
+					&& nativeElem != awst::WType::biguintType()
+					&& nativeElem != awst::WType::boolType())
+					val = builder::TypeCoercion::coerceForAssignment(
+						std::move(val), nativeElem, m_loc);
 				// Cast to native type first, then ARC4Encode.
 				if (val->wtype != elementType)
 				{

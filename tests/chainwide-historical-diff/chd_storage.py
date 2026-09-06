@@ -49,6 +49,50 @@ def _marker_key(value: Any) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
+def type_contains_mapping(types: dict, type_id: str, seen: set[str] | None = None) -> bool:
+    if not type_id or type_id in (seen or set()):
+        return False
+    seen = set(seen or ()) | {type_id}
+    doc = types.get(type_id, {})
+    if doc.get("encoding") == "mapping":
+        return True
+    if doc.get("base") and type_contains_mapping(types, doc["base"], seen):
+        return True
+    return any(type_contains_mapping(types, member.get("type"), seen)
+               for member in doc.get("members") or [])
+
+
+def collect_aggregate_maps(types: dict, type_id: str, value: Any, label: str,
+                           out: dict, declared: list[str]) -> None:
+    """Flatten the mapping members of an aggregate root into name-keyed maps.
+
+    A struct or array root that holds mappings (a top-level EnumerableSet, a
+    `Pool[]` of mapping structs) is not itself a map, so the differ never saw
+    its entries. Both legs walk the same solc type tree, so labels such as
+    `holders._inner._positions` and `pools[2].owed` align one-for-one.
+    """
+    if not type_contains_mapping(types, type_id):
+        return
+    doc = types.get(type_id, {})
+    if doc.get("encoding") == "mapping":
+        out[label] = value if isinstance(value, dict) else {}
+        declared.append(label)
+        return
+    members = doc.get("members") or []
+    if members:
+        items = list(value) if isinstance(value, (list, tuple)) else []
+        for index, member in enumerate(members):
+            item = items[index] if index < len(items) else None
+            collect_aggregate_maps(types, member.get("type"), item,
+                                   f"{label}.{member.get('label')}", out, declared)
+        return
+    if doc.get("base"):
+        items = list(value) if isinstance(value, (list, tuple)) else []
+        for index, item in enumerate(items):
+            collect_aggregate_maps(types, doc["base"], item, f"{label}[{index}]",
+                                   out, declared)
+
+
 class KeyEvidence:
     """Bounded, typed key candidates derived from replay evidence.
 
@@ -509,17 +553,21 @@ class EvmStorageReader:
                 value, _ = self._read_mapping(slot, type_doc, fold, label)
                 maps[label] = value
                 continue
-            # Top-level aggregates stay out of the scalar name/value diff, but
-            # are still walked so every owned slot is attributed for coverage.
+            # Top-level aggregates stay out of the scalar name/value diff and
+            # are walked so every owned slot is attributed for coverage; the
+            # mapping members they hold are flattened into name-keyed maps.
             if (type_doc.get("members") or encoding in ("dynamic_array", "bytes")
                     or self._array_length(type_doc) is not None):
-                self.read_value(slot, entry.get("type"), fold, label)
+                self._paths = 0
+                value, _ = self.read_value(slot, entry.get("type"), fold, label)
+                collect_aggregate_maps(self.types, entry.get("type"), value, label,
+                                       maps, declared)
                 continue
             value, _ = self._scalar(
                 slot, type_doc, fold,
                 offset=int(entry.get("offset", 0)), path=label)
             scalars[label] = value
-        maps["__declared__"] = sorted(declared)
+        maps["__declared__"] = sorted(set(declared))
         return {"scalars": scalars, "maps": maps}
 
 
@@ -1076,12 +1124,14 @@ class NativeStorageReader:
                 value, _ = self._read_mapping(key, type_doc, name)
                 out[name] = value
             else:
-                # Aggregate roots (struct/array around mappings) stay out of the
-                # name-keyed map diff, mirroring EvmStorageReader.read, but are
-                # walked so every descendant box is attributed for coverage.
-                self._read_value2(key, entry.get("type"), name)
+                # Aggregate roots (struct/array around mappings): walked so every
+                # descendant box is attributed, and their mapping members are
+                # flattened into name-keyed maps, mirroring EvmStorageReader.read.
+                value, _ = self._read_value2(key, entry.get("type"), name)
+                collect_aggregate_maps(self.types, entry.get("type"), value, name,
+                                       out, declared)
         self._format2 = False
-        out["__declared__"] = sorted(declared)
+        out["__declared__"] = sorted(set(declared))
         if unsupported:
             out["__unsupported__"] = sorted(unsupported)
         if self.holder_mismatches:

@@ -243,7 +243,10 @@ def test_format2_reader_walks_every_holder_shape():
                         else s2 if bytes(raw) == ARG else "?")
     reader = NativeStorageReader(layout, arc56, boxes, ev, sha, fold)
     maps = reader.read_maps()
-    assert maps["__declared__"] == ["accts", "allow", "bal", "members"]
+    # aggregate roots holding mappings are flattened into name-keyed maps
+    assert maps["__declared__"] == ["accts", "allow", "bal", "members",
+                                    "rows[0].sub", "rows[1].sub"]
+    assert maps["rows[0].sub"] == {} and maps["rows[1].sub"] == {s1: 77}
     assert "__holder_mismatch__" not in maps
     assert maps["bal"] == {s1: 250}
     assert maps["allow"] == {f"{s1}->{s2}": 5}
