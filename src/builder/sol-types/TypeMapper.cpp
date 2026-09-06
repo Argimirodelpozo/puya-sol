@@ -4,42 +4,32 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 namespace puyasol::builder
 {
 
 namespace
 {
-std::string declarationIdentitySuffix(solidity::frontend::Type const* _type)
+/// Value representations erase array/struct locations, including tuple components.
+/// Function signatures retain their semantic parameter/return locations; these are
+/// callable types, not value buffers. Mappings retain their storage-only identity.
+/// Solc owns all nominal identities and recursively relocates array base types.
+solidity::frontend::Type const* representationType(solidity::frontend::Type const* _type)
 {
 	using namespace solidity::frontend;
-	if (!_type)
-		return {};
-
-	std::string result;
-	if (auto const* definition = _type->typeDefinition())
-		result += "#" + std::to_string(definition->id());
-	else if (auto const* contractType = dynamic_cast<ContractType const*>(_type))
-		result += "#" + std::to_string(contractType->contractDefinition().id());
-
-	if (auto const* arrayType = dynamic_cast<ArrayType const*>(_type))
-		result += declarationIdentitySuffix(arrayType->baseType());
-	else if (auto const* mappingType = dynamic_cast<MappingType const*>(_type))
+	if (auto const* tuple = dynamic_cast<TupleType const*>(_type))
 	{
-		result += declarationIdentitySuffix(mappingType->keyType());
-		result += declarationIdentitySuffix(mappingType->valueType());
+		TypePointers components;
+		for (auto const* component: tuple->components())
+			components.push_back(representationType(component));
+		return TypeProvider::tuple(std::move(components));
 	}
-	else if (auto const* tupleType = dynamic_cast<TupleType const*>(_type))
-		for (auto const* component: tupleType->components())
-			result += declarationIdentitySuffix(component);
-	else if (auto const* functionType = dynamic_cast<FunctionType const*>(_type))
-	{
-		for (auto const* parameter: functionType->parameterTypes())
-			result += declarationIdentitySuffix(parameter);
-		for (auto const* returnType: functionType->returnParameterTypes())
-			result += declarationIdentitySuffix(returnType);
-	}
-	return result;
+	// Not every ReferenceType is relocatable: solc's calldata ArraySliceType
+	// deliberately asserts in copyForLocation(). Only value buffers normalize.
+	if (dynamic_cast<ArrayType const*>(_type) || dynamic_cast<StructType const*>(_type))
+		return TypeProvider::withLocationIfReference(DataLocation::Memory, _type);
+	return _type;
 }
 
 bool reachesStructBeingMapped(
@@ -154,8 +144,7 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	if (!_solType)
 		return awst::WType::voidType();
 
-	std::string const typeStr = _solType->toString(true);
-	std::string const cacheKey = typeStr + declarationIdentitySuffix(_solType);
+	std::string const cacheKey = representationType(_solType)->identifier();
 	auto it = m_solTypeCache.find(cacheKey);
 	if (it != m_solTypeCache.end())
 		return it->second;
@@ -242,7 +231,7 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 		break;
 
 	default:
-		result = mapFallbackCategory(_solType, typeStr);
+		result = mapFallbackCategory(_solType, _solType->toString(true));
 		break;
 	}
 

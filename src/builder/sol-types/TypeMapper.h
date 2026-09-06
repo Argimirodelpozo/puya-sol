@@ -97,14 +97,11 @@ private:
 	/// Owns all dynamically-created WTypes.
 	std::vector<std::unique_ptr<awst::WType>> m_ownedTypes;
 
-	/// Keyed by toString(true) plus the declaration ids of contained user-defined
-	/// types: solc does NOT intern Type objects
-	/// (TypeProvider::array/withLocation allocate fresh), so pointer keying
-	/// gives textually identical types distinct WTypes — recursive structs
-	/// then truncate at different depths (encode/decode mismatch) and the
-	/// ~40 pointer-equality sites against mapped types spuriously re-wrap.
-	/// The declaration suffix disambiguates same-named file-level types from
-	/// different source units while keeping data-location variants interned.
+	/// Solc's canonical identifier after value-representation normalization:
+	/// arrays/structs (including tuple components) share across locations and
+	/// pointer/ref forms; callable signatures retain their parameter locations.
+	/// Nominal identity comes from solc, not source spelling or Type pointers.
+	/// These invocation-local keys must never be used as persisted storage keys.
 	std::unordered_map<std::string, awst::WType const*>
 		m_solTypeCache;
 	/// Synthetic keys used only for struct recursion projections.

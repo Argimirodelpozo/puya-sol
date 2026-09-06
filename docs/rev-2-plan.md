@@ -1,6 +1,6 @@
 # rev-2: sol-types and storage implementation plan
 
-Status: in progress. F1, F2, F4, F7, F9 and R1 are implemented and checkpoint-test
+Status: in progress. F1, F2, F4, F7, F9, R1 and R2 are implemented and checkpoint-test
 verified; the remaining findings/refactors and final full-suite verification are pending.
 
 Branch: `rev-2`, based on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`.
@@ -246,16 +246,16 @@ correctness work, not an expansion of the language's implicit conversion rules.
 
 ### R2 — Canonical, normalized solc type interning
 
-- [ ] Replace `toString(true)` plus recursive `declarationIdentitySuffix()` in
+- [x] Replace `toString(true)` plus recursive `declarationIdentitySuffix()` in
   [TypeMapper.cpp](../src/builder/sol-types/TypeMapper.cpp) with solc identifiers
   after deliberate representation normalization.
-- [ ] Specify which memory/storage/calldata distinctions are intentionally shared
+- [x] Specify which memory/storage/calldata distinctions are intentionally shared
   by the runtime representation and which must remain distinct. Raw identifier
   substitution alone is not a behavior-preserving change.
-- [ ] Preserve nominal identity for structs, enums, UDVTs and contracts, including
+- [x] Preserve nominal identity for structs, enums, UDVTs and contracts, including
   nested types and function signatures. Test same-named declarations from distinct
   sources, recursive projections and all relevant data locations.
-- [ ] Retain valid recursive construction/caching behavior and test consumers
+- [x] Retain valid recursive construction/caching behavior and test consumers
   that rely on interned WType pointer identity. Never use these compilation-local
   identifiers as a persisted-storage format.
 
@@ -356,6 +356,26 @@ Expected results were confirmed with an in-process solc 0.8.34/Cancun oracle,
 optimizer disabled and legacy pipeline. Intermediate runs exposed and fixed
 previously bypassed slot-constructor and boxed-aggregate conversion routes;
 those failures are resolved in the checkpoint result above.
+
+### Checkpoint 4 — canonical type identity
+
+All 19 native CTests passed. The focused array/struct/function/type-storage
+selection passed 190 tests, with 5 existing xfails and 1 existing xpass, in
+38.85 seconds. Report: `/tmp/puyasol-rev-2-type-identity-verified.xml`.
+
+Value arrays and structs, including tuple components, normalize their location
+through solc before using its canonical identifier. Callable parameter/return
+locations and non-relocatable calldata slices remain intact. The handwritten
+declaration-identity suffix traversal is removed. Native tests cover nominal
+types from distinct source units, fresh equivalent solc objects, pointer/ref
+forms, recursive projections, cache resets, callable signatures and slices.
+The semantic copy/reference regression covers both storage modes and ABI
+profiles; the expected result was confirmed by solc 0.8.34/Cancun, optimizer
+disabled, legacy pipeline. An intermediate run caught an invalid attempt to
+relocate calldata slices; that is fixed and covered by both test layers.
+
+R2 was completed before the persisted-storage steps while their compatibility
+decision remains pending. The full suite is the next checkpoint.
 
 ### Baseline and remaining gates
 

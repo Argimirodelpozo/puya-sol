@@ -475,6 +475,21 @@ if(BUILD_TESTING)
 	target_include_directories(puya-sol-wtype-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	add_test(NAME puya-sol-wtype-equivalence COMMAND puya-sol-wtype-tests)
 
+	add_executable(puya-sol-type-mapper-tests
+		tests/cpp/TypeMapperTests.cpp
+		src/builder/sol-types/TypeMapper.cpp
+		src/builder/sol-types/Arc4Defaults.cpp
+		src/awst/WType.cpp
+		src/Logger.cpp
+	)
+	target_include_directories(puya-sol-type-mapper-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_dependencies(puya-sol-type-mapper-tests puya-sol-verify-solidity-build)
+	target_link_libraries(puya-sol-type-mapper-tests
+		puya_sol_solidity puya_sol_yul puya_sol_evmasm puya_sol_langutil
+		puya_sol_smtutil puya_sol_solutil Boost::filesystem Threads::Threads
+	)
+	add_test(NAME puya-sol-type-mapper COMMAND puya-sol-type-mapper-tests)
+
 	add_executable(puya-sol-encoded-size-tests
 		tests/cpp/EncodedSizeTests.cpp
 		src/builder/sol-types/Arc4Defaults.cpp
