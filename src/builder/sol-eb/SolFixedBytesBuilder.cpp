@@ -112,33 +112,19 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::binary_op(
 	return std::make_unique<SolFixedBytesBuilder>(m_ctx, resultType, std::move(retagged));
 }
 
-std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
-	InstanceBuilder& _other, BuilderComparisonOp _op,
-	awst::SourceLocation const& _loc)
+void padBytesOperandsToCommonWidth(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression>& _lhs,
+	std::shared_ptr<awst::Expression>& _rhs)
 {
-	bool otherIsBytes = _other.wtype() && _other.wtype()->kind() == awst::WTypeKind::Bytes;
-	bool otherIsAccount = _other.wtype() == awst::WType::accountType();
-	if (!otherIsBytes && !otherIsAccount)
-		return nullptr;
-
-	auto lhs = resolve();
-	auto rhs = _other.resolve();
-
-	// EVM bytesN compares 32-byte LEFT-ALIGNED words; bytes3("abc")==bytes4("abc")
-	// is true and "b" > "aa" (0x62.. > 0x6161..). AVM operands are N raw bytes, so
-	// right-pad the shorter side to the common declared width: constants fold at
-	// compile time (including bare string literals — "aa" == x with x bytes22
-	// arrives as a 2-byte StringConstant); RUNTIME operands pad too — solc
-	// legally widens bytesM→bytesN (`bytes2 a == bytes4 b`), and skipping them
-	// compared 2 raw bytes against 4.
-	auto bytesLen = [](awst::Expression const& e) -> size_t {
+	auto declaredLen = [](awst::Expression const& e) -> size_t {
 		if (auto const* bw = dynamic_cast<awst::BytesWType const*>(e.wtype))
 			if (bw->length().has_value())
 				return *bw->length();
 		return 0;
 	};
 	auto padOperand = [&](std::shared_ptr<awst::Expression>& expr, size_t targetLen) {
-		auto* newType = m_ctx.typeMapper.createType<awst::BytesWType>(
+		auto* newType = _ctx.typeMapper.createType<awst::BytesWType>(
 			static_cast<int>(targetLen));
 		if (auto* bc = dynamic_cast<awst::BytesConstant*>(expr.get()))
 		{
@@ -160,7 +146,7 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 				std::move(val), expr->sourceLocation, awst::BytesEncoding::Utf8, newType);
 			return;
 		}
-		size_t len = bytesLen(*expr);
+		size_t len = declaredLen(*expr);
 		if (len == 0 || len >= targetLen)
 			return;
 		auto loc = expr->sourceLocation;
@@ -170,12 +156,29 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 				awst::makeBzero(static_cast<int>(targetLen - len), loc), loc),
 			newType, loc);
 	};
-	size_t common = std::max(bytesLen(*lhs), bytesLen(*rhs));
+	size_t common = std::max(declaredLen(*_lhs), declaredLen(*_rhs));
 	if (common > 0)
 	{
-		padOperand(lhs, common);
-		padOperand(rhs, common);
+		padOperand(_lhs, common);
+		padOperand(_rhs, common);
 	}
+}
+
+std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
+	InstanceBuilder& _other, BuilderComparisonOp _op,
+	awst::SourceLocation const& _loc)
+{
+	bool otherIsBytes = _other.wtype() && _other.wtype()->kind() == awst::WTypeKind::Bytes;
+	bool otherIsAccount = _other.wtype() == awst::WType::accountType();
+	if (!otherIsBytes && !otherIsAccount)
+		return nullptr;
+
+	auto lhs = resolve();
+	auto rhs = _other.resolve();
+
+	// EVM left-aligned bytesN compare: pad both sides to the common declared
+	// width (equality AND the ordered b</b> intrinsics below need it).
+	padBytesOperandsToCommonWidth(m_ctx, lhs, rhs);
 
 	if (_op == BuilderComparisonOp::Eq || _op == BuilderComparisonOp::Ne)
 	{

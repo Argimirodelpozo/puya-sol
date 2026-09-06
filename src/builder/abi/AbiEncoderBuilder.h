@@ -57,6 +57,17 @@ public:
 		std::vector<std::shared_ptr<awst::Expression>> _values,
 		awst::SourceLocation const& _loc);
 
+	/// Build `_args[_first..]` and encode them as canonical EVM ABI — the
+	/// argument loop shared by encode / encodeWithSelector / encodeWithSignature.
+	/// Each arg is typed at its solc mobile type (literals get the concrete ABI
+	/// type Solidity assigns at this call) and coerced there when the built
+	/// value's wtype differs.
+	static std::shared_ptr<awst::Expression> encodeArgsAsEvmAbi(
+		ContractContext& _ctx,
+		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const& _args,
+		size_t _first,
+		awst::SourceLocation const& _loc);
+
 	/// ARC4-encode an already-built list of argument values into a single bytes
 	/// expression: 0 values → empty bytes; 1 value → that value's ARC4 bytes (NO
 	/// tuple wrapper); N values → an ARC4 tuple. Each value is encoded at

@@ -753,23 +753,17 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
 }
 
 
-std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgsAsEvmAbi(
 	ContractContext& _ctx,
-	solidity::frontend::FunctionCall const& _callNode,
+	std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const& _args,
+	size_t _first,
 	awst::SourceLocation const& _loc)
 {
-	using namespace solidity::frontend;
-	auto const& args = _callNode.arguments();
-
-	if (args.empty())
-		return std::make_unique<GenericAbiResult>(
-			_ctx, awst::makeBytesConstant({}, _loc));
-
 	std::vector<solidity::frontend::Type const*> types;
 	std::vector<std::shared_ptr<awst::Expression>> values;
-	for (auto const& arg: args)
+	for (size_t i = _first; i < _args.size(); ++i)
 	{
-		auto const* sourceType = arg->annotation().type;
+		auto const* sourceType = _args[i]->annotation().type;
 		auto const* type = sourceType;
 		// Solc leaves literals as rational/string-literal pseudo-types. Its
 		// mobile type is the concrete ABI type Solidity assigns at this call.
@@ -777,7 +771,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 			if (auto const* mobile = type->mobileType())
 				type = mobile;
 		types.push_back(type);
-		auto value = _ctx.buildExpr(*arg);
+		auto value = _ctx.buildExpr(*_args[i]);
 		if (type)
 			if (auto const* target = _ctx.typeMapper.map(type);
 				target && value->wtype != target)
@@ -787,9 +781,22 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
 						std::move(value), _loc);
 		values.push_back(std::move(value));
 	}
-	return std::make_unique<GenericAbiResult>(_ctx,
-		encodeValuesAsEvmAbi(_ctx, types, std::move(values), _loc));
+	return encodeValuesAsEvmAbi(_ctx, types, std::move(values), _loc);
+}
 
+std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncode(
+	ContractContext& _ctx,
+	solidity::frontend::FunctionCall const& _callNode,
+	awst::SourceLocation const& _loc)
+{
+	auto const& args = _callNode.arguments();
+
+	if (args.empty())
+		return std::make_unique<GenericAbiResult>(
+			_ctx, awst::makeBytesConstant({}, _loc));
+
+	return std::make_unique<GenericAbiResult>(_ctx,
+		encodeArgsAsEvmAbi(_ctx, args, 0, _loc));
 }
 
 // ── Top-level dispatcher ──

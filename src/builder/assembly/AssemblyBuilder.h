@@ -603,6 +603,13 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
+	/// shl/shr shared lowering: value * 2^shift mod 2^256 (left) or
+	/// value / 2^shift (right); 0 when shift ≥ 256 (EIP-145).
+	std::shared_ptr<awst::Expression> buildLogicalShift(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		char const* _name, bool _left, awst::SourceLocation const& _loc
+	);
+
 	/// Yul byte(n, x): extract byte n from 32-byte big-endian value x.
 	std::shared_ptr<awst::Expression> handleByte(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
@@ -638,6 +645,13 @@ private:
 	std::shared_ptr<awst::Expression> handleSmod(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc
+	);
+
+	/// sdiv/smod shared lowering: |a| op |b| with the sign re-applied
+	/// (div: sign(a) XOR sign(b); mod: sign(a)); x/0 = x%0 = 0.
+	std::shared_ptr<awst::Expression> buildSignedDivMod(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		char const* _name, bool _isDiv, awst::SourceLocation const& _loc
 	);
 
 	/// Yul slt(a, b): signed less-than (two's complement).

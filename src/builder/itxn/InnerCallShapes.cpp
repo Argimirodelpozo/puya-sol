@@ -228,6 +228,16 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 		argTypes.push_back(item->wtype);
 	_argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(std::move(argTypes), std::nullopt);
 
+	return submitAppCall(_ctx, std::move(_receiver), std::move(_argsTuple), std::move(_callValue), _loc);
+}
+
+std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitAppCall(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _receiver,
+	std::shared_ptr<awst::Expression> _argsTuple,
+	std::shared_ptr<awst::Expression> _callValue,
+	awst::SourceLocation const& _loc)
+{
 	// Receiver feeds both the payment's Receiver and the app id derivation.
 	std::shared_ptr<awst::Expression> payTxn;
 	if (_callValue)
@@ -244,7 +254,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 	create->fields["Fee"] = awst::makeZero(_loc);
 	create->fields["ApplicationID"] = std::move(appId);
 	create->fields["OnCompletion"] = awst::makeZero(_loc);
-	create->fields["ApplicationArgs"] = std::move(_argsTuple);
+	// No ApplicationArgs (null tuple): the callee sees empty calldata.
+	if (_argsTuple)
+		create->fields["ApplicationArgs"] = std::move(_argsTuple);
 
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
 	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
@@ -465,40 +477,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(
 		std::move(argTypes), std::nullopt);
 
-	// Receiver feeds both the payment's Receiver and the app id derivation.
-	std::shared_ptr<awst::Expression> payTxn;
-	if (_callValue)
-	{
-		_receiver = awst::makeEvalOnce(_receiver, _loc);
-		payTxn = buildNativePayment(_ctx.typeMapper.profile(), _ctx.preEffects(),
-			_receiver, std::move(_callValue), _loc);
-	}
-	auto appId = addressToAppId(std::move(_receiver), _loc);
-
-	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
-	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
-	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, _loc);
-	create->fields["Fee"] = awst::makeZero(_loc);
-	create->fields["ApplicationID"] = std::move(appId);
-	create->fields["OnCompletion"] = awst::makeZero(_loc);
-	create->fields["ApplicationArgs"] = std::move(argsTuple);
-
-	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
-	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
-	if (payTxn)
-		submit->itxns.push_back(std::move(payTxn));
-	submit->itxns.push_back(std::move(create));
-
-	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
-	_ctx.preEffects().push_back(std::move(submitStmt));
-
-	// Capture THIS submit's log (see captureLastLog: tuple-of-calls clobbering).
-	auto readLog = captureLastLog(_ctx, _loc);
-	auto stripPrefix = awst::makeExtract(
-		std::move(readLog), 4, 0, _loc); // ARC-4 return log prefix
-
-	return std::make_unique<GenericResultBuilder>(_ctx,
-		makeBoolBytesTuple(true, std::move(stripPrefix), _loc));
+	return submitAppCall(_ctx, std::move(_receiver), std::move(argsTuple), std::move(_callValue), _loc);
 }
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEmptyData(
@@ -513,26 +492,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEmptyData(
 	// fail the inner txn — the LowLevelCallOutcome adaptation applies.
 	EvmFeaturePolicy::report(
 		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
-	auto appId = addressToAppId(std::move(_receiver), _loc);
-
-	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
-	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
-	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, _loc);
-	create->fields["Fee"] = awst::makeZero(_loc);
-	create->fields["ApplicationID"] = std::move(appId);
-	create->fields["OnCompletion"] = awst::makeZero(_loc);
-	// No ApplicationArgs: the callee sees empty calldata.
-
-	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
-	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
-	submit->itxns.push_back(std::move(create));
-	_ctx.preEffects().push_back(
-		awst::makeExpressionStatement(std::move(submit), _loc));
-
-	auto readLog = captureLastLog(_ctx, _loc);
-	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, _loc);
-	return std::make_unique<GenericResultBuilder>(_ctx,
-		makeBoolBytesTuple(true, std::move(stripPrefix), _loc));
+	return submitAppCall(_ctx, std::move(_receiver), nullptr, nullptr, _loc);
 }
 
 // ── .staticcall(data) precompile routing ──

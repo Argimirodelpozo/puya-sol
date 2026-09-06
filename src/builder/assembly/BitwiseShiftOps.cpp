@@ -453,28 +453,34 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleDiv(
 	);
 }
 
-std::shared_ptr<awst::Expression> AssemblyBuilder::handleShl(
+std::shared_ptr<awst::Expression> AssemblyBuilder::buildLogicalShift(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
-	awst::SourceLocation const& _loc
+	char const* _name, bool _left, awst::SourceLocation const& _loc
 )
 {
-	// shl(shift, value) → (value * 2^shift) mod 2^256, or 0 when shift ≥ 256 (EIP-145).
+	// shl(shift, value) → (value * 2^shift) mod 2^256, shr(shift, value) →
+	// value / 2^shift; both 0 when shift ≥ 256 (EIP-145): `shr(sub(256,…), MASK)`
+	// → shr(256,…) at bucket boundaries must return 0 (AAVE
+	// PositionStatusMap.sol:223), and AVM b>> has no such clamping.
 	// Arg order is (shift, value) — reversed vs. C/AVM.
-	if (!checkArity(_args, 2, "shl", _loc))
+	if (!checkArity(_args, 2, _name, _loc))
 		return nullptr;
 	// Materialize once: shift feeds both buildPowerOf2 and the <256 conditional
 	// (makeEvalOnce = OperandPlan primitive; skips SE on a constant amount).
 	auto shift = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
-	// Reduce value mod 2^256 before multiplying. Negative int128 decoded as
-	// arc4.uint512 yields a 512-bit biguint; (512-bit * 2^s) overflows AVM's
-	// 64-byte bigint limit before the trailing mod can reduce it (V4 Pool.updateTick
+	// Reduce value mod 2^256 first. Negative int128 decoded as arc4.uint512
+	// yields a 512-bit biguint; (512-bit * 2^s) overflows AVM's 64-byte bigint
+	// limit before the trailing mod can reduce it (V4 Pool.updateTick
 	// shl(128, liquidityNet)). Pre-reduction is a no-op for values already <2^256.
 	auto value = wrapMod256(ensureBiguint(_args[1], _loc), _loc);
 	auto power = buildPowerOf2(shift, _loc);
-	auto product = makeBigUIntBinOp(
-		value, awst::BigUIntBinaryOperator::Mult, std::move(power), _loc
+	auto shifted = makeBigUIntBinOp(
+		value,
+		_left ? awst::BigUIntBinaryOperator::Mult : awst::BigUIntBinaryOperator::FloorDiv,
+		std::move(power), _loc
 	);
-	auto wrapped = wrapMod256(std::move(product), _loc);
+	if (_left)
+		shifted = wrapMod256(std::move(shifted), _loc);
 	auto twoFiftySix = awst::makeIntegerConstant(
 		"256", _loc, awst::WType::biguintType());
 	auto cond = awst::makeNumericCompare(
@@ -482,8 +488,16 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShl(
 	auto zero = awst::makeIntegerConstant(
 		"0", _loc, awst::WType::biguintType());
 	return awst::makeConditional(
-		std::move(cond), std::move(wrapped), std::move(zero),
+		std::move(cond), std::move(shifted), std::move(zero),
 		awst::WType::biguintType(), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleShl(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc
+)
+{
+	return buildLogicalShift(_args, "shl", /*_left=*/true, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleShr(
@@ -491,28 +505,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShr(
 	awst::SourceLocation const& _loc
 )
 {
-	// shr(shift, value) → value / 2^shift, or 0 when shift ≥ 256 (EIP-145).
-	// `shr(sub(256,…), MASK)` → shr(256,…) at bucket boundaries must return 0
-	// (see AAVE PositionStatusMap.sol:223). AVM b>> has no such clamping.
-	if (!checkArity(_args, 2, "shr", _loc))
-		return nullptr;
-	// Materialize once: shift feeds both buildPowerOf2 and the <256 conditional
-	// (makeEvalOnce = OperandPlan primitive; skips SE on a constant amount).
-	auto shift = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
-	auto value = wrapMod256(ensureBiguint(_args[1], _loc), _loc);
-	auto power = buildPowerOf2(shift, _loc);
-	auto divResult = makeBigUIntBinOp(
-		value, awst::BigUIntBinaryOperator::FloorDiv, std::move(power), _loc
-	);
-	auto twoFiftySix = awst::makeIntegerConstant(
-		"256", _loc, awst::WType::biguintType());
-	auto cond = awst::makeNumericCompare(
-		shift, awst::NumericComparison::Lt, std::move(twoFiftySix), _loc);
-	auto zero = awst::makeIntegerConstant(
-		"0", _loc, awst::WType::biguintType());
-	return awst::makeConditional(
-		std::move(cond), std::move(divResult), std::move(zero),
-		awst::WType::biguintType(), _loc);
+	return buildLogicalShift(_args, "shr", /*_left=*/false, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleByte(

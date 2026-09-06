@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/contract/ReturnFinishing.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/storage/EvmLayoutMode.h"
@@ -460,93 +461,235 @@ void ContractBuilder::registerBodyRefParams(
 
 }
 
+// ── Body finishing shared with buildFreestandingSubroutine (ReturnFinishing.h) ──
+
+void emitNamedReturnInits(
+	awst::Block& _body,
+	solidity::frontend::FunctionDefinition const& _func,
+	TypeMapper& _typeMapper,
+	bool _skipValueInits,
+	int _memoryBumpMinBytes,
+	awst::SourceLocation const& _loc)
+{
+	using solidity::frontend::VariableDeclaration;
+	auto const& retParams = _func.returnParameters();
+	std::vector<std::shared_ptr<awst::Statement>> inits;
+	for (auto const& rp: retParams)
+	{
+		if (_skipValueInits) break;   // value zero-init handled by the chain's outer method
+		if (rp->name().empty())
+			continue;
+		// Box-keyed storage-ref named returns hold a bytes box-key, not a struct — skip zero-init.
+		if (rp->referenceLocation() == VariableDeclaration::Location::Storage
+			&& storageRefReturnIsBytesKeyed(&_func, _typeMapper.analysis()))
+			continue;
+		// --evm-storage-layout: the named return holds a biguint slot.
+		if ((_typeMapper.profile().evmStorageLayout || storageRefReturnUsesSlot(&_func, _typeMapper.analysis()))
+			&& rp->referenceLocation() == VariableDeclaration::Location::Storage)
+		{
+			inits.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(rp->name(), awst::WType::biguintType(), _loc),
+				awst::makeZero(_loc, awst::WType::biguintType()),
+				_loc));
+			continue;
+		}
+		auto* rpType = _typeMapper.map(rp->type());
+
+		// >4KB memory returns: pre-zeroed in preamble; skip bzero (pointer model).
+		if (rp->referenceLocation() == VariableDeclaration::Location::Memory
+			&& memoryUsesBlob(rpType))
+			continue;
+
+		auto target = awst::makeVarExpression(rp->name(), rpType, _loc);
+		auto zeroVal = StorageMapper::makeDefaultValue(rpType, _loc);
+		inits.push_back(awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), _loc));
+	}
+	for (auto const& rp: retParams)
+	{
+		if (rp->referenceLocation() != VariableDeclaration::Location::Memory)
+			continue;
+		auto* rpType = _typeMapper.map(rp->type());
+		int sz = computeEncodedElementSize(rpType).fixedBytes<int>().value_or(0);
+		if (sz <= _memoryBumpMinBytes)
+			continue;
+		// Blob-backed memory return: bind FMP (before bump) to __blobagg_off_<id>
+		// to match blob-aggregate registration in ContractBuilder::buildBlock.
+		if (memoryUsesBlob(rpType))
+		{
+			std::string offN = "__blobagg_off_" + std::to_string(rp->id());
+			auto blob = awst::makeLoadSlot(
+				_typeMapper.profile().scratchLayout.memoryFirst(), _loc);
+			auto base = awst::makeExtractUInt64(std::move(blob),
+				awst::makeIntegerConstant("88", _loc), _loc);
+			inits.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
+				std::move(base), _loc));
+		}
+		for (auto& s: AssemblyBuilder::emitFreeMemoryBump(
+				_typeMapper.profile().scratchLayout, sz, _loc, static_cast<int>(rp->id())))
+			inits.push_back(std::move(s));
+	}
+	if (!inits.empty())
+		_body.body.insert(
+			_body.body.begin(),
+			std::make_move_iterator(inits.begin()),
+			std::make_move_iterator(inits.end()));
+}
+
+void emitImplicitReturn(
+	awst::Block& _body,
+	awst::WType const* _returnType,
+	solidity::frontend::FunctionDefinition const& _func,
+	TypeMapper& _typeMapper,
+	sol_ast::FunctionContext const& _fnCtx,
+	ImplicitReturnShape const& _shape,
+	awst::SourceLocation const& _loc)
+{
+	using solidity::frontend::VariableDeclaration;
+	if (!_shape.hasReturnValue || blockAlwaysTerminates(_body))
+		return;
+
+	auto const& retParams = _func.returnParameters();
+	bool hasNamedReturns = false;
+	for (auto const& rp: retParams)
+		if (!rp->name().empty())
+			hasNamedReturns = true;
+
+	static std::vector<size_t> const s_noAugmentation;
+	auto const& storageIdx = _shape.storageParamIndices ? *_shape.storageParamIndices : s_noAugmentation;
+	auto const& memoryIdx = _shape.memoryRefParamIndices ? *_shape.memoryRefParamIndices : s_noAugmentation;
+	size_t const totalAugmented = storageIdx.size() + memoryIdx.size();
+	auto augmentedArg = [&](size_t idx) {
+		auto const& arg = (*_shape.args)[idx];
+		return awst::makeVarExpression(arg.name, arg.wtype, _loc);
+	};
+	auto blobOffVar = [&](VariableDeclaration const& rp) {
+		return awst::makeVarExpression(
+			"__blobagg_off_" + std::to_string(rp.id()), awst::WType::uint64Type(), _loc);
+	};
+	// Any named memory aggregate exposed to Yul may have been mutated or
+	// repointed: reconstruct its native value from the current offset.
+	auto materialized = [&](VariableDeclaration const& rp, awst::WType const* wtype) {
+		std::vector<std::shared_ptr<awst::Statement>> reads;
+		auto value = materializeBlobValue(
+			_typeMapper, rp.type(), wtype,
+			"__blobagg_off_" + std::to_string(rp.id()), _loc, reads);
+		for (auto& st: reads)
+			_body.body.push_back(std::move(st));
+		return value;
+	};
+
+	auto retStmt = awst::makeReturnStatement(nullptr, _loc);
+	if (!hasNamedReturns && retParams.empty() && totalAugmented > 0)
+	{
+		// Void + augmentation: return augmented args in storage-then-memory order.
+		if (totalAugmented == 1)
+			retStmt->value = augmentedArg(!storageIdx.empty() ? storageIdx[0] : memoryIdx[0]);
+		else
+		{
+			auto tuple = awst::makeTupleExpression(_returnType, _loc);
+			for (size_t idx: storageIdx)
+				tuple->items.push_back(augmentedArg(idx));
+			for (size_t idx: memoryIdx)
+				tuple->items.push_back(augmentedArg(idx));
+			retStmt->value = std::move(tuple);
+		}
+	}
+	else if (hasNamedReturns && retParams.size() == 1 && totalAugmented == 0)
+	{
+		auto const& rp = *retParams[0];
+		bool const inMemory = rp.referenceLocation() == VariableDeclaration::Location::Memory;
+		if (_shape.calldataPointerReturns && _fnCtx.seededCalldataPointers.count(rp.name()))
+			retStmt->value = TypeCoercion::calldataPointerValueRead(rp.name(), _loc);
+		else if (inMemory && _fnCtx.isAssemblyAggregate(rp.id())
+			&& !memoryUsesBlob(_typeMapper.map(rp.type())))
+			retStmt->value = materialized(rp, _typeMapper.map(rp.type()));
+		else
+		{
+			auto const* vt = rp.referenceLocation() == VariableDeclaration::Location::Storage
+				? _typeMapper.functionReturnPlan(_func).nativeType
+				: _typeMapper.map(rp.type());
+			if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(vt))
+				retStmt->value = blobOffVar(rp);
+			else
+				retStmt->value = awst::makeVarExpression(rp.name(), vt, _loc);
+		}
+	}
+	else if (hasNamedReturns)
+	{
+		// Named values, then the augmented args (matches the augmented return type).
+		auto tuple = awst::makeTupleExpression(nullptr, _loc);
+		for (auto const& rpPtr: retParams)
+		{
+			auto const& rp = *rpPtr;
+			bool const inMemory = rp.referenceLocation() == VariableDeclaration::Location::Memory;
+			auto const* vt = (_typeMapper.profile().evmStorageLayout
+				&& rp.referenceLocation() == VariableDeclaration::Location::Storage)
+				? awst::WType::biguintType()   // slot handle
+				: _typeMapper.map(rp.type());
+			if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(vt))
+				tuple->items.push_back(blobOffVar(rp));
+			else if (inMemory && _fnCtx.isAssemblyAggregate(rp.id()) && !memoryUsesBlob(vt))
+				tuple->items.push_back(materialized(rp, vt));
+			else
+				tuple->items.push_back(awst::makeVarExpression(rp.name(), vt, _loc));
+		}
+		for (size_t idx: storageIdx)
+			tuple->items.push_back(augmentedArg(idx));
+		for (size_t idx: memoryIdx)
+			tuple->items.push_back(augmentedArg(idx));
+		tuple->wtype = _returnType;
+		retStmt->value = std::move(tuple);
+	}
+	else
+		retStmt->value = StorageMapper::makeDefaultValue(_returnType, _loc);
+
+	// Build-time encoding: the synthesized implicit return is the SECOND return
+	// construction site (SolReturnStatement is the first, for explicit returns);
+	// encode it here too so it matches the wire method.returnType. The value is
+	// a named var (scalar) or a literal tuple of named vars — never an opaque
+	// call, so the spill vector stays empty.
+	if (_shape.encodeReturns && retStmt->value)
+	{
+		std::vector<std::shared_ptr<awst::Statement>> prepend;
+		retStmt->value = TypeCoercion::encodeReturnValue(
+			_typeMapper, std::move(retStmt->value), *_shape.returnPlan,
+			_loc, prepend, /*asmWrap=*/_shape.asmWrap);
+		for (auto& s: prepend)
+			_body.body.push_back(std::move(s));
+	}
+
+	// Enum range check on implicit named-return.
+	if (_shape.enumRangeAssert && hasNamedReturns && retParams.size() == 1)
+	{
+		if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retParams[0]->type()))
+		{
+			unsigned numMembers = enumType->numberOfMembers();
+			auto var = awst::makeVarExpression(retParams[0]->name(), awst::WType::uint64Type(), _loc);
+
+			auto assertStmt = awst::makeExpressionStatement(
+				awst::makeEnumRangeAssert(std::move(var), numMembers, _loc),
+				_loc);
+			_body.body.push_back(std::move(assertStmt));
+		}
+	}
+
+	_body.body.push_back(std::move(retStmt));
+}
+
 /// buildFunction phase: zero-init named return vars (Solidity implicit init) and bump the free-memory pointer for memory-typed …
 void ContractBuilder::prependNamedReturnInits(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func)
 {
-	// Zero-init named return vars (Solidity implicit init); bump free-memory pointer
-	// for every memory-typed return (EVM allocates at entry; tests probe FMP movement).
-	// For a CHAIN-lowered modifier'd function the return params are THREADED in/out as
-	// call args (buildModifierChain), so the OUTER method zero-inits them once — doing it
-	// again in the body would reset the value on every repeated `_;` (no accumulation).
-	// Skip the VALUE zero-inits there (keep the memory FMP bumps).
-	bool const chainLowered = !_func.modifiers().empty();
-	{
-		auto const& retParams = _func.returnParameters();
-		std::vector<std::shared_ptr<awst::Statement>> inits;
-		for (auto const& rp: retParams)
-		{
-			if (chainLowered) break;   // value zero-init handled by the chain's outer method
-			if (rp->name().empty())
-				continue;
-			// Box-keyed storage-ref named returns hold a bytes box-key, not a struct — skip zero-init.
-			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& storageRefReturnIsBytesKeyed(&_func, m_typeMapper.analysis()))
-				continue;
-			// --evm-storage-layout: the named return holds a biguint slot.
-			if ((m_typeMapper.profile().evmStorageLayout || storageRefReturnUsesSlot(&_func, m_typeMapper.analysis()))
-				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
-			{
-				inits.push_back(awst::makeAssignmentStatement(
-					awst::makeVarExpression(rp->name(), awst::WType::biguintType(),
-						method.sourceLocation),
-					awst::makeZero(method.sourceLocation, awst::WType::biguintType()),
-					method.sourceLocation));
-				continue;
-			}
-			auto* rpType = m_typeMapper.map(rp->type());
-
-			// >4KB memory returns: pre-zeroed in preamble; skip bzero (pointer model).
-			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-				&& memoryUsesBlob(rpType))
-				continue;
-
-			auto target = awst::makeVarExpression(rp->name(), rpType, method.sourceLocation);
-
-			auto zeroVal = StorageMapper::makeDefaultValue(rpType, method.sourceLocation);
-
-			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), method.sourceLocation);
-			inits.push_back(std::move(assign));
-		}
-		for (auto const& rp: retParams)
-		{
-			if (rp->referenceLocation()
-				!= solidity::frontend::VariableDeclaration::Location::Memory)
-				continue;
-			auto* rpType = m_typeMapper.map(rp->type());
-			int sz = computeEncodedElementSize(rpType).fixedBytes<int>().value_or(0);
-			if (sz <= 0)
-				continue;
-			// Blob-backed memory return: bind FMP (before bump) to __blobagg_off_<id>
-			// to match blob-aggregate registration in ContractBuilder::buildBlock.
-			if (memoryUsesBlob(rpType))
-			{
-				std::string offN = "__blobagg_off_" + std::to_string(rp->id());
-				auto blob = awst::makeLoadSlot(
-					m_typeMapper.profile().scratchLayout.memoryFirst(),
-					method.sourceLocation);
-				auto base = awst::makeExtractUInt64(std::move(blob),
-					awst::makeIntegerConstant("88", method.sourceLocation), method.sourceLocation);
-				inits.push_back(awst::makeAssignmentStatement(
-					awst::makeVarExpression(offN, awst::WType::uint64Type(), method.sourceLocation),
-					std::move(base), method.sourceLocation));
-			}
-			for (auto& s: AssemblyBuilder::emitFreeMemoryBump(
-					m_typeMapper.profile().scratchLayout, sz,
-					method.sourceLocation, static_cast<int>(rp->id())))
-				inits.push_back(std::move(s));
-		}
-		if (!inits.empty())
-		{
-			method.body->body.insert(
-				method.body->body.begin(),
-				std::make_move_iterator(inits.begin()),
-				std::make_move_iterator(inits.end())
-			);
-		}
-	}
-
+	// For a CHAIN-lowered modifier'd function the return params are THREADED
+	// in/out as call args (buildModifierChain), so the OUTER method zero-inits
+	// them once — skip the VALUE zero-inits here (keep the memory FMP bumps);
+	// EVM allocates every memory-typed return at entry (tests probe FMP movement).
+	emitNamedReturnInits(
+		*method.body, _func, m_typeMapper,
+		/*_skipValueInits=*/!_func.modifiers().empty(),
+		/*_memoryBumpMinBytes=*/0, method.sourceLocation);
 }
 
 /// buildFunction phase: synthesize the implicit return (named vars or default zero) when the body can fall off the end, including …
@@ -557,126 +700,16 @@ void ContractBuilder::synthesizeImplicitReturn(
 	std::vector<ReturnWireElem> const& returnPlan,
 	bool funcHasInlineAssembly)
 {
-	// Synthesize implicit return: named-return vars or default zero.
-	if (method.returnType != awst::WType::voidType()
-		&& !blockAlwaysTerminates(*method.body))
-	{
-		auto const& retParams = _func.returnParameters();
-		bool hasNamedReturns = false;
-		for (auto const& rp: retParams)
-			if (!rp->name().empty())
-				hasNamedReturns = true;
-
-		auto retStmt = awst::makeReturnStatement(nullptr, method.sourceLocation);
-
-		if (hasNamedReturns)
-		{
-			if (retParams.size() == 1)
-			{
-				// A named CALLDATA return whose pointer locals are live (an asm
-				// block wrote x.offset/x.length — calldata_assign_from_nowhere)
-				// reads through the pointer, not the (zero-init) local.
-				if (m_functionCtx->seededCalldataPointers.count(
-						retParams[0]->name()))
-					retStmt->value = TypeCoercion::calldataPointerValueRead(
-						retParams[0]->name(), method.sourceLocation);
-				else if (retParams[0]->referenceLocation()
-						== solidity::frontend::VariableDeclaration::Location::Memory
-					&& m_functionCtx->isAssemblyAggregate(retParams[0]->id())
-					&& !memoryUsesBlob(m_typeMapper.map(retParams[0]->type())))
-				{
-					// Any named memory aggregate exposed to Yul may have been
-					// mutated or repointed. Reconstruct its native value from the
-					// current offset for the implicit Solidity return, at any shape.
-					std::vector<std::shared_ptr<awst::Statement>> reads;
-					retStmt->value = materializeBlobValue(
-						m_typeMapper, retParams[0]->type(),
-						m_typeMapper.map(retParams[0]->type()),
-						"__blobagg_off_" + std::to_string(retParams[0]->id()),
-						method.sourceLocation, reads);
-					for (auto& st: reads)
-						method.body->body.push_back(std::move(st));
-				}
-				else if (retParams[0]->referenceLocation()
-						== solidity::frontend::VariableDeclaration::Location::Storage)
-					retStmt->value = awst::makeVarExpression(
-						retParams[0]->name(), m_typeMapper.functionReturnPlan(_func).nativeType,
-						method.sourceLocation);
-				else
-					retStmt->value = awst::makeVarExpression(
-						retParams[0]->name(), m_typeMapper.map(retParams[0]->type()), method.sourceLocation);
-			}
-			else
-			{
-				auto tuple = awst::makeTupleExpression(nullptr, method.sourceLocation);
-				for (auto const& rp: retParams)
-				{
-					auto* vt = (m_typeMapper.profile().evmStorageLayout
-						&& rp->referenceLocation()
-							== solidity::frontend::VariableDeclaration::Location::Storage)
-						? awst::WType::biguintType()
-						: m_typeMapper.map(rp->type());
-					if (rp->referenceLocation()
-							== solidity::frontend::VariableDeclaration::Location::Memory
-						&& m_functionCtx->isAssemblyAggregate(rp->id())
-						&& !memoryUsesBlob(vt))
-					{
-						std::vector<std::shared_ptr<awst::Statement>> reads;
-						auto value = materializeBlobValue(
-							m_typeMapper, rp->type(), vt,
-							"__blobagg_off_" + std::to_string(rp->id()),
-							method.sourceLocation, reads);
-						for (auto& st: reads)
-							method.body->body.push_back(std::move(st));
-						tuple->items.push_back(std::move(value));
-					}
-					else
-						tuple->items.push_back(awst::makeVarExpression(
-							rp->name(), vt, method.sourceLocation));
-				}
-				tuple->wtype = method.returnType;
-				retStmt->value = std::move(tuple);
-			}
-		}
-		else
-		{
-			retStmt->value = StorageMapper::makeDefaultValue(method.returnType, method.sourceLocation);
-		}
-
-		// Build-time encoding: the synthesized implicit return is the SECOND return
-		// construction site (SolReturnStatement is the first, for explicit returns);
-		// encode it here too so it matches the wire method.returnType set below. The
-		// value is a named var (scalar) or a literal tuple of named vars — never an
-		// opaque call, so the spill vector stays empty.
-		if (encodeReturnsAtBuildTime && retStmt->value)
-		{
-			std::vector<std::shared_ptr<awst::Statement>> prepend;
-			retStmt->value = TypeCoercion::encodeReturnValue(
-				m_typeMapper, std::move(retStmt->value), returnPlan,
-				method.sourceLocation, prepend,
-				/*asmWrap=*/funcHasInlineAssembly);
-			for (auto& s: prepend)
-				method.body->body.push_back(std::move(s));
-		}
-
-		// Enum range check on implicit named-return.
-		if (hasNamedReturns && retParams.size() == 1)
-		{
-			if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retParams[0]->type()))
-			{
-				unsigned numMembers = enumType->numberOfMembers();
-				auto var = awst::makeVarExpression(retParams[0]->name(), awst::WType::uint64Type(), method.sourceLocation);
-
-				auto assertStmt = awst::makeExpressionStatement(
-					awst::makeEnumRangeAssert(std::move(var), numMembers, method.sourceLocation),
-					method.sourceLocation);
-				method.body->body.push_back(std::move(assertStmt));
-			}
-		}
-
-		method.body->body.push_back(std::move(retStmt));
-	}
-
+	ImplicitReturnShape shape;
+	shape.hasReturnValue = method.returnType != awst::WType::voidType();
+	shape.calldataPointerReturns = true;
+	shape.enumRangeAssert = true;
+	shape.encodeReturns = encodeReturnsAtBuildTime;
+	shape.returnPlan = &returnPlan;
+	shape.asmWrap = funcHasInlineAssembly;
+	emitImplicitReturn(
+		*method.body, method.returnType, _func, m_typeMapper, *m_functionCtx,
+		shape, method.sourceLocation);
 }
 
 /// buildFunction phase: sub-64-bit / bool / enum param guards at the ABI entry.
