@@ -22,6 +22,7 @@
 #include "builder/sol-types/Arc4Defaults.h"
 #include "Logger.h"
 
+#include <cctype>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 // yul nodes BY VALUE (the AST aliases are std::variant, which needs
@@ -129,6 +130,24 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	m_hostBoundFunctions.clear();
 	m_hostBoundFunctionIds.clear();
 	m_selectorContracts.clear();
+	// solc emits colliding contract names under their fully qualified name
+	// (CompilerStack::filesystemFriendlyName); unique names stay plain. The
+	// backend derives artifact stems from the AWST contract name, so apply the
+	// same rule here, sanitized to the artifact-stem alphabet.
+	m_artifactNames.clear();
+	for (auto const& qualifiedName: _compiler.contractNames())
+	{
+		std::string friendly = _compiler.filesystemFriendlyName(qualifiedName);
+		std::string const plain = qualifiedName.substr(qualifiedName.rfind(':') + 1);
+		if (friendly == plain)
+			continue;
+		for (auto& c: friendly)
+			if (!(std::isalnum(static_cast<unsigned char>(c)) || c == '_'))
+				c = '_';
+		if (!friendly.empty() && std::isdigit(static_cast<unsigned char>(friendly.front())))
+			friendly.insert(friendly.begin(), '_');
+		m_artifactNames[qualifiedName] = friendly;
+	}
 	for (auto const& sourceName: _compiler.sourceNames())
 		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
 			solidity::frontend::ContractDefinition>(_compiler.ast(sourceName).nodes()))
@@ -895,6 +914,7 @@ void AWSTBuilder::translateContracts(
 				_opupBudget, _ensureBudget, _viaYulBehavior,
 				m_hostBoundFunctions
 			);
+			translator.setArtifactNames(m_artifactNames);
 			auto const& storagePlan = m_session.storagePlan(*contract);
 			auto const emitEvmStorageRuntime = evmStorageRuntimeNeeded
 				&& !emittedEvmStorageRuntime;
@@ -1044,6 +1064,7 @@ void AWSTBuilder::translateContracts(
 				_opupBudget, _ensureBudget, _viaYulBehavior,
 				m_hostBoundFunctions
 			);
+			translator.setArtifactNames(m_artifactNames);
 			auto const& storagePlan = m_session.storagePlan(*lib);
 			auto const emitEvmStorageRuntime = evmStorageRuntimeNeeded
 				&& !emittedEvmStorageRuntime;

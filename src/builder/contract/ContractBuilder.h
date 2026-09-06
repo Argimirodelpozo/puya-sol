@@ -125,6 +125,12 @@ public:
 	);
 
 	/// Build AWST from a full contract definition.
+	/// Artifact names for colliding contract names (see ContractBuilder::build).
+	void setArtifactNames(std::map<std::string, std::string> _names)
+	{
+		m_artifactNames = std::move(_names);
+	}
+
 	std::shared_ptr<awst::Contract> build(
 		solidity::frontend::ContractDefinition const& _contract,
 		StorageRuntimePlan const& _storagePlan,
@@ -150,6 +156,9 @@ private:
 	std::map<std::string, uint64_t> m_ensureBudget;
 	bool m_viaIR = false;
 	std::vector<solidity::frontend::FunctionDefinition const*> m_hostBoundFunctions;
+	/// Fully qualified name → artifact (AWST contract) name for contracts whose
+	/// plain name collides within the compilation (solc's filesystem-friendly rule).
+	std::map<std::string, std::string> m_artifactNames;
 
 	std::unique_ptr<eb::ContractContext> m_exprBuilder;
 

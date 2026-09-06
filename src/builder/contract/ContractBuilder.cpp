@@ -529,6 +529,12 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_storageMapper.beginContract(_storagePlan.solidityLayout, m_sourceFile);
 	m_boxArrayVars.clear();
 	std::string contractName = _contract.name();
+	// solc's CompilerStack::filesystemFriendlyName rule: a contract whose name
+	// collides with another compiled contract is emitted under its fully
+	// qualified name (path and name joined by `_`); unique names stay plain.
+	if (auto it = m_artifactNames.find(_contract.fullyQualifiedName());
+		it != m_artifactNames.end())
+		contractName = it->second;
 	m_contractId = _contract.fullyQualifiedName();
 	auto const& contractId = m_contractId;
 

@@ -37,7 +37,8 @@ foreach(i RANGE 0 1)
 endforeach()
 
 # Identical bytes do not prove identity: different source units can resolve
-# their imports differently. Real output-name collisions must fail closed.
+# their imports differently. Colliding names follow solc: each contract is
+# emitted under its filesystem-friendly fully qualified name.
 foreach(name A B)
 	file(WRITE "${input}/${name}.sol"
 		"pragma solidity ^0.8.20; contract C { function f() public pure returns(uint64) { return 1; } }")
@@ -46,6 +47,13 @@ execute_process(COMMAND "${PUYA_SOL}"
 	--source "${input}/A.sol" --source "${input}/B.sol" --import-path "${input}"
 	--no-puya --output-dir "${OUTPUT_ROOT}/collision"
 	RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE errors)
-if(result EQUAL 0 OR NOT "${output}${errors}" MATCHES "artifact name collision: C.*A.sol:C.*B.sol:C")
-	message(FATAL_ERROR "distinct contracts must report both identities: ${output}\n${errors}")
+if(NOT result EQUAL 0)
+	message(FATAL_ERROR "colliding contract names must compile under solc's qualified artifact names: ${output}\n${errors}")
 endif()
+file(READ "${OUTPUT_ROOT}/collision/awst.json" collision_awst)
+foreach(expected_name A_sol_C B_sol_C)
+	string(FIND "${collision_awst}" "${expected_name}" found_name)
+	if(found_name EQUAL -1)
+		message(FATAL_ERROR "expected qualified artifact name ${expected_name} in the AWST: ${output}\n${errors}")
+	endif()
+endforeach()

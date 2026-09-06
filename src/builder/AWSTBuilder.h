@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include "awst/Node.h"
 #include "builder/CompilationSession.h"
 #include "builder/contract/ContractBuilder.h"
@@ -55,6 +57,8 @@ private:
 	/// a root Subroutine cannot call a contract instance method.
 	std::vector<solidity::frontend::FunctionDefinition const*> m_hostBoundFunctions;
 	std::set<int64_t> m_hostBoundFunctionIds;
+	/// solc's filesystemFriendlyName rule for colliding contract names.
+	std::map<std::string, std::string> m_artifactNames;
 	std::vector<solidity::frontend::ContractDefinition const*> m_selectorContracts;
 
 	// ── Build phases (executed in order from build()) ──
