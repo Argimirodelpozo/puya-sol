@@ -2,21 +2,13 @@
 
 #include "awst/Node.h"
 #include "builder/sol-types/SolcFwd.h"
+#include "builder/storage/StoragePathWalker.h"
 
 namespace puyasol::builder::eb { class ContractContext; }
 
 namespace puyasol::builder::sol_ast
 {
 class Context;
-
-/// Logical holder identity and serialized value path are distinct: an inline
-/// array/struct has a descendant mapping identity, but its ordinary fields and
-/// dynamic length still live inside the enclosing box.
-struct StorageHolder
-{
-	std::shared_ptr<awst::Expression> key;
-	std::shared_ptr<awst::Expression> value;
-};
 
 /// One path resolver for direct access, aliases and reference arguments.
 /// Consumes solc roots/member offsets/array facts and StorageKey's encoder.

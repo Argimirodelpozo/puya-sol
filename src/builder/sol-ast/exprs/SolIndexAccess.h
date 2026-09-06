@@ -60,13 +60,6 @@ private:
 		awst::WType const* _arrWtype,
 		std::shared_ptr<awst::Expression> _idxExpr);
 
-	/// Walk the root mapping/array type for `_numLevels` index steps,
-	/// returning the declared key wtype at each level (nullptr at array
-	/// levels). Used to coerce each runtime index expression to the
-	/// canonical encoding type before hashing.
-	std::vector<awst::WType const*> resolveKeyWTypes(
-		solidity::frontend::Type const* _rootType, size_t _numLevels);
-
 	/// Compute the value wtype reached after applying every mapping
 	/// layer in `_baseType`. For non-mapping base types, returns the
 	/// type-mapped wtype of the index expression itself.
