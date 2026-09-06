@@ -4,6 +4,7 @@
 
 #include "builder/proxies/UupsLowering.h"
 #include "builder/proxies/Erc1967Lowering.h"
+#include "awst/HelperMethod.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -89,13 +90,10 @@ awst::ContractMethod UupsLowering::updateGateMethod(
 	awst::ContractMethod const& _authorizeMethod,
 	awst::SourceLocation const& _loc)
 {
-	awst::ContractMethod method;
-	method.sourceLocation = _loc;
-	method.cref = _cref;
-	method.memberName = GATE_NAME;
-	method.returnType = awst::WType::voidType();
+	auto method = awst::makeHelperMethod(
+		_cref, GATE_NAME, awst::WType::voidType(), {}, _loc);
 
-	auto body = awst::makeBlock(_loc);
+	auto body = method.body;
 	// The user's permission hook IS the gate: its inlined modifiers
 	// (onlyOwner and friends) and body run inside the UpdateApplication txn.
 	// The "new implementation" argument has no meaningful value in the
@@ -117,7 +115,6 @@ awst::ContractMethod UupsLowering::updateGateMethod(
 	body->body.push_back(awst::makeExpressionStatement(std::move(call), _loc));
 	body->body.push_back(Erc1967Lowering::upgradedEvent(_loc));
 	body->body.push_back(awst::makeReturnStatement(nullptr, _loc));
-	method.body = std::move(body);
 
 	// ABI (not bare) for the same reasons as the 1967 gate: ARC-56 event
 	// aggregation and a declared update surface. UpdateApplication only,

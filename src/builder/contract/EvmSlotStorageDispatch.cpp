@@ -11,6 +11,7 @@
 #include <libsolidity/ast/Types.h>
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
+#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 
@@ -21,6 +22,17 @@ namespace puyasol::builder
 {
 namespace
 {
+/// Element-shape parameters of the dynamic-array codec, in argument order.
+constexpr char const* kDynarrMetrics[] = {"__size", "__aw", "__per", "__mul", "__bp"};
+
+/// `_args` followed by the five uint64 metric parameters.
+awst::HelperArgs withMetrics(awst::HelperArgs _args)
+{
+	for (char const* an: kDynarrMetrics)
+		_args.emplace_back(an, awst::WType::uint64Type());
+	return _args;
+}
+
 /// The seven runtime subroutines of the EVM-slot storage model, plus the
 /// expression factories they share.
 ///
@@ -138,21 +150,9 @@ struct EvmSlotCodec
 	// ── __storage_read(slot: biguint) -> biguint ──
 	void emitStorageRead(awst::Contract* _contractNode) const
 	{
-		awst::ContractMethod readSub;
-		readSub.sourceLocation = loc;
-		readSub.cref = cref;
-		readSub.memberName = "__storage_read";
-		readSub.returnType = awst::WType::biguintType();
-		readSub.arc4MethodConfig = std::nullopt;
-		readSub.pure = false;
-
-		awst::SubroutineArgument slotArg;
-		slotArg.name = "__slot";
-		slotArg.wtype = awst::WType::biguintType();
-		slotArg.sourceLocation = loc;
-		readSub.args.push_back(slotArg);
-
-		auto body = awst::makeBlock(loc);
+		auto readSub = awst::makeHelperMethod(cref, "__storage_read",
+			awst::WType::biguintType(), {{"__slot", awst::WType::biguintType()}}, loc);
+		auto body = readSub.body;
 		if (!denseOnly)
 			body->body.push_back(makeSlotWrapStmt());
 
@@ -195,34 +195,17 @@ struct EvmSlotCodec
 				denseCmp(), std::move(denseBlk), std::move(sparseBlk), loc));
 		}
 
-		readSub.body = body;
 		_contractNode->methods.push_back(std::move(readSub));
 	}
 
 	// ── __storage_write(slot: biguint, value: biguint) -> void ──
 	void emitStorageWrite(awst::Contract* _contractNode) const
 	{
-		awst::ContractMethod writeSub;
-		writeSub.sourceLocation = loc;
-		writeSub.cref = cref;
-		writeSub.memberName = "__storage_write";
-		writeSub.returnType = awst::WType::voidType();
-		writeSub.arc4MethodConfig = std::nullopt;
-		writeSub.pure = false;
-
-		awst::SubroutineArgument slotArg;
-		slotArg.name = "__slot";
-		slotArg.wtype = awst::WType::biguintType();
-		slotArg.sourceLocation = loc;
-		writeSub.args.push_back(slotArg);
-
-		awst::SubroutineArgument valArg;
-		valArg.name = "__value";
-		valArg.wtype = awst::WType::biguintType();
-		valArg.sourceLocation = loc;
-		writeSub.args.push_back(valArg);
-
-		auto body = awst::makeBlock(loc);
+		auto writeSub = awst::makeHelperMethod(cref, "__storage_write",
+			awst::WType::voidType(),
+			{{"__slot", awst::WType::biguintType()}, {"__value", awst::WType::biguintType()}},
+			loc);
+		auto body = writeSub.body;
 		if (!denseOnly)
 			body->body.push_back(makeSlotWrapStmt());
 
@@ -277,7 +260,6 @@ struct EvmSlotCodec
 				denseCmp(), std::move(denseBlk), std::move(sparseBlk), loc));
 		}
 
-		writeSub.body = body;
 		_contractNode->methods.push_back(std::move(writeSub));
 	}
 
@@ -336,20 +318,9 @@ struct EvmSlotCodec
 	// ── __evm_bytes_read(slot: biguint) -> bytes ──
 	void emitBytesRead(awst::Contract* _contractNode) const
 	{
-		awst::ContractMethod sub;
-		sub.sourceLocation = loc;
-		sub.cref = cref;
-		sub.memberName = "__evm_bytes_read";
-		sub.returnType = awst::WType::bytesType();
-		sub.arc4MethodConfig = std::nullopt;
-		sub.pure = false;
-		awst::SubroutineArgument slotArg;
-		slotArg.name = "__slot";
-		slotArg.wtype = awst::WType::biguintType();
-		slotArg.sourceLocation = loc;
-		sub.args.push_back(slotArg);
-
-		auto body = awst::makeBlock(loc);
+		auto sub = awst::makeHelperMethod(cref, "__evm_bytes_read",
+			awst::WType::bytesType(), {{"__slot", awst::WType::biguintType()}}, loc);
+		auto body = sub.body;
 		// wb = pad32(word); lastByte = wb[31]
 		body->body.push_back(awst::makeAssignmentStatement(
 			bytesVar("__wb"),
@@ -414,33 +385,19 @@ struct EvmSlotCodec
 		body->body.push_back(awst::makeReturnStatement(
 			awst::makeExtract3(bytesVar("__data"), u64c(0), u64Var("__len"), loc), loc));
 
-		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
 	}
 
 	// ── __evm_bytes_write(slot: biguint, val: bytes) -> void ──
 	void emitBytesWrite(awst::Contract* _contractNode) const
 	{
-		awst::ContractMethod sub;
-		sub.sourceLocation = loc;
-		sub.cref = cref;
-		sub.memberName = "__evm_bytes_write";
-		sub.returnType = awst::WType::voidType();
-		sub.arc4MethodConfig = std::nullopt;
-		sub.pure = false;
-		awst::SubroutineArgument slotArg;
-		slotArg.name = "__slot";
-		slotArg.wtype = awst::WType::biguintType();
-		slotArg.sourceLocation = loc;
-		sub.args.push_back(slotArg);
-		awst::SubroutineArgument valArg;
-		valArg.name = "__val";
-		valArg.wtype = awst::WType::bytesType();
-		valArg.sourceLocation = loc;
-		sub.args.push_back(valArg);
+		auto sub = awst::makeHelperMethod(cref, "__evm_bytes_write",
+			awst::WType::voidType(),
+			{{"__slot", awst::WType::biguintType()}, {"__val", awst::WType::bytesType()}},
+			loc);
 
 		auto valVar = [&]() { return bytesVar("__val"); };
-		auto body = awst::makeBlock(loc);
+		auto body = sub.body;
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__len"), awst::makeLen(valVar(), loc), loc));
 		// old word FIRST (stale-chunk cleanup needs the previous length)
@@ -554,7 +511,6 @@ struct EvmSlotCodec
 		}
 		body->body.push_back(awst::makeReturnStatement(nullptr, loc));
 
-		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
 	}
 
@@ -564,31 +520,14 @@ struct EvmSlotCodec
 	// keccak256(slot32)+i. Callers cap/validate element width.
 	void emitDynamicArrayRead(awst::Contract* _contractNode) const
 	{
-		awst::ContractMethod sub;
-		sub.sourceLocation = loc;
-		sub.cref = cref;
-		sub.memberName = "__evm_dynarr_read";
-		sub.returnType = awst::WType::bytesType();
-		sub.arc4MethodConfig = std::nullopt;
-		sub.pure = false;
-		awst::SubroutineArgument slotArg2;
-		slotArg2.name = "__slot";
-		slotArg2.wtype = awst::WType::biguintType();
-		slotArg2.sourceLocation = loc;
-		sub.args.push_back(slotArg2);
-		for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
-		{
-			awst::SubroutineArgument a;
-			a.name = an;
-			a.wtype = awst::WType::uint64Type();
-			a.sourceLocation = loc;
-			sub.args.push_back(a);
-		}
+		auto sub = awst::makeHelperMethod(cref, "__evm_dynarr_read",
+			awst::WType::bytesType(),
+			withMetrics({{"__slot", awst::WType::biguintType()}}), loc);
 
 		// __size = storage bytes per element, __aw = ARC4 bytes per element
 		// (differs for address: 20 stored, 32 encoded), __per = elements per
 		// slot (EVM packs from the LOW end of the word).
-		auto body = awst::makeBlock(loc);
+		auto body = sub.body;
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__n"), biguintToU64(readWordCall(slotVar())), loc));
 		// __mul = lanes per ELEMENT (fixed-array / uniform-struct elements are
@@ -705,7 +644,6 @@ struct EvmSlotCodec
 		body->body.push_back(awst::makeWhileLoop(std::move(cond), std::move(loop), loc));
 		body->body.push_back(awst::makeReturnStatement(bytesVar("__data"), loc));
 
-		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
 	}
 
@@ -716,36 +654,15 @@ struct EvmSlotCodec
 	// EVM assignment semantics, and a later push must see zeroed slots.
 	void emitDynamicArrayWrite(awst::Contract* _contractNode) const
 	{
-		awst::ContractMethod sub;
-		sub.sourceLocation = loc;
-		sub.cref = cref;
-		sub.memberName = "__evm_dynarr_write";
-		sub.returnType = awst::WType::voidType();
-		sub.arc4MethodConfig = std::nullopt;
-		sub.pure = false;
-		awst::SubroutineArgument slotArg3;
-		slotArg3.name = "__slot";
-		slotArg3.wtype = awst::WType::biguintType();
-		slotArg3.sourceLocation = loc;
-		sub.args.push_back(slotArg3);
-		awst::SubroutineArgument valArg;
-		valArg.name = "__val";
-		valArg.wtype = awst::WType::bytesType();
-		valArg.sourceLocation = loc;
-		sub.args.push_back(valArg);
+		auto sub = awst::makeHelperMethod(cref, "__evm_dynarr_write",
+			awst::WType::voidType(),
+			withMetrics({{"__slot", awst::WType::biguintType()}, {"__val", awst::WType::bytesType()}}),
+			loc);
 		auto valVar = [&]() {
 			return awst::makeVarExpression("__val", awst::WType::bytesType(), loc);
 		};
-		for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
-		{
-			awst::SubroutineArgument a;
-			a.name = an;
-			a.wtype = awst::WType::uint64Type();
-			a.sourceLocation = loc;
-			sub.args.push_back(a);
-		}
 
-		auto body = awst::makeBlock(loc);
+		auto body = sub.body;
 		// old length (for the shrink-clear tail)
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__old"), biguintToU64(readWordCall(slotVar())), loc));
@@ -904,7 +821,6 @@ struct EvmSlotCodec
 			body->body.push_back(awst::makeWhileLoop(
 				std::move(cond), std::move(loop), loc));
 		}
-		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
 	}
 
@@ -915,7 +831,7 @@ struct EvmSlotCodec
 	void emitNestedDynamicArrayMethods(awst::Contract* _contractNode) const
 	{
 		auto metricArgs = [&](std::vector<awst::CallArg>& _args) {
-			for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
+			for (char const* an: kDynarrMetrics)
 				awst::pushCallArg(_args, an, u64Var(an));
 		};
 		auto leafRead = [&](std::shared_ptr<awst::Expression> _slot) {
@@ -973,46 +889,13 @@ struct EvmSlotCodec
 				awst::makeUInt64BinOp(u64Var("__j"),
 					awst::UInt64BinaryOperator::Add, u64c(1), loc), loc);
 		};
-		auto mkArgs = [&](awst::ContractMethod& _sub, bool _withVal) {
-			awst::SubroutineArgument sa;
-			sa.name = "__slot";
-			sa.wtype = awst::WType::biguintType();
-			sa.sourceLocation = loc;
-			_sub.args.push_back(sa);
-			if (_withVal)
-			{
-				awst::SubroutineArgument va;
-				va.name = "__val";
-				va.wtype = awst::WType::bytesType();
-				va.sourceLocation = loc;
-				_sub.args.push_back(va);
-			}
-			awst::SubroutineArgument depth;
-			depth.name = "__depth";
-			depth.wtype = awst::WType::uint64Type();
-			depth.sourceLocation = loc;
-			_sub.args.push_back(depth);
-			for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
-			{
-				awst::SubroutineArgument a;
-				a.name = an;
-				a.wtype = awst::WType::uint64Type();
-				a.sourceLocation = loc;
-				_sub.args.push_back(a);
-			}
-		};
-
 		// READ
 		{
-			awst::ContractMethod sub;
-			sub.sourceLocation = loc;
-			sub.cref = cref;
-			sub.memberName = "__evm_dynarr_recursive_read";
-			sub.returnType = awst::WType::bytesType();
-			sub.arc4MethodConfig = std::nullopt;
-			sub.pure = false;
-			mkArgs(sub, /*_withVal=*/false);
-			auto body = awst::makeBlock(loc);
+			auto sub = awst::makeHelperMethod(cref, "__evm_dynarr_recursive_read",
+				awst::WType::bytesType(),
+				withMetrics({{"__slot", awst::WType::biguintType()},
+					{"__depth", awst::WType::uint64Type()}}), loc);
+			auto body = sub.body;
 			{
 				auto base = awst::makeBlock(loc);
 				base->body.push_back(awst::makeReturnStatement(
@@ -1060,20 +943,16 @@ struct EvmSlotCodec
 					awst::makeConcat(bytesVar("__heads"), bytesVar("__tails"),
 						loc), loc), loc);
 			body->body.push_back(std::move(ret));
-			sub.body = body;
 			_contractNode->methods.push_back(std::move(sub));
 		}
 
 		// WRITE
 		{
-			awst::ContractMethod sub;
-			sub.sourceLocation = loc;
-			sub.cref = cref;
-			sub.memberName = "__evm_dynarr_recursive_write";
-			sub.returnType = awst::WType::voidType();
-			sub.arc4MethodConfig = std::nullopt;
-			sub.pure = false;
-			mkArgs(sub, /*_withVal=*/true);
+			auto sub = awst::makeHelperMethod(cref, "__evm_dynarr_recursive_write",
+				awst::WType::voidType(),
+				withMetrics({{"__slot", awst::WType::biguintType()},
+					{"__val", awst::WType::bytesType()},
+					{"__depth", awst::WType::uint64Type()}}), loc);
 			auto valVar2 = [&]() {
 				return awst::makeVarExpression("__val", awst::WType::bytesType(), loc);
 			};
@@ -1090,7 +969,7 @@ struct EvmSlotCodec
 								std::move(_idx), loc), loc),
 						u64c(2), loc), loc), loc);
 			};
-			auto body = awst::makeBlock(loc);
+			auto body = sub.body;
 			{
 				auto base = awst::makeBlock(loc);
 				base->body.push_back(leafWriteStmt(slotVar(), valVar2()));
@@ -1150,7 +1029,6 @@ struct EvmSlotCodec
 				body->body.push_back(awst::makeWhileLoop(
 					std::move(cond), std::move(loop), loc));
 			}
-			sub.body = body;
 			_contractNode->methods.push_back(std::move(sub));
 		}
 	}

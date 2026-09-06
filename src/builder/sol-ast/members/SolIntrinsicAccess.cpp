@@ -10,6 +10,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/XchainAccounts.h"
 #include "builder/BuildArtifacts.h"
+#include "awst/HelperMethod.h"
 #include <algorithm>
 #include <cctype>
 #include <vector>
@@ -71,14 +72,11 @@ std::shared_ptr<awst::Expression> buildEvmMsgSender(
 		{
 			name = "__evm_sender";
 			arts.evmDecodeStructMethods[key] = name;
-			awst::ContractMethod method;
-			method.sourceLocation = loc;
-			method.memberName = name;
-			method.returnType = awst::WType::accountType();
-			auto body = awst::makeBlock(loc);
-			body->body.push_back(awst::makeReturnStatement(
+			// cref is stamped when the pending methods are attached.
+			auto method = awst::makeHelperMethod(
+				"", name, awst::WType::accountType(), {}, loc);
+			method.body->body.push_back(awst::makeReturnStatement(
 				buildEvmMsgSenderInline(ctx, *xc, loc), loc));
-			method.body = body;
 			arts.pendingEvmDecodeMethods.push_back(std::move(method));
 		}
 		return awst::makeSubroutineCall(

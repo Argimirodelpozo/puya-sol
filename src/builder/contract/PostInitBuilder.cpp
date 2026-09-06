@@ -13,6 +13,7 @@
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-types/SolIntType.h"
 
+#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 
@@ -43,11 +44,8 @@ void ContractBuilder::buildPostInitMethod(
 		createBlock->body.push_back(std::move(setPendingStmt));
 
 		// Build __postInit method with deferred constructor body
-		awst::ContractMethod postInit;
-		postInit.sourceLocation = method.sourceLocation;
-		postInit.returnType = awst::WType::voidType();
-		postInit.cref = m_contractId;
-		postInit.memberName = "__postInit";
+		auto postInit = awst::makeHelperMethod(m_contractId, "__postInit",
+			awst::WType::voidType(), {}, method.sourceLocation);
 
 		// Mirror constructor params on __postInit so the caller passes the same values.
 		if (constructor)
@@ -55,13 +53,11 @@ void ContractBuilder::buildPostInitMethod(
 			int paramIdx = 0;
 			for (auto const& param: constructor->parameters())
 			{
-				awst::SubroutineArgument arg;
-				arg.name = param->name().empty()
-					? "_param" + std::to_string(paramIdx)
-					: param->name();
-				arg.sourceLocation = method.sourceLocation;
-				arg.wtype = m_typeMapper.map(param->type());
-				postInit.args.push_back(std::move(arg));
+				postInit.args.push_back(awst::makeHelperArg(
+					param->name().empty()
+						? "_param" + std::to_string(paramIdx)
+						: param->name(),
+					m_typeMapper.map(param->type()), method.sourceLocation));
 				++paramIdx;
 			}
 		}
@@ -132,7 +128,7 @@ void ContractBuilder::buildPostInitMethod(
 			setFunctionContext(paramContext, postInit.returnType);
 		}
 
-		auto postInitBody = awst::makeBlock(method.sourceLocation);
+		auto postInitBody = postInit.body;
 
 		// Guard: assert(__ctor_pending == 1)
 		auto readPending = awst::makeIntrinsicCall("app_global_get", awst::WType::uint64Type(), method.sourceLocation);
@@ -246,7 +242,6 @@ void ContractBuilder::buildPostInitMethod(
 			postInitBody->body.insert(postInitBody->body.begin(), std::move(stmt));
 		}
 
-		postInit.body = postInitBody;
 		m_postInitMethod = std::move(postInit);
 }
 

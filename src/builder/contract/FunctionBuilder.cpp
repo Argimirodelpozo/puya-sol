@@ -2,6 +2,7 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/storage/EvmLayoutMode.h"
+#include "awst/HelperMethod.h"
 #include "awst/Termination.hpp"
 #include "awst/StatementWalk.h"
 #include "awst/Visit.h"
@@ -37,19 +38,13 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 	std::string const& _contractName
 )
 {
-	awst::ContractMethod method;
-	method.sourceLocation = makeLoc(_contract.location());
-	method.returnType = awst::WType::boolType();
-	method.cref = m_contractId;
-	method.memberName = "clear_state_program";
-
-	auto body = awst::makeBlock(method.sourceLocation);
+	auto method = awst::makeHelperMethod(m_contractId, "clear_state_program",
+		awst::WType::boolType(), {}, makeLoc(_contract.location()));
 
 	// return true
 	auto ret = awst::makeReturnStatement(awst::makeTrue(method.sourceLocation), method.sourceLocation);
 
-	body->body.push_back(ret);
-	method.body = body;
+	method.body->body.push_back(ret);
 
 	return method;
 }

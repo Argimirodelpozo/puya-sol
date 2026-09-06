@@ -2,6 +2,7 @@
 #include "builder/AwstShorthand.h"
 
 #include "Logger.h"
+#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -221,22 +222,14 @@ private:
 				name = "__evm_deca_" + std::to_string(
 					awst::NameGen::next("EvmAbiDecode.arrayMethod"));
 				arts.evmDecodeStructMethods[key] = name;
-				awst::ContractMethod method;
-				method.sourceLocation = m_loc;
-				method.memberName = name;
-				method.returnType = arrayW;
-				awst::SubroutineArgument startArg;
-				startArg.name = "__start";
-				startArg.wtype = awst::WType::uint64Type();
-				startArg.sourceLocation = m_loc;
-				method.args.push_back(startArg);
-				auto body = awst::makeBlock(m_loc);
+				// cref is stamped when the pending methods are attached.
+				auto method = awst::makeHelperMethod("", name, arrayW,
+					{{"__start", awst::WType::uint64Type()}}, m_loc);
 				auto value = arrayValueInline(array,
 					awst::makeVarExpression("__start", awst::WType::uint64Type(), m_loc),
-					nullptr, body->body);
-				body->body.push_back(
+					nullptr, method.body->body);
+				method.body->body.push_back(
 					awst::makeReturnStatement(std::move(value), m_loc));
-				method.body = body;
 				arts.pendingEvmDecodeMethods.push_back(std::move(method));
 			}
 			auto call = awst::makeSubroutineCall(
@@ -346,22 +339,14 @@ private:
 				name = "__evm_decs_" + std::to_string(def.id());
 				// Registered BEFORE the body so recursive structs resolve.
 				arts.evmDecodeStructMethods[key] = name;
-				awst::ContractMethod method;
-				method.sourceLocation = m_loc;
-				method.memberName = name;
-				method.returnType = structW;
-				awst::SubroutineArgument startArg;
-				startArg.name = "__start";
-				startArg.wtype = awst::WType::uint64Type();
-				startArg.sourceLocation = m_loc;
-				method.args.push_back(startArg);
-				auto body = awst::makeBlock(m_loc);
+				// cref is stamped when the pending methods are attached.
+				auto method = awst::makeHelperMethod("", name, structW,
+					{{"__start", awst::WType::uint64Type()}}, m_loc);
 				auto value = structFields(structure, structW,
 					awst::makeVarExpression("__start", awst::WType::uint64Type(), m_loc),
-					body->body);
-				body->body.push_back(
+					method.body->body);
+				method.body->body.push_back(
 					awst::makeReturnStatement(std::move(value), m_loc));
-				method.body = body;
 				arts.pendingEvmDecodeMethods.push_back(std::move(method));
 			}
 			auto call = awst::makeSubroutineCall(

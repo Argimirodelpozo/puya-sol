@@ -5,6 +5,7 @@
 #include "builder/contract/RouterConditions.h"
 
 #include "Logger.h"
+#include "awst/HelperMethod.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/SolcFacts.h"
 #include "builder/abi/EvmAbiDecode.h"
@@ -87,6 +88,37 @@ void emitNonPayableCall(
 	out.push_back(awst::makeExpressionStatement(std::move(call), loc));
 }
 
+/// A word-leaf decode helper `name(__off)`: one `__evm_decw(__off)` fetch
+/// (evaluated once), `guard(word)` asserted with `message`, `result(word)`
+/// returned.
+using WordLeafFn = std::function<std::shared_ptr<awst::Expression>(
+	std::shared_ptr<awst::Expression> const&)>;
+
+void synthesizeWordLeaf(
+	awst::Contract& contract,
+	std::string const& cref,
+	awst::SourceLocation const& loc,
+	std::string const& name,
+	awst::WType const* returnType,
+	WordLeafFn const& guard,
+	char const* message,
+	WordLeafFn const& result)
+{
+	auto sub = awst::makeHelperMethod(
+		cref, name, returnType, {{"__off", awst::WType::uint64Type()}}, loc);
+	auto fetch = awst::makeSubroutineCall(
+		awst::InstanceMethodTarget{"__evm_decw"},
+		awst::WType::bytesType(), loc);
+	awst::pushCallArg(fetch->args, awst::makeVarExpression(
+		"__off", awst::WType::uint64Type(), loc));
+	auto value = awst::makeEvalOnce(std::move(fetch), loc);
+	sub.body->body.push_back(awst::makeExpressionStatement(
+		awst::makeAssert(guard(value), loc, message), loc));
+	sub.body->body.push_back(
+		awst::makeReturnStatement(result(value), loc));
+	contract.methods.push_back(std::move(sub));
+}
+
 /// Synthesize the shared EVM-entry helper subroutines once per contract:
 ///   __evm_npy() — the non-payable guard every non-payable arm runs;
 ///   __evm_decw(__off) — bounds-checked 32-byte word fetch from
@@ -100,36 +132,21 @@ void synthesizeEvmEntryHelpers(
 		return;
 	std::string cref = contract.methods.front().cref;
 	{
-		awst::ContractMethod sub;
-		sub.sourceLocation = loc;
-		sub.cref = cref;
-		sub.memberName = "__evm_npy";
-		sub.returnType = awst::WType::voidType();
-		sub.arc4MethodConfig = std::nullopt;
-		auto body = awst::makeBlock(loc);
-		emitNonPayableCheck(loc, body->body);
-		body->body.push_back(awst::makeReturnStatement(nullptr, loc));
-		sub.body = std::move(body);
+		auto sub = awst::makeHelperMethod(
+			cref, "__evm_npy", awst::WType::voidType(), {}, loc);
+		emitNonPayableCheck(loc, sub.body->body);
+		sub.body->body.push_back(awst::makeReturnStatement(nullptr, loc));
 		contract.methods.push_back(std::move(sub));
 	}
 	{
-		awst::ContractMethod sub;
-		sub.sourceLocation = loc;
-		sub.cref = cref;
-		sub.memberName = "__evm_decw";
-		sub.returnType = awst::WType::bytesType();
-		sub.arc4MethodConfig = std::nullopt;
-		awst::SubroutineArgument offArg;
-		offArg.name = "__off";
-		offArg.wtype = awst::WType::uint64Type();
-		offArg.sourceLocation = loc;
-		sub.args.push_back(offArg);
+		auto sub = awst::makeHelperMethod(
+			cref, "__evm_decw", awst::WType::bytesType(),
+			{{"__off", awst::WType::uint64Type()}}, loc);
 		auto off = [&]() {
 			return awst::makeVarExpression(
 				"__off", awst::WType::uint64Type(), loc);
 		};
-		auto body = awst::makeBlock(loc);
-		body->body.push_back(awst::makeExpressionStatement(
+		sub.body->body.push_back(awst::makeExpressionStatement(
 			awst::makeAssert(
 				awst::makeNumericCompare(
 					awst::makeUInt64BinOp(off(),
@@ -137,79 +154,40 @@ void synthesizeEvmEntryHelpers(
 					awst::NumericComparison::Lte,
 					awst::makeLen(awst::makeAppArg(1, loc), loc), loc),
 				loc, "EVM ABI decode out of bounds"), loc));
-		body->body.push_back(awst::makeReturnStatement(
+		sub.body->body.push_back(awst::makeReturnStatement(
 			awst::makeExtract3(
 				awst::makeAppArg(1, loc), off(), u64(32, loc), loc), loc));
-		sub.body = std::move(body);
 		contract.methods.push_back(std::move(sub));
 	}
 	// __evm_deco(__off) — offset/length small word: decw + high-24-zero
 	// assert + narrow. __evm_arga(__off) — address leaf: decw + padding
 	// assert. Each dynamic arg repeats the former, each address arg the
 	// latter; one body apiece (puya strips whichever ends up uncalled).
-	{
-		awst::ContractMethod sub;
-		sub.sourceLocation = loc;
-		sub.cref = cref;
-		sub.memberName = "__evm_deco";
-		sub.returnType = awst::WType::uint64Type();
-		sub.arc4MethodConfig = std::nullopt;
-		awst::SubroutineArgument offArg;
-		offArg.name = "__off";
-		offArg.wtype = awst::WType::uint64Type();
-		offArg.sourceLocation = loc;
-		sub.args.push_back(offArg);
-		auto body = awst::makeBlock(loc);
-		auto fetch = awst::makeSubroutineCall(
-			awst::InstanceMethodTarget{"__evm_decw"},
-			awst::WType::bytesType(), loc);
-		awst::pushCallArg(fetch->args, awst::makeVarExpression(
-			"__off", awst::WType::uint64Type(), loc));
-		auto value = awst::makeEvalOnce(std::move(fetch), loc);
-		body->body.push_back(awst::makeExpressionStatement(
-			awst::makeAssert(
-				awst::makeNumericCompare(
-					awst::makeAsBiguint(
-						awst::makeExtract(value, 0, 24, loc), loc),
-					awst::NumericComparison::Eq,
-					awst::makeIntegerConstant("0", loc,
-						awst::WType::biguintType()), loc),
-				loc, "EVM ABI offset exceeds uint64"), loc));
-		body->body.push_back(awst::makeReturnStatement(
-			awst::makeWord32ToUInt64(value, loc), loc));
-		sub.body = std::move(body);
-		contract.methods.push_back(std::move(sub));
-	}
-	{
-		awst::ContractMethod sub;
-		sub.sourceLocation = loc;
-		sub.cref = cref;
-		sub.memberName = "__evm_arga";
-		sub.returnType = awst::WType::accountType();
-		sub.arc4MethodConfig = std::nullopt;
-		awst::SubroutineArgument offArg;
-		offArg.name = "__off";
-		offArg.wtype = awst::WType::uint64Type();
-		offArg.sourceLocation = loc;
-		sub.args.push_back(offArg);
-		auto body = awst::makeBlock(loc);
-		auto fetch = awst::makeSubroutineCall(
-			awst::InstanceMethodTarget{"__evm_decw"},
-			awst::WType::bytesType(), loc);
-		awst::pushCallArg(fetch->args, awst::makeVarExpression(
-			"__off", awst::WType::uint64Type(), loc));
-		auto value = awst::makeEvalOnce(std::move(fetch), loc);
-		body->body.push_back(awst::makeExpressionStatement(
-			awst::makeAssert(
-				awst::makeBytesComparison(
-					awst::makeExtract(value, 0, 12, loc),
-					awst::EqualityComparison::Eq, awst::makeBzero(12, loc), loc),
-				loc, "invalid EVM ABI address padding"), loc));
-		body->body.push_back(awst::makeReturnStatement(
-			awst::makeAsAccount(value, loc), loc));
-		sub.body = std::move(body);
-		contract.methods.push_back(std::move(sub));
-	}
+	synthesizeWordLeaf(contract, cref, loc, "__evm_deco",
+		awst::WType::uint64Type(),
+		[&](auto const& value) {
+			return awst::makeNumericCompare(
+				awst::makeAsBiguint(
+					awst::makeExtract(value, 0, 24, loc), loc),
+				awst::NumericComparison::Eq,
+				awst::makeIntegerConstant("0", loc,
+					awst::WType::biguintType()), loc);
+		},
+		"EVM ABI offset exceeds uint64",
+		[&](auto const& value) {
+			return awst::makeWord32ToUInt64(value, loc);
+		});
+	synthesizeWordLeaf(contract, cref, loc, "__evm_arga",
+		awst::WType::accountType(),
+		[&](auto const& value) {
+			return awst::makeBytesComparison(
+				awst::makeExtract(value, 0, 12, loc),
+				awst::EqualityComparison::Eq, awst::makeBzero(12, loc), loc);
+		},
+		"invalid EVM ABI address padding",
+		[&](auto const& value) {
+			return awst::makeAsAccount(value, loc);
+		});
 }
 
 struct EvmRoute
@@ -366,21 +344,13 @@ std::map<std::string, std::string> synthesizeEvmReturnTails(
 			continue;   // unexpected wire shape — keep those arms inline
 
 		std::string name = "__evm_ret" + std::to_string(index++);
-		awst::ContractMethod sub;
-		sub.sourceLocation = loc;
-		sub.cref = cref;
-		sub.memberName = name;
-		sub.returnType = awst::WType::voidType();
-		sub.arc4MethodConfig = std::nullopt;
-		auto body = awst::makeBlock(loc);
+		auto sub = awst::makeHelperMethod(
+			cref, name, awst::WType::voidType(), {}, loc);
+		auto body = sub.body;
 		std::vector<std::shared_ptr<awst::Expression>> returnValues;
 		if (!spec.returnTypes.empty())
 		{
-			awst::SubroutineArgument arg;
-			arg.name = "__v";
-			arg.wtype = spec.retW;
-			arg.sourceLocation = loc;
-			sub.args.push_back(std::move(arg));
+			sub.args.push_back(awst::makeHelperArg("__v", spec.retW, loc));
 			auto v = [&]() {
 				return awst::makeVarExpression("__v", spec.retW, loc);
 			};
@@ -399,7 +369,6 @@ std::map<std::string, std::string> synthesizeEvmReturnTails(
 			body->body);
 		emitReturnLog(std::move(encoded), loc, body->body);
 		body->body.push_back(awst::makeReturnStatement(nullptr, loc));
-		sub.body = std::move(body);
 		contract.methods.push_back(std::move(sub));
 		tailByKey[key] = name;
 	}
