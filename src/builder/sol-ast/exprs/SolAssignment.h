@@ -8,6 +8,8 @@
 namespace puyasol::builder::sol_ast
 {
 
+class EvmSlotLowering;
+
 /// Assignment expressions: =, +=, -=, *=, /=, etc.
 /// Handles tuple decomposition, struct copy-on-write, bytes element assignment,
 /// ARC4 encoding for storage targets, and compound assignment operators.
@@ -132,6 +134,44 @@ private:
 	/// --evm-storage-layout: any value-type write rooted at a persistent state
 	/// var lowers to __storage_write at its EVM word address (EvmSlotLowering).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleEvmStorageWrite();
+
+	// ── tryHandleEvmStorageWrite rungs (SolAssignment.cpp), tried in order ──
+	/// A rung's verdict: unclaimed falls through to the next rung; claimed
+	/// ends the handler with `result` (a disengaged result = the handler
+	/// yields nullopt, exactly as the former inline early-outs did).
+	struct EvmWriteRung
+	{
+		bool claimed = false;
+		std::optional<std::shared_ptr<awst::Expression>> result;
+		explicit operator bool() const { return claimed; }
+		static EvmWriteRung done(std::optional<std::shared_ptr<awst::Expression>> _result)
+		{
+			return {true, std::move(_result)};
+		}
+	};
+	/// `ptr = <storage ref>` on a storage local: re-point the slot handle.
+	EvmWriteRung tryEvmStoragePointerRebind(solidity::frontend::Expression const& _lhs);
+	/// `b[i] = v` on storage bytes/string: whole-value replace3 at the asserted index.
+	EvmWriteRung tryEvmBytesElementWrite(solidity::frontend::Expression const& _lhs);
+	/// Whole fixed-array assignment: slot copy, converting copy, or value RHS.
+	EvmWriteRung tryEvmFixedArrayWrite(solidity::frontend::Expression const& _lhs);
+	/// Differently shaped fixed arrays: unrolled per-element read/convert/write.
+	std::shared_ptr<awst::Expression> emitEvmConvertingArrayCopy(
+		EvmSlotLowering& _low,
+		solidity::frontend::ArrayType const* _lat,
+		solidity::frontend::ArrayType const* _rat,
+		std::shared_ptr<awst::Expression> const& _lslot,
+		std::shared_ptr<awst::Expression> const& _rslot);
+	/// Whole-struct assignment: per-member slot writes.
+	EvmWriteRung tryEvmStructWrite(solidity::frontend::Expression const& _lhs);
+	/// Whole bytes/string assignment via __evm_bytes_write.
+	EvmWriteRung tryEvmBytesValueWrite(solidity::frontend::Expression const& _lhs);
+	/// Whole storage dynamic-array assignment via the recursive array writer.
+	EvmWriteRung tryEvmDynamicArrayWrite(solidity::frontend::Expression const& _lhs);
+	/// Terminal rung: value-type leaf store (RHS first, pinned; compound
+	/// read-modify-write). Any non-value LHS left over is rejected loudly.
+	std::optional<std::shared_ptr<awst::Expression>> emitEvmScalarWrite(
+		solidity::frontend::Expression const& _lhs);
 
 	/// EVM blob memory: whole-variable assignment to a blob-backed memory
 	/// local/param/named-return RE-SPILLS the value into a fresh blob region
