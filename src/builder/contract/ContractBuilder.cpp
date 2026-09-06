@@ -526,6 +526,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 )
 {
 	m_currentContract = &_contract;
+	m_storageMapper.beginContract(_storagePlan.solidityLayout, m_sourceFile);
 	m_boxArrayVars.clear();
 	std::string contractName = _contract.name();
 	m_contractId = _contract.fullyQualifiedName();

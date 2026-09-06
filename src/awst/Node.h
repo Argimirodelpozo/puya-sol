@@ -1896,6 +1896,9 @@ struct BoxValueExpression: Expression
 	std::string nodeType() const override { return "BoxValueExpression"; }
 	std::shared_ptr<Expression> key;
 	std::optional<std::string> existsAssertionMessage;
+	/// Builder-only origin, not serialized. A literal key is not evidence of
+	/// declaration initialization (runtime mapping keys can also be constant).
+	bool isDeclarationRoot = false;
 };
 
 inline std::shared_ptr<BoxValueExpression> makeBoxValueExpression(

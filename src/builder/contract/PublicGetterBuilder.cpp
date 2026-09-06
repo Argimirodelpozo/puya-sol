@@ -308,10 +308,8 @@ std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 	auto const* solStructType = dynamic_cast<solidity::frontend::StructType const*>(var->type());
 	if (solStructType && returnTypeCount >= 1)
 	{
-		auto* storedWType = tm.map(var->type());
-		auto fullStruct = sm.createStateRead(
-			binding.name, storedWType, binding.kind, loc
-		);
+		auto* storedWType = binding.wtype;
+		auto fullStruct = sm.createStateRead(binding, loc);
 
 		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
 		auto items = projectStructFields(tm, solStructType, arc4Struct, fullStruct, loc);
@@ -362,14 +360,11 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	std::shared_ptr<awst::Expression> readExpr;
 	// Array getter(i): IndexExpression into the packed ARC4 array slot (not sha256 key).
 	auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
-	auto* arrWType = tm.map(arrType);
+	auto binding = sm.physicalBindingFor(*var);
+	auto* arrWType = binding.wtype;
 	auto* elemARC4 = tm.mapSolTypeToARC4(arrType->baseType());
 
-	auto binding = sm.physicalBindingFor(*var);
-
-	auto arrayRead = sm.createStateRead(
-		binding.name, arrWType, binding.kind, loc
-	);
+	auto arrayRead = sm.createStateRead(binding, loc);
 
 	auto idxRef = awst::makeVarExpression(getter.args[0].name, getter.args[0].wtype, loc);
 	auto idx = TypeCoercion::checkedIndexToUint64(body.body, std::move(idxRef), loc);

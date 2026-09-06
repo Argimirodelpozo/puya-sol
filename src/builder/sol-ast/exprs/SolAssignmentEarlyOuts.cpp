@@ -40,7 +40,6 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 		return std::nullopt;
 
 	auto* sb = m_ctx.storageBackend;
-	auto const& name = lhsIdent->name();
 	auto* varType = m_ctx.typeMapper.map(lhsDecl->type());
 	auto rhs = buildExpr(m_assignment.rightHandSide());
 
@@ -51,7 +50,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 	}
 	else
 	{
-		auto currentValue = sb->emitReadForVar(*lhsDecl, name, varType, m_loc);
+		auto currentValue = sb->emitReadForVar(*lhsDecl, m_loc);
 		auto* solType = m_assignment.leftHandSide().annotation().type;
 		rhs = widenSignedCompoundRhs(std::move(rhs));
 		newValue = eb::AssignmentHelper::computeCompoundOrFallback(
@@ -64,7 +63,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 	// assignment-expression value (the tree is shared by two parents).
 	newValue = awst::makeEvalOnce(std::move(newValue), m_loc);
 
-	auto stmt = sb->emitWriteForVar(*lhsDecl, name, newValue, m_loc);
+	auto stmt = sb->emitWriteForVar(*lhsDecl, newValue, m_loc);
 	if (stmt)
 		m_ctx.postEffects().push_back(std::move(stmt));
 
@@ -486,7 +485,9 @@ SolAssignment::tryHandleBoxedAggregatePathWrite()
 		else
 			key = awst::makeUtf8BytesConstant(
 				binding.name, m_loc, awst::WType::boxKeyType());
-		return awst::makeBoxValueExpression(std::move(key), rootW, m_loc);
+		auto box = awst::makeBoxValueExpression(std::move(key), rootW, m_loc);
+		box->isDeclarationRoot = keyParam.empty();
+		return box;
 	};
 
 	std::string rootName = "__boxref_root_" + std::to_string(

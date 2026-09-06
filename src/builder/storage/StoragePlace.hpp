@@ -28,22 +28,28 @@ struct StoragePlace
 	StoragePlaceKind kind;
 	std::shared_ptr<awst::Expression> key;
 	awst::WType const* valueType;
+	bool isDeclarationRoot = false;
 
 	/// Recover a root place from a storage read or raw state field.  A single
-	/// StateGet and value-only reinterpret casts are transparent.
+	/// StateGet and value-only reinterpret casts are transparent, in any order.
 	static std::optional<StoragePlace> fromRead(
 		std::shared_ptr<awst::Expression> _expression)
 	{
 		if (!_expression)
 			return std::nullopt;
-		_expression = awst::unwrapStateGet(std::move(_expression));
-		while (auto const* cast = dynamic_cast<awst::ReinterpretCast const*>(
-			_expression.get()))
-			_expression = cast->expr;
+		while (_expression)
+		{
+			if (auto const* read = dynamic_cast<awst::StateGet const*>(_expression.get()))
+				_expression = read->field;
+			else if (auto const* cast = dynamic_cast<awst::ReinterpretCast const*>(_expression.get()))
+				_expression = cast->expr;
+			else
+				break;
+		}
 
 		if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(
 			_expression.get()); box && box->key)
-			return StoragePlace{StoragePlaceKind::Box, box->key, box->wtype};
+			return StoragePlace{StoragePlaceKind::Box, box->key, box->wtype, box->isDeclarationRoot};
 		if (auto const* state = dynamic_cast<awst::AppStateExpression const*>(
 			_expression.get()); state && state->key)
 			return StoragePlace{
@@ -75,10 +81,14 @@ struct StoragePlace
 		awst::SourceLocation const& _loc) const
 	{
 		if (kind == StoragePlaceKind::Box)
-			return awst::makeBoxValueExpression(
+		{
+			auto box = awst::makeBoxValueExpression(
 				awst::makeReinterpretCast(
 					std::move(_key), awst::WType::boxKeyType(), _loc),
 				valueType, _loc);
+			box->isDeclarationRoot = isDeclarationRoot;
+			return box;
+		}
 		return awst::makeAppStateExpression(
 			awst::makeReinterpretCast(
 				std::move(_key), awst::WType::stateKeyType(), _loc),

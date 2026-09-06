@@ -1,4 +1,5 @@
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/StorageLayout.h"
 #include "builder/SourceLocConvert.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -80,7 +81,9 @@ std::shared_ptr<awst::BoxValueExpression> StorageMapper::makeTopLevelBoxExpr(
 	awst::SourceLocation const& _loc)
 {
 	auto key = awst::makeUtf8BytesConstant(_varName, _loc, awst::WType::boxKeyType());
-	return awst::makeBoxValueExpression(std::move(key), _type, _loc);
+	auto box = awst::makeBoxValueExpression(std::move(key), _type, _loc);
+	box->isDeclarationRoot = true;
+	return box;
 }
 
 bool StorageMapper::isTopLevelDynamicBox(awst::BoxValueExpression const* _box)
@@ -92,9 +95,7 @@ bool StorageMapper::isTopLevelDynamicBox(awst::BoxValueExpression const* _box)
 		|| kind == awst::WTypeKind::ReferenceArray
 		|| awst::isDynamicBytes(_box->wtype);
 	if (!dynamicSized) return false;
-	// Top-level = key is a BytesConstant; mapping values use runtime concat/hash.
-	return _box->key
-		&& std::dynamic_pointer_cast<awst::BytesConstant>(_box->key) != nullptr;
+	return _box->isDeclarationRoot;
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::makeBoxLenTuple(
@@ -216,7 +217,8 @@ unsigned StorageMapper::elementsPerBox(awst::WType const* _type)
 	return BOX_VALUE_CAPACITY / elemSize;
 }
 
-bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var) const
+bool StorageMapper::classifyBoxStorage(
+	solidity::frontend::VariableDeclaration const& _var, std::string const& _name) const
 {
 	auto const* type = _var.type();
 	if (!type)
@@ -267,7 +269,7 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	{
 		auto slotsUpperBound = type->storageSizeUpperBound();
 		auto estimatedBytes = slotsUpperBound * 32;
-		auto keyBytes = storageNameFor(_var).size();
+		auto keyBytes = _name.size();
 		unsigned maxValueBytes = (128 > keyBytes) ? (128 - keyBytes) : 0;
 		if (estimatedBytes > maxValueBytes)
 			return true;
@@ -290,101 +292,114 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	return false;
 }
 
+StorageMapper::PhysicalBinding StorageMapper::makeBinding(
+	solidity::frontend::VariableDeclaration const& _var,
+	std::string _name, SlotVariable const* _logicalSlot) const
+{
+	PhysicalBinding binding;
+	binding.declaration = &_var;
+	binding.storageClass = _var.isConstant() ? StorageClass::Constant
+		: _var.referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
+			? StorageClass::Transient
+		: _var.immutable() ? StorageClass::Immutable : StorageClass::Persistent;
+	binding.logicalSlot = _logicalSlot;
+	binding.wtype = _logicalSlot ? _logicalSlot->wtype : m_typeMapper.map(_var.type());
+	binding.name = std::move(_name);
+	if (!binding.hasPersistentCell())
+		return binding;
+	binding.kind = classifyBoxStorage(_var, binding.name)
+		? awst::AppStorageKind::Box : awst::AppStorageKind::AppGlobal;
+
+	auto const* type = binding.wtype;
+	if (profile().evmStorageLayout && binding.storageClass == StorageClass::Persistent)
+		binding.initialization = RootInitialization::Slot;
+	else if (binding.kind == awst::AppStorageKind::AppGlobal)
+		binding.initialization = RootInitialization::NamedCell;
+	else if (type && (type->kind() == awst::WTypeKind::ReferenceArray
+		|| type->kind() == awst::WTypeKind::ARC4DynamicArray
+		|| type->kind() == awst::WTypeKind::ARC4StaticArray
+		|| awst::isDynamicBytes(type)))
+		// Retain the legacy mapping-root bytes placeholder as well as arrays.
+		// This says nothing about the existence of a keyed mapping entry.
+		binding.initialization = arc4StaticArrayTotalBytes(type) > MAX_PREALLOC_BYTES
+			? RootInitialization::UnallocatedArrayBox : RootInitialization::DeferredArrayBox;
+	else if (type && type->kind() == awst::WTypeKind::ARC4Struct && _var.value())
+		binding.initialization = RootInitialization::ExplicitBox;
+	else
+		binding.initialization = RootInitialization::LazyBox;
+	return binding;
+}
+
+void StorageMapper::beginContract(StorageLayout const& _layout, std::string const& _sourceFile)
+{
+	m_layout = &_layout;
+	m_bindings.clear();
+	std::set<std::string> usedNames;
+	forEachStateVar(*_layout.contract(), [&](auto const* var)
+	{
+		if (m_bindings.count(var->id()))
+			return;
+		std::string keyName = var->name();
+		// Preserve the existing named-cell namespace, including immutables.
+		// Slot mode historically uses plain names for its non-slot cells.
+		if (!profile().evmStorageLayout && !var->isConstant()
+			&& var->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Transient)
+		{
+			if (usedNames.count(keyName))
+			{
+				std::string owner;
+				if (auto const* oc = dynamic_cast<solidity::frontend::ContractDefinition const*>(var->scope()))
+					owner = oc->name();
+				keyName += "." + (owner.empty() ? "dup" : owner);
+				if (usedNames.count(keyName))
+					keyName += "." + std::to_string(var->id());
+				Logger::instance().debug(
+					"state variable '" + var->name() + "' is declared by more than "
+					"one base contract; storing the " + owner + " one as '"
+					+ keyName + "'", makeLoc(var->location(), _sourceFile));
+			}
+			usedNames.insert(keyName);
+		}
+		m_bindings.emplace(var->id(), makeBinding(*var, std::move(keyName),
+			_layout.getVarInfoById(var->id())));
+	});
+}
+
 std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 	solidity::frontend::ContractDefinition const& _contract,
-	std::string const& _sourceFile
-)
+	std::string const& _sourceFile)
 {
 	std::vector<awst::AppStorageDefinition> defs;
-	// Identity is the DECLARATION, not the name: inheritance can visit the
-	// same declaration twice (dedupe those), while two DIFFERENT declarations
-	// may legitimately share a name across base contracts (keep both, give the
-	// later one a distinct key). Keying by name collapsed ERC20._name onto
-	// EIP712._name in every ERC20Permit contract.
-	std::set<int64_t> seenDecls;
-	std::set<std::string> usedNames;
-
+	std::set<int64_t> seen;
 	forEachStateVar(_contract, [&](auto const* var)
 	{
-		if (var->isConstant())
+		auto binding = physicalBindingFor(*var);
+		if (!binding.hasPersistentCell() || !seen.insert(var->id()).second)
 			return;
-		if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient)
-			return;
-		if (seenDecls.count(var->id()))
-			return;
-		seenDecls.insert(var->id());
-
-		// NOTE: immutables share this key namespace with real state vars. On
-		// EVM they are inlined into bytecode and are not storage at all, which
-		// is how ERC20's `string _name` and EIP712's `ShortString immutable
-		// _name` came to collide. Giving them their own namespace was tried
-		// and REVERTED: ~14 read/write call sites across 6 files still resolve
-		// by plain name, so the keys diverged and 8 immutable tests failed.
-		// The collision itself is already fixed by keying on the DECLARATION
-		// (below); a separate namespace needs the declaration threaded through
-		// every site first.
-		std::string keyName = var->name();
-		if (usedNames.count(keyName))
-		{
-			std::string owner;
-			if (auto const* oc = dynamic_cast<
-					solidity::frontend::ContractDefinition const*>(var->scope()))
-				owner = oc->name();
-			keyName = keyName + "." + (owner.empty() ? "dup" : owner);
-			// pathological: same name AND same owner name — fall back to the id
-			if (usedNames.count(keyName))
-				keyName = keyName + "." + std::to_string(var->id());
-			Logger::instance().debug(
-				"state variable '" + var->name() + "' is declared by more than "
-				"one base contract; storing the " + owner + " one as '"
-				+ keyName + "'", makeLoc(var->location(), _sourceFile));
-		}
-		usedNames.insert(keyName);
-		m_storageNames[var->id()] = keyName;
 
 		awst::AppStorageDefinition def;
 		def.sourceLocation = makeLoc(var->location(), _sourceFile);
-		def.memberName = keyName;
-
-		if (shouldUseBoxStorage(*var))
+		def.memberName = binding.name;
+		def.storageKind = binding.kind;
+		def.storageWType = binding.wtype;
+		// A declaration-root mapping has only a prefix. Its manifest describes
+		// the eventual entry value, not the root's internal bytes placeholder.
+		if (auto const* mapping = dynamic_cast<solidity::frontend::MappingType const*>(var->type()))
 		{
-			def.storageKind = awst::AppStorageKind::Box;
-
-			// Unwrap nested mappings to find the final non-mapping value type.
-			if (auto const* mappingType = dynamic_cast<solidity::frontend::MappingType const*>(var->type()))
-			{
-				solidity::frontend::Type const* valueType = mappingType->valueType();
-				while (auto const* nestedMapping = dynamic_cast<solidity::frontend::MappingType const*>(valueType))
-					valueType = nestedMapping->valueType();
-				def.storageWType = m_typeMapper.map(valueType);
-				def.isMap = true;
-			}
-			else if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(var->type()))
-			{
-				def.storageWType = m_typeMapper.map(arrType);
-				def.isMap = false;
-			}
-			else
-			{
-				def.storageWType = m_typeMapper.map(var->type());
-			}
+			auto const* valueType = mapping->valueType();
+			while (auto const* nested = dynamic_cast<solidity::frontend::MappingType const*>(valueType))
+				valueType = nested->valueType();
+			def.storageWType = m_typeMapper.map(valueType);
+			def.isMap = true;
 		}
-		else
-		{
-			def.storageKind = awst::AppStorageKind::AppGlobal;
-			def.storageWType = m_typeMapper.map(var->type());
-
-			if (def.storageWType == awst::WType::stringType())
-				Logger::instance().info(
-					"string state variable '" + var->name()
-					+ "' uses Algorand global state (limited to ~64 bytes)"
-				);
-		}
-
-		def.key = makeKeyExpr(keyName, def.sourceLocation, def.storageKind);
+		else if (binding.kind == awst::AppStorageKind::AppGlobal
+			&& binding.wtype == awst::WType::stringType())
+			Logger::instance().info(
+				"string state variable '" + var->name()
+				+ "' uses Algorand global state (limited to ~64 bytes)");
+		def.key = makeKeyExpr(binding.name, def.sourceLocation, binding.kind);
 		defs.push_back(std::move(def));
 	});
-
 	return defs;
 }
 
@@ -396,27 +411,28 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStorageTarget(
 )
 {
 	if (_kind == awst::AppStorageKind::Box)
-		return awst::makeBoxValueExpression(_key, _type, _loc);
+	{
+		auto box = awst::makeBoxValueExpression(_key, _type, _loc);
+		box->isDeclarationRoot = true;
+		return box;
+	}
 	// AppGlobal (Transient is dispatched by StorageBackend before reaching here).
 	return awst::makeAppStateExpression(_key, _type, _loc);
-}
-
-std::string StorageMapper::storageNameFor(
-	solidity::frontend::VariableDeclaration const& _var) const
-{
-	auto it = m_storageNames.find(_var.id());
-	return it == m_storageNames.end() ? _var.name() : it->second;
 }
 
 StorageMapper::PhysicalBinding StorageMapper::physicalBindingFor(
 	solidity::frontend::VariableDeclaration const& _var) const
 {
-	return {
-		storageNameFor(_var),
-		shouldUseBoxStorage(_var)
-			? awst::AppStorageKind::Box
-			: awst::AppStorageKind::AppGlobal,
-	};
+	if (auto it = m_bindings.find(_var.id()); it != m_bindings.end())
+		return it->second;
+	// Foreign declarations can be visited speculatively. Never reuse a binding
+	// from another contract, and do not cache it in this contract's namespace.
+	return makeBinding(_var, _var.name(), m_layout ? m_layout->getVarInfoById(_var.id()) : nullptr);
+}
+
+bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var) const
+{
+	return physicalBindingFor(_var).kind == awst::AppStorageKind::Box;
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
@@ -428,10 +444,6 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 {
 	auto key = makeKeyExpr(_varName, _loc, _kind);
 	auto target = makeStorageTarget(key, _type, _kind, _loc);
-
-	// Box: gates on 4 KB stack-value cap; see makeStateGetWithDefault.
-	if (_kind == awst::AppStorageKind::Box)
-		return makeStateGetWithDefault(std::move(target), _type, _loc);
 
 	// Solidity storage is zero-initialised even when no physical AVM cell has
 	// been written yet. Normal deployments eagerly seed globals, but proxies,

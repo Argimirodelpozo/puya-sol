@@ -58,8 +58,7 @@ void ContractBuilder::buildStorageDispatch(
 	auto stateCellRead = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
 		if (!v || !v->declaration) return nullptr;
 		auto binding = m_storageMapper.physicalBindingFor(*v->declaration);
-		return m_storageMapper.createStateRead(
-			binding.name, v->wtype, binding.kind, loc);
+		return m_storageMapper.createStateRead(binding, loc);
 	};
 	auto stateCellWrite = [&](SlotVariable const* v,
 		std::shared_ptr<awst::Expression> value)
@@ -67,8 +66,7 @@ void ContractBuilder::buildStorageDispatch(
 	{
 		if (!v || !v->declaration) return nullptr;
 		auto binding = m_storageMapper.physicalBindingFor(*v->declaration);
-		return m_storageMapper.createStateWrite(
-			binding.name, std::move(value), v->wtype, binding.kind, loc);
+		return m_storageMapper.createStateWrite(binding, std::move(value), loc);
 	};
 
 	// EVM slot arithmetic wraps mod 2^256 (boundary fixtures repoint an array to

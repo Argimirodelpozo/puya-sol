@@ -142,8 +142,8 @@ void ContractBuilder::emitStateVarInitFor(
 	{
 		// Transient state belongs only to the transient runtime, never named
 		// persistent cells (which are also absent from its advertised schema).
-		if (var->isConstant() || var->referenceLocation()
-			== solidity::frontend::VariableDeclaration::Location::Transient)
+		auto binding = m_storageMapper.physicalBindingFor(*var);
+		if (!binding.hasPersistentCell())
 			continue;
 		if (stateVarInitialized.count(var->id()))
 			continue;
@@ -153,28 +153,21 @@ void ContractBuilder::emitStateVarInitFor(
 		// (absent box = 0); only explicit initializers need a write.
 		// Immutables keep their named cells (they are not in EVM
 		// storage) and fall through to the existing path.
-			if (m_typeMapper.profile().evmStorageLayout && !var->immutable()
-			&& var->referenceLocation()
-				!= solidity::frontend::VariableDeclaration::Location::Transient)
+		if (binding.initialization == StorageMapper::RootInitialization::Slot)
 		{
 			emitSlotModeStateVarInit(*var, targetBody, loc);
 			continue;
 		}
 
-	auto binding = m_storageMapper.physicalBindingFor(*var);
 		auto kind = binding.kind;
 
-		auto* wtype = m_typeMapper.map(var->type());
+		auto* wtype = binding.wtype;
 
 		// Box ARC4 struct with explicit initializer: encode + box_put.
 		// Dynamic arrays/bytes handled by m_boxArrayVars loop; skip here.
 		if (kind == awst::AppStorageKind::Box)
 		{
-			if (!var->value())
-				continue;
-			bool isStructBox = wtype
-				&& wtype->kind() == awst::WTypeKind::ARC4Struct;
-			if (!isStructBox)
+			if (binding.initialization != StorageMapper::RootInitialization::ExplicitBox)
 				continue;
 			auto initVal = lowerStateInitializer(*var, wtype, loc);
 			if (!initVal)
@@ -330,7 +323,8 @@ void ContractBuilder::collectBoxArrayVars(
 	std::set<int64_t> lengthInitialized;
 	forEachStateVarReverse(_contract, [&](auto const* var)
 	{
-		if (var->isConstant())
+		auto binding = m_storageMapper.physicalBindingFor(*var);
+		if (!binding.hasPersistentCell())
 			return;
 		// puyabug.md #10 gate (default storage mode only): storage `bool[]`
 		// silently reads wrong values back — fail loud with the workaround.
@@ -349,54 +343,19 @@ void ContractBuilder::collectBoxArrayVars(
 		if (lengthInitialized.count(var->id()))
 			return;
 
-		auto binding = m_storageMapper.physicalBindingFor(*var);
-		auto kind = binding.kind;
-
-		if (kind != awst::AppStorageKind::Box)
-			return;
-
-		auto* wtype = m_typeMapper.map(var->type());
-		if (!wtype)
-			return;
-		// Dynamic arrays, dynamic bytes, and ARC4 static arrays all need
-		// box_create at deploy time ("no such box" otherwise).
-		bool isBoxType = wtype->kind() == awst::WTypeKind::ReferenceArray
-			|| wtype->kind() == awst::WTypeKind::ARC4DynamicArray
-			|| wtype->kind() == awst::WTypeKind::ARC4StaticArray
-			|| awst::isDynamicBytes(wtype);   // covers the bytesType() singleton too
-		if (!isBoxType)
-			return;
-
-		// ARC4StaticArray: oversized → multi-box layout (N boxes keyed
-		// `<name>++itob(page)`). AVM single-box cap = 32768 B;
-		// page = idx / elemsPerBox at runtime.
-		if (wtype->kind() == awst::WTypeKind::ARC4StaticArray)
+		if (binding.initialization == StorageMapper::RootInitialization::UnallocatedArrayBox)
 		{
-			auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(wtype);
-			if (sa && sa->arraySize() > 0)
-			{
-				uint64_t totalBytes = StorageMapper::arc4StaticArrayTotalBytes(wtype);
-				// Cap pre-allocation at 4 boxes (128 KB). Beyond that,
-				// __postInit box_create burst exceeds write-budget (~8
-				// box_create per app call). .length reads still work
-				// (compile-time constant); element writes on
-				// un-pre-allocated arrays fail — see multi-box-storage.md.
-				// totalBytes==0 (struct/dynamic-element) falls through to
-				// single-box path.
-				constexpr uint64_t MAX_PREALLOC_BYTES = 4ULL * 32768ULL;
-				if (totalBytes > MAX_PREALLOC_BYTES)
-				{
-					Logger::instance().warning(
-						"state array '" + var->name() + "' has declared size "
-						+ std::to_string(sa->arraySize())
-						+ " which exceeds 4-box (128 KB) pre-allocation cap — skipping box_create. "
-						"Element writes will fail at runtime but .length reads "
-						"still return the declared size.",
-						loc);
-					return;
-				}
-			}
+			auto const* array = static_cast<awst::ARC4StaticArray const*>(binding.wtype);
+			Logger::instance().warning(
+				"state array '" + var->name() + "' has declared size "
+				+ std::to_string(array->arraySize())
+				+ " which exceeds 4-box (128 KB) pre-allocation cap — skipping box_create. "
+				"Element writes will fail at runtime but .length reads "
+				"still return the declared size.", loc);
+			return;
 		}
+		if (binding.initialization != StorageMapper::RootInitialization::DeferredArrayBox)
+			return;
 
 		lengthInitialized.insert(var->id());
 		// Dynamic array boxes are created in __postInit (after funding)
@@ -829,7 +788,8 @@ void ContractBuilder::emitBoxCreateForStateVars(
 	{
 		if (!var)
 			continue;
-		auto const varName = m_storageMapper.physicalBindingFor(*var).name;
+		auto binding = m_storageMapper.physicalBindingFor(*var);
+		auto const& varName = binding.name;
 		auto boxKey = awst::makeUtf8BytesConstant(varName, _loc);
 
 		// Dynamic bytes without init: box_create(size=0). Raw content has no length
@@ -862,7 +822,7 @@ void ContractBuilder::emitBoxCreateForStateVars(
 		// ARC4StaticArray (uint[N], int[N], etc.): allocate
 		// elementSize * arraySize bytes so the contract can
 		// write to slot indices without "no such box".
-		auto* varWtype = m_typeMapper.map(var->type());
+		auto* varWtype = binding.wtype;
 		if (varWtype && varWtype->kind() == awst::WTypeKind::ARC4StaticArray)
 		{
 			auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(varWtype);

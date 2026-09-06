@@ -1,4 +1,5 @@
 #include "awst/WType.h"
+#include "builder/storage/StoragePlace.hpp"
 
 #include <iostream>
 #include <string>
@@ -43,6 +44,27 @@ int main()
 		"struct field mismatch was ignored");
 	ok &= require(!structurallyEquivalent(&arrayA, nullptr),
 		"null type was treated as equivalent");
+
+	// Storage origin must survive alias reconstruction independently of key shape.
+	auto box = makeBoxValueExpression(makeUtf8BytesConstant("root", {}, WType::boxKeyType()),
+		&arrayA, {});
+	box->isDeclarationRoot = true;
+	auto read = makeStateGet(box, makeBytesConstant({}, {}), &arrayA, {});
+	auto wrapped = makeReinterpretCast(read, &arrayA, {});
+	auto place = puyasol::builder::StoragePlace::fromRead(wrapped);
+	ok &= require(place && place->isDeclarationRoot && place->valueType == &arrayA,
+		"storage origin was lost through interleaved read/cast wrappers");
+	if (place)
+	{
+		auto rebuilt = place->makeField(makeVarExpression("key", WType::bytesType(), {}), {});
+		auto const* rebuiltBox = dynamic_cast<BoxValueExpression const*>(rebuilt.get());
+		ok &= require(rebuiltBox && rebuiltBox->isDeclarationRoot,
+			"storage alias reconstruction lost declaration origin");
+	}
+	box->isDeclarationRoot = false;
+	place = puyasol::builder::StoragePlace::fromRead(box);
+	ok &= require(place && !place->isDeclarationRoot,
+		"a literal runtime key was mistaken for an initialized declaration");
 
 	return ok ? 0 : 1;
 }

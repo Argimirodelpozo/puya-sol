@@ -1,7 +1,9 @@
 # rev-2: sol-types and storage implementation plan
 
 Status: in progress. F1, F2, F4, F7, F9, R1 and R2 are implemented and checkpoint-test
-verified; the remaining findings/refactors and final full-suite verification are pending.
+verified. The first full-suite run reopened F9: metadata-only huge storage arrays
+are rejected too early. That regression, remaining findings/refactors and final
+full-suite verification are pending.
 
 Branch: `rev-2`, based on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`.
 Scope: all nine correctness findings from the sol-types/storage audit, plus
@@ -264,10 +266,10 @@ types do not alias, and the handwritten identity-suffix recursion is removed.
 
 ### R3 — Shared storage binding, lifecycle and representation facts
 
-- [ ] Extend the existing physical binding/runtime-plan model instead of adding
+- [x] Extend the existing physical binding/runtime-plan model instead of adding
   another competing planner. Record declaration identity, storage class,
   logical layout, physical representation, and eager/lazy/default behavior.
-- [ ] Have initialization, reads/writes, reference passing, getters and schema
+- [x] Have initialization, reads/writes, reference passing, getters and schema
   generation consume the same facts. Runtime mapping entries still carry their
   own keys and existence state; declaration metadata alone cannot prove existence.
 - [ ] Replace lifecycle guesses based on raw AWST expression shape where the
@@ -278,6 +280,9 @@ types do not alias, and the handwritten identity-suffix recursion is removed.
 Acceptance: the initial refactor preserves layout and behavior byte-for-byte;
 intentional fixes are separate, test-backed changes. Do not remove backend
 workarounds merely because they appear repetitive or reference stale documents.
+
+The binding/lifecycle portion is implemented; transient codec consolidation and
+its obsolete name index remain with F6. Fixed-width missing-box reads remain F5.
 
 ## Persisted-storage compatibility gate
 
@@ -375,7 +380,51 @@ disabled, legacy pipeline. An intermediate run caught an invalid attempt to
 relocate calldata slices; that is fixed and covered by both test layers.
 
 R2 was completed before the persisted-storage steps while their compatibility
-decision remains pending. The full suite is the next checkpoint.
+decision remains pending.
+
+### Full-suite checkpoint — b9fe763671
+
+The fixed compiler at `b9fe763671` ran `framework/test_compile_cache.py`,
+`framework/test_harness.py` and `tests/` with two workers and no LocalNet reset.
+Result: **1,736 passed, 6 failed, 102 xfailed, 38 xpassed**, 291.33 seconds.
+Report: `/tmp/puyasol-rev-2-type-checkpoint-full.xml`.
+
+The known Puya `test_dce_reverting_subexpr_literal_folds` failure remains. Five
+additional failures surfaced F9's premature capacity diagnostics:
+`test_FixedFeeRegistrar`, the two compile-time ERC-7201 array-length tests,
+`test_denominations_in_array_sizes`, and `test_denomination_array_layout`.
+Solc logical layout and fixed `.length` facts do not require materializing the
+entire array; those uses must remain available at full width. Actual unsupported
+materialization/access still requires a clear diagnostic. F9 is not finally
+verified until these cases are resolved and the full suite is rerun.
+
+### Checkpoint 5 — contract-scoped storage bindings
+
+All 19 native CTests and 281 focused semantic tests passed, with 11 existing
+xfails and 1 existing xpass, in 64.90 seconds. Report:
+`/tmp/puyasol-rev-2-bindings.xml`. Selection: storage, getters, inheritance,
+immutable, structs, arrays, storage/type and parity regressions, remaining-review
+regressions, and the existing declaration-identity/contract-dispatch tests.
+
+Bindings now cache storage class, solc logical placement, native type, physical
+key/kind and root initialization once per contract. They do not claim a mapping
+entry exists. Initialization, schema and native read/write paths share these
+facts; explicit box-origin metadata survives aliases without guessing from a
+literal key. The unused backend name/type arguments and duplicate array-root
+initialization classification were removed. The mapping-root placeholder and
+existing preallocation policy are deliberately unchanged.
+
+The new runtime fixture compiles opposite inheritance orders and standalone
+bases together, checks independent state and delete/reuse, and deploys with exact
+schemas in both ABI/storage profiles. Its stateful sequence was confirmed by
+solc 0.8.34/Cancun (legacy pipeline, optimizer disabled). Native coverage checks
+origin preservation through interleaved StateGet/reinterpret wrappers.
+
+Complete AWST outputs compare byte-for-byte equal before/after for canonical
+same-name storage, colliding aggregate names, array conversions and their slot
+mode counterpart. Snapshots: `/tmp/puyasol-rev-2-bindings-before` and
+`/tmp/puyasol-rev-2-bindings-after`. This includes app-state definitions/keys;
+no persisted-format switch was made. Full-suite F9 failures above remain pending.
 
 ### Baseline and remaining gates
 

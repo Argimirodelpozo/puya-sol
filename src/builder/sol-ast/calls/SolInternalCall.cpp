@@ -229,7 +229,7 @@ std::vector<StorageRoot> traceStorageRoots(
 			} else if (auto const* sg = dynamic_cast<awst::StateGet const*>(e)) {
 				traceToRoot(sg->field.get());
 			} else if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(e)) {
-				sr.rootBox = awst::makeBoxValueExpression(box->key, box->wtype, box->sourceLocation);
+				sr.rootBox = std::make_shared<awst::BoxValueExpression>(*box);
 			} else if (auto const* app = dynamic_cast<awst::AppStateExpression const*>(e)) {
 				sr.rootAppState = awst::makeAppStateExpression(app->key, app->wtype, app->sourceLocation);
 			}

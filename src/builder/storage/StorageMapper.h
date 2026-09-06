@@ -13,18 +13,44 @@
 namespace puyasol::builder
 {
 
+class StorageLayout;
+struct SlotVariable;
+
 /// Maps Solidity state variables to AWST AppStorageDefinitions.
 class StorageMapper
 {
 public:
+	enum class StorageClass { Constant, Immutable, Persistent, Transient };
+	enum class RootInitialization
+	{
+		None, Slot, NamedCell, LazyBox, ExplicitBox, DeferredArrayBox, UnallocatedArrayBox
+	};
+
 	struct PhysicalBinding
 	{
+		solidity::frontend::VariableDeclaration const* declaration = nullptr;
+		StorageClass storageClass = StorageClass::Persistent;
+		/// Session-owned solc logical placement, absent for non-persistent state.
+		SlotVariable const* logicalSlot = nullptr;
+		awst::WType const* wtype = nullptr;
 		std::string name;
 		awst::AppStorageKind kind = awst::AppStorageKind::AppGlobal;
+		/// Declaration-root initialization only. Mapping entries remain lazy;
+		/// neither initialization nor a constant key proves current existence.
+		RootInitialization initialization = RootInitialization::None;
+
+		bool hasPersistentCell() const
+		{
+			return storageClass == StorageClass::Persistent || storageClass == StorageClass::Immutable;
+		}
 	};
 
 	explicit StorageMapper(TypeMapper& _typeMapper): m_typeMapper(_typeMapper) {}
 	TargetProfile const& profile() const { return m_typeMapper.profile(); }
+
+	/// Rebind for every contract, including slot mode. Inherited declarations
+	/// can have different names/slots in different contracts of the same unit.
+	void beginContract(StorageLayout const& _layout, std::string const& _sourceFile);
 
 	/// Create AppStorageDefinitions for a contract's state variables.
 	std::vector<awst::AppStorageDefinition> mapStateVariables(
@@ -39,7 +65,19 @@ public:
 	PhysicalBinding physicalBindingFor(
 		solidity::frontend::VariableDeclaration const& _var) const;
 
-	/// Create an expression to read a state variable.
+	std::shared_ptr<awst::Expression> createStateRead(
+		PhysicalBinding const& _binding, awst::SourceLocation const& _loc)
+	{
+		return createStateRead(_binding.name, _binding.wtype, _binding.kind, _loc);
+	}
+	std::shared_ptr<awst::Expression> createStateWrite(
+		PhysicalBinding const& _binding, std::shared_ptr<awst::Expression> _value,
+		awst::SourceLocation const& _loc)
+	{
+		return createStateWrite(_binding.name, std::move(_value), _binding.wtype, _binding.kind, _loc);
+	}
+
+	/// Explicit value view for promoted getter/slot types and synthetic cells.
 	std::shared_ptr<awst::Expression> createStateRead(
 		std::string const& _varName,
 		awst::WType const* _type,
@@ -66,6 +104,7 @@ public:
 
 	/// AVM single-box value capacity.
 	static constexpr unsigned BOX_VALUE_CAPACITY = 32768;
+	static constexpr uint64_t MAX_PREALLOC_BYTES = 4ULL * BOX_VALUE_CAPACITY;
 
 	/// AVM stack-value cap (`max_byte_array_size`). bzero(N>4096) reverts at
 	/// runtime, so StateGet's zero-default can't be materialised for large box types.
@@ -116,7 +155,7 @@ public:
 	);
 
 	/// Canonical top-level state-var box: BoxValueExpression keyed by _varName.
-	/// Pairs with isTopLevelDynamicBox to recognise the shape.
+	/// Carries explicit declaration origin; key expression shape is irrelevant.
 	static std::shared_ptr<awst::BoxValueExpression> makeTopLevelBoxExpr(
 		std::string const& _varName,
 		awst::WType const* _type,
@@ -126,8 +165,8 @@ public:
 	/// True iff _box is a top-level dynamic-typed state-var box
 	/// (ARC4DynamicArray / ReferenceArray / dynamic bytes) eagerly created in
 	/// __postInit (m_boxArrayVars), so bare BoxValueExpression reads are safe.
-	/// "Top-level" = key is a BytesConstant; mapping values (runtime concat/hash)
-	/// are lazy and don't qualify. Shared by makeStateGetWithDefault (read skip)
+	/// Declaration origin is explicit; runtime mapping values are lazy and don't
+	/// qualify. Shared by makeStateGetWithDefault (read skip)
 	/// and handleDelete (box_put-empty instead of box_del).
 	static bool isTopLevelDynamicBox(awst::BoxValueExpression const* _box);
 
@@ -155,12 +194,12 @@ public:
 		awst::SourceLocation const& _loc);
 
 private:
-	std::string storageNameFor(
-		solidity::frontend::VariableDeclaration const& _var) const;
-
-	/// declaration id → storage key name (only populated for contracts whose
-	/// state vars are mapped; empty means "use the plain name").
-	std::map<int64_t, std::string> m_storageNames;
+	PhysicalBinding makeBinding(solidity::frontend::VariableDeclaration const& _var,
+		std::string _name, SlotVariable const* _logicalSlot) const;
+	bool classifyBoxStorage(solidity::frontend::VariableDeclaration const& _var,
+		std::string const& _name) const;
+	std::map<int64_t, PhysicalBinding> m_bindings;
+	StorageLayout const* m_layout = nullptr;
 
 	TypeMapper& m_typeMapper;
 

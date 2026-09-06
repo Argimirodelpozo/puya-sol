@@ -30,15 +30,12 @@ public:
 	/// Dispatch a state-var read to the right backend.
 	std::shared_ptr<awst::Expression> emitReadForVar(
 		solidity::frontend::VariableDeclaration const& _var,
-		std::string const& _name,
-		awst::WType const* _type,
 		awst::SourceLocation const& _loc) const;
 
 	/// Dispatch a state-var write. Returns a Statement; AppGlobal/Box wrap
 	/// createStateWrite in an ExpressionStatement.
 	std::shared_ptr<awst::Statement> emitWriteForVar(
 		solidity::frontend::VariableDeclaration const& _var,
-		std::string const& _name,
 		std::shared_ptr<awst::Expression> _value,
 		awst::SourceLocation const& _loc) const;
 

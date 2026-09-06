@@ -232,7 +232,7 @@ std::shared_ptr<awst::Expression> buildStateVarRead(
 	if (varDecl.referenceLocation() == VariableDeclaration::Location::Transient
 		&& ctx.storageBackend && ctx.storageBackend->isTransient(varDecl))
 	{
-		if (auto read = ctx.storageBackend->emitReadForVar(varDecl, name, type, loc))
+		if (auto read = ctx.storageBackend->emitReadForVar(varDecl, loc))
 			return read;
 	}
 
