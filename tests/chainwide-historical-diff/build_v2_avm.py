@@ -29,6 +29,15 @@ ROOT = HERE.parent.parent
 PUYA_SOL = ROOT / "build" / "puya-sol"
 PUYA = ROOT / "puya" / ".venv" / "bin" / "puya"
 
+# The compiler is fail-closed on EVM behaviours the AVM cannot reproduce
+# (address.balance in microAlgos, an uncatchable low-level call failure, ...)
+# and MessageTransmitterV2 uses two of them.  This research harness
+# acknowledges the same list the semantic-test framework passes for every
+# per-contract replay (framework/compile.py::_RESEARCH_DIVERGENCES), so the v2
+# artifacts carry exactly the divergences the v1 ones do.
+sys.path.insert(0, str(ROOT / "tests" / "solidity-semantic-tests"))
+from framework.compile import _RESEARCH_DIVERGENCES as RESEARCH_DIVERGENCES  # noqa: E402
+
 TAGS = {
     "cctp2_transmitter": "MessageTransmitterV2",
     "cctp2_messenger": "TokenMessengerV2",
@@ -113,6 +122,7 @@ def build(cases: Path, tag: str, contract: str) -> None:
             *[a for r in mf["remappings"] for a in ("--remapping", r)],
             "--legacy-source-rewrite",
             "--evm-storage-layout",
+            *[a for d in RESEARCH_DIVERGENCES for a in ("--allow-divergence", d)],
             *[a for b in ENSURE_BUDGET.get(tag, []) for a in ("--ensure-budget", b)],
             "--puya-path", str(PUYA),
             "--output-dir", str(out_dir),

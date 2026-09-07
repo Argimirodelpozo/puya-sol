@@ -460,6 +460,28 @@ def load_oracle_api(prover_root: Path) -> Any:
     return importlib.import_module("cctp_replay")
 
 
+def _app_account_funding() -> int:
+    """microAlgos each replayed application account is created with.
+
+    Funding is environmental, like the OpUp fee credit: on chain the deployer
+    tops the app account up as its box storage grows. Every box a contract
+    creates raises the account's minimum balance (2500 + 400 * (name + size)
+    microAlgos), and CCTP writes one `usedNonces` box per received message
+    plus balance boxes in the stub; the prover enforces that requirement, so a
+    fixed 30 ALGO seed ran out after ~1000 receiveMessage calls (2026-09-07:
+    1971 `balance 30000000 below min 30028000` panics from index 1070 of a
+    6029-call window, none of them a compiler divergence). Seed enough for
+    any window; lower it (CCTP_APP_FUNDING) only to probe MBR behaviour.
+    """
+    return int(os.environ.get("CCTP_APP_FUNDING", str(10**12)))
+
+
+def _progress_every() -> int:
+    """Root calls between stderr progress lines (a deep window runs for hours
+    with no other output; 0 disables)."""
+    return int(os.environ.get("CCTP_PROGRESS_EVERY", "250")) or 1 << 62
+
+
 def _ensure_budget_target() -> int:
     """OpUp target for the v1 receive/replace shim.
 
@@ -471,113 +493,27 @@ def _ensure_budget_target() -> int:
     return int(os.environ.get("CCTP_ENSURE_BUDGET", "45000"))
 
 
-def pre08_compat_teal(source: str) -> tuple[str, list[str]]:
-    """Restore the intentional uint8 wrap used by CCTP's Solidity-0.7 TMV.
+# ── TEAL-shape compatibility shims ───────────────────────────────────────────
+# A shim is a set of anchored SITES.  Each site's regex CONTAINS the anchor it
+# belongs to (the router label, the assert, the compare), so a match is
+# adjacency by construction; the regex must match exactly once, and after the
+# rewrite a marker line unique to that site must sit within `window` lines of
+# the re-located anchor.  Anything else raises ShimError naming the shim and
+# the site.  A shim that lands somewhere else, twice, or not at all is never
+# silent: the 08-13 → rev-2 re-derivation hit every one of those (router
+# label suffixes, intc_N / intc N / pushint spellings, a `dig 36` stack temp
+# that became a frame slot), and the shape-regex that replaced the literals
+# then fired on CCTP v2's receiveMessage router and claimed shims it had not
+# applied.  Which shims an artifact gets is keyed by CONTRACT NAME
+# (EXPECTED_SHIMS), never by what happens to match.
 
-    The cached CCTP corpus was fetched with ``--relax-pre08`` because puya-sol accepts
-    Solidity 0.8 syntax.  Merely changing the pragma also changes arithmetic: the
-    historical TypedMemView deliberately computes ``uint8(32 * 8) == 0`` to ask
-    ``leftMask`` for all 256 bits, while 0.8 reverts.  Keep this compatibility shim
-    narrow and reported rather than pretending every pre-0.8 arithmetic expression has
-    been reconstructed.
-    """
-    # Constant spellings differ between compiler revisions (intc_N / intc N /
-    # pushint, with or without a comment) and rev-2 dropped the redundant
-    # frame_dig before the bounds assert; match the shape, not one rendering,
-    # and wrap with a literal 256 rather than assuming an intcblock index.
-    pattern = re.compile(
-        r"(TypedMemView\.index_after_if_else@\d+:\n"
-        r"(?:    frame_dig \d+\n)?"
-        r"    assert // TypedMemView/index - Attempted to index more than 32 bytes\n"
-        r"    frame_dig -1\n"
-        r"    (?:intc_\d+ // 8|intc \d+ // 8|pushint 8(?: // 8)?)\n"
-        r"    \*\n)"
-        r"    dup\n"
-        r"    (?:intc_\d+ // 255|intc \d+ // 255|pushint 255(?: // 255)?)\n"
-        r"    <=\n"
-        r"    assert // overflow\n"
-        r"(    frame_dig -3\n)"
-    )
-    patched, count = pattern.subn(r"\1    pushint 256\n    %\n\2", source)
-    if count > 1:
-        raise ValueError(f"expected at most one TypedMemView lowering, found {count}")
-    applied = []
-    if count:
-        applied.append("TypedMemView.index uint8(32 * 8) wrap restored with unchecked")
-    else:
-        patched = source
+TMV_INDEX_ASSERT = (
+    "assert // TypedMemView/index - Attempted to index more than 32 bytes"
+)
+SHIM_MARK = "// shim:"
+V1_TRANSMITTER_CONTRACT = "MessageTransmitter"
 
-    # The router label's numeric suffix varies by compiler revision.
-    route_match = re.search(r"main_receiveMessage_route@\d+:\n", patched)
-    route = route_match.group(0) if route_match else None
-    if route:
-        if "__historical_ensure_budget" in patched:
-            raise ValueError("historical ensure-budget shim already exists")
-        patched = patched.replace(
-            route,
-            route
-            + f"    pushint {_ensure_budget_target()}\n"
-            + "    pushint 0\n"
-            + "    callsub __historical_ensure_budget\n"
-            + "    txna ApplicationArgs 1\n"
-            + "    extract 2 0\n"
-            + "    store 255\n",
-            1,
-        )
-        replace_match = re.search(r"main_replaceMessage_route@\d+:\n", patched)
-        if not replace_match:
-            raise ValueError("expected one replaceMessage route")
-        replace_route = replace_match.group(0)
-        patched = patched.replace(
-            replace_route,
-            replace_route
-            + f"    pushint {_ensure_budget_target()}\n"
-            + "    pushint 0\n"
-            + "    callsub __historical_ensure_budget\n",
-            1,
-        )
-        clone_lowering = (
-            "    dup\n"
-            "    callsub Message._messageBody\n"
-            "    callsub TypedMemView.clone\n"
-        )
-        # Workaround for the pre-2026-08-19 blob-backed clone repoint bug; the
-        # compiler no longer emits this exact lowering, so apply only if present.
-        if patched.count(clone_lowering) == 1:
-            patched = patched.replace(
-                clone_lowering,
-                "    load 255\n    extract 116 0\n",
-                1,
-            )
-            applied.append("Message._messageBody clone lowering shim")
-        elif patched.count(clone_lowering) > 1:
-            raise ValueError("expected one Message._messageBody clone lowering")
-        # The historical sender word is a stack temp (`dig N`) or a frame slot
-        # (`frame_dig N`) depending on the compiler revision; compare the low
-        # 64 bits either way. Anchor on the replaceMessage body so the shim
-        # cannot land on another caller-app comparison.
-        caller_compare = re.compile(
-            r"(replaceMessage_after_if_else@\d+:\n(?:.*\n){0,40}?)"
-            r"    pushint 24\n"
-            r"    bzero\n"
-            r"    global CallerApplicationID\n"
-            r"    itob\n"
-            r"    concat\n"
-            r"    ((?:frame_)?dig \d+)\n"
-            r"    ==\n"
-        )
-        patched, compare_count = caller_compare.subn(
-            r"\1    global CallerApplicationID\n"
-            r"    \2\n"
-            r"    pushint 24\n"
-            r"    extract_uint64\n"
-            r"    ==\n",
-            patched,
-            count=1,
-        )
-        if compare_count:
-            applied.append("replaceMessage caller-app comparison shim")
-        patched += """
+HISTORICAL_ENSURE_BUDGET_TEAL = """
 
 // Historical replay resource shim. This is the same ephemeral-app OpUp strategy used
 // by puya's ensure_budget; it changes available budget, not contract-visible state.
@@ -609,17 +545,359 @@ __historical_ensure_budget_while:
 __historical_ensure_budget_done:
     retsub
 """
-        applied.append(
-            f"receiveMessage/replaceMessage ensure_budget"
-            f"({_ensure_budget_target()}) OpUp shim")
-        applied.append("receiveMessage forwards exact signed message bytes[116:]")
-        applied.append("replaceMessage caller-app comparison uses address low 64 bits")
+
+
+class ShimError(ValueError):
+    """A compatibility shim's anchor is missing, ambiguous, or has moved."""
+
+
+@dataclass(frozen=True)
+class ShimSite:
+    what: str
+    pattern: re.Pattern[str]  # contains the anchor; must match exactly once
+    replacement: str
+    anchor: re.Pattern[str]  # re-locates the anchor line after the rewrite
+    marker: str  # unique text the rewrite leaves at the site
+    window: int = 12  # max |marker line - anchor line|
+
+
+@dataclass(frozen=True)
+class Shim:
+    name: str  # reported in scope.pre08_compatibility_patches
+    sites: tuple[ShimSite, ...]
+    epilogue: str = ""  # appended once after every site applied
+
+
+def _const(value: int) -> str:
+    """Any rendering of an integer constant across compiler revisions."""
+    return (
+        rf"(?:intc_\d+ // {value}|intc \d+ // {value}|pushint {value}(?: // {value})?)"
+    )
+
+
+def _label(name: str) -> re.Pattern[str]:
+    """A label DEFINITION (the router's `match` line lists labels without ':')."""
+    return re.compile(rf"^{re.escape(name)}@\d+:$", re.M)
+
+
+def _tmv_wrap_shim() -> Shim:
+    """Restore the intentional uint8 wrap used by CCTP's Solidity-0.7 TMV.
+
+    The cached corpus was fetched with ``--relax-pre08`` because puya-sol accepts
+    Solidity 0.8 syntax.  Merely changing the pragma also changes arithmetic: the
+    historical TypedMemView deliberately computes ``uint8(32 * 8) == 0`` to ask
+    ``leftMask`` for all 256 bits, while 0.8 reverts.  The site is the overflow
+    assert right after ``_bytes * 8`` in TypedMemView.index; the rewrite drops
+    it and reduces mod 256 instead.
+    """
+    marker = f"pushint 256 {SHIM_MARK} TypedMemView.index uint8 wrap"
+    return Shim(
+        name="TypedMemView.index uint8(32 * 8) wrap restored with unchecked",
+        sites=(
+            ShimSite(
+                what="uint8 overflow assert after `_bytes * 8` in TypedMemView.index",
+                pattern=re.compile(
+                    r"(TypedMemView\.index_after_if_else@\d+:\n"
+                    r"(?:    frame_dig \d+\n)?"
+                    rf"    {re.escape(TMV_INDEX_ASSERT)}\n"
+                    r"    frame_dig -1\n"
+                    rf"    {_const(8)}\n"
+                    r"    \*\n)"
+                    r"    dup\n"
+                    rf"    {_const(255)}\n"
+                    r"    <=\n"
+                    r"    assert // overflow\n"
+                    r"(    frame_dig -3\n)"
+                ),
+                replacement=r"\1" + f"    {marker}\n    %\n" + r"\2",
+                anchor=re.compile(rf"^    {re.escape(TMV_INDEX_ASSERT)}$", re.M),
+                marker=marker,
+                window=6,
+            ),
+        ),
+    )
+
+
+def _opup_shim() -> Shim:
+    """OpUp escalation at the receiveMessage/replaceMessage router entries.
+
+    v1 ships without ``--ensure-budget``; receiveMessage's ECDSA recovery and
+    TMV parsing need 12-14k opcodes, above the 11,200 a fully pooled group
+    supplies (README "Opcode budget"), so the harness buys budget the way a
+    real deployment would.  Sites: the two router labels; the call is
+    inserted immediately after the label, ahead of the argument decode.
+    Lines the other route shim already inserted (all carry SHIM_MARK) may sit
+    between the label and the decode.
+    """
+    target = _ensure_budget_target()
+
+    def site(route: str) -> ShimSite:
+        marker = f"callsub __historical_ensure_budget {SHIM_MARK} OpUp {route} route"
+        return ShimSite(
+            what=f"{route} router entry (label + `txna ApplicationArgs 1` decode)",
+            pattern=re.compile(
+                rf"(^main_{route}_route@\d+:\n(?:    .*{re.escape(SHIM_MARK)}.*\n)*)"
+                r"(    txna ApplicationArgs 1\n)",
+                re.M,
+            ),
+            replacement=(
+                r"\1"
+                + f"    pushint {target} {SHIM_MARK} OpUp {route} target\n"
+                + f"    pushint 0 {SHIM_MARK} OpUp {route} fee\n"
+                + f"    {marker}\n"
+                + r"\2"
+            ),
+            anchor=_label(f"main_{route}_route"),
+            marker=marker,
+            window=8,
+        )
+
+    return Shim(
+        name=f"receiveMessage/replaceMessage ensure_budget({target}) OpUp shim",
+        sites=(site("receiveMessage"), site("replaceMessage")),
+        epilogue=HISTORICAL_ENSURE_BUDGET_TEAL,
+    )
+
+
+def _body_forward_shim() -> Shim:
+    """Forward the exact signed message body to handleReceiveMessage.
+
+    Site 1 captures the raw ``message`` argument (ARC-4 length prefix
+    stripped) into scratch 255 at the receiveMessage router entry.  Site 2 is
+    the ``Message._messageBody`` + ``TypedMemView.clone`` pair that feeds the
+    handleReceiveMessage inner call right after ``assert // Nonce already
+    used`` (unique to receiveMessage): it is replaced by ``bytes[116:]`` of the
+    captured message — 116 is CCTP's fixed header size.  Stack shape is
+    unchanged (view stays, body bytes on top).
+    """
+    capture = f"store 255 {SHIM_MARK} capture signed message bytes"
+    forwarded = f"{SHIM_MARK} message body forwarded from the captured signed bytes"
+    return Shim(
+        name="receiveMessage forwards exact signed message bytes[116:]",
+        sites=(
+            ShimSite(
+                what="capture of the raw message argument at the receiveMessage router entry",
+                pattern=re.compile(
+                    rf"(^main_receiveMessage_route@\d+:\n(?:    .*{re.escape(SHIM_MARK)}.*\n)*)"
+                    r"(    txna ApplicationArgs 1\n)",
+                    re.M,
+                ),
+                replacement=(
+                    r"\1"
+                    + f"    txna ApplicationArgs 1 {SHIM_MARK} capture message\n"
+                    + f"    extract 2 0 {SHIM_MARK} capture message\n"
+                    + f"    {capture}\n"
+                    + r"\2"
+                ),
+                anchor=_label("main_receiveMessage_route"),
+                marker=capture,
+                window=8,
+            ),
+            ShimSite(
+                what=(
+                    "Message._messageBody + TypedMemView.clone feeding the "
+                    "handleReceiveMessage inner call after `assert // Nonce already used`"
+                ),
+                pattern=re.compile(
+                    r"(    assert // Nonce already used\n(?:    [^\n]*\n){1,24}?)"
+                    r"    dup\n"
+                    r"    callsub Message\._messageBody\n"
+                    r"    callsub TypedMemView\.clone\n"
+                    r"(    itxn_begin\n)"
+                ),
+                replacement=(
+                    r"\1"
+                    + "    load 255\n"
+                    + "    extract 116 0\n"
+                    + f"    {forwarded}\n"
+                    + r"\2"
+                ),
+                anchor=re.compile(r"^    assert // Nonce already used$", re.M),
+                marker=forwarded,
+                window=30,
+            ),
+        ),
+    )
+
+
+def _caller_compare_shim() -> Shim:
+    """Compare a calling application to the low 64 bits of the sender word.
+
+    replaceMessage requires ``msg.sender == bytes32ToAddress(_sender)``; when
+    TokenMessenger.replaceDepositForBurn is the caller, ``_sender`` holds the
+    messenger's historical 32-byte EVM address while the compiler's
+    caller-app branch builds ``bytes24 ++ itob(CallerApplicationID)``.  The
+    app id IS the address's low 64 bits by the joint lane's address model, so
+    compare those.  Site: the ``||`` short-circuit's caller-app branch,
+    between ``bnz replaceMessage_bool_true`` and ``bz replaceMessage_bool_false``;
+    the sender word may be a stack temp (``dig N``) or a frame slot.
+    """
+    marker = (
+        f"extract_uint64 {SHIM_MARK} caller app == low 64 bits of the historical sender"
+    )
+    return Shim(
+        name="replaceMessage caller-app comparison uses address low 64 bits",
+        sites=(
+            ShimSite(
+                what=(
+                    "caller-application branch of `msg.sender == bytes32ToAddress(_sender)` "
+                    "inside replaceMessage"
+                ),
+                pattern=re.compile(
+                    r"(    bnz replaceMessage_bool_true@\d+\n"
+                    r"    global CallerApplicationID\n"
+                    r"    bz replaceMessage_bool_false@\d+\n)"
+                    r"    pushint 24\n"
+                    r"    bzero\n"
+                    r"    global CallerApplicationID\n"
+                    r"    itob\n"
+                    r"    concat\n"
+                    r"    ((?:frame_)?dig \d+)\n"
+                    r"    ==\n"
+                    r"(    bz replaceMessage_bool_false@\d+\n)"
+                ),
+                replacement=(
+                    r"\1"
+                    + "    global CallerApplicationID\n"
+                    + r"    \2" + "\n"
+                    + "    pushint 24\n"
+                    + f"    {marker}\n"
+                    + "    ==\n"
+                    + r"\3"
+                ),
+                anchor=re.compile(r"^    bnz replaceMessage_bool_true@\d+$", re.M),
+                marker=marker,
+                window=12,
+            ),
+        ),
+    )
+
+
+_SHIM_BUILDERS = {
+    "tmv": _tmv_wrap_shim,
+    "opup": _opup_shim,
+    "body": _body_forward_shim,
+    "caller": _caller_compare_shim,
+}
+# Which shims each known contract MUST receive.  A contract listed here whose
+# TEAL lacks one of its anchors fails loudly instead of replaying unshimmed.
+EXPECTED_SHIMS: dict[str, tuple[str, ...]] = {
+    V1_TRANSMITTER_CONTRACT: ("tmv", "opup", "body", "caller"),
+    "TokenMessenger": ("tmv",),
+    "TokenMinter": (),
+    # v2 compiles its own budget in (build_v2_avm.py --ensure-budget), has no
+    # replaceMessage, and its receiveMessage needs neither body forwarding nor
+    # the caller compare — only the pragma-relaxation wrap applies.
+    "MessageTransmitterV2": ("tmv",),
+    "TokenMessengerV2": ("tmv",),
+    "TokenMinterV2": (),
+}
+
+
+def shim_set_for(source: str, contract: str | None) -> tuple[str, ...]:
+    """Shim keys for an artifact: by contract name, else inferred from shape.
+
+    The inference exists for contracts this table does not know (synthetic
+    selftests, upgrade eras): TypedMemView present → wrap; a replaceMessage
+    router → the v1 MessageTransmitter set.
+    """
+    if contract in EXPECTED_SHIMS:
+        return EXPECTED_SHIMS[contract]
+    keys: list[str] = []
+    if TMV_INDEX_ASSERT in source:
+        keys.append("tmv")
+    if _label("main_replaceMessage_route").search(source):
+        keys += ["opup", "body", "caller"]
+    return tuple(keys)
+
+
+def _apply_site(source: str, shim: Shim, site: ShimSite) -> tuple[str, int]:
+    """Rewrite one site; returns (patched, marker line).  Loud on any drift."""
+    where = f"shim [{shim.name} :: {site.what}]"
+    patched, count = site.pattern.subn(site.replacement, source)
+    if count == 0:
+        raise ShimError(
+            f"{where}: anchor not found — this compiler revision changed the TEAL "
+            "shape at that site; re-derive the site's pattern (grep the anchor in "
+            "the artifact) instead of replaying an unshimmed artifact"
+        )
+    if count > 1:
+        raise ShimError(f"{where}: anchor matched {count} times; refusing an ambiguous rewrite")
+    anchors = [m.start() for m in site.anchor.finditer(patched)]
+    if len(anchors) != 1:
+        raise ShimError(
+            f"{where}: expected exactly one anchor after the rewrite, found {len(anchors)}"
+        )
+    markers = [m.start() for m in re.finditer(re.escape(site.marker), patched)]
+    if len(markers) != 1:
+        raise ShimError(
+            f"{where}: rewrite marker present {len(markers)} times, expected exactly once"
+        )
+    anchor_line = patched.count("\n", 0, anchors[0]) + 1
+    marker_line = patched.count("\n", 0, markers[0]) + 1
+    if abs(marker_line - anchor_line) > site.window:
+        raise ShimError(
+            f"{where}: rewrite landed {abs(marker_line - anchor_line)} lines from its "
+            f"anchor (limit {site.window}) — the anchor moved"
+        )
+    return patched, marker_line
+
+
+def apply_compat_shims(
+    source: str, contract: str | None = None
+) -> tuple[str, list[str], dict[str, list[dict[str, Any]]]]:
+    """Apply the artifact's shim set; (patched, applied names, per-site audit).
+
+    Every site of every expected shim must apply exactly once next to its
+    anchor (ShimError otherwise), so the returned `applied` list is a record
+    of rewrites that happened, not of intentions.
+    """
+    if "__historical_ensure_budget" in source:
+        raise ValueError("historical ensure-budget shim already exists")
+    if SHIM_MARK in source:
+        raise ValueError("compatibility shims already applied")
+    patched = source
+    applied: list[str] = []
+    placed: list[tuple[str, ShimSite]] = []
+    for key in shim_set_for(source, contract):
+        shim = _SHIM_BUILDERS[key]()
+        for site in shim.sites:
+            patched, _line = _apply_site(patched, shim, site)
+            placed.append((shim.name, site))
+        if shim.epilogue:
+            patched += shim.epilogue
+        applied.append(shim.name)
+    # Audit lines are located in the FINAL text: a later shim's insertion
+    # shifts every site recorded before it.
+    sites: dict[str, list[dict[str, Any]]] = {}
+    for name, site in placed:
+        line = patched.count("\n", 0, patched.index(site.marker)) + 1
+        sites.setdefault(name, []).append({"site": site.what, "line": line})
+    return patched, applied, sites
+
+
+def pre08_compat_teal(
+    source: str, contract: str | None = None
+) -> tuple[str, list[str]]:
+    """CCTP-specific compatibility shims for a pragma-relaxed 0.7.6 artifact.
+
+    Keep this narrow and reported rather than pretending every pre-0.8
+    arithmetic expression has been reconstructed: the four shims (TMV uint8
+    wrap, OpUp budget, exact message-body forwarding, low-64-bit caller
+    compare) are the whole set, each anchored on the TEAL site it belongs to.
+    """
+    patched, applied, _sites = apply_compat_shims(source, contract)
     return patched, applied
 
 
 def build_pre08_compat_artifacts(
     cases: Path,
-) -> tuple[tempfile.TemporaryDirectory[str], Path, dict[str, list[str]]]:
+) -> tuple[
+    tempfile.TemporaryDirectory[str],
+    Path,
+    dict[str, list[str]],
+    dict[str, dict[str, list[dict[str, Any]]]],
+]:
     """Patch disposable TEAL artifacts without changing the cached corpus.
 
     The oracle assembles the patched TEAL source.  The cached binary is only a
@@ -629,15 +907,187 @@ def build_pre08_compat_artifacts(
     temp = tempfile.TemporaryDirectory(prefix="puya-cctp-historical-")
     root = Path(temp.name)
     patches = {}
+    sites = {}
     for tag, config in CASE_CONFIG.items():
         out = root / tag / "out_avm"
         shutil.copytree(cases / tag / "out_avm", out)
         approval = out / f"{config['contract']}.approval.teal"
-        source, applied = pre08_compat_teal(approval.read_text())
+        source, applied, applied_sites = apply_compat_shims(
+            approval.read_text(), config["contract"]
+        )
         approval.write_text(source)
         patches[tag] = applied
-    return temp, root, patches
+        sites[tag] = applied_sites
+    return temp, root, patches, sites
 
+
+# ── registered-artifact validation ──────────────────────────────────────────
+# The joint lane consumes cases/<tag>/out_avm directly, and the per-contract
+# LocalNet lane (replay.py, batch.py, run_subset.py) compiles the SAME
+# directory with --contract-abi evm: its ARC-56 then exposes `__postInit`
+# alone and every historical call fails to encode — or, compiled without
+# --evm-storage-layout, the artifact keeps named app-global cells and the
+# slot-for-slot storage comparison silently compares nothing.  Both happened
+# in September 2026.  Check every registered artifact up front and say how
+# to fix it.
+
+ARTIFACT_SUFFIXES = ("approval.teal", "clear.teal", "approval.bin", "clear.bin", "arc56.json")
+
+
+class ArtifactError(RuntimeError):
+    """A registered out_avm artifact cannot serve the joint lane."""
+
+
+def artifact_fix_command(cases: Path, tag: str) -> str:
+    multifile = False
+    try:
+        multifile = bool(load_json(cases / tag / "case.json").get("multifile"))
+    except Exception:
+        pass
+    if multifile:
+        return f"python3 build_v2_avm.py {cases}"
+    return f"python3 refresh_cctp_artifacts.py {tag} --cases {cases}"
+
+
+def check_joint_artifact(
+    cases: Path,
+    tag: str,
+    contract: str,
+    *,
+    signatures: list[str] | tuple[str, ...] = (),
+    postinit_arity: int | None = None,
+    artifact_dir: str | None = None,
+    fix: str | None = None,
+) -> dict[str, Any]:
+    """Validate one registered artifact; ArtifactError carries the fix command.
+
+    Checks, in order: the five artifact files exist; the ARC-56 is an ARC-4
+    profile compile (an EVM-profile one exposes `__postInit` only); every
+    signature the replay will encode resolves to exactly one ARC-56 method
+    (name + arity, as method_for does), including `__postInit` at the
+    constructor's arity; storage is EVM-slot backed (no named ARC-56 state).
+    """
+    out = cases / (artifact_dir or f"{tag}/out_avm")
+    fix = fix or artifact_fix_command(cases, tag)
+    missing = [
+        f"{contract}.{suffix}"
+        for suffix in ARTIFACT_SUFFIXES
+        if not (out / f"{contract}.{suffix}").exists()
+    ]
+    if missing:
+        raise ArtifactError(f"{tag}/{contract}: {out} is missing {missing}. Fix: {fix}")
+    arc56_path = out / f"{contract}.arc56.json"
+    arc56 = load_json(arc56_path)
+    names = [method["name"] for method in arc56.get("methods", [])]
+    if set(names) <= {"__postInit"}:
+        raise ArtifactError(
+            f"{tag}/{contract}: {arc56_path} exposes only {names} — an EVM-profile "
+            "(--contract-abi evm) compile, which the per-contract LocalNet lane "
+            "(replay.py, batch.py, run_subset.py) writes into the same out_avm. The "
+            "joint lane encodes every historical call against the ARC-4 method list. "
+            f"Fix: {fix}"
+        )
+    unresolved = []
+    for signature in signatures:
+        try:
+            method_for(arc56, signature)
+        except ValueError as error:
+            unresolved.append(f"{signature}: {error}")
+    if postinit_arity is not None:
+        signature = "__postInit(" + ",".join("_" for _ in range(postinit_arity)) + ")"
+        try:
+            method_for(arc56, signature)
+        except ValueError as error:
+            unresolved.append(f"{signature} [constructor arity {postinit_arity}]: {error}")
+    if unresolved:
+        raise ArtifactError(
+            f"{tag}/{contract}: {len(unresolved)} signature(s) the replay must encode are "
+            f"not in the ARC-56 method list ({len(names)} methods): "
+            + "; ".join(unresolved[:6])
+            + f". Fix: {fix}"
+        )
+    state = arc56.get("state") or {}
+    named = sorted(
+        {
+            key
+            for section in ("keys", "maps")
+            for scope in (state.get(section) or {}).values()
+            for key in scope
+            if not key.startswith("__")
+        }
+    )
+    if named:
+        raise ArtifactError(
+            f"{tag}/{contract}: compiled WITHOUT --evm-storage-layout (the ARC-56 "
+            f"declares named state {named[:8]}); the joint storage lane decodes EVM slot "
+            "pages ('p:'/'s:' boxes) and would compare nothing against the EVM leg. "
+            f"Fix: {fix}"
+        )
+    return {
+        "artifact": str(arc56_path),
+        "methods": len(names),
+        "signatures_checked": len(signatures) + (postinit_arity is not None),
+        "storage_model": "evm-slots",
+        "approval_bytes": (out / f"{contract}.approval.bin").stat().st_size,
+    }
+
+
+def validate_joint_artifacts(
+    cases: Path,
+    case_data: dict[str, "CaseData"] | None = None,
+    tags: set[str] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """Check every artifact the joint lane registers: cases, stub, upgrade eras.
+
+    `tags` narrows the check (refresh_cctp_artifacts.py validates what it just
+    compiled); the stub is checked whenever its source tag is in scope.
+    """
+    if case_data is None:
+        case_data = {
+            tag: CaseData.load(cases, tag)
+            for tag in CASE_CONFIG
+            if tags is None or tag in tags
+        }
+    report: dict[str, dict[str, Any]] = {}
+    for tag, data in case_data.items():
+        if tags is not None and tag not in tags:
+            continue
+        signatures = sorted(
+            {
+                call["sig"]
+                for call in data.calls["calls"]
+                if call.get("sig") and "#" not in call["hash"]
+            }
+        )
+        signatures += [entry["sig"] for entry in INIT_CALLS if entry["tag"] == tag]
+        report[tag] = check_joint_artifact(
+            cases,
+            tag,
+            data.config["contract"],
+            signatures=signatures,
+            postinit_arity=len(data.calls["meta"]["ctor_args"]),
+        )
+    stub_tag = STUB_SOURCE["tag"]
+    if tags is None or stub_tag in tags:
+        report[f"stub:{stub_tag}"] = check_joint_artifact(
+            cases,
+            stub_tag,
+            STUB_CONFIG["contract"],
+            signatures=["mint(address,uint256)", "approve(address,uint256)"],
+            fix=f"python3 refresh_cctp_artifacts.py {stub_tag} --cases {cases}",
+        )
+    for index, entry in enumerate(UPGRADES):
+        if tags is not None and entry["tag"] not in tags:
+            continue
+        report[f"upgrade:{entry['tag']}#{index}"] = check_joint_artifact(
+            cases,
+            entry["tag"],
+            entry["contract"],
+            signatures=[entry["init_sig"]] if entry.get("init_sig") else [],
+            artifact_dir=entry["avm_artifact"],
+            fix=f"re-run gen_upgrades.py {entry['tag']} (README: Mid-history upgrades)",
+        )
+    return report
 
 class Runner:
     def __init__(
@@ -658,13 +1108,20 @@ class Runner:
         self.stub_arc56 = load_json(
             cases_path / STUB_SOURCE["tag"] / "out_avm" / "StubERC20.arc56.json"
         )
+        # Fail before the prover is touched if any registered artifact is an
+        # EVM-profile or named-cell compile (check_joint_artifact says how to fix).
+        self.artifact_check = validate_joint_artifacts(cases_path, self.cases)
         self._compat_temp = None
         self.compatibility_patches: dict[str, list[str]] = {}
+        self.compatibility_sites: dict[str, dict[str, list[dict[str, Any]]]] = {}
         artifact_cases = cases_path
         if pre08_compat:
-            self._compat_temp, artifact_cases, self.compatibility_patches = (
-                build_pre08_compat_artifacts(cases_path)
-            )
+            (
+                self._compat_temp,
+                artifact_cases,
+                self.compatibility_patches,
+                self.compatibility_sites,
+            ) = build_pre08_compat_artifacts(cases_path)
         self.artifacts = {
             data.config["contract"]: self.api.artifact(
                 artifact_cases, tag, data.config["contract"]
@@ -683,13 +1140,12 @@ class Runner:
             art_dir = cases_path / entry["avm_artifact"]
             contract = entry["contract"]
             source = (art_dir / f"{contract}.approval.teal").read_text()
-            applied: list[str] = []
             if pre08_compat:
-                source, applied = pre08_compat_teal(source)
-            if applied:
-                self.compatibility_patches[
-                    f"upgrade:{entry['tag']}#{len(self.upgrade_artifacts)}"
-                ] = applied
+                source, applied, applied_sites = apply_compat_shims(source, contract)
+                if applied:
+                    label = f"upgrade:{entry['tag']}#{len(self.upgrade_artifacts)}"
+                    self.compatibility_patches[label] = applied
+                    self.compatibility_sites[label] = applied_sites
             self.upgrade_artifacts.append(
                 (
                     {
@@ -752,7 +1208,7 @@ class Runner:
         )
         state.balances[(self.api.CONTROLLER,)] = {
             "account": "app",
-            "amount": 30_000_000,
+            "amount": _app_account_funding(),
         }
         state.balances[(creator,)] = {"account": creator, "amount": 10**12}
 
@@ -1263,11 +1719,22 @@ class Runner:
                 continue
             matched = self.replay_call(item)
             replayed += 1
+            if replayed % _progress_every() == 0:
+                matched_so_far = sum(1 for r in self.results if r["matched_status"])
+                print(
+                    f"progress: {replayed} root calls replayed, "
+                    f"{matched_so_far} matched so far (block {item['block']})",
+                    file=sys.stderr,
+                    flush=True,
+                )
             if not matched and not self.continue_after_divergence:
                 stopped = True
                 break
 
         self.reclassify_payload_races()
+        root_calls = sum(
+            1 for item in historical_stream(self.cases) if item["kind"] == "call"
+        )
         compared = [r for r in self.results if r.get("matched_status") is not None]
         skipped = [r for r in self.results if r.get("status") == "not-replayed"]
         mismatches = [r for r in compared if not r["matched_status"]]
@@ -1275,11 +1742,7 @@ class Runner:
             "scope": {
                 "kind": "historical CCTP receipt-status replay",
                 "real_contracts": [item["contract"] for item in CASE_CONFIG.values()],
-                "root_fixture_calls": sum(
-                    1
-                    for item in historical_stream(self.cases)
-                    if item["kind"] == "call"
-                ),
+                "root_fixture_calls": root_calls,
                 "lifted_inner_calls_excluded": sum(
                     1
                     for data in self.cases.values()
@@ -1289,6 +1752,7 @@ class Runner:
                 "dependency_model": (
                     "StubERC20 with per-successful-deposit synthetic mint/approval"
                 ),
+                "app_account_funding_microalgo": _app_account_funding(),
                 "comparison": "historical receipt status vs oracle ACCEPT/reject",
                 "mainnet_receipt_metadata_corrections": MAINNET_RECEIPT_METADATA,
                 "zero_log_receipt_corrections": self.receipt_corrections,
@@ -1297,6 +1761,8 @@ class Runner:
                     "the cached corpus itself is unchanged"
                 ),
                 "pre08_compatibility_patches": self.compatibility_patches,
+                "pre08_compatibility_sites": self.compatibility_sites,
+                "artifact_check": self.artifact_check,
                 "mid_history_upgrades": self.upgrades_applied,
                 "pre08_compatibility_boundary": (
                     "The known TypedMemView uint8 wrap is restored; this is not a "
@@ -1315,6 +1781,9 @@ class Runner:
                 "matched_statuses": sum(r["matched_status"] for r in compared),
                 "status_mismatches": len(mismatches),
                 "not_replayed": len(skipped),
+                # Root calls the loop never reached (a --limit, or a stop at
+                # the first divergence).  Zero on a complete replay.
+                "root_calls_not_reached": root_calls - len(self.results),
                 "stopped_at_first_divergence": stopped,
                 "tainted_suffix": self.tainted and self.continue_after_divergence,
             },
@@ -1401,8 +1870,13 @@ def main() -> int:
         "--prover-root",
         type=Path,
         default=os.environ.get("AVM_PROVER_ROOT"),
-        required="AVM_PROVER_ROOT" not in os.environ,
         help="avm-prover checkout (or set AVM_PROVER_ROOT)",
+    )
+    parser.add_argument(
+        "--check-artifacts",
+        action="store_true",
+        help="only validate the registered out_avm artifacts (ARC-4 profile, full "
+        "method list, --evm-storage-layout) and exit; no prover needed",
     )
     parser.add_argument(
         "--oracle",
@@ -1426,6 +1900,21 @@ def main() -> int:
     args = parser.parse_args()
     if args.config:
         apply_joint_config(load_json(args.config))
+    if args.check_artifacts:
+        try:
+            checked = validate_joint_artifacts(args.cases.resolve())
+        except ArtifactError as error:
+            print(f"artifact check FAILED: {error}", file=sys.stderr)
+            return 1
+        for label, info in checked.items():
+            print(
+                f"artifact ok: {label}: {info['methods']} ARC-4 methods, "
+                f"{info['signatures_checked']} signature(s) resolve, "
+                f"{info['storage_model']}, {info['approval_bytes']} B approval"
+            )
+        return 0
+    if args.prover_root is None:
+        parser.error("--prover-root (or AVM_PROVER_ROOT) is required to replay")
 
     oracle = args.oracle or args.prover_root / "oracle" / "avmoracle"
     runner = Runner(
@@ -1442,11 +1931,27 @@ def main() -> int:
     else:
         print(rendered, end="")
     summary = report["summary"]
+    # A stop at the first divergence is reported even when that row was later
+    # reclassified as an identical-payload race: "853/853" with 3,976 root
+    # calls never reached is not a full replay.
+    incomplete = ""
+    if summary["root_calls_not_reached"]:
+        why = (
+            "stopped at the first divergence"
+            if summary["stopped_at_first_divergence"]
+            else "--limit"
+        )
+        incomplete = (
+            f"; INCOMPLETE: {summary['root_calls_not_reached']} of "
+            f"{report['scope']['root_fixture_calls']} root calls not reached ({why}"
+            + ("; rerun with --continue-after-divergence" if summary["stopped_at_first_divergence"] else "")
+            + ")"
+        )
     print(
         "historical CCTP: "
         f"{summary['matched_statuses']}/{summary['compared_statuses']} statuses match; "
         f"{summary['not_replayed']} not replayed; "
-        f"{summary['status_mismatches']} mismatch(es)",
+        f"{summary['status_mismatches']} mismatch(es)" + incomplete,
         file=sys.stderr,
     )
     return 1 if summary["status_mismatches"] else 0

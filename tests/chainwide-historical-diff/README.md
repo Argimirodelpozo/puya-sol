@@ -94,6 +94,15 @@ python3 harvest.py --tvl 40
 # self-test the STORAGE DIFFER on a synthetic contract (no network)
 ../WIP/tiny-fuzzing-oracle/.evmvenv/bin/python selftest.py            # named-cell model
 ../WIP/tiny-fuzzing-oracle/.evmvenv/bin/python selftest.py --evm-storage-layout
+
+# re-run a chosen list of fetched cases on the current binary and compare each
+# fresh report with the stored one (snapshotted to <out>/prev/ first);
+# --slot names the tags to run in --evm-storage-layout mode
+python3 run_subset.py /tmp/subset pepe,usde,permit2 --slot usde,permit2
+
+# recompile the CCTP v1 joint-lane artifacts (ARC-4 profile + slot mode) after
+# a per-contract replay of a CCTP case overwrote them — compile only
+python3 refresh_cctp_artifacts.py            # cctp_transmitter cctp_messenger cctp_minter
 ```
 
 `selftest.py` exists because a real history only exercises the storage shapes
@@ -132,6 +141,26 @@ python3 oracle_cctp_historical.py cases \
   --output /tmp/cctp-historical.json
 ```
 
+**Artifacts.** The lane registers `cases/<tag>/out_avm/<Contract>.*` for the
+three cases, the `StubERC20` from the stub's source tag, and every upgrade era
+— and the same `out_avm` is what the per-contract LocalNet lane (`replay.py`,
+`batch.py`, `run_subset.py`) overwrites with a `--contract-abi evm` compile,
+whose ARC-56 exposes `__postInit` alone. The driver therefore validates every
+registered artifact **before touching the prover** (`check_joint_artifact`):
+the five artifact files exist; the ARC-56 is an ARC-4-profile compile; every
+signature the replay will encode (each case's historical `sig`s, config-era
+`init_calls`, upgrade `init_sig`s, the stub's `mint`/`approve`, and
+`__postInit` at the constructor's arity) resolves to exactly one ARC-56
+method; and storage is EVM-slot backed (an ARC-56 that declares named state
+was compiled without `--evm-storage-layout`, and the slot-for-slot storage
+lane would then compare nothing — which is exactly what the 2026-09-06 refresh
+produced). Each failure names the artifact and the fix command:
+`refresh_cctp_artifacts.py <tag>` for the single-file v1 cases (ARC-4 profile,
+`--evm-storage-layout`, the stub included; compile only), `build_v2_avm.py`
+for the multi-file v2 cases. `oracle_cctp_historical.py cases
+[--config ...] --check-artifacts` runs only that check, without a prover, and
+the report records the result under `scope.artifact_check`.
+
 The driver uses unified `Access` resources first and falls back to a pooled
 16-transaction resource group when needed. Historical contract addresses keep
 their exact signed 32-byte representation; their low 64 bits are also used as
@@ -139,6 +168,11 @@ the corresponding application IDs, matching puya-sol's current contract-call
 address convention. Timestamp, round, sender, value, constructor order, and
 receipt success/revert status are replayed. The report stops at the first
 divergence by default; `--continue-after-divergence` marks the suffix tainted.
+A stop is reported as such even when the stopping row is later reclassified as
+an identical-payload race: the summary carries `root_calls_not_reached`, and
+the console line says `INCOMPLETE: N of M root calls not reached` — a
+"853/853 statuses match" that stopped at call 853 of 4829 is not a replay of
+the window (2026-09-06).
 
 The complete campaign was validated on 2026-08-17: all 429 root calls were
 executed, all 429 AVM statuses matched their Ethereum mainnet receipts, and no
@@ -169,6 +203,38 @@ calls, and all 29 direct TokenMinter calls. All 1,029 root calls matched, with
 zero skipped calls and zero mismatches. That audit found one additional stale
 Blockscout success label, retained in `MAINNET_RECEIPT_METADATA` alongside the
 three already known corrections.
+
+### Re-running the three-way certification
+
+The certified numbers are produced by exactly this sequence, one process at a
+time (the oracle is the long pole: ~1.5 s per root call), each lane against a
+cases directory holding the window to certify — `cases/<tag>` carries the
+last fetched window and `cases/<tag>_w<N>bak` the earlier ones, so a deep
+window that is not the current one is replayed from a scratch directory that
+symlinks the backup's fixtures and the case's `out_avm`:
+
+```bash
+python3 refresh_cctp_artifacts.py                       # v1 artifacts, current compiler
+python3 build_v2_avm.py                                 # v2 artifacts (P1/P2 + --ensure-budget)
+python3 oracle_cctp_historical.py cases --check-artifacts
+python3 oracle_cctp_historical.py cases --config joint_config_v2.json --check-artifacts
+
+# v1 (3000 txns/contract) — receipts are the event oracle; EVM leg; oracle leg; three-way diff
+python3 fetch_logs.py eth.blockscout.com cctp_transmitter cctp_messenger cctp_minter
+../WIP/tiny-fuzzing-oracle/.evmvenv/bin/python cctp_evm_leg.py cases --output cases/cctp_evm_results.json
+python3 oracle_cctp_historical.py cases --prover-root $AVM_PROVER --continue-after-divergence \
+    --output cctp_joint_report.json
+python3 cctp_joint_diff.py cases --avm cctp_joint_report.json --evm cases/cctp_evm_results.json \
+    --output cctp_joint_diff_report.json
+
+# v2 (2000 txns/contract): the same four with --config joint_config_v2.json and the cctp2_* names
+```
+
+`--continue-after-divergence` is not optional for a certification: without it
+the driver stops at the first divergent row, and an identical-payload race
+that is reclassified afterwards leaves a "N/N statuses match" summary that
+covered N calls of the window (the console line now says `INCOMPLETE`).
+`triage_joint.py <report>` buckets whatever mismatches remain.
 
 ### Opcode budget: what the replay does and does not prove
 
@@ -204,6 +270,24 @@ budget viability is demonstrated only for a build that adds it.
 
 Sub-call budget is not separately bounded: the figures above are per root call
 with its whole inner-transaction tree included.
+
+**App-account funding (minimum balance).** Every box a contract creates raises
+its application account's minimum balance (2500 + 400 × (name + value) µAlgo:
+28,900 per `usedNonces` entry in slot mode, 825,700 per 2 KB page), and the
+prover sweeps that requirement exactly as `eval.checkMinBalance` does — once
+per top-level transaction, over the accounts the group *touched* through a
+balance setter. The driver used to seed each app account with a fixed 30 ALGO
+(the seed is explicit, so the prover does not auto-top-up the box owner), which
+CCTP v1 exhausts after 1,007 sparse boxes: on 2026-09-07 every `receiveMessage`
+from index 1070 of the 6029-call window panicked with `balance 30000000 below
+min 30028000` — each one had *executed completely* (49 OpUps, the four inner
+events) before the end-of-group sweep rejected it, and the EVM leg matched all
+6029. Admin calls never trip it because they send no inner transaction from
+the app account. Funding is environmental (a deployer tops the account up as
+boxes grow), so each app account is now created with 10¹² µAlgo
+(`CCTP_APP_FUNDING` lowers it to probe MBR behaviour), the seed is recorded
+under `scope.app_account_funding_microalgo`, and the OpUp fee credit stays
+separate (`fee=100_000` per call).
 
 **Every run now carries a budget profile.** Each OpUp escalation is an
 ephemeral application create-and-delete (`ApplicationID 0`,
@@ -242,6 +326,25 @@ full Ethereum-state equivalence:
   `uint8(32 * 8)` wrap, OpUp budget for receive/replace, forwarding the exact
   signed message body, and comparing a caller application to the low 64 bits
   of its historical EVM address. This is not general Solidity 0.7 emulation.
+  **Which shims an artifact gets is keyed by contract name**
+  (`EXPECTED_SHIMS`: v1 `MessageTransmitter` all four, both messengers and
+  `MessageTransmitterV2` the TMV wrap only, minters none; unknown names —
+  synthetic selftests, upgrade eras — fall back to shape inference), never by
+  what happens to match: the shape regex that replaced the 08-13 literals had
+  fired on v2's `main_receiveMessage_route@8` and then failed on the missing
+  replaceMessage route. **Each shim is a set of anchored sites**
+  (`ShimSite`): the site regex *contains* the anchor it belongs to (the router
+  label, the `TypedMemView/index` assert, the `Nonce already used` assert
+  ahead of the clone, the `bnz/bz replaceMessage_bool_*` branches around the
+  caller compare), must match exactly once, and after the rewrite a marker
+  line unique to the site (`// shim: ...`) must sit within a few lines of the
+  re-located anchor. Anything else — anchor missing, matched twice, marker
+  elsewhere — raises `ShimError` naming the shim and the site, so a shim that
+  "applies" at the wrong place or not at all can no longer pass silently (the
+  08-19 certified artifact had replayed without the caller-compare shim while
+  the report listed it). The report records the applied names
+  (`pre08_compatibility_patches`) and the final line of every site
+  (`pre08_compatibility_sites`).
 - Four stale success labels in the Blockscout fixtures are overridden by
   explicitly listed Ethereum mainnet receipts. The first 500 calls to each of
   Transmitter and Messenger were re-audited; the cached fixture files remain
@@ -347,6 +450,71 @@ two-era contract whose upgrade changes all three lanes (a V2-only revert, a
 V2-only event, doubled credits in storage), through BOTH the hand-written
 config and the fetch-shaped `upgrades.json` → `gen_upgrades.py` pipeline;
 it must finish with 0 findings.
+
+## Oracle-backed per-contract replay (no LocalNet)
+
+`oracle_case.py` is the per-contract AVM leg on avm-prover's canonical oracle
+(go-algorand's own evaluator over an in-memory ledger) instead of LocalNet.
+Same inputs, same compile path (avm_leg's, so `PUYA_SOL_EXTRA_ARGS` applies
+the same way), same `avm_results.json` shape — `differ.py` runs unchanged:
+
+```bash
+# default (holder format 2) storage model
+python3 oracle_case.py cases/pol && python3 differ.py cases/pol
+# the case's compile mode must match its EVM-leg run: eul was fetched in slot mode
+python3 oracle_case.py cases/eul --evm-storage-layout && python3 differ.py cases/eul
+# the JSON opts are avm_leg's (skips / time_base / deployment_time / evm_layout)
+python3 oracle_case.py cases/pol '{"skips": ["7"]}'
+# binary: --oracle PATH, $AVM_ORACLE_BIN, else <prover-root>/oracle/avmoracle;
+# prover root: --prover-root PATH, $AVM_PROVER_ROOT, else ../new_verifier_experiment/avm-prover
+```
+
+What is hermetic now:
+
+- **Time.** `latest_timestamp` is pinned per request from the shared schedule
+  (the EVM leg's recorded `time_base`/`deployment_time`, else the history's own
+  instants), so a time-gated history replays at its true epoch no matter what
+  ran before — `eul` (its constructor requires `mintingRestrictedBefore_ >
+  block.timestamp`) replays after any number of other cases. Nothing ratchets.
+- **State.** One oracle ledger per run, created fresh; every failed attempt
+  (resource discovery, budget escalation) commits nothing. No shared node, no
+  funding, no signatures — the xchain LogicSig identity A(E) is just a sender
+  address, and the creator is the historical creator.
+- **Storage reading.** The carried globals/boxes go through the same readers
+  as the LocalNet lane (`decode_global_state`, `read_native_maps`,
+  `read_slot_storage`) via `chd_box_source.OracleBoxSource`, holder-mismatch
+  root check included; `chd_box_source.AlgodBoxSource` is the LocalNet source.
+
+What still differs from the LocalNet lane, by construction:
+
+- Every call runs in a full 16-txn group with 15 *executed* helper calls
+  (LocalNet's OpUp helper twins as oracle apps 8001/8002): plain first, then
+  OpUp-amplified on a budget error — the two tiers `framework.call` retries
+  through, so the budget ceiling is the same (~94k opcodes), but the group
+  shape is constant (LocalNet's first attempt is a bare txn). Box references
+  are discovered from the oracle's own `invalid Box reference` panics and
+  packed across the group; every spare slot carries an empty ref for I/O
+  budget. The oracle registers the approval program as the clear program too,
+  so a >8 KiB program is charged twice against the read budget — the empty
+  refs absorb it, and it never reaches a verdict.
+- `block.number` is a small counter (+2 per call, like LocalNet's seal + call),
+  not the historical height, and chain-id-derived values differ from both
+  LocalNet and py-evm (the same `_NOISE_SIG_RE` noise class).
+- Not covered (refused loudly, never approximated): constructor dependencies
+  and answer tapes, split/delegate code pages, child programs via box,
+  proxy-runtime deploys, `new C()` children. `replay.py`'s platform-limit
+  re-skip loop still drives only `avm_leg.py`.
+
+Validated 2026-09-07 against the prior LocalNet reports: `pol`, `vanry`
+(default mode) and `eul` (slot mode) reproduce the LocalNet verdict and every
+differ count, with identical per-call outcomes and an identical storage census
+(unattributed boxes and holder mismatches included); `cases/selftest` passes
+`selftest.check` — every storage shape populated on both legs — in both
+storage models (`python3 oracle_case.py cases/selftest [--evm-storage-layout]`
+then `differ.py`; the case is synthesised once by `selftest.py` under the EVM
+venv, the oracle lane only needs the cached case dir). Residual differences
+from the LocalNet run are the documented noise classes only: chain-id-derived
+values, and height-parameterized getters answering for each run's own rounds.
 
 ## Architecture
 
