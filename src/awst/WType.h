@@ -328,6 +328,24 @@ private:
 	std::optional<std::vector<std::string>> m_names;
 };
 
+/// Name suffix of an inner-transaction WType for an AVM TypeEnum value
+/// (pay/keyreg/acfg/axfer/afrz/appl; "unknown" otherwise). Shared by
+/// WInnerTransactionFields and WInnerTransaction, which each held a
+/// byte-identical private copy.
+inline std::string txnTypeSuffix(int _type)
+{
+	switch (_type)
+	{
+	case 1: return "pay";
+	case 2: return "keyreg";
+	case 3: return "acfg";
+	case 4: return "axfer";
+	case 5: return "afrz";
+	case 6: return "appl";
+	default: return "unknown";
+	}
+}
+
 class WInnerTransactionFields: public WType
 {
 public:
@@ -347,19 +365,6 @@ public:
 	std::optional<int> transactionType() const { return m_transactionType; }
 
 private:
-	static std::string txnTypeSuffix(int _type)
-	{
-		switch (_type)
-		{
-		case 1: return "pay";
-		case 2: return "keyreg";
-		case 3: return "acfg";
-		case 4: return "axfer";
-		case 5: return "afrz";
-		case 6: return "appl";
-		default: return "unknown";
-		}
-	}
 	std::optional<int> m_transactionType;
 };
 
@@ -382,19 +387,6 @@ public:
 	std::optional<int> transactionType() const { return m_transactionType; }
 
 private:
-	static std::string txnTypeSuffix(int _type)
-	{
-		switch (_type)
-		{
-		case 1: return "pay";
-		case 2: return "keyreg";
-		case 3: return "acfg";
-		case 4: return "axfer";
-		case 5: return "afrz";
-		case 6: return "appl";
-		default: return "unknown";
-		}
-	}
 	std::optional<int> m_transactionType;
 };
 

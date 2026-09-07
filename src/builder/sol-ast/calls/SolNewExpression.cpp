@@ -235,6 +235,23 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 	return e;
 }
 
+std::shared_ptr<awst::Expression> SolNewExpression::handleNewString()
+{
+	// `new string(N)` allocates an N-byte string. Reuse the bytes handler's
+	// shape (`bzero(N)`) and reinterpret the result as string.
+	auto sizeExpr = !m_call.arguments().empty()
+		? buildExpr(*m_call.arguments()[0])
+		: nullptr;
+	if (sizeExpr)
+		sizeExpr = builder::TypeCoercion::implicitNumericCast(
+			std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
+	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
+	if (sizeExpr)
+		bzero->stackArgs.push_back(std::move(sizeExpr));
+	auto cast = awst::makeReinterpretCast(std::move(bzero), awst::WType::stringType(), m_loc);
+	return cast;
+}
+
 std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 {
 	auto* resultType = m_ctx.typeMapper.map(m_call.annotation().type);
@@ -242,22 +259,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 	if (resultType && resultType->kind() == awst::WTypeKind::Bytes)
 		return handleNewBytes();
 
-	// `new string(N)` allocates an N-byte string. Reuse the bytes handler
-	// (which emits `bzero(N)`) and reinterpret the result as string.
 	if (resultType == awst::WType::stringType())
-	{
-		auto sizeExpr = !m_call.arguments().empty()
-			? buildExpr(*m_call.arguments()[0])
-			: nullptr;
-		if (sizeExpr)
-			sizeExpr = builder::TypeCoercion::implicitNumericCast(
-				std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
-		auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-		if (sizeExpr)
-			bzero->stackArgs.push_back(std::move(sizeExpr));
-		auto cast = awst::makeReinterpretCast(std::move(bzero), resultType, m_loc);
-		return cast;
-	}
+		return handleNewString();
 
 	if (resultType && (resultType->kind() == awst::WTypeKind::ReferenceArray
 		|| resultType->kind() == awst::WTypeKind::ARC4StaticArray
@@ -267,7 +270,25 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 	// new Contract(...) — deploy child contract via inner app creation transaction.
 	// Uses minimal stub programs since we can't embed the child's compiled bytecode
 	// at this stage. The created app won't be functional but the address is valid.
+	rejectCreate2Salt();
 
+	auto const& funcExpr = funcExpression();
+	if (auto const* newExpr = dynamic_cast<NewExpression const*>(&funcExpr))
+	{
+		auto const* contractType = dynamic_cast<ContractType const*>(
+			newExpr->typeName().annotation().type);
+		if (contractType)
+			return handleNewContract(*contractType);
+	}
+
+	auto vc = awst::makeVoidConstant(m_loc);
+	return vc;
+}
+
+// ── new Contract(...) stages, in emission order ──────────────────────
+
+void SolNewExpression::rejectCreate2Salt()
+{
 	// `new C{salt:s}(...)` is CREATE2. CREATE2's address derivation (salt+initcode
 	// hash) has no AVM equivalent — fail loud rather than silently wrong-lower.
 	if (auto const* opts = dynamic_cast<FunctionCallOptions const*>(&m_call.expression()))
@@ -286,396 +307,409 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				break;
 			}
 	}
+}
 
-	auto const& funcExpr = funcExpression();
-	if (auto const* newExpr = dynamic_cast<NewExpression const*>(&funcExpr))
+std::shared_ptr<awst::Expression> SolNewExpression::handleNewContract(
+	ContractType const& _contractType)
+{
+	std::string childName = _contractType.contractDefinition().name();
+	Logger::instance().info(
+		"'new " + childName + "()' — using template variables for "
+		"child bytecode (substitute before deployment).");
+
+	// Track this child contract for .tmpl file generation
+	m_ctx.typeMapper.artifacts().childContracts.insert(childName);
+
+	// __postInit needed when ctor reads msg.value/sender/data (unavailable
+	// at AppCreate time where sender/value belong to the parent).
+	auto const* childCtor = _contractType.contractDefinition().constructor();
+	// THE postInit decision — the SAME computeNeedsPostInit the child compiles
+	// with (PostInitTriggers: box writes, new C(), msg.*, AVM stdlib calls). This
+	// used to be a local msg.*-only re-derivation that DRIFTED from the child:
+	// a ctor writing a box-stored state var (dynamic array `s_ = s`) made the
+	// child defer ALL init to __postInit while the caller passed args at create
+	// and never called __postInit -> child deployed with NO state, failing only
+	// on the first read (arrays_in_constructors).
+	bool childHasPostInit = computeNeedsPostInit(
+		_contractType.contractDefinition(), m_ctx.storageMapper);
+
+	// Build inner appl create transaction with TemplateVar programs
+	static awst::WInnerTransactionFields s_applFieldsType(6); // appl
+	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, m_loc);
+
+	auto makeU64 = [&](std::string val) {
+		auto c = awst::makeIntegerConstant(std::move(val), m_loc);
+		return c;
+	};
+	create->fields["TypeEnum"] = makeU64("6");
+	create->fields["Fee"] = makeU64("0");
+	// Extra program pages for large child contracts
+	create->fields["ExtraProgramPages"] = makeU64("3");
+	// Global/local state schema — generous defaults
+	create->fields["GlobalNumUint"] = makeU64("16");
+	create->fields["GlobalNumByteSlice"] = makeU64("16");
+
+	create->fields["ApprovalProgramPages"] = buildChildApprovalPages(childName);
+
+	// ClearStateProgram = TemplateVar("TMPL_CLEAR_ChildName")
+	create->fields["ClearStateProgram"] = awst::makeTemplateVar(
+		"TMPL_CLEAR_" + childName, awst::WType::bytesType(), m_loc);
+
+	// No __postInit: ctor runs during AppCreate. EVM profile carries one
+	// canonical constructor body; ARC4 profile keeps one encoded arg per slot.
+	if (!childHasPostInit && childCtor && !m_call.arguments().empty())
+		if (auto argsTuple = buildChildCreateArgs(*childCtor, childHasPostInit))
+			create->fields["ApplicationArgs"] = std::move(argsTuple);
+
+	// Submit the inner transaction
+	static awst::WInnerTransaction s_applTxnType(6);
+	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, m_loc);
+	submit->itxns.push_back(std::move(create));
+
+	auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
+	m_ctx.preEffects().push_back(std::move(submitStmt));
+
+	// Read CreatedApplicationID via itxn intrinsic and save to temp var
+	// because subsequent fund txn would clobber the itxn context.
+	auto createdAppIdCall = awst::makeItxn(
+		"CreatedApplicationID", awst::WType::uint64Type(), m_loc);
+
+	int newAppId = awst::NameGen::next("SolNewExpression.newAppIdCounter");
+	std::string newAppIdVarName = "__new_app_id_" + std::to_string(newAppId);
+	auto newAppIdTarget = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
+	auto newAppIdAssign = awst::makeAssignmentStatement(newAppIdTarget, std::move(createdAppIdCall), m_loc);
+	m_ctx.preEffects().push_back(std::move(newAppIdAssign));
+
+	// Use the stored app ID from now on
+	auto createdAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
+
+	emitChildFunding(createdAppId, childHasPostInit);
+
+	if (childHasPostInit)
+		emitChildPostInit(childCtor, newAppIdVarName);
+
+	// Return as applicationType (avoids address-hash conversion for calls).
+	auto appIdCast = awst::makeAsApplication(std::move(createdAppId), m_loc);
+
+	return appIdCast;
+}
+
+std::shared_ptr<awst::Expression> SolNewExpression::encodeCtorArg(
+	std::shared_ptr<awst::Expression> _argVal, Type const* _paramSolType, bool _childHasPostInit)
+{
+	if (auto const* fixedB = dynamic_cast<FixedBytesType const*>(_paramSolType))
 	{
-		auto const* contractType = dynamic_cast<ContractType const*>(
-			newExpr->typeName().annotation().type);
-		if (contractType)
+		// bytesN param: the callee decodes exactly N bytes (its
+		// reader asserts the length). A hex-literal arg arrives
+		// NUMERIC (uint64/biguint, leading zero bytes stripped)
+		// — to bytes, then left-pad/trim to N.
+		std::shared_ptr<awst::Expression> asB;
+		if (_argVal->wtype == awst::WType::uint64Type())
+			asB = awst::makeItob(std::move(_argVal), m_loc);
+		else
+			asB = awst::makeAsBytes(std::move(_argVal), m_loc);
+		_argVal = awst::makeExtractLastN(
+			awst::makeLeftPadToN(std::move(asB),
+				static_cast<int>(fixedB->numBytes()), m_loc),
+			static_cast<int>(fixedB->numBytes()), m_loc);
+	}
+	else if (_argVal->wtype == awst::WType::biguintType())
+	{
+		auto it = builder::SolIntType::fromSol(_paramSolType);
+		if (_childHasPostInit && (!it || it->isSigned))
 		{
-			std::string childName = contractType->contractDefinition().name();
-			Logger::instance().info(
-				"'new " + childName + "()' — using template variables for "
-				"child bytecode (substitute before deployment).");
-
-			// Track this child contract for .tmpl file generation
-			m_ctx.typeMapper.artifacts().childContracts.insert(childName);
-
-			// __postInit needed when ctor reads msg.value/sender/data (unavailable
-			// at AppCreate time where sender/value belong to the parent).
-			auto const* childCtor = contractType->contractDefinition().constructor();
-			// THE postInit decision — the SAME computeNeedsPostInit the child compiles
-			// with (PostInitTriggers: box writes, new C(), msg.*, AVM stdlib calls). This
-			// used to be a local msg.*-only re-derivation that DRIFTED from the child:
-			// a ctor writing a box-stored state var (dynamic array `s_ = s`) made the
-			// child defer ALL init to __postInit while the caller passed args at create
-			// and never called __postInit -> child deployed with NO state, failing only
-			// on the first read (arrays_in_constructors).
-			bool childHasPostInit = computeNeedsPostInit(
-				contractType->contractDefinition(), m_ctx.storageMapper);
-
-			// ARC4-encode ctor args once; reused for AppCreate or __postInit.
-			auto buildEncodedCtorArgs = [&]() {
-				std::vector<std::shared_ptr<awst::Expression>> out;
-				if (!childCtor) return out;
-				auto const ctorArgs = m_call.sortedArguments();
-				auto const& ctorParams = childCtor->parameters();
-				for (size_t i = 0; i < ctorArgs.size() && i < ctorParams.size(); ++i)
-				{
-					auto argVal = buildExpr(*ctorArgs[i]);
-					auto* paramSolType = ctorParams[i]->type();
-					auto* paramWType = m_ctx.typeMapper.map(paramSolType);
-					argVal = builder::TypeCoercion::implicitNumericCast(
-						std::move(argVal), paramWType, m_loc);
-
-					if (auto const* fixedB = dynamic_cast<FixedBytesType const*>(paramSolType))
-					{
-						// bytesN param: the callee decodes exactly N bytes (its
-						// reader asserts the length). A hex-literal arg arrives
-						// NUMERIC (uint64/biguint, leading zero bytes stripped)
-						// — to bytes, then left-pad/trim to N.
-						std::shared_ptr<awst::Expression> asB;
-						if (argVal->wtype == awst::WType::uint64Type())
-							asB = awst::makeItob(std::move(argVal), m_loc);
-						else
-							asB = awst::makeAsBytes(std::move(argVal), m_loc);
-						argVal = awst::makeExtractLastN(
-							awst::makeLeftPadToN(std::move(asB),
-								static_cast<int>(fixedB->numBytes()), m_loc),
-							static_cast<int>(fixedB->numBytes()), m_loc);
-					}
-					else if (argVal->wtype == awst::WType::biguintType())
-					{
-						auto it = builder::SolIntType::fromSol(paramSolType);
-						if (childHasPostInit && (!it || it->isSigned))
-						{
-							// SIGNED params stay biguint in __postInit (arc56
-							// renders them uint512; the router asserts 64
-							// bytes) — send the canonical value zero-extended.
-							argVal = awst::makeLeftPadToN(
-								awst::makeAsBytes(std::move(argVal), m_loc), 64,
-								m_loc);
-						}
-						else
-						{
-							unsigned bits = 256;
-							if (it && !it->isSigned)
-								bits = it->bits;
-							auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-							auto encode = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
-							argVal = std::move(encode);
-						}
-					}
-					else if (argVal->wtype == awst::WType::uint64Type())
-					{
-						if (childHasPostInit)
-						{
-							// __postInit keeps uint64-wtype params as declared
-							// uint64 (router: btoi of an 8-byte arg).
-							auto itob64 = awst::makeIntrinsicCall(
-								"itob", awst::WType::bytesType(), m_loc);
-							itob64->stackArgs.push_back(std::move(argVal));
-							argVal = std::move(itob64);
-						}
-						else
-						{
-							unsigned bits = 64;
-							auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
-							if (intT) bits = intT->numBits();
-							auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-							auto encode = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
-							argVal = std::move(encode);
-						}
-					}
-					else if (argVal->wtype == awst::WType::boolType())
-					{
-						if (childHasPostInit)
-						{
-							// __postInit declares the param as arc4 bool (its
-							// router asserts len==1); the 8-byte itob form is
-							// the CREATE-path reader's convention only.
-							argVal = awst::makeARC4Encode(std::move(argVal),
-								awst::WType::arc4BoolType(), m_loc);
-						}
-						else
-						{
-							auto asU64 = awst::makeAsUInt64(std::move(argVal), m_loc);
-							auto itob = awst::makeIntrinsicCall(
-								"itob", awst::WType::bytesType(), m_loc);
-							itob->stackArgs.push_back(std::move(asU64));
-							argVal = std::move(itob);
-						}
-					}
-					else if (argVal->wtype
-						&& argVal->wtype->kind() == awst::WTypeKind::ReferenceArray)
-					{
-						// Aggregate ctor arg: the child's create/postInit reader expects the
-						// ARC4 wire form (2-byte count header + elements — it reinterprets to
-						// the arc4 type then ConvertArray's back). Encode the native array.
-						auto const* arc4T = m_ctx.typeMapper.mapToARC4Type(argVal->wtype);
-						if (arc4T != argVal->wtype)
-							argVal = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
-					}
-					out.push_back(std::move(argVal));
-				}
-				return out;
-			};
-
-			// Build inner appl create transaction with TemplateVar programs
-			static awst::WInnerTransactionFields s_applFieldsType(6); // appl
-			auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, m_loc);
-
-			auto makeU64 = [&](std::string val) {
-				auto c = awst::makeIntegerConstant(std::move(val), m_loc);
-				return c;
-			};
-			create->fields["TypeEnum"] = makeU64("6");
-			create->fields["Fee"] = makeU64("0");
-			// Extra program pages for large child contracts
-			create->fields["ExtraProgramPages"] = makeU64("3");
-			// Global/local state schema — generous defaults
-			create->fields["GlobalNumUint"] = makeU64("16");
-			create->fields["GlobalNumByteSlice"] = makeU64("16");
-
-			// ApprovalProgramPages = two ≤4096-byte pages: a single AVM stack
-			// value (and bytecblock constant) caps at 4096 bytes while a
-			// 3-extra-page program can reach 8192. Sources:
-			//   default: TMPL_APPROVAL_ChildName_P0/_P1 template constants
-			//     (page 1 substitutes to empty for small children);
-			//   --child-programs-via-box: slices of the deployer-provisioned
-			//     "__cp_<Child>" box (the program never enters the parent
-			//     bytecode — 16KB-cap relief). Page split at runtime from
-			//     box_len; box_extract(key, len, 0) is valid for the empty
-			//     tail, so no branch on the extract itself.
-			{
-				auto pages = awst::makeTupleExpression(nullptr, m_loc);
-				if (m_ctx.typeMapper.profile().childProgramsViaBox)
-				{
-					m_ctx.typeMapper.artifacts().boxProvisionedChildren
-						.insert(childName);
-					auto boxKey = [&]() {
-						return awst::makeUtf8BytesConstant(
-							"__cp_" + childName, m_loc);
-					};
-					auto lenU64 = [&]() {
-						auto* tupleT = m_ctx.typeMapper.createType<awst::WTuple>(
-							std::vector<awst::WType const*>{
-								awst::WType::uint64Type(),
-								awst::WType::boolType()});
-						return awst::makeTupleItem(
-							awst::makeBoxLen(boxKey(), tupleT, m_loc), 0,
-							awst::WType::uint64Type(), m_loc);
-					};
-					auto page0Len = [&]() {
-						return awst::makeConditional(
-							awst::makeNumericCompare(lenU64(),
-								awst::NumericComparison::Gt,
-								awst::makeIntegerConstant("4096", m_loc), m_loc),
-							awst::makeIntegerConstant("4096", m_loc), lenU64(),
-							awst::WType::uint64Type(), m_loc);
-					};
-					pages->items.push_back(awst::makeBoxExtract(boxKey(),
-						awst::makeIntegerConstant("0", m_loc), page0Len(), m_loc));
-					pages->items.push_back(awst::makeBoxExtract(boxKey(),
-						page0Len(),
-						awst::makeUInt64BinOp(lenU64(),
-							awst::UInt64BinaryOperator::Sub, page0Len(), m_loc),
-						m_loc));
-				}
-				else
-					for (int page = 0; page < 2; ++page)
-						pages->items.push_back(awst::makeTemplateVar(
-							"TMPL_APPROVAL_" + childName + "_P" + std::to_string(page),
-							awst::WType::bytesType(), m_loc));
-				pages->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-					std::vector<awst::WType const*>{
-						awst::WType::bytesType(), awst::WType::bytesType()},
-					std::nullopt);
-				create->fields["ApprovalProgramPages"] = std::move(pages);
-			}
-
-			// ClearStateProgram = TemplateVar("TMPL_CLEAR_ChildName")
-			create->fields["ClearStateProgram"] = awst::makeTemplateVar(
-				"TMPL_CLEAR_" + childName, awst::WType::bytesType(), m_loc);
-
-			// No __postInit: ctor runs during AppCreate. EVM profile carries one
-			// canonical constructor body; ARC4 profile keeps one encoded arg per slot.
-			if (!childHasPostInit && childCtor && !m_call.arguments().empty())
-			{
-				if (m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
-				{
-					std::vector<Type const*> parameterTypes;
-					for (auto const& parameter: childCtor->parameters())
-						parameterTypes.push_back(parameter->type());
-					auto body = eb::InnerCallHandlers::encodeEvmArgumentBody(
-						m_ctx, m_call.sortedArguments(), parameterTypes, m_loc);
-					auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
-					argsTuple->items.push_back(std::move(body));
-					std::vector<awst::WType const*> argTypes{
-						awst::WType::bytesType()};
-					argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-						std::move(argTypes), std::nullopt);
-					create->fields["ApplicationArgs"] = std::move(argsTuple);
-				}
-				else
-				{
-					auto encodedArgs = buildEncodedCtorArgs();
-					if (!encodedArgs.empty())
-					{
-						auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
-						std::vector<awst::WType const*> argTypes;
-						for (auto& argument: encodedArgs)
-						{
-							argTypes.push_back(argument->wtype);
-							argsTuple->items.push_back(std::move(argument));
-						}
-						argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-							std::move(argTypes), std::nullopt);
-						create->fields["ApplicationArgs"] = std::move(argsTuple);
-					}
-				}
-			}
-
-			// Submit the inner transaction
-			static awst::WInnerTransaction s_applTxnType(6);
-			auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, m_loc);
-			submit->itxns.push_back(std::move(create));
-
-			auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
-			m_ctx.preEffects().push_back(std::move(submitStmt));
-
-			// Read CreatedApplicationID via itxn intrinsic and save to temp var
-			// because subsequent fund txn would clobber the itxn context.
-			auto createdAppIdCall = awst::makeItxn(
-				"CreatedApplicationID", awst::WType::uint64Type(), m_loc);
-
-			int newAppId = awst::NameGen::next("SolNewExpression.newAppIdCounter");
-			std::string newAppIdVarName = "__new_app_id_" + std::to_string(newAppId);
-			auto newAppIdTarget = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
-			auto newAppIdAssign = awst::makeAssignmentStatement(newAppIdTarget, std::move(createdAppIdCall), m_loc);
-			m_ctx.preEffects().push_back(std::move(newAppIdAssign));
-
-			// Use the stored app ID from now on
-			auto createdAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
-
-			// Fund the newly created app's proven native escrow.
-			{
-				// MBR (1M) + value ONLY when no __postInit: with postInit, value
-				// travels in the [pay(value),__postInit] group (gtxns Amount GI-1).
-				// Bundling here too → 2x value (MBR+2*500000 verified). A pay txn
-				// always transfers Amount — no "only-sets-msg.value" mode.
-				// [pay,create,postInit] impossible: child's addr/app-id unknown until create.
-				// Slot mode: the child's state lives in boxes (page box ≈0.83
-				// ALGO, sparse ≈0.029 each) — 1 ALGO starves any child that
-				// stores an aggregate in its ctor. 10 ALGO covers a page + ~300
-				// sparse slots.
-				auto baseMbr = awst::makeIntegerConstant(
-					m_ctx.typeMapper.profile().evmStorageLayout ? "4000000" : "1000000", m_loc);
-				std::shared_ptr<awst::Expression> ctorValueForFund =
-					childHasPostInit ? nullptr : extractCallValue();
-				std::shared_ptr<awst::Expression> totalFundAmount;
-				if (ctorValueForFund)
-				{
-					totalFundAmount = awst::makeUInt64BinOp(
-						std::move(baseMbr), awst::UInt64BinaryOperator::Add,
-						std::move(ctorValueForFund), m_loc);
-				}
-				else
-				{
-					totalFundAmount = std::move(baseMbr);
-				}
-				auto fundCreate = buildNativePayment(m_ctx.typeMapper.profile(), m_ctx.preEffects(),
-					awst::makeAsApplication(createdAppId, m_loc), std::move(totalFundAmount), m_loc);
-
-				static awst::WInnerTransaction s_fundTxnType(1);
-				auto fundSubmit = awst::makeSubmitInnerTransaction(&s_fundTxnType, m_loc);
-				fundSubmit->itxns.push_back(std::move(fundCreate));
-
-				auto fundStmt = awst::makeExpressionStatement(std::move(fundSubmit), m_loc);
-				m_ctx.preEffects().push_back(std::move(fundStmt));
-			}
-
-			if (childHasPostInit)
-			{
-				// Build __postInit(t1,t2,...)void signature via THE shared
-				// top-level param namer (eb::solTypeToArc4ParamName — enums
-				// collapse to their uint64 carrier, exactly what the callee
-				// publishes; nestedArc4Name would say uint8 and mis-selector).
-				// Replaces a local twin lacking enum/UDVT/bytesN/aggregate
-				// handling (T4 twin drift; the shared return-wire scope: wire
-				// sigs must mirror PUYA's wtype-derived naming, never solc's
-				// EVM-canonical spelling).
-				std::string postInitSig = "__postInit(";
-				bool first = true;
-				// ctor-less child can still need __postInit (box state-var initializers).
-				std::vector<solidity::frontend::ASTPointer<solidity::frontend::VariableDeclaration>> const noParams;
-				for (auto const& p: childCtor ? childCtor->parameters() : noParams)
-				{
-					if (!first) postInitSig += ",";
-					postInitSig += eb::solTypeToArc4ParamName(m_ctx, p->type());
-					first = false;
-				}
-				postInitSig += ")void";
-
-				auto methodConst = awst::makeMethodConstant(
-					postInitSig, awst::WType::bytesType(), m_loc);
-
-				auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
-				argsTuple->items.push_back(std::move(methodConst));
-
-				auto encodedArgs = buildEncodedCtorArgs();
-				for (auto& e: encodedArgs)
-					argsTuple->items.push_back(std::move(e));
-
-				// wtype required: puya rejects WInnerTxn ApplicationArgs with void wtype.
-				{
-					std::vector<awst::WType const*> argTypes;
-					for (auto const& item: argsTuple->items)
-						argTypes.push_back(item->wtype);
-					argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-						std::move(argTypes), std::nullopt);
-				}
-
-				// Payment txn: sets msg.value for __postInit.
-				std::shared_ptr<awst::Expression> callValue = extractCallValue();
-				if (!callValue)
-					callValue = awst::makeZero(m_loc);
-
-				auto postAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
-
-				// PaymentTxn (sets msg.value for __postInit)
-				auto payTxn = buildNativePayment(m_ctx.typeMapper.profile(), m_ctx.preEffects(),
-					awst::makeAsApplication(postAppId, m_loc), std::move(callValue), m_loc);
-
-				// AppCall __postInit(args)
-				static awst::WInnerTransactionFields s_applFieldsType2(6);
-				auto postCall = awst::makeCreateInnerTransaction(&s_applFieldsType2, m_loc);
-				postCall->fields["TypeEnum"] = awst::makeIntegerConstant("6", m_loc);
-				postCall->fields["OnCompletion"] = awst::makeZero(m_loc);
-				postCall->fields["Fee"] = awst::makeZero(m_loc);
-				postCall->fields["ApplicationID"] = std::move(postAppId);
-				postCall->fields["ApplicationArgs"] = std::move(argsTuple);
-
-				// Group: PaymentTxn must be visible to __postInit's msg.value.
-				static awst::WInnerTransaction s_payApplGroupType(1);
-				auto postSubmit = awst::makeSubmitInnerTransaction(&s_payApplGroupType, m_loc);
-				postSubmit->itxns.push_back(std::move(payTxn));
-				postSubmit->itxns.push_back(std::move(postCall));
-
-				auto postStmt = awst::makeExpressionStatement(std::move(postSubmit), m_loc);
-				m_ctx.preEffects().push_back(std::move(postStmt));
-			}
-
-			// Return as applicationType (avoids address-hash conversion for calls).
-			auto appIdCast = awst::makeAsApplication(std::move(createdAppId), m_loc);
-
-			return appIdCast;
+			// SIGNED params stay biguint in __postInit (arc56
+			// renders them uint512; the router asserts 64
+			// bytes) — send the canonical value zero-extended.
+			_argVal = awst::makeLeftPadToN(
+				awst::makeAsBytes(std::move(_argVal), m_loc), 64,
+				m_loc);
+		}
+		else
+		{
+			unsigned bits = 256;
+			if (it && !it->isSigned)
+				bits = it->bits;
+			auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+			auto encode = awst::makeARC4Encode(std::move(_argVal), arc4T, m_loc);
+			_argVal = std::move(encode);
 		}
 	}
-
-	auto vc = awst::makeVoidConstant(m_loc);
-	return vc;
+	else if (_argVal->wtype == awst::WType::uint64Type())
+	{
+		if (_childHasPostInit)
+		{
+			// __postInit keeps uint64-wtype params as declared
+			// uint64 (router: btoi of an 8-byte arg).
+			auto itob64 = awst::makeIntrinsicCall(
+				"itob", awst::WType::bytesType(), m_loc);
+			itob64->stackArgs.push_back(std::move(_argVal));
+			_argVal = std::move(itob64);
+		}
+		else
+		{
+			unsigned bits = 64;
+			auto const* intT = dynamic_cast<IntegerType const*>(_paramSolType);
+			if (intT) bits = intT->numBits();
+			auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+			auto encode = awst::makeARC4Encode(std::move(_argVal), arc4T, m_loc);
+			_argVal = std::move(encode);
+		}
+	}
+	else if (_argVal->wtype == awst::WType::boolType())
+	{
+		if (_childHasPostInit)
+		{
+			// __postInit declares the param as arc4 bool (its
+			// router asserts len==1); the 8-byte itob form is
+			// the CREATE-path reader's convention only.
+			_argVal = awst::makeARC4Encode(std::move(_argVal),
+				awst::WType::arc4BoolType(), m_loc);
+		}
+		else
+		{
+			auto asU64 = awst::makeAsUInt64(std::move(_argVal), m_loc);
+			auto itob = awst::makeIntrinsicCall(
+				"itob", awst::WType::bytesType(), m_loc);
+			itob->stackArgs.push_back(std::move(asU64));
+			_argVal = std::move(itob);
+		}
+	}
+	else if (_argVal->wtype
+		&& _argVal->wtype->kind() == awst::WTypeKind::ReferenceArray)
+	{
+		// Aggregate ctor arg: the child's create/postInit reader expects the
+		// ARC4 wire form (2-byte count header + elements — it reinterprets to
+		// the arc4 type then ConvertArray's back). Encode the native array.
+		auto const* arc4T = m_ctx.typeMapper.mapToARC4Type(_argVal->wtype);
+		if (arc4T != _argVal->wtype)
+			_argVal = awst::makeARC4Encode(std::move(_argVal), arc4T, m_loc);
+	}
+	return _argVal;
 }
+
+std::vector<std::shared_ptr<awst::Expression>> SolNewExpression::buildEncodedCtorArgs(
+	FunctionDefinition const* _childCtor, bool _childHasPostInit)
+{
+	std::vector<std::shared_ptr<awst::Expression>> out;
+	if (!_childCtor) return out;
+	auto const ctorArgs = m_call.sortedArguments();
+	auto const& ctorParams = _childCtor->parameters();
+	for (size_t i = 0; i < ctorArgs.size() && i < ctorParams.size(); ++i)
+	{
+		auto argVal = buildExpr(*ctorArgs[i]);
+		auto* paramSolType = ctorParams[i]->type();
+		auto* paramWType = m_ctx.typeMapper.map(paramSolType);
+		argVal = builder::TypeCoercion::implicitNumericCast(
+			std::move(argVal), paramWType, m_loc);
+		out.push_back(encodeCtorArg(std::move(argVal), paramSolType, _childHasPostInit));
+	}
+	return out;
+}
+
+std::shared_ptr<awst::TupleExpression> SolNewExpression::buildChildApprovalPages(
+	std::string const& _childName)
+{
+	// ApprovalProgramPages = two ≤4096-byte pages: a single AVM stack
+	// value (and bytecblock constant) caps at 4096 bytes while a
+	// 3-extra-page program can reach 8192. Sources:
+	//   default: TMPL_APPROVAL_ChildName_P0/_P1 template constants
+	//     (page 1 substitutes to empty for small children);
+	//   --child-programs-via-box: slices of the deployer-provisioned
+	//     "__cp_<Child>" box (the program never enters the parent
+	//     bytecode — 16KB-cap relief). Page split at runtime from
+	//     box_len; box_extract(key, len, 0) is valid for the empty
+	//     tail, so no branch on the extract itself.
+	auto pages = awst::makeTupleExpression(nullptr, m_loc);
+	if (m_ctx.typeMapper.profile().childProgramsViaBox)
+	{
+		m_ctx.typeMapper.artifacts().boxProvisionedChildren
+			.insert(_childName);
+		auto boxKey = [&]() {
+			return awst::makeUtf8BytesConstant(
+				"__cp_" + _childName, m_loc);
+		};
+		auto lenU64 = [&]() {
+			auto* tupleT = m_ctx.typeMapper.createType<awst::WTuple>(
+				std::vector<awst::WType const*>{
+					awst::WType::uint64Type(),
+					awst::WType::boolType()});
+			return awst::makeTupleItem(
+				awst::makeBoxLen(boxKey(), tupleT, m_loc), 0,
+				awst::WType::uint64Type(), m_loc);
+		};
+		auto page0Len = [&]() {
+			return awst::makeConditional(
+				awst::makeNumericCompare(lenU64(),
+					awst::NumericComparison::Gt,
+					awst::makeIntegerConstant("4096", m_loc), m_loc),
+				awst::makeIntegerConstant("4096", m_loc), lenU64(),
+				awst::WType::uint64Type(), m_loc);
+		};
+		pages->items.push_back(awst::makeBoxExtract(boxKey(),
+			awst::makeIntegerConstant("0", m_loc), page0Len(), m_loc));
+		pages->items.push_back(awst::makeBoxExtract(boxKey(),
+			page0Len(),
+			awst::makeUInt64BinOp(lenU64(),
+				awst::UInt64BinaryOperator::Sub, page0Len(), m_loc),
+			m_loc));
+	}
+	else
+		for (int page = 0; page < 2; ++page)
+			pages->items.push_back(awst::makeTemplateVar(
+				"TMPL_APPROVAL_" + _childName + "_P" + std::to_string(page),
+				awst::WType::bytesType(), m_loc));
+	pages->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+		std::vector<awst::WType const*>{
+			awst::WType::bytesType(), awst::WType::bytesType()},
+		std::nullopt);
+	return pages;
+}
+
+std::shared_ptr<awst::TupleExpression> SolNewExpression::buildChildCreateArgs(
+	FunctionDefinition const& _childCtor, bool _childHasPostInit)
+{
+	if (m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
+	{
+		std::vector<Type const*> parameterTypes;
+		for (auto const& parameter: _childCtor.parameters())
+			parameterTypes.push_back(parameter->type());
+		auto body = eb::InnerCallHandlers::encodeEvmArgumentBody(
+			m_ctx, m_call.sortedArguments(), parameterTypes, m_loc);
+		auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
+		argsTuple->items.push_back(std::move(body));
+		std::vector<awst::WType const*> argTypes{
+			awst::WType::bytesType()};
+		argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+			std::move(argTypes), std::nullopt);
+		return argsTuple;
+	}
+
+	auto encodedArgs = buildEncodedCtorArgs(&_childCtor, _childHasPostInit);
+	if (encodedArgs.empty())
+		return nullptr;
+	auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
+	std::vector<awst::WType const*> argTypes;
+	for (auto& argument: encodedArgs)
+	{
+		argTypes.push_back(argument->wtype);
+		argsTuple->items.push_back(std::move(argument));
+	}
+	argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+		std::move(argTypes), std::nullopt);
+	return argsTuple;
+}
+
+void SolNewExpression::emitChildFunding(
+	std::shared_ptr<awst::Expression> const& _createdAppId, bool _childHasPostInit)
+{
+	// Fund the newly created app's proven native escrow.
+	// MBR (1M) + value ONLY when no __postInit: with postInit, value
+	// travels in the [pay(value),__postInit] group (gtxns Amount GI-1).
+	// Bundling here too → 2x value (MBR+2*500000 verified). A pay txn
+	// always transfers Amount — no "only-sets-msg.value" mode.
+	// [pay,create,postInit] impossible: child's addr/app-id unknown until create.
+	// Slot mode: the child's state lives in boxes (page box ≈0.83
+	// ALGO, sparse ≈0.029 each) — 1 ALGO starves any child that
+	// stores an aggregate in its ctor. 10 ALGO covers a page + ~300
+	// sparse slots.
+	auto baseMbr = awst::makeIntegerConstant(
+		m_ctx.typeMapper.profile().evmStorageLayout ? "4000000" : "1000000", m_loc);
+	std::shared_ptr<awst::Expression> ctorValueForFund =
+		_childHasPostInit ? nullptr : extractCallValue();
+	std::shared_ptr<awst::Expression> totalFundAmount;
+	if (ctorValueForFund)
+	{
+		totalFundAmount = awst::makeUInt64BinOp(
+			std::move(baseMbr), awst::UInt64BinaryOperator::Add,
+			std::move(ctorValueForFund), m_loc);
+	}
+	else
+	{
+		totalFundAmount = std::move(baseMbr);
+	}
+	auto fundCreate = buildNativePayment(m_ctx.typeMapper.profile(), m_ctx.preEffects(),
+		awst::makeAsApplication(_createdAppId, m_loc), std::move(totalFundAmount), m_loc);
+
+	static awst::WInnerTransaction s_fundTxnType(1);
+	auto fundSubmit = awst::makeSubmitInnerTransaction(&s_fundTxnType, m_loc);
+	fundSubmit->itxns.push_back(std::move(fundCreate));
+
+	auto fundStmt = awst::makeExpressionStatement(std::move(fundSubmit), m_loc);
+	m_ctx.preEffects().push_back(std::move(fundStmt));
+}
+
+void SolNewExpression::emitChildPostInit(
+	FunctionDefinition const* _childCtor, std::string const& _newAppIdVarName)
+{
+	// Build __postInit(t1,t2,...)void signature via THE shared
+	// top-level param namer (eb::solTypeToArc4ParamName — enums
+	// collapse to their uint64 carrier, exactly what the callee
+	// publishes; nestedArc4Name would say uint8 and mis-selector).
+	// Replaces a local twin lacking enum/UDVT/bytesN/aggregate
+	// handling (T4 twin drift; the shared return-wire scope: wire
+	// sigs must mirror PUYA's wtype-derived naming, never solc's
+	// EVM-canonical spelling).
+	std::string postInitSig = "__postInit(";
+	bool first = true;
+	// ctor-less child can still need __postInit (box state-var initializers).
+	std::vector<solidity::frontend::ASTPointer<solidity::frontend::VariableDeclaration>> const noParams;
+	for (auto const& p: _childCtor ? _childCtor->parameters() : noParams)
+	{
+		if (!first) postInitSig += ",";
+		postInitSig += eb::solTypeToArc4ParamName(m_ctx, p->type());
+		first = false;
+	}
+	postInitSig += ")void";
+
+	auto methodConst = awst::makeMethodConstant(
+		postInitSig, awst::WType::bytesType(), m_loc);
+
+	auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
+	argsTuple->items.push_back(std::move(methodConst));
+
+	auto encodedArgs = buildEncodedCtorArgs(_childCtor, /*_childHasPostInit=*/true);
+	for (auto& e: encodedArgs)
+		argsTuple->items.push_back(std::move(e));
+
+	// wtype required: puya rejects WInnerTxn ApplicationArgs with void wtype.
+	{
+		std::vector<awst::WType const*> argTypes;
+		for (auto const& item: argsTuple->items)
+			argTypes.push_back(item->wtype);
+		argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+			std::move(argTypes), std::nullopt);
+	}
+
+	// Payment txn: sets msg.value for __postInit.
+	std::shared_ptr<awst::Expression> callValue = extractCallValue();
+	if (!callValue)
+		callValue = awst::makeZero(m_loc);
+
+	auto postAppId = awst::makeVarExpression(_newAppIdVarName, awst::WType::uint64Type(), m_loc);
+
+	// PaymentTxn (sets msg.value for __postInit)
+	auto payTxn = buildNativePayment(m_ctx.typeMapper.profile(), m_ctx.preEffects(),
+		awst::makeAsApplication(postAppId, m_loc), std::move(callValue), m_loc);
+
+	// AppCall __postInit(args)
+	static awst::WInnerTransactionFields s_applFieldsType2(6);
+	auto postCall = awst::makeCreateInnerTransaction(&s_applFieldsType2, m_loc);
+	postCall->fields["TypeEnum"] = awst::makeIntegerConstant("6", m_loc);
+	postCall->fields["OnCompletion"] = awst::makeZero(m_loc);
+	postCall->fields["Fee"] = awst::makeZero(m_loc);
+	postCall->fields["ApplicationID"] = std::move(postAppId);
+	postCall->fields["ApplicationArgs"] = std::move(argsTuple);
+
+	// Group: PaymentTxn must be visible to __postInit's msg.value.
+	static awst::WInnerTransaction s_payApplGroupType(1);
+	auto postSubmit = awst::makeSubmitInnerTransaction(&s_payApplGroupType, m_loc);
+	postSubmit->itxns.push_back(std::move(payTxn));
+	postSubmit->itxns.push_back(std::move(postCall));
+
+	auto postStmt = awst::makeExpressionStatement(std::move(postSubmit), m_loc);
+	m_ctx.preEffects().push_back(std::move(postStmt));
+}
+
 
 } // namespace puyasol::builder::sol_ast
