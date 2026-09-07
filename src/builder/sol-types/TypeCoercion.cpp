@@ -567,6 +567,41 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendSignedElement(
 	return _value;
 }
 
+namespace
+{
+
+/// Shared body of checkedIndexToUint64 / checkedAmountToUint64: a biguint
+/// value is pinned to a `<_tmpPrefix><n>` temp (n drawn from the
+/// `_counterKey` NameGen sequence), asserted `< 2^64` with `_message`, and the
+/// temp (or a uint64 value, untouched) narrows through implicitNumericCast.
+/// The two public wrappers differ ONLY in those three strings.
+std::shared_ptr<awst::Expression> checkedNarrowToUint64(
+	std::vector<std::shared_ptr<awst::Statement>>& _preStmts,
+	std::shared_ptr<awst::Expression> _value,
+	awst::SourceLocation const& _loc,
+	char const* _tmpPrefix,
+	char const* _counterKey,
+	char const* _message
+)
+{
+	if (_value && _value->wtype == awst::WType::biguintType())
+	{
+		std::string nm = _tmpPrefix + std::to_string(awst::NameGen::next(_counterKey));
+		_preStmts.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc), std::move(_value), _loc));
+		auto fits = awst::makeNumericCompare(
+			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc),
+			awst::NumericComparison::Lt,
+			awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType()), _loc);
+		_preStmts.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(std::move(fits), _loc, _message), _loc));
+		_value = awst::makeVarExpression(nm, awst::WType::biguintType(), _loc);
+	}
+	return TypeCoercion::implicitNumericCast(std::move(_value), awst::WType::uint64Type(), _loc);
+}
+
+} // namespace
+
 std::shared_ptr<awst::Expression> TypeCoercion::checkedIndexToUint64(
 	std::vector<std::shared_ptr<awst::Statement>>& _preStmts,
 	std::shared_ptr<awst::Expression> _idx,
@@ -578,21 +613,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::checkedIndexToUint64(
 	// else `arr[2^128]` silently truncates the high bits and reads arr[low-64-bits] instead of
 	// reverting (the downstream `index < length` check only sees the truncated value). Pins to a
 	// temp so a side-effecting index (`a[--i]`) evaluates once.
-	if (_idx && _idx->wtype == awst::WType::biguintType())
-	{
-		std::string nm = "__ckidx_" + std::to_string(
-			awst::NameGen::next("TypeCoercion.checkedIndex"));
-		_preStmts.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc), std::move(_idx), _loc));
-		auto fits = awst::makeNumericCompare(
-			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc),
-			awst::NumericComparison::Lt,
-			awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType()), _loc);
-		_preStmts.push_back(awst::makeExpressionStatement(
-			awst::makeAssert(std::move(fits), _loc, "array index out of bounds"), _loc));
-		_idx = awst::makeVarExpression(nm, awst::WType::biguintType(), _loc);
-	}
-	return implicitNumericCast(std::move(_idx), awst::WType::uint64Type(), _loc);
+	return checkedNarrowToUint64(_preStmts, std::move(_idx), _loc,
+		"__ckidx_", "TypeCoercion.checkedIndex", "array index out of bounds");
 }
 
 std::shared_ptr<awst::Expression> TypeCoercion::checkedAmountToUint64(
@@ -606,22 +628,9 @@ std::shared_ptr<awst::Expression> TypeCoercion::checkedAmountToUint64(
 	// BEFORE truncating — else `payable(to).transfer(100 ether)` (1e20 > 2^64)
 	// silently sends 1e20 mod 2^64 microAlgos. Pin to a temp so a side-effecting
 	// amount evaluates once.
-	if (_amount && _amount->wtype == awst::WType::biguintType())
-	{
-		std::string nm = "__ckamt_" + std::to_string(
-			awst::NameGen::next("TypeCoercion.checkedAmount"));
-		_preStmts.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc), std::move(_amount), _loc));
-		auto fits = awst::makeNumericCompare(
-			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc),
-			awst::NumericComparison::Lt,
-			awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType()), _loc);
-		_preStmts.push_back(awst::makeExpressionStatement(
-			awst::makeAssert(std::move(fits), _loc,
-				"transfer amount exceeds uint64 (AVM amounts are 64-bit)"), _loc));
-		_amount = awst::makeVarExpression(nm, awst::WType::biguintType(), _loc);
-	}
-	return implicitNumericCast(std::move(_amount), awst::WType::uint64Type(), _loc);
+	return checkedNarrowToUint64(_preStmts, std::move(_amount), _loc,
+		"__ckamt_", "TypeCoercion.checkedAmount",
+		"transfer amount exceeds uint64 (AVM amounts are 64-bit)");
 }
 
 void TypeCoercion::assertImplicitlyConvertible(
@@ -1139,6 +1148,270 @@ std::vector<uint8_t> TypeCoercion::intLiteralToBytesN(std::string const& _decima
 	return out;
 }
 
+namespace
+{
+
+// ── coerceForAssignment rungs, tried in the order below. Each returns nullptr
+// when its shape doesn't apply and only then leaves `_expr` untouched; a claim
+// consumes `_expr` and yields the converted value. ────────────────────────
+
+/// Scalar ARC4 integer widening (arc4.uintN → arc4.uintM, arc4.intN →
+/// arc4.intM, N < M, same signedness — the only integer element conversions
+/// solc admits implicitly). Both are byte-level: unsigned prepends zeros,
+/// signed prepends a runtime 0x00/0xFF run keyed on the top bit. A general
+/// rule here means every aggregate copy that recurses per element inherits
+/// it — mirroring solc, where array copies delegate to the one scalar
+/// conversion function instead of enumerating element kinds.
+std::shared_ptr<awst::Expression> tryWidenArc4ScalarInt(
+	std::shared_ptr<awst::Expression>& _expr,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	auto const* srcInt = dynamic_cast<awst::ARC4UIntN const*>(_expr->wtype);
+	auto const* tgtInt = dynamic_cast<awst::ARC4UIntN const*>(_targetType);
+	if (!(srcInt && tgtInt && srcInt->n() < tgtInt->n()
+		&& srcInt->n() % 8 == 0 && tgtInt->n() % 8 == 0
+		&& srcInt->isSigned() == tgtInt->isSigned()))
+		return nullptr;
+	int const pad = static_cast<int>((tgtInt->n() - srcInt->n()) / 8);
+	if (!srcInt->isSigned())
+		return awst::makeReinterpretCast(
+			awst::makeLeftPad(
+				awst::makeAsBytes(std::move(_expr), _loc), pad, _loc),
+			_targetType, _loc);
+	auto once = awst::makeEvalOnce(
+		awst::makeAsBytes(std::move(_expr), _loc), _loc);
+	auto signByte = awst::makeBtoi(
+		awst::makeExtract(once, 0, 1, _loc), _loc);
+	auto isNeg = awst::makeNumericCompare(
+		std::move(signByte), awst::NumericComparison::Gte,
+		awst::makeIntegerConstant(128, _loc), _loc);
+	auto prefix = awst::makeConditional(
+		std::move(isNeg),
+		awst::makeBytesConstant(
+			std::vector<uint8_t>(static_cast<size_t>(pad), 0xFFu), _loc),
+		awst::makeBzero(pad, _loc),
+		awst::WType::bytesType(), _loc);
+	return awst::makeReinterpretCast(
+		awst::makeConcat(std::move(prefix), once, _loc), _targetType, _loc);
+}
+
+/// Fixed-array copies (ARC4StaticArray source → static/dynamic ARC4 array)
+/// recurse through the same scalar/aggregate conversion rules (not separate
+/// signed/unsigned literal special cases).
+std::shared_ptr<awst::Expression> tryCopyArc4StaticArray(
+	std::shared_ptr<awst::Expression>& _expr,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	auto const* source = dynamic_cast<awst::ARC4StaticArray const*>(_expr->wtype);
+	if (!source)
+		return nullptr;
+	auto const* targetStatic = dynamic_cast<awst::ARC4StaticArray const*>(_targetType);
+	auto const* targetDynamic = dynamic_cast<awst::ARC4DynamicArray const*>(_targetType);
+	auto const* targetElem = targetStatic ? targetStatic->elementType()
+		: targetDynamic ? targetDynamic->elementType() : nullptr;
+	if (!(targetElem && (!targetStatic || source->arraySize() <= targetStatic->arraySize())))
+		return nullptr;
+	bool const sameElement = awst::structurallyEquivalent(source->elementType(), targetElem);
+	if (sameElement && targetDynamic)
+	{
+		checkedSize<uint16_t>(source->arraySize(), "ARC4 array length");
+		return prependArc4LengthHeader(std::move(_expr), source->arraySize(), _targetType, _loc);
+	}
+	auto const sourceStride = computeEncodedElementSize(source->elementType()).fixedBytes<int>();
+	auto const targetStride = computeEncodedElementSize(targetElem).fixedBytes<int>();
+	if (sameElement && targetStatic && sourceStride)
+	{
+		auto const padding = EncodedSize::fixed(*sourceStride)
+			.times(targetStatic->arraySize() - source->arraySize()).fixedBytes<int>().value();
+		return awst::makeReinterpretCast(
+			awst::makeRightPad(awst::makeAsBytes(std::move(_expr), _loc), padding, _loc),
+			_targetType, _loc);
+	}
+	if (sourceStride && targetStride && source->arraySize() <= 256)
+	{
+		auto once = awst::makeEvalOnce(awst::makeAsBytes(std::move(_expr), _loc), _loc);
+		std::vector<uint8_t> header;
+		if (targetDynamic)
+		{
+			auto const count = checkedSize<uint16_t>(source->arraySize(), "ARC4 array length");
+			header = {static_cast<uint8_t>(count >> 8), static_cast<uint8_t>(count)};
+		}
+		std::shared_ptr<awst::Expression> bytes = awst::makeBytesConstant(std::move(header), _loc);
+		for (int64_t i = 0; i < source->arraySize(); ++i)
+		{
+			auto element = awst::makeReinterpretCast(
+				awst::makeExtract(once, checkedSize<int>(i * *sourceStride, "array element offset"),
+					*sourceStride, _loc), source->elementType(), _loc);
+			bytes = awst::makeConcat(std::move(bytes),
+				awst::makeAsBytes(TypeCoercion::coerceForAssignment(std::move(element), targetElem, _loc), _loc), _loc);
+		}
+		if (targetStatic && targetStatic->arraySize() > source->arraySize())
+			bytes = awst::makeRightPad(std::move(bytes), EncodedSize::fixed(*targetStride)
+				.times(targetStatic->arraySize() - source->arraySize()).fixedBytes<int>().value(), _loc);
+		return awst::makeReinterpretCast(std::move(bytes), _targetType, _loc);
+	}
+	return nullptr;
+}
+
+/// String/bytes source → fixed-size bytes[N] target of a DIFFERENT width.
+/// For fixed-size bytes[N] targets coming from a narrower fixed bytes[M]
+/// (M < N), Solidity right-pads the source with zeros to produce N bytes. A
+/// bare ReinterpretCast leaves the source's M bytes labelled as bytes[N],
+/// which decodes to the wrong width at the call boundary; build the padded
+/// value explicitly. nullptr = unsized target, unknown source width, or
+/// widths already equal (the caller's plain ReinterpretCast applies).
+std::shared_ptr<awst::Expression> tryResizeFixedBytes(
+	std::shared_ptr<awst::Expression>& _expr,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	auto const* tw = dynamic_cast<awst::BytesWType const*>(_targetType);
+	if (!tw || !tw->length().has_value())
+		return nullptr;
+	int targetWidth = static_cast<int>(*tw->length());
+	int sourceWidth = 0;
+	if (auto const* sw = dynamic_cast<awst::BytesWType const*>(_expr->wtype))
+		if (sw->length().has_value())
+			sourceWidth = static_cast<int>(*sw->length());
+	// Hex/string literals can carry the generic bytes representation
+	// even though their concrete byte count is known. Preserve that
+	// width for the same fixed-bytes conversion used by assignment,
+	// return, initialization, and call arguments.
+	if (sourceWidth == 0)
+		if (auto const* bytes = dynamic_cast<awst::BytesConstant const*>(
+			_expr.get()))
+			sourceWidth = static_cast<int>(bytes->value.size());
+	if (!(sourceWidth > 0 && sourceWidth != targetWidth))
+		return nullptr;
+	auto srcBytes = awst::makeAsBytes(std::move(_expr), _loc);
+	std::shared_ptr<awst::Expression> resized;
+	if (sourceWidth < targetWidth)
+		resized = awst::makeRightPad(
+			std::move(srcBytes), targetWidth - sourceWidth, _loc);
+	else
+		resized = awst::makeExtract3(
+			std::move(srcBytes), awst::makeZero(_loc),
+			awst::makeIntegerConstant(targetWidth, _loc), _loc);
+	return awst::makeReinterpretCast(
+		std::move(resized), _targetType, _loc);
+}
+
+/// Bytes-kind target: IntegerConstant → BytesConstant(bytes[N]), string
+/// literal → right-padded bytes[N], then any string/bytes-compatible source
+/// via (width-adjusting) ReinterpretCast. nullptr = not a bytes target, or a
+/// source that is none of those (e.g. an account — the next rung's shape).
+std::shared_ptr<awst::Expression> tryCoerceToBytes(
+	std::shared_ptr<awst::Expression>& _expr,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	if (_targetType->kind() != awst::WTypeKind::Bytes)
+		return nullptr;
+	auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_targetType);
+	if (bytesType && bytesType->length().has_value())
+	{
+		int N = static_cast<int>(*bytesType->length());
+
+		// IntegerConstant → bytes[N]
+		if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_expr.get()))
+		{
+			return awst::makeBytesConstant(
+				TypeCoercion::intLiteralToBytesN(intConst->value, N), _loc,
+				awst::BytesEncoding::Base16, _targetType);
+		}
+
+		// String → bytes[N] (right-padded)
+		if (auto padded = TypeCoercion::stringToBytesN(_expr.get(), _targetType, N, _loc))
+			return padded;
+	}
+
+	// String/bytes-compatible → bytes via ReinterpretCast.
+	if (_expr->wtype == awst::WType::stringType()
+		|| _expr->wtype->kind() == awst::WTypeKind::Bytes)
+	{
+		if (auto resized = tryResizeFixedBytes(_expr, _targetType, _loc))
+			return resized;
+		auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
+		return cast;
+	}
+	return nullptr;
+}
+
+/// Account ↔ bytes[32]: a relabelling ReinterpretCast either way.
+std::shared_ptr<awst::Expression> tryAccountBytesReinterpret(
+	std::shared_ptr<awst::Expression>& _expr,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	if (_targetType == awst::WType::accountType()
+		&& (_expr->wtype->kind() == awst::WTypeKind::Bytes
+			|| _expr->wtype == awst::WType::bytesType()))
+	{
+		auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
+		return cast;
+	}
+	if (_expr->wtype == awst::WType::accountType()
+		&& _targetType->kind() == awst::WTypeKind::Bytes)
+	{
+		auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
+		return cast;
+	}
+	return nullptr;
+}
+
+/// application → account: encode the app id into a fake address of
+/// the form (24 zero bytes ++ itob(app_id)). This round-trips
+/// losslessly through the inverse `extract 24 8; btoi` we use in the
+/// account→application path below, so `A a = new A(); a.f();` keeps
+/// the original app id rather than the SHA512_256 on-chain address
+/// (which is opaque and can't be recovered).
+std::shared_ptr<awst::Expression> tryApplicationToAccount(
+	std::shared_ptr<awst::Expression>& _expr,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	if (!(_targetType == awst::WType::accountType()
+		&& _expr->wtype == awst::WType::applicationType()))
+		return nullptr;
+	auto idBytes = awst::makeAsUInt64(std::move(_expr), _loc);
+	auto itob = awst::makeItob(std::move(idBytes), _loc);
+	auto cat = awst::makeLeftPad(std::move(itob), 24, _loc);
+	return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
+}
+
+/// account → application: extract last 8 bytes (app_id) via btoi
+/// Only meaningful for addresses built from our convention (\x00*24 + app_id).
+std::shared_ptr<awst::Expression> tryAccountToApplication(
+	std::shared_ptr<awst::Expression>& _expr,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	if (!(_targetType == awst::WType::applicationType()
+		&& _expr->wtype == awst::WType::accountType()))
+		return nullptr;
+	auto toBytes = awst::makeAsBytes(std::move(_expr), _loc);
+	auto btoi = awst::makeWord32ToUInt64(std::move(toBytes), _loc);
+	return awst::makeReinterpretCast(std::move(btoi), _targetType, _loc);
+}
+
+/// uint64 → bool (0/non-0)
+std::shared_ptr<awst::Expression> tryUInt64ToBool(
+	std::shared_ptr<awst::Expression>& _expr,
+	awst::WType const* _targetType,
+	awst::SourceLocation const& _loc)
+{
+	if (!(_targetType == awst::WType::boolType()
+		&& _expr->wtype == awst::WType::uint64Type()))
+		return nullptr;
+	auto zero = awst::makeZero(_loc);
+	auto cmp = awst::makeNumericCompare(std::move(_expr), awst::NumericComparison::Ne, std::move(zero), _loc);
+	return cmp;
+}
+
+} // namespace
+
 std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::WType const* _targetType,
@@ -1153,218 +1426,27 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	if (_expr->wtype == _targetType)
 		return _expr;
 
-	// Scalar ARC4 integer widening (arc4.uintN → arc4.uintM, arc4.intN →
-	// arc4.intM, N < M, same signedness — the only integer element conversions
-	// solc admits implicitly). Both are byte-level: unsigned prepends zeros,
-	// signed prepends a runtime 0x00/0xFF run keyed on the top bit. A general
-	// rule here means every aggregate copy that recurses per element inherits
-	// it — mirroring solc, where array copies delegate to the one scalar
-	// conversion function instead of enumerating element kinds.
-	{
-		auto const* srcInt = dynamic_cast<awst::ARC4UIntN const*>(_expr->wtype);
-		auto const* tgtInt = dynamic_cast<awst::ARC4UIntN const*>(_targetType);
-		if (srcInt && tgtInt && srcInt->n() < tgtInt->n()
-			&& srcInt->n() % 8 == 0 && tgtInt->n() % 8 == 0
-			&& srcInt->isSigned() == tgtInt->isSigned())
-		{
-			int const pad = static_cast<int>((tgtInt->n() - srcInt->n()) / 8);
-			if (!srcInt->isSigned())
-				return awst::makeReinterpretCast(
-					awst::makeLeftPad(
-						awst::makeAsBytes(std::move(_expr), _loc), pad, _loc),
-					_targetType, _loc);
-			auto once = awst::makeEvalOnce(
-				awst::makeAsBytes(std::move(_expr), _loc), _loc);
-			auto signByte = awst::makeBtoi(
-				awst::makeExtract(once, 0, 1, _loc), _loc);
-			auto isNeg = awst::makeNumericCompare(
-				std::move(signByte), awst::NumericComparison::Gte,
-				awst::makeIntegerConstant(128, _loc), _loc);
-			auto prefix = awst::makeConditional(
-				std::move(isNeg),
-				awst::makeBytesConstant(
-					std::vector<uint8_t>(static_cast<size_t>(pad), 0xFFu), _loc),
-				awst::makeBzero(pad, _loc),
-				awst::WType::bytesType(), _loc);
-			return awst::makeReinterpretCast(
-				awst::makeConcat(std::move(prefix), once, _loc), _targetType, _loc);
-		}
-	}
-
+	// Rungs in shape order; the first to claim `_expr` decides. The scalar
+	// ARC4 integer widening comes first so every aggregate copy that recurses
+	// per element inherits it.
+	if (auto widened = tryWidenArc4ScalarInt(_expr, _targetType, _loc))
+		return widened;
 	// One integer-array emitter handles every shape and shares the scalar
 	// conversion above. It classifies before touching _pre or evaluating _expr.
 	if (auto widened = tryWidenArc4ArrayInt(_expr, _targetType, _pre, _loc))
 		return widened;
-
-	// Other fixed-array copies recurse through the same scalar/aggregate
-	// conversion rules (not separate signed/unsigned literal special cases).
-	if (auto const* source = dynamic_cast<awst::ARC4StaticArray const*>(_expr->wtype))
-	{
-		auto const* targetStatic = dynamic_cast<awst::ARC4StaticArray const*>(_targetType);
-		auto const* targetDynamic = dynamic_cast<awst::ARC4DynamicArray const*>(_targetType);
-		auto const* targetElem = targetStatic ? targetStatic->elementType()
-			: targetDynamic ? targetDynamic->elementType() : nullptr;
-		if (targetElem && (!targetStatic || source->arraySize() <= targetStatic->arraySize()))
-		{
-			bool const sameElement = awst::structurallyEquivalent(source->elementType(), targetElem);
-			if (sameElement && targetDynamic)
-			{
-				checkedSize<uint16_t>(source->arraySize(), "ARC4 array length");
-				return prependArc4LengthHeader(std::move(_expr), source->arraySize(), _targetType, _loc);
-			}
-			auto const sourceStride = computeEncodedElementSize(source->elementType()).fixedBytes<int>();
-			auto const targetStride = computeEncodedElementSize(targetElem).fixedBytes<int>();
-			if (sameElement && targetStatic && sourceStride)
-			{
-				auto const padding = EncodedSize::fixed(*sourceStride)
-					.times(targetStatic->arraySize() - source->arraySize()).fixedBytes<int>().value();
-				return awst::makeReinterpretCast(
-					awst::makeRightPad(awst::makeAsBytes(std::move(_expr), _loc), padding, _loc),
-					_targetType, _loc);
-			}
-			if (sourceStride && targetStride && source->arraySize() <= 256)
-			{
-				auto once = awst::makeEvalOnce(awst::makeAsBytes(std::move(_expr), _loc), _loc);
-				std::vector<uint8_t> header;
-				if (targetDynamic)
-				{
-					auto const count = checkedSize<uint16_t>(source->arraySize(), "ARC4 array length");
-					header = {static_cast<uint8_t>(count >> 8), static_cast<uint8_t>(count)};
-				}
-				std::shared_ptr<awst::Expression> bytes = awst::makeBytesConstant(std::move(header), _loc);
-				for (int64_t i = 0; i < source->arraySize(); ++i)
-				{
-					auto element = awst::makeReinterpretCast(
-						awst::makeExtract(once, checkedSize<int>(i * *sourceStride, "array element offset"),
-							*sourceStride, _loc), source->elementType(), _loc);
-					bytes = awst::makeConcat(std::move(bytes),
-						awst::makeAsBytes(coerceForAssignment(std::move(element), targetElem, _loc), _loc), _loc);
-				}
-				if (targetStatic && targetStatic->arraySize() > source->arraySize())
-					bytes = awst::makeRightPad(std::move(bytes), EncodedSize::fixed(*targetStride)
-						.times(targetStatic->arraySize() - source->arraySize()).fixedBytes<int>().value(), _loc);
-				return awst::makeReinterpretCast(std::move(bytes), _targetType, _loc);
-			}
-		}
-	}
-
-	// IntegerConstant → BytesConstant(bytes[N])
-	if (_targetType->kind() == awst::WTypeKind::Bytes)
-	{
-		auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_targetType);
-		if (bytesType && bytesType->length().has_value())
-		{
-			int N = static_cast<int>(*bytesType->length());
-
-			// IntegerConstant → bytes[N]
-			if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_expr.get()))
-			{
-				return awst::makeBytesConstant(
-					intLiteralToBytesN(intConst->value, N), _loc,
-					awst::BytesEncoding::Base16, _targetType);
-			}
-
-			// String → bytes[N] (right-padded)
-			if (auto padded = stringToBytesN(_expr.get(), _targetType, N, _loc))
-				return padded;
-		}
-
-		// String/bytes-compatible → bytes via ReinterpretCast.
-		// For fixed-size bytes[N] targets coming from a narrower fixed
-		// bytes[M] (M < N), Solidity right-pads the source with zeros to
-		// produce N bytes. A bare ReinterpretCast leaves the source's M
-		// bytes labelled as bytes[N], which decodes to the wrong width
-		// at the call boundary; build the padded value explicitly.
-		if (_expr->wtype == awst::WType::stringType()
-			|| _expr->wtype->kind() == awst::WTypeKind::Bytes)
-		{
-			if (auto const* tw = dynamic_cast<awst::BytesWType const*>(_targetType))
-			{
-				if (tw->length().has_value())
-				{
-					int targetWidth = static_cast<int>(*tw->length());
-					int sourceWidth = 0;
-					if (auto const* sw = dynamic_cast<awst::BytesWType const*>(_expr->wtype))
-						if (sw->length().has_value())
-							sourceWidth = static_cast<int>(*sw->length());
-					// Hex/string literals can carry the generic bytes representation
-					// even though their concrete byte count is known. Preserve that
-					// width for the same fixed-bytes conversion used by assignment,
-					// return, initialization, and call arguments.
-					if (sourceWidth == 0)
-						if (auto const* bytes = dynamic_cast<awst::BytesConstant const*>(
-							_expr.get()))
-							sourceWidth = static_cast<int>(bytes->value.size());
-					if (sourceWidth > 0 && sourceWidth != targetWidth)
-					{
-						auto srcBytes = awst::makeAsBytes(std::move(_expr), _loc);
-						std::shared_ptr<awst::Expression> resized;
-						if (sourceWidth < targetWidth)
-							resized = awst::makeRightPad(
-								std::move(srcBytes), targetWidth - sourceWidth, _loc);
-						else
-							resized = awst::makeExtract3(
-								std::move(srcBytes), awst::makeZero(_loc),
-								awst::makeIntegerConstant(targetWidth, _loc), _loc);
-						return awst::makeReinterpretCast(
-							std::move(resized), _targetType, _loc);
-					}
-				}
-			}
-
-			auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
-			return cast;
-		}
-	}
-
-	// Account ↔ bytes[32]
-	if (_targetType == awst::WType::accountType()
-		&& (_expr->wtype->kind() == awst::WTypeKind::Bytes
-			|| _expr->wtype == awst::WType::bytesType()))
-	{
-		auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
+	if (auto copied = tryCopyArc4StaticArray(_expr, _targetType, _loc))
+		return copied;
+	if (auto bytes = tryCoerceToBytes(_expr, _targetType, _loc))
+		return bytes;
+	if (auto cast = tryAccountBytesReinterpret(_expr, _targetType, _loc))
 		return cast;
-	}
-	if (_expr->wtype == awst::WType::accountType()
-		&& _targetType->kind() == awst::WTypeKind::Bytes)
-	{
-		auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
+	if (auto cast = tryApplicationToAccount(_expr, _targetType, _loc))
 		return cast;
-	}
-
-	// application → account: encode the app id into a fake address of
-	// the form (24 zero bytes ++ itob(app_id)). This round-trips
-	// losslessly through the inverse `extract 24 8; btoi` we use in the
-	// account→application path below, so `A a = new A(); a.f();` keeps
-	// the original app id rather than the SHA512_256 on-chain address
-	// (which is opaque and can't be recovered).
-	if (_targetType == awst::WType::accountType()
-		&& _expr->wtype == awst::WType::applicationType())
-	{
-		auto idBytes = awst::makeAsUInt64(std::move(_expr), _loc);
-		auto itob = awst::makeItob(std::move(idBytes), _loc);
-		auto cat = awst::makeLeftPad(std::move(itob), 24, _loc);
-		return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
-	}
-
-	// account → application: extract last 8 bytes (app_id) via btoi
-	// Only meaningful for addresses built from our convention (\x00*24 + app_id).
-	if (_targetType == awst::WType::applicationType()
-		&& _expr->wtype == awst::WType::accountType())
-	{
-		auto toBytes = awst::makeAsBytes(std::move(_expr), _loc);
-		auto btoi = awst::makeWord32ToUInt64(std::move(toBytes), _loc);
-		return awst::makeReinterpretCast(std::move(btoi), _targetType, _loc);
-	}
-
-	// uint64 → bool (0/non-0)
-	if (_targetType == awst::WType::boolType()
-		&& _expr->wtype == awst::WType::uint64Type())
-	{
-		auto zero = awst::makeZero(_loc);
-		auto cmp = awst::makeNumericCompare(std::move(_expr), awst::NumericComparison::Ne, std::move(zero), _loc);
+	if (auto cast = tryAccountToApplication(_expr, _targetType, _loc))
+		return cast;
+	if (auto cmp = tryUInt64ToBool(_expr, _targetType, _loc))
 		return cmp;
-	}
 
 	return _expr;
 }

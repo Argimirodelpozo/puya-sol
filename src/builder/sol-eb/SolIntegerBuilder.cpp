@@ -77,161 +77,246 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 		return wrap(buildSignedArithmetic(m_ctx, m_scope.isUnchecked(), _op,
 			std::move(lhs), std::move(rhs), m_int.bits, _loc));
 
-	// ── BigUInt path ──
+	// ── BigUInt path: rungs in shape order (shift → sub → pow → signed div/mod → rest) ──
 	if (needsBigUInt)
 	{
 		lhs = promoteToBiguint(std::move(lhs), _loc);
 
-		// Shift amount stays uint64 (don't promote) — but a biguint-typed amount
-		// must be CLAMPED, not low-64-truncated: `x >> 2^128` shifted by 0 where
-		// EVM saturates for any amount >= 256. shiftAmountToUint64 selects 256
-		// for huge amounts, which the shift builders below saturate on.
+		// Shift amount stays uint64 (don't promote) — the shift rung clamps it.
 		if (_op == BuilderBinaryOp::LShift || _op == BuilderBinaryOp::RShift)
-		{
-			auto shiftAmt = shiftAmountToUint64(std::move(rhs), _loc);
-			std::shared_ptr<awst::Expression> result;
-			// Signed >> = SAR (sign-filling); logical FloorDiv would zero-fill negatives.
-			if (m_int.isSigned && _op == BuilderBinaryOp::RShift)
-			{
-				// Sub-word signed: canonicalize to 256-bit two's complement FIRST, so a shift by
-				// >= the value's own width still sign-fills (int8(-1) >> 256 == -1, not 0). The
-				// value is only 8/64-bit-wide as a local/param, so without this the SAR's
-				// negativity test (v >= 2^255) is false and it zero-fills.
-				if (m_int.bits < 256)
-					lhs = TypeCoercion::signExtendToUint256(std::move(lhs), m_int.bits, _loc);
-				result = buildBigUIntArithmeticShiftRight(std::move(lhs), std::move(shiftAmt), _loc);
-			}
-			else
-				result = buildBigUIntShift(std::move(lhs), std::move(shiftAmt),
-					_op == BuilderBinaryOp::LShift, _loc);
-			// Solidity truncates `x << n` to the type width — shifts never overflow-check, even when
-			// checked — but buildBigUIntShift only wraps to 2^256. Mask unsigned sub-word/uint64
-			// LShift back to 2^bits (`uint8(254) << 1` is 252, not 508). RShift only shrinks the
-			// value so it always already fits. Found by the differential fuzzer.
-			if (_op == BuilderBinaryOp::LShift && !m_int.isSigned && m_int.bits < 256)
-				result = TypeCoercion::maskUnsignedToWidth(std::move(result), m_int.bits, _loc);
-			result = emitOverflowCheck(std::move(result), _op, _loc);
-			// A sub-word value's native WType is uint64; narrow the biguint shift result back so
-			// it composes as a SUB-expression with surrounding uint64 ops — `(a << 7) & b` else
-			// hands a biguint to a UInt64BinaryOperation (puya: "expected uint64"). The value is
-			// masked/sign-extended to <=64 bits, so the cast is lossless. >64-bit stays biguint.
-			if (!m_int.biguintBacked() && result->wtype == awst::WType::biguintType())
-				result = TypeCoercion::implicitNumericCast(
-					std::move(result), awst::WType::uint64Type(), _loc);
-			return wrap(std::move(result));
-		}
+			return buildBigUIntShiftOp(_op, std::move(lhs), std::move(rhs), _loc);
 
 		rhs = promoteToBiguint(std::move(rhs), _loc);
 
 		if (_op == BuilderBinaryOp::Sub)
-		{
-			// Signed: skip `a>=b` assert — `1-2=-1` is valid two's complement, not underflow.
-			bool skipUnsignedAssert = m_int.isSigned || m_scope.isUnchecked();
-			auto result = buildWrappingSubtract(m_ctx, skipUnsignedAssert, std::move(lhs), std::move(rhs), _loc);
-			result = emitOverflowCheck(std::move(result), _op, _loc);
-			// Unchecked unsigned sub-256 biguint underflow wraps to 2^256 (buildWrappingSubtract),
-			// but Solidity wraps to 2^N: `uint128(0) - 1` is 2^128-1, not 2^256-1. Mask to the type
-			// width so checked consumers and `<= uintN.max` don't see a non-canonical value. (uint64
-			// narrows below; checked sub asserted a>=b so its result is in range; signed keeps 256-bit
-			// two's complement.) Found by the differential fuzzer.
-			if (m_scope.isUnchecked() && !m_int.isSigned && m_int.biguintBacked() && m_int.bits < 256)
-				result = TypeCoercion::maskUnsignedToWidth(std::move(result), m_int.bits, _loc);
-			// uint64 routed here for unchecked-underflow wrapping (above): the 256-bit wrap narrows
-			// to uint64 = the correct mod-2^64 value, and composes with surrounding uint64 ops.
-			if (!m_int.biguintBacked() && result->wtype == awst::WType::biguintType())
-				result = TypeCoercion::implicitNumericCast(
-					std::move(result), awst::WType::uint64Type(), _loc);
-			return wrap(std::move(result));
-		}
-
+			return buildBigUIntSubOp(std::move(lhs), std::move(rhs), _loc);
 		if (_op == BuilderBinaryOp::Pow)
-		{
-			auto result = buildBigUIntExp(m_ctx, m_scope.isUnchecked(), std::move(lhs), std::move(rhs), _loc);
-			result = emitOverflowCheck(std::move(result), _op, _loc);
-			// Unchecked sub-256 biguint exp wraps products mod 2^256 (buildBigUIntExp), but Solidity
-			// wraps to 2^N: e.g. `uint128 a ** 2` must be mod 2^128. Mask to the type width (same as the
-			// unchecked sub fix above). Found by the differential fuzzer.
-			if (m_scope.isUnchecked() && !m_int.isSigned && m_int.biguintBacked() && m_int.bits < 256)
-				result = TypeCoercion::maskUnsignedToWidth(std::move(result), m_int.bits, _loc);
-			return wrap(std::move(result));
-		}
-
+			return buildBigUIntPowOp(std::move(lhs), std::move(rhs), _loc);
 		if (m_int.isSigned && (_op == BuilderBinaryOp::Mod || _op == BuilderBinaryOp::FloorDiv))
-		{
-			// buildSignedModDiv needs canonical 256-bit two's complement (it reads sign from
-			// `value >= 2^255`). promoteToBiguint above ZERO-extends, so a narrower signed
-			// operand (e.g. int16 -32768 -> 2^64-32768) would read as a huge POSITIVE number
-			// -> wrong abs/sign. Sign-extend each from its own width (idempotent for canonical
-			// int128/int256). The div-overflow guard + result narrowing now live INSIDE the
-			// shared helper (same path as direct `a/b` — see BigUIntMathHelpers).
-			unsigned lhsBits = _reverse ? otherInt->numBits() : m_int.bits;
-			unsigned rhsBits = _reverse ? m_int.bits : otherInt->numBits();
-			if (lhsBits < 256)
-				lhs = TypeCoercion::signExtendToUint256(std::move(lhs), lhsBits, _loc);
-			if (rhsBits < 256)
-				rhs = TypeCoercion::signExtendToUint256(std::move(rhs), rhsBits, _loc);
-			return wrap(buildSignedModDiv(
-				std::move(lhs), std::move(rhs), _op, m_int.bits, !m_scope.isUnchecked(), _loc));
-		}
-
-		awst::BigUIntBinaryOperator bigOp = awst::BigUIntBinaryOperator::Add;
-		switch (_op)
-		{
-		case BuilderBinaryOp::Add: bigOp = awst::BigUIntBinaryOperator::Add; break;
-		case BuilderBinaryOp::Mult: bigOp = awst::BigUIntBinaryOperator::Mult; break;
-		case BuilderBinaryOp::Div:
-		case BuilderBinaryOp::FloorDiv: bigOp = awst::BigUIntBinaryOperator::FloorDiv; break;
-		case BuilderBinaryOp::Mod: bigOp = awst::BigUIntBinaryOperator::Mod; break;
-		case BuilderBinaryOp::BitOr: bigOp = awst::BigUIntBinaryOperator::BitOr; break;
-		case BuilderBinaryOp::BitXor: bigOp = awst::BigUIntBinaryOperator::BitXor; break;
-		case BuilderBinaryOp::BitAnd: bigOp = awst::BigUIntBinaryOperator::BitAnd; break;
-		default: break;
-		}
-		auto e = awst::makeBigUIntBinOp(std::move(lhs), bigOp, std::move(rhs), _loc);
-
-		std::shared_ptr<awst::Expression> result = e;
-
-		if (m_scope.isUnchecked()
-			&& (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Mult))
-		{
-			// Wrap to the TYPE width (mod 2^m_int.bits), not mod 2^256. A sub-256 unchecked
-			// Add/Mult can exceed 2^m_int.bits (e.g. uint128 2*(2^128-1)) yet stay < 2^256, so
-			// wrapMod256 left it non-canonical — correct when the value is masked again at
-			// the ARC4 encode, but wrong when consumed first (e.g. `(a*~c)/x` divides a
-			// too-wide dividend). Mirrors the unchecked sub/exp masking above.
-			result = (m_int.bits < 256)
-				? TypeCoercion::maskUnsignedToWidth(std::move(result), m_int.bits, _loc)
-				: wrapMod256(std::move(result), _loc);
-		}
-
-		return wrap(emitOverflowCheck(std::move(result), _op, _loc));
+			return buildSignedModDivOp(_op, std::move(lhs), std::move(rhs),
+				_reverse ? otherInt->numBits() : m_int.bits,
+				_reverse ? m_int.bits : otherInt->numBits(), _loc);
+		return buildBigUIntArithBitwiseOp(_op, std::move(lhs), std::move(rhs), _loc);
 	}
 
-	// ── UInt64 path ──
+	// ── UInt64 path: full-width unchecked Add/Mult wrap, then the opcode table ──
+	// uint64 (m_int.bits==64) unchecked Add/Mult: the AVM `+`/`*` opcodes PANIC on overflow,
+	// but Solidity `unchecked` wraps mod 2^64. (Sub is force-routed through the biguint
+	// wrapping path above; Pow is handled in its rung; sub-word <64 masks in the table rung —
+	// only the full-width Add/Mult fell through to the panicking opcode.)
+	if (m_scope.isUnchecked() && !m_int.isSigned && m_int.bits == 64
+		&& (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Mult))
+		return buildUInt64WrappingAddMult(_op, std::move(lhs), std::move(rhs), _loc);
+	return buildUInt64ArithBitwiseOp(_op, std::move(lhs), std::move(rhs), _loc);
+}
+
+// ── binary_op rungs ──────────────────────────────────────────────────
+
+std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildBigUIntShiftOp(
+	BuilderBinaryOp _op, std::shared_ptr<awst::Expression> _lhs,
+	std::shared_ptr<awst::Expression> _rhs, awst::SourceLocation const& _loc)
+{
+	// Shift amount stays uint64 (don't promote) — but a biguint-typed amount
+	// must be CLAMPED, not low-64-truncated: `x >> 2^128` shifted by 0 where
+	// EVM saturates for any amount >= 256. shiftAmountToUint64 selects 256
+	// for huge amounts, which the shift builders below saturate on.
+	auto shiftAmt = shiftAmountToUint64(std::move(_rhs), _loc);
+	std::shared_ptr<awst::Expression> result;
+	// Signed >> = SAR (sign-filling); logical FloorDiv would zero-fill negatives.
+	if (m_int.isSigned && _op == BuilderBinaryOp::RShift)
+	{
+		// Sub-word signed: canonicalize to 256-bit two's complement FIRST, so a shift by
+		// >= the value's own width still sign-fills (int8(-1) >> 256 == -1, not 0). The
+		// value is only 8/64-bit-wide as a local/param, so without this the SAR's
+		// negativity test (v >= 2^255) is false and it zero-fills.
+		if (m_int.bits < 256)
+			_lhs = TypeCoercion::signExtendToUint256(std::move(_lhs), m_int.bits, _loc);
+		result = buildBigUIntArithmeticShiftRight(std::move(_lhs), std::move(shiftAmt), _loc);
+	}
+	else
+		result = buildBigUIntShift(std::move(_lhs), std::move(shiftAmt),
+			_op == BuilderBinaryOp::LShift, _loc);
+	// Solidity truncates `x << n` to the type width — shifts never overflow-check, even when
+	// checked — but buildBigUIntShift only wraps to 2^256. Mask unsigned sub-word/uint64
+	// LShift back to 2^bits (`uint8(254) << 1` is 252, not 508). RShift only shrinks the
+	// value so it always already fits. Found by the differential fuzzer.
+	if (_op == BuilderBinaryOp::LShift && !m_int.isSigned && m_int.bits < 256)
+		result = TypeCoercion::maskUnsignedToWidth(std::move(result), m_int.bits, _loc);
+	result = emitOverflowCheck(std::move(result), _op, _loc);
+	// A sub-word value's native WType is uint64; narrow the biguint shift result back so
+	// it composes as a SUB-expression with surrounding uint64 ops — `(a << 7) & b` else
+	// hands a biguint to a UInt64BinaryOperation (puya: "expected uint64"). The value is
+	// masked/sign-extended to <=64 bits, so the cast is lossless. >64-bit stays biguint.
+	if (!m_int.biguintBacked() && result->wtype == awst::WType::biguintType())
+		result = TypeCoercion::implicitNumericCast(
+			std::move(result), awst::WType::uint64Type(), _loc);
+	return wrap(std::move(result));
+}
+
+std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildBigUIntSubOp(
+	std::shared_ptr<awst::Expression> _lhs, std::shared_ptr<awst::Expression> _rhs,
+	awst::SourceLocation const& _loc)
+{
+	// Signed: skip `a>=b` assert — `1-2=-1` is valid two's complement, not underflow.
+	bool skipUnsignedAssert = m_int.isSigned || m_scope.isUnchecked();
+	auto result = buildWrappingSubtract(m_ctx, skipUnsignedAssert, std::move(_lhs), std::move(_rhs), _loc);
+	result = emitOverflowCheck(std::move(result), BuilderBinaryOp::Sub, _loc);
+	// Unchecked unsigned sub-256 biguint underflow wraps to 2^256 (buildWrappingSubtract),
+	// but Solidity wraps to 2^N: `uint128(0) - 1` is 2^128-1, not 2^256-1. Mask to the type
+	// width so checked consumers and `<= uintN.max` don't see a non-canonical value. (uint64
+	// narrows below; checked sub asserted a>=b so its result is in range; signed keeps 256-bit
+	// two's complement.) Found by the differential fuzzer.
+	if (m_scope.isUnchecked() && !m_int.isSigned && m_int.biguintBacked() && m_int.bits < 256)
+		result = TypeCoercion::maskUnsignedToWidth(std::move(result), m_int.bits, _loc);
+	// uint64 routed here for unchecked-underflow wrapping (above): the 256-bit wrap narrows
+	// to uint64 = the correct mod-2^64 value, and composes with surrounding uint64 ops.
+	if (!m_int.biguintBacked() && result->wtype == awst::WType::biguintType())
+		result = TypeCoercion::implicitNumericCast(
+			std::move(result), awst::WType::uint64Type(), _loc);
+	return wrap(std::move(result));
+}
+
+std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildBigUIntPowOp(
+	std::shared_ptr<awst::Expression> _lhs, std::shared_ptr<awst::Expression> _rhs,
+	awst::SourceLocation const& _loc)
+{
+	auto result = buildBigUIntExp(m_ctx, m_scope.isUnchecked(), std::move(_lhs), std::move(_rhs), _loc);
+	result = emitOverflowCheck(std::move(result), BuilderBinaryOp::Pow, _loc);
+	// Unchecked sub-256 biguint exp wraps products mod 2^256 (buildBigUIntExp), but Solidity
+	// wraps to 2^N: e.g. `uint128 a ** 2` must be mod 2^128. Mask to the type width (same as the
+	// unchecked sub fix above). Found by the differential fuzzer.
+	if (m_scope.isUnchecked() && !m_int.isSigned && m_int.biguintBacked() && m_int.bits < 256)
+		result = TypeCoercion::maskUnsignedToWidth(std::move(result), m_int.bits, _loc);
+	return wrap(std::move(result));
+}
+
+std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildSignedModDivOp(
+	BuilderBinaryOp _op, std::shared_ptr<awst::Expression> _lhs,
+	std::shared_ptr<awst::Expression> _rhs, unsigned _lhsBits, unsigned _rhsBits,
+	awst::SourceLocation const& _loc)
+{
+	// buildSignedModDiv needs canonical 256-bit two's complement (it reads sign from
+	// `value >= 2^255`). promoteToBiguint above ZERO-extends, so a narrower signed
+	// operand (e.g. int16 -32768 -> 2^64-32768) would read as a huge POSITIVE number
+	// -> wrong abs/sign. Sign-extend each from its own width (idempotent for canonical
+	// int128/int256). The div-overflow guard + result narrowing now live INSIDE the
+	// shared helper (same path as direct `a/b` — see BigUIntMathHelpers).
+	if (_lhsBits < 256)
+		_lhs = TypeCoercion::signExtendToUint256(std::move(_lhs), _lhsBits, _loc);
+	if (_rhsBits < 256)
+		_rhs = TypeCoercion::signExtendToUint256(std::move(_rhs), _rhsBits, _loc);
+	return wrap(buildSignedModDiv(
+		std::move(_lhs), std::move(_rhs), _op, m_int.bits, !m_scope.isUnchecked(), _loc));
+}
+
+std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildBigUIntArithBitwiseOp(
+	BuilderBinaryOp _op, std::shared_ptr<awst::Expression> _lhs,
+	std::shared_ptr<awst::Expression> _rhs, awst::SourceLocation const& _loc)
+{
+	awst::BigUIntBinaryOperator bigOp = awst::BigUIntBinaryOperator::Add;
+	switch (_op)
+	{
+	case BuilderBinaryOp::Add: bigOp = awst::BigUIntBinaryOperator::Add; break;
+	case BuilderBinaryOp::Mult: bigOp = awst::BigUIntBinaryOperator::Mult; break;
+	case BuilderBinaryOp::Div:
+	case BuilderBinaryOp::FloorDiv: bigOp = awst::BigUIntBinaryOperator::FloorDiv; break;
+	case BuilderBinaryOp::Mod: bigOp = awst::BigUIntBinaryOperator::Mod; break;
+	case BuilderBinaryOp::BitOr: bigOp = awst::BigUIntBinaryOperator::BitOr; break;
+	case BuilderBinaryOp::BitXor: bigOp = awst::BigUIntBinaryOperator::BitXor; break;
+	case BuilderBinaryOp::BitAnd: bigOp = awst::BigUIntBinaryOperator::BitAnd; break;
+	default: break;
+	}
+	auto e = awst::makeBigUIntBinOp(std::move(_lhs), bigOp, std::move(_rhs), _loc);
+
+	std::shared_ptr<awst::Expression> result = e;
+
+	if (m_scope.isUnchecked()
+		&& (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Mult))
+	{
+		// Wrap to the TYPE width (mod 2^m_int.bits), not mod 2^256. A sub-256 unchecked
+		// Add/Mult can exceed 2^m_int.bits (e.g. uint128 2*(2^128-1)) yet stay < 2^256, so
+		// wrapMod256 left it non-canonical — correct when the value is masked again at
+		// the ARC4 encode, but wrong when consumed first (e.g. `(a*~c)/x` divides a
+		// too-wide dividend). Mirrors the unchecked sub/exp masking above.
+		result = (m_int.bits < 256)
+			? TypeCoercion::maskUnsignedToWidth(std::move(result), m_int.bits, _loc)
+			: wrapMod256(std::move(result), _loc);
+	}
+
+	return wrap(emitOverflowCheck(std::move(result), _op, _loc));
+}
+
+std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildUInt64WrappingAddMult(
+	BuilderBinaryOp _op, std::shared_ptr<awst::Expression> _lhs,
+	std::shared_ptr<awst::Expression> _rhs, awst::SourceLocation const& _loc)
+{
+	// Wide-compute via biguint, mod 2^64, narrow back to uint64 (low 8 bytes).
+	auto lb = promoteToBiguint(std::move(_lhs), _loc);
+	auto rb = promoteToBiguint(std::move(_rhs), _loc);
+	auto big = awst::makeBigUIntBinOp(std::move(lb),
+		_op == BuilderBinaryOp::Add ? awst::BigUIntBinaryOperator::Add
+			: awst::BigUIntBinaryOperator::Mult,
+		std::move(rb), _loc);
+	auto mod = awst::makeBigUIntBinOp(std::move(big), awst::BigUIntBinaryOperator::Mod,
+		awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType()), _loc);
+	return wrap(TypeCoercion::implicitNumericCast(std::move(mod), awst::WType::uint64Type(), _loc));
+}
+
+std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildUInt64PowOp(
+	std::shared_ptr<awst::UInt64BinaryOperation> _e, awst::SourceLocation const& _loc)
+{
+	// Unchecked uint exp: AVM `exp` is uint64-only and asserts on overflow; both a sub-uint64
+	// intermediate (uint8 2**256) AND a full uint64 base whose power overflows 2^64 (uint64
+	// MAX**2, found by the generative cast fuzzer) would revert where Solidity wraps. Route
+	// through biguint square-and-multiply then mod 2**m_int.bits. Add/Mult/Sub at uint64 already wrap
+	// (needsBigUInt / backend); exp is the one that fell in the m_int.bits<64 gap (== the uint64-sub gap).
+	if (m_scope.isUnchecked() && !m_int.isSigned && m_int.bits <= 64)
+	{
+		auto biguintResult = buildBigUIntExp(m_ctx, m_scope.isUnchecked(), _e->left, _e->right, _loc);
+
+		// 2^m_int.bits; uint64_t(1)<<64 is UB, so the full-uint64 modulus is spelled out.
+		std::string modValStr = (m_int.bits == 64)
+			? "18446744073709551616"
+			: std::to_string(uint64_t(1) << m_int.bits);
+		auto modConst = awst::makeIntegerConstant(modValStr, _loc, awst::WType::biguintType());
+		auto masked = awst::makeBigUIntBinOp(std::move(biguintResult),
+			awst::BigUIntBinaryOperator::Mod, std::move(modConst), _loc);
+		auto asBytes = awst::makeAsBytes(std::move(masked), _loc);
+		auto leftPadded = awst::makeLeftPad(std::move(asBytes), 8, _loc);
+		auto sub8 = awst::makeUInt64BinOp(
+			awst::makeLen(leftPadded, _loc),
+			awst::UInt64BinaryOperator::Sub,
+			awst::makeIntegerConstant("8", _loc), _loc);
+		auto last8 = awst::makeExtract3(leftPadded, std::move(sub8),
+			awst::makeIntegerConstant("8", _loc), _loc);
+		auto u64 = awst::makeBtoi(std::move(last8), _loc);
+		return wrap(std::move(u64));
+	}
+
+	// AVM `exp` asserts on 0^0; Solidity defines 0**0=1.
+	_e->op = awst::UInt64BinaryOperator::Pow;
+
+	auto zero = awst::makeZero(_loc);
+
+	auto cond = awst::makeNumericCompare(_e->right, awst::NumericComparison::Eq, std::move(zero), _loc);
+
+	auto one = awst::makeOne(_loc);
+
+	std::shared_ptr<awst::Expression> powResult = awst::makeConditional(
+		std::move(cond), std::move(one), _e, awst::WType::uint64Type(), _loc);
+
+	return wrap(emitOverflowCheck(std::move(powResult), BuilderBinaryOp::Pow, _loc));
+}
+
+std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildUInt64ArithBitwiseOp(
+	BuilderBinaryOp _op, std::shared_ptr<awst::Expression> _lhs,
+	std::shared_ptr<awst::Expression> _rhs, awst::SourceLocation const& _loc)
+{
 	auto e = std::make_shared<awst::UInt64BinaryOperation>();
 	e->sourceLocation = _loc;
 	e->wtype = awst::WType::uint64Type();
-	e->left = std::move(lhs);
-	e->right = std::move(rhs);
-
-	// uint64 (m_int.bits==64) unchecked Add/Mult: the AVM `+`/`*` opcodes PANIC on overflow,
-	// but Solidity `unchecked` wraps mod 2^64. (Sub is force-routed through the biguint
-	// wrapping path above; Pow is handled in its case; sub-word <64 masks below — only
-	// the full-width Add/Mult fell through to the panicking opcode.) Wide-compute via
-	// biguint, mod 2^64, narrow back to uint64 (low 8 bytes).
-	if (m_scope.isUnchecked() && !m_int.isSigned && m_int.bits == 64
-		&& (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Mult))
-	{
-		auto lb = promoteToBiguint(std::move(e->left), _loc);
-		auto rb = promoteToBiguint(std::move(e->right), _loc);
-		auto big = awst::makeBigUIntBinOp(std::move(lb),
-			_op == BuilderBinaryOp::Add ? awst::BigUIntBinaryOperator::Add
-				: awst::BigUIntBinaryOperator::Mult,
-			std::move(rb), _loc);
-		auto mod = awst::makeBigUIntBinOp(std::move(big), awst::BigUIntBinaryOperator::Mod,
-			awst::makeIntegerConstant("18446744073709551616", _loc, awst::WType::biguintType()), _loc);
-		return wrap(TypeCoercion::implicitNumericCast(std::move(mod), awst::WType::uint64Type(), _loc));
-	}
+	e->left = std::move(_lhs);
+	e->right = std::move(_rhs);
 
 	switch (_op)
 	{
@@ -256,49 +341,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	case BuilderBinaryOp::FloorDiv: e->op = awst::UInt64BinaryOperator::FloorDiv; break;
 	case BuilderBinaryOp::Mod: e->op = awst::UInt64BinaryOperator::Mod; break;
 	case BuilderBinaryOp::Pow:
-	{
-		// Unchecked uint exp: AVM `exp` is uint64-only and asserts on overflow; both a sub-uint64
-		// intermediate (uint8 2**256) AND a full uint64 base whose power overflows 2^64 (uint64
-		// MAX**2, found by the generative cast fuzzer) would revert where Solidity wraps. Route
-		// through biguint square-and-multiply then mod 2**m_int.bits. Add/Mult/Sub at uint64 already wrap
-		// (needsBigUInt / backend); exp is the one that fell in the m_int.bits<64 gap (== the uint64-sub gap).
-		if (m_scope.isUnchecked() && !m_int.isSigned && m_int.bits <= 64)
-		{
-			auto biguintResult = buildBigUIntExp(m_ctx, m_scope.isUnchecked(), e->left, e->right, _loc);
-
-			// 2^m_int.bits; uint64_t(1)<<64 is UB, so the full-uint64 modulus is spelled out.
-			std::string modValStr = (m_int.bits == 64)
-				? "18446744073709551616"
-				: std::to_string(uint64_t(1) << m_int.bits);
-			auto modConst = awst::makeIntegerConstant(modValStr, _loc, awst::WType::biguintType());
-			auto masked = awst::makeBigUIntBinOp(std::move(biguintResult),
-				awst::BigUIntBinaryOperator::Mod, std::move(modConst), _loc);
-			auto asBytes = awst::makeAsBytes(std::move(masked), _loc);
-			auto leftPadded = awst::makeLeftPad(std::move(asBytes), 8, _loc);
-			auto sub8 = awst::makeUInt64BinOp(
-				awst::makeLen(leftPadded, _loc),
-				awst::UInt64BinaryOperator::Sub,
-				awst::makeIntegerConstant("8", _loc), _loc);
-			auto last8 = awst::makeExtract3(leftPadded, std::move(sub8),
-				awst::makeIntegerConstant("8", _loc), _loc);
-			auto u64 = awst::makeBtoi(std::move(last8), _loc);
-			return wrap(std::move(u64));
-		}
-
-		// AVM `exp` asserts on 0^0; Solidity defines 0**0=1.
-		e->op = awst::UInt64BinaryOperator::Pow;
-
-		auto zero = awst::makeZero(_loc);
-
-		auto cond = awst::makeNumericCompare(e->right, awst::NumericComparison::Eq, std::move(zero), _loc);
-
-		auto one = awst::makeOne(_loc);
-
-		std::shared_ptr<awst::Expression> powResult = awst::makeConditional(
-			std::move(cond), std::move(one), e, awst::WType::uint64Type(), _loc);
-
-		return wrap(emitOverflowCheck(std::move(powResult), _op, _loc));
-	}
+		// Exp is its own rung: both of its shapes return from inside it.
+		return buildUInt64PowOp(std::move(e), _loc);
 	case BuilderBinaryOp::LShift: e->op = awst::UInt64BinaryOperator::LShift; break;
 	case BuilderBinaryOp::RShift: e->op = awst::UInt64BinaryOperator::RShift; break;
 	case BuilderBinaryOp::BitOr: e->op = awst::UInt64BinaryOperator::BitOr; break;
