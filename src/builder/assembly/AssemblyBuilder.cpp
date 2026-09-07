@@ -510,7 +510,8 @@ void AssemblyBuilder::flushMemoryToScratch(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// No-op now that slot 0 lives directly in scratch; retained as a splitter sync hook.
+	// Not a no-op: emits store(slot0, load(slot0)). Memory already lives in
+	// scratch, so this only re-writes the current blob.
 	storeMemoryBlob(memoryVar(_loc), _loc, _out, 0);
 }
 

@@ -177,9 +177,6 @@ public:
 	/// Walk one level up. Returns nullptr at the root (TranslationContext).
 	Context* parent() const { return m_parent; }
 
-	/// Flat scope state shared across the whole chain (owned by TranslationContext).
-	ScopeState& scopeState() const { return *m_state; }
-
 	// ── Lexical-scope state (parent-chain walks) ────────────────────
 
 	/// True if any ancestor scope is inside an `unchecked { }` block.
@@ -313,9 +310,6 @@ public:
 	{
 		m_state->assemblyAggregates.insert(_declId);
 	}
-
-	/// Toggle the enclosing FunctionContext's inConstructor flag.
-	void setInConstructor(bool _flag);
 
 	void setParamRemap(int64_t _declId, ParamRemap _remap)
 	{

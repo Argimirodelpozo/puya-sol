@@ -9,10 +9,9 @@ using njson = nlohmann::json;
 
 static void addTemplateVarDefs(
 	njson& opts,
-	std::set<std::string> const& _children,
-	std::map<std::string, int64_t> const& _intVars = {})
+	std::set<std::string> const& _children)
 {
-	if (_children.empty() && _intVars.empty()) return;
+	if (_children.empty()) return;
 	auto& defs = opts["cli_template_definitions"];
 	for (auto const& child : _children)
 	{
@@ -26,11 +25,6 @@ static void addTemplateVarDefs(
 		defs["APPROVAL_" + child + "_P1"] = "0x068101";
 		defs["CLEAR_" + child] = "0x068101";
 	}
-	// Integer template vars (e.g. UROS_ORCH_APP_ID for the splitter):
-	// declared with a placeholder 0; deploy-time substitution writes the
-	// real value into the bytecode.
-	for (auto const& [name, value] : _intVars)
-		defs[name] = value;
 }
 
 bool OptionsWriter::write(
@@ -40,7 +34,6 @@ bool OptionsWriter::write(
 	int _optimizationLevel,
 	bool _outputIr,
 	std::set<std::string> const& _templateVarChildren,
-	std::map<std::string, int64_t> const& _intTemplateVars,
 	artifact::Digest& _digest,
 	std::string& _error
 )
@@ -76,7 +69,7 @@ bool OptionsWriter::write(
 	opts["target_avm_version"] = 12;
 	opts["template_vars_prefix"] = "TMPL_";
 	opts["cli_template_definitions"] = njson::object();
-	addTemplateVarDefs(opts, _templateVarChildren, _intTemplateVars);
+	addTemplateVarDefs(opts, _templateVarChildren);
 	if (_outputIr)
 	{
 		opts["output_ssa_ir"] = true;

@@ -878,7 +878,8 @@ private:
 		int _slot = 0
 	);
 
-	/// No-op now (slot 0 in direct scratch); retained as a splitter sync hook.
+	/// Emit a self-store of memory slot 0 (memory already lives in scratch; the
+	/// store re-writes the current blob). Called at block end and before halts.
 	void flushMemoryToScratch(
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out

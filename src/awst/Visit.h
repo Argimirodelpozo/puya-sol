@@ -1,8 +1,8 @@
 #pragma once
 
 /// @file Visit.h
-/// Read-only traversal of AWST expression trees. Production analysis and
-/// validation must not depend on the experimental splitter's mutating walker.
+/// Pre-order traversal of AWST expression trees. The const walker is the
+/// real one; the mutable overloads are a const_cast shim over it.
 
 #include "awst/Node.h"
 
