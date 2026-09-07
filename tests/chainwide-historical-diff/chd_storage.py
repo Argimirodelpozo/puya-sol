@@ -18,7 +18,7 @@ import itertools
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Mapping
 
 
 @dataclass(frozen=True)
@@ -629,9 +629,15 @@ class NativeStorageReader:
     (the ARC-56 ``structs`` table is only a fallback): the deployed encoding
     follows solc widths, and the ARC-56 table can name a struct ``tuple`` with
     carrier widths (``uint512`` for a ``uint128`` member).
+
+    ``box_values`` is any ``Mapping[bytes, bytes]`` of box name → content — the
+    reader never talks to a chain. ``chd_box_source`` supplies the sources:
+    algod (LocalNet), an avm-prover oracle state (``OracleBoxSource``), or a
+    plain dict, so the walk and the holder-coordinate root check run
+    identically over either backend.
     """
 
-    def __init__(self, layout: dict, arc56: dict, box_values: dict[bytes, bytes],
+    def __init__(self, layout: dict, arc56: dict, box_values: Mapping[bytes, bytes],
                  evidence: KeyEvidence, sha256: Callable[[bytes], bytes], fold,
                  max_mapping_paths: int = 75_000):
         self.layout = layout
@@ -1078,9 +1084,19 @@ class NativeStorageReader:
         out: dict[str, Any] = {}
         declared: list[str] = []
         unsupported = []
+        # Format-2 mapping roots are ALSO published as ARC-56 box maps (prefix =
+        # the coordinate root key) so clients see key/value types; they are
+        # walked by the format-2 loop below, never as legacy prefix maps.
+        def _root_key(spec):
+            try:
+                return base64.b64decode(spec.get("key") or spec.get("prefix") or "")
+            except Exception:
+                return b""
         # Legacy roots: source-named, declared as ARC-56 prefix maps.
         self._format2 = False
         for name, spec in bmaps.items():
+            if _root_key(spec).startswith(HOLDER_ROOT_PREFIX):
+                continue
             entry = entries.get(name)
             if not entry:
                 unsupported.append(name)
@@ -1094,13 +1110,11 @@ class NativeStorageReader:
             value, _ = self._read_mapping(
                 name.encode(), type_doc, name, spec.get("valueType"))
             out[name] = value
-        # Format-2 roots: coordinate-keyed, every mapping-containing aggregate.
+        # Format-2 roots: coordinate-keyed, every mapping-containing aggregate
+        # (pure mappings sit in maps.box, holder aggregates in keys.box).
         self._format2 = True
-        for name, spec in box_keys.items():
-            try:
-                key = base64.b64decode(spec.get("key") or "")
-            except Exception:
-                continue
+        for name, spec in list(box_keys.items()) + list(bmaps.items()):
+            key = _root_key(spec)
             if not key.startswith(HOLDER_ROOT_PREFIX):
                 continue
             self.format2_roots[name] = key

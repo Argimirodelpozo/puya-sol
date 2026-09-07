@@ -38,6 +38,7 @@ from chd_common import (algo_sender_seed, arg_content20,
                         tape_script_chunks, canon_value,
                         dump_json, is_platform_limit, load_json,
                         probe_clock_target, replay_clock_targets, symbol)
+from chd_box_source import AlgodBoxSource
 from chd_storage import KeyEvidence, NativeStorageReader
 
 from algosdk import encoding
@@ -186,6 +187,28 @@ def _dec_avm(raw, vtype, fold):
     return "0x" + b.hex()
 
 
+def _global_key_index(arc56):
+    """arc56 global key bytes → (Solidity variable name, declared value type)."""
+    st = (arc56 or {}).get("state") or {}
+    gkeys = (st.get("keys") or {}).get("global") or {}
+    return {base64.b64decode(v["key"]): (name, v.get("valueType"))
+            for name, v in gkeys.items() if v.get("key")}
+
+
+def decode_global_state(entries, arc56, fold):
+    """`read_avm_storage` over already-fetched state: `entries` are
+    (key bytes, raw) pairs with raw an int or bytes — the shape algod's
+    global-state and the oracle's `globals_after` both reduce to."""
+    by_key = _global_key_index(arc56)
+    scalars = {}
+    for k, raw in entries:
+        if k not in by_key:
+            continue
+        name, vt = by_key[k]
+        scalars[name] = _dec_avm(raw, vt, fold)
+    return {"scalars": scalars}
+
+
 def read_avm_storage(algod, app_id, arc56, fold):
     """AVM state → {scalars: {var: value}, maps: {mapname: {symbol: value}}}.
 
@@ -193,10 +216,7 @@ def read_avm_storage(algod, app_id, arc56, fold):
     map prefixes), which is what makes name-keyed diffing against solc's
     storageLayout possible across two totally different storage models.
     Reading it also covers variables with NO public getter."""
-    st = (arc56 or {}).get("state") or {}
-    gkeys = (st.get("keys") or {}).get("global") or {}
-    by_key = {base64.b64decode(v["key"]): (name, v.get("valueType"))
-              for name, v in gkeys.items() if v.get("key")}
+    by_key = _global_key_index(arc56)
 
     scalars = {}
     try:
@@ -448,19 +468,17 @@ def read_avm_maps(algod, app_id, arc56, layout, syms, fold, calls=None,
                   fns=None, app_id_symbols=None, snapshots=None, getters=None):
     """Read native box state through the recursive solc/ARC-56 type tree."""
     try:
-        names = [base64.b64decode(item["name"])
-                 for item in (algod.application_boxes(app_id).get("boxes") or [])]
+        box_values = AlgodBoxSource(algod, app_id)
     except Exception as exc:
         return {"__error__": str(exc)[:80]}
+    return read_native_maps(box_values, arc56, layout, syms, fold, calls, fns,
+                            app_id_symbols, snapshots, getters)
 
-    box_values = {}
-    for name in names:
-        try:
-            box_values[name] = base64.b64decode(
-                (algod.application_box_by_name(app_id, name) or {}).get("value") or "")
-        except Exception:
-            continue
 
+def read_native_maps(box_values, arc56, layout, syms, fold, calls=None, fns=None,
+                     app_id_symbols=None, snapshots=None, getters=None):
+    """`read_avm_maps` over an already-fetched box mapping (chd_box_source):
+    the same walk, coverage census and holder-mismatch check, chain-agnostic."""
     from Crypto.Hash import keccak as _keccak_mod
     def _keccak(data):
         digest = _keccak_mod.new(digest_bits=256)
@@ -505,6 +523,11 @@ def read_avm_maps(algod, app_id, arc56, layout, syms, fold, calls=None,
     roots |= {name.encode()
               for name in (((arc56.get("state") or {}).get("maps") or {})
                            .get("box") or {})}
+    # Holder format 2 roots as the READER resolved them: a format-2 mapping
+    # root may be published as a box map whose prefix is the coordinate key
+    # (no keys.box entry, and its source name is not the box name), so the two
+    # derivations above miss it and every root box reads as unattributed.
+    roots |= set(reader.format2_roots.values())
     # "__cp_<Child>" boxes = deployer-provisioned child programs, not storage.
     unexplained = (set(box_values) - reader.matched - raw_names - roots
                    - {n for n in box_values if n.startswith(b"__cp_")})
@@ -567,6 +590,140 @@ def xchain_account(template: bytes, owner20: bytes) -> _Acct:
     acct.signer = LogicSigTransactionSigner(acct.lsig)
     acct.xchain_owner = owner20
     return acct
+
+
+def xchain_template_bytes() -> bytes:
+    """XCHAIN_TOY_TEAL assembled by hand: version 9, `pushbytes <20-byte
+    placeholder>`, `pop`, `pushint 1`. Byte-identical to algod's assembly
+    (checked against the oracle's program_hash), so an algod-less backend
+    derives the same A(E) and lands on the same compile-cache key."""
+    return (bytes([9, 0x80, len(XCHAIN_PLACEHOLDER)]) + XCHAIN_PLACEHOLDER
+            + bytes([0x48, 0x81, 0x01]))
+
+
+def xchain_compile_args(template: bytes | None) -> list[str]:
+    if template is None:
+        return []
+    return ["--xchain-template", template.hex(),
+            "--xchain-placeholder", XCHAIN_PLACEHOLDER.hex()]
+
+
+def mode_compile_args(opts) -> list[str] | None:
+    """Storage-model / child-program flags shared by the main contract and deps."""
+    if bool(opts.get("evm_memory")):
+        raise RuntimeError(
+            "universal EVM memory mode is unavailable; the compiler rejects "
+            "--evm-memory-layout")
+    # The historical `evm_layout` replay field now selects only the compiler's
+    # implemented EVM-numbered storage model.
+    return ([] + (["--evm-storage-layout"] if bool(opts.get("evm_layout")) else [])
+            + (["--child-programs-via-box"] if opts.get("child_box") else [])) or None
+
+
+def main_compile_args(case_dir: Path, opts, mode_args, xchain_args) -> list[str]:
+    """The main contract's full flag set: mode flags, optional split/delegate
+    config, the EVM calldata ABI and the xchain sender template."""
+    split_config = opts.get("split_config")
+    if split_config:
+        split_path = Path(split_config)
+        if not split_path.is_absolute():
+            split_path = case_dir / split_path
+        main_args = list(mode_args or []) + ["--split-config", str(split_path)]
+    else:
+        main_args = mode_args
+    force_delegate = opts.get("force_delegate") or []
+    if isinstance(force_delegate, str):
+        force_delegate = [x.strip() for x in force_delegate.split(",") if x.strip()]
+    if force_delegate:
+        main_args = list(main_args or []) + [
+            "--force-delegate", ",".join(force_delegate)]
+    # These cases are fetched from deployed EVM contracts. Their public entry
+    # boundary and typed cross-contract calls therefore use canonical Solidity
+    # calldata; ARC4 remains the native transport only for harness-private
+    # lifecycle methods and dependency tape loaders.
+    main_args = list(main_args or []) + ["--contract-abi", "evm"]
+    return main_args + list(xchain_args)
+
+
+def compile_main_contract(h, case_dir: Path, case, main_args):
+    """Compile prepared.sol (or the multi-file manifest) the way the replay
+    deploys it — shared by the LocalNet and oracle backends."""
+    mf = case.get("multifile")
+    if mf:
+        # compile_sol REMOVES import_dir when it finishes (normally a temp dir
+        # made by the upstream splitter), so hand it a throwaway COPY — passing
+        # cases/<tag>/src directly makes the compiler delete the fetched sources.
+        tmp_root = Path(tempfile.mkdtemp(prefix="chd_src_"))
+        shutil.copytree(case_dir / "src", tmp_root, dirs_exist_ok=True)
+        return h.compile(tmp_root / mf["main"],
+                         extra_sources=[tmp_root / r for r in mf["files"]],
+                         extra_import_dir=tmp_root,
+                         extra_remappings=mf["remappings"],
+                         extra_args=main_args)
+    return h.compile(case_dir / "prepared.sol", extra_args=main_args)
+
+
+def compiled_artifact_root(artifacts) -> Path:
+    return next(iter(artifacts.by_contract.values()))["arc56"].parents[1]
+
+
+def collect_compiler_events(artifacts, case_name: str) -> list:
+    """Every ARC-56 event lowering across the compilation's artifacts."""
+    artifact_root = compiled_artifact_root(artifacts)
+    compiler_events = []
+    seen_compiler_events = set()
+    event_spec_paths = [artifact["arc56"]
+                        for artifact in artifacts.by_contract.values()]
+    # The unsplit contract spec remains beside the per-compilation directory.
+    # It is the authoritative union of events before public methods are moved
+    # to internal-only page contracts (whose individual specs intentionally
+    # omit those events).
+    unsplit_spec = artifact_root.parent / f"{case_name}.arc56.json"
+    if unsplit_spec.exists():
+        event_spec_paths.append(unsplit_spec)
+    for spec_path in event_spec_paths:
+        spec = load_json(spec_path)
+        for event in spec.get("events") or []:
+            key = (event.get("name"), tuple(
+                (arg.get("name"), arg.get("type"))
+                for arg in event.get("args") or []))
+            if key not in seen_compiler_events:
+                seen_compiler_events.add(key)
+                compiler_events.append(event)
+    return compiler_events
+
+
+def evm_wire_value(value, spec):
+    """Convert a resolved replay value to eth-abi's recursive shape."""
+    typ = spec.get("type", "")
+    m = re.match(r"^(.*)\[(\d*)\]$", typ)
+    if m:
+        elem = dict(spec)
+        elem["type"] = m.group(1)
+        return [evm_wire_value(item, elem) for item in (value or [])]
+    if typ == "tuple":
+        return tuple(evm_wire_value(item, component)
+                     for item, component in zip(
+                         value, spec.get("components") or []))
+    if typ == "address":
+        if isinstance(value, str):
+            try:
+                raw = encoding.decode_address(value)
+            except Exception:
+                raw = bytes.fromhex(value.removeprefix("0x"))
+        else:
+            raw = bytes(value)
+        return raw[-20:]
+    if typ.startswith("bytes"):
+        return bytes(value)
+    return value
+
+
+def evm_selector(sig: str) -> bytes:
+    from Crypto.Hash import keccak
+    digest = keccak.new(digest_bits=256)
+    digest.update(sig.encode())
+    return digest.digest()[:4]
 
 
 def main():
@@ -697,38 +854,9 @@ def main():
     # form (bzero(24) ++ itob(app_id)) — the puya-sol cross-contract calling
     # convention, so the main ctor's inner txns reach the local dep.
     evm_layout = bool(opts.get("evm_layout"))
-    evm_memory = bool(opts.get("evm_memory"))
-    if evm_memory:
-        raise RuntimeError(
-            "universal EVM memory mode is unavailable; the compiler rejects "
-            "--evm-memory-layout")
-    # The historical `evm_layout` replay field now selects only the compiler's
-    # implemented EVM-numbered storage model.
-    _mode_args = ([] + (["--evm-storage-layout"] if evm_layout else [])
-                     + (["--child-programs-via-box"] if opts.get("child_box") else [])) or None
-    split_config = opts.get("split_config")
-    if split_config:
-        split_path = Path(split_config)
-        if not split_path.is_absolute():
-            split_path = case_dir / split_path
-        _main_args = list(_mode_args or []) + ["--split-config", str(split_path)]
-    else:
-        _main_args = _mode_args
-    force_delegate = opts.get("force_delegate") or []
-    if isinstance(force_delegate, str):
-        force_delegate = [x.strip() for x in force_delegate.split(",") if x.strip()]
-    if force_delegate:
-        _main_args = list(_main_args or []) + [
-            "--force-delegate", ",".join(force_delegate)]
-    # These cases are fetched from deployed EVM contracts. Their public entry
-    # boundary and typed cross-contract calls therefore use canonical Solidity
-    # calldata; ARC4 remains the native transport only for harness-private
-    # lifecycle methods and dependency tape loaders.
-    _main_args = list(_main_args or []) + ["--contract-abi", "evm"]
-    _xchain_args = ([] if not use_xchain else
-                    ["--xchain-template", _xtmpl.hex(),
-                     "--xchain-placeholder", XCHAIN_PLACEHOLDER.hex()])
-    _main_args += _xchain_args
+    _mode_args = mode_compile_args(opts)
+    _xchain_args = xchain_compile_args(_xtmpl if use_xchain else None)
+    _main_args = main_compile_args(case_dir, opts, _mode_args, _xchain_args)
     # A dep that must ROUTE a call has to be built with its CALLER's wire ABI.
     # Deps were compiled with the mode flags only, so their routers dispatched
     # ARC-4 method selectors while the contract under test called them with EVM
@@ -828,42 +956,10 @@ def main():
         _dep_seek[_a] = (_dapp, _plan["bounds"])
 
     # ── compile + deploy ──────────────────────────────────────────────────
-    mf = case.get("multifile")
-    if mf:
-        # compile_sol REMOVES import_dir when it finishes (normally a temp dir
-        # made by the upstream splitter), so hand it a throwaway COPY — passing
-        # cases/<tag>/src directly makes the compiler delete the fetched sources.
-        tmp_root = Path(tempfile.mkdtemp(prefix="chd_src_"))
-        shutil.copytree(case_dir / "src", tmp_root, dirs_exist_ok=True)
-        artifacts = h.compile(tmp_root / mf["main"],
-                              extra_sources=[tmp_root / r for r in mf["files"]],
-                              extra_import_dir=tmp_root,
-                              extra_remappings=mf["remappings"],
-                              extra_args=_main_args)
-    else:
-        artifacts = h.compile(case_dir / "prepared.sol", extra_args=_main_args)
+    artifacts = compile_main_contract(h, case_dir, case, _main_args)
 
-    artifact_root = next(iter(artifacts.by_contract.values()))["arc56"].parents[1]
-    compiler_events = []
-    seen_compiler_events = set()
-    event_spec_paths = [artifact["arc56"]
-                        for artifact in artifacts.by_contract.values()]
-    # The unsplit contract spec remains beside the per-compilation directory.
-    # It is the authoritative union of events before public methods are moved
-    # to internal-only page contracts (whose individual specs intentionally
-    # omit those events).
-    unsplit_spec = artifact_root.parent / f"{case['name']}.arc56.json"
-    if unsplit_spec.exists():
-        event_spec_paths.append(unsplit_spec)
-    for spec_path in event_spec_paths:
-        spec = load_json(spec_path)
-        for event in spec.get("events") or []:
-            key = (event.get("name"), tuple(
-                (arg.get("name"), arg.get("type"))
-                for arg in event.get("args") or []))
-            if key not in seen_compiler_events:
-                seen_compiler_events.add(key)
-                compiler_events.append(event)
+    artifact_root = compiled_artifact_root(artifacts)
+    compiler_events = collect_compiler_events(artifacts, case["name"])
     delegate_doc_path = artifact_root / "delegate_helpers.json"
     delegate_doc = (load_json(delegate_doc_path)
                     if delegate_doc_path.exists() else {}) or {}
@@ -936,47 +1032,16 @@ def main():
 
     main_artifact = artifacts.by_contract[case["name"]]
 
-    def _evm_wire_value(value, spec):
-        """Convert a resolved replay value to eth-abi's recursive shape."""
-        typ = spec.get("type", "")
-        m = re.match(r"^(.*)\[(\d*)\]$", typ)
-        if m:
-            elem = dict(spec)
-            elem["type"] = m.group(1)
-            return [_evm_wire_value(item, elem) for item in (value or [])]
-        if typ == "tuple":
-            return tuple(_evm_wire_value(item, component)
-                         for item, component in zip(
-                             value, spec.get("components") or []))
-        if typ == "address":
-            if isinstance(value, str):
-                try:
-                    raw = encoding.decode_address(value)
-                except Exception:
-                    raw = bytes.fromhex(value.removeprefix("0x"))
-            else:
-                raw = bytes(value)
-            return raw[-20:]
-        if typ.startswith("bytes"):
-            return bytes(value)
-        return value
-
-    def _evm_selector(sig):
-        from Crypto.Hash import keccak
-        digest = keccak.new(digest_bits=256)
-        digest.update(sig.encode())
-        return digest.digest()[:4]
-
     def _call_evm(app_, sig, args, **call_opts):
         fn = meta["fns"].get(sig) or {"inputs": [], "outputs": []}
         inputs = fn.get("inputs") or []
-        values = [_evm_wire_value(value, spec)
+        values = [evm_wire_value(value, spec)
                   for value, spec in zip(args, inputs)]
         body = evm_abi_encode([_ctype(spec) for spec in inputs], values)
         _claim = getattr(ln.account, "xchain_owner", None)
         _xargs = (body,) if _claim is None else (body, _claim)
         result = h.call_raw(
-            app_, _evm_selector(sig), extra_args=_xargs, **call_opts)
+            app_, evm_selector(sig), extra_args=_xargs, **call_opts)
         if result.reverted:
             return result
         magic = bytes.fromhex("151f7c75")
