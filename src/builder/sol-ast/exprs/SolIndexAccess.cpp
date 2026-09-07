@@ -23,21 +23,6 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
-namespace
-{
-// Read a FULL-WIDTH biguint storage slot via __puyasol___storage_read (the
-// box-per-slot store keys on all 32 bytes; the historical low-8 truncation was
-// only sound under the mod-256 fallback).
-std::shared_ptr<awst::Expression> readStorageSlotBiguint(
-	std::shared_ptr<awst::Expression> _slot, awst::SourceLocation const& _loc)
-{
-	auto call = awst::makeSubroutineCall(
-		awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), _loc);
-	awst::pushCallArg(call->args, "__slot", std::move(_slot));
-	return call;
-}
-} // namespace
-
 SolIndexAccess::SolIndexAccess(eb::ContractContext& _ctx, IndexAccess const& _node)
 	: SolExpression(_ctx, _node), m_indexAccess(_node)
 {

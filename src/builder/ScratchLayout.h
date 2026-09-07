@@ -25,9 +25,9 @@ namespace puyasol::builder
 /// the same N (the default keeps today's numbers). Nothing in-repo pins the
 /// flash range beyond documentation; the compiler itself never emits it.
 ///
-/// The splitter's own cross-chunk slots start at
-/// FunctionSplitter::kLiveVarsScratchSlot (100); the constructor bound keeps
-/// every layout slot clear of them.
+/// Slots 100.. are reserved for the splitter's cross-chunk state (branch
+/// experimental/splitter, not on main); the constructor bound keeps every
+/// layout slot below them.
 class ScratchLayout
 {
 public:
@@ -35,9 +35,9 @@ public:
 	static constexpr int flashSlotCount = 10;
 	static constexpr int maxScratchSlot = 255;
 	static constexpr int defaultMemorySlots = 5;
-	/// flashLast() must stay below the splitter's slot range (100).
+	/// flashLast() must stay below slot 100 (see the class comment).
 	static constexpr int maxMemorySlots = 88;
-	/// Separate native address high bytes; below splitter 100, above every
+	/// Separate native address high bytes; below slot 100, above every
 	/// supported memory/transient/flash reservation. Reserved only when used.
 	static constexpr int transientAddressShadowSlot = 99;
 

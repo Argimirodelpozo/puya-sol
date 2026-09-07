@@ -8,7 +8,6 @@
 #include "awst/StatementWalk.h"
 #include "awst/Visit.h"
 #include "builder/AWSTBuilder.h"
-#include "builder/NatSpecTags.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/contract/ParamABIValidator.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
@@ -838,13 +837,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	if (!_asInternalCopy)
 		method.arc4MethodConfig = buildARC4Config(_func, method.sourceLocation);
 
-	// uros: chunk-assigned methods must not be inlined (an inlined copy defeats
-	// the split; the uros backend needs to stub it in non-owning chunks).
-	if (method.arc4MethodConfig.has_value())
-		if (auto* abiCfg = std::get_if<awst::ARC4ABIMethodConfig>(&*method.arc4MethodConfig))
-			if (!abiCfg->chunk.empty())
-				method.inlineOpt = false;
-
 	// ARC4 methods: remap param types to ARC4; stash decode ops for deferred
 	// insertion (collectArc4ParamRemaps above).
 	auto paramDecodes = collectArc4ParamRemaps(
@@ -1011,10 +1003,6 @@ std::optional<awst::ARC4MethodConfig> ContractBuilder::buildARC4Config(
 	{
 		config.readonly = true;
 	}
-
-	// uros chunk: @custom:uros-chunk <name>
-	if (_func.documentation())
-		config.chunk = natSpecTagValue(*_func.documentation()->text(), "custom:uros-chunk");
 
 	return awst::ARC4MethodConfig(config);
 }

@@ -98,7 +98,7 @@ int main()
 	puyasol::artifact::Digest optionsDigest;
 	error.clear();
 	ok &= require(puyasol::json::OptionsWriter::write(
-		optionsPath, {"a.C", "b.D"}, tempDir.string(), 2, true, {"D"}, {},
+		optionsPath, {"a.C", "b.D"}, tempDir.string(), 2, true, {"D"},
 		optionsDigest, error),
 		"multi-target options must write successfully: " + error);
 	auto options = njson::parse(readText(optionsPath));
@@ -108,13 +108,13 @@ int main()
 	auto const optionsBefore = readText(optionsPath);
 	error.clear();
 	ok &= require(!puyasol::json::OptionsWriter::write(
-		optionsPath, {}, tempDir.string(), 1, false, {}, {}, optionsDigest, error),
+		optionsPath, {}, tempDir.string(), 1, false, {}, optionsDigest, error),
 		"an empty compilation set must be rejected");
 	ok &= require(readText(optionsPath) == optionsBefore,
 		"invalid options must not replace the last valid file");
 	error.clear();
 	ok &= require(!puyasol::json::OptionsWriter::write(
-		optionsPath, {"a.C", "a.C"}, tempDir.string(), 1, false, {}, {}, optionsDigest, error),
+		optionsPath, {"a.C", "a.C"}, tempDir.string(), 1, false, {}, optionsDigest, error),
 		"duplicate compilation identities must not silently coalesce");
 	ok &= require(readText(optionsPath) == optionsBefore,
 		"duplicate identities must preserve the last valid options");

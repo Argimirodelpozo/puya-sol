@@ -4,7 +4,6 @@
 
 #include <boost/filesystem/path.hpp>
 
-#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -24,7 +23,6 @@ public:
 		int _optimizationLevel,
 		bool _outputIr,
 		std::set<std::string> const& _templateVarChildren,
-		std::map<std::string, int64_t> const& _intTemplateVars,
 		artifact::Digest& _digest,
 		std::string& _error
 	);

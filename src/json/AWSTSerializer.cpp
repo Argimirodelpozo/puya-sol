@@ -192,9 +192,6 @@ njson AWSTSerializer::serializeContract(awst::Contract const& _contract)
 	j["avm_version"] = _contract.avmVersion.has_value()
 		? njson(_contract.avmVersion.value())
 		: njson(nullptr);
-	j["splitter"] = _contract.splitter.empty()
-		? njson(nullptr)
-		: njson(_contract.splitter);
 
 	return j;
 }
@@ -976,7 +973,6 @@ njson AWSTSerializer::serializeARC4MethodConfig(awst::ARC4MethodConfig const& _c
 		j["default_args"] = njson(abi->defaultArgs);
 		j["resource_encoding"] = "value";
 		j["validate_encoding"] = nullptr;
-		j["chunk"] = abi->chunk.empty() ? njson(nullptr) : njson(abi->chunk);
 	}
 
 	return j;
