@@ -70,11 +70,15 @@ be converted to the declared key type before encoding. This is not EVM's
 
 ## Artifacts and tooling
 
-ARC-56 `state.keys.box` records the exact root key and its stored representation,
-with a format-2 description. A mapping root's value is only its existing internal
-placeholder; actual entries have derived hash keys. They are **not** described
-as ARC-56 `state.maps.box` prefix maps: a holder is not a literal prefix of its
-entry hashes. Struct/array roots may also contain ordinary encoded data.
+ARC-56 `state.keys.box` records each struct/array root key and its stored
+representation, with a format-2 description; such roots may also contain
+ordinary encoded data. A pure mapping root is published as a `state.maps.box`
+entry so clients see its key and value types (a nested mapping's `keyType` is
+the tuple of its key types; the value struct appears in `structs`): its
+`prefix` is the same coordinate root key, and its description states that entry
+names are tagged SHA-256 derivations of the key under that root — **not**
+`prefix ++ encode(key)`. Generic ARC-56 clients must derive entry names with
+the rules above (or `framework/storage_keys.py`) rather than by concatenation.
 
 The test/tooling helper
 [`framework/storage_keys.py`](../tests/solidity-semantic-tests/framework/storage_keys.py)

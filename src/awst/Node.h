@@ -2065,6 +2065,7 @@ struct AppStorageDefinition
 	WType const* storageWType = WType::bytesType();
 	std::shared_ptr<Expression> key;
 	bool isMap = false; // true for mapping types (key_wtype != null in AWST JSON)
+	WType const* keyWType = nullptr; // map key type (null → box key bytes)
 	std::optional<std::string> description;
 };
 

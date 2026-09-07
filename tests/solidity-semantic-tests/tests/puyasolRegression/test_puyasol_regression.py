@@ -4121,9 +4121,11 @@ def test_evm_layout_default_mode_untouched(harness):
     boxes = arc56["state"]["keys"]["box"]
     assert "a" in keys or "a" in arc56.get("state", {}).get("keys", {}).get("box", {}), \
         "default mode should still declare per-var state"
-    assert "bal" in boxes
-    assert "holder format 2" in boxes["bal"]["desc"]
-    assert "bal" not in maps  # hash-derived entries are not literal prefix maps
+    # Pure mapping roots are published as maps.box entries (prefix = the
+    # format-2 root); entry names are still hash-derived, as the desc states.
+    assert "bal" in maps and "bal" not in boxes
+    assert (maps["bal"]["keyType"], maps["bal"]["valueType"]) == ("address", "uint256")
+    assert "holder format 2 mapping" in maps["bal"]["desc"]
 
 
 def test_evm_layout_strings(harness):
@@ -5481,3 +5483,41 @@ def test_this_call_return_widths(harness):
     assert as_int(harness.call(app, "structGetter()", **opts).abi_return) == 3
     assert as_int(harness.call(app, "explicitSub()", **opts).abi_return) == 65536
     assert as_int(harness.call(app, "tuple()", **opts).abi_return) == 34
+
+
+def test_arc56_mapping_root_metadata(harness):
+    """puyasolRegression/contracts/arc56_mapping_roots.sol — NOT an o.g. semantic test.
+
+    Holder format 2 had stopped describing mapping roots in ARC-56 (valueType
+    AVMBytes, value structs missing from `structs`, no `maps.box` entries).
+    Pure mapping roots are now `maps.box` entries: prefix = the coordinate root
+    key, keyType = the declared key (a tuple for nested mappings), valueType =
+    the innermost value with its struct published; the description states the
+    hashed-entry derivation. Holder aggregates stay `keys.box` roots.
+    """
+    import base64 as _b64
+    from framework.storage_keys import holder_root
+    artifacts = harness.compile("puyasolRegression/contracts/arc56_mapping_roots.sol")
+    spec = json.loads(artifacts.by_contract["Arc56MappingRoots"]["arc56"].read_text())
+    maps = spec["state"]["maps"]["box"]
+    keys = spec["state"]["keys"]["box"]
+    assert (maps["plain"]["keyType"], maps["plain"]["valueType"]) == ("address", "P2")
+    assert _b64.b64decode(maps["plain"]["prefix"]) == holder_root(0)
+    assert "tagged SHA-256" in maps["plain"]["desc"]
+    assert (maps["nested"]["keyType"], maps["nested"]["valueType"]) == ("(uint256,address)", "Q")
+    assert _b64.b64decode(maps["nested"]["prefix"]) == holder_root(1)
+    assert (maps["named"]["keyType"], maps["named"]["valueType"]) == ("string", "uint256")
+    assert {"P2", "Q"} <= set(spec["structs"])
+    assert [f["type"] for f in spec["structs"]["Q"]] == ["uint64", "address"]
+    assert "arr" in keys and "arr" not in maps
+    for name in ("plain", "nested", "named"):
+        assert name not in keys
+    # The declarations are metadata only: storage still round-trips.
+    from algosdk import encoding as _enc
+    app = harness.deploy(artifacts, "Arc56MappingRoots", fund_wei=5_000_000)
+    who = _enc.encode_address(b"\x00" * 12 + b"\x11" * 20)
+    harness.call(app, "setNested(uint256,address,uint64)", 3, who, 9, extra_fee=10_000)
+    got = harness.call(app, "getNested(uint256,address)", 3, who).abi_return
+    assert as_int(got[0]) == 9
+    harness.call(app, "setNamed(string,uint256)", "k", 77, extra_fee=10_000)
+    assert as_int(harness.call(app, "named(string)", "k").abi_return) == 77

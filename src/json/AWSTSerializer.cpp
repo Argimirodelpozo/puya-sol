@@ -1020,7 +1020,7 @@ njson AWSTSerializer::serializeAppStorageDefinition(awst::AppStorageDefinition c
 	j["storage_wtype"] = serializeWType(_def.storageWType);
 	j["key"] = _def.key ? serializeExpression(*_def.key) : njson(nullptr);
 	j["key_wtype"] = _def.isMap
-		? serializeWType(awst::WType::boxKeyType())
+		? serializeWType(_def.keyWType ? _def.keyWType : awst::WType::boxKeyType())
 		: njson(nullptr);
 	j["description"] = _def.description.has_value()
 		? njson(_def.description.value())

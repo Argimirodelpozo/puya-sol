@@ -549,9 +549,34 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 		def.memberName = binding.name;
 		def.storageKind = binding.kind;
 		def.storageWType = binding.wtype;
+		if (auto const* mapping = dynamic_cast<solidity::frontend::MappingType const*>(var->type());
+			mapping && binding.kind == awst::AppStorageKind::Box)
+		{
+			// A mapping root is published as an ARC-56 box map so clients see
+			// its key and value types (and the value struct in `structs`):
+			// prefix = the format-2 root key, keyType = the declared key
+			// (a tuple for nested mappings), valueType = the innermost value.
+			// Entry names are tagged SHA-256 derivations under that root, NOT
+			// prefix ++ encode(key) — see docs/storage-format.md.
+			std::vector<awst::WType const*> keyTypes;
+			solidity::frontend::Type const* valueType = mapping;
+			while (auto const* inner = dynamic_cast<solidity::frontend::MappingType const*>(valueType))
+			{
+				keyTypes.push_back(m_typeMapper.mapSolTypeToARC4(inner->keyType()));
+				valueType = inner->valueType();
+			}
+			def.isMap = true;
+			def.keyWType = keyTypes.size() == 1
+				? keyTypes.front()
+				: m_typeMapper.createType<awst::ARC4Tuple>(std::move(keyTypes));
+			def.storageWType = m_typeMapper.mapSolTypeToARC4(valueType);
+			def.description = "puya-sol holder format 2 mapping; prefix = solc root coordinate; "
+				"entry names are tagged SHA-256 derivations of the key under this root, "
+				"not prefix ++ encode(key). See docs/storage-format.md. Fresh deployments only.";
+		}
 		// Hash-derived entries are not ARC-56 prefix maps. Describe the actual
-		// root cell, including a mapping's internal bytes placeholder, honestly.
-		if (containsMappingType(var->type()))
+		// root cell of a mapping-holding aggregate honestly.
+		else if (containsMappingType(var->type()))
 			def.description = "puya-sol holder format 2; solc root coordinate; "
 				"descendant keys use tagged SHA-256 derivation, not ARC-56 prefix maps. "
 				"See docs/storage-format.md. Fresh deployments only.";

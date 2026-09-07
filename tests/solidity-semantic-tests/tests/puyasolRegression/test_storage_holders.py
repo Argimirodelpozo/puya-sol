@@ -84,13 +84,25 @@ def test_storage_holder_manifest(harness):
     original = binding("HolderOriginal", "original")
     renamed = binding("HolderRenamed", "renamed")
     assert original["key"]["value"] == renamed["key"]["value"]
-    for contract, name, slot in (("HolderOriginal", "original", 0), ("HolderRenamed", "renamed", 0),
-                                 ("HolderWide", "values", 2**200), ("StorageHolders", "abc", 4)):
+    # Holder aggregates are honest `keys.box` roots; pure mappings are published
+    # as `maps.box` entries (prefix = the same coordinate root) so clients see
+    # their key/value types, with the hashed-entry derivation in the description.
+    for contract, name, slot, is_map in (("HolderOriginal", "original", 0, False),
+                                         ("HolderRenamed", "renamed", 0, False),
+                                         ("HolderWide", "values", 2**200, True),
+                                         ("StorageHolders", "abc", 4, True)):
         spec = json.loads(artifacts.by_contract[contract]["arc56"].read_text())
-        entry = spec["state"]["keys"]["box"][name]
-        assert base64.b64decode(entry["key"]) == holder_root(slot)
-        assert "holder format 2" in entry["desc"]
-        assert name not in spec["state"]["maps"]["box"]
+        if is_map:
+            entry = spec["state"]["maps"]["box"][name]
+            assert base64.b64decode(entry["prefix"]) == holder_root(slot)
+            assert (entry["keyType"], entry["valueType"]) == ("uint256", "uint256")
+            assert "holder format 2 mapping" in entry["desc"]
+            assert name not in spec["state"]["keys"]["box"]
+        else:
+            entry = spec["state"]["keys"]["box"][name]
+            assert base64.b64decode(entry["key"]) == holder_root(slot)
+            assert "holder format 2" in entry["desc"]
+            assert name not in spec["state"]["maps"]["box"]
         assert len(holder_root(slot)) == 54
 
     for contract, slot in (("HolderOriginal", 0), ("HolderRenamed", 0), ("HolderWide", 2**200)):
