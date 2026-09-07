@@ -62,3 +62,88 @@ jobs:
           path: build/puya-sol-build-manifest.txt
           if-no-files-found: error
           retention-days: 30
+
+      - name: Upload the compiler for the chain-diff job
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: puya-sol-${{ github.sha }}
+          path: build/puya-sol
+          if-no-files-found: error
+          retention-days: 7
+
+  # Chainwide historical diff on avm-prover's oracle: replays four recorded
+  # mainnet histories (tests/chainwide-historical-diff/cases/{selftest,pol,
+  # vanry,eul}) through the compiled contracts and diffs every call, event
+  # and storage slot against the recorded EVM leg. No LocalNet: the oracle
+  # pins block time per transaction, so the run is hermetic.
+  chain-diff-oracle:
+    runs-on: ubuntu-24.04
+    needs: build-and-test
+    timeout-minutes: 60
+    env:
+      AVM_PROVER_REPO: https://github.com/Argimirodelpozo/avm-prover.git
+      AVM_PROVER_COMMIT: f3b4dcfc591084f86628531dd004895ab1a45287
+
+    steps:
+      - name: Check out pinned sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            build-essential autoconf automake libtool pkg-config \
+            libboost-filesystem-dev libboost-program-options-dev
+          python3 -m pip install --upgrade pip
+          python3 -m pip install ./puya
+          python3 -m pip install -r tests/chainwide-historical-diff/requirements-ci.txt
+          echo "PUYA_SOL_PUYA=$(command -v puya)" >> "$GITHUB_ENV"
+
+      - name: Download the compiler
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: puya-sol-${{ github.sha }}
+          path: build
+      - run: chmod +x build/puya-sol && build/puya-sol --help > /dev/null
+
+      - name: Set up Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: '1.26'
+          cache: false
+
+      - name: Restore the oracle binary
+        id: oracle-cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: avm-prover/oracle/avmoracle
+          key: avmoracle-${{ env.AVM_PROVER_COMMIT }}-${{ runner.os }}
+
+      - name: Build the oracle from the pinned prover
+        if: steps.oracle-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --quiet "$AVM_PROVER_REPO" avm-prover
+          git -C avm-prover checkout --quiet "$AVM_PROVER_COMMIT"
+          (cd avm-prover/oracle && ./build.sh)
+
+      - name: Restore the prover checkout for a cached oracle
+        if: steps.oracle-cache.outputs.cache-hit == 'true'
+        run: |
+          test -d avm-prover/.git || git clone --quiet "$AVM_PROVER_REPO" avm-prover
+          git -C avm-prover checkout --quiet "$AVM_PROVER_COMMIT"
+
+      - name: Replay the tracked histories on the oracle and diff
+        env:
+          AVM_PROVER_ROOT: ${{ github.workspace }}/avm-prover
+        run: python3 tests/chainwide-historical-diff/ci_oracle_lane.py
+
+      - name: Upload the diff reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: chain-diff-reports-${{ github.sha }}
+          path: tests/chainwide-historical-diff/cases/*/report.json
+          if-no-files-found: warn
+          retention-days: 30

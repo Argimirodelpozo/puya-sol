@@ -1,5 +1,16 @@
-# fetched chain data + per-leg replay artifacts (re-fetchable; can be large)
-cases/
+# fetched chain data + per-leg replay artifacts (re-fetchable; can be large).
+# The INPUTS of four small cases are tracked so CI can run the oracle lane
+# (ci_oracle_lane.py): selftest, pol, vanry (default model) and eul (slot mode).
+cases/*
+!cases/selftest/
+!cases/pol/
+!cases/vanry/
+!cases/eul/
+cases/*/out_*/
+cases/*/avm_results*.json
+cases/*/report*.json
+cases/*/*.localnet.json
+cases/*/__pycache__/
 joint_config_upgtest.json
 joint_config_upgtest_gen.json
 .npm_ext/
