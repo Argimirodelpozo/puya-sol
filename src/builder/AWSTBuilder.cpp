@@ -642,6 +642,256 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	return sub;
 }
 
+namespace
+{
+
+/// Library with an externally-callable implemented function: EVM deploys such
+/// a library itself when the unit has no deployable contract.
+bool isDeployableLibrary(solidity::frontend::ContractDefinition const& _library)
+{
+	for (auto const* f: _library.definedFunctions())
+		if (f->isImplemented() && !f->isConstructor()
+			&& (f->visibility() == solidity::frontend::Visibility::Public
+				|| f->visibility() == solidity::frontend::Visibility::External))
+			return true;
+	return false;
+}
+
+/// `contract X is LogicSig` (AVM.sol).
+bool isLogicSigContract(solidity::frontend::ContractDefinition const& _contract)
+{
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		if (base->name() == "LogicSig")
+			return true;
+	return false;
+}
+
+/// LogicSig entry: the function carrying the `logicsig` modifier, else the
+/// sole public/external ARC4 method. Null when neither rule selects one.
+awst::ContractMethod const* logicSigEntry(
+	solidity::frontend::ContractDefinition const& _contract,
+	awst::Contract const& _awstContract)
+{
+	std::string entryName;
+	for (auto const* f: _contract.definedFunctions())
+	{
+		if (f->isConstructor() || !f->isImplemented())
+			continue;
+		for (auto const& modInv: f->modifiers())
+		{
+			auto const& p = modInv->name().path();
+			if (!p.empty() && p.back() == "logicsig")
+			{
+				entryName = f->name();
+				break;
+			}
+		}
+		if (!entryName.empty())
+			break;
+	}
+	awst::ContractMethod const* entry = nullptr;
+	if (!entryName.empty())
+	{
+		for (auto const& m: _awstContract.methods)
+			if (m.memberName == entryName) { entry = &m; break; }
+	}
+	else
+	{
+		// Fallback: sole public/external ARC4 method.
+		int pubCount = 0;
+		for (auto const& m: _awstContract.methods)
+			if (m.arc4MethodConfig.has_value()) { entry = &m; ++pubCount; }
+		if (pubCount != 1)
+			entry = nullptr;
+	}
+	return entry;
+}
+
+std::shared_ptr<awst::LogicSignature> makeLogicSignature(
+	awst::Contract const& _awstContract, awst::ContractMethod const& _entry)
+{
+	auto program = std::make_shared<awst::Subroutine>();
+	program->sourceLocation = _entry.sourceLocation;
+	program->id = _awstContract.id;
+	program->name = _entry.memberName;
+	program->args = _entry.args;
+	program->returnType = _entry.returnType;
+	program->body = _entry.body;
+	program->documentation = _entry.documentation;
+	program->pure = _entry.pure;
+
+	auto lsig = std::make_shared<awst::LogicSignature>();
+	lsig->sourceLocation = _awstContract.sourceLocation;
+	lsig->id = _awstContract.id;
+	lsig->shortName = _awstContract.name;
+	lsig->program = std::move(program);
+	lsig->docstring = _awstContract.description;
+	lsig->reservedScratchSpace = _awstContract.reservedScratchSpace;
+	lsig->avmVersion = _awstContract.avmVersion;
+	return lsig;
+}
+
+/// LogicSig: AVM lsig instead of stateful app. The entry function (logicsig
+/// modifier, or sole public method) becomes the program; app state /
+/// inner-txns hard-fail downstream. Returns whether a root was emitted.
+bool emitLogicSignature(
+	solidity::frontend::ContractDefinition const& _contract,
+	awst::Contract const& _awstContract,
+	std::vector<std::shared_ptr<awst::RootNode>>& _roots)
+{
+	auto const* entry = logicSigEntry(_contract, _awstContract);
+	if (!entry)
+	{
+		Logger::instance().error(
+			"contract `" + _contract.name() + "` is LogicSig but has no single "
+			"entry function — mark exactly one function with the `logicsig` modifier",
+			_awstContract.sourceLocation);
+		return false;
+	}
+	_roots.push_back(makeLogicSignature(_awstContract, *entry));
+	Logger::instance().info("Emitted LogicSignature: " + _contract.name());
+	return true;
+}
+
+bool hasArc4Method(awst::Contract const& _awstContract)
+{
+	for (auto const& method: _awstContract.methods)
+		if (method.arc4MethodConfig.has_value())
+			return true;
+	return false;
+}
+
+/// Constructor-only contracts need a dummy ARC4 method so puya's router has
+/// something to route (constructor runs at create time).
+void appendDummyArc4Method(awst::Contract& _awstContract)
+{
+	awst::ContractMethod dummy;
+	dummy.sourceLocation = _awstContract.sourceLocation;
+	dummy.cref = _awstContract.id;
+	dummy.memberName = "__dummy";
+	dummy.returnType = awst::WType::boolType();
+
+	auto body = awst::makeBlock(dummy.sourceLocation);
+	auto ret = awst::makeReturnStatement(awst::makeTrue(dummy.sourceLocation), dummy.sourceLocation);
+	body->body.push_back(ret);
+	dummy.body = body;
+
+	awst::ARC4BareMethodConfig config;
+	config.sourceLocation = dummy.sourceLocation;
+	config.allowedCompletionTypes = {0}; // NoOp
+	config.create = 3; // Disallow
+	dummy.arc4MethodConfig = config;
+
+	_awstContract.methods.push_back(std::move(dummy));
+}
+
+/// Only emit contracts with public methods or a constructor. Non-deployable
+/// contracts (internal-only, e.g. ErrorReporter) are translated for MRO
+/// resolution but not emitted to AWST. Returns whether a root was emitted.
+bool emitDeployableContract(
+	solidity::frontend::ContractDefinition const& _contract,
+	std::shared_ptr<awst::Contract> _awstContract,
+	std::vector<std::shared_ptr<awst::RootNode>>& _roots)
+{
+	bool hasPublicMethod = hasArc4Method(*_awstContract);
+	if (!hasPublicMethod && !_contract.abstract())
+	{
+		appendDummyArc4Method(*_awstContract);
+		hasPublicMethod = true;
+	}
+	if (!hasPublicMethod)
+	{
+		Logger::instance().debug("Skipping non-deployable contract: " + _contract.name());
+		return false;
+	}
+	eliminateDeadCode(*_awstContract);
+	_roots.push_back(std::move(_awstContract));
+	return true;
+}
+
+} // namespace
+
+bool AWSTBuilder::prescanEvmStorageLayout(
+	solidity::frontend::CompilerStack& _compiler)
+{
+	// Slot-mode unit pre-scan: the storage runtime subroutines share one
+	// SubroutineID across the whole unit, so their bodies must be IDENTICAL for
+	// every contract — decide dense-only / single-page globally BEFORE any
+	// contract builds. Libraries and abstract bases count (their functions and
+	// vars compile into hosts/derived contracts).
+	if (!m_session.profile.evmStorageLayout)
+		return false;
+	bool evmStorageRuntimeNeeded = false;
+	bool anySparse = false;
+	unsigned long long maxSlots = 0;
+	for (auto const& sourceName: _compiler.sourceNames())
+		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
+			solidity::frontend::ContractDefinition>(_compiler.ast(sourceName).nodes()))
+		{
+			if (!contract || contract->isInterface())
+				continue;
+			auto const& storagePlan = m_session.storagePlan(*contract);
+			auto const slots = storagePlan.solidityLayout.totalSlots();
+			if (storagePlan.needsDispatch())
+				evmStorageRuntimeNeeded = true;
+			if (storagePlan.requiresSparseSlots)
+				anySparse = true;
+			if (slots > maxSlots)
+				maxSlots = slots;
+		}
+	// Free/library subroutines are outside every contract's defined-function
+	// walk. A reachable assembly sload/sstore still needs the unit runtime even
+	// when every contract has zero declared state.
+	for (auto const callableId:
+		m_session.analysis.callablesWithStorageAssembly)
+		if (!m_session.analysis.hasReachabilityGraphs
+			|| m_session.analysis.reachableCallableIds.count(callableId))
+		{
+			evmStorageRuntimeNeeded = true;
+			anySparse = true;
+			break;
+		}
+	m_session.profile.denseOnlyStorage = !anySparse;
+	m_session.profile.singlePageStorage =
+		maxSlots <= builder::kEvmSlotsPerPage;
+	Logger::instance().debug("PRESCAN dense=" + std::to_string(!anySparse)
+		+ " singlePage=" + std::to_string(maxSlots <= builder::kEvmSlotsPerPage)
+		+ " maxSlots=" + std::to_string(maxSlots));
+	return evmStorageRuntimeNeeded;
+}
+
+std::shared_ptr<awst::Contract> AWSTBuilder::translateContract(
+	solidity::frontend::ContractDefinition const& _contract,
+	std::string const& _sourceFile,
+	uint64_t _opupBudget,
+	std::map<std::string, uint64_t> const& _ensureBudget,
+	bool _viaYulBehavior,
+	bool _evmStorageRuntimeNeeded,
+	bool& _emittedEvmStorageRuntime,
+	std::vector<std::shared_ptr<awst::RootNode>>& _roots)
+{
+	ContractBuilder translator(
+		m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
+		_sourceFile, m_functionSymbols,
+		_opupBudget, _ensureBudget, _viaYulBehavior,
+		m_hostBoundFunctions
+	);
+	translator.setArtifactNames(m_artifactNames);
+	auto const& storagePlan = m_session.storagePlan(_contract);
+	auto const emitEvmStorageRuntime = _evmStorageRuntimeNeeded
+		&& !_emittedEvmStorageRuntime;
+	auto awstContract = translator.build(
+		_contract, storagePlan, emitEvmStorageRuntime);
+	if (m_session.profile.evmStorageLayout && emitEvmStorageRuntime)
+		_emittedEvmStorageRuntime = true;
+
+	// Collect dispatch subroutines as root nodes so library
+	// subroutines can resolve them via SubroutineID.
+	for (auto& sub : translator.takeDispatchSubroutines())
+		_roots.push_back(std::move(sub));
+	return awstContract;
+}
+
 void AWSTBuilder::translateContracts(
 	solidity::frontend::CompilerStack& _compiler,
 	std::string const& _sourceFile,
@@ -650,50 +900,7 @@ void AWSTBuilder::translateContracts(
 	bool _viaYulBehavior,
 	std::vector<std::shared_ptr<awst::RootNode>>& roots)
 {
-	bool evmStorageRuntimeNeeded = false;
-	// Slot-mode unit pre-scan: the storage runtime subroutines share one
-	// SubroutineID across the whole unit, so their bodies must be IDENTICAL for
-	// every contract — decide dense-only / single-page globally BEFORE any
-	// contract builds. Libraries and abstract bases count (their functions and
-	// vars compile into hosts/derived contracts).
-	if (m_session.profile.evmStorageLayout)
-	{
-		bool anySparse = false;
-		unsigned long long maxSlots = 0;
-		for (auto const& sourceName: _compiler.sourceNames())
-			for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
-				solidity::frontend::ContractDefinition>(_compiler.ast(sourceName).nodes()))
-			{
-				if (!contract || contract->isInterface())
-					continue;
-				auto const& storagePlan = m_session.storagePlan(*contract);
-				auto const slots = storagePlan.solidityLayout.totalSlots();
-				if (storagePlan.needsDispatch())
-					evmStorageRuntimeNeeded = true;
-				if (storagePlan.requiresSparseSlots)
-					anySparse = true;
-				if (slots > maxSlots)
-					maxSlots = slots;
-			}
-		// Free/library subroutines are outside every contract's defined-function
-		// walk. A reachable assembly sload/sstore still needs the unit runtime even
-		// when every contract has zero declared state.
-		for (auto const callableId:
-			m_session.analysis.callablesWithStorageAssembly)
-			if (!m_session.analysis.hasReachabilityGraphs
-				|| m_session.analysis.reachableCallableIds.count(callableId))
-			{
-				evmStorageRuntimeNeeded = true;
-				anySparse = true;
-				break;
-			}
-		m_session.profile.denseOnlyStorage = !anySparse;
-		m_session.profile.singlePageStorage =
-			maxSlots <= builder::kEvmSlotsPerPage;
-		Logger::instance().debug("PRESCAN dense=" + std::to_string(!anySparse)
-			+ " singlePage=" + std::to_string(maxSlots <= builder::kEvmSlotsPerPage)
-			+ " maxSlots=" + std::to_string(maxSlots));
-	}
+	bool const evmStorageRuntimeNeeded = prescanEvmStorageLayout(_compiler);
 
 	bool emittedDeployable = false;
 	bool emittedEvmStorageRuntime = false;
@@ -724,157 +931,25 @@ void AWSTBuilder::translateContracts(
 				// source has NO deployable contract, EVM deploys the library
 				// itself (public/external fns get external dispatch) — mirrored
 				// after the loop.
-				for (auto const* f: contract->definedFunctions())
-					if (f->isImplemented() && !f->isConstructor()
-						&& (f->visibility() == solidity::frontend::Visibility::Public
-							|| f->visibility() == solidity::frontend::Visibility::External))
-					{
-						deployableLibraries.push_back(contract);
-						break;
-					}
+				if (isDeployableLibrary(*contract))
+					deployableLibraries.push_back(contract);
 				continue;
 			}
 
 			Logger::instance().info("Translating contract: " + contract->name());
+			auto awstContract = translateContract(
+				*contract, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior,
+				evmStorageRuntimeNeeded, emittedEvmStorageRuntime, roots);
 
-			ContractBuilder translator(
-				m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
-				_sourceFile, m_functionSymbols,
-				_opupBudget, _ensureBudget, _viaYulBehavior,
-				m_hostBoundFunctions
-			);
-			translator.setArtifactNames(m_artifactNames);
-			auto const& storagePlan = m_session.storagePlan(*contract);
-			auto const emitEvmStorageRuntime = evmStorageRuntimeNeeded
-				&& !emittedEvmStorageRuntime;
-			auto awstContract = translator.build(
-				*contract, storagePlan, emitEvmStorageRuntime);
-			if (m_session.profile.evmStorageLayout && emitEvmStorageRuntime)
-				emittedEvmStorageRuntime = true;
-
-			// Collect dispatch subroutines as root nodes so library
-			// subroutines can resolve them via SubroutineID.
-			for (auto& sub : translator.takeDispatchSubroutines())
-				roots.push_back(std::move(sub));
-
-			// LogicSig: contract `is LogicSig` (AVM.sol) → AVM lsig instead of stateful app.
-			// Entry function (logicsig modifier, or sole public method) becomes the program.
-			// App state / inner-txns hard-fail downstream.
+			if (isLogicSigContract(*contract))
 			{
-				bool isLsig = false;
-				for (auto const* base: contract->annotation().linearizedBaseContracts)
-					if (base->name() == "LogicSig") { isLsig = true; break; }
-				if (isLsig)
-				{
-					std::string entryName;
-					for (auto const* f: contract->definedFunctions())
-					{
-						if (f->isConstructor() || !f->isImplemented())
-							continue;
-						for (auto const& modInv: f->modifiers())
-						{
-							auto const& p = modInv->name().path();
-							if (!p.empty() && p.back() == "logicsig")
-							{
-								entryName = f->name();
-								break;
-							}
-						}
-						if (!entryName.empty())
-							break;
-					}
-					awst::ContractMethod const* entry = nullptr;
-					if (!entryName.empty())
-					{
-						for (auto const& m: awstContract->methods)
-							if (m.memberName == entryName) { entry = &m; break; }
-					}
-					else
-					{
-						// Fallback: sole public/external ARC4 method.
-						int pubCount = 0;
-						for (auto const& m: awstContract->methods)
-							if (m.arc4MethodConfig.has_value()) { entry = &m; ++pubCount; }
-						if (pubCount != 1)
-							entry = nullptr;
-					}
-					if (!entry)
-					{
-						Logger::instance().error(
-							"contract `" + contract->name() + "` is LogicSig but has no single "
-							"entry function — mark exactly one function with the `logicsig` modifier",
-							awstContract->sourceLocation);
-						continue;
-					}
-					auto program = std::make_shared<awst::Subroutine>();
-					program->sourceLocation = entry->sourceLocation;
-					program->id = awstContract->id;
-					program->name = entry->memberName;
-					program->args = entry->args;
-					program->returnType = entry->returnType;
-					program->body = entry->body;
-					program->documentation = entry->documentation;
-					program->pure = entry->pure;
-
-					auto lsig = std::make_shared<awst::LogicSignature>();
-					lsig->sourceLocation = awstContract->sourceLocation;
-					lsig->id = awstContract->id;
-					lsig->shortName = awstContract->name;
-					lsig->program = std::move(program);
-					lsig->docstring = awstContract->description;
-					lsig->reservedScratchSpace = awstContract->reservedScratchSpace;
-					lsig->avmVersion = awstContract->avmVersion;
-					roots.push_back(std::move(lsig));
+				if (emitLogicSignature(*contract, *awstContract, roots))
 					emittedDeployable = true;
-					Logger::instance().info("Emitted LogicSignature: " + contract->name());
-					continue;
-				}
+				continue;
 			}
 
-			// Only emit contracts with public methods or a constructor.
-			// Non-deployable contracts (internal-only, e.g. ErrorReporter) are
-			// translated for MRO resolution but not emitted to AWST.
-			bool hasPublicMethod = false;
-			for (auto const& method: awstContract->methods)
-			{
-				if (method.arc4MethodConfig.has_value())
-				{
-					hasPublicMethod = true;
-					break;
-				}
-			}
-			// Constructor-only contracts need a dummy ARC4 method so puya's
-			// router has something to route (constructor runs at create time).
-			if (!hasPublicMethod && !contract->abstract())
-			{
-				awst::ContractMethod dummy;
-				dummy.sourceLocation = awstContract->sourceLocation;
-				dummy.cref = awstContract->id;
-				dummy.memberName = "__dummy";
-				dummy.returnType = awst::WType::boolType();
-
-				auto body = awst::makeBlock(dummy.sourceLocation);
-				auto ret = awst::makeReturnStatement(awst::makeTrue(dummy.sourceLocation), dummy.sourceLocation);
-				body->body.push_back(ret);
-				dummy.body = body;
-
-				awst::ARC4BareMethodConfig config;
-				config.sourceLocation = dummy.sourceLocation;
-				config.allowedCompletionTypes = {0}; // NoOp
-				config.create = 3; // Disallow
-				dummy.arc4MethodConfig = config;
-
-				awstContract->methods.push_back(std::move(dummy));
-				hasPublicMethod = true;
-			}
-			if (hasPublicMethod)
-			{
-				eliminateDeadCode(*awstContract);
-				roots.push_back(std::move(awstContract));
+			if (emitDeployableContract(*contract, std::move(awstContract), roots))
 				emittedDeployable = true;
-			}
-			else
-				Logger::instance().debug("Skipping non-deployable contract: " + contract->name());
 		}
 	}
 
@@ -887,26 +962,10 @@ void AWSTBuilder::translateContracts(
 		for (auto const* lib: deployableLibraries)
 		{
 			Logger::instance().info("Translating library as deployable contract: " + lib->name());
-			ContractBuilder translator(
-				m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
-				_sourceFile, m_functionSymbols,
-				_opupBudget, _ensureBudget, _viaYulBehavior,
-				m_hostBoundFunctions
-			);
-			translator.setArtifactNames(m_artifactNames);
-			auto const& storagePlan = m_session.storagePlan(*lib);
-			auto const emitEvmStorageRuntime = evmStorageRuntimeNeeded
-				&& !emittedEvmStorageRuntime;
-			auto awstContract = translator.build(
-				*lib, storagePlan, emitEvmStorageRuntime);
-			if (m_session.profile.evmStorageLayout && emitEvmStorageRuntime)
-				emittedEvmStorageRuntime = true;
-			for (auto& sub : translator.takeDispatchSubroutines())
-				roots.push_back(std::move(sub));
-			bool hasPublicMethod = false;
-			for (auto const& method: awstContract->methods)
-				if (method.arc4MethodConfig.has_value()) { hasPublicMethod = true; break; }
-			if (!hasPublicMethod)
+			auto awstContract = translateContract(
+				*lib, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior,
+				evmStorageRuntimeNeeded, emittedEvmStorageRuntime, roots);
+			if (!hasArc4Method(*awstContract))
 				continue;
 			eliminateDeadCode(*awstContract);
 			roots.push_back(std::move(awstContract));

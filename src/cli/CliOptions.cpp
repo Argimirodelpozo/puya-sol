@@ -197,6 +197,164 @@ void printUsage(char const* _progName)
 		<< "  --help                 Show this help message\n";
 }
 
+namespace
+{
+/// One CLI flag: its spelling, whether it consumes the next argv entry, and
+/// the handler that applies it (`_value` is empty for bare flags). Handlers
+/// exit with status 2 on a malformed value, as the inline arms always did.
+struct FlagSpec
+{
+	char const* name;
+	bool takesValue;
+	void (*apply)(Options& _opts, std::string const& _value);
+};
+
+void applyLogLevel(Options& _opts, std::string const& _value)
+{
+	_opts.logLevel = _value;
+	if (_opts.logLevel != "debug" && _opts.logLevel != "info"
+		&& _opts.logLevel != "warning" && _opts.logLevel != "error")
+	{
+		std::cerr << "Error: --log-level expects debug, info, warning, or "
+			"error; got '" << _opts.logLevel << "'" << std::endl;
+		std::exit(2);
+	}
+}
+
+void applyEnsureBudget(Options& _opts, std::string const& _spec)
+{
+	// Format: func_name:budget
+	auto colon = _spec.find(':');
+	if (colon == std::string::npos || colon == 0)
+	{
+		std::cerr << "Error: --ensure-budget expects <function>:<budget>, got '"
+			<< _spec << "'" << std::endl;
+		std::exit(2);
+	}
+	_opts.ensureBudget[_spec.substr(0, colon)] =
+		parseNumber("--ensure-budget", _spec.substr(colon + 1));
+}
+
+void applyContractAbi(Options& _opts, std::string const& _value)
+{
+	_opts.contractAbi = _value;
+	if (_opts.contractAbi != "arc4" && _opts.contractAbi != "evm")
+	{
+		std::cerr << "Error: --contract-abi expects arc4 or evm; got '"
+			<< _opts.contractAbi << "'" << std::endl;
+		std::exit(2);
+	}
+}
+
+void applyAllowDivergence(Options& _opts, std::string const& _value)
+{
+	std::string name = _value;
+	if (!builder::EvmFeaturePolicy::isAllowName(name))
+	{
+		std::cerr << "Error: --allow-divergence does not recognize '"
+			<< name << "'. Valid names: "
+			<< builder::EvmFeaturePolicy::allowedNames() << std::endl;
+		std::exit(2);
+	}
+	_opts.allowedEvmDivergences.insert(std::move(name));
+}
+
+void rejectEvmMemoryLayout(Options&, std::string const&)
+{
+	std::cerr
+		<< "Error: --evm-memory-layout is not implemented and cannot be "
+			"enabled. Compilation stopped before source processing."
+		<< std::endl;
+	std::exit(2);
+}
+
+void rejectEvmLayout(Options&, std::string const&)
+{
+	std::cerr
+		<< "Error: --evm-layout is unavailable because its EVM memory "
+			"mode is not implemented. Use --evm-storage-layout only when "
+			"slot-compatible storage is sufficient."
+		<< std::endl;
+	std::exit(2);
+}
+
+FlagSpec const kFlags[] = {
+	{"--source", true,
+		[](Options& o, std::string const& v) { o.sourceFiles.push_back(v); }},
+	{"--import-path", true,
+		[](Options& o, std::string const& v) { o.importPaths.push_back(v); }},
+	{"--remapping", true,
+		[](Options& o, std::string const& v) { o.remappings.push_back(v); }},
+	{"--output-dir", true,
+		[](Options& o, std::string const& v) { o.outputDir = v; }},
+	{"--puya-path", true,
+		[](Options& o, std::string const& v) { o.puyaPath = v; }},
+	{"--log-level", true, applyLogLevel},
+	{"--dump-awst", false,
+		[](Options& o, std::string const&) { o.dumpAwst = true; }},
+	{"--no-puya", false,
+		[](Options& o, std::string const&) { o.noPuya = true; }},
+	{"--opup-budget", true,
+		[](Options& o, std::string const& v) {
+			o.opupBudget = parseNumber("--opup-budget", v); }},
+	{"--ensure-budget", true, applyEnsureBudget},
+	{"--optimization-level", true,
+		[](Options& o, std::string const& v) {
+			o.optimizationLevel = parseBoundedInt("--optimization-level", v, 0, 2); }},
+	{"--evm-memory-slots", true,
+		[](Options& o, std::string const& v) {
+			o.evmMemorySlots = parseBoundedInt(
+				"--evm-memory-slots", v, 1, builder::ScratchLayout::maxMemorySlots); }},
+	{"--evm-storage-layout", false,
+		[](Options& o, std::string const&) { o.evmStorageLayout = true; }},
+	{"--evm-memory-layout", false, rejectEvmMemoryLayout},
+	{"--evm-layout", false, rejectEvmLayout},
+	{"--output-ir", false,
+		[](Options& o, std::string const&) { o.outputIr = true; }},
+	{"--no-output-logs", false,
+		[](Options& o, std::string const&) { o.outputLogs = false; }},
+	{"--via-yul-behavior", false,
+		[](Options& o, std::string const&) { o.viaYulBehavior = true; }},
+	{"--legacy-source-rewrite", false,
+		[](Options& o, std::string const&) { o.legacySourceRewrite = true; }},
+	{"--evm-selectors", false,
+		[](Options& o, std::string const&) { o.evmSelectors = true; }},
+	{"--contract-abi", true, applyContractAbi},
+	{"--evm-version", true,
+		[](Options& o, std::string const& v) { o.evmVersion = v; }},
+	{"--evm-chain-id", true,
+		[](Options& o, std::string const& v) {
+			o.evmChainId = parseUint256Decimal("--evm-chain-id", v); }},
+	{"--evm-block-gas-limit", true,
+		[](Options& o, std::string const& v) {
+			o.evmBlockGasLimit = parseUint256Decimal("--evm-block-gas-limit", v); }},
+	{"--evm-coinbase", true,
+		[](Options& o, std::string const& v) {
+			o.evmCoinbase = parseAddressHex("--evm-coinbase", v); }},
+	{"--allow-divergence", true, applyAllowDivergence},
+	{"--xchain-template", true,
+		[](Options& o, std::string const& v) {
+			o.xchainTemplateHex = parseHexBlob("--xchain-template", v, 0); }},
+	{"--xchain-placeholder", true,
+		[](Options& o, std::string const& v) {
+			o.xchainPlaceholderHex = parseHexBlob("--xchain-placeholder", v, 20); }},
+	{"--child-programs-via-box", false,
+		[](Options& o, std::string const&) { o.childProgramsViaBox = true; }},
+	{"--force-inline-sub", true,
+		[](Options& o, std::string const& v) { o.forceInlineSubs.push_back(v); }},
+	{"--force-no-inline-sub", true,
+		[](Options& o, std::string const& v) { o.forceNoInlineSubs.push_back(v); }},
+};
+
+FlagSpec const* findFlag(std::string const& _arg)
+{
+	for (auto const& flag: kFlags)
+		if (_arg == flag.name)
+			return &flag;
+	return nullptr;
+}
+} // namespace
+
 Options parseArgs(int _argc, char* _argv[])
 {
 	Options opts;
@@ -205,134 +363,20 @@ Options parseArgs(int _argc, char* _argv[])
 	{
 		std::string arg = _argv[i];
 
-		if (arg == "--source" && i + 1 < _argc)
-			opts.sourceFiles.push_back(_argv[++i]);
-		else if (arg == "--import-path" && i + 1 < _argc)
-			opts.importPaths.push_back(_argv[++i]);
-		else if (arg == "--remapping" && i + 1 < _argc)
-			opts.remappings.push_back(_argv[++i]);
-		else if (arg == "--output-dir" && i + 1 < _argc)
-			opts.outputDir = _argv[++i];
-		else if (arg == "--puya-path" && i + 1 < _argc)
-			opts.puyaPath = _argv[++i];
-		else if (arg == "--log-level" && i + 1 < _argc)
-		{
-			opts.logLevel = _argv[++i];
-			if (opts.logLevel != "debug" && opts.logLevel != "info"
-				&& opts.logLevel != "warning" && opts.logLevel != "error")
-			{
-				std::cerr << "Error: --log-level expects debug, info, warning, or "
-					"error; got '" << opts.logLevel << "'" << std::endl;
-				std::exit(2);
-			}
-		}
-		else if (arg == "--dump-awst")
-			opts.dumpAwst = true;
-		else if (arg == "--no-puya")
-			opts.noPuya = true;
-		else if (arg == "--opup-budget" && i + 1 < _argc)
-			opts.opupBudget = parseNumber("--opup-budget", _argv[++i]);
-		else if (arg == "--ensure-budget" && i + 1 < _argc)
-		{
-			// Format: func_name:budget
-			std::string spec = _argv[++i];
-			auto colon = spec.find(':');
-			if (colon == std::string::npos || colon == 0)
-			{
-				std::cerr << "Error: --ensure-budget expects <function>:<budget>, got '"
-					<< spec << "'" << std::endl;
-				std::exit(2);
-			}
-			opts.ensureBudget[spec.substr(0, colon)] =
-				parseNumber("--ensure-budget", spec.substr(colon + 1));
-		}
-		else if (arg == "--optimization-level" && i + 1 < _argc)
-			opts.optimizationLevel = parseBoundedInt(
-				"--optimization-level", _argv[++i], 0, 2);
-		else if (arg == "--evm-memory-slots" && i + 1 < _argc)
-			opts.evmMemorySlots = parseBoundedInt(
-				"--evm-memory-slots", _argv[++i], 1,
-				builder::ScratchLayout::maxMemorySlots);
-		else if (arg == "--evm-storage-layout")
-			opts.evmStorageLayout = true;
-		else if (arg == "--evm-memory-layout")
-		{
-			std::cerr
-				<< "Error: --evm-memory-layout is not implemented and cannot be "
-					"enabled. Compilation stopped before source processing."
-				<< std::endl;
-			std::exit(2);
-		}
-		else if (arg == "--evm-layout")
-		{
-			std::cerr
-				<< "Error: --evm-layout is unavailable because its EVM memory "
-					"mode is not implemented. Use --evm-storage-layout only when "
-					"slot-compatible storage is sufficient."
-				<< std::endl;
-			std::exit(2);
-		}
-		else if (arg == "--output-ir")
-			opts.outputIr = true;
-		else if (arg == "--no-output-logs")
-			opts.outputLogs = false;
-		else if (arg == "--via-yul-behavior")
-			opts.viaYulBehavior = true;
-		else if (arg == "--legacy-source-rewrite")
-			opts.legacySourceRewrite = true;
-		else if (arg == "--evm-selectors")
-			opts.evmSelectors = true;
-		else if (arg == "--contract-abi" && i + 1 < _argc)
-		{
-			opts.contractAbi = _argv[++i];
-			if (opts.contractAbi != "arc4" && opts.contractAbi != "evm")
-			{
-				std::cerr << "Error: --contract-abi expects arc4 or evm; got '"
-					<< opts.contractAbi << "'" << std::endl;
-				std::exit(2);
-			}
-		}
-		else if (arg == "--evm-version" && i + 1 < _argc)
-			opts.evmVersion = _argv[++i];
-		else if (arg == "--evm-chain-id" && i + 1 < _argc)
-			opts.evmChainId = parseUint256Decimal(arg, _argv[++i]);
-		else if (arg == "--evm-block-gas-limit" && i + 1 < _argc)
-			opts.evmBlockGasLimit = parseUint256Decimal(arg, _argv[++i]);
-		else if (arg == "--evm-coinbase" && i + 1 < _argc)
-			opts.evmCoinbase = parseAddressHex(arg, _argv[++i]);
-		else if (arg == "--allow-divergence" && i + 1 < _argc)
-		{
-			std::string name = _argv[++i];
-			if (!builder::EvmFeaturePolicy::isAllowName(name))
-			{
-				std::cerr << "Error: --allow-divergence does not recognize '"
-					<< name << "'. Valid names: "
-					<< builder::EvmFeaturePolicy::allowedNames() << std::endl;
-				std::exit(2);
-			}
-			opts.allowedEvmDivergences.insert(std::move(name));
-		}
-		else if (arg == "--xchain-template" && i + 1 < _argc)
-			opts.xchainTemplateHex = parseHexBlob(arg, _argv[++i], 0);
-		else if (arg == "--xchain-placeholder" && i + 1 < _argc)
-			opts.xchainPlaceholderHex = parseHexBlob(arg, _argv[++i], 20);
-		else if (arg == "--child-programs-via-box")
-			opts.childProgramsViaBox = true;
-		else if (arg == "--force-inline-sub" && i + 1 < _argc)
-			opts.forceInlineSubs.push_back(_argv[++i]);
-		else if (arg == "--force-no-inline-sub" && i + 1 < _argc)
-			opts.forceNoInlineSubs.push_back(_argv[++i]);
-		else if (arg == "--help")
+		if (arg == "--help")
 		{
 			printUsage(_argv[0]);
 			std::exit(0);
 		}
-		else
+		// A value flag with no argument left is not recognised as a flag at all.
+		auto const* flag = findFlag(arg);
+		if (!flag || (flag->takesValue && i + 1 >= _argc))
 		{
 			std::cerr << "Unknown option: " << arg << std::endl;
 			printUsage(_argv[0]);
 			std::exit(1);
 		}
+		flag->apply(opts, flag->takesValue ? std::string(_argv[++i]) : std::string());
 	}
 
 	return opts;

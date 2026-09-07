@@ -215,12 +215,13 @@ void ProgramAnalysis::closeCallableReferences(std::set<int64_t>& _ids) const
 	closeOverEdges(_ids, callableReferences);
 }
 
-ProgramAnalysis ProgramAnalysis::analyze(
-	CompilerStack& _compiler,
-	bool _evmStorageLayout)
+namespace
 {
-	ProgramAnalysis result;
 
+/// Per-contract facts: modifier reference edges, mapping-valued structs, and
+/// the creation/deployed call-graph reachability.
+void collectContractFacts(CompilerStack& _compiler, ProgramAnalysis& _out)
+{
 	std::set<Type const*> seen;
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
@@ -228,234 +229,247 @@ ProgramAnalysis ProgramAnalysis::analyze(
 			ASTNode::filteredNodes<ContractDefinition>(_compiler.ast(sourceName).nodes()))
 		{
 			for (auto const* modifier: contract->functionModifiers())
-				indexCallable(*modifier, result);
+				indexCallable(*modifier, _out);
 			for (auto const* stateVar: contract->stateVariables())
 				collectMappingValueStructs(
-					stateVar->type(), result.boxKeyedStructs, seen);
+					stateVar->type(), _out.boxKeyedStructs, seen);
 			if (contract->annotation().creationCallGraph.set())
 				collectContractCallGraphFacts(
 					*contract, (*contract->annotation().creationCallGraph).get(),
-					result);
+					_out);
 			if (contract->annotation().deployedCallGraph.set())
 				collectContractCallGraphFacts(
 					*contract, (*contract->annotation().deployedCallGraph).get(),
-					result);
+					_out);
 		}
 	}
+}
 
+/// Index every function declaration and its reference edges; storage struct
+/// params of non-library functions are ref-passed structs.
+void indexFunctionDeclarations(CompilerStack& _compiler, ProgramAnalysis& _out)
+{
 	forEachFunction(_compiler, [&](FunctionDefinition const* function,
 		ContractDefinition const* contract) {
 		if (function)
 		{
-			result.functionDeclarations[function->id()] = function;
-			indexCallable(*function, result);
+			_out.functionDeclarations[function->id()] = function;
+			indexCallable(*function, _out);
 		}
 		if (!function || !contract || contract->isLibrary())
 			return;
 		for (auto const& param: function->parameters())
 			if (param->referenceLocation() == VariableDeclaration::Location::Storage)
 				if (auto const* structure = dynamic_cast<StructType const*>(param->type()))
-					result.refPassedStructs.insert(structure->structDefinition().id());
+					_out.refPassedStructs.insert(structure->structDefinition().id());
 	});
-	for (auto const& [caller, callees]: result.callableReferences)
+}
+
+/// Reverse the reference edges and close the reachable sets over them,
+/// keeping only real function declarations in the per-contract sets.
+void closeReachability(ProgramAnalysis& _out)
+{
+	for (auto const& [caller, callees]: _out.callableReferences)
 		for (auto callee: callees)
-			result.callableCallers[callee].insert(caller);
-	result.closeCallableReferences(result.reachableCallableIds);
-	for (auto id: result.reachableCallableIds)
-		if (result.functionDeclarations.count(id))
-			result.reachableFunctionIds.insert(id);
-	for (auto& [_, reachable]: result.reachableFunctionsByContract)
+			_out.callableCallers[callee].insert(caller);
+	_out.closeCallableReferences(_out.reachableCallableIds);
+	for (auto id: _out.reachableCallableIds)
+		if (_out.functionDeclarations.count(id))
+			_out.reachableFunctionIds.insert(id);
+	for (auto& [_, reachable]: _out.reachableFunctionsByContract)
 	{
-		result.closeCallableReferences(reachable);
+		_out.closeCallableReferences(reachable);
 		for (auto it = reachable.begin(); it != reachable.end();)
-			if (!result.functionDeclarations.count(*it))
+			if (!_out.functionDeclarations.count(*it))
 				it = reachable.erase(it);
 			else
 				++it;
 	}
+}
 
-	struct BodyFactsWalker: ASTConstVisitor
+/// Body/Yul facts of one callable at a time (`callableId`): memory-local
+/// reassignment, inline assembly and its storage use, `.slot` references, and
+/// the storage-ref parameter/slot transfer edges closed after the walk.
+struct BodyFactsWalker: ASTConstVisitor
+{
+	ProgramAnalysis& analysis;
+	std::set<int64_t>& reassignedMemoryLocals;
+	std::set<int64_t>& callablesWithInlineAssembly;
+	std::set<int64_t>& callablesWithStorageAssembly;
+	std::set<int64_t>& asmSlotReferenceDeclarations;
+	std::set<int64_t>& structRefOffsetParams;
+	std::map<int64_t, std::set<int64_t>> offsetTransfers;
+	std::map<int64_t, std::set<int64_t>> slotTransfers;
+	bool collectOffsets;
+	int64_t callableId = 0;
+	BodyFactsWalker(
+		ProgramAnalysis& _analysis,
+		std::set<int64_t>& _reassignedMemoryLocals,
+		std::set<int64_t>& _callablesWithInlineAssembly,
+		std::set<int64_t>& _callablesWithStorageAssembly,
+		std::set<int64_t>& _asmSlotReferenceDeclarations,
+		std::set<int64_t>& _structRefOffsetParams,
+		bool _collectOffsets)
+		: analysis(_analysis), reassignedMemoryLocals(_reassignedMemoryLocals),
+		  callablesWithInlineAssembly(_callablesWithInlineAssembly),
+		  callablesWithStorageAssembly(_callablesWithStorageAssembly),
+		  asmSlotReferenceDeclarations(_asmSlotReferenceDeclarations),
+		  structRefOffsetParams(_structRefOffsetParams),
+		  collectOffsets(_collectOffsets)
+	{}
+
+	static bool isArrayElementStructRef(Expression const* _expression)
 	{
-		ProgramAnalysis& analysis;
-		std::set<int64_t>& reassignedMemoryLocals;
-		std::set<int64_t>& callablesWithInlineAssembly;
-		std::set<int64_t>& callablesWithStorageAssembly;
-		std::set<int64_t>& asmSlotReferenceDeclarations;
-		std::set<int64_t>& structRefOffsetParams;
-		std::map<int64_t, std::set<int64_t>> offsetTransfers;
-		std::map<int64_t, std::set<int64_t>> slotTransfers;
-		bool collectOffsets;
-		int64_t callableId = 0;
-		BodyFactsWalker(
-			ProgramAnalysis& _analysis,
-			std::set<int64_t>& _reassignedMemoryLocals,
-			std::set<int64_t>& _callablesWithInlineAssembly,
-			std::set<int64_t>& _callablesWithStorageAssembly,
-			std::set<int64_t>& _asmSlotReferenceDeclarations,
-			std::set<int64_t>& _structRefOffsetParams,
-			bool _collectOffsets)
-			: analysis(_analysis), reassignedMemoryLocals(_reassignedMemoryLocals),
-			  callablesWithInlineAssembly(_callablesWithInlineAssembly),
-			  callablesWithStorageAssembly(_callablesWithStorageAssembly),
-			  asmSlotReferenceDeclarations(_asmSlotReferenceDeclarations),
-			  structRefOffsetParams(_structRefOffsetParams),
-			  collectOffsets(_collectOffsets)
-		{}
-
-		static bool isArrayElementStructRef(Expression const* _expression)
-		{
-			auto const* index = dynamic_cast<IndexAccess const*>(_expression);
-			if (!index)
-				return false;
-			auto const* array = dynamic_cast<ArrayType const*>(
-				index->baseExpression().annotation().type);
-			return array && !array->isByteArrayOrString() && array->baseType()
-				&& array->baseType()->category() == Type::Category::Struct;
-		}
-
-		void transferOffset(VariableDeclaration const& target, Expression const& argument)
-		{
-			if (!collectOffsets
-				|| target.referenceLocation() != VariableDeclaration::Location::Storage
-				|| !dynamic_cast<StructType const*>(target.type()))
-				return;
-			if (isArrayElementStructRef(&argument))
-				structRefOffsetParams.insert(target.id());
-			else if (auto const* identifier = dynamic_cast<Identifier const*>(&argument))
-				if (auto const* declaration = identifier->annotation().referencedDeclaration)
-					offsetTransfers[declaration->id()].insert(target.id());
-		}
-
-		void transferSlot(int64_t target, Expression const& expression)
-		{
-			if (!expression.annotation().type
-				|| !expression.annotation().type->dataStoredIn(DataLocation::Storage))
-				return;
-			if (auto const* identifier = dynamic_cast<Identifier const*>(&expression))
-			{
-				if (auto const* source = identifier->annotation().referencedDeclaration)
-					slotTransfers[source->id()].insert(target);
-			}
-			else if (auto const* call = dynamic_cast<FunctionCall const*>(&expression))
-			{
-				Declaration const* source = nullptr;
-				if (auto const* id = dynamic_cast<Identifier const*>(&call->expression()))
-					source = id->annotation().referencedDeclaration;
-				else if (auto const* member = dynamic_cast<MemberAccess const*>(&call->expression()))
-					source = member->annotation().referencedDeclaration;
-				if (dynamic_cast<FunctionDefinition const*>(source))
-					slotTransfers[source->id()].insert(target);
-			}
-			else if (auto const* index = dynamic_cast<IndexAccess const*>(&expression))
-				transferSlot(target, index->baseExpression());
-			else if (auto const* member = dynamic_cast<MemberAccess const*>(&expression))
-				transferSlot(target, member->expression());
-			else if (auto const* conditional = dynamic_cast<Conditional const*>(&expression))
-			{
-				transferSlot(target, conditional->trueExpression());
-				transferSlot(target, conditional->falseExpression());
-			}
-		}
-
-		bool visit(Return const& statement) override
-		{
-			if (statement.expression())
-				transferSlot(callableId, *statement.expression());
-			return true;
-		}
-
-		bool visit(VariableDeclarationStatement const& statement) override
-		{
-			if (statement.declarations().size() == 1 && statement.declarations()[0]
-				&& statement.initialValue())
-			{
-				transferOffset(*statement.declarations()[0], *statement.initialValue());
-				if (statement.declarations()[0]->referenceLocation()
-					== VariableDeclaration::Location::Storage)
-					transferSlot(statement.declarations()[0]->id(), *statement.initialValue());
-			}
-			return true;
-		}
-
-		bool visit(Assignment const& _assignment) override
-		{
-			if (auto const* identifier =
-				dynamic_cast<Identifier const*>(&_assignment.leftHandSide()))
-				if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(
-						identifier->annotation().referencedDeclaration))
-				{
-					if (declaration->referenceLocation()
-						== VariableDeclaration::Location::Memory)
-						reassignedMemoryLocals.insert(declaration->id());
-					transferOffset(*declaration, _assignment.rightHandSide());
-					if (declaration->referenceLocation() == VariableDeclaration::Location::Storage)
-						transferSlot(declaration->id(), _assignment.rightHandSide());
-				}
-			return true;
-		}
-
-		bool visit(InlineAssembly const& _assembly) override
-		{
-			callablesWithInlineAssembly.insert(callableId);
-			auto prepared = SolcFacts::prepareAssembly(_assembly);
-			if (prepared->facts.usesStorage)
-				callablesWithStorageAssembly.insert(callableId);
-			analysis.asmAssignedSlotDeclarations.insert(
-				prepared->assignedSlotDeclarations.begin(), prepared->assignedSlotDeclarations.end());
-			analysis.preparedAssemblies.emplace(_assembly.id(), std::move(prepared));
-			for (auto const& [_, reference]: _assembly.annotation().externalReferences)
-				if (reference.suffix == "slot" && reference.declaration)
-					asmSlotReferenceDeclarations.insert(reference.declaration->id());
+		auto const* index = dynamic_cast<IndexAccess const*>(_expression);
+		if (!index)
 			return false;
-		}
+		auto const* array = dynamic_cast<ArrayType const*>(
+			index->baseExpression().annotation().type);
+		return array && !array->isByteArrayOrString() && array->baseType()
+			&& array->baseType()->category() == Type::Category::Struct;
+	}
 
-		bool visit(FunctionCall const& _call) override
+	void transferOffset(VariableDeclaration const& target, Expression const& argument)
+	{
+		if (!collectOffsets
+			|| target.referenceLocation() != VariableDeclaration::Location::Storage
+			|| !dynamic_cast<StructType const*>(target.type()))
+			return;
+		if (isArrayElementStructRef(&argument))
+			structRefOffsetParams.insert(target.id());
+		else if (auto const* identifier = dynamic_cast<Identifier const*>(&argument))
+			if (auto const* declaration = identifier->annotation().referencedDeclaration)
+				offsetTransfers[declaration->id()].insert(target.id());
+	}
+
+	void transferSlot(int64_t target, Expression const& expression)
+	{
+		if (!expression.annotation().type
+			|| !expression.annotation().type->dataStoredIn(DataLocation::Storage))
+			return;
+		if (auto const* identifier = dynamic_cast<Identifier const*>(&expression))
 		{
-			if (!collectOffsets)
-				return true;
-			Declaration const* declaration = nullptr;
-			if (auto const* identifier =
-				dynamic_cast<Identifier const*>(&_call.expression()))
-				declaration = identifier->annotation().referencedDeclaration;
-			else if (auto const* member =
-				dynamic_cast<MemberAccess const*>(&_call.expression()))
-				declaration = member->annotation().referencedDeclaration;
-			auto const* function =
-				dynamic_cast<FunctionDefinition const*>(declaration);
-			if (!function)
-				return true;
-
-			auto arguments = _call.sortedArguments();
-			auto const& params = function->parameters();
-			auto const* type = dynamic_cast<FunctionType const*>(
-				_call.expression().annotation().type);
-			size_t const shift = type && type->hasBoundFirstArgument() ? 1 : 0;
-			if (params.size() != arguments.size() + shift)
-				return true;
-			if (shift)
-				if (auto const* member = dynamic_cast<MemberAccess const*>(&_call.expression()))
-					transferOffset(*params.front(), member->expression());
-			for (size_t i = 0; i < arguments.size(); ++i)
-				transferOffset(*params[i + shift], *arguments[i]);
-			return true;
+			if (auto const* source = identifier->annotation().referencedDeclaration)
+				slotTransfers[source->id()].insert(target);
 		}
-	} bodyFactsWalker(
-		result, result.reassignedMemoryLocals, result.callablesWithInlineAssembly,
-		result.callablesWithStorageAssembly,
-		result.asmSlotReferenceDeclarations,
-		result.structRefOffsetParams, !_evmStorageLayout);
+		else if (auto const* call = dynamic_cast<FunctionCall const*>(&expression))
+		{
+			Declaration const* source = nullptr;
+			if (auto const* id = dynamic_cast<Identifier const*>(&call->expression()))
+				source = id->annotation().referencedDeclaration;
+			else if (auto const* member = dynamic_cast<MemberAccess const*>(&call->expression()))
+				source = member->annotation().referencedDeclaration;
+			if (dynamic_cast<FunctionDefinition const*>(source))
+				slotTransfers[source->id()].insert(target);
+		}
+		else if (auto const* index = dynamic_cast<IndexAccess const*>(&expression))
+			transferSlot(target, index->baseExpression());
+		else if (auto const* member = dynamic_cast<MemberAccess const*>(&expression))
+			transferSlot(target, member->expression());
+		else if (auto const* conditional = dynamic_cast<Conditional const*>(&expression))
+		{
+			transferSlot(target, conditional->trueExpression());
+			transferSlot(target, conditional->falseExpression());
+		}
+	}
 
-	// Body/Yul facts are invariant: collect them once, then close the finite,
-	// monotone parameter-transfer graph without an arbitrary depth cutoff.
+	bool visit(Return const& statement) override
+	{
+		if (statement.expression())
+			transferSlot(callableId, *statement.expression());
+		return true;
+	}
+
+	bool visit(VariableDeclarationStatement const& statement) override
+	{
+		if (statement.declarations().size() == 1 && statement.declarations()[0]
+			&& statement.initialValue())
+		{
+			transferOffset(*statement.declarations()[0], *statement.initialValue());
+			if (statement.declarations()[0]->referenceLocation()
+				== VariableDeclaration::Location::Storage)
+				transferSlot(statement.declarations()[0]->id(), *statement.initialValue());
+		}
+		return true;
+	}
+
+	bool visit(Assignment const& _assignment) override
+	{
+		if (auto const* identifier =
+			dynamic_cast<Identifier const*>(&_assignment.leftHandSide()))
+			if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(
+					identifier->annotation().referencedDeclaration))
+			{
+				if (declaration->referenceLocation()
+					== VariableDeclaration::Location::Memory)
+					reassignedMemoryLocals.insert(declaration->id());
+				transferOffset(*declaration, _assignment.rightHandSide());
+				if (declaration->referenceLocation() == VariableDeclaration::Location::Storage)
+					transferSlot(declaration->id(), _assignment.rightHandSide());
+			}
+		return true;
+	}
+
+	bool visit(InlineAssembly const& _assembly) override
+	{
+		callablesWithInlineAssembly.insert(callableId);
+		auto prepared = SolcFacts::prepareAssembly(_assembly);
+		if (prepared->facts.usesStorage)
+			callablesWithStorageAssembly.insert(callableId);
+		analysis.asmAssignedSlotDeclarations.insert(
+			prepared->assignedSlotDeclarations.begin(), prepared->assignedSlotDeclarations.end());
+		analysis.preparedAssemblies.emplace(_assembly.id(), std::move(prepared));
+		for (auto const& [_, reference]: _assembly.annotation().externalReferences)
+			if (reference.suffix == "slot" && reference.declaration)
+				asmSlotReferenceDeclarations.insert(reference.declaration->id());
+		return false;
+	}
+
+	bool visit(FunctionCall const& _call) override
+	{
+		if (!collectOffsets)
+			return true;
+		Declaration const* declaration = nullptr;
+		if (auto const* identifier =
+			dynamic_cast<Identifier const*>(&_call.expression()))
+			declaration = identifier->annotation().referencedDeclaration;
+		else if (auto const* member =
+			dynamic_cast<MemberAccess const*>(&_call.expression()))
+			declaration = member->annotation().referencedDeclaration;
+		auto const* function =
+			dynamic_cast<FunctionDefinition const*>(declaration);
+		if (!function)
+			return true;
+
+		auto arguments = _call.sortedArguments();
+		auto const& params = function->parameters();
+		auto const* type = dynamic_cast<FunctionType const*>(
+			_call.expression().annotation().type);
+		size_t const shift = type && type->hasBoundFirstArgument() ? 1 : 0;
+		if (params.size() != arguments.size() + shift)
+			return true;
+		if (shift)
+			if (auto const* member = dynamic_cast<MemberAccess const*>(&_call.expression()))
+				transferOffset(*params.front(), member->expression());
+		for (size_t i = 0; i < arguments.size(); ++i)
+			transferOffset(*params[i + shift], *arguments[i]);
+		return true;
+	}
+};
+
+/// Walk every implemented function body, then every implemented modifier
+/// body, once with `_walker`.
+void collectBodyFacts(CompilerStack& _compiler, BodyFactsWalker& _walker)
+{
 	forEachFunction(_compiler, [&](FunctionDefinition const* function,
 		ContractDefinition const*) {
 		if (function && function->isImplemented())
 		{
-			bodyFactsWalker.callableId = function->id();
+			_walker.callableId = function->id();
 			for (auto const& parameter: function->returnParameters())
 				if (parameter->referenceLocation() == VariableDeclaration::Location::Storage)
-					bodyFactsWalker.slotTransfers[parameter->id()].insert(function->id());
-			function->body().accept(bodyFactsWalker);
+					_walker.slotTransfers[parameter->id()].insert(function->id());
+			function->body().accept(_walker);
 		}
 	});
 	for (auto const& sourceName: _compiler.sourceNames())
@@ -464,16 +478,20 @@ ProgramAnalysis ProgramAnalysis::analyze(
 			for (auto const* modifier: contract->functionModifiers())
 				if (modifier && modifier->isImplemented())
 				{
-					bodyFactsWalker.callableId = modifier->id();
-					modifier->body().accept(bodyFactsWalker);
+					_walker.callableId = modifier->id();
+					modifier->body().accept(_walker);
 				}
-	closeOverEdges(result.structRefOffsetParams, bodyFactsWalker.offsetTransfers);
-	auto slotSources = result.asmAssignedSlotDeclarations;
-	closeOverEdges(slotSources, bodyFactsWalker.slotTransfers);
-	for (auto const& [id, function]: result.functionDeclarations)
+}
+
+/// Per-function storage-reference return facts; `_slotSources` are the
+/// declarations an assembly `.slot` assignment reaches.
+void deriveStorageReferenceReturns(
+	ProgramAnalysis& _out, std::set<int64_t> const& _slotSources)
+{
+	for (auto const& [id, function]: _out.functionDeclarations)
 	{
-		auto& facts = result.storageReferenceReturns[id];
-		facts.slotHandle = slotSources.count(id) != 0;
+		auto& facts = _out.storageReferenceReturns[id];
+		facts.slotHandle = _slotSources.count(id) != 0;
 		if (!facts.slotHandle)
 		{
 			facts.indexedReturn = indexedStorageReturn(*function);
@@ -484,12 +502,39 @@ ProgramAnalysis ProgramAnalysis::analyze(
 		}
 		if (facts.indexedReturn)
 		{
-			result.storageRefPointerReturnAccesses.insert(facts.indexedReturn->id());
+			_out.storageRefPointerReturnAccesses.insert(facts.indexedReturn->id());
 			facts.bytesKeyed = facts.bytesKeyed || dynamic_cast<MappingType const*>(
 				facts.indexedReturn->baseExpression().annotation().type)
 				|| function->returnParameters()[0]->type()->containsNestedMapping();
 		}
 	}
+}
+
+} // namespace
+
+ProgramAnalysis ProgramAnalysis::analyze(
+	CompilerStack& _compiler,
+	bool _evmStorageLayout)
+{
+	ProgramAnalysis result;
+
+	collectContractFacts(_compiler, result);
+	indexFunctionDeclarations(_compiler, result);
+	closeReachability(result);
+
+	BodyFactsWalker bodyFactsWalker(
+		result, result.reassignedMemoryLocals, result.callablesWithInlineAssembly,
+		result.callablesWithStorageAssembly,
+		result.asmSlotReferenceDeclarations,
+		result.structRefOffsetParams, !_evmStorageLayout);
+
+	// Body/Yul facts are invariant: collect them once, then close the finite,
+	// monotone parameter-transfer graph without an arbitrary depth cutoff.
+	collectBodyFacts(_compiler, bodyFactsWalker);
+	closeOverEdges(result.structRefOffsetParams, bodyFactsWalker.offsetTransfers);
+	auto slotSources = result.asmAssignedSlotDeclarations;
+	closeOverEdges(slotSources, bodyFactsWalker.slotTransfers);
+	deriveStorageReferenceReturns(result, slotSources);
 
 	return result;
 }

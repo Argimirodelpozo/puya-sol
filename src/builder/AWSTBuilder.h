@@ -90,6 +90,24 @@ private:
 		bool _viaYulBehavior,
 		std::vector<std::shared_ptr<awst::RootNode>>& _roots);
 
+	// ── translateContracts phases ───────────────────────────────────────
+	/// --evm-storage-layout unit pre-scan (dense-only / single-page profile
+	/// flags); returns whether the unit-global storage runtime is needed.
+	bool prescanEvmStorageLayout(solidity::frontend::CompilerStack& _compiler);
+
+	/// One ContractBuilder run over `_contract`; its dispatch subroutines go
+	/// straight to `_roots`. The unit-global EVM storage runtime is emitted
+	/// with the first contract when needed (`_emittedEvmStorageRuntime` latches).
+	std::shared_ptr<awst::Contract> translateContract(
+		solidity::frontend::ContractDefinition const& _contract,
+		std::string const& _sourceFile,
+		uint64_t _opupBudget,
+		std::map<std::string, uint64_t> const& _ensureBudget,
+		bool _viaYulBehavior,
+		bool _evmStorageRuntimeNeeded,
+		bool& _emittedEvmStorageRuntime,
+		std::vector<std::shared_ptr<awst::RootNode>>& _roots);
+
 	/// Build an awst::Subroutine for a library function or free function.
 	/// `_libraryName` is empty for free functions; forwarded to ContractContext
 	/// as `contractName` for member-name resolution.
