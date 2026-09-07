@@ -500,15 +500,43 @@ What still differs from the LocalNet lane, by construction:
 - `block.number` is a small counter (+2 per call, like LocalNet's seal + call),
   not the historical height, and chain-id-derived values differ from both
   LocalNet and py-evm (the same `_NOISE_SIG_RE` noise class).
-- Not covered (refused loudly, never approximated): constructor dependencies
-  and answer tapes, split/delegate code pages, child programs via box,
-  proxy-runtime deploys, `new C()` children. `replay.py`'s platform-limit
-  re-skip loop still drives only `avm_leg.py`.
+- Dependency contracts replay here too. Each one in `meta.dep_ctors` is
+  compiled and initialised in a scratch ledger where it is app 9001 (the only
+  id the oracle creates), then imported into the ledger of the contract under
+  test as a callable app 9002+ (`OracleState.absorb_current_as`), so the
+  inner `appl` to `bzero(24) ‖ itob(id)` reaches it — avm_leg's build-flag rule
+  included (a routing dependency takes its CALLER's wire ABI, a tape-driven
+  stand-in keeps the ARC-4 profile that still exposes `__load`/`__seek`).
+  A recorded answer tape is loaded the same way, but `__seek(start,end)` rides
+  in the replayed call's OWN group as an extra sibling instead of a separate
+  transaction, so a rejected call rolls the cursor back with it. Answers for
+  transactions this run skips are not loaded at all (a stand-in keeps its tape
+  in one dynamic array, i.e. one 32 KiB box — morpho_alloc's 1629 words
+  overflow it, and 197 of its 200 transactions are skipped anyway); a probe's
+  `source_txn` is always kept.
+- Not covered (refused loudly, never approximated): split/delegate code pages,
+  child programs via box, `new C()` children, and a stand-in still carrying the
+  pre-selector answer tape (`python3 fetch.py --refresh-stubs <tag>` regenerates
+  it — `avm_leg.py` requires the same tape). `CHD_ORACLE_NO_DEPS=1` restores the
+  old refusal for a sweep that does not want to pay for dependency deploys.
+  `replay.py`'s platform-limit re-skip loop still drives only `avm_leg.py`.
+
+The app's global state schema is the compiled ARC-56 declaration padded up to
+framework.deploy's 16/16 floor, not a flat 16/16: `cases/toshi` declares 4 uint
+/ 24 byte-slice and used to die inside `__postInit` on "store bytes count 17
+exceeds schema bytes count 16" (it now replays 168/200 in the DEFAULT model
+with no divergence, matching its slot-mode LocalNet baseline).
 
 Validated 2026-09-07 against the prior LocalNet reports: `pol`, `vanry`
 (default mode) and `eul` (slot mode) reproduce the LocalNet verdict and every
 differ count, with identical per-call outcomes and an identical storage census
-(unattributed boxes and holder mismatches included); `cases/selftest` passes
+(unattributed boxes and holder mismatches included); the dependency cases
+`aave_gateway` (148/200), `cctp_messenger` (290/300), `gho` (119/200),
+`cctp_minter_w200bak` (33/41, answer tape) and `morpho_alloc` (3/200, 13
+stand-ins) reproduce theirs with zero real divergences, and
+`zk_worldid_idmgr` reproduces its 12 snapshot / 1 storage / 12 storage-map
+divergences bucket for bucket (all downstream of 46 `registerIdentities`
+transactions whose calldata exceeds the AVM's 4 KiB argument cap); `cases/selftest` passes
 `selftest.check` — every storage shape populated on both legs — in both
 storage models (`python3 oracle_case.py cases/selftest [--evm-storage-layout]`
 then `differ.py`; the case is synthesised once by `selftest.py` under the EVM

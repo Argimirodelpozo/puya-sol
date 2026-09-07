@@ -40,11 +40,21 @@ committed state carried between requests by OracleState):
   storage           the carried globals/boxes feed the SAME readers avm_leg
                     uses (decode_global_state / read_native_maps /
                     read_slot_storage) via chd_box_source.OracleBoxSource,
-                    holder-mismatch root check included.
+                    holder-mismatch root check included;
+  dependencies      each recorded dependency is compiled and deployed like the
+                    main app in a scratch ledger of its own, then imported as a
+                    callable app 9002+ (`absorb_current_as`), so the contract's
+                    inner `appl` to bzero(24) ‖ itob(id) reaches it. A recorded
+                    ANSWER TAPE is loaded into its stand-in through the same
+                    `__load` the LocalNet lane uses; `__seek(start,end)` rides
+                    in the replayed call's OWN group (one sibling per active
+                    tape) instead of a separate transaction, so a rejected call
+                    rolls the cursor back with it.
 
-Not covered — refused loudly rather than approximated: constructor
-dependencies and answer tapes, split/delegate code pages, child programs via
-box, proxy-runtime deploys, `new C()` children (CH<n> symbols).
+Not covered — refused loudly rather than approximated: split/delegate code
+pages, child programs via box, `new C()` children (CH<n> symbols), and a
+stand-in still carrying the pre-selector answer tape (`fetch.py
+--refresh-stubs <tag>` regenerates it).
 """
 from __future__ import annotations
 
@@ -79,17 +89,19 @@ from avm_leg import (XCHAIN_PLACEHOLDER, XCHAIN_TOY_TEAL, _ctype, _ret,
                      mode_compile_args, read_native_maps, xchain_compile_args,
                      xchain_template_bytes)
 from chd_box_source import OracleBoxSource, slot_map_from_boxes
-from chd_common import (arg_content20, canon_value, deployment_clock_target,
-                        dump_json, is_platform_limit, load_json,
-                        probe_clock_target, replay_clock_targets, replay_epoch,
-                        symbol)
+from chd_common import (arg_content20, build_dep_tape_plans, canon_value,
+                        deployment_clock_target, dump_json, is_platform_limit,
+                        load_json, probe_clock_target, replay_clock_targets,
+                        replay_epoch, symbol, tape_script_chunks)
 from framework import Harness
+from framework.call import _resolve_method
 from framework.deploy import _encode_ctor_args, _load_arc56, _zero_for_type
 from event_diff import decode_avm_log_bytes
 
 DEFAULT_PROVER_ROOT = HERE.parents[3] / "new_verifier_experiment" / "avm-prover"
 
 ORACLE_APP = 9001                    # the oracle's fixed id for the app under eval
+DEP_APP_BASE = 9002                  # dependency contracts: 9002, 9003, …
 HELPER_APP, TARGET_APP = 8001, 8002  # LocalNet's OpUp helper + the bare app it calls
 POOL = 15                            # helper calls per group (16 minus the call)
 OPUP_DEPTH = 8                       # inner calls per amplified helper (framework.call)
@@ -97,6 +109,8 @@ MIN_FEE = 1_000
 EXTRA_FEE = 20_000                   # avm_leg's per-call fee headroom
 INNER_FEE_HEADROOM = 16_000
 MAX_TXN_REFS = 8                     # MaxAppTotalTxnReferences
+SCHEMA_PAD = 16                      # framework.deploy's spare global cells
+MAX_SCHEMA_CELLS = 64                # consensus max global entries per kind
 RETRY_CAP = 96                       # discovery attempts per call
 MEMO_CAP = 48                        # recently used box names seeded on every call
 ROUND0 = 1_000
@@ -142,6 +156,45 @@ def _is_budget_error(err: str) -> bool:
     """framework.call._is_budget_error, on the oracle's error text."""
     m = err.lower()
     return "budget" in m or "opcode" in m or "dynamic cost" in m
+
+
+def global_schema_for(app_spec, name: str) -> tuple[int, int]:
+    """(uints, byte-slices) for an app's global schema.
+
+    The ARC-56 declaration padded to framework.deploy's 16/16 floor, so small
+    contracts keep the exact schema the LocalNet lane deploys while a contract
+    that declares MORE named globals than that gets what it declares. A flat
+    16/16 made every such contract undeployable here (cases/toshi declares
+    4 uint / 24 byte-slice and died on "store bytes count 17 exceeds schema
+    bytes count 16" inside __postInit).
+    """
+    declared = app_spec.state.schema.global_state
+    uints, byteslices = int(declared.ints), int(declared.bytes)
+    if uints > MAX_SCHEMA_CELLS or byteslices > MAX_SCHEMA_CELLS:
+        raise RuntimeError(
+            f"{name}: ARC-56 global schema {uints} uint / {byteslices} "
+            f"byte-slice exceeds the AVM maximum of {MAX_SCHEMA_CELLS} per "
+            f"kind — this contract cannot be deployed on any lane")
+    return max(uints, SCHEMA_PAD), max(byteslices, SCHEMA_PAD)
+
+
+def app_address_hex(app_id: int) -> str:
+    """go-algorand's application escrow address, as the oracle spells it."""
+    return hashlib.new("sha512_256",
+                       b"appID" + int(app_id).to_bytes(8, "big")).hexdigest()
+
+
+def arc4_app_args(abi_method, values) -> list[str]:
+    """App args for one ARC-4 method call, ATC-encoded offline (selector +
+    ARC4 args, >14-arg tuple packing included)."""
+    sk, addr = account.generate_account()
+    sp = SuggestedParams(fee=MIN_FEE, first=1, last=1000,
+                         gh=base64.b64encode(bytes(32)).decode(), flat_fee=True)
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(app_id=ORACLE_APP, method=abi_method, sender=addr, sp=sp,
+                        signer=AccountTransactionSigner(sk),
+                        method_args=list(values))
+    return [a.hex() for a in atc.build_group()[0].txn.app_args]
 
 
 def load_state_adapter(prover_root: Path):
@@ -200,6 +253,10 @@ class Identities:
     def __init__(self, reg: dict, calls: list, template: bytes):
         self.reg = reg
         self.template = template
+        # historical dependency address → the app id its stand-in was given.
+        # Assigned before any dependency is deployed so a dependency's OWN
+        # constructor arguments can name a later one.
+        self.dep_apps: dict[str, int] = {}
         self.creator20 = bytes.fromhex(reg["creator"][2:])
         self.creator32 = bytes(12) + self.creator20
         self.creator_hex = self.creator32.hex()
@@ -241,11 +298,19 @@ class Identities:
             return encoding.encode_address(bytes(12) + arg_content20(m))
         return encoding.encode_address(bytes(32))
 
+    def dep_address(self, addr: str) -> str:
+        """puya-sol's cross-contract value for a dependency: bzero(24) ‖ itob(id)."""
+        app = self.dep_apps.get(str(addr).lower())
+        if app is None:
+            raise NotImplementedError(
+                f"dependency {addr} has no stand-in on this lane — it is not in "
+                f"calls.json meta.dep_ctors, so a call reaching it would run "
+                f"against an empty account instead of the recorded contract")
+        return encoding.encode_address(bytes(24) + app.to_bytes(8, "big"))
+
     def resolve(self, v):
         if isinstance(v, dict) and set(v) == {"__dep__"}:
-            raise NotImplementedError(
-                "constructor/runtime dependency contracts are not replayed by "
-                "the oracle lane yet (see README)")
+            return self.dep_address(v["__dep__"])
         if isinstance(v, dict) and set(v) == {"__addr__"}:
             return self.concrete_addr(v["__addr__"])
         if isinstance(v, dict) and set(v) == {"__b__"}:
@@ -266,6 +331,15 @@ class Identities:
             inv[(bytes(12) + a.owner).hex()] = symbol(i)
         for _a, i in self.reg["args"].items():
             inv[(bytes(12) + arg_content20(i)).hex()] = symbol(i)
+        for a, i in (self.reg.get("deps") or {}).items():
+            app = self.dep_apps.get(a.lower())
+            if app is None:
+                continue
+            # Both value forms of a dependency app, as avm_leg folds them: the
+            # contract value the caller passes around, and the ESCROW address a
+            # stand-in's `address(this)` answers from assembly.
+            inv[(bytes(24) + app.to_bytes(8, "big")).hex()] = symbol(f"D{i}")
+            inv[app_address_hex(app)] = symbol(f"D{i}")
         # A Solidity `address` keeps 20 bytes: fold the truncated forms too.
         for k in list(inv):
             inv.setdefault((bytes(12) + bytes.fromhex(k)[-20:]).hex(), inv[k])
@@ -278,6 +352,10 @@ class Identities:
             syms[symbol(i)] = bytes(12) + a.owner
         for _ad, i in self.reg["args"].items():
             syms[symbol(i)] = bytes(12) + arg_content20(i)
+        for a, i in (self.reg.get("deps") or {}).items():
+            app = self.dep_apps.get(a.lower())
+            if app is not None:
+                syms[symbol(f"D{i}")] = bytes(24) + app.to_bytes(8, "big")
         return syms
 
 
@@ -286,8 +364,10 @@ class OracleLane:
     one oracle ledger, with the committed state carried between requests."""
 
     def __init__(self, oracle: Oracle, adapter, approval_teal: str, clear_teal: str,
-                 approval_bin: bytes, clear_bin: bytes, creator_hex: str):
+                 approval_bin: bytes, clear_bin: bytes, creator_hex: str,
+                 schema: tuple[int, int] = (SCHEMA_PAD, SCHEMA_PAD)):
         self.oracle, self.adapter = oracle, adapter
+        self.global_uints, self.global_bytes = schema
         self.approval, self.clear = approval_teal, clear_teal
         self.approval_bin, self.clear_bin = approval_bin, clear_bin
         total = len(approval_bin) + len(clear_bin)
@@ -312,7 +392,14 @@ class OracleLane:
         self.fund(creator_hex)
         self.fund(self.app_addr)
         self.round = ROUND0
-        self.memo: list[str] = []
+        self.memo: list[tuple[int, str]] = []
+        # Dependency apps this lane must keep REACHABLE (an inner `appl` needs
+        # its callee among the group's application resources) and the owner of
+        # every box the dependencies brought with them — the oracle's box panic
+        # names the box, never its app.
+        self.dep_apps: list[int] = []
+        self.box_owner: dict[str, int] = {}
+        self.last_accept: dict = {}
         self.stats = {"calls": 0, "attempts": 0, "discoveries": 0,
                       "amplified": 0, "seed_drops": 0}
 
@@ -323,10 +410,11 @@ class OracleLane:
 
     def _app_fields(self) -> dict:
         # In whole-group mode the current app's params (schema, pages) come
-        # from the request itself on EVERY call; framework.deploy's schema is
-        # 16/16 globals, no locals.
+        # from the request itself on EVERY call, so they must match what
+        # create() registered — no locals, like framework.deploy.
         return {"execute_group": True,
-                "global_num_uint": 16, "global_num_byteslice": 16,
+                "global_num_uint": self.global_uints,
+                "global_num_byteslice": self.global_bytes,
                 "local_num_uint": 0, "local_num_byteslice": 0,
                 "extra_program_pages": self.extra_pages,
                 "clear_source": self.clear}
@@ -341,17 +429,24 @@ class OracleLane:
             **self._app_fields())
         for key in ("accounts", "foreign_assets", "foreign_apps", "foreign_box_refs"):
             req.pop(key, None)
+        # puya-sol defers the constructor body to __postInit, so the create txn
+        # normally calls nothing — but it has spare reference slots, and a
+        # dependency named there costs nothing when it goes unused.
+        if self.dep_apps:
+            req["foreign_apps"] = self.dep_apps[:MAX_TXN_REFS - self.write_budget_refs]
         resp = self.oracle.run(req)
         if resp.get("result") != "ACCEPT":
             raise RuntimeError(f"create txn failed: {resp.get('error')}")
         self.state.carry(resp)
+        self.last_accept = resp
         # Keep the app registered for later requests (the oracle omits its own
         # app from app_params_after; whole-group calls re-derive it anyway).
         self.state.register_application({
             "app": ORACLE_APP, "creator": self.creator,
             "approval_program": self.approval_bin.hex(),
             "clear_state_program": self.clear_bin.hex(),
-            "global_num_uint": 16, "global_num_byteslice": 16,
+            "global_num_uint": self.global_uints,
+            "global_num_byteslice": self.global_bytes,
             "extra_program_pages": self.extra_pages})
         self.round += 1
 
@@ -372,43 +467,77 @@ class OracleLane:
             out.append(item)
         return out
 
-    def build(self, sender: str, app_args_hex: list[str], refs: list[str], *,
-              ts: int, value: int = 0, amplify: bool = False) -> dict | None:
-        """The 16-txn group request, or None when `refs` overflow its slots.
+    def build(self, sender: str, app_args_hex: list[str],
+              refs: list[tuple[int, str]], *, ts: int, value: int = 0,
+              amplify: bool = False, extra: list[dict] = ()) -> dict | None:
+        """The 16-txn group request, or None when the references overflow it.
 
         Shape mirrors framework.call's pooled retry: helpers FIRST (pooled
         budget accrues before the call runs), the msg.value payment immediately
-        before the app call, the app call last. Named box refs fill the app
-        call's 8 slots, then the helpers' (as foreign refs to app 9001); every
-        remaining slot is an empty ref, +2048 bytes of I/O budget each.
+        before the app call, the app call last. `extra` siblings (dependency
+        tape seeks) replace helper slots, so the group stays inside the 16-txn
+        limit and their effect commits — or rolls back — with the call itself.
+
+        A reference is (app, box name), app 0 meaning the contract under test.
+        Its own boxes fill the call txn's 8 compact slots first; everything
+        else rides on the helpers as foreign refs, each distinct owner costing
+        one slot on top. Dependency apps are named as resources whether or not
+        they own a box, because an inner `appl` needs its callee available.
+        Every remaining slot is an empty ref, +2048 bytes of I/O budget each.
         """
-        count = POOL - (1 if value else 0)
-        sibs = self._siblings(sender, count, amplify)
+        extra = list(extra or ())
+        count = POOL - (1 if value else 0) - len(extra)
+        if count < 0:
+            return None
+        helpers = self._siblings(sender, count, amplify)
+        sibs = helpers + extra
         if value:
             sibs.append({"type_enum": 1,
                          "u64": {"Amount": int(value), "Fee": MIN_FEE},
                          "addr": {"Sender": sender, "Receiver": self.app_addr}})
         depth = OPUP_DEPTH if amplify else 0
-        fee = (MIN_FEE * (count + 2) + EXTRA_FEE + MIN_FEE * count * depth
+        fee = (MIN_FEE * (len(sibs) + 1) + EXTRA_FEE + MIN_FEE * count * depth
                + INNER_FEE_HEADROOM)
-        pending = list(refs)
-        main_refs, pending = pending[:MAX_TXN_REFS], pending[MAX_TXN_REFS:]
+        main_refs: list[str] = []
+        pending: list[tuple[int, str]] = []
+        for app, key in refs:
+            app = ORACLE_APP if app in (0, ORACLE_APP) else app
+            if app == ORACLE_APP and len(main_refs) < MAX_TXN_REFS:
+                main_refs.append(key)
+            else:
+                pending.append((app, key))
+        # Group a dependency's boxes together: one owner slot then its refs.
+        pending.sort(key=lambda ref: ref[0])
+        declare = list(self.dep_apps)
         for item in sibs:
             if item["type_enum"] != 6:
                 continue
             apps = list(item.get("foreign_apps") or [])
             spare = MAX_TXN_REFS - len(apps)
-            take = min(len(pending), spare - 1) if pending else 0
-            if take > 0:
-                chunk, pending = pending[:take], pending[take:]
-                apps.append(ORACLE_APP)
-                item["foreign_box_refs"] = [{"app": ORACLE_APP, "key": key}
-                                            for key in chunk]
-                spare -= 1 + take
+            box_refs = []
+            while pending:
+                app, key = pending[0]
+                need = (0 if app in apps else 1) + 1
+                if need > spare:
+                    break
+                if app not in apps:
+                    apps.append(app)
+                    spare -= 1
+                box_refs.append({"app": app, "key": key})
+                spare -= 1
+                pending.pop(0)
+            while declare and spare:
+                app = declare.pop(0)
+                if app in apps:
+                    continue
+                apps.append(app)
+                spare -= 1
+            if box_refs:
+                item["foreign_box_refs"] = box_refs
             if apps:
                 item["foreign_apps"] = apps
             item["box_refs"] = [""] * spare
-        if pending:
+        if pending or declare:
             return None
         self.state.latest_timestamp = int(ts)
         req = self.state.request(
@@ -421,20 +550,38 @@ class OracleLane:
         req["box_refs"] = main_refs + [""] * (MAX_TXN_REFS - len(main_refs))
         return req
 
+    def _attribute(self, key: str, found: list[tuple[int, str]]):
+        """Which app owns the box the oracle just refused?
+
+        Its panic names the box, never its owner. A box a dependency brought in
+        with it is known outright; anything else is tried against the contract
+        under test first and then each dependency in turn — one extra attempt
+        per candidate, which is what makes a box a dependency CREATES during
+        the call (or a name both apps happen to use) still resolve.
+        """
+        hinted = self.box_owner.get(key)
+        candidates = ([hinted] if hinted is not None else []) + [ORACLE_APP]
+        candidates += [app for app in self.dep_apps if app != hinted]
+        for app in candidates:
+            if (app, key) not in found:
+                return (app, key)
+        return None
+
     def call(self, sender: str, app_args_hex: list[str], *, ts: int,
-             value: int = 0, commit: bool = True) -> tuple[bool, dict, dict]:
+             value: int = 0, commit: bool = True,
+             extra: list[dict] = ()) -> tuple[bool, dict, dict]:
         """One app call with resource discovery; commits on ACCEPT when asked."""
         self.fund(sender)
         self.stats["calls"] += 1
         seeds = list(self.memo)
-        found: list[str] = []
+        found: list[tuple[int, str]] = []
         amplify = False
         resp: dict = {}
         attempt = 0
         for attempt in range(1, RETRY_CAP + 1):
             refs = found + [s for s in seeds if s not in found]
             req = self.build(sender, app_args_hex, refs, ts=ts, value=value,
-                             amplify=amplify)
+                             amplify=amplify, extra=extra)
             if req is None:
                 if seeds:
                     seeds = []
@@ -450,9 +597,9 @@ class OracleLane:
             err = str(resp.get("error") or "")
             m = INVALID_BOX.search(err)
             if m:
-                name = m.group(1).lower()
-                if name and name not in found:
-                    found.append(name)
+                ref = self._attribute(m.group(1).lower(), found) if m.group(1) else None
+                if ref is not None:
+                    found.append(ref)
                     self.stats["discoveries"] += 1
                     continue
                 break
@@ -472,16 +619,18 @@ class OracleLane:
             break
         ok = resp.get("result") == "ACCEPT"
         if ok:
-            for name in reversed(found):
-                if name in self.memo:
-                    self.memo.remove(name)
-                self.memo.insert(0, name)
+            for ref in reversed(found):
+                if ref in self.memo:
+                    self.memo.remove(ref)
+                self.memo.insert(0, ref)
             del self.memo[MEMO_CAP:]
             if commit:
                 self.state.carry(resp)
+                self.last_accept = resp
         return ok, resp, {"attempts": attempt, "refs": len(found), "amplified": amplify}
 
-    def read_many(self, items: list[tuple[str, list[str]]], *, ts: int) -> list[dict]:
+    def read_many(self, items: list[tuple[str, list[str]]], *, ts: int,
+                  extra: list[dict] = ()) -> list[dict]:
         """Uncommitted reads, batched per oracle process; a read that trips a
         resource/budget limit is re-run alone through the discovery loop."""
         out: list[dict] = []
@@ -490,14 +639,16 @@ class OracleLane:
             reqs = []
             for sender, app_args in chunk:
                 self.fund(sender)
-                reqs.append(self.build(sender, app_args, list(self.memo), ts=ts))
+                reqs.append(self.build(sender, app_args, list(self.memo), ts=ts,
+                                       extra=extra))
             self.stats["attempts"] += len(reqs)
             for (sender, app_args), resp in zip(chunk, self.oracle.run_batch(reqs)):
                 err = str(resp.get("error") or "")
                 if (resp.get("result") != "ACCEPT"
                         and (INVALID_BOX.search(err) or IO_BUDGET.search(err)
                              or _is_budget_error(err))):
-                    _ok, resp, _info = self.call(sender, app_args, ts=ts, commit=False)
+                    _ok, resp, _info = self.call(sender, app_args, ts=ts,
+                                                 commit=False, extra=extra)
                 out.append(resp)
         return out
 
@@ -516,6 +667,254 @@ class OracleLane:
         return OracleBoxSource(self.state.boxes)
 
 
+# ── dependency contracts ─────────────────────────────────────────────────
+TAPE_LOAD_SIG = "__load(bytes32[],uint256[],bytes32[])"
+TAPE_SEEK_SIG = "__seek(uint256,uint256)"
+
+
+class DepApp:
+    """One recorded dependency, deployed as its own app in the oracle ledger.
+
+    It is compiled and initialised in a scratch ledger where it IS app 9001 —
+    the only id the oracle creates — and then imported into the ledger of the
+    contract under test under a stable id of its own. puya-sol's cross-contract
+    convention does the rest: the address value bzero(24) ‖ itob(id) the main
+    contract holds becomes an inner `appl` to exactly that app.
+    """
+
+    def __init__(self, addr: str, name: str, app_id: int, lane: OracleLane,
+                 app_spec):
+        self.addr, self.name, self.app_id = addr.lower(), name, app_id
+        self.lane, self.app_spec = lane, app_spec
+
+    def export(self, state) -> None:
+        """Publish program, schema and committed state into the main ledger."""
+        state.register_application({
+            "app": self.app_id, "creator": self.lane.creator,
+            "approval_program": self.lane.approval_bin.hex(),
+            "clear_state_program": self.lane.clear_bin.hex(),
+            "global_num_uint": self.lane.global_uints,
+            "global_num_byteslice": self.lane.global_bytes,
+            "extra_program_pages": self.lane.extra_pages})
+        state.absorb_current_as(self.lane.last_accept, self.app_id)
+        escrow = app_address_hex(self.app_id)
+        state.balances[(escrow,)] = {"account": escrow, "amount": FUNDING}
+
+    def box_keys(self) -> list[str]:
+        return [str(item["key"]).lower() for item in self.lane.state.boxes]
+
+    def method(self, signature: str, arity: int):
+        """The dependency's ARC-4 method for a Solidity signature, or None.
+
+        Arity is checked because _resolve_method falls back to the only method
+        of that NAME: a stand-in still carrying the pre-selector answer tape has
+        a two-argument __load, and silently encoding three arguments into it
+        would load garbage instead of failing.
+        """
+        method = _resolve_method(self.app_spec, signature)
+        return method if method is not None and len(method.args) == arity else None
+
+    def seek_txn(self, sender: str, start: int, end: int) -> dict:
+        """A `__seek(start,end)` sibling for one replayed call's own group."""
+        return {"type_enum": 6,
+                "u64": {"ApplicationID": self.app_id, "Fee": 0},
+                "addr": {"Sender": sender},
+                "app_args": arc4_app_args(self.method(TAPE_SEEK_SIG, 2),
+                                          [int(start), int(end)])}
+
+
+def _dep_lane(oracle: Oracle, adapter, h, sol: Path, name: str | None,
+              compile_args: list[str], ids: "Identities", ctor_markers: list,
+              ts: int) -> tuple[OracleLane, str, object]:
+    """Compile one dependency source and run its create + __postInit."""
+    artifacts = h.compile(sol, extra_args=compile_args)
+    picked = artifacts.last_deployable(name)
+    if picked is None:
+        raise RuntimeError(f"no deployable contract compiled from {sol}")
+    artifact = artifacts.by_contract[picked]
+    app_spec = _load_arc56(artifact["arc56"])
+    directory = artifact["approval_teal"].parent
+    lane = OracleLane(
+        oracle, adapter, artifact["approval_teal"].read_text(),
+        artifact["clear_teal"].read_text(),
+        (directory / f"{picked}.approval.bin").read_bytes(),
+        (directory / f"{picked}.clear.bin").read_bytes(), ids.creator_hex,
+        schema=global_schema_for(app_spec, f"dependency {picked}"))
+    ctor_values = [ids.resolve(m) for m in (ctor_markers or [])] or None
+    create_args = ([a.hex() for a in _encode_ctor_args(ctor_values, app_spec, artifact)]
+                   if ctor_values else [])
+    lane.create(create_args, ts=ts)
+    post_args = postinit_app_args(app_spec, ctor_values)
+    if post_args is not None:
+        ok, resp, _info = lane.call(ids.creator_hex, post_args, ts=ts)
+        if not ok:
+            raise RuntimeError(
+                f"{picked} __postInit failed: {str(resp.get('error'))[:200]}")
+    return lane, picked, app_spec
+
+
+def deploy_dependencies(oracle: Oracle, adapter, h, case_dir: Path, meta: dict,
+                        mode_args, xchain_args, ids: "Identities",
+                        ts: int) -> list[DepApp]:
+    """Every recorded dependency, children-first (the EVM leg's own order).
+
+    avm_leg's LocalNet loop without a chain, including its build-flag rule: a
+    dependency that must ROUTE a call is compiled with its CALLER's wire ABI,
+    while a TAPE-DRIVEN stand-in keeps the ARC-4 profile — the only one that
+    still exposes __load/__seek — and answers from its fallback either way.
+    Unlike that loop this one REFUSES a dependency it cannot build: a missing
+    stand-in silently turns every call into it against an empty account.
+    """
+    specs = meta.get("dep_ctors") or []
+    if not specs:
+        return []
+    tape_path = case_dir / "dep_tape.json"
+    taped = {a.lower() for a in
+             (((load_json(tape_path) or {}).get("tapes") or {})
+              if tape_path.exists() else {})}
+    for spec in specs:
+        ids.dep_apps.setdefault(spec["addr"].lower(),
+                                DEP_APP_BASE + len(ids.dep_apps))
+    deps: list[DepApp] = []
+    seen: set[str] = set()
+    for spec in specs:
+        addr = spec["addr"].lower()
+        if addr in seen:
+            continue
+        seen.add(addr)
+        directory = case_dir / spec["dir"]
+        compile_args = (list(mode_args or []) if addr in taped
+                        else list(mode_args or []) + ["--contract-abi", "evm"]
+                        + list(xchain_args))
+        try:
+            lane, picked, app_spec = _dep_lane(
+                oracle, adapter, h, directory / "prepared.sol", spec.get("name"),
+                compile_args, ids, spec.get("args"), ts)
+        except Exception as exc:
+            fallback = directory / "stub_fallback.sol"
+            if not fallback.exists():
+                raise RuntimeError(
+                    f"dependency {spec.get('name')} ({addr}) could not be "
+                    f"deployed on the oracle lane: {str(exc)[:300]}") from exc
+            lane, picked, app_spec = _dep_lane(
+                oracle, adapter, h, fallback, None, compile_args, ids, None, ts)
+            print(f"[avm] dep {spec.get('name')}: generic stand-in deployed "
+                  f"instead ({str(exc)[:100]})")
+        dep = DepApp(addr, picked, ids.dep_apps[addr], lane, app_spec)
+        deps.append(dep)
+        print(f"[avm] dep {picked} app_id={dep.app_id} @ {addr[:10]}…")
+    return deps
+
+
+def dep_address_map(reg: dict, calls: list, ids: "Identities",
+                    deps: list[DepApp]) -> dict[bytes, bytes]:
+    """avm_leg's `_m20`: historical 20-byte address → this leg's 32-byte word.
+
+    A recorded answer is ABI-encoded, so an address inside it has to be
+    translated the same way a call argument is, or a `msg.sender == owner`
+    guard fed from the tape can never pass.
+    """
+    mapping: dict[bytes, bytes] = {}
+    senders = {(c.get("sender") or {}).get("__addr__") for c in calls}
+    for addr, i in (reg.get("args") or {}).items():
+        acct = ids.accts.get(i) if i in senders else None
+        mapping[bytes.fromhex(addr[2:])] = (
+            bytes(12) + acct.owner if acct is not None
+            else bytes(12) + arg_content20(i))
+    for addr, i in (reg.get("senders") or {}).items():
+        if i in ids.accts:
+            mapping[bytes.fromhex(addr[2:])] = bytes(12) + ids.accts[i].owner
+    if reg.get("creator"):
+        mapping[bytes.fromhex(reg["creator"][2:])] = ids.creator32
+    for dep in deps:
+        mapping[bytes.fromhex(dep.addr[2:])] = (
+            bytes(24) + dep.app_id.to_bytes(8, "big"))
+    return mapping
+
+
+def tape_skips(calls: list, meta: dict, ext_skips: set) -> set:
+    """Transactions whose recorded answers this run will never need.
+
+    A stand-in holds its tape in one puya-sol dynamic array, and an array is
+    one box: 32 KiB, about a thousand words. morpho_alloc records 1629 words
+    for a single dependency and 197 of its 200 transactions are skipped, so
+    loading the whole tape overflowed the box before a single call replayed.
+    Answers are addressed per transaction (`__seek(start,end)`), so dropping a
+    skipped transaction's answers only renumbers what stays — every replayed
+    transaction still reads exactly the entries it recorded. A parameterized
+    probe replays a recorded read, so ITS transaction is never dropped even
+    when the replay skipped it.
+    """
+    keep = {int(probe["source_txn"]) for probe in (meta.get("probes") or [])
+            if probe.get("source_txn") is not None}
+    skipped = {c["i"] for c in calls if c.get("skip")} | {int(i) for i in ext_skips}
+    return skipped - keep
+
+
+def load_dep_tapes(case_dir: Path, reg: dict, calls: list, meta: dict,
+                   ext_skips: set, ids: "Identities", deps: list[DepApp],
+                   ts: int) -> dict:
+    """Load each recorded answer tape into its stand-in; return the seek plan.
+
+    TWO-PHASE, exactly as on LocalNet: every stand-in exists by now, so the
+    answers can be translated into this leg's address space before they are
+    written.
+    """
+    plans = build_dep_tape_plans(case_dir, tape_skips(calls, meta, ext_skips),
+                                 dep_address_map(reg, calls, ids, deps),
+                                 calls=calls)
+    seek: dict[str, tuple[DepApp, dict]] = {}
+    for addr, plan in plans.items():
+        dep = next((d for d in deps if d.addr == addr), None)
+        if dep is None or not plan["answers"]:
+            continue
+        load = dep.method(TAPE_LOAD_SIG, 3)
+        if load is None or dep.method(TAPE_SEEK_SIG, 2) is None:
+            raise NotImplementedError(
+                f"dependency stand-in {dep.name} ({addr}) has no "
+                f"{TAPE_LOAD_SIG}/{TAPE_SEEK_SIG} — it predates the "
+                f"selector-gated, transaction-bounded answer tape both legs "
+                f"now use, and serving its recorded answers ungated would "
+                f"replay something the EVM leg never did. Regenerate the "
+                f"stand-ins with `python3 fetch.py --refresh-stubs "
+                f"{case_dir.name}` (avm_leg.py requires the same tape).")
+        for words, lens, selectors in tape_script_chunks(plan["answers"],
+                                                         plan["selectors"]):
+            ok, resp, _info = dep.lane.call(
+                ids.creator_hex, arc4_app_args(load, [words, lens, selectors]),
+                ts=ts)
+            if not ok:
+                error = str(resp.get("error") or "")
+                if "box size too large" in error:
+                    words_total = sum((len(a) + 31) // 32 for a in plan["answers"])
+                    raise NotImplementedError(
+                        f"dependency {dep.name} ({addr}) records "
+                        f"{len(plan['answers'])} answers / {words_total} words, "
+                        f"and a stand-in keeps them in ONE dynamic array — "
+                        f"which is one 32 KiB box on the AVM (a ~1000-word "
+                        f"ceiling, the same on LocalNet). Replay a shorter "
+                        f"window, or split the tape store: {error[:120]}")
+                raise RuntimeError(
+                    f"dependency {dep.name} tape load failed: {error[:200]}")
+        print(f"[avm] dep tape loaded: {len(plan['answers'])} answer(s) "
+              f"@ {addr[:10]}…")
+        seek[addr] = (dep, plan["bounds"])
+    return seek
+
+
+def dep_seek_txns(seek: dict, active: set, index: int, sender: str) -> tuple[list, set]:
+    """The `__seek` siblings for one replayed transaction, and the new active
+    set — avm_leg's rule: arm the tapes this transaction bounds, and CLEAR the
+    ones the previous transaction armed so a stale range cannot serve."""
+    upcoming = {addr for addr, (_dep, bounds) in seek.items() if index in bounds}
+    txns = []
+    for addr in sorted(active | upcoming):
+        dep, bounds = seek[addr]
+        start, end = bounds.get(index, (0, 0))
+        txns.append(dep.seek_txn(sender, start, end))
+    return txns, upcoming
+
+
 def verify_xchain_template(oracle: Oracle, template: bytes) -> None:
     """The hand assembly must hash to what the canonical assembler produces —
     otherwise A(E) (and the compile-cache key) would silently differ from the
@@ -528,20 +927,19 @@ def verify_xchain_template(oracle: Oracle, template: bytes) -> None:
             f"vs hand-assembled {expect}")
 
 
-def refuse_unsupported(case: dict, meta: dict, opts: dict, case_dir: Path) -> None:
+def refuse_unsupported(meta: dict, opts: dict, case_dir: Path) -> None:
     problems = []
-    if meta.get("dep_ctors"):
-        problems.append("constructor dependencies (dep_ctors)")
-    if (case_dir / "dep_tape.json").exists():
-        problems.append("dependency answer tapes (dep_tape.json)")
+    if os.environ.get("CHD_ORACLE_NO_DEPS") and (
+            meta.get("dep_ctors") or (case_dir / "dep_tape.json").exists()):
+        # Escape hatch for a sweep that wants the pre-dependency behaviour
+        # back (dependency replay costs a compile and a ledger per stand-in).
+        problems.append("dependency contracts (CHD_ORACLE_NO_DEPS is set)")
     if opts.get("split_config"):
         problems.append("--split-config code pages")
     if opts.get("force_delegate"):
         problems.append("--force-delegate pages")
     if opts.get("child_box"):
         problems.append("--child-programs-via-box")
-    if (case.get("proxy") or {}).get("initializer"):
-        problems.append("proxy-runtime deploys (skip_postinit)")
     if problems:
         raise NotImplementedError(
             "oracle lane does not replay: " + "; ".join(problems)
@@ -616,7 +1014,7 @@ def main(argv=None) -> None:
     cj = load_json(case_dir / "calls.json")
     meta, calls = cj["meta"], cj["calls"]
     ext_skips = set(int(k) for k in (opts.get("skips") or []))
-    refuse_unsupported(case, meta, opts, case_dir)
+    refuse_unsupported(meta, opts, case_dir)
 
     mut = {}
     for e in case["abi"]:
@@ -644,6 +1042,13 @@ def main(argv=None) -> None:
     mode_args = mode_compile_args(opts)
     xchain_args = xchain_compile_args(template)
     main_args = main_compile_args(case_dir, opts, mode_args, xchain_args)
+
+    # ── dependencies FIRST: the contract's own constructor calls them ─────
+    deps = deploy_dependencies(oracle, adapter, h, case_dir, meta, mode_args,
+                               xchain_args, ids, deployment_time)
+    dep_seek = load_dep_tapes(case_dir, reg, calls, meta, ext_skips, ids, deps,
+                              deployment_time)
+
     artifacts = compile_main_contract(h, case_dir, case, main_args)
     if any("__Helper" in n for n in artifacts.by_contract):
         raise NotImplementedError("split helper artifacts are not replayed by the oracle lane")
@@ -661,21 +1066,41 @@ def main(argv=None) -> None:
     clear_bin = (main_artifact["clear_teal"].parent / f"{name}.clear.bin").read_bytes()
 
     lane = OracleLane(oracle, adapter, approval_teal, clear_teal, approval_bin,
-                      clear_bin, ids.creator_hex)
+                      clear_bin, ids.creator_hex,
+                      schema=global_schema_for(app_spec, name))
+    for dep in deps:
+        dep.export(lane.state)
+        lane.dep_apps.append(dep.app_id)
+        # Boxes a dependency arrives with are attributable outright when the
+        # oracle later refuses one by name.
+        for key in dep.box_keys():
+            lane.box_owner[key] = dep.app_id
 
     # ── deploy: create txn + __postInit, at the deployment instant ────────
     ctor_values = [ids.resolve(m) for m in meta["ctor_args"]] or None
     create_args = ([a.hex() for a in _encode_ctor_args(ctor_values, app_spec, main_artifact)]
                    if ctor_values else [])
+    # PROXY-RUNTIME replay (framework.deploy's skip_postinit): an implementation
+    # behind a proxy never ran its constructor against proxy storage — the
+    # replay's own `initialize(...)` call does that work — so the deferred
+    # constructor stays unexecuted here. It must BE deferred: a constructor that
+    # wrote storage during AppCreate cannot be modelled this way.
+    proxy_runtime = bool((case.get("proxy") or {}).get("initializer"))
+    if proxy_runtime and not any(m.name == "__postInit" for m in app_spec.methods):
+        raise RuntimeError(
+            "proxy-runtime replay requires a deferred constructor; this "
+            "implementation executed constructor storage during AppCreate and "
+            "cannot be modelled safely")
     lane.create(create_args, ts=deployment_time)
-    post_args = postinit_app_args(app_spec, ctor_values)
+    post_args = None if proxy_runtime else postinit_app_args(app_spec, ctor_values)
     if post_args is not None:
         ok, resp, info = lane.call(ids.creator_hex, post_args, ts=deployment_time)
         if not ok:
             raise RuntimeError(f"__postInit failed: {str(resp.get('error'))[:300]}")
         lane.round += 1
     print(f"[avm] oracle: deployed {name} app_id={ORACLE_APP} "
-          f"({len(approval_bin)}B approval, {lane.extra_pages} extra pages)")
+          f"({len(approval_bin)}B approval, {lane.extra_pages} extra pages"
+          + (", deferred ctor left for the proxy initializer)" if proxy_runtime else ")"))
 
     # ── folding ───────────────────────────────────────────────────────────
     app_addr32 = bytes.fromhex(lane.app_addr)
@@ -756,6 +1181,7 @@ def main(argv=None) -> None:
     results, snapshots, platform_limits = {}, {}, {}
     snapshot_at = set(meta["snapshot_at"])
     block_ts, block_no = {}, {}
+    active_dep_tapes: set = set()
     current_ts = deployment_time
     for c in calls:
         i = c["i"]
@@ -771,10 +1197,15 @@ def main(argv=None) -> None:
             is_view = mut.get(sig, "") in ("view", "pure")
             sender_hex, claim = ids.sender((c.get("sender") or {}).get("__addr__"))
             value = int(c.get("value") or 0)
+            # Selector-bounded answer tapes: armed inside this call's OWN group,
+            # so a rejected call rolls the cursor back with it instead of
+            # leaving the next transaction reading from a consumed range.
+            seeks, active_dep_tapes = dep_seek_txns(
+                dep_seek, active_dep_tapes, i, ids.creator_hex)
             try:
                 ok, resp, info = lane.call(
                     sender_hex, evm_app_args(sig, args, claim), ts=current_ts,
-                    value=value, commit=not is_view)
+                    value=value, commit=not is_view, extra=seeks)
                 if not ok:
                     reason = str(resp.get("error") or "")[:160 if is_view else 200]
                     results[i] = {"ok": False, "revert": reason}
@@ -821,7 +1252,23 @@ def main(argv=None) -> None:
             items.append(None)
             probe_results[str(len(items) - 1)] = {"ok": False, "revert": str(exc)[:160]}
     live = [(k, item) for k, item in enumerate(items) if item is not None]
-    responses = lane.read_many([item for _k, item in live], ts=probe_ts)
+    if dep_seek:
+        # A parameterized probe replays a recorded read, so its dependencies
+        # must answer from the same range that transaction used. One request
+        # each (the seek differs per probe), instead of the batched read.
+        responses = []
+        for k, item in live:
+            source = probes[k].get("source_txn")
+            if source is None:
+                responses.append(lane.read_many([item], ts=probe_ts)[0])
+                continue
+            seeks, active_dep_tapes = dep_seek_txns(
+                dep_seek, active_dep_tapes, int(source), ids.creator_hex)
+            _ok, resp, _info = lane.call(item[0], item[1], ts=probe_ts,
+                                         commit=False, extra=seeks)
+            responses.append(resp)
+    else:
+        responses = lane.read_many([item for _k, item in live], ts=probe_ts)
     for (k, _item), resp in zip(live, responses):
         probe = probes[k]
         try:
@@ -843,9 +1290,14 @@ def main(argv=None) -> None:
             meta.get("fns") or {}, snapshots, meta.get("getters") or [])
     else:
         storage = decode_global_state(lane.global_entries(), arc56, fold)
+        app_id_symbols = {ORACLE_APP: symbol("self")}
+        dep_index = {a.lower(): i for a, i in (reg.get("deps") or {}).items()}
+        for dep in deps:
+            if dep.addr in dep_index:
+                app_id_symbols[dep.app_id] = symbol(f"D{dep_index[dep.addr]}")
         maps = read_native_maps(
             box_values, arc56, slot_layout, syms, fold, calls,
-            meta.get("fns") or {}, {ORACLE_APP: symbol("self")}, snapshots,
+            meta.get("fns") or {}, app_id_symbols, snapshots,
             meta.get("getters") or [])
         storage["raw_slots"] = maps.pop("__raw_slots__", {})
         storage["coverage"] = maps.pop("__coverage__", {})
@@ -866,6 +1318,8 @@ def main(argv=None) -> None:
                           "requests": oracle.requests,
                           "processes": oracle.processes,
                           "seconds": round(oracle.seconds, 1),
+                          "deps": {dep.addr: dep.app_id for dep in deps},
+                          "dep_tapes": sorted(dep_seek),
                           **lane.stats}})
     n = len(results)
     n_ok = sum(1 for r in results.values() if r["ok"])
