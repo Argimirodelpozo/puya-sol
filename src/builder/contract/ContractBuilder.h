@@ -454,7 +454,6 @@ private:
 		std::vector<solidity::frontend::FunctionDefinition const*> const& _functions);
 	/// Function-pointer dispatch tables plus the recursive-Yul subroutine drain.
 	void emitFunctionPointerDispatch(awst::Contract& _contractNode);
-	void assignSplitterChunks(awst::Contract& _contractNode);
 	void scopeStorageDispatchCalls(
 		StorageRuntimePlan const& _storagePlan,
 		awst::Contract& _contractNode);

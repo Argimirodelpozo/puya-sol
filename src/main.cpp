@@ -504,11 +504,10 @@ std::optional<int> CompileRun::writeOptionsAndManifest()
 	// Write options.json (with template var declarations for child contracts).
 	auto const& childContracts = builder->artifacts().childContracts;
 	optionsPath = outputDir / "options.json";
-	std::map<std::string, int64_t> intTemplateVars;
 	puyasol::artifact::Digest optionsDigest;
 	if (!puyasol::json::OptionsWriter::write(
 		optionsPath, contractNames, opts.outputDir, opts.optimizationLevel,
-		opts.outputIr, childContracts, intTemplateVars, optionsDigest,
+		opts.outputIr, childContracts, optionsDigest,
 		artifactError))
 	{
 		logger.error("Cannot write options artifact: " + artifactError);

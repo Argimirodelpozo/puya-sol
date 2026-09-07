@@ -8,7 +8,6 @@
 #include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "awst/Visit.h"
-#include "builder/NatSpecTags.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -669,8 +668,6 @@ std::shared_ptr<awst::Contract> ContractBuilder::makeContractNode(
 	{
 		std::string const& doc = *_contract.documentation()->text();
 		contract->description = doc;
-		// uros splitter opt-in: `@custom:splitter <selector>` (e.g. "uros").
-		contract->splitter = natSpecTagValue(doc, "custom:splitter");
 	}
 
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
@@ -936,28 +933,6 @@ void ContractBuilder::emitFunctionPointerDispatch(awst::Contract& _contractNode)
 	}
 }
 
-void ContractBuilder::assignSplitterChunks(awst::Contract& _contractNode)
-{
-	// uros splitter: the backend requires EVERY ABI method to declare a chunk
-	// when the contract opts in. User methods get theirs from @custom:uros-chunk,
-	// but compiler-synthesized ABI methods (public-state-var getters, __postInit,
-	// __fallback, __receive) have none. Assign any still-unchunked ABI method to
-	// a default "shell" chunk so the backend can place them. No effect unless the
-	// contract set @custom:splitter, so non-split contracts are unchanged.
-	if (_contractNode.splitter.empty())
-		return;
-	for (auto& m: _contractNode.methods)
-	{
-		if (!m.arc4MethodConfig.has_value())
-			continue;
-		if (auto* abi = std::get_if<awst::ARC4ABIMethodConfig>(&*m.arc4MethodConfig))
-		{
-			if (abi->chunk.empty())
-				abi->chunk = "shell";
-		}
-	}
-}
-
 void ContractBuilder::scopeStorageDispatchCalls(
 	StorageRuntimePlan const& _storagePlan,
 	awst::Contract& _contractNode)
@@ -1128,7 +1103,6 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		buildStorageDispatch(_storagePlan, contract.get(), contractName);
 
 	emitFunctionPointerDispatch(*contract);
-	assignSplitterChunks(*contract);
 	scopeStorageDispatchCalls(_storagePlan, *contract);
 	warnEscapedErc1967Slots(*contract);
 	emitErc1967AdminGate(_contract, *contract);
