@@ -507,11 +507,9 @@ void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method,
 	_method.body->body.insert(_method.body->body.begin(), std::move(assertStmt));
 }
 
-std::shared_ptr<awst::Contract> ContractBuilder::build(
+std::string ContractBuilder::beginContract(
 	solidity::frontend::ContractDefinition const& _contract,
-	StorageRuntimePlan const& _storagePlan,
-	bool _emitEvmStorageRuntime
-)
+	StorageRuntimePlan const& _storagePlan)
 {
 	m_currentContract = &_contract;
 	m_storageMapper.beginContract(_storagePlan.solidityLayout, m_sourceFile);
@@ -524,7 +522,6 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		it != m_artifactNames.end())
 		contractName = it->second;
 	m_contractId = _contract.fullyQualifiedName();
-	auto const& contractId = m_contractId;
 
 	// Reset the generated-name counters: a contract's temp/subroutine names
 	// (`__mod_retval_N`, `f__mod0_N`, …) must depend only on its own content,
@@ -532,53 +529,63 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// multi-contract output; prerequisite for parallel per-contract compiles).
 	awst::NameGen::resetAll();
 
-	// Reset Yul subroutine sink (drained below).
+	// Reset Yul subroutine sink (drained by emitFunctionPointerDispatch).
 	m_typeMapper.artifacts().pendingYulSubroutines.clear();
 
 	// Collect transient state variables
 	m_transientStorage.collectVars(_contract, m_typeMapper);
-	// Note: setTransientStorage called after m_exprBuilder is created (below)
+	// Note: setTransientStorage called after m_exprBuilder is created (createFunctionContexts)
+	return contractName;
+}
 
+std::set<int64_t> ContractBuilder::collectOverloadedNames(
+	solidity::frontend::ContractDefinition const& _contract)
+{
 	// Overloaded names: true overloads (same name, different params) only;
 	// virtual overrides occupy the same slot and don't count.
 	// Must be computed before translator creation so ctor uses correct names.
 	m_overloadedNames.clear();
 	// Function ids that a more-derived contract overrides — computed here for
-	// overload naming, reused below to skip re-emitting overridden inherited
-	// functions.
+	// overload naming, reused by buildInheritedFunctions to skip re-emitting
+	// overridden inherited functions.
 	std::set<int64_t> overriddenIds;
+	forEachDefinedFunction(_contract, [&](auto const* func)
 	{
-		forEachDefinedFunction(_contract, [&](auto const* func)
-		{
-			if (func->isConstructor() || !func->isImplemented())
-				return;
-			// Mark all base functions of this override as overridden
-			for (auto const* baseFunc: func->annotation().baseFunctions)
-				overriddenIds.insert(baseFunc->id());
-		});
+		if (func->isConstructor() || !func->isImplemented())
+			return;
+		// Mark all base functions of this override as overridden
+		for (auto const* baseFunc: func->annotation().baseFunctions)
+			overriddenIds.insert(baseFunc->id());
+	});
 
-		std::unordered_map<std::string, int> nameCount;
-		forEachDefinedFunction(_contract, [&](auto const* func)
+	std::unordered_map<std::string, int> nameCount;
+	forEachDefinedFunction(_contract, [&](auto const* func)
+	{
+		if (func->isConstructor() || !func->isImplemented())
+			return;
+		// Skip functions that have been overridden by a more-derived version
+		if (overriddenIds.count(func->id()))
+			return;
+		nameCount[func->name()]++;
+	});
+	for (auto const& [name, count]: nameCount)
+	{
+		if (count > 1)
 		{
-			if (func->isConstructor() || !func->isImplemented())
-				return;
-			// Skip functions that have been overridden by a more-derived version
-			if (overriddenIds.count(func->id()))
-				return;
-			nameCount[func->name()]++;
-		});
-		for (auto const& [name, count]: nameCount)
-		{
-			if (count > 1)
-			{
-				m_overloadedNames.insert(name);
-				Logger::instance().debug("Overloaded function: " + name + " (" + std::to_string(count) + " versions)");
-			}
+			m_overloadedNames.insert(name);
+			Logger::instance().debug("Overloaded function: " + name + " (" + std::to_string(count) + " versions)");
 		}
 	}
+	return overriddenIds;
+}
 
+void ContractBuilder::createExpressionBuilder(
+	solidity::frontend::ContractDefinition const& _contract,
+	StorageRuntimePlan const& _storagePlan,
+	std::string const& _contractName)
+{
 	m_exprBuilder = std::make_unique<eb::ContractContext>(
-		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
+		m_typeMapper, m_storageMapper, m_sourceFile, _contractName,
 		m_overloadedNames, m_functionSymbols,
 		m_functionPointers
 	);
@@ -589,7 +596,12 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// and runtime-dispatch generation. It is always solc's exact logical layout;
 	// the selected backend binds declarations to physical AVM cells separately.
 	m_exprBuilder->storageLayout = &_storagePlan.solidityLayout;
+}
 
+std::vector<solidity::frontend::FunctionDefinition const*>
+ContractBuilder::collectReachableHostBoundFunctions(
+	solidity::frontend::ContractDefinition const& _contract) const
+{
 	// A host-bound free/library function only belongs in contracts whose solc
 	// call graph can reach it.  The unit-global list is deliberately
 	// conservative (it also closes over root callers), but copying that whole
@@ -604,10 +616,15 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				|| m_typeMapper.analysis().isFunctionReachable(
 					_contract.id(), function->id())))
 			reachableHostBoundFunctions.push_back(function);
+	return reachableHostBoundFunctions;
+}
 
+void ContractBuilder::registerHostBoundFunctionNames(
+	std::vector<solidity::frontend::FunctionDefinition const*> const& _functions)
+{
 	// Pre-populate host-bound function map before translation so the call
 	// resolver routes them as InstanceMethodTargets.
-	for (auto const* function: reachableHostBoundFunctions)
+	for (auto const* function: _functions)
 	{
 		if (!function) continue;
 		auto const* scope = function->annotation().contract;
@@ -616,7 +633,11 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			+ "_" + function->name() + "_" + std::to_string(function->id());
 		m_exprBuilder->internalizedFunctionNames[function->id()] = methodName;
 	}
+}
 
+void ContractBuilder::createFunctionContexts(
+	solidity::frontend::ContractDefinition const& _contract)
+{
 	// In-place emplace — TranslationContext caches a pointer to its own scopeState_;
 	// copy/move construction would dangle that pointer.
 	m_tr.emplace(*m_exprBuilder, m_typeMapper, m_sourceFile);
@@ -632,12 +653,17 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_storageBackend.emplace(m_storageMapper, m_exprBuilder->transientStorage);
 	m_exprBuilder->storageBackend = &*m_storageBackend;
 
-	eb::FunctionPointerBuilder::setCurrentCref(*m_exprBuilder, contractId);
+	eb::FunctionPointerBuilder::setCurrentCref(*m_exprBuilder, m_contractId);
+}
 
+std::shared_ptr<awst::Contract> ContractBuilder::makeContractNode(
+	solidity::frontend::ContractDefinition const& _contract,
+	std::string const& _contractName)
+{
 	auto contract = std::make_shared<awst::Contract>();
 	contract->sourceLocation = makeLoc(_contract.location());
-	contract->id = contractId;
-	contract->name = contractName;
+	contract->id = m_contractId;
+	contract->name = _contractName;
 
 	if (_contract.documentation())
 	{
@@ -665,7 +691,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	contract->reservedScratchSpace = m_typeMapper.profile().scratchLayout.reservedSlots();
 	if (m_transientStorage.addressShadowSize())
 		contract->reservedScratchSpace.push_back(m_transientStorage.addressShadowSlot());
+	return contract;
+}
 
+void ContractBuilder::buildPrograms(
+	solidity::frontend::ContractDefinition const& _contract,
+	std::string const& _contractName,
+	awst::Contract& _contractNode)
+{
 	collectSuperCallMetadata(_contract);
 
 	// Snapshot super targets so the ctor body (translated in buildApprovalProgram)
@@ -674,29 +707,63 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	// Approval and clear programs
 	m_postInitMethod.reset();
-	contract->approvalProgram = buildApprovalProgram(_contract, contractName);
-	contract->clearProgram = buildClearProgram(_contract, contractName);
+	_contractNode.approvalProgram = buildApprovalProgram(_contract, _contractName);
+	_contractNode.clearProgram = buildClearProgram(_contract, _contractName);
 
 	if (m_postInitMethod)
 	{
 		awst::AppStorageDefinition ctorPendingState;
 		ctorPendingState.memberName = "__ctor_pending";
-		ctorPendingState.sourceLocation = contract->approvalProgram.sourceLocation;
+		ctorPendingState.sourceLocation = _contractNode.approvalProgram.sourceLocation;
 		ctorPendingState.storageKind = awst::AppStorageKind::AppGlobal;
 		ctorPendingState.storageWType = awst::WType::uint64Type();
 		ctorPendingState.key = awst::makeUtf8BytesConstant(
 			"__ctor_pending", ctorPendingState.sourceLocation);
-		contract->appState.push_back(std::move(ctorPendingState));
+		_contractNode.appState.push_back(std::move(ctorPendingState));
 
-		contract->methods.push_back(std::move(*m_postInitMethod));
+		_contractNode.methods.push_back(std::move(*m_postInitMethod));
 		m_postInitMethod.reset();
 	}
 	for (auto& constructorSubroutine: m_modifierSubroutines)
-		contract->methods.push_back(std::move(constructorSubroutine));
+		_contractNode.methods.push_back(std::move(constructorSubroutine));
 	m_modifierSubroutines.clear();
+}
 
+std::string ContractBuilder::translationKey(
+	solidity::frontend::FunctionDefinition const& _func) const
+{
+	std::string key = _func.name();
+	if (m_overloadedNames.count(key))
+		key += "#" + std::to_string(_func.id());
+	return key;
+}
 
-	std::set<std::string> translatedFunctions;
+void ContractBuilder::appendMethodWithModifierSubs(
+	awst::Contract& _contractNode, awst::ContractMethod _method)
+{
+	_contractNode.methods.push_back(std::move(_method));
+	for (auto& sub: m_modifierSubroutines)
+		_contractNode.methods.push_back(std::move(sub));
+	m_modifierSubroutines.clear();
+}
+
+/// fallback/receive have empty Solidity names; give explicit memberName.
+static std::string specialMemberName(
+	solidity::frontend::FunctionDefinition const& _func)
+{
+	if (_func.isFallback())
+		return "__fallback";
+	if (_func.isReceive())
+		return "__receive";
+	return {};
+}
+
+void ContractBuilder::buildDefinedFunctions(
+	solidity::frontend::ContractDefinition const& _contract,
+	std::string const& _contractName,
+	awst::Contract& _contractNode,
+	std::set<std::string>& _translatedFunctions)
+{
 	for (auto const* func: _contract.definedFunctions())
 	{
 		if (func->isConstructor())
@@ -711,34 +778,25 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				makeLoc(func->location()));
 			continue;
 		}
-		std::string key = func->name();
-		if (m_overloadedNames.count(key))
-			key += "#" + std::to_string(func->id());
-		translatedFunctions.insert(key);
+		_translatedFunctions.insert(translationKey(*func));
 		clearSuperOverrides();
 		applySuperOverridesFor(func->id());
-		// fallback/receive have empty Solidity names; give explicit memberName.
-		std::string nameOverride;
-		if (func->isFallback())
-			nameOverride = "__fallback";
-		else if (func->isReceive())
-			nameOverride = "__receive";
-		auto method = buildFunction(*func, contractName, nameOverride);
-		contract->methods.push_back(std::move(method));
-		for (auto& sub: m_modifierSubroutines)
-			contract->methods.push_back(std::move(sub));
-		m_modifierSubroutines.clear();
+		appendMethodWithModifierSubs(_contractNode,
+			buildFunction(*func, _contractName, specialMemberName(*func)));
 	}
+}
 
-	// Getters before inherited functions so `uint256 public override test` beats
-	// an inherited `function test()`.
-	buildPublicStateVariableGetters(_contract, *contract, contractName, translatedFunctions);
-
-	// Inherited functions (after getters — same precedence rule).
+void ContractBuilder::buildInheritedFunctions(
+	solidity::frontend::ContractDefinition const& _contract,
+	std::string const& _contractName,
+	awst::Contract& _contractNode,
+	std::set<int64_t> const& _overriddenIds,
+	std::set<std::string>& _translatedFunctions)
+{
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
 	{
 		if (base == &_contract)
-			continue; // Already handled above
+			continue; // Already handled by buildDefinedFunctions
 
 		for (auto const* func: base->definedFunctions())
 		{
@@ -750,13 +808,11 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			// route. The name#id dedup key alone let it through (different id),
 			// producing a duplicate ABI method (stale base body) that routed
 			// on the same selector — safe only by MRO emission order.
-			if (overriddenIds.count(func->id()))
+			if (_overriddenIds.count(func->id()))
 				continue;
 
-			std::string key = func->name();
-			if (m_overloadedNames.count(key))
-				key += "#" + std::to_string(func->id());
-			if (translatedFunctions.count(key))
+			std::string key = translationKey(*func);
+			if (_translatedFunctions.count(key))
 				continue;
 
 			if (!func->isImplemented())
@@ -765,23 +821,20 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					*func, _contract, m_typeMapper.analysis()))
 				continue;
 
-			translatedFunctions.insert(key);
+			_translatedFunctions.insert(key);
 			// Set up MRO-correct super targets for this inherited function
 			clearSuperOverrides();
 			applySuperOverridesFor(func->id());
-			std::string nameOverride2;
-			if (func->isFallback())
-				nameOverride2 = "__fallback";
-			else if (func->isReceive())
-				nameOverride2 = "__receive";
-			auto method = buildFunction(*func, contractName, nameOverride2);
-			contract->methods.push_back(std::move(method));
-			for (auto& sub: m_modifierSubroutines)
-				contract->methods.push_back(std::move(sub));
-			m_modifierSubroutines.clear();
+			appendMethodWithModifierSubs(_contractNode,
+				buildFunction(*func, _contractName, specialMemberName(*func)));
 		}
 	}
+}
 
+void ContractBuilder::buildRouters(
+	solidity::frontend::ContractDefinition const& _contract,
+	awst::Contract& _contractNode)
+{
 	// --child-programs-via-box: this contract's bodies emitted box-loading
 	// `new C()` creates — append the deployer's provisioning method BEFORE
 	// dispatch so the residual ARC4 router (or plain ARC4 router) sees it.
@@ -789,13 +842,13 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	if (!m_typeMapper.artifacts().boxProvisionedChildren.empty())
 	{
 		m_typeMapper.artifacts().boxProvisionedChildren.clear();
-		contract->methods.push_back(makeProvisionChildProgMethod(
-			m_typeMapper, contract->id,
-			contract->approvalProgram.sourceLocation));
+		_contractNode.methods.push_back(makeProvisionChildProgMethod(
+			m_typeMapper, _contractNode.id,
+			_contractNode.approvalProgram.sourceLocation));
 	}
 
 	if (m_typeMapper.profile().contractAbi == ContractAbi::Evm)
-		emitEvmEntryDispatch(_contract, *contract);
+		emitEvmEntryDispatch(_contract, _contractNode);
 	else
 	{
 		// EVM compat arms FIRST (each self-guards on the [selector, body]
@@ -803,17 +856,17 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		// exit-early `return ARC4Router()` form for fallback-less contracts,
 		// which errs internally on unknown selectors and therefore must come
 		// last.
-		emitEvmCompatRoutes(_contract, *contract);
+		emitEvmCompatRoutes(_contract, _contractNode);
 		auto const* fallbackFunc = _contract.fallbackFunction();
 		auto const* receiveFunc = _contract.receiveFunction();
 		if (fallbackFunc && !fallbackFunc->isImplemented())
 			fallbackFunc = nullptr;
 		if (receiveFunc && !receiveFunc->isImplemented())
 			receiveFunc = nullptr;
-		if (contract->approvalProgram.body)
+		if (_contractNode.approvalProgram.body)
 			emitSelectorDispatch(
-				*contract->approvalProgram.body, fallbackFunc, receiveFunc,
-				contract->approvalProgram.sourceLocation);
+				*_contractNode.approvalProgram.body, fallbackFunc, receiveFunc,
+				_contractNode.approvalProgram.sourceLocation);
 	}
 
 	// Router-memoized struct decoders (EvmAbiDecode): the arms referenced
@@ -822,20 +875,22 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		auto& arts = m_typeMapper.artifacts();
 		for (auto& method: arts.pendingEvmDecodeMethods)
 		{
-			method.cref = contract->id;
-			contract->methods.push_back(std::move(method));
+			method.cref = _contractNode.id;
+			_contractNode.methods.push_back(std::move(method));
 		}
 		arts.pendingEvmDecodeMethods.clear();
 		arts.evmDecodeStructMethods.clear();
 	}
+}
 
-	// Emit MRO / fallback / explicit-base super subroutines now that all
-	// regular method bodies are translated.
-	emitSuperSubroutines(*contract, contractName);
-
+void ContractBuilder::buildHostBoundFunctions(
+	std::string const& _contractName,
+	awst::Contract& _contractNode,
+	std::vector<solidity::frontend::FunctionDefinition const*> const& _functions)
+{
 	// Emit functions whose lowering requires a concrete contract host. This
 	// includes function-pointer dispatch and default-layout storage assembly.
-	for (auto const* function: reachableHostBoundFunctions)
+	for (auto const* function: _functions)
 	{
 		if (!function || !function->isImplemented()) continue;
 		auto nameIt = m_exprBuilder->internalizedFunctionNames.find(function->id());
@@ -845,25 +900,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		// attach it through this contract's call graph.
 		m_typeMapper.artifacts().currentFreestandingFunctionId = function->id();
 		auto method = buildFunction(
-			*function, contractName, nameIt->second, /*asInternalCopy=*/true);
+			*function, _contractName, nameIt->second, /*asInternalCopy=*/true);
 		m_typeMapper.artifacts().currentFreestandingFunctionId = -1;
-		contract->methods.push_back(std::move(method));
-		for (auto& sub: m_modifierSubroutines)
-			contract->methods.push_back(std::move(sub));
-		m_modifierSubroutines.clear();
+		appendMethodWithModifierSubs(_contractNode, std::move(method));
 	}
+}
 
-	// Generate __storage_read/__storage_write dispatch subroutines
-	// for assembly sload/sstore support
-	// EVM-layout runtime helpers have unit-global SubroutineIDs and bodies that
-	// are specialized from unit-global profile flags. Emit them once for the
-	// whole unit; generating a copy per concrete contract inflated multi-contract
-	// AWST by hundreds of kilobytes and made duplicate-ID resolution ambiguous.
-	// Default-layout dispatch remains contract-specific and is always emitted.
-	if (_emitEvmStorageRuntime
-		|| (!m_typeMapper.profile().evmStorageLayout && _storagePlan.needsDispatch()))
-		buildStorageDispatch(_storagePlan, contract.get(), contractName);
-
+void ContractBuilder::emitFunctionPointerDispatch(awst::Contract& _contractNode)
+{
 	// Generate function pointer dispatch tables
 	{
 		// Set subroutine IDs for library/free function targets so dispatch
@@ -876,9 +920,9 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		loc.file = m_sourceFile;
 		auto& dispCtx = *m_exprBuilder;
 		auto dispatchMethods = eb::FunctionPointerBuilder::generateDispatchMethods(
-			dispCtx, cref, loc, &m_dispatchSubroutines, &contract->methods);
+			dispCtx, cref, loc, &m_dispatchSubroutines, &_contractNode.methods);
 		for (auto& m : dispatchMethods)
-			contract->methods.push_back(std::move(m));
+			_contractNode.methods.push_back(std::move(m));
 		eb::FunctionPointerBuilder::reset(*m_exprBuilder);
 	}
 
@@ -890,54 +934,81 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		for (auto& sub: yulSubs)
 			m_dispatchSubroutines.push_back(std::move(sub));
 	}
+}
 
+void ContractBuilder::assignSplitterChunks(awst::Contract& _contractNode)
+{
 	// uros splitter: the backend requires EVERY ABI method to declare a chunk
 	// when the contract opts in. User methods get theirs from @custom:uros-chunk,
 	// but compiler-synthesized ABI methods (public-state-var getters, __postInit,
 	// __fallback, __receive) have none. Assign any still-unchunked ABI method to
 	// a default "shell" chunk so the backend can place them. No effect unless the
 	// contract set @custom:splitter, so non-split contracts are unchanged.
-	if (!contract->splitter.empty())
+	if (_contractNode.splitter.empty())
+		return;
+	for (auto& m: _contractNode.methods)
 	{
-		for (auto& m: contract->methods)
+		if (!m.arc4MethodConfig.has_value())
+			continue;
+		if (auto* abi = std::get_if<awst::ARC4ABIMethodConfig>(&*m.arc4MethodConfig))
 		{
-			if (!m.arc4MethodConfig.has_value())
-				continue;
-			if (auto* abi = std::get_if<awst::ARC4ABIMethodConfig>(&*m.arc4MethodConfig))
-			{
-				if (abi->chunk.empty())
-					abi->chunk = "shell";
-			}
+			if (abi->chunk.empty())
+				abi->chunk = "shell";
 		}
 	}
+}
 
+void ContractBuilder::scopeStorageDispatchCalls(
+	StorageRuntimePlan const& _storagePlan,
+	awst::Contract& _contractNode)
+{
 	// Default-layout dispatch bodies are contract-specific because they route
 	// logical slots to this contract's named AVM cells. Scope every generated
 	// call to the same contract-specific root ID. EVM-layout runtime helpers are
 	// compilation-unit singletons and retain their stable global IDs.
-	if (!m_typeMapper.profile().evmStorageLayout && _storagePlan.needsDispatch())
-	{
-		auto const scopeStorageCall = [&](awst::Expression& expression) {
-			auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&expression);
-			if (!call)
-				return;
-			auto* id = std::get_if<awst::SubroutineID>(&call->target);
-			if (!id)
-				return;
-			if (id->target == "__puyasol___storage_read")
-				id->target = contractId + ".__storage_read";
-			else if (id->target == "__puyasol___storage_write")
-				id->target = contractId + ".__storage_write";
-		};
-		awst::visitExpressions(contract->approvalProgram, scopeStorageCall);
-		awst::visitExpressions(contract->clearProgram, scopeStorageCall);
-		for (auto& method: contract->methods)
-			awst::visitExpressions(method, scopeStorageCall);
-		for (auto& subroutine: m_dispatchSubroutines)
-			if (subroutine && subroutine->body)
-				awst::visitExpressions(*subroutine->body, scopeStorageCall);
-	}
+	if (m_typeMapper.profile().evmStorageLayout || !_storagePlan.needsDispatch())
+		return;
+	auto const& contractId = m_contractId;
+	auto const scopeStorageCall = [&](awst::Expression& expression) {
+		auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&expression);
+		if (!call)
+			return;
+		auto* id = std::get_if<awst::SubroutineID>(&call->target);
+		if (!id)
+			return;
+		if (id->target == "__puyasol___storage_read")
+			id->target = contractId + ".__storage_read";
+		else if (id->target == "__puyasol___storage_write")
+			id->target = contractId + ".__storage_write";
+	};
+	awst::visitExpressions(_contractNode.approvalProgram, scopeStorageCall);
+	awst::visitExpressions(_contractNode.clearProgram, scopeStorageCall);
+	for (auto& method: _contractNode.methods)
+		awst::visitExpressions(method, scopeStorageCall);
+	for (auto& subroutine: m_dispatchSubroutines)
+		if (subroutine && subroutine->body)
+			awst::visitExpressions(*subroutine->body, scopeStorageCall);
+}
 
+void ContractBuilder::warnEscapedErc1967Slots(awst::Contract const& _contractNode)
+{
+	// A 1967 slot constant SURVIVING translation means it escaped into
+	// runtime data flow (classify consumes direct sload/sstore uses; the
+	// let-fold emits no store) — the OZ StorageSlot shape. Warn: storage
+	// through a derived slot value splits from the native proxy model.
+	std::set<proxies::Erc1967Slot> warned;
+	proxies::Erc1967Lowering::warnEscapedSlotConstants(
+		_contractNode.approvalProgram, warned);
+	proxies::Erc1967Lowering::warnEscapedSlotConstants(
+		_contractNode.clearProgram, warned);
+	for (auto const& method: _contractNode.methods)
+		proxies::Erc1967Lowering::warnEscapedSlotConstants(method, warned);
+}
+
+void ContractBuilder::emitErc1967AdminGate(
+	solidity::frontend::ContractDefinition const& _contract,
+	awst::Contract& _contractNode)
+{
 	// EIP-1967 (proxy.md §1): if any admin-slot use was lowered while
 	// translating THIS contract's bodies — or inside a freestanding library/
 	// free function THIS contract's call graph reaches (OZ's ERC1967Utils is a
@@ -945,21 +1016,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// and the UpdateApplication method gating native updates on it. Snapshot-
 	// and-reset the direct flag so one contract's proxy machinery never leaks
 	// into the next unit member. Placed after ALL method translation (ordinary
-	// externals build in the loops above, not in buildApprovalProgram).
-	// A 1967 slot constant SURVIVING translation means it escaped into
-	// runtime data flow (classify consumes direct sload/sstore uses; the
-	// let-fold emits no store) — the OZ StorageSlot shape. Warn: storage
-	// through a derived slot value splits from the native proxy model.
-	{
-		std::set<proxies::Erc1967Slot> warned;
-		proxies::Erc1967Lowering::warnEscapedSlotConstants(
-			contract->approvalProgram, warned);
-		proxies::Erc1967Lowering::warnEscapedSlotConstants(
-			contract->clearProgram, warned);
-		for (auto const& method: contract->methods)
-			proxies::Erc1967Lowering::warnEscapedSlotConstants(method, warned);
-	}
-
+	// externals build in the function loops, not in buildApprovalProgram).
 	bool usesErc1967Admin = m_typeMapper.artifacts().usesErc1967Admin;
 	m_typeMapper.artifacts().usesErc1967Admin = false;
 	if (!usesErc1967Admin)
@@ -971,60 +1028,113 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			}
 	if (usesErc1967Admin)
 	{
-		auto loc = contract->approvalProgram.sourceLocation;
-		contract->appState.push_back(
+		auto loc = _contractNode.approvalProgram.sourceLocation;
+		_contractNode.appState.push_back(
 			proxies::Erc1967Lowering::adminStateDefinition(loc));
-		contract->methods.push_back(
-			proxies::Erc1967Lowering::updateGateMethod(contract->id, loc));
+		_contractNode.methods.push_back(
+			proxies::Erc1967Lowering::updateGateMethod(_contractNode.id, loc));
 	}
+}
 
+void ContractBuilder::emitUupsUpdateGate(
+	solidity::frontend::ContractDefinition const& _contract,
+	awst::Contract& _contractNode)
+{
 	// UUPS (proxy.md §3): a concrete contract inheriting OZ UUPSUpgradeable
 	// with an implemented _authorizeUpgrade gets the native update gate —
 	// the hook's translated method (modifiers inlined) is the permission
 	// check, run inside the UpdateApplication txn.
-	if (proxies::UupsLowering::isUupsImplementation(_contract))
+	if (!proxies::UupsLowering::isUupsImplementation(_contract))
+		return;
+	// The translated hook remains the chain entry: its wrapper invokes the
+	// outermost modifier subroutine and therefore preserves the complete
+	// permission check. Internal methods use their registered opaque symbol,
+	// so resolve the concrete override instead of looking for the Solidity
+	// source name (or coupling the gate to a generated `__mod0` name).
+	solidity::frontend::FunctionDefinition const* authorizeFunction = nullptr;
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
 	{
-		// The translated hook remains the chain entry: its wrapper invokes the
-		// outermost modifier subroutine and therefore preserves the complete
-		// permission check. Internal methods use their registered opaque symbol,
-		// so resolve the concrete override instead of looking for the Solidity
-		// source name (or coupling the gate to a generated `__mod0` name).
-		solidity::frontend::FunctionDefinition const* authorizeFunction = nullptr;
-		for (auto const* base: _contract.annotation().linearizedBaseContracts)
-		{
-			if (!base) continue;
-			for (auto const* function: base->definedFunctions())
-				if (function && function->name() == "_authorizeUpgrade"
-					&& function->isImplemented())
-				{
-					authorizeFunction = function;
-					break;
-				}
-			if (authorizeFunction) break;
-		}
-
-		awst::ContractMethod const* hook = nullptr;
-		if (authorizeFunction)
-		{
-			std::string hookName = authorizeFunction->name();
-			if (auto const* symbol =
-				m_functionSymbols.resolve(authorizeFunction->id()))
-				hookName = *symbol;
-			for (auto const& method: contract->methods)
-				if (method.memberName == hookName)
-				{
-					hook = &method;
-					break;
-				}
-		}
-		if (hook)
-			contract->methods.push_back(proxies::UupsLowering::updateGateMethod(
-				contract->id, *hook, contract->approvalProgram.sourceLocation));
+		if (!base) continue;
+		for (auto const* function: base->definedFunctions())
+			if (function && function->name() == "_authorizeUpgrade"
+				&& function->isImplemented())
+			{
+				authorizeFunction = function;
+				break;
+			}
+		if (authorizeFunction) break;
 	}
+
+	awst::ContractMethod const* hook = nullptr;
+	if (authorizeFunction)
+	{
+		std::string hookName = authorizeFunction->name();
+		if (auto const* symbol =
+			m_functionSymbols.resolve(authorizeFunction->id()))
+			hookName = *symbol;
+		for (auto const& method: _contractNode.methods)
+			if (method.memberName == hookName)
+			{
+				hook = &method;
+				break;
+			}
+	}
+	if (hook)
+		_contractNode.methods.push_back(proxies::UupsLowering::updateGateMethod(
+			_contractNode.id, *hook, _contractNode.approvalProgram.sourceLocation));
+}
+
+std::shared_ptr<awst::Contract> ContractBuilder::build(
+	solidity::frontend::ContractDefinition const& _contract,
+	StorageRuntimePlan const& _storagePlan,
+	bool _emitEvmStorageRuntime
+)
+{
+	std::string const contractName = beginContract(_contract, _storagePlan);
+	std::set<int64_t> const overriddenIds = collectOverloadedNames(_contract);
+	createExpressionBuilder(_contract, _storagePlan, contractName);
+	auto const reachableHostBoundFunctions =
+		collectReachableHostBoundFunctions(_contract);
+	registerHostBoundFunctionNames(reachableHostBoundFunctions);
+	createFunctionContexts(_contract);
+
+	auto contract = makeContractNode(_contract, contractName);
+	buildPrograms(_contract, contractName, *contract);
+
+	std::set<std::string> translatedFunctions;
+	buildDefinedFunctions(_contract, contractName, *contract, translatedFunctions);
+	// Getters before inherited functions so `uint256 public override test` beats
+	// an inherited `function test()`.
+	buildPublicStateVariableGetters(_contract, *contract, contractName, translatedFunctions);
+	// Inherited functions (after getters — same precedence rule).
+	buildInheritedFunctions(
+		_contract, contractName, *contract, overriddenIds, translatedFunctions);
+
+	buildRouters(_contract, *contract);
+	// Emit MRO / fallback / explicit-base super subroutines now that all
+	// regular method bodies are translated.
+	emitSuperSubroutines(*contract, contractName);
+	buildHostBoundFunctions(contractName, *contract, reachableHostBoundFunctions);
+
+	// Generate __storage_read/__storage_write dispatch subroutines
+	// for assembly sload/sstore support
+	// EVM-layout runtime helpers have unit-global SubroutineIDs and bodies that
+	// are specialized from unit-global profile flags. Emit them once for the
+	// whole unit; generating a copy per concrete contract inflated multi-contract
+	// AWST by hundreds of kilobytes and made duplicate-ID resolution ambiguous.
+	// Default-layout dispatch remains contract-specific and is always emitted.
+	if (_emitEvmStorageRuntime
+		|| (!m_typeMapper.profile().evmStorageLayout && _storagePlan.needsDispatch()))
+		buildStorageDispatch(_storagePlan, contract.get(), contractName);
+
+	emitFunctionPointerDispatch(*contract);
+	assignSplitterChunks(*contract);
+	scopeStorageDispatchCalls(_storagePlan, *contract);
+	warnEscapedErc1967Slots(*contract);
+	emitErc1967AdminGate(_contract, *contract);
+	emitUupsUpdateGate(_contract, *contract);
 
 	return contract;
 }
-
-
 
 } // namespace puyasol::builder
