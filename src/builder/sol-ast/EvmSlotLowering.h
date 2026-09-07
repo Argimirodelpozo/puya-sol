@@ -171,6 +171,7 @@ public:
 	/// Materialise a whole STRUCT at `_a.slot` as a NewStruct value (per-slot
 	/// word reads via SlotHandleAccess::readStructElem; temps go to
 	/// ctx.preEffects()). Null + loud error when `_a` isn't a struct.
+	/// Read direction of lowerStructValue.
 	std::shared_ptr<awst::Expression> readStructValue(Addr const& _a);
 
 	/// Materialise an array at `_a.slot`; dynamic-array chains use the runtime
@@ -181,6 +182,7 @@ public:
 	/// Whole-struct WRITE: split `_value` (struct-typed) into per-member slot
 	/// writes at `_a.slot`, recursing into NESTED struct members. Statements
 	/// appended to `_out`; loud error + false for unsupported member types.
+	/// Write direction of lowerStructValue.
 	bool writeStructValue(
 		Addr const& _a,
 		std::shared_ptr<awst::Expression> _value,
@@ -238,18 +240,19 @@ private:
 	/// pendingYulSubroutines. Runs only when no clear emission is in flight.
 	void synthesizePendingClearSubs();
 
-	/// Direction of a whole-array lowering. One layout computation (dynamic-
-	/// chain metrics, generic element shape, element addresses, unroll cap)
-	/// feeds both: reads materialise into `value` with temps queued to `out`
-	/// (= ctx.preEffects()); writes scatter `value` as statements into `out`.
-	struct ArrayDir
+	/// Direction of a whole-aggregate (array, struct) lowering. One layout
+	/// computation (dynamic-chain metrics, generic element shape, element and
+	/// member addresses, unroll cap, pinned base) feeds both: reads
+	/// materialise into `value` with temps queued to `out` (= ctx.preEffects());
+	/// writes scatter `value` as statements into `out`.
+	struct ValueDir
 	{
 		bool write;
 		std::shared_ptr<awst::Expression> value;
 		std::vector<std::shared_ptr<awst::Statement>>& out;
 	};
 	bool lowerArrayValue(
-		Addr const& _a, solidity::frontend::ArrayType const* _at, ArrayDir& _d);
+		Addr const& _a, solidity::frontend::ArrayType const* _at, ValueDir& _d);
 
 	/// Mixed aggregate tree (T[][2][], string[], struct-with-array[]): the
 	/// type-directed loop delegating each element to readAny/writeAny.
@@ -257,11 +260,15 @@ private:
 		Addr const& _a,
 		solidity::frontend::ArrayType const* _at,
 		awst::WType const* _arrW,
-		ArrayDir& _d);
+		ValueDir& _d);
 
 	/// Fixed array (len<=64): unrolled per-element recursion off a pinned base.
 	bool lowerFixedArray(
-		Addr const& _a, solidity::frontend::ArrayType const* _at, ArrayDir& _d);
+		Addr const& _a, solidity::frontend::ArrayType const* _at, ValueDir& _d);
+
+	/// Struct at `_a.slot`: per-member recursion off a pinned base (reads of
+	/// flat value-only structs take SlotHandleAccess::readStructElem instead).
+	bool lowerStructValue(Addr const& _a, ValueDir& _d);
 
 	eb::ContractContext& m_ctx;
 	Context& m_scope;

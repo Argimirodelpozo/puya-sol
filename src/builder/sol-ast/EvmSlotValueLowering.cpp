@@ -143,67 +143,118 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::materializeRefValue(
 
 std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _a)
 {
+	ValueDir d{false, nullptr, m_ctx.preEffects()};
+	if (!lowerStructValue(_a, d))
+		return nullptr;
+	return d.value;
+}
+
+bool EvmSlotLowering::writeStructValue(
+	Addr const& _a,
+	std::shared_ptr<awst::Expression> _value,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	ValueDir d{true, std::move(_value), _out};
+	return lowerStructValue(_a, d);
+}
+
+bool EvmSlotLowering::lowerStructValue(Addr const& _a, ValueDir& _d)
+{
 	auto const* st = dynamic_cast<StructType const*>(_a.solType);
 	auto const* structW = st
 		? dynamic_cast<awst::ARC4Struct const*>(m_ctx.typeMapper.map(st)) : nullptr;
-	if (!st || !structW)
+	if (!st || !structW || (_d.write && !_d.value))
 	{
-		Logger::instance().error(
-			"--evm-storage-layout: cannot materialise non-struct storage "
-			"aggregate as a value", m_loc);
-		return nullptr;
+		Logger::instance().error(_d.write
+			? "--evm-storage-layout: unsupported whole-struct storage write"
+			: "--evm-storage-layout: cannot materialise non-struct storage "
+				"aggregate as a value", m_loc);
+		return false;
 	}
-	// Aggregate members recurse from their member-offset bases. Mappings have no
-	// materialised value in Solidity and are therefore deliberately skipped.
-	bool anyNested = false;
-	for (auto const& m: st->structDefinition().members())
+	if (!_d.write)
 	{
-		if (!m || !m->type())
-			continue;
-		if (dynamic_cast<StructType const*>(m->type()))
-			anyNested = true;
-		else if (isBytesLike(m->type()))
-			anyNested = true;   // string/bytes member → recursive path below
-		else if (dynamic_cast<ArrayType const*>(m->type()))
-			anyNested = true;   // array member → readArrayValue below
-		else if (dynamic_cast<solidity::frontend::MappingType const*>(m->type()))
-			anyNested = true;   // mapping member → SKIPPED (Solidity does too)
-		else if (!m->type()->isValueType())
+		// Aggregate members recurse from their member-offset bases. Mappings have no
+		// materialised value in Solidity and are therefore deliberately skipped.
+		bool anyNested = false;
+		for (auto const& m: st->structDefinition().members())
 		{
-			Logger::instance().error(
-				"--evm-storage-layout: cannot materialise struct '"
-				+ st->structDefinition().name() + "' as a value — member '"
-				+ m->name() + "' is not a value type", m_loc);
-			return nullptr;
+			if (!m || !m->type())
+				continue;
+			if (dynamic_cast<StructType const*>(m->type()))
+				anyNested = true;
+			else if (isBytesLike(m->type()))
+				anyNested = true;   // string/bytes member → recursive path below
+			else if (dynamic_cast<ArrayType const*>(m->type()))
+				anyNested = true;   // array member → readArrayValue below
+			else if (dynamic_cast<solidity::frontend::MappingType const*>(m->type()))
+				anyNested = true;   // mapping member → SKIPPED (Solidity does too)
+			else if (!m->type()->isValueType())
+			{
+				Logger::instance().error(
+					"--evm-storage-layout: cannot materialise struct '"
+					+ st->structDefinition().name() + "' as a value — member '"
+					+ m->name() + "' is not a value type", m_loc);
+				return false;
+			}
+		}
+		if (!anyNested)
+		{
+			_d.value = SlotHandleAccess::readStructElem(
+				_d.out, _a.slot, st, structW, m_loc);
+			return true;
 		}
 	}
-	if (!anyNested)
-		return SlotHandleAccess::readStructElem(
-			m_ctx.preEffects(), _a.slot, st, structW, m_loc);
 
-	// pin the base once — members read in separate sub-expressions
-	std::string nm = "__evm_stv_"
-		+ std::to_string(awst::NameGen::next("EvmSlotLowering.structVal"));
-	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc),
+	// pin the base once — members read in separate sub-expressions / write
+	// in separate statements
+	std::string bs = (_d.write ? "__evm_stw_" : "__evm_stv_")
+		+ std::to_string(awst::NameGen::next(
+			_d.write ? "EvmSlotLowering.structW" : "EvmSlotLowering.structVal"));
+	_d.out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc),
 		_a.slot, m_loc));
 	auto baseVar = [&]() {
-		return awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc);
+		return awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc);
 	};
-	auto ns = awst::makeNewStruct(structW, m_loc);
+	// a write pins the struct value too; a read collects into a NewStruct
+	std::string vs = bs + "_v";
+	awst::WType const* valW = nullptr;
+	std::shared_ptr<awst::NewStruct> ns;
+	if (_d.write)
+	{
+		valW = _d.value->wtype ? _d.value->wtype
+			: static_cast<awst::WType const*>(structW);
+		_d.out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(vs, valW, m_loc), std::move(_d.value), m_loc));
+	}
+	else
+		ns = awst::makeNewStruct(structW, m_loc);
+	auto valVar = [&]() {
+		return awst::makeVarExpression(vs, valW, m_loc);
+	};
 	for (auto const& m: st->structDefinition().members())
 	{
 		if (!m)
 			continue;
-		// Mapping content lives at keccak-derived slots and is never copied.
+		// Mapping content lives at keccak-derived slots and is never copied;
+		// Solidity skips mapping members on whole-struct assignment too.
 		if (dynamic_cast<MappingType const*>(m->type()))
 			continue;
 		auto fa = memberAddr(baseVar(), st, m->name(), m->type());
+		// ARC4 struct fields carry ARC4 wtypes
+		awst::WType const* fieldW = awst::structFieldType(structW, m->name());
+		if (_d.write)
+		{
+			auto field = awst::makeFieldExpression(valVar(), m->name(),
+				fieldW ? fieldW : m_ctx.typeMapper.map(m->type()), m_loc);
+			if (!writeAny(fa, m->type(), std::move(field), _d.out))
+				return false;
+			continue;
+		}
 		auto v = readAny(fa, m->type());
 		if (!v)
-			return nullptr;
-		// ARC4 struct fields carry ARC4 wtypes — convert the native read.
-		awst::WType const* fieldW = awst::structFieldType(structW, m->name());
+			return false;
+		// convert the native read to the field's ARC4 wtype
 		if (v && fieldW && v->wtype != fieldW)
 		{
 			if (isBytesLike(m->type())
@@ -214,54 +265,8 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 		}
 		ns->values[m->name()] = std::move(v);
 	}
-	return ns;
-}
-
-bool EvmSlotLowering::writeStructValue(
-	Addr const& _a,
-	std::shared_ptr<awst::Expression> _value,
-	std::vector<std::shared_ptr<awst::Statement>>& _out)
-{
-	auto const* st = dynamic_cast<StructType const*>(_a.solType);
-	auto const* structW = st
-		? dynamic_cast<awst::ARC4Struct const*>(m_ctx.typeMapper.map(st)) : nullptr;
-	if (!st || !structW || !_value)
-	{
-		Logger::instance().error(
-			"--evm-storage-layout: unsupported whole-struct storage write", m_loc);
-		return false;
-	}
-	// pin base slot + struct value: members write in separate statements
-	std::string bs = "__evm_stw_"
-		+ std::to_string(awst::NameGen::next("EvmSlotLowering.structW"));
-	_out.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc),
-		_a.slot, m_loc));
-	std::string vs = bs + "_v";
-	auto const* valW = _value->wtype ? _value->wtype
-		: static_cast<awst::WType const*>(structW);
-	_out.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(vs, valW, m_loc), std::move(_value), m_loc));
-	auto baseVar = [&]() {
-		return awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc);
-	};
-	auto valVar = [&]() {
-		return awst::makeVarExpression(vs, valW, m_loc);
-	};
-	for (auto const& m: st->structDefinition().members())
-	{
-		if (!m)
-			continue;
-		// Solidity skips mapping members on whole-struct assignment.
-		if (dynamic_cast<MappingType const*>(m->type()))
-			continue;
-		auto fa = memberAddr(baseVar(), st, m->name(), m->type());
-		awst::WType const* fieldW = awst::structFieldType(structW, m->name());
-		auto field = awst::makeFieldExpression(valVar(), m->name(),
-			fieldW ? fieldW : m_ctx.typeMapper.map(m->type()), m_loc);
-		if (!writeAny(fa, m->type(), std::move(field), _out))
-			return false;
-	}
+	if (!_d.write)
+		_d.value = ns;
 	return true;
 }
 
@@ -466,7 +471,7 @@ void pushDynElemMetricArgs(
 std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 	Addr const& _a, ArrayType const* _at)
 {
-	ArrayDir d{false, nullptr, m_ctx.preEffects()};
+	ValueDir d{false, nullptr, m_ctx.preEffects()};
 	if (!lowerArrayValue(_a, _at, d))
 		return nullptr;
 	return d.value;
@@ -480,12 +485,12 @@ bool EvmSlotLowering::writeArrayValue(
 {
 	if (!_value)
 		return false;
-	ArrayDir d{true, std::move(_value), _out};
+	ValueDir d{true, std::move(_value), _out};
 	return lowerArrayValue(_a, _at, d);
 }
 
 bool EvmSlotLowering::lowerArrayValue(
-	Addr const& _a, ArrayType const* _at, ArrayDir& _d)
+	Addr const& _a, ArrayType const* _at, ValueDir& _d)
 {
 	if (!_at)
 		return false;
@@ -521,7 +526,7 @@ bool EvmSlotLowering::lowerArrayValue(
 }
 
 bool EvmSlotLowering::lowerDynArrayGeneric(
-	Addr const& _a, ArrayType const* _at, awst::WType const* _arrW, ArrayDir& _d)
+	Addr const& _a, ArrayType const* _at, awst::WType const* _arrW, ValueDir& _d)
 {
 	// Mixed aggregate tree (e.g. T[][2][], string[], or struct-with-
 	// array[]): emit the type-directed loop here. The homogeneous
@@ -734,7 +739,7 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 }
 
 bool EvmSlotLowering::lowerFixedArray(
-	Addr const& _a, ArrayType const* _at, ArrayDir& _d)
+	Addr const& _a, ArrayType const* _at, ValueDir& _d)
 {
 	auto lenU = _at->length();
 	if (lenU == 0 || lenU > 64)
