@@ -24,6 +24,11 @@ PUYA = Path(os.environ.get("PUYA_SOL_PUYA")
 
 TESTS_DIR = SEMANTIC_TESTS_DIR / "tests"
 OUT_DIR = SEMANTIC_TESTS_DIR / "out"
-CACHE_DIR = SEMANTIC_TESTS_DIR / ".compile_cache"
+# PUYA_SOL_CACHE_DIR gives a worker its OWN compile cache. Concurrent sweeps
+# sharing one cache have corrupted entries (two processes writing the same key
+# while a third reads it), so anything that compiles alongside a running batch
+# — a second replay lane, a fuzz campaign — must point here at a private dir.
+CACHE_DIR = Path(os.environ.get("PUYA_SOL_CACHE_DIR")
+                 or SEMANTIC_TESTS_DIR / ".compile_cache")
 PUYA_BACKEND_SRC = Path(os.environ.get("PUYA_SOL_PUYA_SRC")
                         or PUYA_SOL_ROOT / "puya" / "src")
