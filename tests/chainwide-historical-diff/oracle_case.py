@@ -83,7 +83,7 @@ from algosdk.atomic_transaction_composer import (AccountTransactionSigner,
 from algosdk.transaction import SuggestedParams
 
 from avm_leg import (XCHAIN_PLACEHOLDER, XCHAIN_TOY_TEAL, _ctype, _ret,
-                     collect_compiler_events, compile_main_contract,
+                     collect_compiler_events, compile_case_contract,
                      compiled_artifact_root, decode_global_state,
                      evm_selector, evm_wire_value, main_compile_args,
                      mode_compile_args, read_native_maps, xchain_compile_args,
@@ -109,6 +109,7 @@ MIN_FEE = 1_000
 EXTRA_FEE = 20_000                   # avm_leg's per-call fee headroom
 INNER_FEE_HEADROOM = 16_000
 MAX_TXN_REFS = 8                     # MaxAppTotalTxnReferences
+MAX_TXN_ACCOUNTS = 4                 # MaxAppTxnAccounts
 SCHEMA_PAD = 16                      # framework.deploy's spare global cells
 MAX_SCHEMA_CELLS = 64                # consensus max global entries per kind
 RETRY_CAP = 96                       # discovery attempts per call
@@ -144,6 +145,7 @@ done:
 int 1"""
 
 INVALID_BOX = re.compile(r"invalid Box reference 0x([0-9a-fA-F]*)")
+UNAVAILABLE_ACCOUNT = re.compile(r"unavailable Account ([A-Z2-7]{58})")
 IO_BUDGET = re.compile(r"(?:read|write) budget exceeded \((\d+) > (\d+)\)")
 RET_MAGIC = bytes.fromhex("151f7c75")
 
@@ -156,6 +158,24 @@ def _is_budget_error(err: str) -> bool:
     """framework.call._is_budget_error, on the oracle's error text."""
     m = err.lower()
     return "budget" in m or "opcode" in m or "dynamic cost" in m
+
+
+def inner_application_calls(txns: list[dict]) -> dict[str, int]:
+    """Count submitted calls by existing app ID through the entire inner tree.
+
+    Keep budget-helper IDs visible; callers can distinguish them from the
+    recorded dependency IDs. This measures observed calls, not opcode cost or
+    a complete trace of work discarded by a failing group.
+    """
+    counts: dict[str, int] = {}
+    for txn in txns:
+        app_id = int((txn.get("u64") or {}).get("ApplicationID") or 0)
+        if app_id:
+            key = str(app_id)
+            counts[key] = counts.get(key, 0) + 1
+        for key, count in inner_application_calls(txn.get("inner_txns") or []).items():
+            counts[key] = counts.get(key, 0) + count
+    return counts
 
 
 def global_schema_for(app_spec, name: str) -> tuple[int, int]:
@@ -392,6 +412,7 @@ class OracleLane:
         self.fund(creator_hex)
         self.fund(self.app_addr)
         self.round = ROUND0
+        self.accounts_found: list[str] = []
         self.memo: list[tuple[int, str]] = []
         # Dependency apps this lane must keep REACHABLE (an inner `appl` needs
         # its callee among the group's application resources) and the owner of
@@ -419,7 +440,8 @@ class OracleLane:
                 "extra_program_pages": self.extra_pages,
                 "clear_source": self.clear}
 
-    def create(self, app_args_hex: list[str], ts: int) -> None:
+    def create(self, app_args_hex: list[str], ts: int, *,
+               deferred_constructor: bool = False) -> None:
         """framework.deploy's create txn: ctor args as app args, no group."""
         self.state.latest_timestamp = int(ts)
         req = self.state.request(
@@ -429,10 +451,11 @@ class OracleLane:
             **self._app_fields())
         for key in ("accounts", "foreign_assets", "foreign_apps", "foreign_box_refs"):
             req.pop(key, None)
-        # puya-sol defers the constructor body to __postInit, so the create txn
-        # normally calls nothing — but it has spare reference slots, and a
-        # dependency named there costs nothing when it goes unused.
-        if self.dep_apps:
+        # The compiled ARC-56 tells us whether the constructor runs later in
+        # __postInit. Do not name unused dependencies on that create txn:
+        # v42 charges their program-read budget even without executing them.
+        # __postInit's pooled group declares and budgets its callees normally.
+        if self.dep_apps and not deferred_constructor:
             req["foreign_apps"] = self.dep_apps[:MAX_TXN_REFS - self.write_budget_refs]
         resp = self.oracle.run(req)
         if resp.get("result") != "ACCEPT":
@@ -500,9 +523,13 @@ class OracleLane:
                + INNER_FEE_HEADROOM)
         main_refs: list[str] = []
         pending: list[tuple[int, str]] = []
+        # Accounts and boxes share the call txn's 8 reference slots, so every
+        # discovered account costs one box slot; the rest spill to the helpers
+        # below exactly as an over-long box list already does.
+        main_cap = MAX_TXN_REFS - len(self.accounts_found)
         for app, key in refs:
             app = ORACLE_APP if app in (0, ORACLE_APP) else app
-            if app == ORACLE_APP and len(main_refs) < MAX_TXN_REFS:
+            if app == ORACLE_APP and len(main_refs) < main_cap:
                 main_refs.append(key)
             else:
                 pending.append((app, key))
@@ -547,7 +574,16 @@ class OracleLane:
         for key in ("accounts", "foreign_assets", "foreign_apps", "box_refs",
                     "foreign_box_refs"):
             req.pop(key, None)
-        req["box_refs"] = main_refs + [""] * (MAX_TXN_REFS - len(main_refs))
+        req["box_refs"] = main_refs + [""] * max(
+            0, MAX_TXN_REFS - len(main_refs) - len(self.accounts_found))
+        # Accounts the call proved it touches (discovered from the oracle's
+        # own `unavailable Account` panic, the same way boxes are). A payment
+        # to an address the contract computes — FriendTech paying the shares
+        # subject and the protocol fee recipient — is unavailable until named,
+        # and LocalNet never showed this because algod's simulate populates
+        # the resource arrays for us.
+        if self.accounts_found:
+            req["accounts"] = list(self.accounts_found)
         return req
 
     def _attribute(self, key: str, found: list[tuple[int, str]]):
@@ -573,6 +609,9 @@ class OracleLane:
         """One app call with resource discovery; commits on ACCEPT when asked."""
         self.fund(sender)
         self.stats["calls"] += 1
+        # Per call: the addresses this one touches are its own (each FriendTech
+        # buy pays a different subject), and the txn holds at most four.
+        self.accounts_found = []
         seeds = list(self.memo)
         found: list[tuple[int, str]] = []
         amplify = False
@@ -603,6 +642,21 @@ class OracleLane:
                     self.stats["discoveries"] += 1
                     continue
                 break
+            m = UNAVAILABLE_ACCOUNT.search(err)
+            if m and encoding.decode_address(m.group(1)).hex() not in self.accounts_found:
+                if len(self.accounts_found) >= MAX_TXN_ACCOUNTS:
+                    resp = {"result": "PANIC", "error": (
+                        f"account reference capacity: this call needs more than "
+                        f"{MAX_TXN_ACCOUNTS} accounts ({self.accounts_found} + "
+                        f"{m.group(1)})")}
+                    break
+                # The panic renders the address in base32; the request field
+                # carries the raw 32-byte public key as hex, like every other
+                # account in this lane.
+                self.accounts_found.append(encoding.decode_address(m.group(1)).hex())
+                self.stats["account_discoveries"] = (
+                    self.stats.get("account_discoveries", 0) + 1)
+                continue
             if IO_BUDGET.search(err):
                 # Seeded (existing) boxes are charged against the read budget
                 # whether or not the call touches them: retry with only the
@@ -725,9 +779,10 @@ class DepApp:
 
 def _dep_lane(oracle: Oracle, adapter, h, sol: Path, name: str | None,
               compile_args: list[str], ids: "Identities", ctor_markers: list,
-              ts: int) -> tuple[OracleLane, str, object]:
+              ts: int, case: dict | None = None) -> tuple[OracleLane, str, object]:
     """Compile one dependency source and run its create + __postInit."""
-    artifacts = h.compile(sol, extra_args=compile_args)
+    artifacts = (compile_case_contract(h, sol.parent, case, compile_args)
+                 if case is not None else h.compile(sol, extra_args=compile_args))
     picked = artifacts.last_deployable(name)
     if picked is None:
         raise RuntimeError(f"no deployable contract compiled from {sol}")
@@ -741,10 +796,12 @@ def _dep_lane(oracle: Oracle, adapter, h, sol: Path, name: str | None,
         (directory / f"{picked}.clear.bin").read_bytes(), ids.creator_hex,
         schema=global_schema_for(app_spec, f"dependency {picked}"))
     ctor_values = [ids.resolve(m) for m in (ctor_markers or [])] or None
-    create_args = ([a.hex() for a in _encode_ctor_args(ctor_values, app_spec, artifact)]
-                   if ctor_values else [])
-    lane.create(create_args, ts=ts)
+    evm_abi = (case["abi"] if case is not None and
+               any(compile_args[i:i + 2] == ["--contract-abi", "evm"]
+                   for i in range(len(compile_args))) else None)
+    create_args = creation_app_args(app_spec, artifact, ctor_values, evm_abi=evm_abi)
     post_args = postinit_app_args(app_spec, ctor_values)
+    lane.create(create_args, ts=ts, deferred_constructor=post_args is not None)
     if post_args is not None:
         ok, resp, _info = lane.call(ids.creator_hex, post_args, ts=ts)
         if not ok:
@@ -789,7 +846,8 @@ def deploy_dependencies(oracle: Oracle, adapter, h, case_dir: Path, meta: dict,
         try:
             lane, picked, app_spec = _dep_lane(
                 oracle, adapter, h, directory / "prepared.sol", spec.get("name"),
-                compile_args, ids, spec.get("args"), ts)
+                compile_args, ids, spec.get("args"), ts,
+                case=load_json(directory / "case.json"))
         except Exception as exc:
             fallback = directory / "stub_fallback.sol"
             if not fallback.exists():
@@ -979,6 +1037,26 @@ def postinit_app_args(app_spec, ctor_values) -> list[str] | None:
     return [a.hex() for a in atc.build_group()[0].txn.app_args]
 
 
+def creation_app_args(app_spec, artifact, values, *, evm_abi=None) -> list[str]:
+    """Immediate EVM constructors take one tuple; deferred ones use ARC-4.
+
+    Use solc's constructor ABI for the tuple and the compiled lifecycle method
+    to distinguish immediate execution from __postInit. The ARC-4 framework's
+    per-value fallback cannot encode an immediate EVM constructor with two args.
+    """
+    values = list(values or [])
+    deferred = any(method.name == "__postInit" for method in app_spec.methods)
+    if evm_abi is not None and not deferred:
+        ctor = next((item for item in evm_abi if item.get("type") == "constructor"), {})
+        inputs = ctor.get("inputs") or []
+        if len(values) != len(inputs):
+            raise ValueError(f"constructor argument count mismatch: expected {len(inputs)}, got {len(values)}")
+        return ([evm_abi_encode([_ctype(i) for i in inputs],
+                 [evm_wire_value(v, i) for v, i in zip(values, inputs)]).hex()]
+                if inputs else [])
+    return [a.hex() for a in _encode_ctor_args(values, app_spec, artifact)] if values else []
+
+
 def _opt(argv: list[str], flag: str):
     if flag in argv:
         i = argv.index(flag)
@@ -1049,7 +1127,7 @@ def main(argv=None) -> None:
     dep_seek = load_dep_tapes(case_dir, reg, calls, meta, ext_skips, ids, deps,
                               deployment_time)
 
-    artifacts = compile_main_contract(h, case_dir, case, main_args)
+    artifacts = compile_case_contract(h, case_dir, case, main_args)
     if any("__Helper" in n for n in artifacts.by_contract):
         raise NotImplementedError("split helper artifacts are not replayed by the oracle lane")
     delegate_doc = compiled_artifact_root(artifacts) / "delegate_helpers.json"
@@ -1078,20 +1156,20 @@ def main(argv=None) -> None:
 
     # ── deploy: create txn + __postInit, at the deployment instant ────────
     ctor_values = [ids.resolve(m) for m in meta["ctor_args"]] or None
-    create_args = ([a.hex() for a in _encode_ctor_args(ctor_values, app_spec, main_artifact)]
-                   if ctor_values else [])
+    create_args = creation_app_args(app_spec, main_artifact, ctor_values, evm_abi=case["abi"])
     # PROXY-RUNTIME replay (framework.deploy's skip_postinit): an implementation
     # behind a proxy never ran its constructor against proxy storage — the
     # replay's own `initialize(...)` call does that work — so the deferred
     # constructor stays unexecuted here. It must BE deferred: a constructor that
     # wrote storage during AppCreate cannot be modelled this way.
     proxy_runtime = bool((case.get("proxy") or {}).get("initializer"))
-    if proxy_runtime and not any(m.name == "__postInit" for m in app_spec.methods):
+    deferred_constructor = any(m.name == "__postInit" for m in app_spec.methods)
+    if proxy_runtime and not deferred_constructor:
         raise RuntimeError(
             "proxy-runtime replay requires a deferred constructor; this "
             "implementation executed constructor storage during AppCreate and "
             "cannot be modelled safely")
-    lane.create(create_args, ts=deployment_time)
+    lane.create(create_args, ts=deployment_time, deferred_constructor=deferred_constructor)
     post_args = None if proxy_runtime else postinit_app_args(app_spec, ctor_values)
     if post_args is not None:
         ok, resp, info = lane.call(ids.creator_hex, post_args, ts=deployment_time)
@@ -1217,6 +1295,8 @@ def main(argv=None) -> None:
                         raise RuntimeError(error)
                     results[i] = {"ok": True, "ret": _ret(result, meta, sig, fold),
                                   "logs": [] if is_view else (fold_events(logs) or [])}
+                results[i]["inner_apps"] = inner_application_calls(
+                    resp.get("inners_after") or [])
             except NotImplementedError:
                 raise
             except Exception as e:
