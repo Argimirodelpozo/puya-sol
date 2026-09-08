@@ -8,30 +8,31 @@ not as an active test runner.
 
 ## Recorded baseline
 
-Full LocalNet semantic and harness/cache run on **2026-09-06**. The tested
-compiler and regression sources are committed as `d136bd4406` (rev-2 after the
-2026-09-06/07 fixes — solc return widths, split-at-rebind modifiers, path-specialized
-interior storage references, ARC-56 mapping-root maps — and ten byte-identical
-refactor merges plus the splitter-field removal):
+Full LocalNet semantic and harness/cache run on **2026-09-07**. The tested
+compiler and regression sources are committed as `9521c807ba` (rev-2 after
+default-off proxy adaptation, solc-directed modifier lookup, pointer-backed
+modifier memory parameters, and the AWST construction cleanup):
 
 | Result | Count |
 |---|---:|
-| Passed | 1,854 |
+| Passed | 1,860 |
 | Failed | 1 |
 | Expected failure (xfail) | 101 |
 | Unexpected pass (xpass) | 38 |
-| Total | 1,994 |
+| Total | 2,000 |
 
-The run took 1405.81 seconds with two workers (under a heavy concurrent load). Dependencies were pinned to
-Solidity `a99b6d8c0cbf9eddbac104e8e4e16545db7d3d8d` and Puya
-`27751c364229ae3cd0334fe4071e61690b6879e4` (5.10.1). Native CTest coverage passed
-19/19; the final focused holder/builder selection passed 98/98. Harness/cache
-unit tests are included in the full count. Its local JUnit report is
-`/tmp/puyasol-rev-2-final-semantic-v2.xml`; the focused report is
-`/tmp/puyasol-rev-2-holders-final-focused.xml`. The compiler stayed fixed during
-the run, and LocalNet was not reset. See the
-[completed audit record](../../docs/rev-2-results.md) for exact commands,
-binary identity, solc oracle settings and fresh-deployment-only format changes.
+The run took 449.42 seconds with three workers and a warm compilation cache.
+Dependencies were pinned to Solidity
+`a99b6d8c0cbf9eddbac104e8e4e16545db7d3d8d` and Puya
+`27751c364229ae3cd0334fe4071e61690b6879e4` (5.10.1). Native CTest coverage
+passed 19/19. Harness/cache unit tests are included in the full count. The six
+new ordinary passes cover legacy/via-IR modifier lookup and default-off proxy
+behavior in both storage layouts. The local JUnit report is
+`/tmp/puyasol-rev-2-current-semantic.xml`. The compiler stayed fixed during the
+run, and LocalNet was not reset. See the
+[completed sol-types/storage audit record](../../docs/rev-2-results.md) for its
+earlier binary identity, solc oracle settings and fresh-deployment-only format
+changes.
 These are results for that revision and local environment, not a guarantee
 about future commits or arbitrary contracts. Xpasses are non-strict in this
 run and are not folded into the ordinary pass count. Existing XPASS/xfail

@@ -28,10 +28,11 @@ The pipeline:
 
 ## Status
 
-The full semantic/harness run on **2026-09-06** recorded **1,847 passed, 1 failed,
-101 xfailed, and 39 xpassed**. All **19 native tests** passed. The remaining
-failure is a known backend optimization bug that drops a required
-divide-by-zero revert; the suite is **not fully green**. See the
+The full semantic/harness run on **2026-09-07** at `9521c807ba` recorded
+**1,860 passed, 1 failed, 101 xfailed, and 38 xpassed** (2,000 total). All
+**19 native tests** passed. The remaining failure is a known backend
+optimization bug that drops a required divide-by-zero revert; the suite is
+**not fully green**. See the
 [test guide and revision-specific baseline](tests/solidity-semantic-tests/README.md).
 The sol-types/storage audit work is complete; see the
 [rev-2 results and compatibility boundaries](docs/rev-2-results.md).
