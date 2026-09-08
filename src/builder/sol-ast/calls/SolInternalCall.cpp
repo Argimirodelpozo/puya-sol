@@ -15,7 +15,6 @@
 #include "builder/BuildArtifacts.h"
 #include "builder/ReturnWirePlan.h"
 #include "builder/sol-ast/EffectScan.h"
-#include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/contract/EvmMemoryCodec.h"
 #include "builder/itxn/AsaIntrinsics.h"

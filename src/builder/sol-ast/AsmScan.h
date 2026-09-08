@@ -1,5 +1,6 @@
 /// @file AsmScan.h
-/// Inline-assembly shape queries that depend on Yul external references.
+/// One inline-assembly shape query that depends on Yul external references:
+/// recognising the OpenZeppelin StorageSlot pointer-cast idiom.
 
 #pragma once
 
@@ -15,9 +16,6 @@
 
 namespace puyasol::builder
 {
-
-
-
 
 /// If `_func` is a STORAGE-POINTER ALIAS, the aliased parameter index and the
 /// wrapper struct's single field name.

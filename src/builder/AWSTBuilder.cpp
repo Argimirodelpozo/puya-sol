@@ -13,7 +13,6 @@
 #include "builder/itxn/AsaIntrinsics.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/storage/StorageMapper.h"
-#include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/ReturnFinishing.h"
