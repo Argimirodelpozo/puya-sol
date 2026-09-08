@@ -30,6 +30,10 @@ struct TargetProfile
 	/// same 160-bit namespace used by decoded address arguments.
 	ContractAbi contractAbi = ContractAbi::Arc4;
 	bool viaIRSequencing = false;
+	/// Explicitly adapt recognized proxy idioms to native application updates.
+	/// Disabled by default: ordinary source names and EIP-1967 slots retain
+	/// their source semantics, and unsupported delegatecall stays policy-gated.
+	bool proxyAdaptation = false;
 	bool denseOnlyStorage = false;
 	bool singlePageStorage = false;
 	/// Explicit EVM environment inputs. Decimal uint256 strings are retained

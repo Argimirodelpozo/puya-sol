@@ -259,8 +259,6 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 		// unreachable code. EVM sources often have a trailing `return` after one.
 		if (m_blk.terminated)
 			break;
-		if (m_blk.fn.statementHook && m_blk.fn.statementHook(*stmt, awstBlock->body))
-			continue;
 		if (auto const* innerBlock = dynamic_cast<Block const*>(stmt.get()))
 		{
 			// Flatten nested blocks; unchecked-arithmetic flag propagates through.

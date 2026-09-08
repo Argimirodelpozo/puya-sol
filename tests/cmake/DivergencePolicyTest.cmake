@@ -51,6 +51,36 @@ function(run_frontend case_name source_name expected_result expected_text)
     set(frontend_awst_path "${case_output}/awst.json" PARENT_SCOPE)
 endfunction()
 
+# Proxy adaptation is independent of storage layout and all divergence opt-ins.
+foreach(proxy_layout default slots)
+    set(proxy_options "")
+    if(proxy_layout STREQUAL "slots")
+        set(proxy_options --evm-storage-layout)
+    endif()
+    run_frontend(proxy_${proxy_layout}_off ProxyAdaptation.sol 0 "" ${proxy_options})
+    file(READ "${frontend_awst_path}" proxy_awst)
+    string(FIND "${proxy_awst}" "__erc1967_update" proxy_gate)
+    if(NOT proxy_gate EQUAL -1)
+        message(FATAL_ERROR "default compilation synthesized a proxy update gate")
+    endif()
+    run_frontend(proxy_${proxy_layout}_on ProxyAdaptation.sol 0 ""
+        ${proxy_options} --proxy-adaptation)
+    file(READ "${frontend_awst_path}" proxy_awst)
+    string(FIND "${proxy_awst}" "__erc1967_update" proxy_gate)
+    if(proxy_gate EQUAL -1)
+        message(FATAL_ERROR "explicit proxy adaptation did not synthesize its update gate")
+    endif()
+endforeach()
+
+# Enabling xchain must not silently enable the independent proxy adaptation.
+run_frontend(proxy_xchain_off ProxyAdaptation.sol 0 ""
+    --contract-abi evm --xchain-template eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee)
+file(READ "${frontend_awst_path}" proxy_awst)
+string(FIND "${proxy_awst}" "__erc1967_update" proxy_gate)
+if(NOT proxy_gate EQUAL -1)
+    message(FATAL_ERROR "xchain compilation synthesized a proxy update gate without opting in")
+endif()
+
 # Errors remain visible at --log-level error, so log filtering cannot turn an
 # unapproved adaptation into an apparently successful compile.
 run_frontend(
@@ -172,6 +202,9 @@ run_frontend(
 run_frontend(
     delegatecall_denied DelegateCall.sol 1
     "--allow-divergence delegatecall")
+run_frontend(
+    delegatecall_denied_with_proxy_adaptation DelegateCall.sol 1
+    "--allow-divergence delegatecall" --proxy-adaptation)
 run_frontend(
     delegatecall_allowed DelegateCall.sol 0 ""
     --allow-divergence delegatecall)

@@ -207,8 +207,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		auto lit = m_locals.find(name);
 		if (lit == m_locals.end() || lit->second != awst::WType::uint64Type())
 			continue;
-		awst::SourceLocation loc;
-		loc.file = m_sourceFile;
+		awst::SourceLocation loc(m_sourceFile);
 		std::string shadow = "__asmsx_" + name;
 		result.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(shadow, awst::WType::biguintType(), loc),
@@ -235,8 +234,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	// Flush blob at block end; skip when halt already emitted (trailing store = unreachable).
 	if (!m_haltEmitted)
 	{
-		awst::SourceLocation loc;
-		loc.file = m_sourceFile;
+		awst::SourceLocation loc(m_sourceFile);
 		flushMemoryToScratch(loc, result);
 	}
 
@@ -246,8 +244,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		m_signedShadow.clear();
 	for (auto const& [name, shadow]: m_signedShadow)
 	{
-		awst::SourceLocation loc;
-		loc.file = m_sourceFile;
+		awst::SourceLocation loc(m_sourceFile);
 		result.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(name, awst::WType::uint64Type(), loc),
 			safeBtoi(awst::makeVarExpression(shadow, awst::WType::biguintType(), loc), loc),
@@ -260,8 +257,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		m_upgradedLocals.clear();
 	for (auto const& [name, origType]: m_upgradedLocals)
 	{
-		awst::SourceLocation loc;
-		loc.file = m_sourceFile;
+		awst::SourceLocation loc(m_sourceFile);
 
 		auto src = awst::makeVarExpression(name, awst::WType::biguintType(), loc);
 		// For sub-64-bit Solidity types, mask to width before converting to uint64
@@ -417,8 +413,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	awst::SourceLocation loc;
-	loc.file = m_sourceFile;
+	awst::SourceLocation loc(m_sourceFile);
 
 	// Slot 0 lives directly in scratch (no __evm_memory local cache).
 	// MEMORY_VAR declared as vestigial; memoryVar()/assignMemoryVar() go straight to scratch slot 0.
@@ -604,9 +599,7 @@ awst::SourceLocation AssemblyBuilder::makeLoc(
 	if (_debugData)
 		return m_typeMapper.sourceMap().toAwstLoc(
 			m_sourceFile, _debugData->nativeLocation);
-	awst::SourceLocation loc;
-	loc.file = m_sourceFile;
-	return loc;
+	return awst::SourceLocation(m_sourceFile);
 }
 
 // ─── AWST helper ────────────────────────────────────────────────────────────
@@ -1125,11 +1118,8 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	{
 		std::string pName = p.name.str();
 		m_locals[pName] = awst::WType::biguintType();
-		awst::SubroutineArgument arg;
-		arg.name = pName;
-		arg.wtype = awst::WType::biguintType();
-		arg.sourceLocation = makeLoc(p.debugData);
-		subArgs.push_back(std::move(arg));
+		subArgs.emplace_back(
+			pName, awst::WType::biguintType(), makeLoc(p.debugData));
 	}
 
 	for (auto const& r: _funcDef.returnVariables)

@@ -36,6 +36,13 @@ struct PreparedAssembly;
 class SolcFacts
 {
 public:
+	/// Match solc IRGenerator::generateModifier: declaration identity plus
+	/// requiredLookup, followed by solc's own virtual override resolution.
+	/// A constructor-base invocation is not a modifier and returns nullptr.
+	static solidity::frontend::ModifierDefinition const* resolveModifier(
+		solidity::frontend::ModifierInvocation const& _invocation,
+		solidity::frontend::ContractDefinition const* _mostDerived);
+
 	struct YulAnalysis
 	{
 		std::map<std::string, solidity::yul::FunctionDefinition const*> functions;

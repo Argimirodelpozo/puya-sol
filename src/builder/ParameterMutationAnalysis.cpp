@@ -1,5 +1,6 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/CallTarget.h"
+#include "builder/SolcFacts.h"
 
 #include "builder/sol-ast/AsmScan.h"
 
@@ -308,6 +309,20 @@ private:
 						recordRoots(component.get(), _out);
 				return;
 			}
+			if (auto const* conditional = dynamic_cast<Conditional const*>(_expression))
+			{
+				recordRoots(&conditional->trueExpression(), _out);
+				recordRoots(&conditional->falseExpression(), _out);
+				return;
+			}
+			if (auto const* conversion = dynamic_cast<FunctionCall const*>(_expression);
+				conversion && conversion->annotation().kind.set()
+				&& *conversion->annotation().kind == FunctionCallKind::TypeConversion
+				&& conversion->arguments().size() == 1)
+			{
+				_expression = conversion->arguments()[0].get();
+				continue;
+			}
 			break;
 		}
 
@@ -347,8 +362,8 @@ ParameterMutationSummary const& analyzeFrom(
 		// through free/library caller chains.
 		for (auto const& invocation: function.modifiers())
 		{
-			auto const* modifier = dynamic_cast<ModifierDefinition const*>(
-				invocation->name().annotation().referencedDeclaration);
+			auto const* modifier = SolcFacts::resolveModifier(
+				*invocation, _mostDerived);
 			auto const* arguments = invocation->arguments();
 			if (!modifier || !arguments)
 				continue;
@@ -356,8 +371,7 @@ ParameterMutationSummary const& analyzeFrom(
 			for (size_t i = 0;
 				i < arguments->size() && i < parameters.size(); ++i)
 				if (parameters[i]->referenceLocation()
-						== VariableDeclaration::Location::Memory
-					&& dynamic_cast<Identifier const*>((*arguments)[i].get()))
+						== VariableDeclaration::Location::Memory)
 					scanner.recordModifierMemoryAlias(*(*arguments)[i]);
 		}
 		for (auto const& edge: node.edges)

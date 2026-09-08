@@ -1,5 +1,4 @@
 #include "builder/contract/ContractBuilder.h"
-#include "awst/HelperMethod.h"
 #include "builder/abi/EvmAbiDecode.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/assembly/AssemblyBuilder.h"
@@ -626,6 +625,8 @@ void ContractBuilder::emitConstructorPlan(
 		if (!ctor || !ctor->isImplemented())
 			continue;
 		// An empty body can still have an effectful modifier chain.
+		if (!ctor->modifiers().empty())
+			registerModifierMemoryRootParams(*ctor);
 		auto ctorBody = buildBlock(ctor->body());
 		buildConstructorModifierChain(*ctor, ctorBody, _contract.name());
 		for (auto& statement: ctorBody->body)
@@ -690,7 +691,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	std::string const& _contractName
 )
 {
-	auto method = awst::makeHelperMethod(m_contractId, "approval_program",
+	auto method = awst::ContractMethod(m_contractId, "approval_program",
 		awst::WType::boolType(), {}, makeLoc(_contract.location()));
 
 	auto body = method.body;

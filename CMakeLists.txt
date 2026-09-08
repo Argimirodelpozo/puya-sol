@@ -189,7 +189,6 @@ set(SOURCES
 	src/cli/AwstPostPasses.cpp
 	src/Logger.cpp
 	src/awst/WType.cpp
-	src/awst/Node.cpp
 	src/awst/Visit.cpp
 	# Builder core
 	src/builder/AWSTBuilder.cpp

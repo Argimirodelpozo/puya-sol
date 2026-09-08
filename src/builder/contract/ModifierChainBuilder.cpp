@@ -4,19 +4,20 @@
 /// preserving multiple-placeholder semantics without copying AWST nodes.
 
 #include "builder/contract/ContractBuilder.h"
+#include "builder/SolcFacts.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/StatementWalk.h"
 #include "awst/NameGen.h"
-#include "Logger.h"
-#include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "awst/Termination.hpp"
 
-#include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/ast/AST.h>
 
-#include <map>
+#include <algorithm>
+#include <iterator>
 
 namespace puyasol::builder
 {
@@ -24,191 +25,182 @@ namespace puyasol::builder
 namespace
 {
 
-/// True when the modifier body assigns the parameter as a WHOLE (rebinding
-/// the memory pointer) or reaches it from inline assembly. Solidity memory
-/// params alias the argument's object, so member writes must stay visible,
-/// but a rebind only moves the modifier's own pointer.
-class WholeRebindScanner: public solidity::frontend::ASTConstVisitor
+using solidity::frontend::Conditional;
+using solidity::frontend::Expression;
+using solidity::frontend::FunctionCall;
+using solidity::frontend::FunctionCallKind;
+using solidity::frontend::FunctionDefinition;
+using solidity::frontend::Identifier;
+using solidity::frontend::IndexAccess;
+using solidity::frontend::IndexRangeAccess;
+using solidity::frontend::MemberAccess;
+using solidity::frontend::TupleExpression;
+using solidity::frontend::VariableDeclaration;
+
+bool isMemoryReference(VariableDeclaration const& _declaration)
 {
-public:
-	explicit WholeRebindScanner(int64_t _declId): m_declId(_declId) {}
-	bool found = false;
-	bool mutatesMember = false;
-
-	bool visit(solidity::frontend::Assignment const& _assignment) override
-	{
-		checkTarget(_assignment.leftHandSide());
-		checkMemberTarget(_assignment.leftHandSide());
-		return true;
-	}
-	bool visit(solidity::frontend::InlineAssembly const& _assembly) override
-	{
-		for (auto const& [identifier, info]: _assembly.annotation().externalReferences)
-			if (info.declaration && info.declaration->id() == m_declId)
-				found = true;
-		return true;
-	}
-
-private:
-	void checkTarget(solidity::frontend::Expression const& _expression)
-	{
-		if (auto const* identifier =
-				dynamic_cast<solidity::frontend::Identifier const*>(&_expression))
-		{
-			auto const* declaration = identifier->annotation().referencedDeclaration;
-			if (declaration && declaration->id() == m_declId)
-				found = true;
-		}
-		else if (auto const* tuple =
-				dynamic_cast<solidity::frontend::TupleExpression const*>(&_expression))
-			for (auto const& component: tuple->components())
-				if (component)
-					checkTarget(*component);
-	}
-
-	/// `c.value = …` / `c.items[i] = …`: a write through the (aliased) object.
-	void checkMemberTarget(solidity::frontend::Expression const& _expression)
-	{
-		solidity::frontend::Expression const* base = &_expression;
-		while (true)
-		{
-			if (auto const* member =
-					dynamic_cast<solidity::frontend::MemberAccess const*>(base))
-				base = &member->expression();
-			else if (auto const* index =
-					dynamic_cast<solidity::frontend::IndexAccess const*>(base))
-				base = &index->baseExpression();
-			else
-				break;
-		}
-		if (base == &_expression)
-			return;
-		if (auto const* identifier =
-				dynamic_cast<solidity::frontend::Identifier const*>(base))
-		{
-			auto const* declaration = identifier->annotation().referencedDeclaration;
-			if (declaration && declaration->id() == m_declId)
-				mutatesMember = true;
-		}
-	}
-
-	int64_t m_declId;
-};
-
-/// How a modifier body treats a memory parameter as a whole.
-struct RebindFacts
-{
-	bool any = false;            ///< some whole rebind (or asm reference) exists
-	bool nested = false;         ///< a rebind sits inside a branch/loop/tuple
-	bool mutatesMember = false;  ///< `c.f = …` writes through the object
-	/// Top-level `c = …;` statements, in body order.
-	std::vector<solidity::frontend::Statement const*> topLevel;
-};
-
-RebindFacts rebindFacts(
-	solidity::frontend::ModifierDefinition const& _modifier,
-	solidity::frontend::VariableDeclaration const& _param)
-{
-	RebindFacts facts;
-	if (!_modifier.isImplemented())
-		return facts;
-	WholeRebindScanner scanner(_param.id());
-	_modifier.body().accept(scanner);
-	facts.any = scanner.found;
-	facts.mutatesMember = scanner.mutatesMember;
-	if (!facts.any)
-		return facts;
-	size_t rebinds = 0;
-	{
-		// Count every whole rebind, then subtract the top-level ones.
-		struct Counter: solidity::frontend::ASTConstVisitor
-		{
-			explicit Counter(int64_t _id): id(_id) {}
-			int64_t id; size_t count = 0; bool asmRef = false;
-			bool visit(solidity::frontend::Assignment const& _a) override
-			{
-				if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(
-						&_a.leftHandSide()))
-					if (auto const* d = ident->annotation().referencedDeclaration; d && d->id() == id)
-						++count;
-				if (dynamic_cast<solidity::frontend::TupleExpression const*>(&_a.leftHandSide()))
-					++count; // conservatively nested (not split-able)
-				return true;
-			}
-			bool visit(solidity::frontend::InlineAssembly const& _asm) override
-			{
-				for (auto const& [identifier, info]: _asm.annotation().externalReferences)
-					if (info.declaration && info.declaration->id() == id)
-						asmRef = true;
-				return true;
-			}
-		} counter(_param.id());
-		_modifier.body().accept(counter);
-		rebinds = counter.count;
-		if (counter.asmRef)
-			facts.nested = true;
-	}
-	for (auto const& statement: _modifier.body().statements())
-		if (auto const* exprStmt =
-				dynamic_cast<solidity::frontend::ExpressionStatement const*>(statement.get()))
-			if (auto const* assignment = dynamic_cast<solidity::frontend::Assignment const*>(
-					&exprStmt->expression()))
-				if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(
-						&assignment->leftHandSide()))
-					if (auto const* d = ident->annotation().referencedDeclaration;
-						d && d->id() == _param.id())
-						facts.topLevel.push_back(statement.get());
-	if (facts.topLevel.size() < rebinds)
-		facts.nested = true;
-	if (facts.nested && facts.mutatesMember)
-		Logger::instance().warning(
-			"modifier `" + _modifier.name() + "` both writes through and rebinds its "
-			"memory parameter `" + _param.name() + "` inside a branch, loop, tuple or "
-			"assembly; the parameter is bound by value, so member writes made before the "
-			"rebind are not visible to the wrapped function (Solidity shares the object "
-			"until the rebind)",
-			awst::SourceLocation{});
-	return facts;
+	return _declaration.referenceLocation() == VariableDeclaration::Location::Memory
+		&& _declaration.type() && !_declaration.type()->isValueType();
 }
 
-/// Resolve the modifier a chain link invokes: the most-derived override in
-/// `_currentContract` unless the invocation names an explicit `A.m` base.
-/// Null for a constructor base call.
-solidity::frontend::ModifierDefinition const* resolveModifierDefinition(
-	solidity::frontend::ModifierInvocation const& _invocation,
-	solidity::frontend::FunctionDefinition const& _func,
-	solidity::frontend::ContractDefinition const* _currentContract)
+/// Follow only expressions for which solc preserves memory-reference identity.
+/// Calls and constructors intentionally stop the walk: their result is a fresh
+/// value for this lowering. Explicit reference conversions and conditional
+/// reference selection preserve the selected pointer.
+void collectMemoryRoots(
+	Expression const& _expression,
+	std::map<int64_t, VariableDeclaration const*> const& _parameters,
+	std::set<int64_t>& _out)
 {
-	auto const* modDef = dynamic_cast<solidity::frontend::ModifierDefinition const*>(
-		_invocation.name().annotation().referencedDeclaration
-	);
-	if (!modDef)
-		return nullptr; // constructor base call — handled elsewhere
-
-	// Resolve virtual override unless this is an explicit A.m base call.
-	bool isExplicitBaseModifier = false;
+	if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
 	{
-		auto const& path = _invocation.name().path();
-		if (path.size() > 1)
-			isExplicitBaseModifier = true;
+		auto const* declaration = dynamic_cast<VariableDeclaration const*>(
+			identifier->annotation().referencedDeclaration);
+		if (declaration && _parameters.count(declaration->id()))
+			_out.insert(declaration->id());
+		return;
 	}
-
-	auto const* declaringContract = _func.annotation().contract;
-	bool const supportsVirtualModifiers = declaringContract
-		&& !declaringContract->isLibrary() && !_func.isFree();
-	if (_currentContract && supportsVirtualModifiers
-		&& !isExplicitBaseModifier)
+	if (auto const* member = dynamic_cast<MemberAccess const*>(&_expression))
+		return collectMemoryRoots(member->expression(), _parameters, _out);
+	if (auto const* index = dynamic_cast<IndexAccess const*>(&_expression))
+		return collectMemoryRoots(index->baseExpression(), _parameters, _out);
+	if (auto const* range = dynamic_cast<IndexRangeAccess const*>(&_expression))
+		return collectMemoryRoots(range->baseExpression(), _parameters, _out);
+	if (auto const* conditional = dynamic_cast<Conditional const*>(&_expression))
 	{
-		std::string modName = modDef->name();
-		solidity::frontend::ModifierDefinition const* resolved = nullptr;
-		forEachFunctionModifier(*_currentContract, [&](auto const* mod)
-		{
-			if (resolved) return;
-			if (mod->name() == modName) resolved = mod;
+		collectMemoryRoots(conditional->trueExpression(), _parameters, _out);
+		collectMemoryRoots(conditional->falseExpression(), _parameters, _out);
+		return;
+	}
+	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_expression))
+	{
+		for (auto const& component: tuple->components())
+			if (component)
+				collectMemoryRoots(*component, _parameters, _out);
+		return;
+	}
+	if (auto const* call = dynamic_cast<FunctionCall const*>(&_expression);
+		call && call->annotation().kind.set()
+		&& *call->annotation().kind == FunctionCallKind::TypeConversion
+		&& call->arguments().size() == 1)
+		collectMemoryRoots(*call->arguments()[0], _parameters, _out);
+}
+
+std::string memoryRootName(
+	FunctionDefinition const& _function, VariableDeclaration const& _parameter)
+{
+	return "__modroot_" + std::to_string(_function.id()) + "_"
+		+ std::to_string(_parameter.id());
+}
+
+bool canResolveMemoryPointer(
+	sol_ast::Context const& _scope, Expression const& _expression)
+{
+	if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
+	{
+		auto const* declaration = dynamic_cast<VariableDeclaration const*>(
+			identifier->annotation().referencedDeclaration);
+		return declaration && !_scope.findBlobAggregate(declaration->id()).empty();
+	}
+	if (auto const* member = dynamic_cast<MemberAccess const*>(&_expression))
+		return canResolveMemoryPointer(_scope, member->expression());
+	if (auto const* index = dynamic_cast<IndexAccess const*>(&_expression))
+		return canResolveMemoryPointer(_scope, index->baseExpression());
+	if (auto const* conditional = dynamic_cast<Conditional const*>(&_expression))
+		return canResolveMemoryPointer(_scope, conditional->trueExpression())
+			&& canResolveMemoryPointer(_scope, conditional->falseExpression());
+	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_expression))
+		return tuple->components().size() == 1 && tuple->components()[0]
+			&& canResolveMemoryPointer(_scope, *tuple->components()[0]);
+	if (auto const* call = dynamic_cast<FunctionCall const*>(&_expression);
+		call && call->annotation().kind.set()
+		&& *call->annotation().kind == FunctionCallKind::TypeConversion
+		&& call->arguments().size() == 1)
+		return canResolveMemoryPointer(_scope, *call->arguments()[0]);
+	return false;
+}
+
+std::shared_ptr<awst::Expression> resolveMemoryPointer(
+	eb::ContractContext& _ctx, sol_ast::Context& _scope,
+	Expression const& _expression, awst::SourceLocation const& _loc)
+{
+	if (!canResolveMemoryPointer(_scope, _expression))
+		return nullptr;
+	if (auto const* conditional = dynamic_cast<Conditional const*>(&_expression))
+	{
+		auto condition = _ctx.pinIfWriteBacks(
+			_ctx.lower(conditional->condition(), false), _loc);
+		auto trueValue = _ctx.lowerOperand([&] {
+			return resolveMemoryPointer(
+				_ctx, _scope, conditional->trueExpression(), _loc);
 		});
-		if (resolved) modDef = resolved;
+		auto falseValue = _ctx.lowerOperand([&] {
+			return resolveMemoryPointer(
+				_ctx, _scope, conditional->falseExpression(), _loc);
+		});
+		std::string const name = "__modptr_select_" + std::to_string(
+			awst::NameGen::next("ModifierChainBuilder.pointerSelect"));
+		auto target = [&] {
+			return awst::makeVarExpression(
+				name, awst::WType::uint64Type(), _loc);
+		};
+		auto trueBlock = eb::ContractContext::makeScopedResultBlock(
+			std::move(trueValue.effects.pre), target(),
+			std::move(trueValue.value), _loc,
+			std::move(trueValue.effects.post));
+		auto falseBlock = eb::ContractContext::makeScopedResultBlock(
+			std::move(falseValue.effects.pre), target(),
+			std::move(falseValue.value), _loc,
+			std::move(falseValue.effects.post));
+		_ctx.preEffects().push_back(awst::makeIfElse(
+			std::move(condition), std::move(trueBlock),
+			std::move(falseBlock), _loc));
+		return target();
 	}
-	return modDef;
+	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_expression))
+		return resolveMemoryPointer(
+			_ctx, _scope, *tuple->components()[0], _loc);
+	if (auto const* call = dynamic_cast<FunctionCall const*>(&_expression);
+		call && call->annotation().kind.set()
+		&& *call->annotation().kind == FunctionCallKind::TypeConversion)
+		return resolveMemoryPointer(
+			_ctx, _scope, *call->arguments()[0], _loc);
+	return sol_ast::SolIndexAccess::resolveBlobOffset(
+		_ctx, _scope, _expression, _loc);
+}
+
+struct MemoryBridge
+{
+	size_t parameterIndex;
+	VariableDeclaration const* declaration;
+	std::string name;
+	std::string valueName;
+	awst::WType const* nativeType;
+};
+
+template <class MakePrefix>
+void insertBeforeReturns(
+	std::vector<std::shared_ptr<awst::Statement>>& _statements,
+	MakePrefix const& _makePrefix)
+{
+	for (size_t i = 0; i < _statements.size(); ++i)
+	{
+		if (auto const* ret = dynamic_cast<awst::ReturnStatement const*>(
+				_statements[i].get()))
+		{
+			auto prefix = _makePrefix(ret->sourceLocation);
+			auto const count = prefix.size();
+			_statements.insert(
+				_statements.begin() + static_cast<std::ptrdiff_t>(i),
+				std::make_move_iterator(prefix.begin()),
+				std::make_move_iterator(prefix.end()));
+			i += count;
+			continue;
+		}
+		awst::forEachChildBlock(*_statements[i], [&](awst::Block& _block, bool) {
+			insertBeforeReturns(_block.body, _makePrefix);
+		});
+	}
 }
 
 /// Return-parameter THREADING (mirrors solc IR). A modifier arg or the body may
@@ -224,6 +216,7 @@ public:
 		solidity::frontend::FunctionDefinition const& _func,
 		awst::ContractMethod const& _method,
 		std::vector<size_t> const& _writeBackParams,
+		std::vector<awst::SubroutineArgument> _extraArgs,
 		int _chainId,
 		TypeMapper& _typeMapper);
 
@@ -235,6 +228,7 @@ public:
 	{
 		std::vector<awst::SubroutineArgument> out = m_retArgs;
 		out.insert(out.end(), _fnArgs.begin(), _fnArgs.end());
+		out.insert(out.end(), m_extraArgs.begin(), m_extraArgs.end());
 		return out;
 	}
 
@@ -248,6 +242,9 @@ public:
 				awst::pushCallArg(_call->args, r.name,
 					awst::makeVarExpression(r.name, r.type, _loc));
 		for (auto const& arg: m_method.args)
+			awst::pushCallArg(_call->args, arg.name,
+				awst::makeVarExpression(arg.name, arg.wtype, _loc));
+		for (auto const& arg: m_extraArgs)
 			awst::pushCallArg(_call->args, arg.name,
 				awst::makeVarExpression(arg.name, arg.wtype, _loc));
 	}
@@ -350,15 +347,18 @@ private:
 	bool m_hasRet = false;
 	/// Leading return-param args, prepended to every chain sub's signature.
 	std::vector<awst::SubroutineArgument> m_retArgs;
+	/// Shared memory-root offsets, appended after the Solidity parameters.
+	std::vector<awst::SubroutineArgument> m_extraArgs;
 };
 
 ReturnThreading::ReturnThreading(
 	solidity::frontend::FunctionDefinition const& _func,
 	awst::ContractMethod const& _method,
 	std::vector<size_t> const& _writeBackParams,
+	std::vector<awst::SubroutineArgument> _extraArgs,
 	int _chainId,
 	TypeMapper& _typeMapper)
-	: m_method(_method)
+	: m_method(_method), m_extraArgs(std::move(_extraArgs))
 {
 	// Thread the SAME types _method.returnType declares — that is what the body sub
 	// returns after native normalization (which promotes signed sub-64 and wide-uint
@@ -389,18 +389,63 @@ ReturnThreading::ReturnThreading(
 	m_hasRet = (_method.returnType != awst::WType::voidType());
 	for (auto const& r: m_retInfos)
 		if (!r.isWriteBack)
-			m_retArgs.push_back(awst::SubroutineArgument{
-				r.name, _method.sourceLocation, r.type});
+			m_retArgs.emplace_back(r.name, r.type, _method.sourceLocation);
 }
 
 } // namespace
+
+std::vector<VariableDeclaration const*>
+ContractBuilder::modifierMemoryRootParams(FunctionDefinition const& _func) const
+{
+	std::map<int64_t, VariableDeclaration const*> candidates;
+	for (auto const& parameter: _func.parameters())
+		if (isMemoryReference(*parameter) && !parameter->name().empty())
+			candidates.emplace(parameter->id(), parameter.get());
+	if (candidates.empty())
+		return {};
+
+	std::set<int64_t> used;
+	for (auto const& invocation: _func.modifiers())
+	{
+		auto const* modifier = SolcFacts::resolveModifier(
+			*invocation, m_currentContract);
+		auto const* arguments = invocation->arguments();
+		if (!modifier || !arguments)
+			continue;
+		auto const& parameters = modifier->parameters();
+		for (size_t i = 0; i < arguments->size() && i < parameters.size(); ++i)
+			if (isMemoryReference(*parameters[i]))
+				collectMemoryRoots(*(*arguments)[i], candidates, used);
+	}
+
+	std::vector<VariableDeclaration const*> result;
+	result.reserve(used.size());
+	for (auto const& parameter: _func.parameters())
+		if (used.count(parameter->id()))
+			result.push_back(parameter.get());
+	return result;
+}
+
+void ContractBuilder::registerModifierMemoryRootParams(
+	FunctionDefinition const& _func)
+{
+	for (auto const* parameter: modifierMemoryRootParams(_func))
+	{
+		auto const* type = m_typeMapper.map(parameter->type());
+		// Large aggregates already use their declared uint64 BlobOffset calling
+		// convention; small values need the chain-local bridge allocated below.
+		if (!memoryUsesBlob(type))
+			m_functionCtx->setBlobAggregate(
+				parameter->id(), memoryRootName(_func, *parameter));
+	}
+}
 
 void ContractBuilder::bindModifierArguments(
 	solidity::frontend::ModifierInvocation const& _invocation,
 	solidity::frontend::ModifierDefinition const& _modifier,
 	awst::Block& _modBody,
-	ModifierRebindPlans& _rebindPlans,
-	std::vector<int64_t>& _remappedDeclIds)
+	std::vector<int64_t>& _remappedDeclIds,
+	std::vector<int64_t>& _blobDeclIds)
 {
 	auto const* args = _invocation.arguments();
 	auto const& params = _modifier.parameters();
@@ -438,42 +483,47 @@ void ContractBuilder::bindModifierArguments(
 			continue;
 		}
 
-		auto argExpr = m_exprBuilder->buildExpr(*(*args)[pi]);
-		if (!argExpr) continue;
-
-		// Solidity memory parameters alias an identifier argument. Remap the
-		// modifier declaration directly to that variable so writes before or
-		// after `_` remain visible to the wrapped body and its caller.
-		// A body that REBINDS the parameter (`c = Cell(5)`) would leak the
-		// new value into the wrapped function through the alias; bind such
-		// params by value instead (solc: the rebind moves only the
-		// modifier's pointer).
-		// Alias when the body never rebinds the parameter, or rebinds it
-		// only in top-level statements: those statements then bind a
-		// fresh local and switch the remap (statement hook in
-		// buildModifierChain), so member writes before the rebind still
-		// reach the caller's object and the rebind stays local, both as in
-		// Solidity.
-		if (param->referenceLocation()
-				== solidity::frontend::VariableDeclaration::Location::Memory)
+		// solc passes memory references as pointer values. Give the modifier
+		// parameter its own runtime pointer local: writes through it hit the
+		// shared object, while any high-level, tuple, branch/loop, or Yul rebind
+		// changes only this local. If the argument is already bridge/blob-backed,
+		// preserve its exact pointer (including a runtime conditional selection);
+		// otherwise spill the fresh value once.
+		if (isMemoryReference(*param))
 		{
-			auto facts = rebindFacts(_modifier, *param);
-			if (!facts.any || !facts.nested)
+			std::string const pointerName = uniqueName + "_ptr";
+			auto pointer = resolveMemoryPointer(
+				*m_exprBuilder, *m_exprBuilder->currentScope,
+				*(*args)[pi], modLoc);
+			if (pointer)
 			{
 				m_exprBuilder->appendEffectsTo(_modBody.body);
-				if (auto const* variable =
-					dynamic_cast<awst::VarExpression const*>(argExpr.get());
-					variable && variable->wtype == paramType)
-				{
-					m_tr->setParamRemap(param->id(), sol_ast::ParamRemap{
-						variable->name, paramType});
-					_remappedDeclIds.push_back(param->id());
-					for (auto const* statement: facts.topLevel)
-						_rebindPlans[statement] = {param.get(), paramType};
-					continue;
-				}
+				_modBody.body.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(pointerName,
+						awst::WType::uint64Type(), modLoc),
+					std::move(pointer), modLoc));
 			}
+			else
+			{
+				auto value = m_exprBuilder->buildExpr(*(*args)[pi]);
+				if (!value)
+					continue;
+				value = TypeCoercion::coerceForAssignment(
+					std::move(value), paramType, modLoc);
+				m_exprBuilder->appendEffectsTo(_modBody.body);
+				emitBlobBackValue(
+					m_typeMapper, param->type(), paramType,
+					std::move(value), pointerName,
+					awst::NameGen::next("ModifierChainBuilder.modPointer"),
+					modLoc, _modBody.body);
+			}
+			m_tr->setBlobAggregate(param->id(), pointerName);
+			_blobDeclIds.push_back(param->id());
+			continue;
 		}
+
+		auto argExpr = m_exprBuilder->buildExpr(*(*args)[pi]);
+		if (!argExpr) continue;
 
 		// Storage-POINTER modifier param (`modifier m(uint256[] storage a, ...)`
 		// / `mapping(...) storage`): alias it to the ARGUMENT's storage location
@@ -539,8 +589,54 @@ void ContractBuilder::buildModifierChain(
 		? _func.name() : _method.memberName;
 	auto const& cref = m_contractId;
 
+	std::vector<MemoryBridge> memoryBridges;
+	std::vector<awst::SubroutineArgument> bridgeArgs;
+	for (auto const* parameter: modifierMemoryRootParams(_func))
+	{
+		auto const* nativeType = m_typeMapper.map(parameter->type());
+		if (memoryUsesBlob(nativeType))
+			continue; // already a uint64 parameter under the ordinary call plan
+		auto found = std::find_if(
+			_func.parameters().begin(), _func.parameters().end(),
+			[&](auto const& candidate) {
+				return candidate->id() == parameter->id();
+			});
+		if (found == _func.parameters().end())
+			continue;
+		size_t const index = static_cast<size_t>(
+			std::distance(_func.parameters().begin(), found));
+		std::string const name = memoryRootName(_func, *parameter);
+		memoryBridges.push_back({
+			index, parameter, name, m_tr->awstVarName(*parameter), nativeType});
+		bridgeArgs.emplace_back(
+			name, awst::WType::uint64Type(), makeLoc(parameter->location()));
+	}
+
 	ReturnThreading const threading(
-		_func, _method, _writeBackParams, chainId, m_typeMapper);
+		_func, _method, _writeBackParams, std::move(bridgeArgs),
+		chainId, m_typeMapper);
+
+	auto writeBackBridgeValues = [&](std::string const& _pointerSuffix,
+		awst::SourceLocation const& _loc) {
+		std::vector<std::shared_ptr<awst::Statement>> result;
+		for (auto const& bridge: memoryBridges)
+		{
+			if (std::find(_writeBackParams.begin(), _writeBackParams.end(),
+					bridge.parameterIndex) == _writeBackParams.end())
+				continue;
+			auto value = materializeBlobValue(
+				m_typeMapper, bridge.declaration->type(), bridge.nativeType,
+				bridge.name + _pointerSuffix, _loc, result);
+			if (!value || bridge.parameterIndex >= _method.args.size())
+				continue;
+			auto const& argument = _method.args[bridge.parameterIndex];
+			result.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(argument.name, argument.wtype, _loc),
+				TypeCoercion::coerceForAssignment(
+					std::move(value), argument.wtype, _loc), _loc));
+		}
+		return result;
+	};
 
 	// Every emitted sub receives the still-ARC4-encoded `__arc4_*` params.
 	// Materialize independent decode assignments for each body from the compact
@@ -564,10 +660,41 @@ void ContractBuilder::buildModifierChain(
 		bodySub.args = threading.withRetArgs(_method.args); // return params (in/out) + function params
 		bodySub.body = _method.body; // move the original function body here
 		prependDecodes(bodySub.body);
+		// The body receives each root pointer by value. Preserve its entry
+		// pointer for the existing internal-call write-back convention: member
+		// writes change the shared object, but `p = other` only repoints the
+		// body's local pointer and must not escape to its caller (solc memory
+		// reference semantics).
+		std::vector<std::shared_ptr<awst::Statement>> bridgeEntry;
+		for (auto const& bridge: memoryBridges)
+			if (std::find(_writeBackParams.begin(), _writeBackParams.end(),
+					bridge.parameterIndex) != _writeBackParams.end())
+				bridgeEntry.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(
+						bridge.name + "_original", awst::WType::uint64Type(),
+						bodySub.sourceLocation),
+					awst::makeVarExpression(
+						bridge.name, awst::WType::uint64Type(),
+						bodySub.sourceLocation),
+					bodySub.sourceLocation));
+		if (!bridgeEntry.empty())
+			bodySub.body->body.insert(
+				bodySub.body->body.begin(),
+				std::make_move_iterator(bridgeEntry.begin()),
+				std::make_move_iterator(bridgeEntry.end()));
+		insertBeforeReturns(bodySub.body->body,
+			[&](awst::SourceLocation const& loc) {
+				return writeBackBridgeValues("_original", loc);
+			});
 		// A named-return body (`{ r += 1; }`) sets the return-param vars but may fall off
 		// the end without a `return` — append one that threads them back out.
 		if (bodySub.body && !awst::blockAlwaysTerminates(*bodySub.body))
+		{
+			for (auto& statement: writeBackBridgeValues(
+				"_original", bodySub.sourceLocation))
+				bodySub.body->body.push_back(std::move(statement));
 			bodySub.body->body.push_back(threading.makeThreadedReturn(bodySub.sourceLocation));
+		}
 		bodySub.arc4MethodConfig = std::nullopt; // internal, not ABI-routable
 		bodySub.pure = _method.pure;
 		m_modifierSubroutines.push_back(std::move(bodySub));
@@ -580,7 +707,7 @@ void ContractBuilder::buildModifierChain(
 	{
 		auto const& modInvocation = modifiers[i];
 		auto const* modDef =
-			resolveModifierDefinition(*modInvocation, _func, m_currentContract);
+			SolcFacts::resolveModifier(*modInvocation, m_currentContract);
 		if (!modDef)
 			continue; // constructor base call — handled elsewhere
 
@@ -600,11 +727,11 @@ void ContractBuilder::buildModifierChain(
 		// Decode params first so a modifier arg expr (`mArg(a % 5)`) sees native values.
 		prependDecodes(modBody);
 
-		// Top-level whole rebinds of aliased memory params → (param, type).
-		ModifierRebindPlans rebindPlans;
 		std::vector<int64_t> remappedDeclIds;
+		std::vector<int64_t> blobDeclIds;
 		bindModifierArguments(
-			*modInvocation, *modDef, *modBody, rebindPlans, remappedDeclIds);
+			*modInvocation, *modDef, *modBody,
+			remappedDeclIds, blobDeclIds);
 
 		// At `_`: thread the return-param(s) in, call nextSubName, capture them back out
 		// so a repeated/looped `_;` accumulates and a modifier arg's writes propagate.
@@ -619,49 +746,32 @@ void ContractBuilder::buildModifierChain(
 		};
 
 		setPlaceholderFactory(std::move(makePlaceholder));
-		if (!rebindPlans.empty())
-			m_functionCtx->statementHook =
-				[this, &rebindPlans](solidity::frontend::Statement const& statement,
-					std::vector<std::shared_ptr<awst::Statement>>& out) -> bool
-				{
-					auto found = rebindPlans.find(&statement);
-					if (found == rebindPlans.end())
-						return false;
-					auto const* param = found->second.first;
-					auto const* type = found->second.second;
-					auto const& exprStmt =
-						static_cast<solidity::frontend::ExpressionStatement const&>(statement);
-					auto const& assignment =
-						static_cast<solidity::frontend::Assignment const&>(exprStmt.expression());
-					auto loc = makeLoc(statement.location());
-					auto value = m_exprBuilder->buildExpr(assignment.rightHandSide());
-					value = TypeCoercion::coerceForAssignment(std::move(value), type, loc);
-					m_exprBuilder->appendEffectsTo(out);
-					std::string fresh = "__mod_" + param->name() + "_rebound_"
-						+ std::to_string(awst::NameGen::next("ModifierChainBuilder.rebound"));
-					out.push_back(awst::makeAssignmentStatement(
-						awst::makeVarExpression(fresh, type, loc), std::move(value), loc));
-					m_tr->setParamRemap(param->id(), sol_ast::ParamRemap{fresh, type});
-					return true;
-				};
 		auto translatedBody = buildBlock(modDef->body());
-		m_functionCtx->statementHook = {};
 		setPlaceholderFactory({});
 
 		if (translatedBody)
 		{
 			if (threading.hasRet())
 				threading.threadBareReturns(translatedBody->body);
+			insertBeforeReturns(translatedBody->body,
+				[&](awst::SourceLocation const& loc) {
+					return writeBackBridgeValues("", loc);
+				});
 
 			for (auto& stmt: translatedBody->body)
 				modBody->body.push_back(std::move(stmt));
 		}
 
 		// Modifier falls off the end → return the threaded return-param values.
+		for (auto& statement: writeBackBridgeValues(
+			"", modSub.sourceLocation))
+			modBody->body.push_back(std::move(statement));
 		modBody->body.push_back(threading.makeThreadedReturn(modSub.sourceLocation));
 
 		for (auto declId: remappedDeclIds)
 			m_tr->eraseParamRemap(declId);
+		for (auto declId: blobDeclIds)
+			m_tr->eraseBlobAggregate(declId);
 
 		modSub.body = modBody;
 		m_modifierSubroutines.push_back(std::move(modSub));
@@ -671,6 +781,24 @@ void ContractBuilder::buildModifierChain(
 	// Rewrite _method.body to zero-init the return-param vars, call the outermost modifier
 	// (threading the return params in), capture them back, and return them.
 	_method.body = threading.makeEntryBody(nextSubName);
+	std::vector<std::shared_ptr<awst::Statement>> entryPrefix =
+		makeParamDecodeStatements(_paramDecodes);
+	for (auto const& bridge: memoryBridges)
+		emitBlobBackValue(
+			m_typeMapper, bridge.declaration->type(), bridge.nativeType,
+			awst::makeVarExpression(
+				bridge.valueName, bridge.nativeType,
+				_method.sourceLocation),
+			bridge.name,
+			awst::NameGen::next("ModifierChainBuilder.rootPointer"),
+			_method.sourceLocation, entryPrefix);
+	if (!entryPrefix.empty())
+		_method.body->body.insert(
+			_method.body->body.begin(),
+			std::make_move_iterator(entryPrefix.begin()),
+			std::make_move_iterator(entryPrefix.end()));
+	for (auto const& bridge: memoryBridges)
+		m_tr->eraseBlobAggregate(bridge.declaration->id());
 }
 
 void ContractBuilder::buildConstructorModifierChain(
@@ -702,12 +830,12 @@ void ContractBuilder::buildConstructorModifierChain(
 		// invent and thread a dead internal local for it.
 		if (parameter->name().empty())
 			continue;
-		constructor.args.push_back({
+		constructor.args.emplace_back(
 			m_tr->awstVarName(*parameter),
-			makeLoc(parameter->location()),
 			m_typeMapper.profile().evmStorageLayout
 				&& parameter->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				? awst::WType::biguintType() : m_typeMapper.map(parameter->type())});
+				? awst::WType::biguintType() : m_typeMapper.map(parameter->type()),
+			makeLoc(parameter->location()));
 	}
 
 	auto const* savedReturnType = m_functionCtx->returnType;

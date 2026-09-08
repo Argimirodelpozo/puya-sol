@@ -190,7 +190,9 @@ void AssemblyBuilder::handleSstore(
 	// beacon writes are runtime traps — upgradeTo lowers to the native
 	// UpdateApplication ceremony, and unreachable sites strip via DCE
 	// (the delegatecall precedent).
-	switch (proxies::Erc1967Lowering::classify(_args[0].get()))
+	switch (m_typeMapper.profile().proxyAdaptation
+		? proxies::Erc1967Lowering::classify(_args[0].get())
+		: proxies::Erc1967Slot::None)
 	{
 	case proxies::Erc1967Slot::Admin:
 		m_typeMapper.artifacts().noteErc1967AdminUse();
@@ -396,7 +398,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 
 	// EIP-1967 proxy slots (proxy.md §1): admin → synthesized global,
 	// implementation → this app's own identity, beacon → runtime trap.
-	switch (proxies::Erc1967Lowering::classify(_args[0].get()))
+	switch (m_typeMapper.profile().proxyAdaptation
+		? proxies::Erc1967Lowering::classify(_args[0].get())
+		: proxies::Erc1967Slot::None)
 	{
 	case proxies::Erc1967Slot::Admin:
 		m_typeMapper.artifacts().noteErc1967AdminUse();

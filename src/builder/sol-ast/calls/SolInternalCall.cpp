@@ -17,6 +17,7 @@
 #include "builder/sol-ast/EffectScan.h"
 #include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/StorageRefPointer.h"
+#include "builder/contract/EvmMemoryCodec.h"
 #include "builder/itxn/AsaIntrinsics.h"
 #include "builder/abi/Arc4Stdlib.h"
 #include "builder/itxn/CallResolver.h"
@@ -304,6 +305,7 @@ std::shared_ptr<awst::Expression> emitAugmentedCallWriteBacks(
 	std::shared_ptr<awst::SubroutineCallExpression> const& call,
 	std::vector<StorageRoot> const& roots,
 	std::vector<size_t> const& memoryRefParamIndices,
+	std::vector<std::pair<std::string, Type const*>> const& blobWriteBacks,
 	CallBoundaryPlan const& plan,
 	awst::SourceLocation const& m_loc)
 {
@@ -399,13 +401,39 @@ std::shared_ptr<awst::Expression> emitAugmentedCallWriteBacks(
 		}
 	}
 
-	// Memory-ref writeback: assign post-call tuple slot back to caller
-	// local (VarExpression). Skip non-VarExpression args (no stable
-	// lvalue without re-evaluating side-effecting bases).
+	// Memory-ref writeback: assign the post-call tuple slot back to the caller
+	// local. A modifier-chain memory root is pointer-backed, so its value-use is
+	// a materialisation rather than a VarExpression; overwrite the existing
+	// scratch object instead. This preserves the alias observed by the wrapped
+	// body and modifier epilogues when an internal helper mutates the argument.
 	size_t memBaseIdx = baseIdx + roots.size();
 	for (size_t mi = 0; mi < memoryRefParamIndices.size(); ++mi)
 	{
 		size_t pi = memoryRefParamIndices[mi];
+		auto* memArgType = call->args[pi].value->wtype;
+		auto modifiedArg = pickFromTuple(memBaseIdx + mi, memArgType);
+
+		auto const& [blobOffset, blobType] = blobWriteBacks[mi];
+		if (!blobOffset.empty())
+		{
+			std::vector<std::shared_ptr<awst::Statement>> writes;
+			if (!builder::writeEvmMemoryValueAt(
+					ctx.typeMapper, blobType, std::move(modifiedArg),
+					awst::makeVarExpression(blobOffset,
+						awst::WType::uint64Type(), m_loc),
+					m_loc, writes))
+			{
+				Logger::instance().error(
+					"callee mutation of this pointer-backed memory value cannot "
+					"be written through without changing its root pointer",
+					m_loc);
+				continue;
+			}
+			for (auto& write: writes)
+				ctx.queuePostEffect(std::move(write));
+			continue;
+		}
+
 		auto const* argVar = dynamic_cast<awst::VarExpression const*>(
 			call->args[pi].value.get());
 		// A non-VarExpression arg (a temporary like `mut(getArray())`) has
@@ -413,9 +441,6 @@ std::shared_ptr<awst::Expression> emitAugmentedCallWriteBacks(
 		// unobservable anyway (EVM matches). Correctly dropped, no warning.
 		if (!argVar || argVar->name.empty())
 			continue;
-
-		auto* memArgType = call->args[pi].value->wtype;
-		auto modifiedArg = pickFromTuple(memBaseIdx + mi, memArgType);
 
 		auto target = awst::makeVarExpression(argVar->name, memArgType, m_loc);
 		auto writeBack = awst::makeAssignmentExpression(
@@ -920,8 +945,37 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		if (!plan.writeBackParams.empty())
 		{
 			auto roots = traceStorageRoots(*call, plan.storageWriteBackParams);
+			// Solc identifies the source declaration and mutated parameter;
+			// Context only supplies our representation-specific scratch pointer.
+			auto const sourceArgs = m_call.sortedArguments();
+			std::vector<std::pair<std::string, Type const*>> blobWriteBacks;
+			for (size_t pi: plan.memoryWriteBackParams)
+			{
+				if (pi >= plan.parameters.size()
+					|| plan.parameters[pi].passing != RefParamPassing::Value)
+				{
+					blobWriteBacks.emplace_back();
+					continue;
+				}
+				Expression const* source = nullptr;
+				if (_isUsingForCall && pi == 0)
+					if (auto const* member = dynamic_cast<MemberAccess const*>(
+							&funcExpression()))
+						source = &member->expression();
+				size_t const shift = _isUsingForCall ? 1 : 0;
+				if (!source && pi >= shift && pi - shift < sourceArgs.size())
+					source = sourceArgs[pi - shift].get();
+				auto const* id = dynamic_cast<Identifier const*>(source);
+				auto const* declaration = id
+					? dynamic_cast<VariableDeclaration const*>(
+						id->annotation().referencedDeclaration) : nullptr;
+				blobWriteBacks.emplace_back(
+					declaration ? m_scope.findBlobAggregate(declaration->id()) : "",
+					declaration ? declaration->type() : nullptr);
+			}
 			auto origRet = emitAugmentedCallWriteBacks(
-				m_ctx, call, roots, plan.memoryWriteBackParams, plan, m_loc);
+				m_ctx, call, roots, plan.memoryWriteBackParams,
+				blobWriteBacks, plan, m_loc);
 			return wrapStorageRefResult(std::move(origRet), _funcDef);
 		}
 		auto const* target = std::get_if<awst::InstanceMethodTarget>(&call->target);

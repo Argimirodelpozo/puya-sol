@@ -1,10 +1,11 @@
-"""EIP-1967 proxy-slot lowering (proxy.md §1).
+"""Opt-in EIP-1967 proxy-slot lowering (proxy.md §1).
 
-Admin slot → synthesized app global + bare UpdateApplication gate;
+Admin slot → synthesized app global + ABI UpdateApplication gate;
 implementation slot → the app's own identity; upgradeTo → runtime trap.
 """
 
 import base64
+import json
 
 import pytest
 from algosdk import account as algosdk_account, transaction
@@ -63,7 +64,7 @@ def _update_app(harness, app, artifacts, name, sender_addr, sender_sk,
 def _run_flow(harness, extra_args):
     artifacts = harness.compile(
         "puyasolRegression/contracts/erc1967_impl.sol",
-        extra_args=extra_args,
+        extra_args=["--proxy-adaptation", *(extra_args or [])],
     )
     app = harness.deploy(artifacts, "Erc1967Impl")
     acct = harness.localnet.account
@@ -133,12 +134,51 @@ def _run_flow(harness, extra_args):
     assert as_int(harness.call(app, "value()").abi_return) == 777
 
 
-def test_erc1967_default_mode(harness):
+def test_erc1967_proxy_adaptation_native_layout(harness):
     _run_flow(harness, None)
 
 
 def test_erc1967_evm_layout(harness):
     _run_flow(harness, ["--evm-storage-layout"])
+
+
+@pytest.mark.parametrize("layout", [[], ["--evm-storage-layout"]], ids=["native", "slots"])
+def test_proxy_adaptation_default_off_slots(harness, layout):
+    """All three EIP-1967 coordinates keep ordinary storage semantics."""
+    artifacts = harness.compile(
+        "puyasolRegression/contracts/erc1967_impl.sol", extra_args=layout)
+    spec = json.loads(artifacts.by_contract["Erc1967Impl"]["arc56"].read_text())
+    assert not {"__erc1967_update", "__uups_update"}.intersection(
+        method["name"] for method in spec["methods"])
+    app = harness.deploy(artifacts, "Erc1967Impl")
+    for method in ("admin()", "implementation()", "beacon()"):
+        assert as_int(harness.call(app, method).abi_return) == 0
+
+    owner = harness.localnet.account
+    harness.call(app, "initAdmin(address)", owner.address)
+    harness.call(app, "upgradeTo(address)", owner.address)
+    harness.call(app, "setBeacon(address)", owner.address)
+    for method in ("admin()", "implementation()", "beacon()"):
+        assert _addr_bytes(harness.call(app, method).abi_return) == decode_address(owner.address)
+    harness.call(app, "setValue(uint256)", 41)
+    assert as_int(harness.call(app, "rawValue()").abi_return) == 41
+    assert "escapes into a runtime context" not in (harness.out_dir / "puya-sol.log").read_text()
+
+
+@pytest.mark.parametrize("layout", [[], ["--evm-storage-layout"]], ids=["native", "slots"])
+def test_proxy_adaptation_default_off_named_bodies(harness, layout):
+    """UUPS/Proxy/ERC1967Utils names must not trigger source-body replacement."""
+    artifacts = harness.compile(
+        "puyasolRegression/contracts/proxy_named_bodies.sol", extra_args=layout)
+    spec = json.loads(artifacts.by_contract["ProxyNamedBodies"]["arc56"].read_text())
+    assert not {"__erc1967_update", "__uups_update"}.intersection(
+        method["name"] for method in spec["methods"])
+    app = harness.deploy(artifacts, "ProxyNamedBodies")
+    assert as_int(harness.call(app, "check()").abi_return) == 3
+    assert as_int(harness.call(app, "delegatedValue()").abi_return) == 37
+    assert tuple(as_int(value) for value in harness.call(app, "libraryValues()").abi_return) == (17, 23, 29)
+    harness.call(app, "upgradeToAndCall(address,bytes)", harness.localnet.account.address, b"")
+    assert as_int(harness.call(app, "count()").abi_return) == 31
 
 
 # Admin-slot assembly reached through a LIBRARY (the OZ
@@ -150,7 +190,7 @@ def test_erc1967_evm_layout(harness):
 def _run_lib_flow(harness, extra_args):
     artifacts = harness.compile(
         "puyasolRegression/contracts/erc1967_lib_multi.sol",
-        extra_args=extra_args,
+        extra_args=["--proxy-adaptation", *(extra_args or [])],
     )
     acct = harness.localnet.account
 
@@ -175,7 +215,7 @@ def _run_lib_flow(harness, extra_args):
     assert as_int(harness.call(proxy, "value()").abi_return) == 777
 
 
-def test_erc1967_library_attribution_default(harness):
+def test_erc1967_library_attribution_native_layout(harness):
     _run_lib_flow(harness, None)
 
 
@@ -192,7 +232,8 @@ def test_erc1967_let_bound_slot(harness):
     admin round-trip and gated native update work exactly as with a literal
     slot argument.
     """
-    artifacts = harness.compile("puyasolRegression/contracts/erc1967_slot_flow.sol")
+    artifacts = harness.compile("puyasolRegression/contracts/erc1967_slot_flow.sol",
+                                extra_args=["--proxy-adaptation"])
     app = harness.deploy(artifacts, "LetSlot")
     acct = harness.localnet.account
 
@@ -212,7 +253,8 @@ def test_erc1967_escaped_slot_warning(harness):
     getAddressSlot) cannot be classified — the compiler must WARN that
     storage through the derived slot splits from the native proxy model.
     """
-    harness.compile("puyasolRegression/contracts/erc1967_slot_flow.sol")
+    harness.compile("puyasolRegression/contracts/erc1967_slot_flow.sol",
+                    extra_args=["--proxy-adaptation"])
     log = (harness.out_dir / "puya-sol.log").read_text()
     assert "escapes into a runtime context" in log
 
@@ -223,7 +265,8 @@ def test_erc1967_contract_valued_admin(harness):
     the identity form against that app's ESCROW address via app_params_get,
     so no EOA can update either way (fail-closed, not open).
     """
-    artifacts = harness.compile("puyasolRegression/contracts/erc1967_slot_flow.sol")
+    artifacts = harness.compile("puyasolRegression/contracts/erc1967_slot_flow.sol",
+                                extra_args=["--proxy-adaptation"])
     acct = harness.localnet.account
 
     # Identity form: raw word == bytes24(0) ++ itob(appId).
@@ -250,7 +293,8 @@ def test_erc1967_impl_only_no_gate(harness):
     """UUPS shape (implementation slot only, no admin use): NO gate is
     synthesized — native updates stay rejected, fail-closed (proxy.md §1).
     """
-    artifacts = harness.compile("puyasolRegression/contracts/erc1967_lib_multi.sol")
+    artifacts = harness.compile("puyasolRegression/contracts/erc1967_lib_multi.sol",
+                                extra_args=["--proxy-adaptation"])
     app = harness.deploy(artifacts, "ImplOnly")
     acct = harness.localnet.account
 

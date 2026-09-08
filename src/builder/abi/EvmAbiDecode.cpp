@@ -2,7 +2,6 @@
 #include "builder/AwstShorthand.h"
 
 #include "Logger.h"
-#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -223,8 +222,8 @@ private:
 					awst::NameGen::next("EvmAbiDecode.arrayMethod"));
 				arts.evmDecodeStructMethods[key] = name;
 				// cref is stamped when the pending methods are attached.
-				auto method = awst::makeHelperMethod("", name, arrayW,
-					{{"__start", awst::WType::uint64Type()}}, m_loc);
+				auto method = awst::ContractMethod("", name, arrayW,
+					{{"__start", awst::WType::uint64Type(), m_loc}}, m_loc);
 				auto value = arrayValueInline(array,
 					awst::makeVarExpression("__start", awst::WType::uint64Type(), m_loc),
 					nullptr, method.body->body);
@@ -340,8 +339,8 @@ private:
 				// Registered BEFORE the body so recursive structs resolve.
 				arts.evmDecodeStructMethods[key] = name;
 				// cref is stamped when the pending methods are attached.
-				auto method = awst::makeHelperMethod("", name, structW,
-					{{"__start", awst::WType::uint64Type()}}, m_loc);
+				auto method = awst::ContractMethod("", name, structW,
+					{{"__start", awst::WType::uint64Type(), m_loc}}, m_loc);
 				auto value = structFields(structure, structW,
 					awst::makeVarExpression("__start", awst::WType::uint64Type(), m_loc),
 					method.body->body);

@@ -177,6 +177,8 @@ void printUsage(char const* _progName)
 		<< "                         the xchain account model in the EVM profile.\n"
 		<< "  --xchain-placeholder <hex>  The 20-byte owner placeholder inside the\n"
 		<< "                         template (default ee x20).\n"
+		<< "  --proxy-adaptation    Opt into recognized proxy-to-native-update adaptations.\n"
+		<< "                         Disabled by default; see proxy.md for semantic boundaries.\n"
 		<< "  --child-programs-via-box  `new C()` child approval programs load from a\n"
 		<< "                         deployer-provisioned __cp_<Child> box instead of\n"
 		<< "                         embedded template constants (16KB-cap relief).\n"
@@ -319,6 +321,8 @@ FlagSpec const kFlags[] = {
 		[](Options& o, std::string const&) { o.legacySourceRewrite = true; }},
 	{"--evm-selectors", false,
 		[](Options& o, std::string const&) { o.evmSelectors = true; }},
+	{"--proxy-adaptation", false,
+		[](Options& o, std::string const&) { o.proxyAdaptation = true; }},
 	{"--contract-abi", true, applyContractAbi},
 	{"--evm-version", true,
 		[](Options& o, std::string const& v) { o.evmVersion = v; }},

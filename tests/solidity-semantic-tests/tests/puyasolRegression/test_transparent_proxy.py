@@ -15,7 +15,8 @@ def test_transparent_proxy_unit_compiles_and_impl_runs(harness):
     OZ v5 transparent closure (Proxy/ERC1967Proxy/TransparentUpgradeableProxy/
     ProxyAdmin) + implementation + factory, all in one unit."""
     artifacts = harness.compile(
-        "puyasolRegression/contracts/transparent_proxy_unit.sol")
+        "puyasolRegression/contracts/transparent_proxy_unit.sol",
+        extra_args=["--proxy-adaptation"])
     # Every contract of the trio must have compiled to a deployable artifact.
     for name in ("TranspImpl", "TranspFactory", "ProxyAdmin",
                  "TransparentUpgradeableProxy", "ERC1967Proxy"):

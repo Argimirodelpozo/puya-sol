@@ -1,5 +1,13 @@
 # Proxy patterns on the AVM — implementation boundaries and directions
 
+All compiler adaptations described here require **`--proxy-adaptation`**.
+They are **disabled by default**, independently of xchain and individual
+`--allow-divergence` options. Without this flag, EIP-1967 slots are ordinary
+storage, proxy-named functions retain their source bodies, and no native
+proxy update gate is synthesized. Unsupported delegation remains subject to
+the normal compiler policy. Opting in accepts the native-update semantics and
+recognized-idiom limitations below; it is not a claim of EVM proxy equivalence.
+
 Every EVM proxy pattern is a workaround for one protocol fact: **deployed EVM
 bytecode is immutable**. The AVM does not share that fact — an application's
 approval program is natively replaceable via an `UpdateApplication`

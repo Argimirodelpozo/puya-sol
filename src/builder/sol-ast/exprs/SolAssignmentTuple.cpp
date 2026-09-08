@@ -2,6 +2,7 @@
 #include "builder/sol-ast/exprs/SolAssignment.h"
 
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/contract/ContractBuilder.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/NameGen.h"
 #include "builder/storage/SlotHandleAccess.h"
@@ -376,6 +377,45 @@ bool SolAssignment::emitTupleComponentWrite(
 	if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(item.get()))
 		if (varExpr->name.empty())
 			return true;
+
+	// A tuple component can rebind a pointer-backed memory local just like a
+	// plain `p = value` assignment. The generic tuple target is a materialized
+	// value (not an lvalue), so repoint its registered offset explicitly. This
+	// keeps tuple rebinding runtime-scoped inside branches and loops.
+	if (_sourceLhs && i < _sourceLhs->components().size()
+		&& _sourceLhs->components()[i])
+	{
+		auto const* identifier = dynamic_cast<Identifier const*>(
+			_sourceLhs->components()[i].get());
+		auto const* declaration = identifier
+			? dynamic_cast<VariableDeclaration const*>(
+				identifier->annotation().referencedDeclaration)
+			: nullptr;
+		std::string const offsetName = declaration
+			? m_scope.findBlobAggregate(declaration->id()) : std::string{};
+		if (declaration && !offsetName.empty()
+			&& declaration->referenceLocation()
+				== VariableDeclaration::Location::Memory)
+		{
+			auto const* valueTuple = dynamic_cast<awst::WTuple const*>(
+				_value->wtype);
+			auto const* componentType = valueTuple
+				&& i < valueTuple->types().size()
+				? valueTuple->types()[i]
+				: m_ctx.typeMapper.map(declaration->type());
+			std::shared_ptr<awst::Expression> value = awst::makeTupleItem(
+				_value, static_cast<int>(i), componentType, m_loc);
+			auto const* targetType = m_ctx.typeMapper.map(declaration->type());
+			value = builder::TypeCoercion::coerceForAssignment(
+				std::move(value), targetType, m_loc);
+			builder::emitBlobBackValue(
+				m_ctx.typeMapper, declaration->type(), targetType,
+				std::move(value), offsetName,
+				awst::NameGen::next("SolAssignmentTuple.blobRespill"),
+				m_loc, m_ctx.postEffects());
+			return true;
+		}
+	}
 
 	switch (tryStoragePointerComponent(i, item, _value, _sourceLhs))
 	{

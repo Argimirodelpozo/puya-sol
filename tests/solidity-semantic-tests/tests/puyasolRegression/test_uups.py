@@ -48,7 +48,8 @@ def _update_app(harness, app, artifacts, name, sender_addr, sender_sk,
 
 def test_uups_native_update_gate(harness):
     """puyasolRegression/contracts/uups_impl.sol — flattened OZ v5 UUPS."""
-    artifacts = harness.compile("puyasolRegression/contracts/uups_impl.sol")
+    artifacts = harness.compile("puyasolRegression/contracts/uups_impl.sol",
+                                extra_args=["--proxy-adaptation"])
     app = harness.deploy(artifacts, "UupsBox")
     owner = harness.localnet.account
 

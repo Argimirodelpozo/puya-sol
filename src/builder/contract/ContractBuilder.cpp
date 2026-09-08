@@ -5,7 +5,6 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/SelectorRouter.h"
 #include "builder/contract/EvmMemoryCodec.h"
-#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "awst/Visit.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
@@ -44,10 +43,12 @@ static awst::ContractMethod makeProvisionChildProgMethod(
 	TypeMapper& _typeMapper, std::string const& _cref,
 	awst::SourceLocation const& _loc)
 {
-	auto method = awst::makeHelperMethod(_cref, "__provisionChildProg",
+	auto method = awst::ContractMethod(_cref, "__provisionChildProg",
 		awst::WType::voidType(),
-		{{"name", awst::WType::bytesType()}, {"total", awst::WType::uint64Type()},
-			{"offset", awst::WType::uint64Type()}, {"chunk", awst::WType::bytesType()}},
+		{{"name", awst::WType::bytesType(), _loc},
+			{"total", awst::WType::uint64Type(), _loc},
+			{"offset", awst::WType::uint64Type(), _loc},
+			{"chunk", awst::WType::bytesType(), _loc}},
 		_loc);
 
 	awst::ARC4ABIMethodConfig config;
@@ -913,8 +914,7 @@ void ContractBuilder::emitFunctionPointerDispatch(awst::Contract& _contractNode)
 			*m_exprBuilder, m_functionSymbols);
 
 		auto const& cref = m_contractId;
-		awst::SourceLocation loc;
-		loc.file = m_sourceFile;
+		awst::SourceLocation loc(m_sourceFile);
 		auto& dispCtx = *m_exprBuilder;
 		auto dispatchMethods = eb::FunctionPointerBuilder::generateDispatchMethods(
 			dispCtx, cref, loc, &m_dispatchSubroutines, &_contractNode.methods);
@@ -967,6 +967,8 @@ void ContractBuilder::scopeStorageDispatchCalls(
 
 void ContractBuilder::warnEscapedErc1967Slots(awst::Contract const& _contractNode)
 {
+	if (!m_typeMapper.profile().proxyAdaptation)
+		return;
 	// A 1967 slot constant SURVIVING translation means it escaped into
 	// runtime data flow (classify consumes direct sload/sstore uses; the
 	// let-fold emits no store) — the OZ StorageSlot shape. Warn: storage
@@ -984,6 +986,8 @@ void ContractBuilder::emitErc1967AdminGate(
 	solidity::frontend::ContractDefinition const& _contract,
 	awst::Contract& _contractNode)
 {
+	if (!m_typeMapper.profile().proxyAdaptation)
+		return;
 	// EIP-1967 (proxy.md §1): if any admin-slot use was lowered while
 	// translating THIS contract's bodies — or inside a freestanding library/
 	// free function THIS contract's call graph reaches (OZ's ERC1967Utils is a
@@ -1019,7 +1023,8 @@ void ContractBuilder::emitUupsUpdateGate(
 	// with an implemented _authorizeUpgrade gets the native update gate —
 	// the hook's translated method (modifiers inlined) is the permission
 	// check, run inside the UpdateApplication txn.
-	if (!proxies::UupsLowering::isUupsImplementation(_contract))
+	if (!m_typeMapper.profile().proxyAdaptation
+		|| !proxies::UupsLowering::isUupsImplementation(_contract))
 		return;
 	// The translated hook remains the chain entry: its wrapper invokes the
 	// outermost modifier subroutine and therefore preserves the complete

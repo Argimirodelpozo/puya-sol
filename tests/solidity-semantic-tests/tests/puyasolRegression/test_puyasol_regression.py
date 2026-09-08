@@ -5361,18 +5361,27 @@ def test_modifier_memory_param_rebind(harness):
     A modifier that REBINDS its memory parameter (`c = Cell(5)`) must not leak
     the new object into the wrapped function (solc: 1, the alias model gave 5),
     while a modifier that writes THROUGH the parameter keeps sharing the
-    caller's object (11 both inside and after the call). A body that writes
+    caller's object, including writes routed through another internal helper
+    by the wrapped body and observed after `_` (12 both inside and after the
+    call for both a struct and a dynamic array). A body that writes
     through and then rebinds at top level keeps both semantics: the parameter
     aliases the caller's object until the rebind statement, which binds a fresh
-    local (callK: 2002 inside, 2002 after). Only a rebind nested in a branch,
-    loop, tuple or assembly falls back to binding by value (callN: 1).
+    local (callK: 2002 inside, 2002 after). Branch, loop, tuple, and inline-Yul
+    rebinds are runtime pointer assignments too: the write made first remains
+    shared, while every later rebind stays local. The invocation's conditional
+    memory argument also preserves whichever pointer solc selects at runtime.
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/modifier_memory_rebind.sol")
     assert as_int(harness.call(app, "callG()", extra_fee=10_000).abi_return) == 1
-    assert as_int(harness.call(app, "callH()", extra_fee=10_000).abi_return) == 11011
-    assert as_int(harness.call(app, "seen()").abi_return) == 11
+    assert as_int(harness.call(app, "callH()", extra_fee=10_000).abi_return) == 12012
+    assert as_int(harness.call(app, "seen()").abi_return) == 12
+    assert as_int(harness.call(app, "callArray()", extra_fee=10_000).abi_return) == 12012
+    assert as_int(harness.call(app, "arraySeen()").abi_return) == 12
     assert as_int(harness.call(app, "callK()", extra_fee=10_000).abi_return) == 2002 * 10000 + 2002
-    assert as_int(harness.call(app, "callN()", extra_fee=10_000).abi_return) == 1
+    for mode in range(8):
+        got = tuple(as_int(value) for value in harness.call(
+            app, "callN(uint256)", mode, extra_fee=10_000).abi_return)
+        assert got == ((2, 10, 2, 10) if mode < 4 else (1, 11, 1, 11))
 
 
 def test_storage_ref_call_member_write(harness):

@@ -282,8 +282,11 @@ public:
 		}
 		if (auto const* array = dynamic_cast<ArrayType const*>(type))
 		{
-			if (array->isByteArrayOrString() || array->isDynamicallySized())
+			if (array->isByteArrayOrString())
 				return false;
+			if (array->isDynamicallySized())
+				return dynamicArrayAt(
+					array, std::move(value), std::move(offset), out);
 			return fixedArrayAt(array, std::move(value), std::move(offset), out);
 		}
 		if (auto const* structure = dynamic_cast<StructType const*>(type))
@@ -364,9 +367,6 @@ private:
 		ArrayType const* array, std::shared_ptr<awst::Expression> value,
 		Statements& out)
 	{
-		auto const* arrayW = m_mapper.map(array);
-		auto const* elemW = arrayElementType(arrayW);
-		auto const* elemType = array->baseType();
 		auto arrayValue = pin(std::move(value), out, "array");
 
 		if (!array->isDynamicallySized())
@@ -376,21 +376,30 @@ private:
 			return base;
 		}
 
+		auto count = pin(awst::makeArrayLength(
+			arrayValue, awst::WType::uint64Type(), m_loc), out, "arraycount");
+		auto size = add(u64(32, m_loc), awst::makeUInt64BinOp(
+			count, awst::UInt64BinaryOperator::Mult,
+			u64(array->memoryStride(), m_loc), m_loc), m_loc);
+		auto base = pin(allocate(std::move(size), out), out, "arraybase");
+		writeWord(base, awst::makeLeftPadToN(
+			awst::makeItob(count, m_loc), 32, m_loc), out);
+		writeArrayElements(array, arrayValue, base, count, out);
+		return base;
+	}
+
+	void writeArrayElements(ArrayType const* array,
+		std::shared_ptr<awst::Expression> arrayValue,
+		std::shared_ptr<awst::Expression> base,
+		std::shared_ptr<awst::Expression> count,
+		Statements& out)
+	{
+		auto const* elemW = arrayElementType(m_mapper.map(array));
+		auto const* elemType = array->baseType();
 		int id = awst::NameGen::next("EvmMemoryCodec.writeArray");
 		std::string suffix = std::to_string(id);
 		auto idxVar = [&]() { return awst::makeVarExpression(
 			"__evmmem_wi_" + suffix, awst::WType::uint64Type(), m_loc); };
-		auto countVar = [&]() { return awst::makeVarExpression(
-			"__evmmem_wn_" + suffix, awst::WType::uint64Type(), m_loc); };
-		out.push_back(awst::makeAssignmentStatement(
-			countVar(), awst::makeArrayLength(
-				arrayValue, awst::WType::uint64Type(), m_loc), m_loc));
-		auto size = add(u64(32, m_loc), awst::makeUInt64BinOp(
-			countVar(), awst::UInt64BinaryOperator::Mult,
-			u64(array->memoryStride(), m_loc), m_loc), m_loc);
-		auto base = pin(allocate(std::move(size), out), out, "arraybase");
-		writeWord(base, awst::makeLeftPadToN(
-			awst::makeItob(countVar(), m_loc), 32, m_loc), out);
 		out.push_back(awst::makeAssignmentStatement(idxVar(), u64(0, m_loc), m_loc));
 
 		auto body = awst::makeBlock(m_loc);
@@ -404,8 +413,24 @@ private:
 			idxVar(), add(idxVar(), u64(1, m_loc), m_loc), m_loc));
 		out.push_back(awst::makeWhileLoop(
 			awst::makeNumericCompare(idxVar(), awst::NumericComparison::Lt,
-				countVar(), m_loc), std::move(body), m_loc));
-		return base;
+				count, m_loc), std::move(body), m_loc));
+	}
+
+	bool dynamicArrayAt(ArrayType const* array,
+		std::shared_ptr<awst::Expression> value,
+		std::shared_ptr<awst::Expression> offset, Statements& out)
+	{
+		auto arrayValue = pin(std::move(value), out, "array");
+		auto count = pin(awst::makeArrayLength(
+			arrayValue, awst::WType::uint64Type(), m_loc), out, "arraycount");
+		auto base = awst::makeEvalOnce(std::move(offset), m_loc);
+		auto oldCount = checkedUint64Word(m_mapper, base, m_loc, out);
+		out.push_back(awst::makeExpressionStatement(awst::makeAssert(
+			awst::makeNumericCompare(count, awst::NumericComparison::Eq,
+				std::move(oldCount), m_loc),
+			m_loc, "callee changed a memory array root length"), m_loc));
+		writeArrayElements(array, arrayValue, base, count, out);
+		return true;
 	}
 
 	std::shared_ptr<awst::Expression> structValue(

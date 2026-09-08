@@ -5,7 +5,6 @@
 
 #include "builder/BuildArtifacts.h"
 #include "builder/sol-types/TypeCoercion.h"
-#include "awst/HelperMethod.h"
 #include "awst/Visit.h"
 #include "Logger.h"
 
@@ -331,7 +330,7 @@ awst::AppStorageDefinition Erc1967Lowering::adminStateDefinition(
 awst::ContractMethod Erc1967Lowering::updateGateMethod(
 	std::string const& _cref, awst::SourceLocation const& _loc)
 {
-	auto method = awst::makeHelperMethod(
+	auto method = awst::ContractMethod(
 		_cref, "__erc1967_update", awst::WType::voidType(), {}, _loc);
 
 	auto body = method.body;

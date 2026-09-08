@@ -4,7 +4,6 @@
 
 #include "builder/proxies/UupsLowering.h"
 #include "builder/proxies/Erc1967Lowering.h"
-#include "awst/HelperMethod.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -90,7 +89,7 @@ awst::ContractMethod UupsLowering::updateGateMethod(
 	awst::ContractMethod const& _authorizeMethod,
 	awst::SourceLocation const& _loc)
 {
-	auto method = awst::makeHelperMethod(
+	auto method = awst::ContractMethod(
 		_cref, GATE_NAME, awst::WType::voidType(), {}, _loc);
 
 	auto body = method.body;

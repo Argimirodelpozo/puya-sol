@@ -2034,6 +2034,14 @@ struct BigUIntAugmentedAssignment: Statement
 
 struct SubroutineArgument
 {
+	SubroutineArgument() = default;
+	SubroutineArgument(
+		std::string _name, WType const* _wtype, SourceLocation _sourceLocation)
+		: name(std::move(_name)), sourceLocation(std::move(_sourceLocation)),
+		  wtype(_wtype)
+	{
+	}
+
 	std::string name;
 	SourceLocation sourceLocation;
 	WType const* wtype = WType::voidType();
@@ -2041,6 +2049,17 @@ struct SubroutineArgument
 
 struct ContractMethod
 {
+	ContractMethod() = default;
+	ContractMethod(
+		std::string _cref, std::string _memberName,
+		WType const* _returnType, std::vector<SubroutineArgument> _args,
+		SourceLocation _sourceLocation)
+		: sourceLocation(_sourceLocation), args(std::move(_args)),
+		  returnType(_returnType), body(makeBlock(_sourceLocation)),
+		  cref(std::move(_cref)), memberName(std::move(_memberName))
+	{
+	}
+
 	SourceLocation sourceLocation;
 	std::vector<SubroutineArgument> args;
 	WType const* returnType = WType::voidType();

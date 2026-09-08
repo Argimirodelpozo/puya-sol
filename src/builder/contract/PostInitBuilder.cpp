@@ -13,7 +13,6 @@
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-types/SolIntType.h"
 
-#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 
@@ -44,7 +43,7 @@ void ContractBuilder::buildPostInitMethod(
 		createBlock->body.push_back(std::move(setPendingStmt));
 
 		// Build __postInit method with deferred constructor body
-		auto postInit = awst::makeHelperMethod(m_contractId, "__postInit",
+		auto postInit = awst::ContractMethod(m_contractId, "__postInit",
 			awst::WType::voidType(), {}, method.sourceLocation);
 
 		// Mirror constructor params on __postInit so the caller passes the same values.
@@ -53,11 +52,11 @@ void ContractBuilder::buildPostInitMethod(
 			int paramIdx = 0;
 			for (auto const& param: constructor->parameters())
 			{
-				postInit.args.push_back(awst::makeHelperArg(
+				postInit.args.emplace_back(
 					param->name().empty()
 						? "_param" + std::to_string(paramIdx)
 						: param->name(),
-					m_typeMapper.map(param->type()), method.sourceLocation));
+					m_typeMapper.map(param->type()), method.sourceLocation);
 				++paramIdx;
 			}
 		}

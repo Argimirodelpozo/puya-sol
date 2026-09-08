@@ -180,8 +180,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	// algorithms never enter the root set.
 	if (m_session.artifacts.needsRipemd160)
 	{
-		awst::SourceLocation builtinLoc;
-		builtinLoc.file = _sourceFile;
+		awst::SourceLocation builtinLoc(_sourceFile);
 		roots.push_back(builder::builtin::buildRipemd160Subroutine(builtinLoc));
 	}
 
@@ -254,8 +253,7 @@ void AWSTBuilder::translateLibraryFunctions(
 					if (hasFunctionPointerParameter(*func)
 						&& func->visibility() == solidity::frontend::Visibility::External)
 					{
-						awst::SourceLocation warnLoc;
-						warnLoc.file = _sourceFile;
+						awst::SourceLocation warnLoc(_sourceFile);
 						Logger::instance().warning(
 							"external library function `" + qualifiedName + "` internalized "
 							"into using-contract — Solidity would normally deploy this as a "
@@ -329,13 +327,15 @@ void AWSTBuilder::buildFreestandingParams(
 {
 	auto const& plan = m_session.typeMapper.callBoundaryPlan(function);
 	for (auto const& parameter: plan.parameters)
-		sub.args.push_back({parameter.name,
-			m_session.sourceMap.toAwstLoc(sourceFile, parameter.declaration->location()), parameter.type});
+		sub.args.emplace_back(parameter.name, parameter.type,
+			m_session.sourceMap.toAwstLoc(
+				sourceFile, parameter.declaration->location()));
 	for (auto pi: plan.offsetParams)
 	{
 		auto const& parameter = plan.parameters[pi];
-		sub.args.push_back({parameter.offsetName(),
-			m_session.sourceMap.toAwstLoc(sourceFile, parameter.declaration->location()), awst::WType::uint64Type()});
+		sub.args.emplace_back(parameter.offsetName(), awst::WType::uint64Type(),
+			m_session.sourceMap.toAwstLoc(
+				sourceFile, parameter.declaration->location()));
 	}
 }
 
@@ -599,7 +599,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// would drag the storage-dispatch runtime + delegatecall into the demand
 	// graph; each has an exact native meaning instead.
 	if (auto fold = proxies::Erc1967Lowering::classifyUtilsFunction(_func);
-		fold != proxies::Erc1967Lowering::UtilsFold::None)
+		m_session.typeMapper.profile().proxyAdaptation
+			&& fold != proxies::Erc1967Lowering::UtilsFold::None)
 		sub->body = proxies::Erc1967Lowering::utilsFoldBody(
 			fold, sub->returnType, sub->args, m_session.artifacts, loc);
 	else
@@ -632,7 +633,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// 1967 slot constants surviving in a library/free body escaped into
 	// runtime data flow (the OZ StorageSlot shape) — warn here; contract
 	// bodies get the same scan in ContractBuilder.
-	if (sub->body)
+	if (sub->body && m_session.typeMapper.profile().proxyAdaptation)
 	{
 		std::set<builder::proxies::Erc1967Slot> warned;
 		builder::proxies::Erc1967Lowering::warnEscapedSlotConstants(

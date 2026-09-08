@@ -395,6 +395,7 @@ std::optional<int> CompileRun::buildAwst()
 			? puyasol::builder::ContractAbi::Evm
 			: puyasol::builder::ContractAbi::Arc4,
 		.viaIRSequencing = opts.viaYulBehavior,
+		.proxyAdaptation = opts.proxyAdaptation,
 		.evmChainId = opts.evmChainId.empty()
 			? std::nullopt : std::optional<std::string>{opts.evmChainId},
 		.evmBlockGasLimit = opts.evmBlockGasLimit.empty()

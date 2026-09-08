@@ -1092,11 +1092,7 @@ void EvmSlotLowering::synthesizePendingClearSubs()
 			continue;
 		body.push_back(awst::makeReturnStatement(nullptr, m_loc));
 		std::vector<awst::SubroutineArgument> args;
-		awst::SubroutineArgument sa;
-		sa.name = "__slot";
-		sa.wtype = awst::WType::biguintType();
-		sa.sourceLocation = m_loc;
-		args.push_back(sa);
+		args.emplace_back("__slot", awst::WType::biguintType(), m_loc);
 		auto blk = awst::makeBlock(m_loc);
 		blk->body = std::move(body);
 		arts.pendingYulSubroutines.push_back(awst::makeSubroutine(

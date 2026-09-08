@@ -410,7 +410,7 @@ bool memoryUsesBlob(awst::WType const* _type)
 	// FIRST hardening the blob model for the common small-array ops — verified blocker: routing
 	// `uint[]` here breaks `T memory a = new uint[](N)` inline-init ("assignment target type
 	// differs from expression value type": the new-array value vs the uint64 offset binding).
-	// Flip here once the blob model handles new-init / push / etc. for small arrays. See PLAN.md.
+	// Flip here once the blob model handles new-init / push / etc. for small arrays.
 	return computeEncodedElementSize(_type).fixedBytes().value_or(0) > 4096;
 }
 

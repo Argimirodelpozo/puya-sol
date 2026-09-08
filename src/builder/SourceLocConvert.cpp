@@ -22,25 +22,25 @@ awst::SourceLocation convert(
 	int _start,
 	int _end)
 {
-	awst::SourceLocation loc;
-	loc.file = _file;
+	int line;
+	int endLine;
 	if (_cs)
 	{
 		int startLine = lineAt(_cs, _start);
 		// `end` is exclusive: a node ending exactly at a newline must not
 		// spill onto the next line.
-		int endLine = lineAt(_cs, _end > _start ? _end - 1 : _end);
-		loc.line = startLine > 0 ? startLine : 0;
-		loc.endLine = endLine >= startLine ? endLine : loc.line;
+		int translatedEndLine = lineAt(_cs, _end > _start ? _end - 1 : _end);
+		line = startLine > 0 ? startLine : 0;
+		endLine = translatedEndLine >= startLine ? translatedEndLine : line;
 	}
 	else
 	{
 		// No stream registered (synthetic node or pre-registration path):
 		// keep the raw offsets — monotonic and non-zero beats fabricated 0s.
-		loc.line = _start >= 0 ? _start : 0;
-		loc.endLine = _end >= 0 ? _end : 0;
+		line = _start >= 0 ? _start : 0;
+		endLine = _end >= 0 ? _end : 0;
 	}
-	return loc;
+	return awst::SourceLocation(_file, line, endLine);
 }
 } // namespace
 

@@ -10,7 +10,6 @@
 #include <libsolidity/ast/Types.h>
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
-#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 
@@ -209,10 +208,12 @@ struct NamedCellDispatch
 		// FULL 256-bit slot: EVM slots are 2^256-wide (boundary fixtures probe
 		// sub(0,5) = 2^256-5; keccak-derived slots are arbitrary). The old uint64
 		// arg silently truncated them at every call site.
-		awst::HelperArgs args{{"__slot", awst::WType::biguintType()}};
+		std::vector<awst::SubroutineArgument> args{
+			{"__slot", awst::WType::biguintType(), loc}};
 		if (withValue)
-			args.push_back({"__value", awst::WType::biguintType()});
-		return awst::makeHelperMethod(cref, std::move(name), returnType, args, loc);
+			args.emplace_back("__value", awst::WType::biguintType(), loc);
+		return awst::ContractMethod(
+			cref, std::move(name), returnType, std::move(args), loc);
 	}
 
 	// Default fallback: BOX-PER-SLOT keyed by the full 32-byte slot ("s:" ++ slot).
@@ -708,8 +709,7 @@ void ContractBuilder::buildStorageDispatch(
 	}
 
 	auto const& layout = _storagePlan.solidityLayout;
-	awst::SourceLocation loc;
-	loc.file = m_sourceFile;
+	awst::SourceLocation loc(m_sourceFile);
 
 	NamedCellDispatch dispatch{m_storageMapper, loc, m_contractId};
 	auto const table = collectDispatchSlots(layout);

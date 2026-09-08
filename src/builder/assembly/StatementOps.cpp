@@ -204,7 +204,7 @@ void AssemblyBuilder::buildVariableDeclaration(
 		// site) and emit NO store — all references fold, and a magic constant
 		// surviving in the AWST is reserved as the "escaped to runtime"
 		// warning signal (Erc1967Lowering::warnEscapedSlotConstants).
-		if (!m_reassignedLocals.count(origName))
+		if (m_typeMapper.profile().proxyAdaptation && !m_reassignedLocals.count(origName))
 			if (auto const* slotConst =
 					dynamic_cast<awst::IntegerConstant const*>(value.get());
 				slotConst && proxies::Erc1967Lowering::classify(slotConst)

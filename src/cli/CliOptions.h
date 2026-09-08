@@ -38,6 +38,7 @@ struct Options
 	// Opt-in because external function-pointer representation grows to carry
 	// both identities and observable selector values change.
 	bool evmSelectors = false;
+	bool proxyAdaptation = false;
 	std::string contractAbi = "arc4";
 	std::string evmVersion;     // empty = compiler default (cancun)
 	// Explicit EVM environment inputs used by the semantic policy. Empty means

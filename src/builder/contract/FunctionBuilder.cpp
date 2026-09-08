@@ -3,7 +3,6 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/storage/EvmLayoutMode.h"
-#include "awst/HelperMethod.h"
 #include "awst/Termination.hpp"
 #include "awst/StatementWalk.h"
 #include "awst/Visit.h"
@@ -38,7 +37,7 @@ awst::ContractMethod ContractBuilder::buildClearProgram(
 	std::string const& _contractName
 )
 {
-	auto method = awst::makeHelperMethod(m_contractId, "clear_state_program",
+	auto method = awst::ContractMethod(m_contractId, "clear_state_program",
 		awst::WType::boolType(), {}, makeLoc(_contract.location()));
 
 	// return true
@@ -342,12 +341,13 @@ void ContractBuilder::buildMethodSignature(
 
 	auto const& plan = m_typeMapper.callBoundaryPlan(_func, m_currentContract);
 	for (auto const& parameter: plan.parameters)
-		method.args.push_back({parameter.name, makeLoc(parameter.declaration->location()), parameter.type});
+		method.args.emplace_back(parameter.name, parameter.type,
+			makeLoc(parameter.declaration->location()));
 	for (auto pi: plan.offsetParams)
 	{
 		auto const& parameter = plan.parameters[pi];
-		method.args.push_back({parameter.offsetName(),
-			makeLoc(parameter.declaration->location()), awst::WType::uint64Type()});
+		method.args.emplace_back(parameter.offsetName(), awst::WType::uint64Type(),
+			makeLoc(parameter.declaration->location()));
 	}
 }
 
@@ -863,6 +863,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			setReturnWirePlan(returnPlan, /*asmWrap=*/funcHasInlineAssembly);
 
 		registerBodyRefParams(_func, asmSlotParamIds);
+		// A memory object passed into a modifier must retain solc's pointer
+		// identity across every generated chain link. Register those exact
+		// parameter roots before translating the body so reads, writes, and
+		// rebinds all use the existing scratch-pointer lowering.
+		if (!_func.modifiers().empty())
+			registerModifierMemoryRootParams(_func);
 
 		m_functionCtx->inConstructor = _func.isConstructor();
 		m_functionCtx->callableId = _func.id();
@@ -881,7 +887,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// real bodies would drag delegatecall + escaped-1967-slot storage
 		// into the demand graph.
 		if (auto fold = proxies::UupsLowering::classify(_func);
-			fold != proxies::UupsFold::None)
+			m_typeMapper.profile().proxyAdaptation && fold != proxies::UupsFold::None)
 			method.body = proxies::UupsLowering::foldedBody(
 				fold, method.sourceLocation);
 		else

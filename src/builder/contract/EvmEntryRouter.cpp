@@ -5,7 +5,6 @@
 #include "builder/contract/RouterConditions.h"
 
 #include "Logger.h"
-#include "awst/HelperMethod.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/SolcFacts.h"
 #include "builder/abi/EvmAbiDecode.h"
@@ -104,8 +103,9 @@ void synthesizeWordLeaf(
 	char const* message,
 	WordLeafFn const& result)
 {
-	auto sub = awst::makeHelperMethod(
-		cref, name, returnType, {{"__off", awst::WType::uint64Type()}}, loc);
+	auto sub = awst::ContractMethod(
+		cref, name, returnType,
+		{{"__off", awst::WType::uint64Type(), loc}}, loc);
 	auto fetch = awst::makeSubroutineCall(
 		awst::InstanceMethodTarget{"__evm_decw"},
 		awst::WType::bytesType(), loc);
@@ -132,16 +132,16 @@ void synthesizeEvmEntryHelpers(
 		return;
 	std::string cref = contract.methods.front().cref;
 	{
-		auto sub = awst::makeHelperMethod(
+		auto sub = awst::ContractMethod(
 			cref, "__evm_npy", awst::WType::voidType(), {}, loc);
 		emitNonPayableCheck(loc, sub.body->body);
 		sub.body->body.push_back(awst::makeReturnStatement(nullptr, loc));
 		contract.methods.push_back(std::move(sub));
 	}
 	{
-		auto sub = awst::makeHelperMethod(
+		auto sub = awst::ContractMethod(
 			cref, "__evm_decw", awst::WType::bytesType(),
-			{{"__off", awst::WType::uint64Type()}}, loc);
+			{{"__off", awst::WType::uint64Type(), loc}}, loc);
 		auto off = [&]() {
 			return awst::makeVarExpression(
 				"__off", awst::WType::uint64Type(), loc);
@@ -344,13 +344,13 @@ std::map<std::string, std::string> synthesizeEvmReturnTails(
 			continue;   // unexpected wire shape — keep those arms inline
 
 		std::string name = "__evm_ret" + std::to_string(index++);
-		auto sub = awst::makeHelperMethod(
+		auto sub = awst::ContractMethod(
 			cref, name, awst::WType::voidType(), {}, loc);
 		auto body = sub.body;
 		std::vector<std::shared_ptr<awst::Expression>> returnValues;
 		if (!spec.returnTypes.empty())
 		{
-			sub.args.push_back(awst::makeHelperArg("__v", spec.retW, loc));
+			sub.args.emplace_back("__v", spec.retW, loc);
 			auto v = [&]() {
 				return awst::makeVarExpression("__v", spec.retW, loc);
 			};

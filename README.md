@@ -197,6 +197,11 @@ calls and may change state. No `--allow-divergence staticcall` flag is required
 (the flag remains accepted for compatibility). Separate divergences, such as
 low-level call failure handling, still require their own acknowledgment.
 
+Proxy-to-native-update adaptation is disabled by default. Use the separate
+`--proxy-adaptation` flag to enable recognized ERC-1967/UUPS lowerings and
+synthesized update gates. It is independent of xchain and divergence opt-ins;
+see [the proxy boundaries](proxy.md) before enabling it.
+
 `type(C).creationCode` and `type(C).runtimeCode` are hard compile errors: the
 deployed program is TEAL, so EVM bytecode — even solc's real object for the
 same source — describes a contract that does not exist on chain, and its usual

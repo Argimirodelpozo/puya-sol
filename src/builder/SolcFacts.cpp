@@ -24,6 +24,28 @@ namespace puyasol::builder
 
 using namespace solidity::yul;
 
+solidity::frontend::ModifierDefinition const* SolcFacts::resolveModifier(
+	solidity::frontend::ModifierInvocation const& invocation,
+	solidity::frontend::ContractDefinition const* mostDerived)
+{
+	using namespace solidity::frontend;
+	auto const* modifier = dynamic_cast<ModifierDefinition const*>(
+		invocation.name().annotation().referencedDeclaration);
+	if (!modifier)
+		return nullptr;
+	auto const& lookup = invocation.name().annotation().requiredLookup;
+	solAssert(lookup.set(), "Missing solc modifier lookup fact");
+	switch (*lookup)
+	{
+	case VirtualLookup::Static: return modifier;
+	case VirtualLookup::Virtual:
+		return mostDerived ? &modifier->resolveVirtual(*mostDerived) : modifier;
+	case VirtualLookup::Super:
+		solAssert(false, "Solc does not permit super modifier lookup");
+	}
+	return nullptr;
+}
+
 namespace
 {
 

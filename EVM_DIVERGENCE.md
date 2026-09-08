@@ -103,6 +103,11 @@ slots 0–127. These are target capacities, not changes to solc's packing rules.
 
 ## Other standing entries (summaries; see tests' xfail reasons)
 
+- Proxy-to-native-update adaptations require the separate, default-off
+  `--proxy-adaptation` flag. Without it, proxy names and EIP-1967 slot values
+  do not activate body replacements, native admin cells, or update gates.
+  See [proxy.md](proxy.md) for the opt-in semantics and recognition limits.
+
 - `delegatecall`: rejected by default because there is no AVM analogue. A
   research build may acknowledge `--allow-divergence delegatecall`, which
   preserves a deliberate runtime-failure lowering rather than fabricating

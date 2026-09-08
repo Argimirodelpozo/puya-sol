@@ -512,13 +512,7 @@ std::shared_ptr<Subroutine> buildRipemd160Subroutine(SourceLocation loc)
 	sub->pure = true;
 	sub->inlineOpt = false;
 
-	{
-		SubroutineArgument arg;
-		arg.name = "data";
-		arg.wtype = WType::bytesType();
-		arg.sourceLocation = loc;
-		sub->args.push_back(std::move(arg));
-	}
+	sub->args.emplace_back("data", WType::bytesType(), loc);
 
 	auto body = makeBlock(loc);
 

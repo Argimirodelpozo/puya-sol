@@ -11,7 +11,6 @@
 #include <libsolidity/ast/Types.h>
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
-#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 
@@ -26,10 +25,12 @@ namespace
 constexpr char const* kDynarrMetrics[] = {"__size", "__aw", "__per", "__mul", "__bp"};
 
 /// `_args` followed by the five uint64 metric parameters.
-awst::HelperArgs withMetrics(awst::HelperArgs _args)
+std::vector<awst::SubroutineArgument> withMetrics(
+	std::vector<awst::SubroutineArgument> _args,
+	awst::SourceLocation const& _loc)
 {
 	for (char const* an: kDynarrMetrics)
-		_args.emplace_back(an, awst::WType::uint64Type());
+		_args.emplace_back(an, awst::WType::uint64Type(), _loc);
 	return _args;
 }
 
@@ -150,8 +151,9 @@ struct EvmSlotCodec
 	// ── __storage_read(slot: biguint) -> biguint ──
 	void emitStorageRead(awst::Contract* _contractNode) const
 	{
-		auto readSub = awst::makeHelperMethod(cref, "__storage_read",
-			awst::WType::biguintType(), {{"__slot", awst::WType::biguintType()}}, loc);
+		auto readSub = awst::ContractMethod(cref, "__storage_read",
+			awst::WType::biguintType(),
+			{{"__slot", awst::WType::biguintType(), loc}}, loc);
 		auto body = readSub.body;
 		if (!denseOnly)
 			body->body.push_back(makeSlotWrapStmt());
@@ -201,9 +203,10 @@ struct EvmSlotCodec
 	// ── __storage_write(slot: biguint, value: biguint) -> void ──
 	void emitStorageWrite(awst::Contract* _contractNode) const
 	{
-		auto writeSub = awst::makeHelperMethod(cref, "__storage_write",
+		auto writeSub = awst::ContractMethod(cref, "__storage_write",
 			awst::WType::voidType(),
-			{{"__slot", awst::WType::biguintType()}, {"__value", awst::WType::biguintType()}},
+			{{"__slot", awst::WType::biguintType(), loc},
+				{"__value", awst::WType::biguintType(), loc}},
 			loc);
 		auto body = writeSub.body;
 		if (!denseOnly)
@@ -343,12 +346,14 @@ struct EvmSlotCodec
 	// the new count, as the EVM does on shrink.
 	void emitBytesCodec(awst::Contract* _contractNode, bool _write) const
 	{
-		awst::HelperArgs args{{"__slot", awst::WType::biguintType()}};
+		std::vector<awst::SubroutineArgument> args{
+			{"__slot", awst::WType::biguintType(), loc}};
 		if (_write)
-			args.emplace_back("__val", awst::WType::bytesType());
-		auto sub = awst::makeHelperMethod(cref,
+			args.emplace_back("__val", awst::WType::bytesType(), loc);
+		auto sub = awst::ContractMethod(cref,
 			_write ? "__evm_bytes_write" : "__evm_bytes_read",
-			_write ? awst::WType::voidType() : awst::WType::bytesType(), args, loc);
+			_write ? awst::WType::voidType() : awst::WType::bytesType(),
+			std::move(args), loc);
 		auto body = sub.body;
 		auto valVar = [&]() { return bytesVar("__val"); };
 		// low byte of the padded word `_w`, and its parity (even = short form)
@@ -525,13 +530,14 @@ struct EvmSlotCodec
 	// region reset for each outer element.
 	void emitDynamicArrayCodec(awst::Contract* _contractNode, bool _write) const
 	{
-		awst::HelperArgs args{{"__slot", awst::WType::biguintType()}};
+		std::vector<awst::SubroutineArgument> args{
+			{"__slot", awst::WType::biguintType(), loc}};
 		if (_write)
-			args.emplace_back("__val", awst::WType::bytesType());
-		auto sub = awst::makeHelperMethod(cref,
+			args.emplace_back("__val", awst::WType::bytesType(), loc);
+		auto sub = awst::ContractMethod(cref,
 			_write ? "__evm_dynarr_write" : "__evm_dynarr_read",
 			_write ? awst::WType::voidType() : awst::WType::bytesType(),
-			withMetrics(std::move(args)), loc);
+			withMetrics(std::move(args), loc), loc);
 		auto body = sub.body;
 		auto valVar = [&]() { return bytesVar("__val"); };
 		// lanes of an element count
@@ -820,10 +826,10 @@ struct EvmSlotCodec
 		};
 		// READ
 		{
-			auto sub = awst::makeHelperMethod(cref, "__evm_dynarr_recursive_read",
+			auto sub = awst::ContractMethod(cref, "__evm_dynarr_recursive_read",
 				awst::WType::bytesType(),
-				withMetrics({{"__slot", awst::WType::biguintType()},
-					{"__depth", awst::WType::uint64Type()}}), loc);
+				withMetrics({{"__slot", awst::WType::biguintType(), loc},
+					{"__depth", awst::WType::uint64Type(), loc}}, loc), loc);
 			auto body = sub.body;
 			{
 				auto base = awst::makeBlock(loc);
@@ -877,11 +883,11 @@ struct EvmSlotCodec
 
 		// WRITE
 		{
-			auto sub = awst::makeHelperMethod(cref, "__evm_dynarr_recursive_write",
+			auto sub = awst::ContractMethod(cref, "__evm_dynarr_recursive_write",
 				awst::WType::voidType(),
-				withMetrics({{"__slot", awst::WType::biguintType()},
-					{"__val", awst::WType::bytesType()},
-					{"__depth", awst::WType::uint64Type()}}), loc);
+				withMetrics({{"__slot", awst::WType::biguintType(), loc},
+					{"__val", awst::WType::bytesType(), loc},
+					{"__depth", awst::WType::uint64Type(), loc}}, loc), loc);
 			auto valVar2 = [&]() {
 				return awst::makeVarExpression("__val", awst::WType::bytesType(), loc);
 			};
@@ -985,8 +991,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	bool const denseOnly = m_typeMapper.profile().denseOnlyStorage;
 
 	auto const& cref = m_contractId;
-	awst::SourceLocation loc;
-	loc.file = m_sourceFile;
+	awst::SourceLocation loc(m_sourceFile);
 
 	// Single-page dense layouts skip the mod and the wide btoi normalisation.
 	bool const singlePage = denseOnly

@@ -748,14 +748,11 @@ void ContractBuilder::buildPublicStateVariableGetters(
 		auto const solParamNames = getterFuncType->parameterNames();
 		for (size_t i = 0; i < solParamTypes.size(); ++i)
 		{
-			awst::SubroutineArgument arg;
 			std::string paramName = (i < solParamNames.size() && !solParamNames[i].empty())
 				? solParamNames[i]
 				: "key" + std::to_string(i);
-			arg.name = paramName;
-			arg.sourceLocation = loc;
-			arg.wtype = m_typeMapper.map(solParamTypes[i]);
-			getter.args.push_back(std::move(arg));
+			getter.args.emplace_back(
+				std::move(paramName), m_typeMapper.map(solParamTypes[i]), loc);
 		}
 
 		auto const& solReturnTypes = getterFuncType->returnParameterTypes();

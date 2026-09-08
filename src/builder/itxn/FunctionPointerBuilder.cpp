@@ -3,7 +3,6 @@
 /// inner app calls for external.
 
 #include "builder/itxn/FunctionPointerBuilder.h"
-#include "awst/HelperMethod.h"
 #include "awst/NameGen.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/SelectorSemantics.h"
@@ -578,19 +577,19 @@ awst::ContractMethod buildDispatchSignature(
 	// silent void). Public targets return WIRE-encoded values — the
 	// per-entry body adapts them back to the native return.
 	// Args: __funcptr_id first, then __static, then function params.
-	auto dispatch = awst::makeHelperMethod(_cref, _dname,
+	auto dispatch = awst::ContractMethod(_cref, _dname,
 		computeReturnType(_ctx, _funcType),
-		{{"__funcptr_id", awst::WType::uint64Type()},
-			{"__static", awst::WType::uint64Type()}}, _loc);
+		{{"__funcptr_id", awst::WType::uint64Type(), _loc},
+			{"__static", awst::WType::uint64Type(), _loc}}, _loc);
 	for (size_t i = 0; i < _funcType->parameterTypes().size(); ++i)
 	{
 		// The SAME native mapping the call site coerces to — the old
 		// mapDispatchType sent address/enum/struct/non-byte-array params
 		// to biguint while the call site passed account/uint64/array
 		// wtypes.
-		dispatch.args.push_back(awst::makeHelperArg(
+		dispatch.args.emplace_back(
 			"__arg" + std::to_string(i),
-			_ctx.typeMapper.map(_funcType->parameterTypes()[i]), _loc));
+			_ctx.typeMapper.map(_funcType->parameterTypes()[i]), _loc);
 	}
 	return dispatch;
 }
@@ -696,8 +695,9 @@ awst::ContractMethod buildSelToIdMethod(
 	std::vector<FuncPtrEntry const*> const& entries,
 	awst::SourceLocation const& _loc)
 {
-	auto selToId = awst::makeHelperMethod(_cref, "__sel_to_id_" + dname,
-		awst::WType::uint64Type(), {{"__sel", awst::WType::bytesType()}}, _loc);
+	auto selToId = awst::ContractMethod(_cref, "__sel_to_id_" + dname,
+		awst::WType::uint64Type(),
+		{{"__sel", awst::WType::bytesType(), _loc}}, _loc);
 
 	auto selBody = selToId.body;
 
