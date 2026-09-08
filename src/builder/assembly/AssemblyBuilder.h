@@ -251,12 +251,10 @@ public:
 	/// `_offVar + 32`, matching EVM string/bytes memory layout, so `add(buf, 32)` in
 	/// asm points at the data and value-reads materialise [len word][data].
 	static std::vector<std::shared_ptr<awst::Statement>> emitBytesBlobAlloc(
-		ScratchLayout const& _scratch,
+		TypeMapper& _typeMapper,
 		std::shared_ptr<awst::Expression> _lenU64, std::string const& _offVar,
 		int _uniqueId, awst::SourceLocation const& _loc);
 
-	/// Read a 32-byte EVM-memory word at a DYNAMIC offset via direct scratch
-	/// (`extract3(loads(off/SLOT_SIZE), off%SLOT_SIZE, 32)`). Static so sol-ast can call it.
 	/// Read [off, off+len) from the multi-slot memory blob as a stack VALUE,
 	/// stitching a SLOT_SIZE straddle. Expression-only (emits no statements),
 	/// so it is usable from return-value positions. A stack value is at most
@@ -273,8 +271,12 @@ public:
 		awst::SourceLocation const& _loc,
 		std::optional<unsigned> _offsetAlignMod32 = std::nullopt);
 
+	/// Read one word from shared scratch memory. Constants and proven-aligned
+	/// offsets stay inline; other offsets call the shared cross-page reader.
+	/// The caller must check bounds on the inline path; the shared reader
+	/// checks its own bounds. `_offset` is already uint64.
 	static std::shared_ptr<awst::Expression> readMemWordDirect(
-		ScratchLayout const& _scratch,
+		TypeMapper& _typeMapper,
 		std::shared_ptr<awst::Expression> _offset,
 		awst::SourceLocation const& _loc,
 		std::optional<unsigned> _offsetAlignMod32 = std::nullopt
@@ -284,7 +286,7 @@ public:
 	/// (slot-routed via readMemWordDirect). For materialising a small (<=SLOT_SIZE)
 	/// aggregate value from the blob. `_byteLen` assumed 32-aligned; trimmed if not.
 	static std::shared_ptr<awst::Expression> readMemRangeDirect(
-		ScratchLayout const& _scratch,
+		TypeMapper& _typeMapper,
 		std::shared_ptr<awst::Expression> _offset,
 		int _byteLen,
 		awst::SourceLocation const& _loc
@@ -294,7 +296,7 @@ public:
 	/// (a word-loop over writeMemWordDirect; the value is zero-padded to a
 	/// whole word at the tail). `_uniqueId` namespaces the loop temps.
 	static void writeMemBytesDirect(
-		ScratchLayout const& _scratch,
+		TypeMapper& _typeMapper,
 		std::shared_ptr<awst::Expression> _offU64,
 		std::shared_ptr<awst::Expression> _bytesValue,
 		int _uniqueId,
@@ -302,10 +304,10 @@ public:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
-	/// Write a 32-byte word at a DYNAMIC offset via direct scratch
-	/// (`stores(slot, replace3(loads(slot), sub, value))`).
+	/// Write one word, inline for constant/proven-aligned offsets and through
+	/// the shared cross-page writer otherwise. Both paths check bounds.
 	static void writeMemWordDirect(
-		ScratchLayout const& _scratch,
+		TypeMapper& _typeMapper,
 		std::shared_ptr<awst::Expression> _offset,
 		std::shared_ptr<awst::Expression> _value32,
 		awst::SourceLocation const& _loc,
@@ -334,6 +336,16 @@ public:
 	);
 
 private:
+	static std::string memoryWordSubroutine(
+		TypeMapper& _typeMapper, bool _write, awst::SourceLocation const& _loc);
+	static void writeMemWordInline(
+		ScratchLayout const& _scratch,
+		std::shared_ptr<awst::Expression> _offset,
+		std::shared_ptr<awst::Expression> _value32,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out,
+		std::optional<unsigned> _offsetAlignMod32);
+
 	ScratchLayout const& scratchLayout() const
 	{
 		return m_typeMapper.profile().scratchLayout;
@@ -1287,6 +1299,7 @@ private:
 	/// 816 guards chained ~2500 basic blocks, and puya's SSA reader recursed
 	/// past its stack limit walking them.
 	std::map<std::string, std::string> m_yulConstantValues;
+	std::map<std::string, unsigned> m_yulArgumentAlignments;
 
 	/// The same values re-keyed to the MANGLED local name the AWST carries
 	/// (inline-expanded frames rename), so a divisor VarExpression resolves.
@@ -1374,24 +1387,23 @@ private:
 	/// leave exits the synthetic function wrapper, not merely the nearest loop.
 	std::string m_yulLeaveFlag;
 
-	/// Handle a call to a user-defined assembly function by inlining it.
+	/// Call a Yul subroutine, or inline a helper requiring the Solidity return frame.
 	std::shared_ptr<awst::Expression> handleUserFunctionCall(
-		std::string const& _name,
-		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		solidity::yul::FunctionCall const& _call,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
-	/// Recursive Yul functions (direct or transitive self-calls); emitted as Subroutines,
-	/// not inlined, to avoid unbounded C++ compile-time recursion.
-	std::set<std::string> m_recursiveYulFuncs;
-
-	/// Recursive Yul function name → AWST SubroutineID for call-site references.
+	/// solc-disambiguated Yul function name → AWST SubroutineID.
 	std::map<std::string, std::string> m_yulFuncSubroutineIds;
+	std::set<std::string> m_yulCalldataFunctions;
+	std::set<std::string> m_yulMemoryWritingFunctions;
+	/// Non-null only inside an outlined function; `leave` returns these values.
+	solidity::yul::FunctionDefinition const* m_yulSubroutine = nullptr;
 
 	/// Per-call temp names for subroutine return values (one per return value).
 	/// Decoupled from the function's own return-var names so recursive calls
-	/// don't clobber the current frame. Empty when the last call was inlined.
+	/// don't clobber the current frame. Also used by the inline fallback.
 	std::vector<std::string> m_yulSubReturnTemps;
 
 	/// Active per-inline-call renames: a Yul user-fn's bare param/return names
@@ -1400,13 +1412,16 @@ private:
 	/// resolveVarRef applies this; the inline path saves/restores it per frame.
 	std::map<std::string, std::string> m_yulInlineRenames;
 
-	/// Emit a Subroutine for a recursive Yul function; push to pending sink.
-	/// Supports 0/1 return values; rejects `leave`.
-	void buildRecursiveYulSubroutine(
+	/// Emit a reachable Yul function with an isolated local scope, shared scratch
+	/// memory, and an explicit calldata argument when solc's graph requires it.
+	void buildYulSubroutine(
 		solidity::yul::FunctionDefinition const& _funcDef,
 		std::string const& _subroutineId,
 		std::string const& _subroutineName
 	);
+	void emitYulSubroutineReturn(
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
 
 private:
 

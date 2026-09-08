@@ -156,12 +156,20 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 				&& !contract->isLibrary())
 				m_selectorContracts.push_back(contract);
 	std::vector<std::shared_ptr<awst::RootNode>> roots;
+	auto collectYulSubroutines = [&] {
+		for (auto& sub: m_session.artifacts.pendingYulSubroutines)
+			roots.push_back(std::move(sub));
+		m_session.artifacts.pendingYulSubroutines.clear();
+	};
 
 	registerFunctionIds(_compiler, m_functionSymbols);
 	presetDispatchCref(_compiler, m_session.functionPointers);
 	collectHostBoundFunctions();
 	translateLibraryFunctions(_compiler, _sourceFile, roots);
 	translateFreeFunctions(_compiler, _sourceFile, roots);
+	// Root helpers must survive the per-contract sink reset below. Host-bound
+	// helpers are drained and storage-scoped by their own ContractBuilder.
+	collectYulSubroutines();
 	translateContracts(_compiler, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior, roots);
 
 	// Callees specialized on an interior field path (requested by call sites
@@ -174,9 +182,12 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 		Logger::instance().debug("Translating path-specialized callee: " + spec.id);
 		roots.push_back(buildFreestandingSubroutine(*spec.function, _sourceFile, spec.id, spec.id, libraryName, &spec));
 	}
+	collectYulSubroutines();
 
 	// Builtin helpers are requested by their lowering sites, so unused
 	// algorithms never enter the root set.
+	for (auto const& [_, sub]: m_session.artifacts.memoryWordSubroutines)
+		roots.push_back(sub);
 	if (m_session.artifacts.needsRipemd160)
 	{
 		awst::SourceLocation builtinLoc(_sourceFile);

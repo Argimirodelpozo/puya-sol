@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the CCTP v2 out_avm artifacts (slot mode) with the two v2 patches.
+"""Build the CCTP v2 out_avm_joint artifacts (ARC-4/slot mode) with two v2 patches.
 
   python3 build_v2_avm.py [cases-dir]
 
@@ -23,6 +23,8 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+from oracle_cctp_historical import JOINT_ARTIFACT_DIR
 
 HERE = Path(__file__).parent
 ROOT = HERE.parent.parent
@@ -112,7 +114,7 @@ def build(cases: Path, tag: str, contract: str) -> None:
         # Initializable latch) — P2 applies only to the proxied contracts.
         if tag != "cctp2_minter" and not any("P2" in a for a in applied):
             sys.exit(f"[{tag}] expected the _disableInitializers patch to apply")
-        out_dir = case_dir / "out_avm"
+        out_dir = case_dir / JOINT_ARTIFACT_DIR
         out_dir.mkdir(exist_ok=True)
         cmd = [
             str(PUYA_SOL),
@@ -121,6 +123,7 @@ def build(cases: Path, tag: str, contract: str) -> None:
             "--import-path", str(tree),
             *[a for r in mf["remappings"] for a in ("--remapping", r)],
             "--legacy-source-rewrite",
+            "--contract-abi", "arc4",
             "--evm-storage-layout",
             *[a for d in RESEARCH_DIVERGENCES for a in ("--allow-divergence", d)],
             *[a for b in ENSURE_BUDGET.get(tag, []) for a in ("--ensure-budget", b)],

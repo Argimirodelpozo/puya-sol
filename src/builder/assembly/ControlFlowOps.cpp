@@ -183,6 +183,11 @@ void AssemblyBuilder::buildLeaveStatement(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
+	if (m_yulSubroutine)
+	{
+		emitYulSubroutineReturn(makeLoc(_node.debugData), _out);
+		return;
+	}
 	// Inlined Yul functions are wrapped in `while true {…break}`;
 	// `leave` breaks out. Outside an inlined function it's a no-op.
 	if (m_inlineDepth > 0)
@@ -252,6 +257,7 @@ void AssemblyBuilder::buildSwitchStatement(
 	bool savedHalt = m_haltEmitted; // switch-case halts are conditional
 	for (auto const& yulCase: _node.cases)
 	{
+		m_haltEmitted = savedHalt;
 		// Each case body starts fresh: recordings from a SIBLING case (translated
 		// just before) never execute on this case's path.
 		invalidateMemConstants();

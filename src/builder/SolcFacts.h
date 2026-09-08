@@ -48,6 +48,12 @@ public:
 		std::map<std::string, solidity::yul::FunctionDefinition const*> functions;
 		std::set<std::string> reachableFunctions;
 		std::set<std::string> recursiveFunctions;
+		/// Transitive requirements of reachable functions, from solc's call
+		/// graph/dialect effects. Calldata needs an explicit hidden argument;
+		/// successful EVM termination still needs the enclosing return frame.
+		std::set<std::string> calldataFunctions;
+		std::set<std::string> terminatingFunctions;
+		std::set<std::string> memoryWritingFunctions;
 		std::set<std::string> assignedVariables;
 		/// Single-assignment locals whose defining expression is a NUMBER
 		/// literal, as a full-width decimal string (solc's SSAValueTracker:
@@ -60,6 +66,18 @@ public:
 	/// then run the Yul analyses against the exact tree lowering will consume.
 	static std::shared_ptr<PreparedAssembly const> prepareAssembly(
 		solidity::frontend::InlineAssembly const& _assembly);
+
+	struct YulArgumentFacts
+	{
+		std::map<std::string, std::string> constants;
+		std::map<std::string, unsigned> residuesMod32;
+	};
+	/// Facts true at EVERY call to an unmodified Yul parameter. solc owns
+	/// scope, reachability, SSA definitions and constant/offset reasoning;
+	/// residues are target-side arithmetic over those immutable definitions.
+	static YulArgumentFacts yulArgumentFacts(
+		PreparedAssembly const& _assembly,
+		std::map<std::string, std::string> const& _externalConstants);
 
 	/// Solidity's canonical four-byte function/error selector. The FunctionType
 	/// overload delegates to solc's externalIdentifier(); the signature overload

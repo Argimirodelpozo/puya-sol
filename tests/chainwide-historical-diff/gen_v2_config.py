@@ -144,7 +144,7 @@ def main() -> int:
         "contract": "StubERC20",
         "app_id": 0x2E9EB0CE3606EB48,
         "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "arc56": "cctp_minter/out_avm/StubERC20.arc56.json",
+        "arc56": "cctp_minter/out_avm_joint/StubERC20.arc56.json",
         "artifact_tag": "cctp_minter",
         "source": "cctp_minter/deps/argdep_a0b86991/prepared.sol",
     }

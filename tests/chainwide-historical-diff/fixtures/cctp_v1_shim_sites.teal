@@ -1,0 +1,38 @@
+// Synthetic, non-executable excerpts of the CCTP v1 shim sites.
+// A unit-test fixture for anchored rewrites, not a compiled contract or a replay input.
+
+main_receiveMessage_route@10:
+    txna ApplicationArgs 1
+    extract 2 0
+    assert // Nonce already used
+    intc_0 // 0
+    dup
+    callsub Message._messageBody
+    callsub TypedMemView.clone
+    itxn_begin
+
+main_replaceMessage_route@20:
+    txna ApplicationArgs 1
+    extract 2 0
+    bnz replaceMessage_bool_true@30
+    global CallerApplicationID
+    bz replaceMessage_bool_false@31
+    pushint 24
+    bzero
+    global CallerApplicationID
+    itob
+    concat
+    frame_dig 3
+    ==
+    bz replaceMessage_bool_false@31
+
+TypedMemView.index_after_if_else@40:
+    assert // TypedMemView/index - Attempted to index more than 32 bytes
+    frame_dig -1
+    intc_1 // 8
+    *
+    dup
+    intc 7 // 255
+    <=
+    assert // overflow
+    frame_dig -3

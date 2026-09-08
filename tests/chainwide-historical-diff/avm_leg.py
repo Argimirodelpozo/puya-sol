@@ -645,9 +645,9 @@ def main_compile_args(case_dir: Path, opts, mode_args, xchain_args) -> list[str]
     return main_args + list(xchain_args)
 
 
-def compile_main_contract(h, case_dir: Path, case, main_args):
+def compile_case_contract(h, case_dir: Path, case, main_args):
     """Compile prepared.sol (or the multi-file manifest) the way the replay
-    deploys it — shared by the LocalNet and oracle backends."""
+    deploys it — shared by roots/dependencies and LocalNet/oracle backends."""
     mf = case.get("multifile")
     if mf:
         # compile_sol REMOVES import_dir when it finishes (normally a temp dir
@@ -880,14 +880,15 @@ def main():
     dep_apps = []
     dep_app_byaddr = {}
     for dspec in meta.get("dep_ctors") or []:
-        dep_sol = case_dir / dspec["dir"] / "prepared.sol"
+        dep_dir = case_dir / dspec["dir"]
         try:
             try:
                 _abi_args = (_mode_args
                              if dspec["addr"].lower() in _taped_deps
                              else list(_mode_args or []) + ["--contract-abi", "evm"]
                              + _xchain_args)
-                darts = h.compile(dep_sol, extra_args=_abi_args)
+                darts = compile_case_contract(
+                    h, dep_dir, load_json(dep_dir / "case.json"), _abi_args)
                 dapp = h.deploy(darts, dspec.get("name"),
                                 ctor_args=[resolve(m) for m in dspec["args"]] or None)
             except Exception:
@@ -956,7 +957,7 @@ def main():
         _dep_seek[_a] = (_dapp, _plan["bounds"])
 
     # ── compile + deploy ──────────────────────────────────────────────────
-    artifacts = compile_main_contract(h, case_dir, case, _main_args)
+    artifacts = compile_case_contract(h, case_dir, case, _main_args)
 
     artifact_root = compiled_artifact_root(artifacts)
     compiler_events = collect_compiler_events(artifacts, case["name"])

@@ -51,6 +51,26 @@ asserts the accepted AVM behavior. See [the divergence policy](../../EVM_DIVERGE
 
 ## Running
 
+### Working-tree verification — 2026-09-08
+
+The [Yul subroutine implementation](../../docs/yul-subroutines.md) and
+[memory-word/call-fact follow-up](../../docs/memory-word-subroutines.md), on `rev-2`
+base `5dee40fa5a0e8794f4c416729e4b34ed20d17c73` with uncommitted changes, was
+tested with compiler SHA-256
+`914afa3dce0c73902cd4e800877d68c31cee9ddd00468bbad1236d61c12ae34a`:
+**1,880 passed, 1 failed, 101 xfailed, 38 xpassed** (2,020 total), in 416.38
+seconds with three workers. No new failures were observed; the sole failure
+is the same Puya DCE/divide-by-zero bug described above. Marker review remains
+deferred. Native CTests passed 19/19. The compiler was held fixed and LocalNet
+reset was disabled. The report is
+`/tmp/puya-sol-memory-size-20260908.3MgBFL/semantic-final.xml`.
+All 2,014 cases from the outlining run retain their JUnit outcome; the six
+additional memory/call-fact cases pass. Relative to the committed 2,000-case
+baseline, there are twelve new Yul/memory cases and eight harness/cache tests;
+no baseline tests were removed.
+
+### Commands
+
 Build the frontend and set up the pinned Puya environment as described in the
 [root README](../../README.md). The test interpreter needs `pytest`,
 `pytest-xdist`, `algokit-utils`, and `py-algorand-sdk`; some categories also use

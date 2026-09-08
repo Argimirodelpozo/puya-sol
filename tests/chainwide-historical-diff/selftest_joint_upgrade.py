@@ -174,7 +174,7 @@ def build_case() -> None:
         (case_dir / "registry.json").open("w"), indent=1,
     )
 
-    compile_avm(case_dir, case_dir / "out_avm")
+    compile_avm(case_dir, case_dir / "out_avm_joint")
     compile_avm(case_dir / "src_v2", case_dir / "out_avm_v2")
 
     json.dump({

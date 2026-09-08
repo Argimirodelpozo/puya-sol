@@ -40,7 +40,7 @@ std::shared_ptr<awst::Expression> checkedUint64Word(
 	out.push_back(AssemblyBuilder::memBoundsAssert(
 		mapper.profile().scratchLayout, once, loc));
 	auto value = awst::makeEvalOnce(AssemblyBuilder::readMemWordDirect(
-		mapper.profile().scratchLayout, once, loc), loc);
+		mapper, once, loc), loc);
 	out.push_back(awst::makeExpressionStatement(
 		awst::makeAssert(
 			awst::makeNumericCompare(
@@ -97,7 +97,7 @@ private:
 		// inspection site, causing both repeated runtime work and exponential
 		// program-size growth in struct-heavy event and ABI codecs.
 		return awst::makeEvalOnce(
-			AssemblyBuilder::readMemWordDirect(m_scratch, once, m_loc), m_loc);
+			AssemblyBuilder::readMemWordDirect(m_mapper, once, m_loc), m_loc);
 	}
 
 	std::shared_ptr<awst::Expression> pointer(
@@ -310,7 +310,7 @@ private:
 		std::shared_ptr<awst::Expression> value, Statements& out)
 	{
 		AssemblyBuilder::writeMemWordDirect(
-			m_scratch, std::move(offset), std::move(value), m_loc, out);
+			m_mapper, std::move(offset), std::move(value), m_loc, out);
 	}
 
 	std::shared_ptr<awst::Expression> pin(
@@ -335,9 +335,9 @@ private:
 		int id = awst::NameGen::next("EvmMemoryCodec.bytes");
 		std::string name = "__evmmem_off_" + std::to_string(id);
 		for (auto& statement: AssemblyBuilder::emitBytesBlobAlloc(
-			m_scratch, awst::makeLen(bytes, m_loc), name, id, m_loc))
+			m_mapper, awst::makeLen(bytes, m_loc), name, id, m_loc))
 			out.push_back(std::move(statement));
-		AssemblyBuilder::writeMemBytesDirect(m_scratch,
+		AssemblyBuilder::writeMemBytesDirect(m_mapper,
 			add(awst::makeVarExpression(name, awst::WType::uint64Type(), m_loc),
 				u64(32, m_loc), m_loc),
 			bytes, id, m_loc, out);

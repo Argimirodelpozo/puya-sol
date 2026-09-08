@@ -205,7 +205,7 @@ def decode_abi_data(types: list[str], data: bytes, fold_addr) -> list[Any]:
 def arc56_event_index(cases_dir: Path) -> dict[bytes, tuple[str, dict]]:
     out: dict[bytes, tuple[str, dict]] = {}
     arcs = [
-        cases_dir / tag / "out_avm" / f"{cfg['contract']}.arc56.json"
+        cases_dir / tag / DRIVER["JOINT_ARTIFACT_DIR"] / f"{cfg['contract']}.arc56.json"
         for tag, cfg in CASE_CONFIG.items()
     ]
     # Mid-history upgrades: post-upgrade eras can emit events the original

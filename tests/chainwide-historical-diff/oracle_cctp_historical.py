@@ -26,6 +26,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+JOINT_ARTIFACT_DIR = "out_avm_joint"
+
 # algosdk is imported lazily inside encode_method so the stream-construction
 # half of this module (CaseData, historical_stream) stays importable from the
 # EVM leg's venv, which has web3/py-evm but not algosdk.
@@ -133,6 +135,17 @@ def load_json(path: Path) -> Any:
     return json.loads(path.read_text())
 
 
+def read_artifact(directory: Path, contract: str) -> dict[str, Any]:
+    """The oracle artifact shape, without its adapter's hardcoded out_avm path."""
+    return {
+        "name": contract,
+        "source": (directory / f"{contract}.approval.teal").read_text(),
+        "clear": (directory / f"{contract}.clear.teal").read_text(),
+        "approval_size": (directory / f"{contract}.approval.bin").stat().st_size,
+        "clear_size": (directory / f"{contract}.clear.bin").stat().st_size,
+    }
+
+
 def _load_verified_receipt_corrections() -> None:
     """Merge receipt_corrections.json into the metadata table.
 
@@ -188,7 +201,6 @@ class CaseData:
     case: dict[str, Any]
     calls: dict[str, Any]
     registry: dict[str, Any]
-    arc56: dict[str, Any]
 
     @classmethod
     def load(cls, cases: Path, tag: str) -> "CaseData":
@@ -201,8 +213,12 @@ class CaseData:
             case=load_json(path / "case.json"),
             calls=load_json(path / "calls.json"),
             registry=load_json(path / "registry.json"),
-            arc56=load_json(path / "out_avm" / f"{config['contract']}.arc56.json"),
         )
+
+    @property
+    def arc56(self) -> dict[str, Any]:
+        # Pure history construction and the EVM leg do not need AVM artifacts.
+        return load_json(self.path / JOINT_ARTIFACT_DIR / f"{self.config['contract']}.arc56.json")
 
     def raw_address(self, marker: Any) -> str:
         if marker == "C":
@@ -900,17 +916,16 @@ def build_pre08_compat_artifacts(
 ]:
     """Patch disposable TEAL artifacts without changing the cached corpus.
 
-    The oracle assembles the patched TEAL source.  The cached binary is only a
-    conservative deployment-size input; the replacement is two bytes smaller and does
-    not cross a program-page boundary.
+    The oracle assembles the patched TEAL source. The cached binary supplies
+    the unpatched program's deployment-size estimate.
     """
     temp = tempfile.TemporaryDirectory(prefix="puya-cctp-historical-")
     root = Path(temp.name)
     patches = {}
     sites = {}
     for tag, config in CASE_CONFIG.items():
-        out = root / tag / "out_avm"
-        shutil.copytree(cases / tag / "out_avm", out)
+        out = root / tag / JOINT_ARTIFACT_DIR
+        shutil.copytree(cases / tag / JOINT_ARTIFACT_DIR, out)
         approval = out / f"{config['contract']}.approval.teal"
         source, applied, applied_sites = apply_compat_shims(
             approval.read_text(), config["contract"]
@@ -922,20 +937,16 @@ def build_pre08_compat_artifacts(
 
 
 # ── registered-artifact validation ──────────────────────────────────────────
-# The joint lane consumes cases/<tag>/out_avm directly, and the per-contract
-# LocalNet lane (replay.py, batch.py, run_subset.py) compiles the SAME
-# directory with --contract-abi evm: its ARC-56 then exposes `__postInit`
-# alone and every historical call fails to encode — or, compiled without
-# --evm-storage-layout, the artifact keeps named app-global cells and the
-# slot-for-slot storage comparison silently compares nothing.  Both happened
-# in September 2026.  Check every registered artifact up front and say how
-# to fix it.
+# Joint ARC-4/slot artifacts have a separate directory from per-contract EVM
+# artifacts. Never fall back to out_avm: sharing it previously let a different
+# profile overwrite the joint method list or make the slot comparison empty.
+# Check every registered artifact up front, including explicit upgrade paths.
 
 ARTIFACT_SUFFIXES = ("approval.teal", "clear.teal", "approval.bin", "clear.bin", "arc56.json")
 
 
 class ArtifactError(RuntimeError):
-    """A registered out_avm artifact cannot serve the joint lane."""
+    """A registered artifact cannot serve the joint lane."""
 
 
 def artifact_fix_command(cases: Path, tag: str) -> str:
@@ -967,7 +978,7 @@ def check_joint_artifact(
     (name + arity, as method_for does), including `__postInit` at the
     constructor's arity; storage is EVM-slot backed (no named ARC-56 state).
     """
-    out = cases / (artifact_dir or f"{tag}/out_avm")
+    out = cases / artifact_dir if artifact_dir is not None else cases / tag / JOINT_ARTIFACT_DIR
     fix = fix or artifact_fix_command(cases, tag)
     missing = [
         f"{contract}.{suffix}"
@@ -982,9 +993,8 @@ def check_joint_artifact(
     if set(names) <= {"__postInit"}:
         raise ArtifactError(
             f"{tag}/{contract}: {arc56_path} exposes only {names} — an EVM-profile "
-            "(--contract-abi evm) compile, which the per-contract LocalNet lane "
-            "(replay.py, batch.py, run_subset.py) writes into the same out_avm. The "
-            "joint lane encodes every historical call against the ARC-4 method list. "
+            "(--contract-abi evm) compile. The joint lane requires its separate "
+            "ARC-4/slot artifacts, not a copy of the per-contract out_avm directory. "
             f"Fix: {fix}"
         )
     unresolved = []
@@ -1105,12 +1115,12 @@ class Runner:
         self.cases = {tag: CaseData.load(cases_path, tag) for tag in CASE_CONFIG}
         for data in self.cases.values():
             object.__setattr__(data, "oracle_api", self.api)
-        self.stub_arc56 = load_json(
-            cases_path / STUB_SOURCE["tag"] / "out_avm" / "StubERC20.arc56.json"
-        )
         # Fail before the prover is touched if any registered artifact is an
         # EVM-profile or named-cell compile (check_joint_artifact says how to fix).
         self.artifact_check = validate_joint_artifacts(cases_path, self.cases)
+        self.stub_arc56 = load_json(
+            cases_path / STUB_SOURCE["tag"] / JOINT_ARTIFACT_DIR / "StubERC20.arc56.json"
+        )
         self._compat_temp = None
         self.compatibility_patches: dict[str, list[str]] = {}
         self.compatibility_sites: dict[str, dict[str, list[dict[str, Any]]]] = {}
@@ -1123,13 +1133,13 @@ class Runner:
                 self.compatibility_sites,
             ) = build_pre08_compat_artifacts(cases_path)
         self.artifacts = {
-            data.config["contract"]: self.api.artifact(
-                artifact_cases, tag, data.config["contract"]
+            data.config["contract"]: read_artifact(
+                artifact_cases / tag / JOINT_ARTIFACT_DIR, data.config["contract"]
             )
             for tag, data in self.cases.items()
         }
-        self.artifacts["StubERC20"] = self.api.artifact(
-            cases_path, STUB_SOURCE["tag"], "StubERC20"
+        self.artifacts["StubERC20"] = read_artifact(
+            cases_path / STUB_SOURCE["tag"] / JOINT_ARTIFACT_DIR, "StubERC20"
         )
         # Per-tag CURRENT era: replay_call always encodes against the arc56 of
         # the implementation live at that point in the stream.
@@ -1148,17 +1158,7 @@ class Runner:
                     self.compatibility_sites[label] = applied_sites
             self.upgrade_artifacts.append(
                 (
-                    {
-                        "name": contract,
-                        "source": source,
-                        "clear": (art_dir / f"{contract}.clear.teal").read_text(),
-                        "approval_size": (
-                            art_dir / f"{contract}.approval.bin"
-                        ).stat().st_size,
-                        "clear_size": (
-                            art_dir / f"{contract}.clear.bin"
-                        ).stat().st_size,
-                    },
+                    {**read_artifact(art_dir, contract), "source": source},
                     load_json(art_dir / f"{contract}.arc56.json"),
                 )
             )
@@ -1875,7 +1875,7 @@ def main() -> int:
     parser.add_argument(
         "--check-artifacts",
         action="store_true",
-        help="only validate the registered out_avm artifacts (ARC-4 profile, full "
+        help="only validate the registered joint artifacts (ARC-4 profile, full "
         "method list, --evm-storage-layout) and exit; no prover needed",
     )
     parser.add_argument(

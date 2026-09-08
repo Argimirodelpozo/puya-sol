@@ -1,5 +1,5 @@
 /// @file UserFunctionOps.cpp
-/// User-defined Yul function inlining + recursive-subroutine dispatch.
+/// User-defined Yul subroutine calls and Solidity-frame inline fallback.
 
 #include "builder/assembly/AssemblyBuilder.h"
 #include "awst/NameGen.h"
@@ -18,27 +18,52 @@ void AssemblyBuilder::buildFunctionDefinition(
 	std::vector<std::shared_ptr<awst::Statement>>& /*_out*/
 )
 {
-	// Collected in first pass and inlined at call sites; nothing to emit here.
+	// Collected in the first pass; definitions have no runtime effect here.
 	auto loc = makeLoc(_def.debugData);
 	Logger::instance().debug(
-		"assembly function '" + _def.name.str() + "' collected for inlining", loc
+		"assembly function '" + _def.name.str() + "' collected", loc
 	);
 }
 
 // ─── Assembly function inlining ─────────────────────────────────────────────
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
-	std::string const& _name,
-	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	solidity::yul::FunctionCall const& _call,
 	awst::SourceLocation const& _loc,
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Clear so callers read the function's own return-var names after inlining.
+	auto const _name = getFunctionName(_call.functionName);
+	// Yul evaluates arguments right-to-left, including their READS. Translating
+	// right-to-left but deferring mload/sload until after a later argument's
+	// call observes the wrong state. Keep literals and local reads (solc forbids
+	// capturing caller stack variables); materialize everything else here.
+	std::vector<std::shared_ptr<awst::Expression>> _args(_call.arguments.size());
+	for (size_t i = _call.arguments.size(); i-- > 0; )
+	{
+		auto value = buildExpression(_call.arguments[i]);
+		drainPendingStatements(_out);
+		if (!value)
+			return nullptr;
+		if (dynamic_cast<awst::VarExpression const*>(value.get())
+			|| dynamic_cast<awst::IntegerConstant const*>(value.get()))
+			_args[i] = std::move(value);
+		else
+		{
+			auto name = "__yularg_" + std::to_string(awst::NameGen::next("UserFunctionOps.arg"));
+			m_locals[name] = value->wtype;
+			if (auto constant = resolveConstantOffset(value))
+				m_localConstants[name] = *constant;
+			if (alignmentMod32(*value).value_or(1u) == 0u)
+				m_alignedLocals.insert(name);
+			_args[i] = awst::makeVarExpression(name, value->wtype, _loc);
+			_out.push_back(awst::makeAssignmentStatement(_args[i], std::move(value), _loc));
+		}
+	}
 	m_yulSubReturnTemps.clear();
 
-	// Recursive Yul functions → AWST Subroutines (emitted in buildBlock); dispatch
-	// via subroutine call to avoid C++ compile-time recursion.
+	// Preserve the function boundary through initial SSA construction. Puya can
+	// still selectively inline the resulting IR after each function is built.
 	auto subIt = m_yulFuncSubroutineIds.find(_name);
 	if (subIt != m_yulFuncSubroutineIds.end())
 	{
@@ -65,6 +90,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		auto call = awst::makeSubroutineCall(awst::SubroutineID{subIt->second}, callRetType, _loc);
 		for (auto const& a: _args)
 			awst::pushCallArg(call->args, ensureBiguint(a, _loc));
+		if (m_yulCalldataFunctions.count(_name))
+			awst::pushCallArg(call->args,
+				awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc));
+		if (m_yulMemoryWritingFunctions.count(_name))
+			invalidateMemConstants();
 
 		int callId = (awst::NameGen::next("UserFunctionOps.s_yulCallId") + 1);
 

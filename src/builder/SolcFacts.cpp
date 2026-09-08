@@ -12,10 +12,14 @@
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/Disambiguator.h>
+#include <libyul/optimiser/DataFlowAnalyzer.h>
+#include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 
+#include <algorithm>
+#include <functional>
 #include <variant>
 #include <vector>
 
@@ -116,6 +120,49 @@ SolcFacts::YulAnalysis SolcFacts::analyzeYul(
 			result.recursiveFunctions.insert(nameString(name));
 	}
 
+	// Propagate builtin requirements over solc's graph, including recursive
+	// SCCs. The termination test is deliberately conservative: even a dead
+	// return builtin retains its enclosing Solidity-frame lowering for now.
+	auto const effects = SideEffectsPropagator::sideEffects(_dialect, graph);
+	std::set<FunctionHandle> calldata, terminating;
+	std::set<BuiltinHandle> calldataBuiltins;
+	for (auto const* name: {"calldataload", "calldatacopy", "calldatasize"})
+		if (auto handle = _dialect.findBuiltin(name))
+			calldataBuiltins.insert(*handle);
+	for (auto const& [caller, callees]: graph.functionCalls)
+		for (auto const& callee: callees)
+			if (auto const* builtin = std::get_if<BuiltinHandle>(&callee))
+			{
+				auto const& info = _dialect.builtin(*builtin);
+				if (calldataBuiltins.count(*builtin))
+					calldata.insert(caller);
+				if (info.controlFlowSideEffects.canTerminate)
+					terminating.insert(caller);
+			}
+	bool changed;
+	do
+	{
+		changed = false;
+		for (auto const& [caller, callees]: graph.functionCalls)
+			for (auto const& callee: callees)
+			{
+				if (calldata.count(callee))
+					changed |= calldata.insert(caller).second;
+				if (terminating.count(callee))
+					changed |= terminating.insert(caller).second;
+			}
+	} while (changed);
+	for (auto const& name: reachable)
+	{
+		auto handle = FunctionHandle{name};
+		if (calldata.count(handle))
+			result.calldataFunctions.insert(nameString(name));
+		if (terminating.count(handle))
+			result.terminatingFunctions.insert(nameString(name));
+		if (effects.at(handle).memory == SideEffects::Write)
+			result.memoryWritingFunctions.insert(nameString(name));
+	}
+
 	// The side-effect propagator deliberately treats an EVM `call` as capable
 	// of touching storage. That is correct for optimizer reordering, but it is
 	// too conservative for our question: only an explicit sload/sstore needs a
@@ -163,6 +210,7 @@ std::shared_ptr<PreparedAssembly const> SolcFacts::prepareAssembly(
 		externalByName.emplace(identifier->name, info);
 	}
 	auto result = std::make_shared<PreparedAssembly>();
+	result->dialect = &_assembly.dialect();
 	Disambiguator disambiguator(
 		_assembly.dialect(), *_assembly.annotation().analysisInfo, reserved);
 	result->block = disambiguator.translate(_assembly.operations().root());
@@ -195,6 +243,142 @@ std::shared_ptr<PreparedAssembly const> SolcFacts::prepareAssembly(
 	result->facts = analyzeYul(result->block, _assembly.dialect());
 	for (auto const& [_, reference]: result->externalReferences)
 		result->facts.usesStorage |= reference.suffix == "slot";
+	return result;
+}
+
+SolcFacts::YulArgumentFacts SolcFacts::yulArgumentFacts(
+	PreparedAssembly const& _assembly,
+	std::map<std::string, std::string> const& _externalConstants)
+{
+	YulArgumentFacts result;
+	auto const& facts = _assembly.facts;
+	if (facts.reachableFunctions.empty() || !_assembly.dialect)
+		return result;
+	auto const& dialect = *_assembly.dialect;
+	std::map<YulName, std::vector<Expression const*>> incoming;
+	struct Calls: ASTWalker
+	{
+		YulAnalysis const& facts;
+		decltype(incoming)& args;
+		Calls(YulAnalysis const& f, decltype(incoming)& a): facts(f), args(a) {}
+		void operator()(FunctionDefinition const& f) override
+		{
+			if (facts.reachableFunctions.count(f.name.str()))
+				ASTWalker::operator()(f);
+		}
+		void operator()(FunctionCall const& call) override
+		{
+			if (auto const* id = std::get_if<Identifier>(&call.functionName))
+				if (auto f = facts.functions.find(id->name.str()); f != facts.functions.end())
+					for (size_t i = 0; i < call.arguments.size(); ++i)
+					{
+						auto const& p = f->second->parameters.at(i).name;
+						if (!facts.assignedVariables.count(p.str()))
+							args[p].push_back(&call.arguments[i]);
+					}
+			ASTWalker::operator()(call);
+		}
+	};
+	Calls calls(facts, incoming);
+	static_cast<ASTWalker&>(calls)(_assembly.block);
+
+	SSAValueTracker ssa;
+	ssa(_assembly.block);
+	std::map<YulName, AssignedValue> values;
+	for (auto const& [name, value]: ssa.values())
+	{
+		if (!value || !SideEffectsCollector(dialect, *value).movable())
+			continue;
+		// An immutable local can snapshot a MUTABLE variable. Its initializer
+		// must not be reinterpreted using that variable's later value.
+		auto refs = VariableReferencesCounter::countReferences(*value);
+		if (std::none_of(refs.begin(), refs.end(), [&](auto const& ref) {
+			return facts.assignedVariables.count(ref.first.str());
+		}))
+			values.emplace(name, AssignedValue{value, 0});
+	}
+	std::map<YulName, Expression> literals;
+	auto bindConstant = [&](YulName name, std::string const& value) {
+		auto [it, inserted] = literals.emplace(name,
+			Literal{{}, LiteralKind::Number, LiteralValue(solidity::u256{value})});
+		values[name] = AssignedValue{&it->second, 0};
+	};
+	for (auto const& [name, value]: _externalConstants)
+		if (!facts.assignedVariables.count(name) && !value.empty()
+			&& value.find_first_not_of("0123456789") == std::string::npos)
+			bindConstant(YulName{name}, value);
+
+	bool changed;
+	do
+	{
+		changed = false;
+		// A fresh immutable snapshot per iteration: the knowledge base must
+		// not retain relations across newly discovered parameter constants.
+		auto snapshot = values;
+		KnowledgeBase knowledge(snapshot, dialect);
+		std::set<YulName> active;
+		std::function<std::optional<unsigned>(Expression const&)> residue =
+			[&](Expression const& expr) -> std::optional<unsigned> {
+			if (auto constant = knowledge.valueIfKnownConstant(expr))
+				return static_cast<unsigned>(*constant & 31);
+			if (auto const* id = std::get_if<Identifier>(&expr))
+			{
+				if (auto r = result.residuesMod32.find(id->name.str()); r != result.residuesMod32.end())
+					return r->second;
+				auto it = snapshot.find(id->name);
+				if (it == snapshot.end() || !active.insert(id->name).second)
+					return std::nullopt;
+				auto r = residue(*it->second.value);
+				active.erase(id->name);
+				return r;
+			}
+			auto const* call = std::get_if<FunctionCall>(&expr);
+			auto const* builtin = call ? std::get_if<BuiltinName>(&call->functionName) : nullptr;
+			if (!builtin)
+				return std::nullopt;
+			auto const& op = dialect.builtin(builtin->handle).name;
+			auto const& args = call->arguments;
+			if (op == "not" && args.size() == 1)
+			{
+				auto r = residue(args[0]);
+				return r ? std::optional<unsigned>(31 ^ *r) : std::nullopt;
+			}
+			if (args.size() != 2)
+				return std::nullopt;
+			auto l = residue(args[0]), r = residue(args[1]);
+			if (op == "add" && l && r) return (*l + *r) % 32;
+			if (op == "sub" && l && r) return (*l + 32 - *r) % 32;
+			if (op == "mul" && l && r) return (*l * *r) % 32;
+			if ((op == "mul" || op == "and") && (l == 0 || r == 0)) return 0;
+			if (op == "and" && l && r) return *l & *r;
+			if (op == "or" && l && r) return *l | *r;
+			if (op == "xor" && l && r) return *l ^ *r;
+			if (op == "shl")
+				if (auto shift = knowledge.valueIfKnownConstant(args[0]))
+				{
+					if (*shift >= 5) return 0;
+					if (r) return (*r << static_cast<unsigned>(*shift)) % 32;
+				}
+			return std::nullopt;
+		};
+		for (auto const& [parameter, args]: incoming)
+		{
+			auto constant = knowledge.valueIfKnownConstant(*args.front());
+			auto alignment = residue(*args.front());
+			for (auto const* arg: args)
+			{
+				if (constant != knowledge.valueIfKnownConstant(*arg)) constant.reset();
+				if (alignment != residue(*arg)) alignment.reset();
+			}
+			if (constant && result.constants.emplace(parameter.str(), constant->str()).second)
+			{
+				bindConstant(parameter, constant->str());
+				changed = true;
+			}
+			if (alignment)
+				changed |= result.residuesMod32.emplace(parameter.str(), *alignment).second;
+		}
+	} while (changed);
 	return result;
 }
 

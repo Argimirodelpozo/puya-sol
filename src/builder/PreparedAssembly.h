@@ -13,6 +13,7 @@ namespace puyasol::builder
 struct PreparedAssembly
 {
 	solidity::yul::Block block;
+	solidity::yul::Dialect const* dialect = nullptr;
 	std::map<solidity::yul::Identifier const*,
 		solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo>
 		externalReferences;

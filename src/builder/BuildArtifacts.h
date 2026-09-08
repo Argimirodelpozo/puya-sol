@@ -24,6 +24,8 @@ namespace puyasol::builder
 struct BuildArtifacts
 {
 	std::vector<std::shared_ptr<awst::Subroutine>> pendingYulSubroutines;
+	/// Shared scratch-memory primitives; unit-wide, not reset between contracts.
+	std::map<std::string, std::shared_ptr<awst::Subroutine>> memoryWordSubroutines;
 	/// --evm-storage-layout: RECURSIVE struct types (S{S[] x}) cannot inline
 	/// their delete — clearing recurses through a per-type runtime subroutine
 	/// instead. Canonical type identifier -> unit-global SubroutineID target;
@@ -90,6 +92,7 @@ struct BuildArtifacts
 	void clear()
 	{
 		pendingYulSubroutines.clear();
+		memoryWordSubroutines.clear();
 		evmClearSubs.clear();
 		pendingEvmClearSubs.clear();
 		childContracts.clear();

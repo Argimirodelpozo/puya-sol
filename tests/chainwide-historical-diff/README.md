@@ -3,7 +3,16 @@
 This replayer remains in-tree; removing the example-port collections does not
 move it or change its case corpus. Usage notes were reconciled on 2026-09-05.
 Campaign figures below are historical observations under their recorded
-profiles, not a fresh run against the current compiler. See the
+profiles, not a fresh full-corpus run against the current compiler. The
+[2026-09-08 SP1 campaign](SP1_REPLAY.md) is a targeted fresh ZK replay with
+real multi-file verifier dependencies and recorded inner application calls.
+Its follow-up translates a synthetic stateful application plus the real SP1
+gateway/verifier, checking two external hops and rollback across all three.
+The [Blobstream bridge follow-up](BLOBSTREAM_REPLAY.md) is partial: real EVM
+proofs and AVM initialization pass. Preserving Yul subroutines now gets PLONK
+through compilation, but its generated program size blocks the paired bridge
+replay.
+See the
 [semantic baseline](../solidity-semantic-tests/README.md) for current compiler
 test results and [proxy.md](../../proxy.md) for supported proxy adaptations.
 
@@ -43,7 +52,8 @@ external state (other contracts, balances, block env) and is skipped
 - Long-horizon state: thousands of organic txns grow arrays/checkpoints/boxes
   far beyond what generated sequences reach.
 - Real orderings (approve→transferFrom races, dust amounts, max-uint approvals).
-- Real revert paths, diffed including payloads.
+- Real revert paths: the per-contract differ compares rejection status, not
+  byte-identical revert payloads (the two backends expose different diagnostics).
 - Real constructor args and real hardcoded-address interactions.
 
 ## Usage
@@ -100,8 +110,8 @@ python3 harvest.py --tvl 40
 # --slot names the tags to run in --evm-storage-layout mode
 python3 run_subset.py /tmp/subset pepe,usde,permit2 --slot usde,permit2
 
-# recompile the CCTP v1 joint-lane artifacts (ARC-4 profile + slot mode) after
-# a per-contract replay of a CCTP case overwrote them — compile only
+# compile the CCTP v1 joint-lane artifacts (ARC-4 profile + slot mode) into
+# out_avm_joint, separate from per-contract out_avm — compile only
 python3 refresh_cctp_artifacts.py            # cctp_transmitter cctp_messenger cctp_minter
 ```
 
@@ -131,9 +141,10 @@ Other call adaptations retain their own policy requirements.
 `oracle_cctp_historical.py` replays the cached `cctp_transmitter`,
 `cctp_messenger`, and `cctp_minter` histories in one chronological avm-prover
 ledger. Unlike the ordinary per-contract replay, the three unsplit contracts
-call each other as real AVM inner application calls. Twelve trace-derived
-entries are therefore excluded from the 429 root calls rather than being
-executed twice.
+call each other as real AVM inner application calls. Trace-derived inner
+entries are excluded from the root stream rather than executed twice (the
+original 429-root window excluded twelve such entries; the current cached
+window is larger).
 
 ```bash
 python3 oracle_cctp_historical.py cases \
@@ -141,11 +152,16 @@ python3 oracle_cctp_historical.py cases \
   --output /tmp/cctp-historical.json
 ```
 
-**Artifacts.** The lane registers `cases/<tag>/out_avm/<Contract>.*` for the
-three cases, the `StubERC20` from the stub's source tag, and every upgrade era
-— and the same `out_avm` is what the per-contract LocalNet lane (`replay.py`,
-`batch.py`, `run_subset.py`) overwrites with a `--contract-abi evm` compile,
-whose ARC-56 exposes `__postInit` alone. The driver therefore validates every
+**Artifacts.** The lane registers `cases/<tag>/out_avm_joint/<Contract>.*` for
+the three cases and `StubERC20` from the stub's source tag. Upgrade eras retain
+their explicit `avm_artifact` directories. Joint builders request
+`--contract-abi arc4 --evm-storage-layout`; the per-contract lane (`replay.py`,
+`batch.py`, `run_subset.py`) retains `out_avm` and `--contract-abi evm`.
+There is **no fallback** from `out_avm_joint` to `out_avm`: sharing the latter
+previously let per-contract builds replace the joint ARC-56 method list with
+an EVM-profile list exposing only `__postInit`. Rebuild existing caches once
+with the commands below to populate the new directory; neither builder
+modifies the per-contract artifacts. The driver still validates every
 registered artifact **before touching the prover** (`check_joint_artifact`):
 the five artifact files exist; the ARC-56 is an ARC-4-profile compile; every
 signature the replay will encode (each case's historical `sig`s, config-era
@@ -159,7 +175,40 @@ produced). Each failure names the artifact and the fix command:
 `--evm-storage-layout`, the stub included; compile only), `build_v2_avm.py`
 for the multi-file v2 cases. `oracle_cctp_historical.py cases
 [--config ...] --check-artifacts` runs only that check, without a prover, and
-the report records the result under `scope.artifact_check`.
+the report records the result under `scope.artifact_check`. This checks the
+artifact profile and replay interface, not deployability or execution results.
+
+The compatibility-shim unit test uses the checked-in, non-executable
+`fixtures/cctp_v1_shim_sites.teal` excerpts rather than a mutable compiled
+cache. It explicitly selects the known contract's four required shims and
+tests missing/ambiguous anchors and constant-pool renumbering. Fresh real
+artifacts still pass through those fail-closed shim checks before replay;
+the fixture is never executed or substituted for a contract.
+
+**Artifact-isolation validation, 2026-09-08.** All 91 harness unit tests pass.
+The freshly rebuilt v1 artifacts replayed the first **853 of 4,829** roots;
+the independent EVM leg replayed the same prefix. The three-way differ has
+zero findings: 849 event-bearing transactions agree on both legs and 815
+contract storage slots agree (including four address-representation folds).
+The existing identical-payload/zero-log-receipt correction accounts for the
+historical-label discrepancy. The AVM loop stopped there before post-run
+reclassification, leaving **3,976 roots unreached**: this does not renew the
+full-window certification below. USDC remains a synthetic dependency. Reports
+are under `/tmp/puya-sol-cctp-joint-20260908.Gla1lt/`: `v1-report.json`,
+`v1-evm-prefix.json`, and `v1-prefix-diff.json`.
+
+**Fresh-build caveat, 2026-09-08.** The isolated v1 and v2 artifacts pass the
+profile/interface checks, and the expected shims apply to the freshly compiled
+TEAL. Canonically assembling the actual shimmed v1 transmitter yields 16,341
+approval bytes plus four clear bytes: just 39 bytes of combined headroom.
+The v2 `MessageTransmitterV2.approval.bin` is **16,869 bytes**, or 16,868 after
+its shim, still above the executing oracle's `future` profile cap of 16,384
+bytes (`--dump-consensus`: 2,048 bytes × eight pages). The joint driver's
+single-program initialization path accepts it; that is not evidence of a
+protocol-valid deployment. The v2 smoke run initializes all contracts and
+matches the first `acceptOwnership()` call only (1 of 6,049 roots). Program
+size and protocol-validated creation remain separate follow-ups; neither that
+smoke run nor `--check-artifacts` certifies the v2 deployment or full history.
 
 The driver uses unified `Access` resources first and falls back to a pooled
 16-transaction resource group when needed. Historical contract addresses keep
@@ -211,7 +260,7 @@ time (the oracle is the long pole: ~1.5 s per root call), each lane against a
 cases directory holding the window to certify — `cases/<tag>` carries the
 last fetched window and `cases/<tag>_w<N>bak` the earlier ones, so a deep
 window that is not the current one is replayed from a scratch directory that
-symlinks the backup's fixtures and the case's `out_avm`:
+symlinks the backup's fixtures and the case's `out_avm_joint`:
 
 ```bash
 python3 refresh_cctp_artifacts.py                       # v1 artifacts, current compiler
@@ -507,6 +556,11 @@ What still differs from the LocalNet lane, by construction:
   inner `appl` to `bzero(24) ‖ itob(id)` reaches it — avm_leg's build-flag rule
   included (a routing dependency takes its CALLER's wire ABI, a tape-driven
   stand-in keeps the ARC-4 profile that still exposes `__load`/`__seek`).
+  Verified multi-file dependencies use the same disposable source-tree compile
+  path as the root. Per-call `results[i].inner_apps` recursively counts observed
+  inner application calls by app ID; budget helpers remain distinguishable from
+  `oracle.deps`. Rejected groups may not expose their discarded inner tree, so
+  an empty count is not proof that no callee was attempted.
   A recorded answer tape is loaded the same way, but `__seek(start,end)` rides
   in the replayed call's OWN group as an extra sibling instead of a separate
   transaction, so a rejected call rolls the cursor back with it. Answers for
@@ -664,7 +718,8 @@ side). Candidates come from three places, in confidence order:
 3. Hardcoded address literals in the source (the memecoin pattern: factory and
    router baked in, zero constructor args).
 
-Verified, single-file, ^0.8 dependencies can be deployed directly. With
+Verified ^0.8 dependencies, single-file or multi-file with source trees and
+remappings, can be deployed directly. With
 `--script-deps`, an observed runtime callee can instead become a stand-in even
 when the main constructor has no dependencies (TokenMinter's USDC shape), with
 historical return data served from a selector-aware tape on both legs. The AVM
@@ -756,11 +811,12 @@ skips and must be reported separately.
 - Outgoing external calls are not mocked; the closed-world filter skips any txn
   whose local result disagrees with its historical receipt, symmetrically.
 - Constructors that call external contracts are only replayable when the
-  dependency is itself verified, single-file and ^0.8 — otherwise the EVM
+  dependency is itself verified and ^0.8 (single-file or multi-file) — otherwise the EVM
   *oracle* can't deploy either, and the case is skipped with that reason.
-- Internal-call recovery needs a parent index, so today it covers **token**
-  contracts. Traces are rate-limited (paced with retries) and any parent trace
-  that can't be fetched is **reported**, never silently dropped.
+- Internal-call recovery needs a parent index: token-transfer logs, ordinary
+  contract logs, or explicit parent-case hints. Eventless calls without a known
+  parent remain outside discovery. Traces are rate-limited (paced with retries)
+  and selected parent traces that can't be fetched are **reported**.
 - The window is the FIRST N txns from creation (state must be built from
   genesis). Internal calls consume that budget, so the window gets denser but
   shorter — and a contract whose internal traffic starts later than its first N

@@ -474,14 +474,22 @@ def main():
     for e in abi:
         _add_event_abi(e)
 
-    # dependency bytecodes (single-file, same relaxed settings)
+    # Dependency bytecodes, using the same verified source tree as the AVM leg.
     for d in deps:
         try:
+            dep_settings = dict(_dep_settings)
+            dep_manifest = d["case"].get("multifile")
+            if dep_manifest:
+                dep_sources = {rel: {"content": (d["dir"] / "src" / rel).read_text()}
+                               for rel in dep_manifest["files"]}
+                dep_settings["remappings"] = dep_manifest["remappings"]
+            else:
+                dep_sources = {"dep.sol": {"content":
+                    (d["dir"] / "prepared.sol").read_text()}}
             dout = solcx.compile_standard({
                 "language": "Solidity",
-                "sources": {"dep.sol": {"content":
-                    (d["dir"] / "prepared.sol").read_text()}},
-                "settings": dict(_dep_settings)})
+                "sources": dep_sources,
+                "settings": dep_settings})
             dtarget = None
             for by_name in dout["contracts"].values():
                 for cname, cdata in by_name.items():

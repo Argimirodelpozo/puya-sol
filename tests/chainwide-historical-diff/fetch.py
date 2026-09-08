@@ -13,6 +13,7 @@ from __future__ import annotations
 import shutil
 import sys
 import time
+from pathlib import PurePosixPath
 
 from chd_common import (CASES, EVM_PY, ZERO, dump_json, http_json, load_json,
                         relax_pragma)
@@ -819,11 +820,48 @@ def write_stub_dep(host: str, address: str, dep_dir) -> dict | None:
     return dep
 
 
+def materialize_sources(case_dir, sc: dict, *, pre08: bool = False) -> dict | None:
+    """Persist the verified source tree for either a root or a dependency."""
+    extra = sc.get("additional_sources") or []
+    manifest = None
+    tree = {}
+    if extra:
+        def relative(name):
+            path = PurePosixPath(str(name).lstrip("/"))
+            if not path.parts or ".." in path.parts:
+                raise ValueError(f"unsafe verified source path: {name!r}")
+            return str(path)
+
+        main = relative(sc.get("file_path") or "Main.sol")
+        tree[main] = relax_pragma(sc["source_code"], pre08=pre08)
+        for source in extra:
+            rel = relative(source["file_path"])
+            if rel in tree:
+                raise ValueError(f"duplicate verified source path: {rel}")
+            tree[rel] = relax_pragma(source.get("source_code", ""), pre08=pre08)
+        manifest = {
+            "main": main, "files": sorted(tree),
+            "remappings": [r.lstrip(":") for r in
+                           (sc.get("compiler_settings") or {}).get("remappings") or []],
+        }
+    case_dir.mkdir(parents=True, exist_ok=True)
+    (case_dir / "source.sol").write_text(sc["source_code"])
+    (case_dir / "prepared.sol").write_text(relax_pragma(sc["source_code"], pre08=pre08))
+    if manifest:
+        src_root = case_dir / "src"
+        shutil.rmtree(src_root, ignore_errors=True)
+        for rel, content in tree.items():
+            path = src_root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content)
+    return manifest
+
+
 def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict | None:
     """LIGHT dependency fetch: verified source + ABI + its own ctor args — no
     txn history (deps are only deployed, never replayed directly). Returns the
     dep's case dict (with nested "ctor_deps") or None when unusable.
-    Single-file verifications only in v1."""
+    Multi-file dependencies retain the verification's source tree/remappings."""
     addr = address.lower()
     if addr in seen or depth <= 0:
         return None
@@ -837,15 +875,14 @@ def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict |
     comp = sc.get("compiler_version") or ""
     if "0.8." not in comp:
         return None
-    if sc.get("additional_sources"):
-        return None                      # v1: single-file deps only
     abi = sc.get("abi") or []
     ctor_hex = (sc.get("constructor_args") or "").removeprefix("0x")
-    dep_dir.mkdir(parents=True, exist_ok=True)
-    (dep_dir / "prepared.sol").write_text(relax_pragma(sc["source_code"]))
+    manifest = materialize_sources(dep_dir, sc)
     dep = {"address": addr, "name": sc.get("name"),
            "compiler_version": comp, "abi": abi,
            "ctor_args_hex": ctor_hex, "ctor_deps": []}
+    if manifest:
+        dep["multifile"] = manifest
     for sub in _decode_ctor_addresses(abi, ctor_hex):
         subdir = dep_dir / f"dep_{sub[2:10]}"
         d2 = fetch_dep(host, sub, subdir, depth - 1, seen)
@@ -1143,7 +1180,7 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     # as ordinary txns from the CALLING contract's identity: the EVM leg
     # impersonates any sender (phase 3) and the AVM leg maps it to a registry
     # sender account like every other historical address.
-    internal = []
+    indexed_internal = []
     try:
         for ipage in range(1, 4):
             d = http_json(f"https://{host}/api?module=account&action=txlistinternal"
@@ -1161,7 +1198,7 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                 inp = t.get("input") or "0x"
                 if inp in ("0x", ""):
                     continue
-                internal.append({
+                indexed_internal.append({
                     "hash": f"{t.get('hash')}#{t.get('traceId') or 'i'}",
                     "from": (t.get("from") or "").lower(),
                     "input": inp,
@@ -1177,10 +1214,10 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
             time.sleep(0.4)
     except Exception as e:
         print(f"[fetch] {tag}: txlistinternal unavailable ({str(e)[:60]})", flush=True)
-    if internal:
+    if indexed_internal:
         seen = {t["hash"] for t in txns}
         last_block = max((t["block"] for t in txns), default=0)
-        add = [t for t in internal
+        add = [t for t in indexed_internal
                if t["hash"] not in seen and (not txns or t["block"] <= last_block)]
         if add:
             txns = sorted(txns + add,
@@ -1346,32 +1383,9 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     # real file TREE plus the verification's remappings, which both legs can
     # consume natively (solc standard-json sources+remappings; puya-sol
     # --source per file + --import-path + --remapping).
-    case_dir.mkdir(parents=True, exist_ok=True)
-    (case_dir / "source.sol").write_text(sc["source_code"])
-    (case_dir / "prepared.sol").write_text(
-        relax_pragma(sc["source_code"], pre08=relax_pre08))
-    extra = sc.get("additional_sources") or []
-    if extra:
-        main_rel = sc.get("file_path") or "Main.sol"
-        def _rel(p):                     # may be absolute in the API payload
-            return str(p).lstrip("/") or "Main.sol"
-        main_rel = _rel(main_rel)
-        tree = {main_rel: relax_pragma(sc["source_code"], pre08=relax_pre08)}
-        for f in extra:
-            tree[_rel(f["file_path"])] = relax_pragma(
-                f.get("source_code", ""), pre08=relax_pre08)
-        src_root = case_dir / "src"
-        shutil.rmtree(src_root, ignore_errors=True)
-        for rel, content in tree.items():
-            p = src_root / rel
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(content)
-        case["multifile"] = {
-            "main": main_rel,
-            "files": sorted(tree),
-            "remappings": [r.lstrip(":") for r in
-                           (sc.get("compiler_settings") or {}).get("remappings") or []],
-        }
+    manifest = materialize_sources(case_dir, sc, pre08=relax_pre08)
+    if manifest:
+        case["multifile"] = manifest
     # ── constructor DEPENDENCIES: verified contracts the ctor args point at.
     # Fetched light (source+abi+ctor args, no history) and deployed FIRST on
     # both legs, with the historical address remapped to the local instance —

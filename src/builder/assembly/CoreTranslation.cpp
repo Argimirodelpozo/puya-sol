@@ -468,21 +468,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		if (auto routed = tryHandleStateVarSload(_call, loc))
 			return routed;
 
-	// Translate arguments RIGHT-TO-LEFT: Yul evaluates call arguments in
-	// right-to-left order, so side effects of inlined user-function args
-	// (whose bodies land in m_pendingStatements during the build) must be
-	// sequenced right-first — `sub(bump(1), bump(10))` runs bump(10) first.
-	std::vector<std::shared_ptr<awst::Expression>> args(_call.arguments.size());
-	for (size_t ai = _call.arguments.size(); ai-- > 0; )
-		args[ai] = buildExpression(_call.arguments[ai]);
-
-	// Memory writers the content-constant tracker can't model precisely: drop
-	// all "mem_0x*" entries. (After arg translation, so entries recorded by
-	// inlined arg builds die too.) The statement path runs the same
-	// classification — see buildExpressionStatement.
-	if (builtinClobbersMemory(funcName))
-		invalidateMemConstants();
-
 	// User-defined assembly functions take precedence over builtins.
 	// This matches Yul's scoping rules: a user `function basefee() -> r { ... }`
 	// shadows the builtin `basefee()` opcode when called.
@@ -490,13 +475,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	{
 		auto const& funcDef = *m_asmFunctions[funcName];
 		std::vector<std::shared_ptr<awst::Statement>> inlinedStmts;
-		auto ret = handleUserFunctionCall(funcName, args, loc, inlinedStmts);
+		auto ret = handleUserFunctionCall(_call, loc, inlinedStmts);
 		for (auto& s: inlinedStmts)
 			m_pendingStatements.push_back(std::move(s));
-		// A subroutine-dispatched single-return call returns its result via a
-		// fresh temp (decoupled from the function's return-var name to avoid
-		// recursion aliasing); use it. Inlined calls return nullptr — read the
-		// function's first return-var name (the inlined body assigned it).
+		// Both outlined and inline single-return calls publish their own fresh
+		// temp, decoupled from other frames' return-variable names.
 		if (ret)
 			return ret;
 		if (!funcDef.returnVariables.empty())
@@ -507,6 +490,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		}
 		return awst::makeVoidConstant(loc);
 	}
+
+	// Builtin arguments also translate right-to-left; user-function calls above
+	// own argument materialization so their pending effects cannot overtake reads.
+	std::vector<std::shared_ptr<awst::Expression>> args(_call.arguments.size());
+	for (size_t ai = _call.arguments.size(); ai-- > 0; )
+		args[ai] = buildExpression(_call.arguments[ai]);
+	if (builtinClobbersMemory(funcName))
+		invalidateMemConstants();
 
 	// Builtin dispatch. The uniform opcodes — those that just translate their
 	// already-built args through a handler with one of two shared signatures —

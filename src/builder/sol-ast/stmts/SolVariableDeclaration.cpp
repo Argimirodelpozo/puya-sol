@@ -538,7 +538,7 @@ bool SolVariableDeclaration::tryAsmAggregateInit(
 					m_blk.builderCtx().buildExpr(*newCall->arguments()[0]),
 					awst::WType::uint64Type(), m_loc);
 				for (auto& s: AB::emitBytesBlobAlloc(
-						m_blk.typeMapper().profile().scratchLayout,
+						m_blk.typeMapper(),
 						std::move(lenU64), offN, static_cast<int>(decl.id()), m_loc))
 					result.push_back(std::move(s));
 				m_blk.setBlobAggregate(decl.id(), offN);

@@ -4,6 +4,7 @@
 
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/AwstShorthand.h"
+#include "builder/BuildArtifacts.h"
 #include "builder/abi/EvmAbiDecode.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -148,14 +149,17 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	// a side-effecting mload(q) would otherwise re-run each time (makeEvalOnce =
 	// OperandPlan primitive; a var/constant offset is duplicated as-is).
 	off = awst::makeEvalOnce(std::move(off), _loc);
-	(_sink ? *_sink : m_pendingStatements).push_back(
-		memBoundsAssert(scratchLayout(), off, _loc));
+	// Generic reads check inside the shared helper; the short aligned path
+	// still needs its check at the call site.
+	if (align == 0 || dynamic_cast<awst::IntegerConstant const*>(off.get()))
+		(_sink ? *_sink : m_pendingStatements).push_back(
+			memBoundsAssert(scratchLayout(), off, _loc));
 	// ONE path for every slot. Slot 0 is plain scratch since the __evm_memory
 	// cache removal, so the old `off < SLOT_SIZE ? slot-0-fast : slow`
 	// conditional selected between two IDENTICAL computations — paying an SE
 	// fan-out, a compare, a branch and a duplicated extract on every dynamic
-	// mload. Dyn is now Direct plus the bounds assert + eval-once wrapper.
-	return readMemWordDirect(scratchLayout(), std::move(off), _loc, align);
+	// mload. Direct selects the inline access or shared checked reader.
+	return readMemWordDirect(m_typeMapper, std::move(off), _loc, align);
 }
 
 void AssemblyBuilder::writeMemWordDyn(
@@ -174,7 +178,7 @@ void AssemblyBuilder::writeMemWordDyn(
 	_out.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
 		std::move(offVal), _loc));
-	writeMemWordDirect(scratchLayout(),
+	writeMemWordDirect(m_typeMapper,
 		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
 		std::move(_value32), _loc, _out, align);
 }
@@ -239,16 +243,24 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemStackRange(
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDirect(
-	ScratchLayout const& _scratch,
+	TypeMapper& _typeMapper,
 	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc,
 	std::optional<unsigned> _offsetAlignMod32)
 {
-	return readMemStackRange(_scratch, std::move(_offset),
+	if (_offsetAlignMod32 != 0 && !dynamic_cast<awst::IntegerConstant const*>(_offset.get()))
+	{
+		auto call = awst::makeSubroutineCall(
+			awst::SubroutineID{memoryWordSubroutine(_typeMapper, false, _loc)},
+			awst::WType::bytesType(), _loc);
+		awst::pushCallArg(call->args, std::move(_offset));
+		return call;
+	}
+	return readMemStackRange(_typeMapper.profile().scratchLayout, std::move(_offset),
 		awst::makeIntegerConstant("32", _loc), _loc, _offsetAlignMod32);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
-	ScratchLayout const& _scratch,
+	TypeMapper& _typeMapper,
 	std::shared_ptr<awst::Expression> _offset, int _byteLen, awst::SourceLocation const& _loc)
 {
 	// Concat ceil(_byteLen/32) successive words; each re-derives its slot
@@ -261,7 +273,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
 			? _offset
 			: awst::makeUInt64BinOp(_offset, awst::UInt64BinaryOperator::Add,
 				awst::makeIntegerConstant(static_cast<uint64_t>(i * 32), _loc), _loc);
-		auto word = readMemWordDirect(_scratch, std::move(wordOff), _loc);
+		auto word = readMemWordDirect(_typeMapper, std::move(wordOff), _loc);
 		acc = acc ? awst::makeConcat(std::move(acc), std::move(word), _loc) : std::move(word);
 	}
 	// Trim to the exact byte length when not word-aligned.
@@ -272,7 +284,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
 }
 
 void AssemblyBuilder::writeMemBytesDirect(
-	ScratchLayout const& _scratch,
+	TypeMapper& _typeMapper,
 	std::shared_ptr<awst::Expression> _offU64,
 	std::shared_ptr<awst::Expression> _bytesValue,
 	int _uniqueId,
@@ -305,7 +317,7 @@ void AssemblyBuilder::writeMemBytesDirect(
 	auto word = awst::makeExtract3(bytesv(), u64v("i"),
 		awst::makeIntegerConstant("32", _loc), _loc);
 	std::vector<std::shared_ptr<awst::Statement>> ws;
-	writeMemWordDirect(_scratch,
+	writeMemWordDirect(_typeMapper,
 		awst::makeUInt64BinOp(u64v("off"), awst::UInt64BinaryOperator::Add,
 			u64v("i"), _loc),
 		std::move(word), _loc, ws);
@@ -318,6 +330,58 @@ void AssemblyBuilder::writeMemBytesDirect(
 }
 
 void AssemblyBuilder::writeMemWordDirect(
+	TypeMapper& _typeMapper,
+	std::shared_ptr<awst::Expression> _offset, std::shared_ptr<awst::Expression> _value32,
+	awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out,
+	std::optional<unsigned> _offsetAlignMod32)
+{
+	if (_offsetAlignMod32 == 0 || dynamic_cast<awst::IntegerConstant const*>(_offset.get()))
+		return writeMemWordInline(_typeMapper.profile().scratchLayout,
+			std::move(_offset), std::move(_value32), _loc, _out, _offsetAlignMod32);
+	auto call = awst::makeSubroutineCall(
+		awst::SubroutineID{memoryWordSubroutine(_typeMapper, true, _loc)},
+		awst::WType::voidType(), _loc);
+	awst::pushCallArg(call->args, std::move(_offset));
+	awst::pushCallArg(call->args, std::move(_value32));
+	_out.push_back(awst::makeExpressionStatement(std::move(call), _loc));
+}
+
+std::string AssemblyBuilder::memoryWordSubroutine(
+	TypeMapper& _typeMapper, bool _write, awst::SourceLocation const& _loc)
+{
+	std::string const id = _write ? "__puyasol_memory_write_word" : "__puyasol_memory_read_word";
+	auto& subs = _typeMapper.artifacts().memoryWordSubroutines;
+	if (subs.count(id))
+		return id;
+	auto const& scratch = _typeMapper.profile().scratchLayout;
+	auto const* u64 = awst::WType::uint64Type();
+	auto const* bytes = awst::WType::bytesType();
+	auto off = awst::makeVarExpression("off", u64, _loc);
+	std::vector<awst::SubroutineArgument> args{{"off", u64, _loc}};
+	auto body = awst::makeBlock(_loc);
+	if (_write)
+	{
+		args.emplace_back("value", bytes, _loc);
+		writeMemWordInline(scratch, off, awst::makeVarExpression("value", bytes, _loc),
+			_loc, body->body, std::nullopt);
+		body->body.push_back(awst::makeReturnStatement(nullptr, _loc));
+	}
+	else
+	{
+		body->body.push_back(memBoundsAssert(scratch, off, _loc));
+		body->body.push_back(awst::makeReturnStatement(readMemStackRange(scratch, off,
+			awst::makeIntegerConstant("32", _loc), _loc), _loc));
+	}
+	// Reads are not pure: a store between two calls must be observed. Both
+	// helpers retain one body regardless of Puya's selective Yul inlining.
+	auto sub = awst::makeSubroutine(id, id, std::move(args),
+		_write ? awst::WType::voidType() : bytes, std::move(body), false, _loc);
+	sub->inlineOpt = false;
+	subs.emplace(id, std::move(sub));
+	return id;
+}
+
+void AssemblyBuilder::writeMemWordInline(
 	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _offset, std::shared_ptr<awst::Expression> _value32,
 	awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out,

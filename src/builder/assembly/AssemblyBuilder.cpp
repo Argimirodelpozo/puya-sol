@@ -131,6 +131,9 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_upgradedLocals.clear();
 	m_paramBitWidths = _paramBitWidths;
 	m_constants = _constants;
+	auto argumentFacts = SolcFacts::yulArgumentFacts(_assembly, _constants);
+	m_yulConstantValues.insert(argumentFacts.constants.begin(), argumentFacts.constants.end());
+	m_yulArgumentAlignments = std::move(argumentFacts.residuesMod32);
 	// AFTER m_constants: verifiers bump the free-memory pointer by a SOLIDITY
 	// constant (`uint16 constant pLastMem`), and an unresolvable bump poisons
 	// the invariant for the whole block. Also needs m_reassignedLocals and
@@ -163,7 +166,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 
 	// Enable synthetic-calldata blob if Yul accesses calldata at non-constant offsets / calldatasize
 	// / a dynamic param's .offset|.length. Blob is emitted in the prelude below, after array-param init.
-	m_useSyntheticCalldata = detectDynamicCalldataAccess(_block);
+	m_useSyntheticCalldata = detectDynamicCalldataAccess(_block)
+		|| !yulFacts.calldataFunctions.empty();
 
 	// Detect array parameter for blob initialization
 	for (auto const& [name, type]: _params)
@@ -182,17 +186,29 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 
 	// solc owns Yul function discovery, reachability, and recursion semantics.
 	m_asmFunctions = yulFacts.functions;
-	m_recursiveYulFuncs.clear();
 	m_yulFuncSubroutineIds.clear();
-	m_recursiveYulFuncs = yulFacts.recursiveFunctions;
-	for (auto const& name: m_recursiveYulFuncs)
+	m_yulCalldataFunctions = yulFacts.calldataFunctions;
+	m_yulMemoryWritingFunctions = yulFacts.memoryWritingFunctions;
+	for (auto const& name: yulFacts.reachableFunctions)
+	{
+		if (yulFacts.terminatingFunctions.count(name))
+		{
+			if (yulFacts.recursiveFunctions.count(name))
+				Logger::instance().error(
+					"recursive Yul function with EVM return/stop requires a program-exit calling convention",
+					makeLoc(m_asmFunctions.at(name)->debugData));
+			continue;
+		}
+		m_yulFuncSubroutineIds[name] = m_sourceFile + "." + m_contextName + "::__yul_" + name;
+	}
+	// Register every ID before lowering any body, including mutually recursive
+	// and forward calls. Definition/map order must not affect dispatch.
+	for (auto const& [name, subId]: m_yulFuncSubroutineIds)
 	{
 		std::string safeCtx = m_contextName;
 		std::replace(safeCtx.begin(), safeCtx.end(), '.', '_');
-		std::string subId = m_sourceFile + "." + m_contextName + "::__yul_" + name;
 		std::string subName = "__yul_" + safeCtx + "_" + name;
-		m_yulFuncSubroutineIds[name] = subId;
-		buildRecursiveYulSubroutine(*m_asmFunctions.at(name), subId, subName);
+		buildYulSubroutine(*m_asmFunctions.at(name), subId, subName);
 	}
 
 	// Second pass: translate statements (skip function definitions already collected)
@@ -366,10 +382,11 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitMemoryAlloc(
 }
 
 std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitBytesBlobAlloc(
-	ScratchLayout const& _scratch,
+	TypeMapper& _typeMapper,
 	std::shared_ptr<awst::Expression> _lenU64, std::string const& _offVar,
 	int _uniqueId, awst::SourceLocation const& _loc)
 {
+	auto const& _scratch = _typeMapper.profile().scratchLayout;
 	std::vector<std::shared_ptr<awst::Statement>> out;
 	auto u64 = awst::WType::uint64Type();
 	auto k = [&](char const* v) { return awst::makeIntegerConstant(v, _loc); };
@@ -390,7 +407,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitBytesBlobAllo
 	// — the old slot-0 replace3 wrote the length into the wrong slot (or
 	// panicked) for every buffer allocated past the first slot.
 	auto lenWord = awst::makeLeftPad(awst::makeItob(lenRead(), _loc), 24, _loc);
-	writeMemWordDirect(_scratch, offRead(), std::move(lenWord), _loc, out);
+	writeMemWordDirect(_typeMapper, offRead(), std::move(lenWord), _loc, out);
 
 	// newFMP = off + 32 + ceil(len/32)*32.
 	auto ceil32 = awst::makeUInt64BinOp(
@@ -937,6 +954,8 @@ std::optional<unsigned> AssemblyBuilder::alignmentMod32(
 	{
 		if (m_alignedLocals.count(var->name))
 			return 0u;
+		if (auto fact = m_yulArgumentAlignments.find(var->name); fact != m_yulArgumentAlignments.end())
+			return fact->second;
 		auto it = m_yulConstantValues.find(var->name);
 		if (it != m_yulConstantValues.end())
 			return decimalMod32(it->second);
@@ -1068,7 +1087,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 	return awst::makeBiguintToUInt64(std::move(_biguintExpr), _loc);
 }
 
-void AssemblyBuilder::buildRecursiveYulSubroutine(
+void AssemblyBuilder::buildYulSubroutine(
 	solidity::yul::FunctionDefinition const& _funcDef,
 	std::string const& _subroutineId,
 	std::string const& _subroutineName
@@ -1076,54 +1095,65 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 {
 	auto loc = makeLoc(_funcDef.debugData);
 
-	// Save state so the outer block can resume after the subroutine is built.
-	auto savedLocals = std::move(m_locals);
-	auto savedConstants = std::move(m_localConstants);
-	auto savedWideConstants = std::move(m_localWideConstants);
-	auto savedYulConstants = std::move(m_yulConstantValues);
-	auto savedAlignedLocals = std::move(m_alignedLocals);
-	auto const savedFmpAligned = m_fmpStaysAligned;
-	auto savedCalldataParamNames = std::move(m_calldataParamNames);
-	auto savedUpgraded = std::move(m_upgradedLocals);
-	auto savedParamBitWidths = m_paramBitWidths;
-	auto savedSignedParamBits = m_signedParamBits;
-	auto savedSignedShadow = std::move(m_signedShadow);
-	auto savedPending = std::move(m_pendingStatements);
-	auto savedHalt = m_haltEmitted;
-	auto savedInlineDepth = m_inlineDepth;
-	auto savedArrayParamName = m_arrayParamName;
-	auto savedArrayParamType = m_arrayParamType;
-	auto savedArrayParamSize = m_arrayParamSize;
-	auto savedReturnType = m_returnType;
+	// Keep compilation facts and host-contract routing, but isolate the local
+	// scope. solc forbids capturing outer stack variables in a Yul function.
+	// Scratch memory/returndata/transient state are already shared by callsub;
+	// calldata is the sole synthetic buffer passed explicitly below.
+	AssemblyBuilder child = *this;
+	child.m_locals.clear();
+	child.m_localConstants.clear();
+	child.m_localWideConstants.clear();
+	child.m_alignedLocals.clear();
+	child.m_localSlotConstants.clear();
+	child.m_calldataMap.clear();
+	child.m_calldataParamNames.clear();
+	child.m_calldataPointerNames.clear();
+	child.m_calldataStaticPtrNames.clear();
+	child.m_blobOffsetVars.clear();
+	child.m_upgradedLocals.clear();
+	child.m_signedShadow.clear();
+	child.m_pendingStatements.clear();
+	child.m_lastMstoreValue = nullptr;
+	child.m_haltEmitted = false;
+	child.m_inlineDepth = 0;
+	child.m_yulLeaveFlag.clear();
+	child.m_yulInlineRenames.clear();
+	child.m_yulSubReturnTemps.clear();
+	child.m_forLoopPost = nullptr;
+	child.m_arrayParamName.clear();
+	child.m_arrayParamType = nullptr;
+	child.m_arrayParamSize = 0;
+	child.m_yulSubroutine = &_funcDef;
+	child.m_useSyntheticCalldata = m_yulCalldataFunctions.count(_funcDef.name.str());
 
-	m_locals.clear();
-	m_localConstants.clear();
-	m_localWideConstants.clear();
-	m_yulConstantValues.clear();
-	m_alignedLocals.clear();
-	m_fmpStaysAligned = false;
-	m_localSlotConstants.clear();
-	m_calldataParamNames.clear();
-	m_upgradedLocals.clear();
-	m_pendingStatements.clear();
-	m_haltEmitted = false;
-	m_inlineDepth = 0;
-	m_arrayParamName.clear();
-	m_arrayParamType = nullptr;
-	m_arrayParamSize = 0;
-	m_returnType = awst::WType::biguintType();
+	size_t nRet = _funcDef.returnVariables.size();
+	awst::WType const* retType = nRet == 0 ? awst::WType::voidType()
+		: nRet == 1 ? awst::WType::biguintType()
+		: m_typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>(nRet, awst::WType::biguintType()));
+	child.m_returnType = retType;
 
 	std::vector<awst::SubroutineArgument> subArgs;
 	for (auto const& p: _funcDef.parameters)
 	{
 		std::string pName = p.name.str();
-		m_locals[pName] = awst::WType::biguintType();
+		if (auto constant = m_yulConstantValues.find(pName); constant != m_yulConstantValues.end())
+		{
+			child.m_constants[pName] = constant->second;
+			child.m_localWideConstants[pName] = constant->second;
+		}
+		child.m_locals[pName] = awst::WType::biguintType();
 		subArgs.emplace_back(
 			pName, awst::WType::biguintType(), makeLoc(p.debugData));
 	}
+	if (child.m_useSyntheticCalldata)
+	{
+		subArgs.emplace_back(CD_BLOB_VAR, awst::WType::bytesType(), loc);
+		child.m_locals[CD_BLOB_VAR] = awst::WType::bytesType();
+	}
 
 	for (auto const& r: _funcDef.returnVariables)
-		m_locals[r.name.str()] = awst::WType::biguintType();
+		child.m_locals[r.name.str()] = awst::WType::biguintType();
 
 	std::vector<std::shared_ptr<awst::Statement>> bodyStmts;
 	// Init return vars to 0 (Yul default)
@@ -1137,31 +1167,10 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	}
 
 	for (auto const& stmt: _funcDef.body.statements)
-		buildStatement(stmt, bodyStmts);
-
-	awst::WType const* retType = awst::WType::voidType();
-	size_t nRet = _funcDef.returnVariables.size();
-	if (nRet == 1)
-	{
-		retType = awst::WType::biguintType();
-		std::string retName = _funcDef.returnVariables[0].name.str();
-		auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
-		bodyStmts.push_back(awst::makeReturnStatement(std::move(retVar), loc));
-	}
-	else if (nRet > 1)
-	{
-		std::vector<awst::WType const*> rts(nRet, awst::WType::biguintType());
-		retType = m_typeMapper.createType<awst::WTuple>(std::move(rts));
-		auto tupleExpr = awst::makeTupleExpression(retType, loc);
-		for (auto const& r: _funcDef.returnVariables)
-			tupleExpr->items.push_back(
-				awst::makeVarExpression(r.name.str(), awst::WType::biguintType(), loc));
-		bodyStmts.push_back(awst::makeReturnStatement(std::move(tupleExpr), loc));
-	}
-	else
-	{
-		bodyStmts.push_back(awst::makeReturnStatement(nullptr, loc));
-	}
+		child.buildStatement(stmt, bodyStmts);
+	child.drainPendingStatements(bodyStmts);
+	if (!child.m_haltEmitted)
+		child.emitYulSubroutineReturn(loc, bodyStmts);
 
 	auto block = awst::makeBlock(loc);
 	block->body = std::move(bodyStmts);
@@ -1171,25 +1180,25 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 		retType, std::move(block), /*pure=*/false, loc);
 
 	m_typeMapper.artifacts().pendingYulSubroutines.push_back(std::move(sub));
+}
 
-	m_locals = std::move(savedLocals);
-	m_localConstants = std::move(savedConstants);
-	m_localWideConstants = std::move(savedWideConstants);
-	m_yulConstantValues = std::move(savedYulConstants);
-	m_alignedLocals = std::move(savedAlignedLocals);
-	m_fmpStaysAligned = savedFmpAligned;
-	m_calldataParamNames = std::move(savedCalldataParamNames);
-	m_upgradedLocals = std::move(savedUpgraded);
-	m_paramBitWidths = std::move(savedParamBitWidths);
-	m_signedParamBits = std::move(savedSignedParamBits);
-	m_signedShadow = std::move(savedSignedShadow);
-	m_pendingStatements = std::move(savedPending);
-	m_haltEmitted = savedHalt;
-	m_inlineDepth = savedInlineDepth;
-	m_arrayParamName = std::move(savedArrayParamName);
-	m_arrayParamType = savedArrayParamType;
-	m_arrayParamSize = savedArrayParamSize;
-	m_returnType = savedReturnType;
+void AssemblyBuilder::emitYulSubroutineReturn(
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	std::shared_ptr<awst::Expression> value;
+	auto const& returns = m_yulSubroutine->returnVariables;
+	if (returns.size() == 1)
+		value = awst::makeVarExpression(returns[0].name.str(), awst::WType::biguintType(), _loc);
+	else if (returns.size() > 1)
+	{
+		auto tuple = awst::makeTupleExpression(m_returnType, _loc);
+		for (auto const& r: returns)
+			tuple->items.push_back(awst::makeVarExpression(r.name.str(), awst::WType::biguintType(), _loc));
+		value = std::move(tuple);
+	}
+	_out.push_back(awst::makeReturnStatement(std::move(value), _loc));
+	m_haltEmitted = true;
 }
 
 // ─── Expression translation ─────────────────────────────────────────────────

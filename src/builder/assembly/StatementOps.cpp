@@ -24,6 +24,8 @@ void AssemblyBuilder::buildStatement(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
+	if (m_yulSubroutine && m_haltEmitted)
+		return;
 	std::visit(
 		[this, &_out](auto const& _node) {
 			using T = std::decay_t<decltype(_node)>;
@@ -91,15 +93,9 @@ void AssemblyBuilder::buildVariableDeclaration(
 					m_locals[n] = awst::WType::biguintType();
 				}
 
-				// Right-to-left: Yul argument evaluation order.
-				std::vector<std::shared_ptr<awst::Expression>> args(call->arguments.size());
-				for (size_t ai = call->arguments.size(); ai-- > 0; )
-					args[ai] = buildExpression(call->arguments[ai]);
+				handleUserFunctionCall(*call, loc, _out);
 
-				handleUserFunctionCall(callName, args, loc, _out);
-
-				// Subroutine call → return values in m_yulSubReturnTemps;
-				// inlined call → return values in the function's own return-var names.
+				// Both call paths publish per-call return temps.
 				bool fromSub = !m_yulSubReturnTemps.empty();
 				size_t numReturns = std::min(
 					_decl.variables.size(), funcDef.returnVariables.size()
@@ -240,12 +236,7 @@ void AssemblyBuilder::buildAssignment(
 				{
 					auto const& funcDef = *m_asmFunctions[callName];
 
-					// Right-to-left: Yul argument evaluation order.
-					std::vector<std::shared_ptr<awst::Expression>> args(call->arguments.size());
-					for (size_t ai = call->arguments.size(); ai-- > 0; )
-						args[ai] = buildExpression(call->arguments[ai]);
-
-					handleUserFunctionCall(callName, args, loc, _out);
+					handleUserFunctionCall(*call, loc, _out);
 
 					bool fromSub = !m_yulSubReturnTemps.empty();
 					size_t numReturns = std::min(
@@ -663,6 +654,11 @@ void AssemblyBuilder::buildExpressionStatement(
 	if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_stmt.expression))
 	{
 		std::string funcName = getFunctionName(call->functionName);
+		if (m_asmFunctions.count(funcName))
+		{
+			handleUserFunctionCall(*call, loc, _out);
+			return;
+		}
 
 		// Statement-position memory writers must drop the "mem_0x*" content
 		// constants exactly like the expression path does (buildFunctionCall)
@@ -914,13 +910,6 @@ void AssemblyBuilder::buildExpressionStatement(
 					writeMemWordDyn(atOff(args[0], 32 * nwords), std::move(stitched), loc, _out);
 				}
 			}
-			return;
-		}
-
-		auto asmIt = m_asmFunctions.find(funcName);
-		if (asmIt != m_asmFunctions.end())
-		{
-			handleUserFunctionCall(funcName, args, loc, _out);
 			return;
 		}
 

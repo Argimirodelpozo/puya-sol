@@ -923,7 +923,7 @@ void ContractBuilder::emitFunctionPointerDispatch(awst::Contract& _contractNode)
 		eb::FunctionPointerBuilder::reset(*m_exprBuilder);
 	}
 
-	// Drain any Subroutines emitted for recursive Yul functions so the
+	// Drain any Subroutines emitted for reachable Yul functions so the
 	// contract-builder caller picks them up alongside fn-ptr dispatchers.
 	{
 		auto yulSubs = std::move(m_typeMapper.artifacts().pendingYulSubroutines);

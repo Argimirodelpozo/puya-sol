@@ -4,6 +4,8 @@ import runpy
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 
 HERE = Path(__file__).parent
 CASES = HERE / "cases"
@@ -92,25 +94,44 @@ def test_historical_contract_addresses_preserve_signed_low_word() -> None:
     assert HISTORICAL["address_argument"](eoa) == bytes(12) + bytes.fromhex(eoa[2:])
 
 
-def test_pre08_shims_are_narrow_and_repeatable() -> None:
-    transmitter = CASES / "cctp_transmitter" / "out_avm"
-    source = (transmitter / "MessageTransmitter.approval.teal").read_text()
-    patched, applied = HISTORICAL["pre08_compat_teal"](source)
+def test_pre08_shims_are_narrow_and_repeatable(monkeypatch) -> None:
+    monkeypatch.setenv("CCTP_ENSURE_BUDGET", "45000")
+    source = (HERE / "fixtures/cctp_v1_shim_sites.teal").read_text()
+    patched, applied = HISTORICAL["pre08_compat_teal"](source, "MessageTransmitter")
 
+    assert len(applied) == 4
     assert "TypedMemView.index uint8(32 * 8) wrap restored with unchecked" in applied
     assert "receiveMessage/replaceMessage ensure_budget(45000) OpUp shim" in applied
     assert "receiveMessage forwards exact signed message bytes[116:]" in applied
     assert "replaceMessage caller-app comparison uses address low 64 bits" in applied
     assert patched.count("__historical_ensure_budget:") == 1
     assert "    load 255\n    extract 116 0\n" in patched
-    assert "    intc 8 // 256\n    %\n" in patched
+    assert "    pushint 256 // shim: TypedMemView.index uint8 wrap\n    %\n" in patched
+    assert "    extract_uint64 // shim: caller app == low 64 bits of the historical sender" in patched
 
-    try:
-        HISTORICAL["pre08_compat_teal"](patched)
-    except ValueError as error:
-        assert str(error) == "historical ensure-budget shim already exists"
+    with pytest.raises(ValueError, match="historical ensure-budget shim already exists"):
+        HISTORICAL["pre08_compat_teal"](patched, "MessageTransmitter")
+
+
+@pytest.mark.parametrize("broken", ["missing", "duplicate", "evm-router"])
+def test_known_contract_shims_fail_closed_on_wrong_artifact(broken):
+    source = (HERE / "fixtures/cctp_v1_shim_sites.teal").read_text()
+    if broken == "missing":
+        source = source.replace("    callsub TypedMemView.clone\n", "")
+    elif broken == "duplicate":
+        source += "\n" + source
     else:
-        raise AssertionError("applying the compatibility shim twice must fail")
+        source = source.replace("main_replaceMessage_route@20:", "main_switch_case_1@20:")
+    with pytest.raises(HISTORICAL["ShimError"]):
+        HISTORICAL["pre08_compat_teal"](source, "MessageTransmitter")
+
+
+@pytest.mark.parametrize("spelling", ["pushint 8", "intc 5 // 8", "intc_3 // 8"])
+def test_shims_do_not_depend_on_constant_pool_indices(spelling):
+    source = (HERE / "fixtures/cctp_v1_shim_sites.teal").read_text()
+    source = source.replace("intc_1 // 8", spelling).replace("@10", "@999")
+    _, applied = HISTORICAL["pre08_compat_teal"](source, "MessageTransmitter")
+    assert len(applied) == 4
 
 
 # ── zero-log receipt correction inside duplicate-payload groups ─────────────
