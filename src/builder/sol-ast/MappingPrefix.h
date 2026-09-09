@@ -8,7 +8,7 @@ namespace puyasol::builder::eb { class ContractContext; }
 
 namespace puyasol::builder::sol_ast
 {
-class Context;
+struct Context;
 
 /// One path resolver for direct access, aliases and reference arguments.
 /// Consumes solc roots/member offsets/array facts and StorageKey's encoder.

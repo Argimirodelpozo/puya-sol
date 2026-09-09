@@ -1,21 +1,29 @@
-/// @file Context.cpp
-/// All decl-id-keyed mutators are inline in the header now (direct
-/// hashmap ops on the shared ScopeState). Only the solc-AST-dependent
-/// naming remains here.
-
 #include "builder/sol-ast/Context.h"
-// solc AST nodes used completely (dynamic_cast / member access); the hub
-// headers only forward-declare them now.
 #include <libsolidity/ast/AST.h>
 
 namespace puyasol::builder::sol_ast
 {
 
+bool Context::isInConstructor() const
+{
+	return function && function->inConstructor;
+}
+
+std::set<std::string>* Context::liveCalldataPointers() const
+{
+	return function ? &function->seededCalldataPointers : nullptr;
+}
+
+int64_t Context::callableId() const
+{
+	return function ? function->callableId : 0;
+}
+
 std::string Context::awstVarName(solidity::frontend::VariableDeclaration const& _vd) const
 {
 	// Modifier-lowering remap wins (same modifier applied twice → unique per-instance
 	// local names, keyed by decl id).
-	if (auto const* remap = findParamRemap(_vd.id()))
+	if (auto const* remap = bindings.paramRemaps.find(_vd.id()))
 		return remap->name;
 
 	// Params/returns keep their bare name (unique in the fn, ABI-facing); locals and

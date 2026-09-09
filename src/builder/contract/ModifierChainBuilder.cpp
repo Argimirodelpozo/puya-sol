@@ -15,6 +15,7 @@
 #include "awst/Termination.hpp"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolutil/Common.h>
 
 #include <algorithm>
 #include <iterator>
@@ -100,7 +101,7 @@ bool canResolveMemoryPointer(
 	{
 		auto const* declaration = dynamic_cast<VariableDeclaration const*>(
 			identifier->annotation().referencedDeclaration);
-		return declaration && !_scope.findBlobAggregate(declaration->id()).empty();
+		return declaration && !_scope.bindings.blobAggregates.get(declaration->id()).empty();
 	}
 	if (auto const* member = dynamic_cast<MemberAccess const*>(&_expression))
 		return canResolveMemoryPointer(_scope, member->expression());
@@ -435,7 +436,7 @@ void ContractBuilder::registerModifierMemoryRootParams(
 		// Large aggregates already use their declared uint64 BlobOffset calling
 		// convention; small values need the chain-local bridge allocated below.
 		if (!memoryUsesBlob(type))
-			m_functionCtx->setBlobAggregate(
+			m_functionCtx->scope.bindings.blobAggregates.set(
 				parameter->id(), memoryRootName(_func, *parameter));
 	}
 }
@@ -517,7 +518,7 @@ void ContractBuilder::bindModifierArguments(
 					awst::NameGen::next("ModifierChainBuilder.modPointer"),
 					modLoc, _modBody.body);
 			}
-			m_tr->setBlobAggregate(param->id(), pointerName);
+			m_tr->scope.bindings.blobAggregates.set(param->id(), pointerName);
 			_blobDeclIds.push_back(param->id());
 			continue;
 		}
@@ -539,7 +540,7 @@ void ContractBuilder::bindModifierArguments(
 			m_exprBuilder->appendEffectsTo(_modBody.body);
 			sol_ast::StorageAlias alias =
 				sol_ast::StorageAlias::classify(std::move(argExpr));
-			m_tr->setStorageAlias(param->id(), std::move(alias));
+			m_tr->scope.bindings.storageAliases.set(param->id(), std::move(alias));
 			_remappedDeclIds.push_back(param->id());
 			continue;
 		}
@@ -566,7 +567,7 @@ void ContractBuilder::bindModifierArguments(
 		auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), modLoc);
 		_modBody.body.push_back(std::move(assignment));
 
-		m_tr->setParamRemap(param->id(), sol_ast::ParamRemap{uniqueName, paramType});
+		m_tr->scope.bindings.paramRemaps.set(param->id(), sol_ast::ParamRemap{uniqueName, paramType});
 		_remappedDeclIds.push_back(param->id());
 	}
 }
@@ -607,7 +608,7 @@ void ContractBuilder::buildModifierChain(
 			std::distance(_func.parameters().begin(), found));
 		std::string const name = memoryRootName(_func, *parameter);
 		memoryBridges.push_back({
-			index, parameter, name, m_tr->awstVarName(*parameter), nativeType});
+			index, parameter, name, m_tr->scope.awstVarName(*parameter), nativeType});
 		bridgeArgs.emplace_back(
 			name, awst::WType::uint64Type(), makeLoc(parameter->location()));
 	}
@@ -745,9 +746,7 @@ void ContractBuilder::buildModifierChain(
 			return placeholderBlock;
 		};
 
-		setPlaceholderFactory(std::move(makePlaceholder));
-		auto translatedBody = buildBlock(modDef->body());
-		setPlaceholderFactory({});
+		auto translatedBody = buildBlock(modDef->body(), std::move(makePlaceholder));
 
 		if (translatedBody)
 		{
@@ -769,9 +768,9 @@ void ContractBuilder::buildModifierChain(
 		modBody->body.push_back(threading.makeThreadedReturn(modSub.sourceLocation));
 
 		for (auto declId: remappedDeclIds)
-			m_tr->eraseParamRemap(declId);
+			m_tr->scope.bindings.paramRemaps.erase(declId);
 		for (auto declId: blobDeclIds)
-			m_tr->eraseBlobAggregate(declId);
+			m_tr->scope.bindings.blobAggregates.erase(declId);
 
 		modSub.body = modBody;
 		m_modifierSubroutines.push_back(std::move(modSub));
@@ -798,7 +797,7 @@ void ContractBuilder::buildModifierChain(
 			std::make_move_iterator(entryPrefix.begin()),
 			std::make_move_iterator(entryPrefix.end()));
 	for (auto const& bridge: memoryBridges)
-		m_tr->eraseBlobAggregate(bridge.declaration->id());
+		m_tr->scope.bindings.blobAggregates.erase(bridge.declaration->id());
 }
 
 void ContractBuilder::buildConstructorModifierChain(
@@ -831,20 +830,17 @@ void ContractBuilder::buildConstructorModifierChain(
 		if (parameter->name().empty())
 			continue;
 		constructor.args.emplace_back(
-			m_tr->awstVarName(*parameter),
+			m_tr->scope.awstVarName(*parameter),
 			m_typeMapper.profile().evmStorageLayout
 				&& parameter->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				? awst::WType::biguintType() : m_typeMapper.map(parameter->type()),
 			makeLoc(parameter->location()));
 	}
 
-	auto const* savedReturnType = m_functionCtx->returnType;
-	bool const savedFrameIsProgram = m_functionCtx->frameIsProgram;
-	m_functionCtx->returnType = awst::WType::voidType();
-	m_functionCtx->frameIsProgram = true;
+	solidity::ScopedSaveAndRestore returnTypeGuard(
+		m_functionCtx->returnType, awst::WType::voidType());
+	solidity::ScopedSaveAndRestore frameGuard(m_functionCtx->frameIsProgram, true);
 	buildModifierChain(_func, constructor, _contractName);
-	m_functionCtx->frameIsProgram = savedFrameIsProgram;
-	m_functionCtx->returnType = savedReturnType;
 	_body = std::move(constructor.body);
 }
 

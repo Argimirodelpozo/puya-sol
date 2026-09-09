@@ -43,15 +43,4 @@ inline void forEachDefinedFunction(
 			_fn(func);
 }
 
-/// Walk all function modifiers, most-derived first.
-template <typename F>
-inline void forEachFunctionModifier(
-	solidity::frontend::ContractDefinition const& _contract,
-	F&& _fn)
-{
-	for (auto const* base: _contract.annotation().linearizedBaseContracts)
-		for (auto const* mod: base->functionModifiers())
-			_fn(mod);
-}
-
 } // namespace puyasol::builder

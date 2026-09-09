@@ -395,7 +395,7 @@ SolAssignment::tryHandleBlobRespill()
 		lid->annotation().referencedDeclaration);
 	if (!lvd
 		|| lvd->referenceLocation() != VariableDeclaration::Location::Memory
-		|| m_scope.findBlobAggregate(lvd->id()).empty())
+		|| m_scope.bindings.blobAggregates.get(lvd->id()).empty())
 		return std::nullopt;
 	// Blob-backing is selected per declaration whenever Yul observes an EVM
 	// pointer, not only by a universal memory profile. Therefore
@@ -405,7 +405,7 @@ SolAssignment::tryHandleBlobRespill()
 	auto value = buildExpr(m_assignment.rightHandSide());
 	if (!value)
 		return std::nullopt;
-	std::string offN = m_scope.findBlobAggregate(lvd->id());
+	std::string offN = m_scope.bindings.blobAggregates.get(lvd->id());
 	std::vector<std::shared_ptr<awst::Statement>> out;
 	if (builder::emitBlobBackValue(m_ctx.typeMapper, lvd->type(),
 			m_ctx.typeMapper.map(lvd->type()), std::move(value), offN,

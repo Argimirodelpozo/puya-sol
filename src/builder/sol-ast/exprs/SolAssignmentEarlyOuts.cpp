@@ -91,7 +91,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 	// Mapping-key-param locals hold the box-key prefix as a runtime bytes value.
 	// Must do a real bytes write; compile-time alias path (VoidConstant) would lose
 	// mutations like `r = a; r[k] = v; r = b; r[k] = v`.
-	if (auto const& keyParam = m_scope.findMappingKeyParam(lhsDecl->id()); !keyParam.empty())
+	if (auto const& keyParam = m_scope.bindings.mappingKeyParams.get(lhsDecl->id()); !keyParam.empty())
 	{
 		if (!m_ctx.typeMapper.profile().evmStorageLayout && containsMappingType(lhsDecl->type()))
 			return awst::makeAssignmentExpression(
@@ -136,7 +136,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 	auto aliasExpr = rhsExpr;
 	if (awst::isRawStorageRead(rhsExpr.get()))
 		aliasExpr = StorageMapper::makeStateGetWithDefault(rhsExpr, rhsExpr->wtype, m_loc);
-	m_scope.setStorageAlias(
+	m_scope.bindings.storageAliases.set(
 		lhsDecl->id(), StorageAlias::stateRead(std::move(aliasExpr)));
 	auto voidExpr = awst::makeVoidConstant(m_loc);
 	return std::shared_ptr<awst::Expression>(voidExpr);
@@ -412,11 +412,11 @@ SolAssignment::tryHandleBoxedAggregatePathWrite()
 		|| (rootArray && rootArray->isByteArrayOrString()))
 		return std::nullopt;
 
-	std::string keyParam = m_scope.findMappingKeyParam(vd->id());
+	std::string keyParam = m_scope.bindings.mappingKeyParams.get(vd->id());
 	// Offset-carrying struct refs name a slice inside a larger box; their
 	// sibling handler owns that representation. Everything here owns a complete
 	// aggregate box value.
-	if (!m_scope.findStructRefOffset(vd->id()).empty())
+	if (!m_scope.bindings.structRefOffsets.get(vd->id()).empty())
 		return std::nullopt;
 	auto binding = vd->isStateVariable() ? m_ctx.storageMapper.physicalBindingFor(*vd)
 		: StorageMapper::PhysicalBinding{};
@@ -553,8 +553,8 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 		baseId->annotation().referencedDeclaration);
 	if (!vd)
 		return std::nullopt;
-	std::string offVar = m_scope.findStructRefOffset(vd->id());
-	std::string keyParam = m_scope.findMappingKeyParam(vd->id());
+	std::string offVar = m_scope.bindings.structRefOffsets.get(vd->id());
+	std::string keyParam = m_scope.bindings.mappingKeyParams.get(vd->id());
 	if (offVar.empty() || keyParam.empty())
 		return std::nullopt;
 	auto const* rootW = dynamic_cast<awst::ARC4Struct const*>(

@@ -31,7 +31,7 @@ class StorageBackend;
 class StorageLayout;
 class TransientStorage;
 namespace sol_ast {
-class Context;
+struct Context;
 }
 }
 
@@ -155,6 +155,10 @@ public:
 	/// funcDef.id() → synthesized method name; CallResolver returns InstanceMethodTarget
 	/// instead of SubroutineID when the funcDef appears here.
 	std::unordered_map<int64_t, std::string> internalizedFunctionNames;
+	/// Concrete super/explicit-base implementations requested while lowering.
+	/// IDs deduplicate emission, including recursive and transitive requests.
+	std::unordered_set<int64_t> baseImplementationIds;
+	std::vector<solidity::frontend::FunctionDefinition const*> pendingBaseImplementations;
 
 	// ── Structurally scoped expression effects ──
 	using EffectStatements = std::vector<std::shared_ptr<awst::Statement>>;
@@ -201,7 +205,7 @@ public:
 
 	/// Depth of CONDITIONALLY-EXECUTED translation regions (if/else branches,
 	/// loop bodies, ternary/short-circuit arms). Compile-time-only state
-	/// mutations — storage-pointer rebinds resolved via setStorageAlias — are
+	/// mutations — storage-pointer rebinds recorded in the scope bindings — are
 	/// UNSOUND inside one (the rebind would apply unconditionally to all
 	/// later uses); producers of such state must fail loud when depth > 0.
 	int conditionalDepth = 0;
@@ -333,7 +337,10 @@ public:
 	/// Innermost active scope; null before the first pushScopeRaii.
 	sol_ast::Context* currentScope = nullptr;
 
-	/// RAII scope guard. Use: `auto guard = ctx.pushScopeRaii(&someContext);`.
+	/// Active scope for expression lowering; requires a pushed or root scope.
+	sol_ast::Context& scope() const;
+
+	/// RAII scope guard. Use: `auto guard = ctx.pushScopeRaii(&block.scope);`.
 	class ScopePush
 	{
 	public:

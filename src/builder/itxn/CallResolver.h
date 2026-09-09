@@ -1,6 +1,5 @@
 #pragma once
 
-#include "builder/sol-ast/Context.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "awst/Node.h"
 
@@ -22,9 +21,6 @@ struct ResolvedCall
 	awst::SubroutineTarget target; ///< Same variant as SubroutineCallExpression::target.
 	solidity::frontend::FunctionDefinition const* funcDef = nullptr; ///< May be null.
 	bool isUsingForCall = false;    ///< Receiver prepended as first arg.
-	bool isSuperCall = false;
-	bool isBaseInternalCall = false;
-	bool isExternalCall = false;    ///< Needs inner txn.
 };
 
 enum class CallTransport
@@ -63,30 +59,20 @@ public:
 		std::initializer_list<solidity::frontend::Expression const*> _operands,
 		awst::SourceLocation const& _loc);
 
-	/// Try to resolve a function call from an Identifier callee; nullopt on failure.
-	static std::optional<ResolvedCall> resolveFromIdentifier(
+	/// Resolve a function expression once: exact solc body plus its AWST target.
+	/// Null for data/function-pointer expressions without a concrete declaration.
+	static std::optional<ResolvedCall> resolveFunction(
 		ContractContext& _ctx,
-		solidity::frontend::Identifier const& _ident,
-		std::string const& _resolvedName);
+		solidity::frontend::Expression const& _expression);
 
-	/// Try to resolve a function call from a MemberAccess callee; nullopt on failure.
-	static std::optional<ResolvedCall> resolveFromMemberAccess(
-		ContractContext& _ctx,
-		sol_ast::Context& _scope,
-		solidity::frontend::MemberAccess const& _memberAccess,
-		std::string const& _resolvedName,
-		size_t _argCount);
-
-	/// Returns "name(paramTypes)" if overloaded, else "name".
+	/// Name of an already-resolved method; does not repeat virtual lookup.
 	static std::string resolveMethodName(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const& _func);
 
-	/// Apply solc's virtual lookup for the contract currently being lowered.
-	/// Non-virtual, free, library, constructor, and non-contract functions are
-	/// returned unchanged.
-	static solidity::frontend::FunctionDefinition const& resolveVirtualTarget(
-		ContractContext const& _ctx,
+	/// Register an exact base implementation for shared internal-body emission.
+	static std::string baseImplementationName(
+		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const& _func);
 
 private:

@@ -424,7 +424,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 				if (auto stmt = m_ctx.transientStorage->buildWrite(
 						*varDecl, std::move(zero), m_loc))
 					m_ctx.postEffects().push_back(std::move(stmt));
-				m_scope.eraseFuncPtrTarget(varDecl->id());
+				m_scope.bindings.funcPtrTargets.erase(varDecl->id());
 				return _operand;
 			}
 			if (varDecl->isStateVariable() && !varDecl->isConstant() && !varDecl->immutable()
@@ -484,7 +484,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
-			m_scope.eraseFuncPtrTarget(varDecl->id());
+			m_scope.bindings.funcPtrTargets.erase(varDecl->id());
 	}
 
 	if (auto const* boxExpr = dynamic_cast<awst::BoxValueExpression const*>(target.get()))

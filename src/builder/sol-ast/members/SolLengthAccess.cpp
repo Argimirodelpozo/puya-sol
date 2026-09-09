@@ -261,7 +261,7 @@ std::shared_ptr<awst::Expression> tryKeyParamArrayLength(
 	auto const* arrType = dynamic_cast<ArrayType const*>(varDecl.type());
 	if (!arrType || arrType->isByteArrayOrString())
 		return nullptr;
-	auto const& keyParam = scope.findMappingKeyParam(varDecl.id());
+	auto const& keyParam = scope.bindings.mappingKeyParams.get(varDecl.id());
 	if (keyParam.empty())
 		return nullptr;
 	if (!arrType->isDynamicallySized())

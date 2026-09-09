@@ -123,54 +123,56 @@ awst::WType const* FunctionPointerBuilder::mapFunctionType(
 
 // ── Register a function as a pointer target ──
 
-void FunctionPointerBuilder::registerTarget(
+unsigned FunctionPointerBuilder::registerTarget(
 	ContractContext& _ctx,
 	FunctionDefinition const* _funcDef,
 	FunctionType const* _funcType,
 	std::string _awstName)
 {
+	if (!_funcDef) return 0;
 	auto& registry = _ctx.functionPointers;
-	if (!_funcDef) return;
-	if (_awstName.empty()
-		&& _funcType
-		&& _funcType->kind() == FunctionType::Kind::Internal)
-		_funcDef = &CallResolver::resolveVirtualTarget(_ctx, *_funcDef);
-	int64_t id = _funcDef->id();
-	std::pair<int64_t, std::string> key{id, _awstName};
-	if (registry.targets.count(key)) return; // already registered for this caller context
-
-	std::string name = std::move(_awstName);
-	if (name.empty())
+	auto const id = _funcDef->id();
+	if (_ctx.baseImplementationIds.count(id))
+		_awstName = CallResolver::baseImplementationName(_ctx, *_funcDef);
+	if (auto found = registry.targets.find(id); found != registry.targets.end())
+	{
+		if (!_awstName.empty())
+			found->second.name = std::move(_awstName);
+		return found->second.id;
+	}
+	if (_awstName.empty())
 		if (auto const* symbol = _ctx.functionSymbols.resolve(id))
-			name = *symbol;
-	if (name.empty())
-		name = _funcDef->name();
-	registry.targets[key] = FuncPtrEntry{
-		id,
-		name,
-		registry.nextId++,
-		_funcType,
-		_funcDef,
-		"" // subroutineId — populated later via setSubroutineId
-	};
+			_awstName = *symbol;
+	if (_awstName.empty())
+		_awstName = CallResolver::resolveMethodName(_ctx, *_funcDef);
+	auto pointerId = registry.nextId++;
+	registry.targets.emplace(id, FuncPtrEntry{
+		id, std::move(_awstName), pointerId, _funcType, _funcDef, ""
+	});
+	return pointerId;
 }
 
 void FunctionPointerBuilder::setSubroutineIds(
 	ContractContext& _ctx,
 	FunctionSymbolTable const& _symbols)
 {
-	for (auto& [key, entry] : _ctx.functionPointers.targets)
+	for (auto& [id, entry] : _ctx.functionPointers.targets)
 	{
-		if (auto const hostBound = _ctx.internalizedFunctionNames.find(key.first);
+		if (_ctx.baseImplementationIds.count(id))
+		{
+			entry.name = CallResolver::baseImplementationName(_ctx, *entry.funcDef);
+			continue;
+		}
+		if (auto const hostBound = _ctx.internalizedFunctionNames.find(id);
 			hostBound != _ctx.internalizedFunctionNames.end())
 		{
 			entry.name = hostBound->second;
 			entry.subroutineId.clear();
 			continue;
 		}
-		if (auto const* symbol = _symbols.resolve(key.first))
+		if (auto const* symbol = _symbols.resolve(id))
 		{
-			if (_symbols.isRootSubroutine(key.first))
+			if (_symbols.isRootSubroutine(id))
 				entry.subroutineId = *symbol;
 			else
 				entry.name = *symbol;
@@ -205,7 +207,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	}
 
 	// Register as target
-	registerTarget(_ctx, _funcDef, funcType, _awstName);
+	auto const funcId = registerTarget(_ctx, _funcDef, funcType, _awstName);
 
 	bool isExternal = isExternalFunctionPointer(funcType);
 
@@ -288,16 +290,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 		return packed;
 	}
 
-	// Internal: return the function's unique ID
-	auto const* targetFunc = _funcDef;
-	if (_awstName.empty())
-		targetFunc = &CallResolver::resolveVirtualTarget(_ctx, *_funcDef);
-	auto const& targets = _ctx.functionPointers.targets;
-	auto it = targets.find({targetFunc->id(), _awstName});
-	unsigned funcId = (it != targets.end()) ? it->second.id : 0;
-
-	auto idConst = awst::makeIntegerConstant(funcId, _loc);
-	return idConst;
+	// Internal references to the same concrete implementation share an ID.
+	return awst::makeIntegerConstant(funcId, _loc);
 }
 
 // ── Build a call through a function pointer ──
@@ -522,8 +516,7 @@ namespace dispatch_detail
 {
 
 /// Group registered targets by dispatch signature. Foreign non-resolvable
-/// targets (different non-library contract, no subroutine id, not a
-/// __super_ ref, part of the external interface) are dropped; signatures
+/// targets (different non-library contract, no subroutine id) are dropped; signatures
 /// demanded by call sites but with no surviving targets keep an EMPTY group
 /// (the dispatch subroutine must still exist so references resolve).
 std::map<std::string, std::vector<FuncPtrEntry const*>> collectDispatchGroups(
@@ -548,8 +541,7 @@ std::map<std::string, std::vector<FuncPtrEntry const*>> collectDispatchGroups(
 		}
 		if (fdContract && _contract && !inHierarchy
 			&& !fdContract->isLibrary()
-			&& entry.subroutineId.empty()
-			&& entry.name.find("__super_") == std::string::npos)
+			&& entry.subroutineId.empty())
 			continue;
 		groups[dname].push_back(&entry);
 	}
@@ -712,7 +704,13 @@ awst::ContractMethod buildSelToIdMethod(
 
 	for (auto const* entry : entries)
 	{
-		if (!entry->funcDef) continue;
+		if (!entry->funcDef || !entry->funcDef->isPartOfExternalInterface()) continue;
+		// A base implementation shares its selector with the override, but it
+		// is only reachable by internal identity, never through a self-call ABI.
+		if (_ctx.currentContract && entry->funcDef->annotation().contract
+			&& !entry->funcDef->annotation().contract->isLibrary()
+			&& &entry->funcDef->resolveVirtual(*_ctx.currentContract) != entry->funcDef)
+			continue;
 		std::shared_ptr<awst::Expression> methodConst;
 		if (_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
 		{

@@ -155,7 +155,7 @@ std::map<std::string, AssemblyBuilder::BoxKeyedSlot> collectBoxKeyedStructSlots(
 		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 		if (!varDecl || !varDecl->isLocalVariable()) continue;
-		auto const* alias = blk.findStorageAlias(varDecl->id());
+		auto const* alias = blk.scope.bindings.storageAliases.find(varDecl->id());
 		if (!alias || !alias->expr || alias->kind != StorageAlias::Kind::StateRead)
 			continue;
 		awst::Expression const* e = alias->expr.get();
@@ -210,13 +210,13 @@ std::map<std::string, std::string> collectStructRefSlotLocals(
 		if (!vd || vd->isStateVariable()
 			|| vd->referenceLocation() != VariableDeclaration::Location::Storage)
 			continue;
-		if (!blk.typeMapper().profile().evmStorageLayout && !blk.findSlotStorageRef(vd->id()))
+		if (!blk.typeMapper().profile().evmStorageLayout && !blk.scope.bindings.slotStorageRefs.get(vd->id()))
 			continue;
 		if (reference.suffix == "slot")
 		{
-			auto binding = blk.findSlotStorageRef(vd->id());
+			auto binding = blk.scope.bindings.slotStorageRefs.get(vd->id());
 			auto const* local = dynamic_cast<awst::VarExpression const*>(binding.get());
-			slots[yulId->name.str()] = local ? local->name : blk.awstVarName(*vd);
+			slots[yulId->name.str()] = local ? local->name : blk.scope.awstVarName(*vd);
 		}
 		else if (reference.suffix == "offset")
 			constants[yulId->name.str()] = "0";
@@ -542,7 +542,7 @@ std::vector<std::pair<std::string, awst::WType const*>> collectAugmentedParams(
 					varDecl->type()))
 				calldataStaticPtrNames.insert(base);
 		}
-		if (auto blobOff = blk.findBlobAggregate(varDecl->id()); !blobOff.empty())
+		if (auto blobOff = blk.scope.bindings.blobAggregates.get(varDecl->id()); !blobOff.empty())
 			blobOffsetVars[name] = blobOff;
 		bool found = false;
 		for (auto const& [pName, pType]: augmentedParams)
@@ -586,7 +586,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	// locals → name__<declId>, params/returns bare). AssemblyBuilder names outer-var
 	// refs decl-based off solc's externalReferences via this callback.
 	auto declNameFn = [this](solidity::frontend::VariableDeclaration const& _vd) {
-		return m_blk.awstVarName(_vd);
+		return m_blk.scope.awstVarName(_vd);
 	};
 
 	std::map<std::string, VariableDeclaration const*> storageLocalAliases;

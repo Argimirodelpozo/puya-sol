@@ -49,7 +49,7 @@ bool SolVariableDeclaration::tryCalldataSlicePointerBinding(
 			if (auto const* baseId = dynamic_cast<Identifier const*>(&idx->baseExpression()))
 				if (auto const* baseVd = dynamic_cast<VariableDeclaration const*>(
 						baseId->annotation().referencedDeclaration))
-					if (auto* live = m_blk.fn.liveCalldataPointers();
+					if (auto* live = m_blk.fn.scope.liveCalldataPointers();
 						live && live->count(baseVd->name()) && idx->indexExpression())
 						if (auto const* arrT = dynamic_cast<solidity::frontend::ArrayType const*>(
 								baseVd->type()))
@@ -70,7 +70,7 @@ bool SolVariableDeclaration::tryCalldataSlicePointerBinding(
 							// Name via awstVarName: assembly resolves the bare local
 							// through externalRefAwstName (= awstVarName mangling), so
 							// the __cd_off_ local + live-set entry must match it.
-							std::string tName = m_blk.awstVarName(decl);
+							std::string tName = m_blk.scope.awstVarName(decl);
 							result.push_back(awst::makeAssignmentStatement(
 								awst::makeVarExpression("__cd_off_" + tName,
 									awst::WType::biguintType(), loc),
@@ -101,13 +101,13 @@ bool SolVariableDeclaration::trySlotModeStoragePointer(
 		&& decl.referenceLocation() == VariableDeclaration::Location::Storage)
 	{
 		auto loc = m_blk.makeLoc(decl.location());
-		EvmSlotLowering low(m_blk.builderCtx(), m_blk, loc);
+		EvmSlotLowering low(m_blk.builderCtx(), m_blk.scope, loc);
 		auto addr = initialValue ? low.resolve(*initialValue) : std::nullopt;
 		if (initialValue && !addr)
 			return true;   // error already logged
 		auto target = awst::makeVarExpression(
-			m_blk.awstVarName(decl), awst::WType::biguintType(), loc);
-		m_blk.setSlotStorageRef(decl.id(), target);
+			m_blk.scope.awstVarName(decl), awst::WType::biguintType(), loc);
+		m_blk.scope.bindings.slotStorageRefs.set(decl.id(), target);
 		// pre-statements (bounds asserts, key pins) BEFORE the binding
 		for (auto& st: m_blk.builderCtx().takePreEffects())
 			result.push_back(std::move(st));
@@ -133,13 +133,8 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 	std::shared_ptr<awst::Expression> value;
 	if (initialValue)
 	{
-		// Track function pointer assignments via ASTNode::referencedDeclaration
-		// (handles Identifier + MemberAccess; super.f safe via findSuperTarget
-		// in SolInternalCall::processFromIdent). EXCEPT a FOREIGN contract's
-		// external fn (`Other(addr).g`): the static shortcut direct-callsubs
-		// the target, which cannot cross apps — those must stay dynamic
-		// (profile-sized appId+selector fields, inner-txn path). `this.f` keeps the
-		// shortcut (self-calls ARE direct subroutine calls by design).
+		// Preserve the initializer expression, including super's lexical owner.
+		// Foreign external pointers must still cross applications at runtime.
 		if (auto const* declFt = dynamic_cast<FunctionType const*>(decl.type()))
 		{
 			bool foreignExternal = false;
@@ -153,7 +148,7 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 			if (!foreignExternal)
 				if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
 						ASTNode::referencedDeclaration(*initialValue)))
-					m_blk.setFuncPtrTarget(decl.id(), funcDef);
+					m_blk.scope.bindings.funcPtrTargets.set(decl.id(), initialValue);
 		}
 
 		value = m_blk.builderCtx().buildExpr(*initialValue);
@@ -172,7 +167,7 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 				ist && ist->dataStoredIn(solidity::frontend::DataLocation::Storage))
 			{
 				auto loc = m_blk.makeLoc(decl.location());
-				EvmSlotLowering low(m_blk.builderCtx(), m_blk, loc);
+				EvmSlotLowering low(m_blk.builderCtx(), m_blk.scope, loc);
 				EvmSlotLowering::Addr a;
 				a.slot = std::move(value);
 				a.solType = ist;
@@ -240,8 +235,8 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 		{
 			auto holder = resolveBuiltStorageHolder(m_blk.builderCtx(), value, m_loc);
 			if (!holder.key) throw SizeError("mapping alias requires a resolved storage holder");
-			auto const name = m_blk.awstVarName(decl);
-			m_blk.setMappingKeyParam(decl.id(), name);
+			auto const name = m_blk.scope.awstVarName(decl);
+			m_blk.scope.bindings.mappingKeyParams.set(decl.id(), name);
 			m_blk.builderCtx().appendEffectsTo(result);
 			result.push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(name, awst::WType::bytesType(), m_loc),
@@ -267,7 +262,7 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 			auto aliasExpr = awst::isRawStorageRead(value.get())
 				? StorageMapper::makeStateGetWithDefault(value, value->wtype, m_loc)
 				: value;
-			m_blk.setStorageAlias(decl.id(), StorageAlias::stateRead(std::move(aliasExpr)));
+			m_blk.scope.bindings.storageAliases.set(decl.id(), StorageAlias::stateRead(std::move(aliasExpr)));
 			m_blk.builderCtx().appendEffectsTo(result);
 			return true;
 		}
@@ -277,13 +272,13 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 		// through the underlying state container's read-modify-write codegen.
 		if (dynamic_cast<awst::IndexExpression const*>(value.get()))
 		{
-			m_blk.setStorageAlias(decl.id(), StorageAlias::indexedPath(value));
+			m_blk.scope.bindings.storageAliases.set(decl.id(), StorageAlias::indexedPath(value));
 			m_blk.builderCtx().appendEffectsTo(result);
 			return true;
 		}
 		if (dynamic_cast<awst::FieldExpression const*>(value.get()))
 		{
-			m_blk.setStorageAlias(decl.id(), StorageAlias::fieldPath(value));
+			m_blk.scope.bindings.storageAliases.set(decl.id(), StorageAlias::fieldPath(value));
 			m_blk.builderCtx().appendEffectsTo(result);
 			return true;
 		}
@@ -323,7 +318,7 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 				if (truePlace->kind == StoragePlaceKind::Box)
 					aliasExpr = StorageMapper::makeStateGetWithDefault(
 						std::move(aliasExpr), truePlace->valueType, m_loc);
-				m_blk.setStorageAlias(decl.id(),
+				m_blk.scope.bindings.storageAliases.set(decl.id(),
 					StorageAlias::stateRead(std::move(aliasExpr)));
 				m_blk.builderCtx().appendEffectsTo(result);
 				return true;
@@ -346,8 +341,8 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 						&& value->wtype == awst::WType::bytesType()));
 			if (isMappingPtr && value->wtype == awst::WType::bytesType())
 			{
-				auto const name = m_blk.awstVarName(decl);
-				m_blk.setMappingKeyParam(decl.id(), name);
+				auto const name = m_blk.scope.awstVarName(decl);
+				m_blk.scope.bindings.mappingKeyParams.set(decl.id(), name);
 				// Plain bytes assignment so `m` holds the holder key at runtime;
 				// `m = otherMapping` updates which mapping `m` points to.
 				auto var = awst::makeVarExpression(name, awst::WType::bytesType(), m_loc);
@@ -362,8 +357,8 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 
 			// Emit the call as an assignment; slot var wtype must match the return wtype.
 			auto* slotWType = value->wtype ? value->wtype : awst::WType::biguintType();
-			auto slotVar = awst::makeVarExpression(m_blk.awstVarName(decl), slotWType, m_loc);
-			m_blk.setSlotStorageRef(decl.id(), slotVar);
+			auto slotVar = awst::makeVarExpression(m_blk.scope.awstVarName(decl), slotWType, m_loc);
+			m_blk.scope.bindings.slotStorageRefs.set(decl.id(), slotVar);
 
 			auto assign = awst::makeAssignmentStatement(std::move(slotVar), std::move(value), m_loc);
 			for (auto& effect: m_blk.builderCtx().takePreEffects())
@@ -443,14 +438,14 @@ bool SolVariableDeclaration::tryMemoryAliasBinding(
 					if (srcRead->wtype != type)
 						srcRead = awst::makeReinterpretCast(
 							std::move(srcRead), type, m_loc);
-					m_blk.setMemoryAlias(decl.id(), std::move(srcRead));
+					m_blk.scope.bindings.memoryAliases.set(decl.id(), std::move(srcRead));
 					m_blk.builderCtx().appendEffectsTo(result);
 					return true;
 				}
 			}
 			else
 			{
-				m_blk.setMemoryAlias(decl.id(), value); // value = buildExpr(a) = a's (resolved) local read
+				m_blk.scope.bindings.memoryAliases.set(decl.id(), value); // value = buildExpr(a) = a's (resolved) local read
 				m_blk.builderCtx().appendEffectsTo(result);
 				return true;
 			}
@@ -480,7 +475,7 @@ bool SolVariableDeclaration::tryBlobOffsetBinding(
 			builder::TypeCoercion::implicitNumericCast(
 				std::move(value), awst::WType::uint64Type(), m_loc),
 			m_loc));
-		m_blk.setBlobAggregate(decl.id(), offN);
+		m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
 		m_blk.builderCtx().appendEffectsTo(result);
 		return true;
 	}
@@ -499,7 +494,7 @@ bool SolVariableDeclaration::tryAsmAggregateInit(
 	// scratch blob using Solidity's EVM memory layout and bind its base offset.
 	if (initialValue
 		&& decl.referenceLocation() == VariableDeclaration::Location::Memory
-		&& m_blk.isAssemblyAggregate(decl.id()))
+		&& m_blk.scope.bindings.assemblyAggregates.contains(decl.id()))
 	{
 		FunctionCall const* newCall = nullptr;
 		if (auto const* fc = dynamic_cast<FunctionCall const*>(initialValue))
@@ -520,7 +515,7 @@ bool SolVariableDeclaration::tryAsmAggregateInit(
 			if (builder::emitBlobBackValue(m_blk.typeMapper(), decl.type(),
 					type, std::move(value), offN,
 					static_cast<int>(decl.id()), loc2, result))
-				m_blk.setBlobAggregate(decl.id(), offN);
+				m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
 			return true;
 		}
 		if (newCall)
@@ -541,7 +536,7 @@ bool SolVariableDeclaration::tryAsmAggregateInit(
 						m_blk.typeMapper(),
 						std::move(lenU64), offN, static_cast<int>(decl.id()), m_loc))
 					result.push_back(std::move(s));
-				m_blk.setBlobAggregate(decl.id(), offN);
+				m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
 				m_blk.builderCtx().appendEffectsTo(result);
 				return true;
 			}
@@ -560,7 +555,7 @@ bool SolVariableDeclaration::tryAsmAggregateInit(
 				if (builder::emitBlobBackValue(m_blk.typeMapper(), decl.type(),
 						type, std::move(value), offN,
 						static_cast<int>(decl.id()), loc2, result))
-					m_blk.setBlobAggregate(decl.id(), offN);
+					m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
 				return true;
 			}
 			result.push_back(awst::makeAssignmentStatement(
@@ -575,7 +570,7 @@ bool SolVariableDeclaration::tryAsmAggregateInit(
 						m_blk.typeMapper().profile().scratchLayout, sz, m_loc,
 						static_cast<int>(decl.id())))
 					result.push_back(std::move(s));
-			m_blk.setBlobAggregate(decl.id(), offN);
+			m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
 			m_blk.builderCtx().appendEffectsTo(result);
 			return true;
 		}
@@ -609,7 +604,7 @@ void SolVariableDeclaration::emitDefaultDeclaration(
 		// multi-slot blob; bind local to FMP base offset so `t.field[i]`
 		// lowers to blob word ops (SolIndexAccess). Blob is pre-zeroed.
 		if (builder::memoryUsesBlob(type)
-			|| m_blk.isAssemblyAggregate(decl.id()))
+			|| m_blk.scope.bindings.assemblyAggregates.contains(decl.id()))
 		{
 			std::string offN = "__blobagg_off_" + std::to_string(decl.id());
 			// base = current FMP (uint64) = extractUInt64(load(slot0), 88)
@@ -624,7 +619,7 @@ void SolVariableDeclaration::emitDefaultDeclaration(
 					m_blk.typeMapper().profile().scratchLayout, sz, m_loc,
 					static_cast<int>(decl.id())))
 				result.push_back(std::move(s));
-			m_blk.setBlobAggregate(decl.id(), offN);
+			m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
 			return; // skip the normal (oversized) target = bzero(sz) assignment
 		}
 
@@ -676,15 +671,15 @@ void SolVariableDeclaration::buildTupleDestructuring(
 		if (slotHandle)
 		{
 			type = awst::WType::biguintType();
-			m_blk.setSlotStorageRef(decl.id(), awst::makeVarExpression(
-				m_blk.awstVarName(decl), type,
+			m_blk.scope.bindings.slotStorageRefs.set(decl.id(), awst::makeVarExpression(
+				m_blk.scope.awstVarName(decl), type,
 				m_blk.makeLoc(decl.location())));
 		}
 
 		// Shadow-safe name: `uint a=100; { (uint a,)=f(); } return a;`
 		// Storage handles use the same declaration binding as ordinary locals.
 		auto target = awst::makeVarExpression(
-			m_blk.awstVarName(decl), type,
+			m_blk.scope.awstVarName(decl), type,
 			m_blk.makeLoc(decl.location()));
 
 		// Extract with the slot's ACTUAL wtype (the RHS element type), then
@@ -719,7 +714,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		auto const& decl = *declarations[0];
 		auto* type = m_blk.typeMapper().map(decl.type());
 
-		auto target = awst::makeVarExpression(m_blk.awstVarName(decl), type, m_blk.makeLoc(decl.location()));
+		auto target = awst::makeVarExpression(m_blk.scope.awstVarName(decl), type, m_blk.makeLoc(decl.location()));
 
 		if (tryCalldataSlicePointerBinding(decl, initialValue, result))
 			return result;

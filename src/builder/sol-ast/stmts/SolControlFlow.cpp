@@ -117,7 +117,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		LoopContext loopCtx;
 		loopCtx.doWhileCondBreak = ifBreak;
 		auto bodyBlk = m_blk.withLoop(loopCtx);
-		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk);
+		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk.scope);
 
 		bool bodyTerminated = false;
 		auto pushBodyStmt = [&](std::shared_ptr<awst::Statement> translated)
@@ -171,7 +171,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		// continue/break inside the body know they're in a loop.
 		LoopContext loopCtx;
 		auto bodyBlk = m_blk.withLoop(loopCtx);
-		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk);
+		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk.scope);
 
 		std::shared_ptr<awst::Block> body;
 		if (auto const* block = dynamic_cast<Block const*>(&m_node.body()))
@@ -241,7 +241,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 	LoopContext loopCtx;
 	loopCtx.forLoopPost = postStmt;
 	auto bodyBlk = m_blk.withLoop(loopCtx);
-	auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk);
+	auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk.scope);
 
 	auto loopBody = awst::makeBlock(m_loc);
 

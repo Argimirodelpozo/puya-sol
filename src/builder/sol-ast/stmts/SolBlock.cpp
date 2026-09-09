@@ -14,6 +14,7 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolutil/Common.h>
 
 namespace puyasol::builder::sol_ast
 {
@@ -32,7 +33,7 @@ namespace
 {
 
 /// Translates Solidity statements into AWST. Holds the BlockContext
-/// (enclosing loop, modifier placeholder factory, parent chain).
+/// (enclosing loop, modifier placeholder factory, effective unchecked flag).
 class SolStatementVisitor: public SolASTVisitor<std::vector<std::shared_ptr<awst::Statement>>>
 {
 public:
@@ -176,7 +177,7 @@ public:
 			if (ps.size() == 1 && ps[0])
 			{
 				auto tgt = awst::makeVarExpression(
-					m_blk.awstVarName(*ps[0]), call->wtype, loc);
+					m_blk.scope.awstVarName(*ps[0]), call->wtype, loc);
 				out.push_back(awst::makeAssignmentStatement(
 					std::move(tgt), std::move(call), loc));
 			}
@@ -192,7 +193,7 @@ public:
 						: m_blk.builderCtx().typeMapper.map(
 							ps[i] ? ps[i]->type() : nullptr);
 					targets->items.push_back(awst::makeVarExpression(
-						ps[i] ? m_blk.awstVarName(*ps[i])
+						ps[i] ? m_blk.scope.awstVarName(*ps[i])
 							  : ("__try_skip" + std::to_string(i)),
 						w, loc));
 				}
@@ -210,7 +211,7 @@ public:
 		if (success)
 		{
 			auto childBlk = m_blk.nest();
-			auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk);
+			auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk.scope);
 			SolBlock handler(childBlk, success->block(),
 				m_blk.makeLoc(success->block().location()));
 			for (auto& st: handler.toAwst())
@@ -221,9 +222,9 @@ public:
 
 	ResultT visitBlock(Block const& _n) override
 	{
-		// Derive a child context to maintain the parent chain.
+		// Inherit lexical state with fresh block-local control flow.
 		auto childBlk = m_blk.nest();
-		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk);
+		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk.scope);
 		SolBlock handler(childBlk, _n, m_blk.makeLoc(_n.location()));
 		return handler.toAwst();
 	}
@@ -249,9 +250,8 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 {
 	auto awstBlock = awst::makeBlock(m_loc);
 
-	bool const wasUnchecked = m_blk.unchecked;
-	if (m_block.unchecked())
-		m_blk.unchecked = true;
+	solidity::ScopedSaveAndRestore uncheckedGuard(
+		m_blk.scope.unchecked, m_blk.scope.unchecked || m_block.unchecked());
 
 	for (auto const& stmt: m_block.statements())
 	{
@@ -263,7 +263,7 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 		{
 			// Flatten nested blocks; unchecked-arithmetic flag propagates through.
 			auto childBlk = m_blk.nest();
-			auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk);
+			auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk.scope);
 			SolBlock handler(childBlk, *innerBlock,
 				m_blk.makeLoc(innerBlock->location()));
 			auto translated = handler.toAwstBlock();
@@ -280,7 +280,6 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 		}
 	}
 
-	m_blk.unchecked = wasUnchecked;
 	return awstBlock;
 }
 

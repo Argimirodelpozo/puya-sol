@@ -1,5 +1,4 @@
 #include "builder/ProgramAnalysis.h"
-#include "builder/CallTarget.h"
 #include "builder/SolcFacts.h"
 
 #include "builder/sol-ast/AsmScan.h"
@@ -30,111 +29,6 @@ int64_t contractContextId(ContractDefinition const* _contract)
 	return _contract ? _contract->id() : 0;
 }
 
-ContractDefinition const* lexicalContract(FunctionDefinition const* _function)
-{
-	return _function ? _function->annotation().contract : nullptr;
-}
-
-bool belongsToHierarchy(
-	ContractDefinition const& _mostDerived,
-	ContractDefinition const* _scope)
-{
-	if (!_scope)
-		return false;
-	auto const& bases = _mostDerived.annotation().linearizedBaseContracts;
-	return std::find(bases.begin(), bases.end(), _scope) != bases.end();
-}
-
-Expression const* unwrappedCallee(Expression const& _expression)
-{
-	auto const* result = &_expression;
-	if (auto const* options = dynamic_cast<FunctionCallOptions const*>(result))
-		result = &options->expression();
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(result);
-		tuple && tuple->components().size() == 1 && tuple->components()[0])
-		result = tuple->components()[0].get();
-	return result;
-}
-
-FunctionDefinition const* referencedFunction(FunctionCall const& _call)
-{
-	auto const* callee = unwrappedCallee(_call.expression());
-	Declaration const* declaration = nullptr;
-	if (auto const* identifier = dynamic_cast<Identifier const*>(callee))
-		declaration = identifier->annotation().referencedDeclaration;
-	else if (auto const* member = dynamic_cast<MemberAccess const*>(callee))
-		declaration = member->annotation().referencedDeclaration;
-	return dynamic_cast<FunctionDefinition const*>(declaration);
-}
-
-} // namespace
-
-/// Resolve the exact implementation used by this call site. This deliberately
-/// mirrors solc's own lookup split: Static keeps an explicit Base.f target,
-/// Super starts at the lexical contract's successor, and Virtual searches from
-/// the most-derived contract.
-FunctionDefinition const* resolveReferenceCallTarget(
-	ContractDefinition const* _mostDerived,
-	FunctionDefinition const* _caller,
-	FunctionCall const& _call)
-{
-	if (!_call.annotation().kind.set()
-		|| *_call.annotation().kind != FunctionCallKind::FunctionCall)
-		return nullptr;
-	auto const* functionType = dynamic_cast<FunctionType const*>(
-		_call.expression().annotation().type);
-	auto const* declaration = referencedFunction(_call);
-	if (!functionType || !declaration)
-		return nullptr;
-	// Ordinary external/delegate calls cross an ABI boundary and do not
-	// preserve memory/storage reference identity.  Public/external LIBRARY
-	// calls are the exception in this backend: solc types them as DelegateCall,
-	// but CallResolver intentionally lowers them to an internal subroutine.
-	// Keep that call edge so its mutated reference parameters are threaded back
-	// to the caller just like an internal library function's.
-	bool const internalCall =
-		functionType->kind() == FunctionType::Kind::Internal;
-	auto const* declarationScope = declaration->annotation().contract;
-	bool const internalizedLibraryDelegateCall =
-		functionType->kind() == FunctionType::Kind::DelegateCall
-		&& declarationScope && declarationScope->isLibrary();
-	if (!internalCall && !internalizedLibraryDelegateCall)
-		return nullptr;
-	auto const* scope = declaration->annotation().contract;
-	if (!_mostDerived || !scope || scope->isLibrary() || declaration->isFree()
-		|| declaration->isConstructor() || !declaration->isOrdinary()
-		|| declaration->name().empty()
-		|| !belongsToHierarchy(*_mostDerived, scope))
-		return declaration;
-
-	auto const* callee = unwrappedCallee(_call.expression());
-	if (auto const* member = dynamic_cast<MemberAccess const*>(callee);
-		member && member->annotation().requiredLookup.set())
-	{
-		switch (*member->annotation().requiredLookup)
-		{
-		case VirtualLookup::Static:
-			return declaration;
-		case VirtualLookup::Super:
-		{
-			auto const* callerContract = lexicalContract(_caller);
-			auto const* searchStart = callerContract
-				? callerContract->superContract(*_mostDerived) : nullptr;
-			return searchStart
-				? &declaration->resolveVirtual(*_mostDerived, searchStart)
-				: declaration;
-		}
-		case VirtualLookup::Virtual:
-			break;
-		}
-	}
-
-	return &declaration->resolveVirtual(*_mostDerived);
-}
-
-namespace
-{
-
 bool isReferenceParameter(VariableDeclaration const& _parameter)
 {
 	if (_parameter.referenceLocation() == VariableDeclaration::Location::Storage)
@@ -163,7 +57,7 @@ public:
 		ContractDefinition const* _mostDerived,
 		FunctionDefinition const& _caller,
 		NodeFacts& _facts)
-		: m_mostDerived(_mostDerived), m_caller(_caller), m_facts(_facts)
+		: m_mostDerived(_mostDerived), m_facts(_facts)
 	{
 		for (size_t i = 0; i < _caller.parameters().size(); ++i)
 			m_parameterIndexById[_caller.parameters()[i]->id()] = i;
@@ -207,12 +101,11 @@ public:
 			&& (functionType->kind() == FunctionType::Kind::ArrayPush
 				|| functionType->kind() == FunctionType::Kind::ArrayPop))
 			if (auto const* member = dynamic_cast<MemberAccess const*>(
-				unwrappedCallee(_call.expression())))
+				&SolcFacts::functionExpression(_call.expression())))
 				recordRoots(&member->expression(),
 					m_facts.direct.mutatedParameterIndices);
 
-		auto const* target = resolveReferenceCallTarget(
-			m_mostDerived, &m_caller, _call);
+		auto const* target = SolcFacts::resolveInternalCall(_call, m_mostDerived);
 		if (!target)
 			return true;
 
@@ -222,7 +115,7 @@ public:
 		bool const bound = functionType && functionType->hasBoundFirstArgument();
 		if (bound && !params.empty())
 			if (auto const* member = dynamic_cast<MemberAccess const*>(
-				unwrappedCallee(_call.expression())))
+				&SolcFacts::functionExpression(_call.expression())))
 				mapArgument(edge, 0, member->expression());
 
 		auto arguments = _call.sortedArguments();
@@ -242,7 +135,6 @@ public:
 
 private:
 	ContractDefinition const* m_mostDerived;
-	FunctionDefinition const& m_caller;
 	NodeFacts& m_facts;
 	std::map<int64_t, size_t> m_parameterIndexById;
 
@@ -291,7 +183,7 @@ private:
 			// of treating the call result as a fresh value.
 			if (auto const* call = dynamic_cast<FunctionCall const*>(_expression))
 			{
-				if (auto const* function = referencedFunction(*call))
+				if (auto const* function = SolcFacts::resolveInternalCall(*call, m_mostDerived))
 					if (auto alias = storagePointerAliasParam(*function))
 					{
 						auto arguments = call->sortedArguments();
@@ -421,14 +313,9 @@ ParameterMutationSummary const& ProgramAnalysis::parameterMutations(
 
 ParameterMutationSummary const* ProgramAnalysis::parameterMutationsForCall(
 	ContractDefinition const* _mostDerived,
-	int64_t _callerCallableId,
 	FunctionCall const& _call) const
 {
-	FunctionDefinition const* caller = nullptr;
-	if (auto found = functionDeclarations.find(_callerCallableId);
-		found != functionDeclarations.end())
-		caller = found->second;
-	auto const* target = resolveReferenceCallTarget(_mostDerived, caller, _call);
+	auto const* target = SolcFacts::resolveInternalCall(_call, _mostDerived);
 	return target ? &parameterMutations(_mostDerived, *target) : nullptr;
 }
 

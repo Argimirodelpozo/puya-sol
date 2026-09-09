@@ -102,11 +102,11 @@ StorageHolder resolveStorageHolder(eb::ContractContext& ctx, Context& scope,
 	{
 		auto const* declaration = id->annotation().referencedDeclaration;
 		if (!declaration) return {};
-		auto const& parameter = scope.findMappingKeyParam(declaration->id());
+		auto const& parameter = scope.bindings.mappingKeyParams.get(declaration->id());
 		if (!parameter.empty())
 			return withValue(ctx, awst::makeVarExpression(parameter, awst::WType::bytesType(), loc),
 				expression.annotation().type, loc);
-		if (auto const* alias = scope.findStorageAlias(declaration->id()))
+		if (auto const* alias = scope.bindings.storageAliases.find(declaration->id()))
 			return resolveBuiltStorageHolder(ctx, alias->expr, loc);
 		if (auto const* var = dynamic_cast<VariableDeclaration const*>(declaration);
 			var && var->isStateVariable() && !var->isConstant() && !var->immutable())

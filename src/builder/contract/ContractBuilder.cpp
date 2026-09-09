@@ -273,7 +273,7 @@ void emitAsmParamSpills(
 		// In default mode the scanner marks exactly the declarations whose Yul
 		// references require pointer semantics. In universal-memory mode it marks
 		// every referenced aggregate. Do not spill unrelated memory parameters.
-		if (!_fn.isAssemblyAggregate(id))
+		if (!_fn.scope.bindings.assemblyAggregates.contains(id))
 			continue;
 		if (!vd->isCallableOrCatchParameter()
 			|| vd->referenceLocation()
@@ -285,7 +285,7 @@ void emitAsmParamSpills(
 			|| dynamic_cast<solidity::frontend::StructType const*>(t);
 		if (!aggregate)
 			continue;
-		if (!_fn.findBlobAggregate(id).empty())
+		if (!_fn.scope.bindings.blobAggregates.get(id).empty())
 			continue;   // already pointer-modeled (>4KB path)
 		auto const* wt = _typeMapper.map(t);
 		std::string offN = "__blobagg_off_" + std::to_string(id);
@@ -293,7 +293,7 @@ void emitAsmParamSpills(
 		if (emitBlobBackValue(_typeMapper, t, wt,
 				awst::makeVarExpression(vd->name(), wt, loc0),
 				offN, static_cast<int>(id), loc0, _out))
-			_fn.setBlobAggregate(id, offN);
+			_fn.scope.bindings.blobAggregates.set(id, offN);
 	}
 }
 
@@ -319,7 +319,7 @@ void markAssemblyAggregates(
 	AssemblyAggregateScanner scanner{asmAggIds};
 	_block.accept(scanner);
 	for (int64_t id: asmAggIds)
-		_fn.markAssemblyAggregate(id);
+		_fn.scope.bindings.assemblyAggregates.insert(id);
 }
 
 std::shared_ptr<awst::Block> buildBlock(
@@ -331,22 +331,20 @@ std::shared_ptr<awst::Block> buildBlock(
 	auto& exprBuilder = _ctx.tr.contractCtx;
 	auto& typeMapper = _ctx.tr.typeMapper;
 	auto const& sourceFile = _ctx.tr.sourceFile;
-	auto fnGuard = exprBuilder.pushScopeRaii(&fn);
-	auto blk = _placeholder
-		? sol_ast::BlockContext::top(fn).withPlaceholder(_placeholder)
-		: sol_ast::BlockContext::top(fn);
-	auto blkGuard = exprBuilder.pushScopeRaii(&blk);
+	auto fnGuard = exprBuilder.pushScopeRaii(&fn.scope);
+	sol_ast::BlockContext blk{fn, nullptr, _placeholder};
+	auto blkGuard = exprBuilder.pushScopeRaii(&blk.scope);
 
 	// Mapping storage-ref params: `m[k]` resolves the dynamic box-key prefix at runtime.
 	for (auto const* mp: _ctx.mappingKeyParams)
 		if (mp && !mp->name().empty())
-			fn.setMappingKeyParam(mp->id(), mp->name());
+			fn.scope.bindings.mappingKeyParams.set(mp->id(), mp->name());
 
 	// --evm-storage-layout: storage-ref params / named storage returns are
 	// biguint slot handles — register so slot-handle machinery resolves them.
 	for (auto const* sp: _ctx.slotRefParams)
 		if (sp && !sp->name().empty())
-			fn.setSlotStorageRef(sp->id(), awst::makeVarExpression(
+			fn.scope.bindings.slotStorageRefs.set(sp->id(), awst::makeVarExpression(
 				sp->name(), awst::WType::biguintType(), awst::SourceLocation{}));
 
 	// Offset-convention struct-ref params (handle-model dual handle): register the companion
@@ -356,7 +354,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	for (auto const* mp: _ctx.mappingKeyParams)
 		if (mp && !mp->name().empty()
 			&& typeMapper.analysis().structRefOffsetParams.count(mp->id()))
-			fn.setStructRefOffset(mp->id(), mp->name() + "__off");
+			fn.scope.bindings.structRefOffsets.set(mp->id(), mp->name() + "__off");
 
 	// Named returns >4 KB: blob-backed aggregates (pointer model) so `p.field[i]`
 	// lowers to multi-slot blob word access. Base offset assigned + FMP bumped in
@@ -368,14 +366,14 @@ std::shared_ptr<awst::Block> buildBlock(
 			continue;
 		auto const* rpType = typeMapper.map(rp->type());
 		if (memoryUsesBlob(rpType))
-			fn.setBlobAggregate(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
+			fn.scope.bindings.blobAggregates.set(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
 	}
 
 	// Blob-agg params >4 KB: param's local IS the uint64 base offset (caller passed
 	// it — see SolInternalCall/SolIdentifier); no FMP bump needed.
 	for (auto const* p: _ctx.blobAggParams)
 		if (p && !p->name().empty())
-			fn.setBlobAggregate(p->id(), p->name());
+			fn.scope.bindings.blobAggregates.set(p->id(), p->name());
 
 	// Promote memory aggregates used as values in inline assembly to blob-backed
 	// (Yul memory pointer). Must mark before body translation so SolVariableDeclaration
@@ -410,10 +408,10 @@ awst::SourceLocation ContractBuilder::makeLoc(
 }
 
 std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
-	solidity::frontend::Block const& _block)
+	solidity::frontend::Block const& _block,
+	sol_ast::PlaceholderFactory _placeholder)
 {
-	auto& ctx = m_functionCtx.value();
-	return ::puyasol::builder::buildBlock(ctx, _block, ctx.placeholder);
+	return ::puyasol::builder::buildBlock(*m_functionCtx, _block, std::move(_placeholder));
 }
 
 void ContractBuilder::setFunctionContext(
@@ -422,29 +420,8 @@ void ContractBuilder::setFunctionContext(
 	std::map<std::string, unsigned> const& _bitWidths,
 	std::map<std::string, solidity::frontend::Type const*> const& _paramSolTypes)
 {
-	auto& ctx = m_functionCtx.value();
-	ctx.params = _params;
-	ctx.returnType = _returnType;
-	ctx.paramBitWidths = _bitWidths;
+	auto& ctx = m_functionCtx.emplace(*m_tr, _params, _returnType, _bitWidths);
 	ctx.paramSolTypes = _paramSolTypes;
-	ctx.returnSolTypes.clear();
-	ctx.namedReturns.clear();
-	ctx.mappingKeyParams.clear();
-	ctx.boxKeyStructParams.clear();
-	ctx.blobAggParams.clear();
-	ctx.placeholder = {};
-	ctx.inConstructor = false;
-	ctx.frameIsProgram = false;
-	ctx.encodeReturnsAtBuildTime = false;
-	ctx.returnAsmWrap = false;
-	ctx.returnWirePlan.clear();
-	ctx.seededCalldataPointers.clear();
-	ctx.slotRefParams.clear();
-}
-
-void ContractBuilder::setPlaceholderFactory(sol_ast::PlaceholderFactory _factory)
-{
-	m_functionCtx->placeholder = std::move(_factory);
 }
 
 void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method,
@@ -635,17 +612,13 @@ void ContractBuilder::registerHostBoundFunctionNames(
 	}
 }
 
-void ContractBuilder::createFunctionContexts(
-	solidity::frontend::ContractDefinition const& _contract)
+void ContractBuilder::createFunctionContexts()
 {
-	// In-place emplace — TranslationContext caches a pointer to its own scopeState_;
-	// copy/move construction would dangle that pointer.
 	m_tr.emplace(*m_exprBuilder, m_typeMapper, m_sourceFile);
-	m_exprBuilder->currentScope = &*m_tr;
+	m_exprBuilder->currentScope = &m_tr->scope;
 	m_functionCtx.emplace(*m_tr,
 		std::vector<std::pair<std::string, awst::WType const*>>{},
 		nullptr, std::map<std::string, unsigned>{});
-	m_functionCtx->currentContract = &_contract;
 
 	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;
@@ -697,12 +670,6 @@ void ContractBuilder::buildPrograms(
 	std::string const& _contractName,
 	awst::Contract& _contractNode)
 {
-	collectSuperCallMetadata(_contract);
-
-	// Snapshot super targets so the ctor body (translated in buildApprovalProgram)
-	// can resolve super.f() to f__super_N rather than the contract's own f.
-	m_allSuperTargetNames = m_tr->allSuperTargets();
-
 	// Approval and clear programs
 	m_postInitMethod.reset();
 	_contractNode.approvalProgram = buildApprovalProgram(_contract, _contractName);
@@ -777,8 +744,6 @@ void ContractBuilder::buildDefinedFunctions(
 			continue;
 		}
 		_translatedFunctions.insert(translationKey(*func));
-		clearSuperOverrides();
-		applySuperOverridesFor(func->id());
 		appendMethodWithModifierSubs(_contractNode,
 			buildFunction(*func, _contractName, specialMemberName(*func)));
 	}
@@ -820,9 +785,6 @@ void ContractBuilder::buildInheritedFunctions(
 				continue;
 
 			_translatedFunctions.insert(key);
-			// Set up MRO-correct super targets for this inherited function
-			clearSuperOverrides();
-			applySuperOverridesFor(func->id());
 			appendMethodWithModifierSubs(_contractNode,
 				buildFunction(*func, _contractName, specialMemberName(*func)));
 		}
@@ -893,7 +855,6 @@ void ContractBuilder::buildHostBoundFunctions(
 		if (!function || !function->isImplemented()) continue;
 		auto nameIt = m_exprBuilder->internalizedFunctionNames.find(function->id());
 		if (nameIt == m_exprBuilder->internalizedFunctionNames.end()) continue;
-		clearSuperOverrides();
 		// Attribute EIP-1967 admin-slot use to the freestanding function and
 		// attach it through this contract's call graph.
 		m_typeMapper.artifacts().currentFreestandingFunctionId = function->id();
@@ -1076,7 +1037,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	auto const reachableHostBoundFunctions =
 		collectReachableHostBoundFunctions(_contract);
 	registerHostBoundFunctionNames(reachableHostBoundFunctions);
-	createFunctionContexts(_contract);
+	createFunctionContexts();
 
 	auto contract = makeContractNode(_contract, contractName);
 	buildPrograms(_contract, contractName, *contract);
@@ -1091,10 +1052,9 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		_contract, contractName, *contract, overriddenIds, translatedFunctions);
 
 	buildRouters(_contract, *contract);
-	// Emit MRO / fallback / explicit-base super subroutines now that all
-	// regular method bodies are translated.
-	emitSuperSubroutines(*contract, contractName);
 	buildHostBoundFunctions(contractName, *contract, reachableHostBoundFunctions);
+	// Close the concrete-implementation worklist before generating dispatchers.
+	emitSuperSubroutines(*contract, contractName);
 
 	// Generate __storage_read/__storage_write dispatch subroutines
 	// for assembly sload/sstore support

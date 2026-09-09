@@ -107,8 +107,7 @@ struct ProgramAnalysis
 			&& contract->second.count(_functionId) != 0;
 	}
 
-	/// Function declarations indexed by globally unique solc ID. Mutation
-	/// analysis uses the caller to give `super.f()` its lexical search start.
+	/// Function declarations indexed by globally unique solc ID.
 	std::map<int64_t, solidity::frontend::FunctionDefinition const*>
 		functionDeclarations;
 
@@ -128,7 +127,6 @@ struct ProgramAnalysis
 	/// internal `_call`. Returns null for indirect and ABI-boundary calls.
 	ParameterMutationSummary const* parameterMutationsForCall(
 		solidity::frontend::ContractDefinition const* _mostDerived,
-		int64_t _callerCallableId,
 		solidity::frontend::FunctionCall const& _call) const;
 
 	static ProgramAnalysis analyze(

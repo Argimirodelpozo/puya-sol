@@ -143,7 +143,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 			{
 				if ((varDecl->isStateVariable() && arrType->isDynamicallySized()
 						&& !varDecl->isConstant() && !varDecl->immutable())
-					|| (!m_scope.findMappingKeyParam(varDecl->id()).empty()
+					|| (!m_scope.bindings.mappingKeyParams.get(varDecl->id()).empty()
 						&& !arrType->isByteArrayOrString()))
 					isDynamicArrayAccess = true;
 			}
@@ -197,7 +197,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 		auto const* vd = dynamic_cast<VariableDeclaration const*>(
 			ident->annotation().referencedDeclaration);
 		if (!vd) return nullptr;
-		std::string offVar = _scope.findBlobAggregate(vd->id());
+		std::string offVar = _scope.bindings.blobAggregates.get(vd->id());
 		if (offVar.empty()) return nullptr;
 		return awst::makeVarExpression(offVar, awst::WType::uint64Type(), _loc);
 	}

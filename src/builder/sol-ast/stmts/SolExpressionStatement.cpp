@@ -193,7 +193,7 @@ bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 		&& rps[0]->referenceLocation()
 			== solidity::frontend::VariableDeclaration::Location::Storage)
 	{
-		EvmSlotLowering low(blk.builderCtx(), blk, loc);
+		EvmSlotLowering low(blk.builderCtx(), blk.scope, loc);
 		auto addr = low.resolve(*node.expression());
 		if (!addr)
 			return true;   // error already logged
@@ -225,7 +225,7 @@ bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 				"storage refs must be a literal tuple", loc);
 			return true;
 		}
-		EvmSlotLowering low(blk.builderCtx(), blk, loc);
+		EvmSlotLowering low(blk.builderCtx(), blk.scope, loc);
 		auto tup = awst::makeTupleExpression(nullptr, loc);
 		std::vector<awst::WType const*> wts;
 		for (size_t ri = 0; ri < rps.size(); ++ri)
@@ -287,7 +287,7 @@ bool tryBoxKeyedRefReturn(BlockContext& blk, Return const& node,
 		}
 	if (storageRefMapReturn && containsMappingType(node.expression()->annotation().type))
 	{
-		stmt->value = storageReferenceKey(blk.builderCtx(), blk, *node.expression(), loc);
+		stmt->value = storageReferenceKey(blk.builderCtx(), blk.scope, *node.expression(), loc);
 		blk.builderCtx().appendEffectsTo(result);
 		result.push_back(std::move(stmt));
 		return true;
@@ -323,7 +323,7 @@ void convertSingleReturnValue(BlockContext& blk, Return const& node,
 	// materializes the aggregate (the storage-declared return case
 	// exited earlier with the raw slot).
 	stmt.value = EvmSlotLowering::materializeRefValue(
-		blk.builderCtx(), blk, std::move(stmt.value),
+		blk.builderCtx(), blk.scope, std::move(stmt.value),
 		node.expression()->annotation().type, targetWType, loc);
 	stmt.value = builder::ConversionPlan{
 		node.expression()->annotation().type,
@@ -371,7 +371,7 @@ void convertTupleReturnValue(BlockContext& blk, Return const& node,
 			auto const* sourceSolType =
 				i < sourceTypes.size() ? sourceTypes[i] : nullptr;
 			tuple->items[i] = EvmSlotLowering::materializeRefValue(
-				blk.builderCtx(), blk,
+				blk.builderCtx(), blk.scope,
 				std::move(tuple->items[i]), sourceSolType,
 				targetWType, loc);
 			tuple->items[i] = builder::ConversionPlan{

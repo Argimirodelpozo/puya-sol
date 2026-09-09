@@ -51,7 +51,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 		std::string keyParam;
 		auto const* decl = ident->annotation().referencedDeclaration;
 		if (decl)
-			keyParam = m_scope.findMappingKeyParam(decl->id());
+			keyParam = m_scope.bindings.mappingKeyParams.get(decl->id());
 		if (!keyParam.empty())
 		{
 			auto key = awst::makeReinterpretCast(
@@ -99,7 +99,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 					ident->annotation().referencedDeclaration); decl)
 			{
 				std::shared_ptr<awst::Expression> length;
-				auto const& keyParam = m_scope.findMappingKeyParam(decl->id());
+				auto const& keyParam = m_scope.bindings.mappingKeyParams.get(decl->id());
 				if (!keyParam.empty())
 					length = SolLengthAccess::stateDynArrayLengthForKey(
 						m_ctx,

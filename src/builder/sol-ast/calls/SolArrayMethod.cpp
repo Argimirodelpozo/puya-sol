@@ -366,7 +366,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryStoragePointerPushPop(
 			&& !array->isByteArrayOrString()
 			&& (memberName == "push" || memberName == "pop"))
 		{
-			auto const& keyParam = m_scope.findMappingKeyParam(decl->id());
+			auto const& keyParam = m_scope.bindings.mappingKeyParams.get(decl->id());
 			if (!keyParam.empty())
 				return handleBoxArray(
 					memberName, baseExpr, *decl,
@@ -377,7 +377,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryStoragePointerPushPop(
 		}
 		if (!decl->isStateVariable())
 		{
-			auto const* alias = m_scope.findStorageAlias(decl->id());
+			auto const* alias = m_scope.bindings.storageAliases.find(decl->id());
 			if (alias
 				&& (memberName == "push" || memberName == "pop"))
 			{

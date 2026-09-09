@@ -16,9 +16,6 @@
 namespace puyasol::builder::eb
 {
 
-// Scope-bound accessor bridges moved to sol_ast::Context (Context.cpp);
-// no callers remained here after visitors/builders switched to m_scope directly.
-
 ContractContext::ContractContext(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,
@@ -39,6 +36,12 @@ ContractContext::ContractContext(
 {}
 
 ContractContext::~ContractContext() = default;
+
+sol_ast::Context& ContractContext::scope() const
+{
+	assert(currentScope && "expression lowering requires an active scope");
+	return *currentScope;
+}
 
 awst::SourceLocation ContractContext::makeLoc(int _start, int _end) const
 {

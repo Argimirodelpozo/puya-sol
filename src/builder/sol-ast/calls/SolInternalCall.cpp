@@ -5,7 +5,7 @@
 #include "builder/sol-types/RefParamPassing.h"
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/ProgramAnalysis.h"
-#include "builder/CallTarget.h"
+#include "builder/SolcFacts.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-ast/MappingPrefix.h"
 #include "builder/storage/EvmLayoutMode.h"
@@ -68,29 +68,6 @@ std::string referableVarName(awst::Expression const* e)
 	return "";
 }
 
-int64_t enclosingCallableId(Context const& context)
-{
-	for (auto const* scope = &context; scope; scope = scope->parent())
-		if (auto const* function = dynamic_cast<FunctionContext const*>(scope))
-			return function->callableId;
-	return 0;
-}
-
-bool syntaxReferencesFunction(FunctionCall const& call)
-{
-	Expression const* callee = &call.expression();
-	if (auto const* options = dynamic_cast<FunctionCallOptions const*>(callee))
-		callee = &options->expression();
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(callee);
-		tuple && tuple->components().size() == 1 && tuple->components()[0])
-		callee = tuple->components()[0].get();
-	Declaration const* declaration = nullptr;
-	if (auto const* identifier = dynamic_cast<Identifier const*>(callee))
-		declaration = identifier->annotation().referencedDeclaration;
-	else if (auto const* member = dynamic_cast<MemberAccess const*>(callee))
-		declaration = member->annotation().referencedDeclaration;
-	return dynamic_cast<FunctionDefinition const*>(declaration) != nullptr;
-}
 } // namespace
 
 awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _funcDef)
@@ -137,7 +114,7 @@ std::shared_ptr<awst::Expression> boxedArrayKey(
 	eb::ContractContext& ctx, Context& scope,
 	BoxedArrayPath const& path, awst::SourceLocation const& loc)
 {
-	auto const& runtimeKey = scope.findMappingKeyParam(path.declaration->id());
+	auto const& runtimeKey = scope.bindings.mappingKeyParams.get(path.declaration->id());
 	if (!runtimeKey.empty())
 		return awst::makeVarExpression(
 		runtimeKey, awst::WType::bytesType(), loc);
@@ -567,7 +544,7 @@ void SolInternalCall::buildSequencedArgs(
 		{
 			if (auto const* id = dynamic_cast<Identifier const*>(&expression))
 				if (auto const* declaration = id->annotation().referencedDeclaration;
-					declaration && !m_scope.findMappingKeyParam(declaration->id()).empty())
+					declaration && !m_scope.bindings.mappingKeyParams.get(declaration->id()).empty())
 					return extractMappingKeyPrefix(expression);
 			auto built = buildExpr(expression);
 			auto place = StoragePlace::fromRead(built);
@@ -774,7 +751,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::offsetForArg(
 		if (auto const* id = dynamic_cast<Identifier const*>(argExpr))
 			if (auto const* vd = dynamic_cast<VariableDeclaration const*>(
 					id->annotation().referencedDeclaration))
-				if (auto offVar = m_scope.findStructRefOffset(vd->id());
+				if (auto offVar = m_scope.bindings.structRefOffsets.get(vd->id());
 					!offVar.empty())
 					return awst::makeVarExpression(
 						offVar, awst::WType::uint64Type(), m_loc);
@@ -864,31 +841,13 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	// External fn-ptr params use the profile-selected dual-purpose byte layout;
 	// dispatch handles them.
 
-	ParameterMutationSummary const* mutations = nullptr;
-	if (_funcDef)
-	{
-		// The source can name a base declaration while the selected method is
-		// an override with different write-back requirements and parameter names.
-		// Use the same solc lookup as mutation analysis before planning its ABI.
-		auto const& analysis = m_ctx.typeMapper.analysis();
-		FunctionDefinition const* caller = nullptr;
-		if (auto found = analysis.functionDeclarations.find(enclosingCallableId(m_scope));
-			found != analysis.functionDeclarations.end())
-			caller = found->second;
-		if (auto const* concrete = resolveReferenceCallTarget(m_ctx.currentContract, caller, m_call))
-		{
-			_funcDef = concrete;
-			_returnType = returnTypeFrom(concrete);
-		}
-		mutations = m_ctx.typeMapper.analysis().parameterMutationsForCall(
-			m_ctx.currentContract, enclosingCallableId(m_scope), m_call);
-		// A locally resolved function-pointer target is not visible in the call
-		// expression's solc declaration. In that case `_funcDef` is already the
-		// exact implementation selected by the translation scope.
-		if (!mutations && !syntaxReferencesFunction(m_call))
-			mutations = &m_ctx.typeMapper.analysis().parameterMutations(
-				m_ctx.currentContract, *_funcDef);
-	}
+	// The resolver supplied one exact body and target. Its signature and
+	// mutation summary must stay paired; never re-resolve only the metadata.
+	auto const* functionType = dynamic_cast<FunctionType const*>(m_call.expression().annotation().type);
+	auto const* mutations = _funcDef && functionType
+		&& functionType->kind() != FunctionType::Kind::External
+		? &m_ctx.typeMapper.analysis().parameterMutations(m_ctx.currentContract, *_funcDef)
+		: nullptr;
 	auto call = awst::makeSubroutineCall(std::move(_target), _returnType, m_loc);
 
 	// Collect param types for coercion; detect mapping storage-ref params.
@@ -969,7 +928,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 					? dynamic_cast<VariableDeclaration const*>(
 						id->annotation().referencedDeclaration) : nullptr;
 				blobWriteBacks.emplace_back(
-					declaration ? m_scope.findBlobAggregate(declaration->id()) : "",
+					declaration ? m_scope.bindings.blobAggregates.get(declaration->id()) : "",
 					declaration ? declaration->type() : nullptr);
 			}
 			auto origRet = emitAugmentedCallWriteBacks(
@@ -1004,12 +963,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 	// Check if this is a function pointer variable call
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
-		if (auto const* target = m_scope.findFuncPtrTarget(varDecl->id()))
-		{
-			decl = target;
-			Logger::instance().debug("resolved function pointer '" + name + "' to '" + target->name() + "'");
-		}
-		else if (auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type()))
+		if (auto const* initialValue = m_scope.bindings.funcPtrTargets.get(varDecl->id()))
+			if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, *initialValue))
+				return buildSubroutineCall(std::move(resolved->target),
+					returnTypeFrom(resolved->funcDef), resolved->funcDef, false);
+		if (auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type()))
 		{
 			bool isInternal = funcType->kind() == FunctionType::Kind::Internal;
 			bool isExternal = isExternalFunctionPointer(funcType);
@@ -1056,35 +1014,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 		}
 	}
 
-	if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(decl))
-	{
-		auto* retType = returnTypeFrom(funcDef);
-		awst::SubroutineTarget target;
-
-		// MRO super dispatch: if the target is registered as a super stub,
-		// use InstanceMethodTarget(stub) so fn-ptr-bound `x()` where
-		// `x = super.f` doesn't bypass the f__super_<callerId> stub.
-		if (auto superName = m_scope.findSuperTarget(funcDef->id()); !superName.empty())
-		{
-			target = awst::InstanceMethodTarget{std::move(superName)};
-			return buildSubroutineCall(std::move(target), retType, funcDef, false);
-		}
-
-		// Try library/free function resolution via CallResolver
-		auto resolved = eb::CallResolver::resolveFromIdentifier(
-			m_ctx, _ident, eb::CallResolver::resolveMethodName(m_ctx, *funcDef));
-		if (resolved)
-		{
-			target = resolved->target;
-		}
-		else
-		{
-			// Regular instance method
-			target = awst::InstanceMethodTarget{eb::CallResolver::resolveMethodName(m_ctx, *funcDef)};
-		}
-
-		return buildSubroutineCall(std::move(target), retType, funcDef, false);
-	}
+	if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, _ident))
+		return buildSubroutineCall(std::move(resolved->target),
+			returnTypeFrom(resolved->funcDef), resolved->funcDef, false);
 
 	// Unknown identifier — fallback
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
@@ -1117,9 +1049,6 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 		}
 	}
 
-	FunctionDefinition const* resolvedFuncDef = nullptr;
-	bool isUsingForCall = false;
-
 	// ARC4's abi.encode envelope must be intercepted before normal argument
 	// lowering; the nested abi.encode supplies Solidity type information only.
 	if (auto arc4Result = eb::Arc4Stdlib::tryHandleCall(
@@ -1132,18 +1061,10 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 			m_ctx, _memberAccess, m_call, m_loc))
 		return *asaResult;
 
-	// Try CallResolver first (handles library, free, using-for, super)
-	auto resolved = eb::CallResolver::resolveFromMemberAccess(
-		m_ctx, m_scope, _memberAccess,
-		_memberAccess.memberName(), m_call.arguments().size());
-	if (resolved)
-	{
-		resolvedFuncDef = resolved->funcDef;
-		if (resolvedFuncDef)
-			retType = returnTypeFrom(resolvedFuncDef);
-		return buildSubroutineCall(
-			resolved->target, retType, resolvedFuncDef, resolved->isUsingForCall);
-	}
+	// Resolve the exact declaration and target together (including self calls).
+	if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, _memberAccess))
+		return buildSubroutineCall(std::move(resolved->target),
+			returnTypeFrom(resolved->funcDef), resolved->funcDef, resolved->isUsingForCall);
 
 	// Check base type for super/base internal calls
 	auto const* baseType = _memberAccess.expression().annotation().type;
@@ -1163,23 +1084,6 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 		if (wasTypeType && contractType)
 		{
 			auto const* refDecl = _memberAccess.annotation().referencedDeclaration;
-			if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(refDecl))
-			{
-				resolvedFuncDef = funcDef;
-				retType = returnTypeFrom(funcDef);
-
-				// Check if there's a __super_N subroutine for this base function
-				if (auto superName = m_scope.findSuperTarget(funcDef->id()); !superName.empty())
-				{
-					auto target = awst::InstanceMethodTarget{std::move(superName)};
-					return buildSubroutineCall(std::move(target), retType, funcDef, false);
-				}
-
-				auto target = awst::InstanceMethodTarget{
-					eb::CallResolver::resolveMethodName(m_ctx, *funcDef)};
-				return buildSubroutineCall(std::move(target), retType, funcDef, false);
-			}
-
 			// Function pointer state variable: C.x() where x is function() internal
 			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
 			{
@@ -1213,32 +1117,6 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 					}
 				}
 			}
-		}
-	}
-
-	// Last resort: try library/free function by AST ID
-	auto const* refDecl = _memberAccess.annotation().referencedDeclaration;
-	if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(refDecl))
-	{
-		resolvedFuncDef = funcDef;
-		retType = returnTypeFrom(funcDef);
-
-		// using-for (prepend receiver) vs direct `L.f(x, ...)` call?
-		auto classifyUsingFor = [&]() -> bool {
-			auto const* bt = _memberAccess.expression().annotation().type;
-			if (!bt) return true;
-			// `import "M" as N; N.f(x)` — N is a Module.
-			if (bt->category() == Type::Category::Module) return false;
-			// `L.f(x)` where L is a library/contract — TypeType referring to a contract.
-			if (bt->category() == Type::Category::TypeType) return false;
-			return true;
-		};
-
-		if (auto const* symbol = m_ctx.functionSymbols.resolve(funcDef->id()))
-		{
-			isUsingForCall = classifyUsingFor();
-			return buildSubroutineCall(
-				awst::SubroutineID{*symbol}, retType, funcDef, isUsingForCall);
 		}
 	}
 
@@ -1296,11 +1174,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 	}
 
 	// Fallback: InstanceMethodTarget
-	std::string methodName = _memberAccess.memberName();
-	if (resolvedFuncDef)
-		methodName = eb::CallResolver::resolveMethodName(m_ctx, *resolvedFuncDef);
 	return buildSubroutineCall(
-		awst::InstanceMethodTarget{methodName}, retType, resolvedFuncDef, false);
+		awst::InstanceMethodTarget{_memberAccess.memberName()}, retType, nullptr, false);
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::resolveFunctionPointerCast(
@@ -1310,16 +1185,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveFunctionPointerCast(
 	{
 		if (auto const* argId = dynamic_cast<Identifier const*>(_innerCall.arguments()[0].get()))
 		{
-			auto const* decl = argId->annotation().referencedDeclaration;
-			if (auto const* targetFunc = dynamic_cast<FunctionDefinition const*>(decl))
-			{
-				auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
-				auto target = awst::InstanceMethodTarget{
-					eb::CallResolver::resolveMethodName(m_ctx, *targetFunc)};
-				Logger::instance().debug(
-					"resolved function pointer cast: calling '" + targetFunc->name() + "' directly");
-				return buildSubroutineCall(std::move(target), retType, targetFunc, false);
-			}
+			if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, *argId))
+				return buildSubroutineCall(std::move(resolved->target),
+					returnTypeFrom(resolved->funcDef), resolved->funcDef, false);
 		}
 	}
 

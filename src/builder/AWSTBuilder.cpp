@@ -359,16 +359,15 @@ void AWSTBuilder::registerFreestandingParamContext(
 	std::set<size_t> const& blobAggParams,
 	std::set<size_t> const& evmSlotRefParams)
 {
-	// Register mapping-storage-ref params (must be after FunctionContext push;
-	// setMappingKeyParam writes into nearestFunction(currentScope)).
+	// Register mapping-storage-ref params in the shared declaration bindings.
 	for (size_t idx: mappingStorageParams)
 	{
 		auto const& param = _func.parameters()[idx];
-		fnCtx.setMappingKeyParam(param->id(), param->name());
+		fnCtx.scope.bindings.mappingKeyParams.set(param->id(), param->name());
 	}
 	auto const& plan = m_session.typeMapper.callBoundaryPlan(_func);
 	for (auto pi: plan.offsetParams)
-		fnCtx.setStructRefOffset(plan.parameters[pi].declaration->id(), plan.parameters[pi].offsetName());
+		fnCtx.scope.bindings.structRefOffsets.set(plan.parameters[pi].declaration->id(), plan.parameters[pi].offsetName());
 
 	// --evm-storage-layout: storage params are biguint slot handles.
 	for (size_t idx: evmSlotRefParams)
@@ -376,7 +375,7 @@ void AWSTBuilder::registerFreestandingParamContext(
 		auto const& param = _func.parameters()[idx];
 		if (param->name().empty())
 			continue;
-		fnCtx.setSlotStorageRef(param->id(), awst::makeVarExpression(
+		fnCtx.scope.bindings.slotStorageRefs.set(param->id(), awst::makeVarExpression(
 			param->name(), awst::WType::biguintType(), awst::SourceLocation{}));
 	}
 
@@ -434,11 +433,11 @@ void AWSTBuilder::registerFreestandingReturnParams(
 			|| rp->name().empty())
 			continue;
 		if (m_session.profile.evmStorageLayout || storageRefReturnUsesSlot(&_func, m_session.analysis))
-			fnCtx.setSlotStorageRef(rp->id(), awst::makeVarExpression(
+			fnCtx.scope.bindings.slotStorageRefs.set(rp->id(), awst::makeVarExpression(
 				rp->name(), awst::WType::biguintType(), awst::SourceLocation{}));
 		else if (dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
 			|| storageRefReturnIsBytesKeyed(&_func, m_session.analysis))
-			fnCtx.setMappingKeyParam(rp->id(), rp->name());
+			fnCtx.scope.bindings.mappingKeyParams.set(rp->id(), rp->name());
 	}
 
 	// Register named memory return params >4KB as blob-backed (pointer model).
@@ -449,7 +448,7 @@ void AWSTBuilder::registerFreestandingReturnParams(
 			continue;
 		auto const* rpTypeB = m_session.typeMapper.map(rp->type());
 		if (memoryUsesBlob(rpTypeB))
-			fnCtx.setBlobAggregate(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
+			fnCtx.scope.bindings.blobAggregates.set(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
 	}
 
 	// Memory aggregate params >4KB: offset var = param name (caller passed it); no FMP bump.
@@ -457,7 +456,7 @@ void AWSTBuilder::registerFreestandingReturnParams(
 	{
 		auto const& param = _func.parameters()[idx];
 		std::string pname = param->name().empty() ? "_param" + std::to_string(idx) : param->name();
-		fnCtx.setBlobAggregate(param->id(), pname);
+		fnCtx.scope.bindings.blobAggregates.set(param->id(), pname);
 	}
 
 }
@@ -552,19 +551,19 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	exprBuilder.selectorContracts = m_selectorContracts;
 
 	sol_ast::TranslationContext tr{exprBuilder, m_session.typeMapper, _sourceFile};
-	auto trGuard = exprBuilder.pushScopeRaii(&tr);
+	auto trGuard = exprBuilder.pushScopeRaii(&tr.scope);
 	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
 	fnCtx.callableId = _func.id();
 	for (auto const& rp: _func.returnParameters())
 		fnCtx.returnSolTypes.push_back(rp->type());
-	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx);
+	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx.scope);
 
 	registerFreestandingParamContext(_func, fnCtx, *sub, slotParams,
 		mappingStorageParams, blobAggParams, evmSlotRefParams);
 
 	// Construct the function-body block context for the body.
-	auto blk = sol_ast::BlockContext::top(fnCtx);
-	auto blkGuard = exprBuilder.pushScopeRaii(&blk);
+	sol_ast::BlockContext blk{fnCtx};
+	auto blkGuard = exprBuilder.pushScopeRaii(&blk.scope);
 
 	registerFreestandingReturnParams(_func, fnCtx, blobAggParams);
 
@@ -588,8 +587,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 					throw SizeError("path specialization: `" + member + "` is not a field of the enclosing storage struct");
 				cursor = awst::makeFieldExpression(std::move(cursor), member, fieldType, loc);
 			}
-			fnCtx.setMappingKeyParam(param->id(), std::string{});
-			blk.setStorageAlias(param->id(), sol_ast::StorageAlias::fieldPath(std::move(cursor)));
+			fnCtx.scope.bindings.mappingKeyParams.set(param->id(), std::string{});
+			blk.scope.bindings.storageAliases.set(param->id(), sol_ast::StorageAlias::fieldPath(std::move(cursor)));
 		}
 
 	// Promote memory aggregates used as asm-pointers (bytes/string buffers in

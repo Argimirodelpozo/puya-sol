@@ -2,6 +2,7 @@
 #include "builder/PreparedAssembly.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/Types.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Exceptions.h>
 #include <libsolutil/Keccak256.h>
@@ -27,6 +28,77 @@ namespace puyasol::builder
 {
 
 using namespace solidity::yul;
+
+solidity::frontend::Expression const& SolcFacts::functionExpression(
+	solidity::frontend::Expression const& expression)
+{
+	using namespace solidity::frontend;
+	if (auto const* options = dynamic_cast<FunctionCallOptions const*>(&expression))
+		return functionExpression(options->expression());
+	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&expression);
+		tuple && tuple->components().size() == 1 && tuple->components()[0])
+		return functionExpression(*tuple->components()[0]);
+	return expression;
+}
+
+solidity::frontend::FunctionDefinition const* SolcFacts::resolveFunction(
+	solidity::frontend::Expression const& expression,
+	solidity::frontend::ContractDefinition const* mostDerived)
+{
+	using namespace solidity::frontend;
+	auto const& callee = functionExpression(expression);
+	auto const* function = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+		ASTNode::referencedDeclaration(callee));
+	if (!function)
+		return nullptr;
+
+	// ASTNode::resolveFunctionCall and IRGeneratorForStatements use this same
+	// lookup for direct calls and function values. Keep expression identity:
+	// modifiers from different bases may name the same referenced declaration.
+	if (auto const* member = dynamic_cast<MemberAccess const*>(&callee))
+	{
+		auto const& lookup = member->annotation().requiredLookup;
+		solAssert(lookup.set(), "Missing solc function lookup fact");
+		if (*lookup == VirtualLookup::Super)
+		{
+			auto const* type = dynamic_cast<TypeType const*>(member->expression().annotation().type);
+			auto const* owner = type ? dynamic_cast<ContractType const*>(type->actualType()) : nullptr;
+			solAssert(mostDerived && owner && owner->isSuper(), "Missing solc super context");
+			auto const* start = owner->contractDefinition().superContract(*mostDerived);
+			solAssert(start, "Missing solc super successor");
+			return &function->resolveVirtual(*mostDerived, start);
+		}
+		solAssert(*lookup == VirtualLookup::Static, "Unexpected solc member lookup");
+	}
+	else if (auto const* identifier = dynamic_cast<solidity::frontend::Identifier const*>(&callee))
+	{
+		solAssert(identifier->annotation().requiredLookup.set()
+			&& *identifier->annotation().requiredLookup == VirtualLookup::Virtual,
+			"Unexpected solc identifier lookup");
+		if (mostDerived && function->virtualSemantics())
+			return &function->resolveVirtual(*mostDerived);
+	}
+	return function;
+}
+
+solidity::frontend::FunctionDefinition const* SolcFacts::resolveInternalCall(
+	solidity::frontend::FunctionCall const& call,
+	solidity::frontend::ContractDefinition const* mostDerived)
+{
+	using namespace solidity::frontend;
+	if (!call.annotation().kind.set()
+		|| *call.annotation().kind != FunctionCallKind::FunctionCall)
+		return nullptr;
+	auto const* type = dynamic_cast<FunctionType const*>(call.expression().annotation().type);
+	if (!type || (type->kind() != FunctionType::Kind::Internal
+		&& type->kind() != FunctionType::Kind::DelegateCall))
+		return nullptr;
+	auto const* function = resolveFunction(call.expression(), mostDerived);
+	if (function && type->kind() == FunctionType::Kind::DelegateCall
+		&& (!function->annotation().contract || !function->annotation().contract->isLibrary()))
+		return nullptr;
+	return function;
+}
 
 solidity::frontend::ModifierDefinition const* SolcFacts::resolveModifier(
 	solidity::frontend::ModifierInvocation const& invocation,

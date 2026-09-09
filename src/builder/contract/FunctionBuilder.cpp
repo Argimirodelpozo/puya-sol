@@ -600,7 +600,7 @@ void emitImplicitReturn(
 		bool const inMemory = rp.referenceLocation() == VariableDeclaration::Location::Memory;
 		if (_shape.calldataPointerReturns && _fnCtx.seededCalldataPointers.count(rp.name()))
 			retStmt->value = TypeCoercion::calldataPointerValueRead(rp.name(), _loc);
-		else if (inMemory && _fnCtx.isAssemblyAggregate(rp.id())
+		else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id())
 			&& !memoryUsesBlob(_typeMapper.map(rp.type())))
 			retStmt->value = materialized(rp, _typeMapper.map(rp.type()));
 		else
@@ -628,7 +628,7 @@ void emitImplicitReturn(
 				: _typeMapper.map(rp.type());
 			if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(vt))
 				tuple->items.push_back(blobOffVar(rp));
-			else if (inMemory && _fnCtx.isAssemblyAggregate(rp.id()) && !memoryUsesBlob(vt))
+			else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id()) && !memoryUsesBlob(vt))
 				tuple->items.push_back(materialized(rp, vt));
 			else
 				tuple->items.push_back(awst::makeVarExpression(rp.name(), vt, _loc));

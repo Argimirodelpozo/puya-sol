@@ -156,7 +156,7 @@ bool EvmSlotLowering::isSlotHandleRef(
 	{
 		auto const* vd = dynamic_cast<VariableDeclaration const*>(
 			id->annotation().referencedDeclaration);
-		if (vd && _scope.findSlotStorageRef(vd->id()))
+		if (vd && _scope.bindings.slotStorageRefs.get(vd->id()))
 			return true;
 		return _ctx.typeMapper.profile().evmStorageLayout
 			&& isStorageTypedRoot(*cur);
@@ -464,7 +464,7 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIdentifier(
 	{
 		// Storage-located local/param: the variable holds the biguint slot
 		// (bound at declaration / by the call convention / asm `.slot :=`).
-		auto slot = m_scope.findSlotStorageRef(vd->id());
+		auto slot = m_scope.bindings.slotStorageRefs.get(vd->id());
 		if (!slot || !dynamic_cast<awst::VarExpression const*>(slot.get()))
 			slot = awst::makeVarExpression(
 				m_scope.awstVarName(*vd), awst::WType::biguintType(), m_loc);

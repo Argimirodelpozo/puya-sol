@@ -16,6 +16,7 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libsolutil/Common.h>
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <map>
@@ -525,16 +526,16 @@ void ContractBuilder::bindBaseCtorArgs(
 			continue;
 		if (storage && !slot)
 		{
-			m_tr->setStorageAlias(parameter.id(), sol_ast::StorageAlias::classify(std::move(value)));
+			m_tr->scope.bindings.storageAliases.set(parameter.id(), sol_ast::StorageAlias::classify(std::move(value)));
 			m_exprBuilder->appendEffectsTo(body->body);
 			continue;
 		}
 		if (!slot)
 			value = ConversionPlan{args[i]->annotation().type, parameter.type(), type,
 				ConversionPlan::Context::Argument}.emit(std::move(value), loc);
-		auto target = awst::makeVarExpression(m_tr->awstVarName(parameter), type, loc);
+		auto target = awst::makeVarExpression(m_tr->scope.awstVarName(parameter), type, loc);
 		if (slot)
-			m_tr->setSlotStorageRef(parameter.id(), target);
+			m_tr->scope.bindings.slotStorageRefs.set(parameter.id(), target);
 		m_exprBuilder->appendEffectsTo(body->body);
 		body->body.push_back(awst::makeAssignmentStatement(target, std::move(value), loc));
 	}
@@ -567,7 +568,7 @@ void ContractBuilder::emitConstructorPlan(
 					auto const* type = m_typeMapper.profile().evmStorageLayout
 						&& param->referenceLocation() == VariableDeclaration::Location::Storage
 						? awst::WType::biguintType() : m_typeMapper.map(param->type());
-					m_tr->setParamRemap(param->id(), sol_ast::ParamRemap{
+					m_tr->scope.bindings.paramRemaps.set(param->id(), sol_ast::ParamRemap{
 						"__ctor_param_" + std::to_string(param->id()), type});
 					remappedParams.push_back(param->id());
 				}
@@ -587,13 +588,6 @@ void ContractBuilder::emitConstructorPlan(
 			arguments.emplace(ctor->annotation().contract, Arguments{owners.at(node), expressions});
 	}
 	auto activate = [&](FunctionDefinition const* ctor) {
-		m_tr->clearSuperTargets();
-		for (auto const& [id, name]: m_allSuperTargetNames)
-			m_tr->setSuperTarget(id, name);
-		if (ctor)
-			if (auto it = m_perFuncSuperOverrides.find(ctor->id()); it != m_perFuncSuperOverrides.end())
-				for (auto const& [id, name]: it->second)
-					m_tr->setSuperTarget(id, name);
 		m_functionCtx->inConstructor = true;
 		m_functionCtx->callableId = ctor ? ctor->id() : 0;
 	};
@@ -634,9 +628,8 @@ void ContractBuilder::emitConstructorPlan(
 	}
 	m_functionCtx->inConstructor = false;
 	m_functionCtx->callableId = 0;
-	m_tr->clearSuperTargets();
 	for (auto id: remappedParams)
-		m_tr->eraseParamRemap(id);
+		m_tr->scope.bindings.paramRemaps.erase(id);
 }
 
 /// buildApprovalProgram phase: init the transient-storage blob (transient scratch slot) BEFORE the create/dispatch split so the …
@@ -738,10 +731,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		}
 		else
 		{
-			auto const* savedReturnType = m_functionCtx->returnType;
-			m_functionCtx->returnType = awst::WType::boolType();
+			solidity::ScopedSaveAndRestore returnTypeGuard(
+				m_functionCtx->returnType, awst::WType::boolType());
 			emitConstructorPlan(_contract, createBlock, emitStateVarInit);
-			m_functionCtx->returnType = savedReturnType;
 		}
 
 		// Return true to complete the create transaction

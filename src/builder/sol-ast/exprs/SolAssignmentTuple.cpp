@@ -117,7 +117,7 @@ std::shared_ptr<awst::Expression> SolAssignment::pinLiteralTupleRhs(
 			if (decl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				&& !decl->isStateVariable())
 				return !m_ctx.typeMapper.profile().evmStorageLayout
-					&& m_scope.findMappingKeyParam(decl->id()).empty();
+					&& m_scope.bindings.mappingKeyParams.get(decl->id()).empty();
 			// Whole aggregate state var receiving a plain storage read.
 			if (decl->isStateVariable() && comp->annotation().type
 				&& !comp->annotation().type->isValueType())
@@ -187,7 +187,7 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 				&& lhsDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				&& !lhsDecl->isStateVariable())
 			{
-				auto const& keyParam = m_scope.findMappingKeyParam(lhsDecl->id());
+				auto const& keyParam = m_scope.bindings.mappingKeyParams.get(lhsDecl->id());
 				if (!m_ctx.typeMapper.profile().evmStorageLayout && !keyParam.empty())
 				{
 					auto const* tuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
@@ -265,7 +265,7 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 						"conditionally-executed block is not supported "
 						"(compile-time rebind would apply unconditionally "
 						"to all following uses).", m_loc);
-				m_scope.setStorageAlias(lhsDecl->id(), std::move(alias));
+				m_scope.bindings.storageAliases.set(lhsDecl->id(), std::move(alias));
 				return TupleComponentAction::Handled;
 			}
 
@@ -392,7 +392,7 @@ bool SolAssignment::emitTupleComponentWrite(
 				identifier->annotation().referencedDeclaration)
 			: nullptr;
 		std::string const offsetName = declaration
-			? m_scope.findBlobAggregate(declaration->id()) : std::string{};
+			? m_scope.bindings.blobAggregates.get(declaration->id()) : std::string{};
 		if (declaration && !offsetName.empty()
 			&& declaration->referenceLocation()
 				== VariableDeclaration::Location::Memory)

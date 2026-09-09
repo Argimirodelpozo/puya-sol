@@ -36,6 +36,24 @@ struct PreparedAssembly;
 class SolcFacts
 {
 public:
+	/// Strip call options and parenthesized singleton expressions.
+	static solidity::frontend::Expression const& functionExpression(
+		solidity::frontend::Expression const& _expression);
+
+	/// Concrete function denoted by a call/reference expression. Uses solc's
+	/// requiredLookup and resolveVirtual; super's lexical owner comes from its
+	/// annotated ContractType, not the function currently being translated.
+	static solidity::frontend::FunctionDefinition const* resolveFunction(
+		solidity::frontend::Expression const& _expression,
+		solidity::frontend::ContractDefinition const* _mostDerived);
+
+	/// Same lookup, restricted to reference-preserving calls (including the
+	/// library delegate calls this backend internalizes). Null for dynamic
+	/// function pointers and ordinary external ABI calls.
+	static solidity::frontend::FunctionDefinition const* resolveInternalCall(
+		solidity::frontend::FunctionCall const& _call,
+		solidity::frontend::ContractDefinition const* _mostDerived);
+
 	/// Match solc IRGenerator::generateModifier: declaration identity plus
 	/// requiredLookup, followed by solc's own virtual override resolution.
 	/// A constructor-base invocation is not a modifier and returns nullptr.

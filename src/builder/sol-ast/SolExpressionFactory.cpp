@@ -114,20 +114,11 @@ public:
 			return awst::makeZero(m_loc);
 		}
 
-		std::string awstName = m_scope.findSuperTarget(m_funcDef->id());
-
-		// Prefer caller's function type: functionType(true) on external-only fns
-		// may return a placeholder with empty params → useless dispatch name.
-		auto const* regType = m_callerFuncType
-			? m_callerFuncType
-			: m_funcDef->functionType(true);
-		if (!regType)
-			regType = m_funcDef->functionType(false);
-		eb::FunctionPointerBuilder::registerTarget(
-			m_ctx,
-			m_funcDef,
-			regType,
-			awstName);
+		auto resolved = eb::CallResolver::resolveFunction(m_ctx, m_memberAccess);
+		solAssert(resolved && resolved->funcDef, "Missing solc function-reference target");
+		std::string awstName;
+		if (auto const* method = std::get_if<awst::InstanceMethodTarget>(&resolved->target))
+			awstName = method->memberName;
 
 		// `C(addr).fn`: receiver address must flow into the fn pointer so
 		// `.address` returns the caller-supplied addr, not the self-sentinel (0).
@@ -157,7 +148,7 @@ public:
 		}
 
 		return eb::FunctionPointerBuilder::buildFunctionReference(
-			m_ctx, m_funcDef, m_loc, m_callerFuncType, receiverAddr, awstName);
+			m_ctx, resolved->funcDef, m_loc, m_callerFuncType, receiverAddr, awstName);
 	}
 private:
 	solidity::frontend::FunctionDefinition const* m_funcDef;

@@ -1,5 +1,6 @@
 #include "builder/sol-ast/EffectScan.h"
 #include "builder/ProgramAnalysis.h"
+#include "builder/SolcFacts.h"
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-eb/ContractContext.h"
 
@@ -12,19 +13,11 @@ bool EffectScan::mayWrite(solidity::frontend::Expression const& expression,
 	eb::ContractContext& context, sol_ast::Context const& scope)
 {
 	using namespace solidity::frontend;
-	int64_t caller = 0;
-	for (auto const* current = &scope; current; current = current->parent())
-		if (auto const* function = dynamic_cast<sol_ast::FunctionContext const*>(current))
-		{
-			caller = function->callableId;
-			break;
-		}
 	struct Scan: ASTConstVisitor
 	{
 		eb::ContractContext& context;
-		int64_t caller;
 		bool found = false;
-		Scan(eb::ContractContext& ctx, int64_t id): context(ctx), caller(id) {}
+		explicit Scan(eb::ContractContext& ctx): context(ctx) {}
 		bool visit(FunctionCall const& call) override
 		{
 			auto kind = *call.annotation().kind;
@@ -37,15 +30,14 @@ bool EffectScan::mayWrite(solidity::frontend::Expression const& expression,
 			else
 			{
 				auto const& analysis = context.typeMapper.analysis();
-				auto const* effects = analysis.parameterMutationsForCall(context.currentContract, caller, call);
+				auto const* effects = analysis.parameterMutationsForCall(context.currentContract, call);
 				if (effects)
 					found |= !effects->mutatedParameterIndices.empty();
 				else if (type->kind() == FunctionType::Kind::Internal)
 					for (auto const* parameter: type->parameterTypes())
 						found |= parameter->dataStoredIn(DataLocation::Memory);
 				// Assembly can write shared EVM memory without a reference parameter.
-				if (auto const* function = dynamic_cast<FunctionDefinition const*>(
-						ASTNode::referencedDeclaration(call.expression())))
+				if (auto const* function = SolcFacts::resolveInternalCall(call, context.currentContract))
 					found |= analysis.callablesWithInlineAssembly.contains(function->id());
 			}
 			return !found;
@@ -58,7 +50,7 @@ bool EffectScan::mayWrite(solidity::frontend::Expression const& expression,
 			found |= op == Token::Inc || op == Token::Dec || op == Token::Delete;
 			return !found;
 		}
-	} scan(context, caller);
+	} scan(context);
 	expression.accept(scan);
 	return scan.found;
 }

@@ -7,6 +7,7 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
+#include "builder/SolcFacts.h"
 #include "builder/storage/StorageBackend.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
@@ -71,7 +72,7 @@ std::shared_ptr<awst::Expression> tryBlobAggregateValue(
 	eb::ContractContext& ctx, Context& scope,
 	VariableDeclaration const& varDecl, awst::SourceLocation const& loc)
 {
-	auto off = scope.findBlobAggregate(varDecl.id());
+	auto off = scope.bindings.blobAggregates.get(varDecl.id());
 	if (off.empty())
 		return nullptr;
 	auto const* vt = ctx.typeMapper.map(varDecl.type());
@@ -94,12 +95,12 @@ std::shared_ptr<awst::Expression> tryStructRefParamValue(
 	VariableDeclaration const& varDecl,
 	awst::SourceLocation const& loc)
 {
-	if (scope.findMappingKeyParam(varDecl.id()).empty()
+	if (scope.bindings.mappingKeyParams.get(varDecl.id()).empty()
 		|| !varDecl.type()
 		|| varDecl.type()->category() != solidity::frontend::Type::Category::Struct)
 		return nullptr;
 	auto* structType = ctx.typeMapper.map(varDecl.type());
-	auto key = awst::makeVarExpression(scope.findMappingKeyParam(varDecl.id()), awst::WType::bytesType(), loc);
+	auto key = awst::makeVarExpression(scope.bindings.mappingKeyParams.get(varDecl.id()), awst::WType::bytesType(), loc);
 	auto boxKey = awst::makeReinterpretCast(
 		std::move(key), awst::WType::boxKeyType(), loc);
 	auto boxExpr = awst::makeBoxValueExpression(std::move(boxKey), structType, loc);
@@ -313,15 +314,15 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	if (decl)
 	{
 		// Parameter remaps (modifier parameters)
-		if (auto const* remap = m_scope.findParamRemap(decl->id()))
+		if (auto const* remap = m_scope.bindings.paramRemaps.find(decl->id()))
 			return awst::makeVarExpression(remap->name, remap->type, m_loc);
 
 		// Storage pointer aliases
-		if (auto const* alias = m_scope.findStorageAlias(decl->id()))
+		if (auto const* alias = m_scope.bindings.storageAliases.find(decl->id()))
 			return alias->expr;
 
 		// Memory-aggregate alias (`T memory b = a` → b resolves to a's local).
-		if (auto memAlias = m_scope.findMemoryAlias(decl->id()))
+		if (auto memAlias = m_scope.bindings.memoryAliases.get(decl->id()))
 			return memAlias;
 	}
 
@@ -330,7 +331,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	{
 		if (isSlotStorageLocal(m_ctx, *varDecl))
 		{
-			if (auto slot = m_scope.findSlotStorageRef(varDecl->id()))
+			if (auto slot = m_scope.bindings.slotStorageRefs.get(varDecl->id()))
 				return slot;
 			return awst::makeVarExpression(
 				m_scope.awstVarName(*varDecl), awst::WType::biguintType(), m_loc);
@@ -340,7 +341,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 			return blobValue;
 
 		if (dynamic_cast<MappingType const*>(varDecl->type()))
-			if (auto const& keyParam = m_scope.findMappingKeyParam(varDecl->id()); !keyParam.empty())
+			if (auto const& keyParam = m_scope.bindings.mappingKeyParams.get(varDecl->id()); !keyParam.empty())
 				return awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc);
 
 		if (auto refValue = tryStructRefParamValue(m_ctx, m_scope, *varDecl, m_loc))
@@ -360,7 +361,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		if (auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(m_solType))
 			if (ft->kind() == solidity::frontend::FunctionType::Kind::Internal
 				|| ft->kind() == solidity::frontend::FunctionType::Kind::External)
-				return eb::FunctionPointerBuilder::buildFunctionReference(m_ctx, funcDef, m_loc, ft);
+				return eb::FunctionPointerBuilder::buildFunctionReference(m_ctx, SolcFacts::resolveFunction(m_ident, m_ctx.currentContract), m_loc, ft);
 		// Otherwise: function used as call target, fall through.
 	}
 

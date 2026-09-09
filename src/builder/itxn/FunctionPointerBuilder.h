@@ -38,7 +38,8 @@ struct FuncPtrEntry
 /// Per-compilation function-pointer dispatch state.
 struct FunctionPointerRegistry
 {
-	std::map<std::pair<int64_t, std::string>, FuncPtrEntry> targets;
+	/// One pointer identity per concrete solc implementation, not per caller.
+	std::map<int64_t, FuncPtrEntry> targets;
 	unsigned nextId = 1;
 	std::map<std::string, solidity::frontend::FunctionType const*> neededDispatches;
 	std::set<std::string> neededRootDispatches;
@@ -66,8 +67,7 @@ public:
 	/// external: appId ++ Solidity selector (flagged mode) ++ ARC-4 selector.
 	/// @param _callerFuncType  Determines Internal vs External when both exist
 	///                         (e.g. `this.g` is External). Derived from _funcDef if null.
-	/// @param _awstName        For super refs in diamond MRO: distinct entries
-	///                         per caller context for the same target astId.
+	/// _funcDef must already be resolved; _awstName selects its exact entry.
 	static std::shared_ptr<awst::Expression> buildFunctionReference(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef,
@@ -85,8 +85,8 @@ public:
 		awst::SourceLocation const& _loc);
 
 	/// Register a function pointer target.
-	/// @param _awstName  AWST name (may differ from _funcDef->name() for super refs, e.g. "f__super_8").
-	static void registerTarget(
+	/// Returns the ID of the already-resolved implementation.
+	static unsigned registerTarget(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef,
 		solidity::frontend::FunctionType const* _funcType,
