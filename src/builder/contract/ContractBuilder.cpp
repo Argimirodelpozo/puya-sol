@@ -335,46 +335,6 @@ std::shared_ptr<awst::Block> buildBlock(
 	sol_ast::BlockContext blk{fn, nullptr, _placeholder};
 	auto blkGuard = exprBuilder.pushScopeRaii(&blk.scope);
 
-	// Mapping storage-ref params: `m[k]` resolves the dynamic box-key prefix at runtime.
-	for (auto const* mp: _ctx.mappingKeyParams)
-		if (mp && !mp->name().empty())
-			fn.scope.bindings.mappingKeyParams.set(mp->id(), mp->name());
-
-	// --evm-storage-layout: storage-ref params / named storage returns are
-	// biguint slot handles — register so slot-handle machinery resolves them.
-	for (auto const* sp: _ctx.slotRefParams)
-		if (sp && !sp->name().empty())
-			fn.scope.bindings.slotStorageRefs.set(sp->id(), awst::makeVarExpression(
-				sp->name(), awst::WType::biguintType(), awst::SourceLocation{}));
-
-	// Offset-convention struct-ref params (handle-model dual handle): register the companion
-	// uint64 offset var so the body's `s.field` writes hit the element slice via
-	// box_replace(key, offset+fieldOff). The offset param itself is in the subroutine signature
-	// (FunctionBuilder) and supplied by the caller (SolInternalCall).
-	for (auto const* mp: _ctx.mappingKeyParams)
-		if (mp && !mp->name().empty()
-			&& typeMapper.analysis().structRefOffsetParams.count(mp->id()))
-			fn.scope.bindings.structRefOffsets.set(mp->id(), mp->name() + "__off");
-
-	// Named returns >4 KB: blob-backed aggregates (pointer model) so `p.field[i]`
-	// lowers to multi-slot blob word access. Base offset assigned + FMP bumped in
-	// FunctionBuilder.
-	for (auto const* rp: _ctx.namedReturns)
-	{
-		if (!rp || rp->name().empty()
-			|| rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Memory)
-			continue;
-		auto const* rpType = typeMapper.map(rp->type());
-		if (memoryUsesBlob(rpType))
-			fn.scope.bindings.blobAggregates.set(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
-	}
-
-	// Blob-agg params >4 KB: param's local IS the uint64 base offset (caller passed
-	// it — see SolInternalCall/SolIdentifier); no FMP bump needed.
-	for (auto const* p: _ctx.blobAggParams)
-		if (p && !p->name().empty())
-			fn.scope.bindings.blobAggregates.set(p->id(), p->name());
-
 	// Promote memory aggregates used as values in inline assembly to blob-backed
 	// (Yul memory pointer). Must mark before body translation so SolVariableDeclaration
 	// blob-backs them at their declaration. Not run during modifier re-entrancy

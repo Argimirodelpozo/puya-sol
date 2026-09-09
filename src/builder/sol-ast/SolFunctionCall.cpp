@@ -1,7 +1,6 @@
 #include "builder/sol-ast/SolFunctionCall.h"
 #include "builder/sol-types/TypeCoercion.h"
-
-#include <libsolidity/ast/ASTUtils.h>
+#include "builder/SolcFacts.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -17,13 +16,7 @@ SolFunctionCall::SolFunctionCall(
 
 solidity::frontend::Expression const& SolFunctionCall::funcExpression() const
 {
-	auto const* expr = &m_call.expression();
-	// Unwrap FunctionCallOptions
-	if (auto const* opts = dynamic_cast<solidity::frontend::FunctionCallOptions const*>(expr))
-		expr = &opts->expression();
-	// Unwrap parenthesized expressions (1-element TupleExpressions).
-	expr = solidity::frontend::resolveOuterUnaryTuples(expr);
-	return *expr;
+	return SolcFacts::functionExpression(m_call.expression());
 }
 
 std::shared_ptr<awst::Expression> SolFunctionCall::extractCallValue()

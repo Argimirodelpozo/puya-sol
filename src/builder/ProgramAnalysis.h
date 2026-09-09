@@ -11,6 +11,7 @@ namespace solidity::frontend
 {
 class CompilerStack;
 class ContractDefinition;
+class Expression;
 class FunctionCall;
 class FunctionDefinition;
 class IndexAccess;
@@ -51,6 +52,10 @@ struct ProgramAnalysis
 	std::set<int64_t> boxKeyedStructs;
 	std::set<int64_t> refPassedStructs;
 	std::set<int64_t> reassignedMemoryLocals;
+	/// Direct function initializers of locals that solc never marks as written
+	/// and that no assembly block references. Safe specialization, not a
+	/// translation-order-dependent cache of a variable's current value.
+	std::map<int64_t, solidity::frontend::Expression const*> stableFunctionPointers;
 	std::set<int64_t> structRefOffsetParams;
 	std::set<int64_t> callablesWithInlineAssembly;
 	std::map<int64_t, std::shared_ptr<PreparedAssembly const>> preparedAssemblies;
@@ -122,12 +127,6 @@ struct ProgramAnalysis
 	ParameterMutationSummary const& parameterMutations(
 		solidity::frontend::ContractDefinition const* _mostDerived,
 		solidity::frontend::FunctionDefinition const& _function) const;
-
-	/// Effects of the concrete function reached by a reference-preserving
-	/// internal `_call`. Returns null for indirect and ABI-boundary calls.
-	ParameterMutationSummary const* parameterMutationsForCall(
-		solidity::frontend::ContractDefinition const* _mostDerived,
-		solidity::frontend::FunctionCall const& _call) const;
 
 	static ProgramAnalysis analyze(
 		solidity::frontend::CompilerStack& _compiler,

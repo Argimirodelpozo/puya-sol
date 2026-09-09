@@ -180,15 +180,6 @@ private:
 		std::map<std::string, unsigned> const& _bitWidths = {},
 		std::map<std::string, solidity::frontend::Type const*> const& _paramSolTypes = {});
 
-	/// Set the named-return parameter decls for the current function.
-	/// `buildBlock` registers them in the function-body BlockContext so
-	/// inner declarations with the same name get shadow-renamed.
-	void setNamedReturns(
-		std::vector<solidity::frontend::VariableDeclaration const*> const& _namedReturns
-	)
-	{
-		m_functionCtx->namedReturns = _namedReturns;
-	}
 
 	/// Enable build-time ABI return encoding for the current function (D2).
 	/// `buildBlock` forwards the plan to the FunctionContext; SolReturnStatement
@@ -201,34 +192,6 @@ private:
 		m_functionCtx->encodeReturnsAtBuildTime = true;
 	}
 
-	/// Set the mapping-storage-ref param decls for the current function.
-	/// `buildBlock` registers them on the function-body FunctionContext so
-	/// SolIndexAccess can build dynamic box-key prefixes at runtime.
-	void setMappingKeyParams(
-		std::vector<solidity::frontend::VariableDeclaration const*> const& _params
-	)
-	{
-		m_functionCtx->mappingKeyParams = _params;
-	}
-
-	/// --evm-storage-layout: storage-ref params/named-returns of the current
-	/// function (biguint slot handles); registered in `buildBlock`.
-	void setSlotRefParams(
-		std::vector<solidity::frontend::VariableDeclaration const*> const& _params
-	)
-	{
-		m_functionCtx->slotRefParams = _params;
-	}
-
-	/// Set the blob-backed (>4KB) memory aggregate param decls for the current
-	/// function. `buildBlock` registers them on the function-body FunctionContext
-	/// so `p.field[i]` lowers to multi-slot blob word access (pointer model).
-	void setBlobAggParams(
-		std::vector<solidity::frontend::VariableDeclaration const*> const& _params
-	)
-	{
-		m_functionCtx->blobAggParams = _params;
-	}
 
 	/// Prepend assert(incoming_amount==0,"not payable") to externally-callable non-payable methods.
 	void prependNonPayableCheck(awst::ContractMethod& _method,
@@ -285,12 +248,6 @@ private:
 		awst::ContractMethod& method,
 		solidity::frontend::FunctionDefinition const& _func,
 		std::string const& _nameOverride);
-	void setupBodyParamContext(
-		awst::ContractMethod const& method,
-		solidity::frontend::FunctionDefinition const& _func);
-	void registerBodyRefParams(
-		solidity::frontend::FunctionDefinition const& _func,
-		std::set<int64_t> const& asmSlotParamIds);
 	void prependNamedReturnInits(
 		awst::ContractMethod& method,
 		solidity::frontend::FunctionDefinition const& _func);

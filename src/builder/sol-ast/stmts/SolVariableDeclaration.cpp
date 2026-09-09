@@ -133,24 +133,6 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 	std::shared_ptr<awst::Expression> value;
 	if (initialValue)
 	{
-		// Preserve the initializer expression, including super's lexical owner.
-		// Foreign external pointers must still cross applications at runtime.
-		if (auto const* declFt = dynamic_cast<FunctionType const*>(decl.type()))
-		{
-			bool foreignExternal = false;
-			if (declFt->kind() == FunctionType::Kind::External)
-				if (auto const* ma = dynamic_cast<MemberAccess const*>(initialValue))
-				{
-					auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression());
-					if (!(baseId && baseId->name() == "this"))
-						foreignExternal = true;
-				}
-			if (!foreignExternal)
-				if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(
-						ASTNode::referencedDeclaration(*initialValue)))
-					m_blk.scope.bindings.funcPtrTargets.set(decl.id(), initialValue);
-		}
-
 		value = m_blk.builderCtx().buildExpr(*initialValue);
 		if (decl.referenceLocation() != VariableDeclaration::Location::Storage)
 			value = StorageMapper::makePartialBoxReadWithDefault(

@@ -69,6 +69,39 @@ additional memory/call-fact cases pass. Relative to the committed 2,000-case
 baseline, there are twelve new Yul/memory cases and eight harness/cache tests;
 no baseline tests were removed.
 
+### Call-boundary refactor verification — 2026-09-09
+
+The five-refactor batch on base `ddda7255dd6358abf1b8d6d0531043a3377b9653`
+was tested with compiler SHA-256
+`63bcbbb8993d1717f104fd3dd26179e69630b8c89f740029e2deb1bf02fd7fd1`.
+It replaces the mutable function-pointer initializer cache with runtime reads
+and specialization only for source initializers proven stable by solc write
+facts; unifies pointer argument sequencing, source-function context construction,
+and native/wire return adaptation; and removes redundant context APIs and scans.
+The `src/` change is 356 lines added and 1,114 removed (net **−758**).
+The existing memory representation is unchanged.
+
+Full verification used `PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 3
+--tb=short --junitxml=/tmp/puya-sol-call-refactors-20260909.0xqSOC/semantic-final.xml`:
+**1,918 passed, 1 failed, 101 xfailed, 38 xpassed** (2,058 total), in 352.00
+seconds. All 2,044 cases from the preceding scope/super-call run retained their
+individual JUnit outcomes, and all 14 new cases passed. The sole failure remains
+the Puya DCE/divide-by-zero bug above; markers were not changed. The compiler
+hash stayed fixed, LocalNet was not reset, and dependency pins are unchanged.
+
+[The new regressions](tests/puyasolRegression/test_call_boundaries.py) cover
+pointer reassignment, tuple swaps, loop re-entry, deletion, assembly writes,
+state/field/index reads, callee-versus-argument evaluation order, reference
+write-back for stable pointers, free/library/contract calldata contexts,
+signed and tuple returns, keyed self getters, and real cross-contract pointer
+calls under ARC-4 and EVM ABI profiles. Expected results were checked independently
+against solc 0.8.34 on PyEVM: 29 checks each with legacy and via-IR compilation,
+optimizer enabled at 200 runs, EVM version Cancun (58/58 passed). This includes
+the different internal-pointer callee/argument order emitted by the two solc modes.
+Focused call/return tests passed 49/49, native CTests 19/19, and chainwide harness
+unit tests 91/91. JUnit reports and the outcome comparison are retained in
+`/tmp/puya-sol-call-refactors-20260909.0xqSOC/`.
+
 ### Commands
 
 Build the frontend and set up the pinned Puya environment as described in the

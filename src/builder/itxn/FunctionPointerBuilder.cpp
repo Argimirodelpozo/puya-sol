@@ -78,17 +78,6 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 		awst::CallArg arg;
 		arg.name = "__arg" + std::to_string(i);
 		arg.value = _args[i];
-		if (i < _funcType->parameterTypes().size())
-		{
-			auto const* parameterType = _funcType->parameterTypes()[i];
-			auto* expectedType = _ctx.typeMapper.map(parameterType);
-			arg.value = builder::ConversionPlan{
-				nullptr,
-				parameterType,
-				expectedType,
-				builder::ConversionPlan::Context::Argument}.emit(
-					std::move(arg.value), _loc);
-		}
 		call->args.push_back(std::move(arg));
 	}
 	return call;
@@ -411,42 +400,11 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
 		submit->itxns.push_back(std::move(create));
 
-		// Decode LastLog: strip 4-byte ARC4 return prefix, coerce to retType.
-		bool signedNarrowReturn = false;
-		if (_funcType->returnParameterTypes().size() == 1)
-			if (auto it = builder::SolIntType::fromSol(
-					_funcType->returnParameterTypes()[0]);
-				it && it->isSigned && it->bits <= 64)
-				signedNarrowReturn = true;
-		auto buildInnerTxnResult = [&](
-			std::vector<std::shared_ptr<awst::Statement>>& out)
-			-> std::shared_ptr<awst::Expression> {
-			auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
-			auto strip = awst::makeExtract(std::move(readLog), 4, 0, _loc); // len=0 = extract to end
-			if (evmContractAbi)
-				return abi::decodeEvmAbi(
-					_ctx.typeMapper, std::move(strip),
-					_funcType->returnParameterTypes(), retType, _loc, out);
-			if (retType == awst::WType::bytesType() || retType == awst::WType::voidType())
-				return strip;
-			if (retType == awst::WType::uint64Type())
-			{
-				// Signed <=64-bit public returns are transported as a canonical
-				// uint256 word; the native carrier is its low eight TC bytes.
-				if (signedNarrowReturn)
-					strip = awst::makeExtract(std::move(strip), 24, 8, _loc);
-				return awst::makeBtoi(std::move(strip), _loc);
-			}
-			if (retType == awst::WType::boolType())
-			{
-				// ARC4 bool: byte 0's top bit set → true.
-				auto getbit = awst::makeGetbit(
-					std::move(strip), awst::makeZero(_loc), _loc);
-				return awst::makeNumericCompare(
-					std::move(getbit), awst::NumericComparison::Ne,
-					awst::makeIntegerConstant("0", _loc), _loc);
-			}
-			return awst::makeReinterpretCast(std::move(strip), retType, _loc);
+		auto buildInnerTxnResult = [&](std::vector<std::shared_ptr<awst::Statement>>& out) {
+			auto payload = awst::makeExtract(
+				awst::makeItxn("LastLog", awst::WType::bytesType(), _loc), 4, 0, _loc);
+			return decodeExternalCallResult(_ctx.typeMapper, std::move(payload),
+				_funcType->returnParameterTypes(), retType, _loc, out);
 		};
 
 		auto ifStmt = awst::makeIfElse(isSelf, awst::makeBlock(_loc), awst::makeBlock(_loc), _loc);
@@ -639,7 +597,7 @@ std::shared_ptr<awst::Block> buildDispatchEntryArm(
 			? awst::SubroutineTarget{awst::SubroutineID{entry->subroutineId}}
 			: awst::SubroutineTarget{awst::InstanceMethodTarget{entry->name}};
 		auto call = awst::makeSubroutineCall(
-			std::move(target), dispatch.returnType, _loc);
+			std::move(target), targetMethod ? targetMethod->returnType : dispatch.returnType, _loc);
 
 		bool const isPublic = targetMethod && targetMethod->arc4MethodConfig.has_value();
 		auto const* plan = entry->funcDef
@@ -659,7 +617,6 @@ std::shared_ptr<awst::Block> buildDispatchEntryArm(
 				arg.name = targetMethod->args.at(i).name;
 			call->args.push_back(std::move(arg));
 		}
-		if (isPublic) call->wtype = targetMethod->returnType;
 
 		if (dispatch.returnType != awst::WType::voidType())
 		{

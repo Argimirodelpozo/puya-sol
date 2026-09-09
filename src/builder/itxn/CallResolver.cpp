@@ -97,24 +97,17 @@ CallPlan CallResolver::plan(solidity::frontend::FunctionCall const& _call)
 			result.isSelfCall = true;
 			result.transport = CallTransport::Internal;
 		}
-
-		// A function-valued struct/array member is data, not a contract method.
+		// Type-level inherited state pointers and function-valued struct fields
+		// are data. Contract-instance members are getters/methods instead.
 		auto const* baseType = member->expression().annotation().type;
-		while (baseType)
-		{
-			if (dynamic_cast<StructType const*>(baseType))
+		if (dynamic_cast<TypeType const*>(baseType) || dynamic_cast<StructType const*>(baseType))
+			if (auto const* variable = dynamic_cast<VariableDeclaration const*>(
+					member->annotation().referencedDeclaration);
+				variable && dynamic_cast<FunctionType const*>(variable->type()))
 			{
 				result.isFunctionPointer = true;
 				result.transport = CallTransport::Internal;
-				break;
 			}
-			if (auto const* array = dynamic_cast<ArrayType const*>(baseType))
-			{
-				baseType = array->baseType();
-				continue;
-			}
-			break;
-		}
 	}
 	else if (auto const* identifier = dynamic_cast<Identifier const*>(result.callee))
 	{
@@ -126,8 +119,7 @@ CallPlan CallResolver::plan(solidity::frontend::FunctionCall const& _call)
 			result.transport = CallTransport::Internal;
 		}
 	}
-	else if (dynamic_cast<IndexAccess const*>(result.callee)
-		|| dynamic_cast<FunctionCall const*>(result.callee))
+	else if (kind == FunctionType::Kind::Internal || kind == FunctionType::Kind::External)
 	{
 		result.isFunctionPointer = true;
 		result.transport = CallTransport::Internal;

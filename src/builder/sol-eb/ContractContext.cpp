@@ -33,7 +33,9 @@ ContractContext::ContractContext(
 	  functionSymbols(_functionSymbols),
 	  functionPointers(_functionPointers),
 	  registry(std::make_unique<BuilderRegistry>())
-{}
+{
+	viaIRSequencing = typeMapper.profile().viaIRSequencing;
+}
 
 ContractContext::~ContractContext() = default;
 

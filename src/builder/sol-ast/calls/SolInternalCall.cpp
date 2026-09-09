@@ -11,7 +11,6 @@
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
-#include "builder/AWSTBuilder.h"
 #include "builder/BuildArtifacts.h"
 #include "builder/ReturnWirePlan.h"
 #include "builder/sol-ast/EffectScan.h"
@@ -22,15 +21,12 @@
 #include "builder/itxn/CallResolver.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/sol-types/FunctionPointerKind.h"
-#include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
-#include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
-#include "builder/storage/StorageBackend.h"
 #include "builder/storage/StoragePlace.hpp"
 #include "Logger.h"
 
@@ -279,6 +275,7 @@ std::shared_ptr<awst::Expression> rebuildFieldPathWriteValue(
 std::shared_ptr<awst::Expression> emitAugmentedCallWriteBacks(
 	eb::ContractContext& ctx,
 	std::shared_ptr<awst::SubroutineCallExpression> const& call,
+	awst::WType const* origRetType,
 	std::vector<StorageRoot> const& roots,
 	std::vector<size_t> const& memoryRefParamIndices,
 	std::vector<std::pair<std::string, Type const*>> const& blobWriteBacks,
@@ -290,7 +287,6 @@ std::shared_ptr<awst::Expression> emitAugmentedCallWriteBacks(
 	//     FLATTENED (K values, not nested WTuple).
 	//   void: bare type if N+M==1; tuple otherwise.
 	// Always unpack (even unresolved args) — wtype mismatch otherwise.
-	auto* origRetType = call->wtype;
 	bool voidReturn = (origRetType == awst::WType::voidType());
 	auto const* origRetTuple = voidReturn
 		? nullptr
@@ -302,8 +298,7 @@ std::shared_ptr<awst::Expression> emitAugmentedCallWriteBacks(
 
 	// 1 element → bare type (puya doesn't wrap single-elem returns);
 	// 2+ → WTuple.
-	auto const* callTupleType = plan.augmentReturn(ctx.typeMapper, origRetType);
-	call->wtype = callTupleType;
+	auto const* callTupleType = call->wtype;
 
 	std::string tempName = "__storage_wb_" + std::to_string(awst::NameGen::next("SolInternalCall.storageWriteBackCounter"));
 
@@ -459,22 +454,6 @@ std::shared_ptr<awst::Expression> SolInternalCall::wrapStorageRefResult(
 		std::move(base), std::move(_result), elemType, m_loc);
 }
 
-void SolInternalCall::collectSubroutineParamTypes(
-	FunctionDefinition const& _funcDef,
-	std::vector<awst::WType const*>& paramTypes,
-	std::set<size_t>& mappingStorageParamIndices,
-	std::set<size_t>& evmSlotRefParamIndices,
-	std::set<size_t>& blobOffsetParamIndices)
-{
-	auto const& plan = m_ctx.typeMapper.callBoundaryPlan(_funcDef, m_ctx.currentContract);
-	for (auto const& parameter: plan.parameters) paramTypes.push_back(parameter.type);
-	mappingStorageParamIndices = plan.keyParams;
-	evmSlotRefParamIndices = plan.slotParams;
-	blobOffsetParamIndices = plan.blobParams;
-}
-
-// For a mapping/storage-ref param: extract the box-key prefix;
-// callee uses it for box key derivation.
 std::shared_ptr<awst::Expression> SolInternalCall::extractMappingKeyPrefix(
 	Expression const& argExpr)
 {
@@ -517,13 +496,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::extractMappingKeyPrefix(
 }
 
 void SolInternalCall::buildSequencedArgs(
-	std::shared_ptr<awst::SubroutineCallExpression> const& call,
+	std::vector<awst::CallArg>& args,
 	FunctionDefinition const* _funcDef,
 	bool _isUsingForCall,
-	std::vector<awst::WType const*> const& paramTypes,
-	std::set<size_t> const& mappingStorageParamIndices,
-	std::set<size_t> const& evmSlotRefParamIndices,
-	std::set<size_t> const& blobOffsetParamIndices)
+	awst::SubroutineTarget const* target,
+	bool followingEffects)
 {
 	// Args evaluate left-to-right on EVM (verified vs 0.8.20 + py-evm), with
 	// each arg's write-backs landing before the NEXT arg — and before the call
@@ -532,6 +509,18 @@ void SolInternalCall::buildSequencedArgs(
 	std::vector<eb::ContractContext::OperandDeltas> argDeltas;
 	std::vector<bool> argMayWrite;
 	auto const* plan = _funcDef ? &m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract) : nullptr;
+	auto const* functionType = dynamic_cast<FunctionType const*>(funcExpression().annotation().type);
+	std::vector<awst::WType const*> paramTypes;
+	if (plan)
+		for (auto const& parameter: plan->parameters)
+			paramTypes.push_back(parameter.type);
+	else if (functionType)
+		for (auto const* type: functionType->parameterTypes())
+			paramTypes.push_back(m_ctx.typeMapper.map(type));
+	static std::set<size_t> const noParameters;
+	auto const& mappingStorageParamIndices = plan ? plan->keyParams : noParameters;
+	auto const& evmSlotRefParamIndices = plan ? plan->slotParams : noParameters;
+	auto const& blobOffsetParamIndices = plan ? plan->blobParams : noParameters;
 	std::map<size_t, std::shared_ptr<awst::Expression>> offsets;
 	auto keyArgument = [&](Expression const& expression, size_t pi) -> std::shared_ptr<awst::Expression> {
 		auto const* array = dynamic_cast<ArrayType const*>(expression.annotation().type);
@@ -564,7 +553,7 @@ void SolInternalCall::buildSequencedArgs(
 				auto const* scope = _funcDef ? _funcDef->annotation().contract : nullptr;
 				bool const specializable = _funcDef && box && box->key && !path.empty() && !largeFixed
 					&& (_funcDef->isFree() || (scope && scope->isLibrary()))
-					&& std::holds_alternative<awst::SubroutineID>(call->target);
+					&& (target && std::holds_alternative<awst::SubroutineID>(*target));
 				if (specializable)
 				{
 					m_pathSpecs[pi] = {path, box->wtype};
@@ -574,7 +563,7 @@ void SolInternalCall::buildSequencedArgs(
 				// storage, e.g. OpenZeppelin 5.x Checkpoints._unsafeAccess): the
 				// EVM slot arithmetic only exists under --evm-storage-layout.
 				bool const hostBound = _funcDef && box && !path.empty()
-					&& !std::holds_alternative<awst::SubroutineID>(call->target);
+					&& !(target && std::holds_alternative<awst::SubroutineID>(*target));
 				throw SizeError(std::string(largeFixed
 					? "large fixed-array storage references require a whole-box root; interior slices are unsupported"
 					: "dynamic-array storage references require a whole-box root; interior resize paths are unsupported")
@@ -589,7 +578,7 @@ void SolInternalCall::buildSequencedArgs(
 		// (Also an aliased parameter of a specialized callee handed onward.)
 		if (auto const* solType = expression.annotation().type;
 			containsMappingType(solType) && !dynamic_cast<MappingType const*>(solType)
-			&& _funcDef && std::holds_alternative<awst::SubroutineID>(call->target)
+			&& _funcDef && (target && std::holds_alternative<awst::SubroutineID>(*target))
 			&& (_funcDef->isFree()
 				|| (_funcDef->annotation().contract && _funcDef->annotation().contract->isLibrary())))
 		{
@@ -652,8 +641,8 @@ void SolInternalCall::buildSequencedArgs(
 			}, /*_conditional=*/false);
 			ca.value = std::move(lowered.value);
 			argDeltas.push_back(std::move(lowered.effects));
-			argMayWrite.push_back(builder::EffectScan::mayWrite(memberAccess->expression(), m_ctx, m_scope));
-			call->args.push_back(std::move(ca));
+			argMayWrite.push_back(builder::EffectScan::mayWrite(memberAccess->expression(), m_ctx));
+			args.push_back(std::move(ca));
 		}
 	}
 
@@ -663,6 +652,10 @@ void SolInternalCall::buildSequencedArgs(
 	{
 		awst::CallArg ca;
 		size_t paramIdx = _isUsingForCall ? (i + 1) : i;
+		auto const* parameterType = _funcDef && paramIdx < _funcDef->parameters().size()
+			? _funcDef->parameters()[paramIdx]->type()
+			: functionType && paramIdx < functionType->parameterTypes().size()
+				? functionType->parameterTypes()[paramIdx] : nullptr;
 		auto lowered = m_ctx.lowerOperand([&]() -> std::shared_ptr<awst::Expression> {
 			if (evmSlotRefParamIndices.count(paramIdx))
 			{
@@ -682,8 +675,7 @@ void SolInternalCall::buildSequencedArgs(
 						m_ctx, m_scope, *sortedArgs[i], m_loc))
 					return off;
 			auto v = buildExpr(*sortedArgs[i]);
-			if (_funcDef && paramIdx < _funcDef->parameters().size()
-				&& _funcDef->parameters()[paramIdx]->referenceLocation() != VariableDeclaration::Location::Storage)
+			if (parameterType && !parameterType->dataStoredIn(DataLocation::Storage))
 				v = StorageMapper::makePartialBoxReadWithDefault(
 					m_ctx.typeMapper, std::move(v), m_ctx.preEffects(), m_loc);
 			// Slot mode: a storage-ref arg bound to a VALUE (memory) param
@@ -694,11 +686,10 @@ void SolInternalCall::buildSequencedArgs(
 					m_ctx, m_scope, std::move(v),
 					sortedArgs[i]->annotation().type,
 					paramTypes[paramIdx], m_loc);
-			if (_funcDef && paramIdx < _funcDef->parameters().size()
-				&& paramIdx < paramTypes.size())
+			if (parameterType && paramIdx < paramTypes.size())
 				v = builder::ConversionPlan{
 					sortedArgs[i]->annotation().type,
-					_funcDef->parameters()[paramIdx]->type(),
+					parameterType,
 					paramTypes[paramIdx],
 					builder::ConversionPlan::Context::Argument}.emit(
 						std::move(v), m_loc);
@@ -709,8 +700,8 @@ void SolInternalCall::buildSequencedArgs(
 		}, /*_conditional=*/false);
 		ca.value = std::move(lowered.value);
 		argDeltas.push_back(std::move(lowered.effects));
-		argMayWrite.push_back(builder::EffectScan::mayWrite(*sortedArgs[i], m_ctx, m_scope));
-		call->args.push_back(std::move(ca));
+		argMayWrite.push_back(builder::EffectScan::mayWrite(*sortedArgs[i], m_ctx));
+		args.push_back(std::move(ca));
 	}
 
 	// Re-emit captured arg effects in arg order. With no write-backs and no
@@ -724,21 +715,21 @@ void SolInternalCall::buildSequencedArgs(
 	{
 		for (size_t ai = 0; ai < argDeltas.size(); ++ai)
 		{
-			bool laterEffects = false;
+			bool laterEffects = followingEffects;
 			for (size_t aj = ai + 1; aj < argDeltas.size(); ++aj)
 				laterEffects = laterEffects
 					|| !argDeltas[aj].empty() || argMayWrite[aj];
 			bool pin = (laterEffects || !argDeltas[ai].post.empty())
-				&& call->args[ai].value
-				&& call->args[ai].value->wtype
-				&& call->args[ai].value->wtype->immutable();
-			call->args[ai].value = m_ctx.emitSequencedOperand(
-				std::move(argDeltas[ai]), std::move(call->args[ai].value), pin, m_loc);
+				&& args[ai].value
+				&& args[ai].value->wtype
+				&& args[ai].value->wtype->immutable();
+			args[ai].value = m_ctx.emitSequencedOperand(
+				std::move(argDeltas[ai]), std::move(args[ai].value), pin, m_loc);
 		}
 	}
 	if (plan)
 		for (auto pi: plan->offsetParams)
-			call->args.push_back({std::nullopt, offsets.at(pi)});
+			args.push_back({std::nullopt, offsets.at(pi)});
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::offsetForArg(
@@ -848,22 +839,17 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		&& functionType->kind() != FunctionType::Kind::External
 		? &m_ctx.typeMapper.analysis().parameterMutations(m_ctx.currentContract, *_funcDef)
 		: nullptr;
-	auto call = awst::makeSubroutineCall(std::move(_target), _returnType, m_loc);
+	auto const* plan = _funcDef
+		? &m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract) : nullptr;
+	auto const* target = std::get_if<awst::InstanceMethodTarget>(&_target);
+	bool const abiEntry = _funcDef && _funcDef->isPartOfExternalInterface() && target
+		&& target->memberName == eb::CallResolver::resolveMethodName(m_ctx, *_funcDef);
+	auto const* emittedReturn = abiEntry
+		? m_ctx.typeMapper.functionReturnPlan(*_funcDef).wireType
+		: plan ? plan->augmentReturn(m_ctx.typeMapper, _returnType) : _returnType;
+	auto call = awst::makeSubroutineCall(std::move(_target), emittedReturn, m_loc);
 
-	// Collect param types for coercion; detect mapping storage-ref params.
-	std::vector<awst::WType const*> paramTypes;
-	std::set<size_t> mappingStorageParamIndices;
-	std::set<size_t> evmSlotRefParamIndices;
-	std::set<size_t> blobOffsetParamIndices;
-	if (_funcDef)
-		collectSubroutineParamTypes(
-			*_funcDef, paramTypes, mappingStorageParamIndices,
-			evmSlotRefParamIndices, blobOffsetParamIndices);
-
-	buildSequencedArgs(
-		call, _funcDef, _isUsingForCall, paramTypes,
-		mappingStorageParamIndices, evmSlotRefParamIndices,
-		blobOffsetParamIndices);
+	buildSequencedArgs(call->args, _funcDef, _isUsingForCall, &call->target);
 	if (!m_pathSpecs.empty())
 	{
 		// Retarget to the callee specialized on the interior field paths.
@@ -932,13 +918,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 					declaration ? declaration->type() : nullptr);
 			}
 			auto origRet = emitAugmentedCallWriteBacks(
-				m_ctx, call, roots, plan.memoryWriteBackParams,
+				m_ctx, call, _returnType, roots, plan.memoryWriteBackParams,
 				blobWriteBacks, plan, m_loc);
 			return wrapStorageRefResult(std::move(origRet), _funcDef);
 		}
-		auto const* target = std::get_if<awst::InstanceMethodTarget>(&call->target);
-		if (_funcDef->isPartOfExternalInterface() && target
-			&& target->memberName == eb::CallResolver::resolveMethodName(m_ctx, *_funcDef))
+		if (abiEntry)
 		{
 			for (size_t pi = 0; pi < plan.parameters.size(); ++pi)
 			{
@@ -946,401 +930,131 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				call->args[pi].value = parameter.encodeArgument(std::move(call->args[pi].value), m_loc);
 				call->args[pi].name = parameter.wireName();
 			}
-			call->wtype = m_ctx.typeMapper.functionReturnPlan(*_funcDef).wireType;
-			return decodeCallResult(call, _returnType, m_loc);
 		}
 	}
 
-	return wrapStorageRefResult(call, _funcDef);
+	return wrapStorageRefResult(decodeCallResult(call, _returnType, m_loc), _funcDef);
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
-	Identifier const& _ident)
+	Identifier const& identifier)
 {
-	std::string name = _ident.name();
-	auto const* decl = _ident.annotation().referencedDeclaration;
-
-	// Check if this is a function pointer variable call
-	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
-	{
-		if (auto const* initialValue = m_scope.bindings.funcPtrTargets.get(varDecl->id()))
-			if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, *initialValue))
-				return buildSubroutineCall(std::move(resolved->target),
-					returnTypeFrom(resolved->funcDef), resolved->funcDef, false);
-		if (auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type()))
-		{
-			bool isInternal = funcType->kind() == FunctionType::Kind::Internal;
-			bool isExternal = isExternalFunctionPointer(funcType);
-
-			if (isInternal || isExternal)
-			{
-				awst::WType const* ptrWType = isInternal
-					? awst::WType::uint64Type()
-					: m_ctx.typeMapper.map(funcType);
-
-				std::shared_ptr<awst::Expression> ptrExpr;
-				if (varDecl->isStateVariable())
-					// The normal identifier reader owns persistent/transient/slot
-					// dispatch and declaration identity; callable values are no exception.
-					ptrExpr = buildExpr(_ident);
-				else
-				{
-					// Read local by mangled AWST name (name__<declId>; bare reads
-					// unassigned var → puya "used before assignment").
-					auto var = awst::makeVarExpression(
-						m_scope.awstVarName(*varDecl), ptrWType, m_loc);
-					ptrExpr = std::move(var);
-				}
-
-				std::vector<std::shared_ptr<awst::Expression>> args;
-				for (auto const& arg : m_call.arguments())
-					args.push_back(m_ctx.buildExpr(*arg));
-
-				auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
-					m_ctx, std::move(ptrExpr), funcType, std::move(args), m_loc);
-				if (result)
-					return result;
-			}
-
-			// Fallback for unsupported kinds:
-			// emit assert(false) to revert (matches EVM behavior for uninitialized pointers)
-			Logger::instance().warning(
-				"call to function pointer '" + name + "' (state var / unsupported), emitting assert(false)", m_loc);
-			m_ctx.queuePostExpression(awst::makeAssert(
-				awst::makeFalse(m_loc), m_loc, "uninitialized function pointer"), m_loc);
-
-			auto vc = awst::makeVoidConstant(m_loc);
-			return vc;
-		}
-	}
-
-	if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, _ident))
+	if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, identifier))
 		return buildSubroutineCall(std::move(resolved->target),
 			returnTypeFrom(resolved->funcDef), resolved->funcDef, false);
-
-	// Unknown identifier — fallback
-	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
-	return buildSubroutineCall(
-		awst::InstanceMethodTarget{name}, retType, nullptr, false);
+	return buildSubroutineCall(awst::InstanceMethodTarget{identifier.name()},
+		m_ctx.typeMapper.map(m_call.annotation().type), nullptr, false);
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
-	MemberAccess const& _memberAccess)
+	MemberAccess const& member)
 {
-	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
-
-	// `this.x()` for signed int ≤64-bit state var: auto-getter returns
-	// biguint (sign-extension). Match that wtype here.
-	if (auto const* refDecl = _memberAccess.annotation().referencedDeclaration)
-	{
-		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
-		{
-			if (varDecl->isStateVariable() && !varDecl->isConstant())
-			{
-				auto const* solType = varDecl->type();
-				if (auto const* udvt =
-					dynamic_cast<solidity::frontend::UserDefinedValueType const*>(solType))
-					solType = &udvt->underlyingType();
-				if (auto const* intType =
-					dynamic_cast<solidity::frontend::IntegerType const*>(solType))
-					if (intType->isSigned() && intType->numBits() <= 64)
-						retType = awst::WType::biguintType();
-			}
-		}
-	}
-
-	// ARC4's abi.encode envelope must be intercepted before normal argument
-	// lowering; the nested abi.encode supplies Solidity type information only.
-	if (auto arc4Result = eb::Arc4Stdlib::tryHandleCall(
-			m_ctx, _memberAccess, m_call, m_loc))
-		return *arc4Result;
-
-	// AVM stdlib intrinsic intercept: short-circuits library resolution so the
-	// fail-fast bodies in libs/AVM.sol are never used as runtime subroutines.
-	if (auto asaResult = eb::AsaIntrinsics::tryHandleCall(
-			m_ctx, _memberAccess, m_call, m_loc))
-		return *asaResult;
-
-	// Resolve the exact declaration and target together (including self calls).
-	if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, _memberAccess))
+	// Intrinsics consume source expressions and must precede argument lowering.
+	if (auto result = eb::Arc4Stdlib::tryHandleCall(m_ctx, member, m_call, m_loc))
+		return *result;
+	if (auto result = eb::AsaIntrinsics::tryHandleCall(m_ctx, member, m_call, m_loc))
+		return *result;
+	if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, member))
 		return buildSubroutineCall(std::move(resolved->target),
 			returnTypeFrom(resolved->funcDef), resolved->funcDef, resolved->isUsingForCall);
 
-	// Check base type for super/base internal calls
-	auto const* baseType = _memberAccess.expression().annotation().type;
-	bool wasTypeType = false;
-	if (baseType && baseType->category() == Type::Category::TypeType)
+	// A self getter has a solc FunctionType but no FunctionDefinition. Its
+	// emitted return uses the same element plan as PublicGetterBuilder.
+	auto* native = m_ctx.typeMapper.map(m_call.annotation().type);
+	if (auto const* variable = dynamic_cast<VariableDeclaration const*>(
+			member.annotation().referencedDeclaration);
+		variable && eb::CallResolver::plan(m_call).isSelfCall)
 	{
-		wasTypeType = true;
-		auto const* typeType = dynamic_cast<TypeType const*>(baseType);
-		if (typeType) baseType = typeType->actualType();
-	}
-
-	if (baseType && baseType->category() == Type::Category::Contract)
-	{
-		auto const* contractType = dynamic_cast<ContractType const*>(baseType);
-
-		// Base internal call: BaseContract.method() or super.method()
-		if (wasTypeType && contractType)
+		auto const* getter = variable->functionType(false);
+		std::vector<awst::WType const*> wire;
+		for (auto const* type: getter->returnParameterTypes())
+			wire.push_back(planReturnElement(m_ctx.typeMapper, type,
+				abiReturnNativeType(m_ctx.typeMapper, type)).wireType);
+		auto* resultType = wire.size() == 1 ? wire.front()
+			: m_ctx.typeMapper.createType<awst::WTuple>(std::move(wire));
+		auto call = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{member.memberName()}, resultType, m_loc);
+		buildSequencedArgs(call->args, nullptr, false);
+		for (size_t i = 0; i < call->args.size(); ++i)
 		{
-			auto const* refDecl = _memberAccess.annotation().referencedDeclaration;
-			// Function pointer state variable: C.x() where x is function() internal
-			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
+			auto const* type = getter->parameterTypes()[i];
+			if (m_ctx.typeMapper.map(type) == awst::WType::biguintType())
 			{
-				if (auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type()))
-				{
-					if (funcType->kind() == FunctionType::Kind::Internal)
-					{
-						std::shared_ptr<awst::Expression> ptrExpr;
-						if (m_ctx.typeMapper.profile().evmStorageLayout && !varDecl->isConstant()
-							&& !varDecl->immutable()
-							&& varDecl->referenceLocation()
-								!= VariableDeclaration::Location::Transient)
-						{
-							EvmSlotLowering low(m_ctx, m_scope, m_loc);
-							auto addr = low.addrForStateVar(*varDecl);
-							if (!addr)
-								return nullptr;
-							ptrExpr = low.readValue(*addr);
-						}
-						else
-							ptrExpr = m_ctx.storageBackend->emitReadForVar(*varDecl, m_loc);
-
-						std::vector<std::shared_ptr<awst::Expression>> args;
-						for (auto const& arg : m_call.arguments())
-							args.push_back(m_ctx.buildExpr(*arg));
-
-						auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
-							m_ctx, std::move(ptrExpr), funcType, std::move(args), m_loc);
-						if (result)
-							return result;
-					}
-				}
+				auto integer = SolIntType::fromSol(type);
+				if (integer && integer->isSigned && integer->bits < 256)
+					call->args[i].value = TypeCoercion::maskUnsignedToWidth(
+						std::move(call->args[i].value), integer->bits, m_loc);
+				call->args[i].value = awst::makeARC4Encode(std::move(call->args[i].value),
+					m_ctx.typeMapper.createType<awst::ARC4UIntN>(integer ? integer->bits : 256), m_loc);
 			}
 		}
+		return decodeCallResult(std::move(call), native, m_loc);
 	}
-
-	// Struct field fn-ptr `s.fn(...)`: InstanceMethodTarget{fn} would call
-	// fn on current contract (wrong). Read the field → ARC4Decode if needed
-	// → FunctionPointerBuilder dispatch.
-	if (auto const* refDecl = _memberAccess.annotation().referencedDeclaration)
-	{
-		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
-		{
-			auto const* funcType = dynamic_cast<FunctionType const*>(varDecl->type());
-			bool isStructField = varDecl->scope()
-				&& dynamic_cast<StructDefinition const*>(varDecl->scope());
-			if (funcType && isStructField)
-			{
-				auto baseExpr = m_ctx.buildExpr(_memberAccess.expression());
-				auto* ptrNativeType = eb::FunctionPointerBuilder::mapFunctionType(
-					m_ctx, funcType);
-				std::shared_ptr<awst::Expression> ptrExpr;
-				if (baseExpr->wtype && baseExpr->wtype->kind() == awst::WTypeKind::ARC4Struct)
-				{
-					auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(baseExpr->wtype);
-					awst::WType const* arc4FieldType = nullptr;
-					for (auto const& [fname, ftype] : arc4Struct->fields())
-						if (fname == _memberAccess.memberName())
-						{
-							arc4FieldType = ftype;
-							break;
-						}
-					auto field = awst::makeFieldExpression(std::move(baseExpr), _memberAccess.memberName(), arc4FieldType ? arc4FieldType : ptrNativeType, m_loc);
-					if (arc4FieldType && arc4FieldType != ptrNativeType)
-					{
-						auto decode = awst::makeARC4Decode(std::move(field), ptrNativeType, m_loc);
-						ptrExpr = std::move(decode);
-					}
-					else
-						ptrExpr = std::move(field);
-				}
-				else
-				{
-					auto field = awst::makeFieldExpression(std::move(baseExpr), _memberAccess.memberName(), ptrNativeType, m_loc);
-					ptrExpr = std::move(field);
-				}
-
-				std::vector<std::shared_ptr<awst::Expression>> args;
-				for (auto const& arg : m_call.arguments())
-					args.push_back(m_ctx.buildExpr(*arg));
-
-				auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
-					m_ctx, std::move(ptrExpr), funcType, std::move(args), m_loc);
-				if (result)
-					return result;
-			}
-		}
-	}
-
-	// Fallback: InstanceMethodTarget
 	return buildSubroutineCall(
-		awst::InstanceMethodTarget{_memberAccess.memberName()}, retType, nullptr, false);
+		awst::InstanceMethodTarget{member.memberName()}, native, nullptr, false);
 }
 
-std::shared_ptr<awst::Expression> SolInternalCall::resolveFunctionPointerCast(
-	FunctionCall const& _innerCall)
+std::shared_ptr<awst::Expression> SolInternalCall::buildFunctionPointerCall(
+	Expression const& callee, FunctionType const& type)
 {
-	if (_innerCall.arguments().size() == 1)
-	{
-		if (auto const* argId = dynamic_cast<Identifier const*>(_innerCall.arguments()[0].get()))
+	// Retain the direct-call reference conventions only for immutable source
+	// facts. A mutable local must read its runtime pointer, even before the
+	// first syntactically encountered write or through a branch/loop.
+	if (auto const* identifier = dynamic_cast<Identifier const*>(&callee))
+		if (auto const* declaration = identifier->annotation().referencedDeclaration)
 		{
-			if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, *argId))
-				return buildSubroutineCall(std::move(resolved->target),
-					returnTypeFrom(resolved->funcDef), resolved->funcDef, false);
+			auto const& stable = m_ctx.typeMapper.analysis().stableFunctionPointers;
+			if (auto it = stable.find(declaration->id()); it != stable.end())
+			{
+				auto const& initializer = SolcFacts::functionExpression(*it->second);
+				auto const* member = dynamic_cast<MemberAccess const*>(&initializer);
+				auto const* receiver = member ? dynamic_cast<Identifier const*>(&member->expression()) : nullptr;
+				// A foreign receiver remains an actual inner application call.
+				if (type.kind() == FunctionType::Kind::Internal || (receiver && receiver->name() == "this"))
+					if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, initializer))
+						return buildSubroutineCall(std::move(resolved->target),
+							returnTypeFrom(resolved->funcDef), resolved->funcDef, false);
+			}
 		}
-	}
 
-	Logger::instance().error("could not resolve function call target", m_loc);
-	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
-	return buildSubroutineCall(
-		awst::InstanceMethodTarget{"unknown"}, retType, nullptr, false);
+	// Identifier/member/index readers own storage and ARC4 field decoding.
+	// Capture effects before emitting either operand group: legacy solc
+	// evaluates internal-call arguments before its callee; IR and external
+	// calls evaluate the callee first.
+	auto pointer = m_ctx.lower(callee, false);
+	auto const* wanted = eb::FunctionPointerBuilder::mapFunctionType(m_ctx, &type);
+	if (pointer.value && !awst::structurallyEquivalent(pointer.value->wtype, wanted))
+		pointer.value = decodeCallResult(std::move(pointer.value), wanted, m_loc);
+	bool const calleeFirst = m_ctx.viaIRSequencing || isExternalFunctionPointer(&type);
+	auto emitPointer = [&]() {
+		pointer.value = m_ctx.emitSequencedOperand(std::move(pointer.effects),
+			std::move(pointer.value), true, m_loc);
+	};
+	if (calleeFirst) emitPointer();
+	std::vector<awst::CallArg> arguments;
+	// Even a plain pointer read can observe a change made by an argument's
+	// value expression (not just its queued effects). Finish args first on legacy.
+	buildSequencedArgs(arguments, nullptr, false, nullptr, !calleeFirst);
+	if (!calleeFirst) emitPointer();
+	std::vector<std::shared_ptr<awst::Expression>> values;
+	for (auto& argument: arguments)
+		values.push_back(std::move(argument.value));
+	return eb::FunctionPointerBuilder::buildFunctionPointerCall(
+		m_ctx, std::move(pointer.value), &type, std::move(values), m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 {
-	auto const& funcExpr = funcExpression();
-
-	if (auto const* identifier = dynamic_cast<Identifier const*>(&funcExpr))
+	auto const plan = eb::CallResolver::plan(m_call);
+	if (plan.isFunctionPointer && plan.functionType)
+		return buildFunctionPointerCall(*plan.callee, *plan.functionType);
+	if (auto const* identifier = dynamic_cast<Identifier const*>(plan.callee))
 		return resolveIdentifierCall(*identifier);
-
-	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&funcExpr))
-	{
-		auto result = resolveMemberAccessCall(*memberAccess);
-		if (auto const* base = dynamic_cast<Identifier const*>(&memberAccess->expression());
-			base && base->name() == "this")
-			result = decodeThisCallReturn(std::move(result));
-		return result;
-	}
-
-	// Generic fn-ptr call: evaluate expression to get pointer ID, dispatch.
-	// Before the cast resolver so `x()()` (nested fn-ptr) dispatches correctly.
-	{
-		auto const* exprType = funcExpr.annotation().type;
-		auto const* funcType = dynamic_cast<FunctionType const*>(exprType);
-		if (funcType
-			&& (funcType->kind() == FunctionType::Kind::Internal
-				|| isExternalFunctionPointer(funcType)))
-		{
-			auto ptrExpr = m_ctx.buildExpr(funcExpr);
-			auto* wantedType = eb::FunctionPointerBuilder::mapFunctionType(
-				m_ctx, funcType);
-			// Shape-compare (not pointer): TypeMapper/FunctionPointerBuilder
-			// may create distinct BytesWType instances for the same shape.
-			auto shapeMatches = [](awst::WType const* _a, awst::WType const* _b) {
-				if (_a == _b) return true;
-				if (!_a || !_b) return false;
-				if (_a->kind() != _b->kind()) return false;
-				if (_a->kind() == awst::WTypeKind::Bytes)
-				{
-					auto const* ab = static_cast<awst::BytesWType const*>(_a);
-					auto const* bb = static_cast<awst::BytesWType const*>(_b);
-					return ab->length() == bb->length();
-				}
-				return _a == _b;
-			};
-			if (ptrExpr && !shapeMatches(ptrExpr->wtype, wantedType))
-			{
-				// Coerce ARC4-encoded fn-ptr to its native profile-selected type.
-				auto const* srcKind = ptrExpr->wtype;
-				bool srcIsArc4 = srcKind
-					&& (srcKind->kind() == awst::WTypeKind::ARC4UIntN
-						|| srcKind->kind() == awst::WTypeKind::ARC4StaticArray);
-				if (srcIsArc4)
-				{
-					auto decode = awst::makeARC4Decode(std::move(ptrExpr), wantedType, m_loc);
-					ptrExpr = std::move(decode);
-				}
-			}
-			if (ptrExpr && shapeMatches(ptrExpr->wtype, wantedType))
-			{
-				std::vector<std::shared_ptr<awst::Expression>> args;
-				for (auto const& arg : m_call.arguments())
-					args.push_back(m_ctx.buildExpr(*arg));
-
-				auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
-					m_ctx, std::move(ptrExpr), funcType, std::move(args), m_loc);
-				if (result)
-					return result;
-			}
-		}
-	}
-
-	if (auto const* innerCall = dynamic_cast<FunctionCall const*>(&funcExpr))
-		return resolveFunctionPointerCast(*innerCall);
-
-	// Fallback: unresolvable call
+	if (auto const* member = dynamic_cast<MemberAccess const*>(plan.callee))
+		return resolveMemberAccessCall(*member);
 	Logger::instance().error("could not resolve function call target", m_loc);
-	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
-	return buildSubroutineCall(
-		awst::InstanceMethodTarget{"unknown"}, retType, nullptr, false);
-}
-
-std::shared_ptr<awst::Expression> SolInternalCall::decodeThisCallReturn(
-	std::shared_ptr<awst::Expression> _call)
-{
-	auto* call = dynamic_cast<awst::SubroutineCallExpression*>(_call.get());
-	auto const* solType = m_call.annotation().type;
-	if (!call || !solType || !call->wtype || call->wtype == awst::WType::voidType())
-		return _call;
-	auto& tm = m_ctx.typeMapper;
-	auto decodable = [](ReturnWireElem const& _e, awst::WType const* _native) {
-		return _e.wireType && _native && _e.wireType != _native
-			&& _e.wireType->kind() == awst::WTypeKind::ARC4UIntN;
-	};
-	// Signed narrow ints travel as arc4.uint256: decode to biguint, then narrow
-	// to the 64-bit two's-complement form the native code expects.
-	auto decodeElem = [&](std::shared_ptr<awst::Expression> _value,
-		ReturnWireElem const& _e, awst::WType const* _native) -> std::shared_ptr<awst::Expression> {
-		if (_e.isSigned && _native == awst::WType::uint64Type())
-			return TypeCoercion::implicitNumericCast(
-				awst::makeARC4Decode(std::move(_value), awst::WType::biguintType(), m_loc),
-				awst::WType::uint64Type(), m_loc);
-		return awst::makeARC4Decode(std::move(_value), _native, m_loc);
-	};
-	auto const* solTuple = dynamic_cast<TupleType const*>(solType);
-	auto const* nativeTuple = dynamic_cast<awst::WTuple const*>(call->wtype);
-	if (solTuple && nativeTuple)
-	{
-		size_t const n = std::min(nativeTuple->types().size(), solTuple->components().size());
-		std::vector<ReturnWireElem> elems;
-		std::vector<awst::WType const*> wire;
-		bool any = false;
-		for (size_t i = 0; i < n; ++i)
-		{
-			auto const* field = solTuple->components()[i];
-			auto const* native = nativeTuple->types()[i];
-			elems.push_back(field
-				? planReturnElement(tm, field, abiReturnNativeType(tm, field)) : ReturnWireElem{});
-			bool const dec = decodable(elems.back(), native);
-			wire.push_back(dec ? elems.back().wireType : native);
-			any = any || dec;
-		}
-		if (!any || n != nativeTuple->types().size())
-			return _call;
-		auto const* nativeType = call->wtype;
-		call->wtype = tm.createType<awst::WTuple>(wire, std::nullopt);
-		auto pinned = awst::makeSingleEvaluation(_call, call->wtype, awst::nextSingleEvalId(), m_loc);
-		auto result = awst::makeTupleExpression(nativeType, m_loc);
-		for (size_t i = 0; i < n; ++i)
-		{
-			std::shared_ptr<awst::Expression> item =
-				awst::makeTupleItem(pinned, static_cast<int>(i), wire[i], m_loc);
-			if (decodable(elems[i], nativeTuple->types()[i]))
-				item = decodeElem(std::move(item), elems[i], nativeTuple->types()[i]);
-			result->items.push_back(std::move(item));
-		}
-		result->wtype = nativeType;
-		return result;
-	}
-	if (solTuple || nativeTuple)
-		return _call;
-	auto elem = planReturnElement(tm, solType, abiReturnNativeType(tm, solType));
-	auto const* native = call->wtype;
-	if (!decodable(elem, native))
-		return _call;
-	call->wtype = elem.wireType;
-	return decodeElem(_call, elem, native);
+	return buildSubroutineCall(awst::InstanceMethodTarget{"unknown"},
+		m_ctx.typeMapper.map(m_call.annotation().type), nullptr, false);
 }
 
 } // namespace puyasol::builder::sol_ast

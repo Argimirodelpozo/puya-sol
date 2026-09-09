@@ -349,118 +349,6 @@ void AWSTBuilder::buildFreestandingParams(
 	}
 }
 
-/// buildFreestandingSubroutine phase: register param context on the FunctionContext (mapping-key params, slot handles, asm …
-void AWSTBuilder::registerFreestandingParamContext(
-	solidity::frontend::FunctionDefinition const& _func,
-	sol_ast::FunctionContext& fnCtx,
-	awst::Subroutine const& sub,
-	std::set<size_t> const& slotParams,
-	std::set<size_t> const& mappingStorageParams,
-	std::set<size_t> const& blobAggParams,
-	std::set<size_t> const& evmSlotRefParams)
-{
-	// Register mapping-storage-ref params in the shared declaration bindings.
-	for (size_t idx: mappingStorageParams)
-	{
-		auto const& param = _func.parameters()[idx];
-		fnCtx.scope.bindings.mappingKeyParams.set(param->id(), param->name());
-	}
-	auto const& plan = m_session.typeMapper.callBoundaryPlan(_func);
-	for (auto pi: plan.offsetParams)
-		fnCtx.scope.bindings.structRefOffsets.set(plan.parameters[pi].declaration->id(), plan.parameters[pi].offsetName());
-
-	// --evm-storage-layout: storage params are biguint slot handles.
-	for (size_t idx: evmSlotRefParams)
-	{
-		auto const& param = _func.parameters()[idx];
-		if (param->name().empty())
-			continue;
-		fnCtx.scope.bindings.slotStorageRefs.set(param->id(), awst::makeVarExpression(
-			param->name(), awst::WType::biguintType(), awst::SourceLocation{}));
-	}
-
-	// Param/return context for inline assembly and sub-word integer truncation.
-	{
-		std::vector<std::pair<std::string, awst::WType const*>> paramContext;
-		std::map<std::string, unsigned> bitWidths;
-		std::map<std::string, awst::WType const*> boxKeyStructParams;
-		for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
-		{
-			auto const& param = _func.parameters()[pi];
-			std::string pname = param->name();
-			if (pname.empty())
-				pname = "_param" + std::to_string(pi);
-			auto* ptype = evmSlotRefParams.count(pi) ? awst::WType::biguintType()
-				: mappingStorageParams.count(pi) ? awst::WType::bytesType()
-				: blobAggParams.count(pi) ? awst::WType::uint64Type()
-				: m_session.typeMapper.map(param->type());
-			paramContext.emplace_back(pname, ptype);
-			// Struct storage-ref param used via `.slot` in asm: record the ARC4
-			// struct wtype so `param.slot` resolves to a BoxValueExpression over
-			// the box-key handle (the bytes param value). Slot mode: the param
-			// IS the biguint slot — no sentinel.
-			if (slotParams.count(pi) && !m_session.profile.evmStorageLayout)
-				boxKeyStructParams[pname] = m_session.typeMapper.map(param->type());
-			if (auto it = builder::SolIntType::fromSol(param->annotation().type); it && it->bits < 64)
-				bitWidths[pname] = it->bits;
-		}
-		for (auto const& rp: _func.returnParameters())
-		{
-			if (auto it = builder::SolIntType::fromSol(rp->annotation().type); it && it->bits < 64)
-				bitWidths[rp->name()] = it->bits;
-		}
-		fnCtx.params = paramContext;
-		fnCtx.returnType = sub.returnType;
-		fnCtx.paramBitWidths = bitWidths;
-		fnCtx.boxKeyStructParams = std::move(boxKeyStructParams);
-	}
-
-}
-
-/// buildFreestandingSubroutine phase: register storage/blob return params and blob param offsets on the FunctionContext.
-void AWSTBuilder::registerFreestandingReturnParams(
-	solidity::frontend::FunctionDefinition const& _func,
-	sol_ast::FunctionContext& fnCtx,
-	std::set<size_t> const& blobAggParams)
-{
-	auto const& returnParams = _func.returnParameters();
-	// Register mapping storage-ref return params (e.g. `returns (mapping(K=>V) storage r)`):
-	// r[k] box-accesses using r's runtime bytes value as the holder prefix.
-	// Slot mode: named storage returns are biguint slot handles instead.
-	for (auto const& rp: returnParams)
-	{
-		if (rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Storage
-			|| rp->name().empty())
-			continue;
-		if (m_session.profile.evmStorageLayout || storageRefReturnUsesSlot(&_func, m_session.analysis))
-			fnCtx.scope.bindings.slotStorageRefs.set(rp->id(), awst::makeVarExpression(
-				rp->name(), awst::WType::biguintType(), awst::SourceLocation{}));
-		else if (dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
-			|| storageRefReturnIsBytesKeyed(&_func, m_session.analysis))
-			fnCtx.scope.bindings.mappingKeyParams.set(rp->id(), rp->name());
-	}
-
-	// Register named memory return params >4KB as blob-backed (pointer model).
-	for (auto const& rp: returnParams)
-	{
-		if (rp->name().empty()
-			|| rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Memory)
-			continue;
-		auto const* rpTypeB = m_session.typeMapper.map(rp->type());
-		if (memoryUsesBlob(rpTypeB))
-			fnCtx.scope.bindings.blobAggregates.set(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
-	}
-
-	// Memory aggregate params >4KB: offset var = param name (caller passed it); no FMP bump.
-	for (size_t idx: blobAggParams)
-	{
-		auto const& param = _func.parameters()[idx];
-		std::string pname = param->name().empty() ? "_param" + std::to_string(idx) : param->name();
-		fnCtx.scope.bindings.blobAggregates.set(param->id(), pname);
-	}
-
-}
-
 /// buildFreestandingSubroutine phase: zero-initialize named return variables (Solidity implicit init) + blob-backed memory-return …
 void AWSTBuilder::prependFreestandingReturnInits(
 	solidity::frontend::FunctionDefinition const& _func,
@@ -529,10 +417,6 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		sub->documentation.description = *_func.documentation()->text();
 
 	auto const& plan = m_session.typeMapper.callBoundaryPlan(_func);
-	auto const& slotParams = plan.asmSlotParams;
-	auto const& mappingStorageParams = plan.keyParams;
-	auto const& blobAggParams = plan.blobParams;
-	auto const& evmSlotRefParams = plan.slotParams;
 	auto const& storageParamIndices = plan.storageWriteBackParams;
 	auto const& memoryRefParamIndices = plan.memoryWriteBackParams;
 	buildFreestandingParams(_func, _sourceFile, *sub);
@@ -552,20 +436,12 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 	sol_ast::TranslationContext tr{exprBuilder, m_session.typeMapper, _sourceFile};
 	auto trGuard = exprBuilder.pushScopeRaii(&tr.scope);
-	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
-	fnCtx.callableId = _func.id();
-	for (auto const& rp: _func.returnParameters())
-		fnCtx.returnSolTypes.push_back(rp->type());
+	sol_ast::FunctionContext fnCtx{tr, _func, sub->args, sub->returnType};
 	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx.scope);
-
-	registerFreestandingParamContext(_func, fnCtx, *sub, slotParams,
-		mappingStorageParams, blobAggParams, evmSlotRefParams);
 
 	// Construct the function-body block context for the body.
 	sol_ast::BlockContext blk{fnCtx};
 	auto blkGuard = exprBuilder.pushScopeRaii(&blk.scope);
-
-	registerFreestandingReturnParams(_func, fnCtx, blobAggParams);
 
 	// Path specialization: the reference param aliases the field path inside
 	// the enclosing box the caller passed (its key travels as the bytes param).

@@ -31,15 +31,11 @@ private:
 	std::shared_ptr<awst::Expression> resolveMemberAccessCall(
 		solidity::frontend::MemberAccess const& _memberAccess);
 
-	/// `this.f()` calls the ABI method itself, whose return is the WIRE shape
-	/// (arc4.uint<bits> sub-words, sign-extended uint256 for signed ints,
-	/// arc4.uintN for wide unsigned); decode numeric elements back to native.
-	std::shared_ptr<awst::Expression> decodeThisCallReturn(
-		std::shared_ptr<awst::Expression> _call);
-
-	/// Resolve a function pointer cast pattern: _castToView(fn)(args).
-	std::shared_ptr<awst::Expression> resolveFunctionPointerCast(
-		solidity::frontend::FunctionCall const& _innerCall);
+	/// All function-valued expressions use the same argument lowering and
+	/// dispatch path. Only proven-stable direct initializers are specialized.
+	std::shared_ptr<awst::Expression> buildFunctionPointerCall(
+		solidity::frontend::Expression const& _callee,
+		solidity::frontend::FunctionType const& _type);
 
 	/// Build the SubroutineCallExpression with arguments and type coercion.
 	std::shared_ptr<awst::Expression> buildSubroutineCall(
@@ -53,25 +49,16 @@ private:
 	std::shared_ptr<awst::Expression> wrapStorageRefResult(
 		std::shared_ptr<awst::Expression> _result,
 		solidity::frontend::FunctionDefinition const* _funcDef);
-	/// Param wtypes for coercion + the mapping/slot storage-ref index sets.
-	void collectSubroutineParamTypes(
-		solidity::frontend::FunctionDefinition const& _funcDef,
-		std::vector<awst::WType const*>& paramTypes,
-		std::set<size_t>& mappingStorageParamIndices,
-		std::set<size_t>& evmSlotRefParamIndices,
-		std::set<size_t>& blobOffsetParamIndices);
 	/// Box-key prefix for a mapping/storage-ref argument.
 	std::shared_ptr<awst::Expression> extractMappingKeyPrefix(
 		solidity::frontend::Expression const& argExpr);
 	/// Build all call args (using-for receiver first) with EVM left-to-right effect sequencing.
 	void buildSequencedArgs(
-		std::shared_ptr<awst::SubroutineCallExpression> const& call,
+		std::vector<awst::CallArg>& args,
 		solidity::frontend::FunctionDefinition const* _funcDef,
 		bool _isUsingForCall,
-		std::vector<awst::WType const*> const& paramTypes,
-		std::set<size_t> const& mappingStorageParamIndices,
-		std::set<size_t> const& evmSlotRefParamIndices,
-		std::set<size_t> const& blobOffsetParamIndices);
+		awst::SubroutineTarget const* target = nullptr,
+		bool followingEffects = false);
 	/// Companion byte offset for an offset-convention struct-ref argument.
 	std::shared_ptr<awst::Expression> offsetForArg(
 		solidity::frontend::Expression const* argExpr);

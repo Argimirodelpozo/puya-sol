@@ -297,8 +297,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 	auto right = std::move(loweredRight.value);
 	auto ld = std::move(loweredLeft.effects);
 	auto rd = std::move(loweredRight.effects);
-	bool const staticNeed = builder::EffectScan::mayWrite(m_binOp.leftExpression(), m_ctx, m_scope)
-		|| builder::EffectScan::mayWrite(m_binOp.rightExpression(), m_ctx, m_scope);
+	bool const staticNeed = builder::EffectScan::mayWrite(m_binOp.leftExpression(), m_ctx)
+		|| builder::EffectScan::mayWrite(m_binOp.rightExpression(), m_ctx);
 	if (m_ctx.viaIRSequencing)
 	{
 		// The earlier value must be consumed before later queued/inline writes.

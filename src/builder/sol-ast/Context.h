@@ -121,8 +121,6 @@ public:
 	}
 	void set(int64_t _id, T _value) { m_values.insert_or_assign(_id, std::move(_value)); }
 	void erase(int64_t _id) { m_values.erase(_id); }
-	void clear() { m_values.clear(); }
-	auto const& all() const { return m_values; }
 
 private:
 	std::unordered_map<int64_t, T> m_values;
@@ -135,10 +133,6 @@ struct ScopeState
 {
 	/// Local `T storage p = …` aliases. Tag + expression; see StorageAlias.
 	DeclBindings<StorageAlias> storageAliases;
-
-	/// Known local fn-ptr initializer. Preserve the expression so direct-call
-	/// lowering retains solc's static/virtual/super lookup and lexical owner.
-	DeclBindings<solidity::frontend::Expression const*> funcPtrTargets;
 
 	/// Slot-based storage refs for local pointers (`T storage p = base[i]`).
 	DeclBindings<std::shared_ptr<awst::Expression>> slotStorageRefs;
@@ -272,14 +266,6 @@ struct FunctionContext
 	bool returnAsmWrap = false;
 	std::vector<ReturnWireElem> returnWirePlan;
 
-	// Translation inputs previously held by a second translation context. Keeping
-	// them on the actual function scope makes one object the source of truth for
-	// body translation, modifier expansion, and implicit-return synthesis.
-	std::vector<solidity::frontend::VariableDeclaration const*> namedReturns;
-	std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParams;
-	std::vector<solidity::frontend::VariableDeclaration const*> blobAggParams;
-	std::vector<solidity::frontend::VariableDeclaration const*> slotRefParams;
-
 	/// Calldata params whose mutable (__cd_off_x, __cd_len_x) pointer locals are
 	/// LIVE — seeded at an assembly block's entry or written via `x.offset := V`.
 	/// Shared across the function's per-block AssemblyBuilders (else every block
@@ -301,6 +287,13 @@ struct FunctionContext
 		  returnType(_returnType),
 		  paramBitWidths(std::move(_paramBitWidths))
 	{}
+
+	/// Bind a source function using its solc declaration, physical boundary plan,
+	/// and actual emitted arguments (wire-remapped for ABI methods).
+	FunctionContext(TranslationContext& _tr,
+		solidity::frontend::FunctionDefinition const& _function,
+		std::vector<awst::SubroutineArgument> const& _args,
+		awst::WType const* _returnType);
 
 	// The scope view refers to this function; construct it in its final location.
 	FunctionContext(FunctionContext const&) = delete;

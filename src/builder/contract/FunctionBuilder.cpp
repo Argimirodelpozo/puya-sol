@@ -351,115 +351,6 @@ void ContractBuilder::buildMethodSignature(
 	}
 }
 
-/// buildFunction phase: seed the assembly-translation function context from the (ARC4-remapped) method args plus sub-64-bit widths …
-void ContractBuilder::setupBodyParamContext(
-	awst::ContractMethod const& method,
-	solidity::frontend::FunctionDefinition const& _func)
-{
-	// Use ARC4-remapped types from method.args for the assembly translation context.
-	{
-		std::vector<std::pair<std::string, awst::WType const*>> paramContext;
-		std::map<std::string, unsigned> bitWidths;
-		std::map<std::string, solidity::frontend::Type const*> paramSolTypes;
-		for (auto const& arg: method.args)
-			paramContext.emplace_back(arg.name, arg.wtype);
-		// Collect sub-64-bit widths from function params and return params
-		for (auto const& p: _func.parameters())
-		{
-			paramSolTypes[p->name()] = p->annotation().type;
-			if (auto it = builder::SolIntType::fromSol(p->annotation().type);
-				it && it->bits < 64)
-				bitWidths[p->name()] = it->bits;
-		}
-		for (auto const& rp: _func.returnParameters())
-		{
-			if (auto it = builder::SolIntType::fromSol(rp->annotation().type);
-				it && it->bits < 64)
-				bitWidths[rp->name()] = it->bits;
-		}
-		setFunctionContext(paramContext, method.returnType, bitWidths, paramSolTypes);
-		for (auto const& rp: _func.returnParameters())
-			m_functionCtx->returnSolTypes.push_back(rp->type());
-	}
-
-
-}
-
-/// buildFunction phase: register named returns, mapping-storage-ref params, slot-handle params, and blob-backed memory params on …
-void ContractBuilder::registerBodyRefParams(
-	solidity::frontend::FunctionDefinition const& _func,
-	std::set<int64_t> const& asmSlotParamIds)
-{
-	auto const& returnParams = _func.returnParameters();
-	// Stash named-return decls for buildBlock (registers >4KB memory returns as blob-backed).
-	std::vector<solidity::frontend::VariableDeclaration const*> namedReturnDecls;
-	for (auto const& rp: returnParams)
-		if (!rp->name().empty())
-			namedReturnDecls.push_back(rp.get());
-	setNamedReturns(namedReturnDecls);
-
-	// Mapping-storage-ref params: stash for buildBlock to register as mapping-key-params
-	// so `m[k]` resolves the dynamic box-key prefix from the runtime bytes value of m.
-	// Covers both input params (storage m) and named returns (storage r assigned r=m1).
-	std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParamDecls;
-	auto isMappingStorageRef = [&](solidity::frontend::VariableDeclaration const* p) {
-		return !m_typeMapper.profile().evmStorageLayout   // slot handles replace box-key prefixes
-			&& p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& (isBoxKeyedStorageRef(p->type(), m_typeMapper.analysis())
-				|| asmSlotParamIds.count(p->id()))
-			&& !p->name().empty();
-	};
-	auto const& callPlan = m_typeMapper.callBoundaryPlan(_func, m_currentContract);
-	for (auto pi: callPlan.keyParams)
-		mappingKeyParamDecls.push_back(callPlan.parameters[pi].declaration);
-	bool const slotReturns = m_typeMapper.profile().evmStorageLayout
-		|| storageRefReturnUsesSlot(&_func, m_typeMapper.analysis());
-	for (auto const& rp: returnParams)
-		// Also register box-keyed storage-ref named returns (e.g. V4 Position.State
-		// storage): storageRefReturnIsBytesKeyed catches the mapping-holder case
-		// that containsMappingType misses for plain-struct elements.
-		if (!slotReturns && (isMappingStorageRef(rp.get())
-			|| (rp->referenceLocation()
-					== solidity::frontend::VariableDeclaration::Location::Storage
-				&& !rp->name().empty() && storageRefReturnIsBytesKeyed(&_func, m_typeMapper.analysis()))))
-			mappingKeyParamDecls.push_back(rp.get());
-	setMappingKeyParams(mappingKeyParamDecls);
-	for (auto const& p: _func.parameters())
-		if (asmSlotParamIds.count(p->id()) && !p->name().empty()
-			&& !m_typeMapper.profile().evmStorageLayout)
-			m_functionCtx->boxKeyStructParams[p->name()] =
-				m_typeMapper.map(p->type());
-
-	// --evm-storage-layout: storage params + named storage returns are
-	// biguint slot handles; register so body access resolves through them.
-	std::vector<solidity::frontend::VariableDeclaration const*> slotRefParamDecls;
-	if (m_typeMapper.profile().evmStorageLayout)
-	{
-		for (auto const& p: _func.parameters())
-			if (p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& !p->name().empty())
-				slotRefParamDecls.push_back(p.get());
-	}
-	if (slotReturns)
-	{
-		for (auto const& rp: returnParams)
-			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& !rp->name().empty())
-				slotRefParamDecls.push_back(rp.get());
-	}
-	setSlotRefParams(slotRefParamDecls);
-
-	// Blob-backed (>4KB) memory params: stash so body's p.field[i] routes to the blob.
-	std::vector<solidity::frontend::VariableDeclaration const*> blobAggParamDecls;
-	for (auto const& p: _func.parameters())
-		if (p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-			&& !p->name().empty()
-			&& memoryUsesBlob(m_typeMapper.map(p->type())))
-			blobAggParamDecls.push_back(p.get());
-	setBlobAggParams(blobAggParamDecls);
-
-}
-
 // ── Body finishing shared with buildFreestandingSubroutine (ReturnFinishing.h) ──
 
 void emitNamedReturnInits(
@@ -807,10 +698,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	awst::ContractMethod method;
 	bool const funcHasInlineAssembly =
 		m_typeMapper.analysis().callablesWithInlineAssembly.count(_func.id()) != 0;
-	std::set<int64_t> asmSlotParamIds;
-	for (auto const& param: _func.parameters())
-		if (m_typeMapper.analysis().asmSlotReferenceDeclarations.count(param->id()))
-			asmSlotParamIds.insert(param->id());
 
 	buildMethodSignature(method, _func, _nameOverride);
 
@@ -844,7 +731,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 	if (_func.isImplemented())
 	{
-		setupBodyParamContext(method, _func);
+		m_functionCtx.emplace(*m_tr, _func, method.args, method.returnType);
 
 		// ABI return encoding belongs at construction time. Plain methods encode
 		// each source return immediately; modifier methods first normalize native
@@ -862,7 +749,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// `value % 2^N` before encoding for these (Pass 2/3 encodeRet).
 			setReturnWirePlan(returnPlan, /*asmWrap=*/funcHasInlineAssembly);
 
-		registerBodyRefParams(_func, asmSlotParamIds);
 		// A memory object passed into a modifier must retain solc's pointer
 		// identity across every generated chain link. Register those exact
 		// parameter roots before translating the body so reads, writes, and
@@ -871,7 +757,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			registerModifierMemoryRootParams(_func);
 
 		m_functionCtx->inConstructor = _func.isConstructor();
-		m_functionCtx->callableId = _func.id();
 		m_functionCtx->frameIsProgram =
 			_func.visibility() == solidity::frontend::Visibility::Internal
 			|| _func.visibility() == solidity::frontend::Visibility::Private

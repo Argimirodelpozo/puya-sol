@@ -1,8 +1,8 @@
 #include "builder/sol-ast/EffectScan.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/SolcFacts.h"
-#include "builder/sol-ast/Context.h"
 #include "builder/sol-eb/ContractContext.h"
+#include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -10,7 +10,7 @@ namespace puyasol::builder
 {
 
 bool EffectScan::mayWrite(solidity::frontend::Expression const& expression,
-	eb::ContractContext& context, sol_ast::Context const& scope)
+	eb::ContractContext& context)
 {
 	using namespace solidity::frontend;
 	struct Scan: ASTConstVisitor
@@ -30,15 +30,14 @@ bool EffectScan::mayWrite(solidity::frontend::Expression const& expression,
 			else
 			{
 				auto const& analysis = context.typeMapper.analysis();
-				auto const* effects = analysis.parameterMutationsForCall(context.currentContract, call);
-				if (effects)
-					found |= !effects->mutatedParameterIndices.empty();
+				auto const* function = SolcFacts::resolveInternalCall(call, context.currentContract);
+				if (function)
+					found |= !analysis.parameterMutations(context.currentContract, *function)
+						.mutatedParameterIndices.empty()
+						|| analysis.callablesWithInlineAssembly.contains(function->id());
 				else if (type->kind() == FunctionType::Kind::Internal)
 					for (auto const* parameter: type->parameterTypes())
 						found |= parameter->dataStoredIn(DataLocation::Memory);
-				// Assembly can write shared EVM memory without a reference parameter.
-				if (auto const* function = SolcFacts::resolveInternalCall(call, context.currentContract))
-					found |= analysis.callablesWithInlineAssembly.contains(function->id());
 			}
 			return !found;
 		}

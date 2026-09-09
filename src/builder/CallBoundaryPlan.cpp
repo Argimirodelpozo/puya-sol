@@ -2,6 +2,8 @@
 #include "builder/sol-types/RefParamPassing.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/abi/EvmAbiDecode.h"
+#include "Logger.h"
 #include "awst/Termination.hpp"
 
 namespace puyasol::builder
@@ -153,6 +155,45 @@ std::shared_ptr<awst::Expression> decodeCallResult(
 	if (native && native->kind() == awst::WTypeKind::ReferenceArray)
 		return awst::makeConvertArray(std::move(value), native, loc);
 	return TypeCoercion::coerceForAssignment(std::move(value), native, loc);
+}
+
+std::shared_ptr<awst::Expression> decodeExternalCallResult(
+	TypeMapper& types, std::shared_ptr<awst::Expression> bytes,
+	std::vector<solidity::frontend::Type const*> const& returns,
+	awst::WType const* native, awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out)
+{
+	if (types.profile().contractAbi == ContractAbi::Evm)
+	{
+		if (!abi::canDecodeEvmAbi(returns))
+		{
+			Logger::instance().error("external return type is not representable in canonical Solidity ABI", loc);
+			return awst::makeVoidConstant(loc);
+		}
+		return abi::decodeEvmAbi(types, std::move(bytes), returns, native, loc, out);
+	}
+	if (returns.empty()) return awst::makeVoidConstant(loc);
+	std::vector<awst::WType const*> wireElements, decodedElements;
+	for (auto const* type: returns)
+	{
+		auto element = planReturnElement(types, type, abiReturnNativeType(types, type));
+		wireElements.push_back(types.mapToARC4Type(element.wireType));
+		// Signed narrow returns travel as uint256; decode to biguint before
+		// the shared native adaptation narrows their two's-complement carrier.
+		decodedElements.push_back(element.nativeType);
+	}
+	auto const* wireType = returns.size() == 1 ? wireElements.front()
+		: types.createType<awst::ARC4Tuple>(std::move(wireElements));
+	auto const* decodedType = returns.size() == 1 ? decodedElements.front()
+		: types.createType<awst::WTuple>(std::move(decodedElements));
+	// Each submitted call has its own identity, even if its payload expression
+	// looks identical to another call's LastLog read.
+	bytes = awst::makeSingleEvaluation(std::move(bytes), awst::WType::bytesType(),
+		awst::nextSingleEvalId(), loc);
+	std::shared_ptr<awst::Expression> value = awst::makeReinterpretCast(std::move(bytes), wireType, loc);
+	if (!awst::structurallyEquivalent(wireType, decodedType))
+		value = awst::makeARC4Decode(std::move(value), decodedType, loc);
+	return decodeCallResult(std::move(value), native, loc);
 }
 
 } // namespace puyasol::builder

@@ -123,18 +123,6 @@ private:
 	void buildFreestandingParams(
 		solidity::frontend::FunctionDefinition const& function,
 		std::string const& sourceFile, awst::Subroutine& sub);
-	void registerFreestandingParamContext(
-		solidity::frontend::FunctionDefinition const& _func,
-		sol_ast::FunctionContext& fnCtx,
-		awst::Subroutine const& sub,
-		std::set<size_t> const& slotParams,
-		std::set<size_t> const& mappingStorageParams,
-		std::set<size_t> const& blobAggParams,
-		std::set<size_t> const& evmSlotRefParams);
-	void registerFreestandingReturnParams(
-		solidity::frontend::FunctionDefinition const& _func,
-		sol_ast::FunctionContext& fnCtx,
-		std::set<size_t> const& blobAggParams);
 	void prependFreestandingReturnInits(
 		solidity::frontend::FunctionDefinition const& _func,
 		awst::Subroutine& sub,

@@ -293,29 +293,13 @@ void closeReachability(ProgramAnalysis& _out)
 struct BodyFactsWalker: ASTConstVisitor
 {
 	ProgramAnalysis& analysis;
-	std::set<int64_t>& reassignedMemoryLocals;
-	std::set<int64_t>& callablesWithInlineAssembly;
-	std::set<int64_t>& callablesWithStorageAssembly;
-	std::set<int64_t>& asmSlotReferenceDeclarations;
-	std::set<int64_t>& structRefOffsetParams;
+	std::set<int64_t> writtenDeclarations;
 	std::map<int64_t, std::set<int64_t>> offsetTransfers;
 	std::map<int64_t, std::set<int64_t>> slotTransfers;
 	bool collectOffsets;
 	int64_t callableId = 0;
-	BodyFactsWalker(
-		ProgramAnalysis& _analysis,
-		std::set<int64_t>& _reassignedMemoryLocals,
-		std::set<int64_t>& _callablesWithInlineAssembly,
-		std::set<int64_t>& _callablesWithStorageAssembly,
-		std::set<int64_t>& _asmSlotReferenceDeclarations,
-		std::set<int64_t>& _structRefOffsetParams,
-		bool _collectOffsets)
-		: analysis(_analysis), reassignedMemoryLocals(_reassignedMemoryLocals),
-		  callablesWithInlineAssembly(_callablesWithInlineAssembly),
-		  callablesWithStorageAssembly(_callablesWithStorageAssembly),
-		  asmSlotReferenceDeclarations(_asmSlotReferenceDeclarations),
-		  structRefOffsetParams(_structRefOffsetParams),
-		  collectOffsets(_collectOffsets)
+	BodyFactsWalker(ProgramAnalysis& _analysis, bool _collectOffsets)
+		: analysis(_analysis), collectOffsets(_collectOffsets)
 	{}
 
 	static bool isArrayElementStructRef(Expression const* _expression)
@@ -336,7 +320,7 @@ struct BodyFactsWalker: ASTConstVisitor
 			|| !dynamic_cast<StructType const*>(target.type()))
 			return;
 		if (isArrayElementStructRef(&argument))
-			structRefOffsetParams.insert(target.id());
+			analysis.structRefOffsetParams.insert(target.id());
 		else if (auto const* identifier = dynamic_cast<Identifier const*>(&argument))
 			if (auto const* declaration = identifier->annotation().referencedDeclaration)
 				offsetTransfers[declaration->id()].insert(target.id());
@@ -386,10 +370,26 @@ struct BodyFactsWalker: ASTConstVisitor
 			&& statement.initialValue())
 		{
 			transferOffset(*statement.declarations()[0], *statement.initialValue());
+			if (dynamic_cast<FunctionType const*>(statement.declarations()[0]->type())
+				&& dynamic_cast<FunctionDefinition const*>(
+					ASTNode::referencedDeclaration(*statement.initialValue())))
+				analysis.stableFunctionPointers.emplace(
+					statement.declarations()[0]->id(), statement.initialValue());
 			if (statement.declarations()[0]->referenceLocation()
 				== VariableDeclaration::Location::Storage)
 				transferSlot(statement.declarations()[0]->id(), *statement.initialValue());
 		}
+		return true;
+	}
+
+	bool visit(Identifier const& identifier) override
+	{
+		// Includes tuple assignments and delete: solc propagates lvalue facts
+		// to the actual written identifiers. Writes anywhere disqualify a local,
+		// including branches/loops that happen to lower after its call site.
+		if (identifier.annotation().willBeWrittenTo)
+			if (auto const* declaration = identifier.annotation().referencedDeclaration)
+				writtenDeclarations.insert(declaration->id());
 		return true;
 	}
 
@@ -402,7 +402,7 @@ struct BodyFactsWalker: ASTConstVisitor
 			{
 				if (declaration->referenceLocation()
 					== VariableDeclaration::Location::Memory)
-					reassignedMemoryLocals.insert(declaration->id());
+					analysis.reassignedMemoryLocals.insert(declaration->id());
 				transferOffset(*declaration, _assignment.rightHandSide());
 				if (declaration->referenceLocation() == VariableDeclaration::Location::Storage)
 					transferSlot(declaration->id(), _assignment.rightHandSide());
@@ -412,16 +412,20 @@ struct BodyFactsWalker: ASTConstVisitor
 
 	bool visit(InlineAssembly const& _assembly) override
 	{
-		callablesWithInlineAssembly.insert(callableId);
+		analysis.callablesWithInlineAssembly.insert(callableId);
 		auto prepared = SolcFacts::prepareAssembly(_assembly);
 		if (prepared->facts.usesStorage)
-			callablesWithStorageAssembly.insert(callableId);
+			analysis.callablesWithStorageAssembly.insert(callableId);
 		analysis.asmAssignedSlotDeclarations.insert(
 			prepared->assignedSlotDeclarations.begin(), prepared->assignedSlotDeclarations.end());
 		analysis.preparedAssemblies.emplace(_assembly.id(), std::move(prepared));
 		for (auto const& [_, reference]: _assembly.annotation().externalReferences)
-			if (reference.suffix == "slot" && reference.declaration)
-				asmSlotReferenceDeclarations.insert(reference.declaration->id());
+			if (reference.declaration)
+			{
+				writtenDeclarations.insert(reference.declaration->id());
+				if (reference.suffix == "slot")
+					analysis.asmSlotReferenceDeclarations.insert(reference.declaration->id());
+			}
 		return false;
 	}
 
@@ -522,15 +526,13 @@ ProgramAnalysis ProgramAnalysis::analyze(
 	indexFunctionDeclarations(_compiler, result);
 	closeReachability(result);
 
-	BodyFactsWalker bodyFactsWalker(
-		result, result.reassignedMemoryLocals, result.callablesWithInlineAssembly,
-		result.callablesWithStorageAssembly,
-		result.asmSlotReferenceDeclarations,
-		result.structRefOffsetParams, !_evmStorageLayout);
+	BodyFactsWalker bodyFactsWalker(result, !_evmStorageLayout);
 
 	// Body/Yul facts are invariant: collect them once, then close the finite,
 	// monotone parameter-transfer graph without an arbitrary depth cutoff.
 	collectBodyFacts(_compiler, bodyFactsWalker);
+	for (auto id: bodyFactsWalker.writtenDeclarations)
+		result.stableFunctionPointers.erase(id);
 	closeOverEdges(result.structRefOffsetParams, bodyFactsWalker.offsetTransfers);
 	auto slotSources = result.asmAssignedSlotDeclarations;
 	closeOverEdges(slotSources, bodyFactsWalker.slotTransfers);

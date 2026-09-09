@@ -311,12 +311,4 @@ ParameterMutationSummary const& ProgramAnalysis::parameterMutations(
 	return analyzeFrom(*this, _mostDerived, _function);
 }
 
-ParameterMutationSummary const* ProgramAnalysis::parameterMutationsForCall(
-	ContractDefinition const* _mostDerived,
-	FunctionCall const& _call) const
-{
-	auto const* target = SolcFacts::resolveInternalCall(_call, _mostDerived);
-	return target ? &parameterMutations(_mostDerived, *target) : nullptr;
-}
-
 } // namespace puyasol::builder

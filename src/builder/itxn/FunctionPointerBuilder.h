@@ -123,7 +123,7 @@ public:
 
 private:
 	/// Build internal-dispatch SubroutineCallExpression (shared by internal
-	/// and external self-call paths). Args are coerced to dispatch param types.
+	/// and external self-call paths). Arguments already have their native types.
 	static std::shared_ptr<awst::SubroutineCallExpression> buildDispatchCall(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionType const* _funcType,

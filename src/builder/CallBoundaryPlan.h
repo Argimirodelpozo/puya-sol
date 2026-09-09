@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-namespace solidity::frontend { class VariableDeclaration; }
-namespace puyasol::awst { class WType; struct Block; struct Expression; struct SourceLocation; }
+namespace solidity::frontend { class VariableDeclaration; class Type; }
+namespace puyasol::awst { class WType; struct Block; struct Expression; struct Statement; struct SourceLocation; }
 
 namespace puyasol::builder
 {
@@ -46,5 +46,13 @@ struct CallBoundaryPlan
 std::shared_ptr<awst::Expression> decodeCallResult(
 	std::shared_ptr<awst::Expression> value, awst::WType const* native,
 	awst::SourceLocation const& loc);
+
+/// Decode an external return payload (without its log prefix) using the same
+/// declared return elements and native adaptation as direct calls/getters.
+std::shared_ptr<awst::Expression> decodeExternalCallResult(
+	TypeMapper& types, std::shared_ptr<awst::Expression> bytes,
+	std::vector<solidity::frontend::Type const*> const& returns,
+	awst::WType const* native, awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out);
 
 } // namespace puyasol::builder
