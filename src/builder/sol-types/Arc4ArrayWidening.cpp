@@ -1,7 +1,7 @@
 #include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
-#include "builder/sol-types/EncodedSize.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "awst/NameGen.h"
 
 namespace puyasol::builder
@@ -21,7 +21,7 @@ std::shared_ptr<awst::Expression> tryNarrowUInt64ToArc4UIntN(
 		_targetType, _loc);
 }
 
-std::shared_ptr<awst::Expression> tryWidenArc4ArrayInt(
+std::shared_ptr<awst::Expression> tryConvertArc4Array(
 	std::shared_ptr<awst::Expression> _value,
 	awst::WType const* _targetType,
 	std::vector<std::shared_ptr<awst::Statement>>* _pre,
@@ -35,18 +35,30 @@ std::shared_ptr<awst::Expression> tryWidenArc4ArrayInt(
 	if (ss && ts && ss->arraySize() > ts->arraySize()) return nullptr;
 	auto const* sourceElem = ss ? ss->elementType() : sd->elementType();
 	auto const* targetElem = ts ? ts->elementType() : td->elementType();
-	// These width-preserving ARC4 integer facts originate in solc's element
-	// types. ConversionPlan owns semantic legality; this layer owns encoding.
+	bool const sameElement = awst::structurallyEquivalent(sourceElem, targetElem);
+	if (ss && td) checkedSize<uint16_t>(ss->arraySize(), "ARC4 array length");
+	// ConvertArray understands packed bools; a byte stride does not.
+	if (sameElement && ss && td)
+		return awst::makeConvertArray(std::move(_value), _targetType, _loc);
+	auto const sourceStride = computeEncodedElementSize(sourceElem).fixedBytes<int>();
+	auto const targetStride = computeEncodedElementSize(targetElem).fixedBytes<int>();
+	if (sameElement && ss && ts && sourceStride)
+		return awst::makeReinterpretCast(awst::makeRightPad(
+			awst::makeAsBytes(std::move(_value), _loc), EncodedSize::fixed(*sourceStride)
+				.times(ts->arraySize() - ss->arraySize()).fixedBytes<int>().value(), _loc),
+			_targetType, _loc);
+
+	// Generic fixed copies recurse through the scalar/aggregate converter.
+	// Dynamic sources use a stride loop only for same-signed integer widening,
+	// whose legality is checked at the solc-typed ConversionPlan front door.
 	auto const sourceInt = SolIntType::fromArc4(sourceElem);
 	auto const targetInt = SolIntType::fromArc4(targetElem);
-	if (!sourceInt || !targetInt || sourceInt->bits >= targetInt->bits
-		|| sourceInt->isSigned != targetInt->isSigned) return nullptr;
-	if (ss && td) checkedSize<uint16_t>(ss->arraySize(), "ARC4 array length");
-
-	// Select the whole strategy BEFORE binding the source or emitting effects.
+	bool const integerWiden = sourceInt && targetInt && sourceInt->bits < targetInt->bits
+		&& sourceInt->isSigned == targetInt->isSigned;
 	bool const unroll = ss && ss->arraySize() <= 256;
-	if (!unroll && !_pre) return nullptr;
-	unsigned const stride = sourceInt->bits / 8;
+	if (!sourceStride || !targetStride || (!unroll && (!integerWiden || !_pre)))
+		return nullptr;
+	unsigned const stride = *sourceStride;
 	auto convert = [&](std::shared_ptr<awst::Expression> bytes) {
 		return awst::makeAsBytes(TypeCoercion::coerceForAssignment(
 			awst::makeReinterpretCast(std::move(bytes), sourceElem, _loc), targetElem, _loc), _loc);
@@ -54,7 +66,7 @@ std::shared_ptr<awst::Expression> tryWidenArc4ArrayInt(
 	auto padTail = [&](std::shared_ptr<awst::Expression> bytes) {
 		if (ss && ts && ts->arraySize() > ss->arraySize())
 			bytes = awst::makeRightPad(std::move(bytes),
-				EncodedSize::fixed(targetInt->bits / 8).times(ts->arraySize() - ss->arraySize())
+				EncodedSize::fixed(*targetStride).times(ts->arraySize() - ss->arraySize())
 					.fixedBytes<int>().value(), _loc);
 		return awst::makeReinterpretCast(std::move(bytes), _targetType, _loc);
 	};
@@ -67,7 +79,7 @@ std::shared_ptr<awst::Expression> tryWidenArc4ArrayInt(
 		std::shared_ptr<awst::Expression> bytes = awst::makeBytesConstant(std::move(header), _loc);
 		for (int64_t i = 0; i < ss->arraySize(); ++i)
 			bytes = awst::makeConcat(std::move(bytes),
-				convert(awst::makeExtract(source, i * stride, stride, _loc)), _loc);
+				convert(awst::makeExtract(source, checkedSize<int>(i * stride, "array element offset"), stride, _loc)), _loc);
 		return padTail(std::move(bytes));
 	}
 

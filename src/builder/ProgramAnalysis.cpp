@@ -326,10 +326,20 @@ struct BodyFactsWalker: ASTConstVisitor
 				offsetTransfers[declaration->id()].insert(target.id());
 	}
 
-	void transferSlot(int64_t target, Expression const& expression)
+	void transferSlot(int64_t target, Expression const& expression, std::optional<size_t> component = {})
 	{
-		if (!expression.annotation().type
-			|| !expression.annotation().type->dataStoredIn(DataLocation::Storage))
+		if (auto const* tuple = dynamic_cast<TupleExpression const*>(&expression))
+		{
+			if (!tuple->isInlineArray() && tuple->components().size() == 1)
+				transferSlot(target, *tuple->components()[0], component);
+			else if (component && tuple->components().at(*component))
+				transferSlot(target, *tuple->components()[*component]);
+			return;
+		}
+		auto const* type = expression.annotation().type;
+		if (auto const* tuple = dynamic_cast<TupleType const*>(type); tuple && component)
+			type = tuple->components().at(*component);
+		if (!type || !type->dataStoredIn(DataLocation::Storage))
 			return;
 		if (auto const* identifier = dynamic_cast<Identifier const*>(&expression))
 		{
@@ -352,23 +362,34 @@ struct BodyFactsWalker: ASTConstVisitor
 			transferSlot(target, member->expression());
 		else if (auto const* conditional = dynamic_cast<Conditional const*>(&expression))
 		{
-			transferSlot(target, conditional->trueExpression());
-			transferSlot(target, conditional->falseExpression());
+			transferSlot(target, conditional->trueExpression(), component);
+			transferSlot(target, conditional->falseExpression(), component);
 		}
 	}
 
 	bool visit(Return const& statement) override
 	{
 		if (statement.expression())
-			transferSlot(callableId, *statement.expression());
+		{
+			auto const& returns = statement.annotation().functionReturnParameters->parameters();
+			for (size_t i = 0; i < returns.size(); ++i)
+				if (returns[i]->referenceLocation() == VariableDeclaration::Location::Storage)
+					transferSlot(callableId, *statement.expression(), returns.size() > 1 ? std::optional<size_t>{i} : std::nullopt);
+		}
 		return true;
 	}
 
 	bool visit(VariableDeclarationStatement const& statement) override
 	{
+		if (statement.initialValue() && statement.declarations().size() > 1)
+			for (size_t i = 0; i < statement.declarations().size(); ++i)
+				if (auto const& declaration = statement.declarations()[i]; declaration
+					&& declaration->referenceLocation() == VariableDeclaration::Location::Storage)
+					transferSlot(declaration->id(), *statement.initialValue(), i);
 		if (statement.declarations().size() == 1 && statement.declarations()[0]
 			&& statement.initialValue())
 		{
+			analysis.localInitializers.emplace(statement.declarations()[0]->id(), statement.initialValue());
 			transferOffset(*statement.declarations()[0], *statement.initialValue());
 			if (dynamic_cast<FunctionType const*>(statement.declarations()[0]->type())
 				&& dynamic_cast<FunctionDefinition const*>(
@@ -395,6 +416,13 @@ struct BodyFactsWalker: ASTConstVisitor
 
 	bool visit(Assignment const& _assignment) override
 	{
+		if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_assignment.leftHandSide()))
+			for (size_t i = 0; i < tuple->components().size(); ++i)
+				if (auto const* identifier = dynamic_cast<Identifier const*>(tuple->components()[i].get()))
+					if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(
+						identifier->annotation().referencedDeclaration);
+						declaration && declaration->referenceLocation() == VariableDeclaration::Location::Storage)
+						transferSlot(declaration->id(), _assignment.rightHandSide(), i);
 		if (auto const* identifier =
 			dynamic_cast<Identifier const*>(&_assignment.leftHandSide()))
 			if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(
@@ -415,8 +443,8 @@ struct BodyFactsWalker: ASTConstVisitor
 		analysis.callablesWithInlineAssembly.insert(callableId);
 		auto prepared = SolcFacts::prepareAssembly(_assembly);
 		if (prepared->facts.usesStorage)
-			analysis.callablesWithStorageAssembly.insert(callableId);
-		analysis.asmAssignedSlotDeclarations.insert(
+			analysis.callablesWithStorageSlotAccess.insert(callableId);
+		analysis.slotHandleDeclarations.insert(
 			prepared->assignedSlotDeclarations.begin(), prepared->assignedSlotDeclarations.end());
 		analysis.preparedAssemblies.emplace(_assembly.id(), std::move(prepared));
 		for (auto const& [_, reference]: _assembly.annotation().externalReferences)
@@ -495,11 +523,13 @@ void deriveStorageReferenceReturns(
 	for (auto const& [id, function]: _out.functionDeclarations)
 	{
 		auto& facts = _out.storageReferenceReturns[id];
+		auto const& returns = function->returnParameters();
 		facts.slotHandle = _slotSources.count(id) != 0;
+		if (facts.slotHandle)
+			_out.callablesWithStorageSlotAccess.insert(id);
 		if (!facts.slotHandle)
 		{
 			facts.indexedReturn = indexedStorageReturn(*function);
-			auto const& returns = function->returnParameters();
 			facts.bytesKeyed = returns.size() == 1
 				&& returns[0]->referenceLocation() == VariableDeclaration::Location::Storage
 				&& containsMappingType(returns[0]->type());
@@ -534,8 +564,19 @@ ProgramAnalysis ProgramAnalysis::analyze(
 	for (auto id: bodyFactsWalker.writtenDeclarations)
 		result.stableFunctionPointers.erase(id);
 	closeOverEdges(result.structRefOffsetParams, bodyFactsWalker.offsetTransfers);
-	auto slotSources = result.asmAssignedSlotDeclarations;
+	auto slotSources = result.slotHandleDeclarations;
+	// Opaque tuple components need runtime identity. Seed their function IDs
+	// before closing the same solc-declaration transfer graph used for .slot,
+	// so a single-reference wrapper around a tuple result retains its handle.
+	for (auto const& [id, function]: result.functionDeclarations)
+		if (function->returnParameters().size() > 1)
+			for (auto const& parameter: function->returnParameters())
+				if (parameter->referenceLocation() == VariableDeclaration::Location::Storage)
+					slotSources.insert(id);
 	closeOverEdges(slotSources, bodyFactsWalker.slotTransfers);
+	for (auto id: slotSources)
+		if (!result.functionDeclarations.contains(id))
+			result.slotHandleDeclarations.insert(id);
 	deriveStorageReferenceReturns(result, slotSources);
 
 	return result;

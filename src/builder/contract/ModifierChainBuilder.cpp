@@ -5,13 +5,15 @@
 
 #include "builder/contract/ContractBuilder.h"
 #include "builder/SolcFacts.h"
+#include "builder/CallBoundaryPlan.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/StatementWalk.h"
 #include "awst/NameGen.h"
-#include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-ast/SolStatement.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
 #include "awst/Termination.hpp"
 
 #include <libsolidity/ast/AST.h>
@@ -204,12 +206,10 @@ void insertBeforeReturns(
 	}
 }
 
-/// Return-parameter THREADING (mirrors solc IR). A modifier arg or the body may
-/// READ/WRITE the named return vars — `mod2(r)`, `m1(x = 2)`, or `r += 1` accumulating
-/// across a repeated/looped `_;`. So thread the return params as LEADING in-args through
-/// every chain sub and capture them back out at each `_`, letting mutations propagate.
-/// These stay native until the outer wrapper return is encoded. Found by the
-/// dispatch fuzzer + the chain-as-default experiment.
+/// Thread return parameters as leading inputs through the modifier chain.
+/// Legacy captures each `_` result back into those inputs; solc via-IR uses
+/// separate outputs, so repeated placeholders reuse the modifier's inputs.
+/// Values stay native until the outer wrapper return is encoded.
 class ReturnThreading
 {
 public:
@@ -222,6 +222,26 @@ public:
 		TypeMapper& _typeMapper);
 
 	bool hasRet() const { return m_hasRet; }
+
+	/// Mirror IRGenerator::generateModifier: initialize separate outputs from
+	/// the inputs BEFORE evaluating modifier arguments. Write-back parameters
+	/// are our memory-reference transport, not Solidity return parameters.
+	ReturnThreading forModifier(awst::Block& _body, bool _viaIR) const
+	{
+		auto result = *this;
+		if (_viaIR)
+			for (auto& r: result.m_retInfos)
+				if (!r.isWriteBack)
+				{
+					auto input = awst::makeVarExpression(r.name, r.type, _body.sourceLocation);
+					r.name = "__mod_return_" + std::to_string(
+						awst::NameGen::next("ModifierChainBuilder.returnOutput"));
+					_body.body.push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(r.name, r.type, _body.sourceLocation),
+						std::move(input), _body.sourceLocation));
+				}
+		return result;
+	}
 
 	/// Prepend retArgs to a sub's args (returns a fresh combined vector).
 	std::vector<awst::SubroutineArgument> withRetArgs(
@@ -238,10 +258,9 @@ public:
 		std::shared_ptr<awst::SubroutineCallExpression> const& _call,
 		awst::SourceLocation const& _loc) const
 	{
-		for (auto const& r: m_retInfos)
-			if (!r.isWriteBack)
-				awst::pushCallArg(_call->args, r.name,
-					awst::makeVarExpression(r.name, r.type, _loc));
+		for (auto const& arg: m_retArgs)
+			awst::pushCallArg(_call->args, arg.name,
+				awst::makeVarExpression(arg.name, arg.wtype, _loc));
 		for (auto const& arg: m_method.args)
 			awst::pushCallArg(_call->args, arg.name,
 				awst::makeVarExpression(arg.name, arg.wtype, _loc));
@@ -258,31 +277,14 @@ public:
 		awst::SourceLocation const& _loc) const
 	{
 		if (!m_hasRet) { _dst->body.push_back(awst::makeExpressionStatement(std::move(_call), _loc)); return; }
-		if (m_retInfos.size() == 1)
-		{
-			auto tgt = awst::makeVarExpression(m_retInfos[0].name, m_retInfos[0].type, _loc);
-			_dst->body.push_back(awst::makeAssignmentStatement(std::move(tgt), std::move(_call), _loc));
-		}
-		else
-		{
-			auto tup = awst::makeTupleExpression(m_method.returnType, _loc);
-			for (auto const& r: m_retInfos)
-				tup->items.push_back(awst::makeVarExpression(r.name, r.type, _loc));
-			_dst->body.push_back(awst::makeAssignmentStatement(std::move(tup), std::move(_call), _loc));
-		}
+		_dst->body.push_back(awst::makeAssignmentStatement(
+			returnValues(_loc, false), decodeCallResult(std::move(_call), m_localReturnType, _loc), _loc));
 	}
 
 	/// Return the threaded return-param(s): `return r` / `return (r1,…,rN)` / bare `return`.
 	std::shared_ptr<awst::Statement> makeThreadedReturn(awst::SourceLocation const& _loc) const
 	{
-		if (!m_hasRet) return awst::makeReturnStatement(nullptr, _loc);
-		if (m_retInfos.size() == 1)
-			return awst::makeReturnStatement(
-				awst::makeVarExpression(m_retInfos[0].name, m_retInfos[0].type, _loc), _loc);
-		auto tup = awst::makeTupleExpression(m_method.returnType, _loc);
-		for (auto const& r: m_retInfos)
-			tup->items.push_back(awst::makeVarExpression(r.name, r.type, _loc));
-		return awst::makeReturnStatement(std::move(tup), _loc);
+		return awst::makeReturnStatement(returnValues(_loc, true), _loc);
 	}
 
 	/// A bare `return;` in a modifier body exits it with the current return-params.
@@ -341,10 +343,31 @@ private:
 		std::string name;
 		awst::WType const* type;
 		bool isWriteBack;
+		ReturnWireElem returnPlan;
 	};
+
+	/// Locals use Solidity's numeric carriers; outgoing results retain the
+	/// method's normalized signature (notably signed int16 -> biguint).
+	std::shared_ptr<awst::Expression> returnValues(
+		awst::SourceLocation const& _loc, bool _normalize) const
+	{
+		if (!m_hasRet) return nullptr;
+		auto value = [&](RetInfo const& r) -> std::shared_ptr<awst::Expression> {
+			auto local = awst::makeVarExpression(r.name, r.type, _loc);
+			return _normalize ? TypeCoercion::encodeReturnElement(
+				std::move(local), r.returnPlan, _loc, false, false) : local;
+		};
+		if (m_retInfos.size() == 1) return value(m_retInfos[0]);
+		auto tuple = awst::makeTupleExpression(
+			_normalize ? m_method.returnType : m_localReturnType, _loc);
+		for (auto const& r: m_retInfos)
+			tuple->items.push_back(value(r));
+		return tuple;
+	}
 
 	awst::ContractMethod const& m_method;
 	std::vector<RetInfo> m_retInfos;
+	awst::WType const* m_localReturnType;
 	bool m_hasRet = false;
 	/// Leading return-param args, prepended to every chain sub's signature.
 	std::vector<awst::SubroutineArgument> m_retArgs;
@@ -361,12 +384,9 @@ ReturnThreading::ReturnThreading(
 	TypeMapper& _typeMapper)
 	: m_method(_method), m_extraArgs(std::move(_extraArgs))
 {
-	// Thread the SAME types _method.returnType declares — that is what the body sub
-	// returns after native normalization (which promotes signed sub-64 and wide-uint
-	// return elements to biguint at the ABI boundary). Re-mapping from the Solidity
-	// type instead would give `int64` → uint64, so capturing the body's biguint into
-	// a uint64 threading slot fails puya with "Tuple type mismatch". For a tuple the
-	// element types come from the WTuple; for a scalar, the whole returnType.
+	// Preserve the actual emitted return signature, including reference handles
+	// and write-backs. Numeric source locals can use a narrower carrier; adapt
+	// calls through the shared result decoder and solc-derived return plan.
 	auto const* retTuple = (_method.returnType
 		&& _method.returnType->kind() == awst::WTypeKind::WTuple)
 		? static_cast<awst::WTuple const*>(_method.returnType) : nullptr;
@@ -379,15 +399,26 @@ ReturnThreading::ReturnThreading(
 		awst::WType const* rt =
 			(retTuple && ri < retTuple->types().size()) ? retTuple->types()[ri]
 			: (!retTuple ? _method.returnType : _typeMapper.map(rp->type()));
-		m_retInfos.push_back({nm, rt, false});
+		auto const* local = SolIntType::fromSolOrEnum(rp->type()) ? _typeMapper.map(rp->type()) : rt;
+		m_retInfos.push_back({nm, local, false, planReturnElement(_typeMapper, rp->type(), rt)});
 	}
 	for (size_t paramIndex: _writeBackParams)
 		if (paramIndex < _method.args.size())
 		{
 			auto const& arg = _method.args[paramIndex];
-			m_retInfos.push_back({arg.name, arg.wtype, true});
+			m_retInfos.push_back({arg.name, arg.wtype, true, {}});
 		}
 	m_hasRet = (_method.returnType != awst::WType::voidType());
+	m_localReturnType = _method.returnType;
+	if (m_retInfos.size() == 1)
+		m_localReturnType = m_retInfos[0].type;
+	else if (retTuple)
+	{
+		std::vector<awst::WType const*> localTypes;
+		for (auto const& r: m_retInfos) localTypes.push_back(r.type);
+		if (localTypes != retTuple->types())
+			m_localReturnType = _typeMapper.createType<awst::WTuple>(std::move(localTypes));
+	}
 	for (auto const& r: m_retInfos)
 		if (!r.isWriteBack)
 			m_retArgs.emplace_back(r.name, r.type, _method.sourceLocation);
@@ -727,6 +758,7 @@ void ContractBuilder::buildModifierChain(
 
 		// Decode params first so a modifier arg expr (`mArg(a % 5)`) sees native values.
 		prependDecodes(modBody);
+		auto const modifierThreading = threading.forModifier(*modBody, m_viaIR);
 
 		std::vector<int64_t> remappedDeclIds;
 		std::vector<int64_t> blobDeclIds;
@@ -734,15 +766,14 @@ void ContractBuilder::buildModifierChain(
 			*modInvocation, *modDef, *modBody,
 			remappedDeclIds, blobDeclIds);
 
-		// At `_`: thread the return-param(s) in, call nextSubName, capture them back out
-		// so a repeated/looped `_;` accumulates and a modifier arg's writes propagate.
+		// At `_`: pass the source-local inputs and capture the next link's outputs.
 		auto makePlaceholder = [&, nextSubName,
 			loc = modSub.sourceLocation]() {
 			auto placeholderBlock = awst::makeBlock(loc);
 			auto call = awst::makeSubroutineCall(
 				awst::InstanceMethodTarget{nextSubName}, _method.returnType, loc);
-			threading.pushThreadedArgs(call, loc);
-			threading.captureReturn(placeholderBlock, std::move(call), loc);
+			modifierThreading.pushThreadedArgs(call, loc);
+			modifierThreading.captureReturn(placeholderBlock, std::move(call), loc);
 			return placeholderBlock;
 		};
 
@@ -750,8 +781,8 @@ void ContractBuilder::buildModifierChain(
 
 		if (translatedBody)
 		{
-			if (threading.hasRet())
-				threading.threadBareReturns(translatedBody->body);
+			if (modifierThreading.hasRet())
+				modifierThreading.threadBareReturns(translatedBody->body);
 			insertBeforeReturns(translatedBody->body,
 				[&](awst::SourceLocation const& loc) {
 					return writeBackBridgeValues("", loc);
@@ -765,7 +796,7 @@ void ContractBuilder::buildModifierChain(
 		for (auto& statement: writeBackBridgeValues(
 			"", modSub.sourceLocation))
 			modBody->body.push_back(std::move(statement));
-		modBody->body.push_back(threading.makeThreadedReturn(modSub.sourceLocation));
+		modBody->body.push_back(modifierThreading.makeThreadedReturn(modSub.sourceLocation));
 
 		for (auto declId: remappedDeclIds)
 			m_tr->scope.bindings.paramRemaps.erase(declId);

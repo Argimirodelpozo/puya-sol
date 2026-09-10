@@ -105,13 +105,15 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::materializeRefValue(
 	awst::WType const* _targetW,
 	awst::SourceLocation const& _loc)
 {
-	if (!_ctx.typeMapper.profile().evmStorageLayout || !_value || !_targetW
+	if (!_value || !_targetW
 		|| _value->wtype != awst::WType::biguintType())
 		return _value;
 	auto k = _targetW->kind();
 	if (k != awst::WTypeKind::ARC4Struct
 		&& k != awst::WTypeKind::ARC4StaticArray
-		&& k != awst::WTypeKind::ARC4DynamicArray)
+		&& k != awst::WTypeKind::ARC4DynamicArray
+		&& !(isBytesLike(_srcSolType)
+			&& (k == awst::WTypeKind::Bytes || _targetW == awst::WType::stringType())))
 		return _value;
 	if (!_srcSolType
 		|| !_srcSolType->dataStoredIn(solidity::frontend::DataLocation::Storage))
@@ -121,6 +123,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::materializeRefValue(
 	a.slot = std::move(_value);
 	a.solType = _srcSolType;
 	a.wtype = _targetW;
+	if (isBytesLike(_srcSolType)) return low.readBytesValue(a);
 	if (dynamic_cast<StructType const*>(_srcSolType))
 		return low.readStructValue(a);
 	if (auto const* at = dynamic_cast<ArrayType const*>(_srcSolType))

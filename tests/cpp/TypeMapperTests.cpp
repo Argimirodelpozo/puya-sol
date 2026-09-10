@@ -3,6 +3,11 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/SourceLocConvert.h"
 #include "builder/sol-types/EncodedSize.h"
+#include "builder/sol-types/Arc4Defaults.h"
+#include "builder/sol-types/Arc4ArrayWidening.h"
+#include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
+#include "awst/TupleValue.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 
 #include <libsolidity/ast/AST.h>
@@ -121,11 +126,14 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 		"callable parameter locations were erased");
 	require(awst::structurallyEquivalent(mapper.map(memoryFunction), mapper.map(calldataFunction)),
 		"equal-width callable handles acquired different physical encodings");
+	builder::TypeCoercion::assertImplicitlyConvertible(calldataFunction, memoryFunction, {}, "callable view test");
+	require(!Logger::instance().hasErrors(), "solc's external callable view was rejected");
 
-	// Calldata slices are reference types, but cannot be relocated by solc.
+	// Calldata slices retain the underlying array's element representation,
+	// without calling the slice type's forbidden copyForLocation().
 	auto const* calldataArray = TypeProvider::array(DataLocation::CallData, TypeProvider::uint256());
-	require(mapper.map(TypeProvider::arraySlice(*calldataArray)) == awst::WType::bytesType(),
-		"calldata slice mapping attempted value-buffer relocation");
+	require(awst::structurallyEquivalent(mapper.map(TypeProvider::arraySlice(*calldataArray)),
+		mapper.map(calldataArray)), "calldata slice lost its array element representation");
 
 	// Layout-only mapping must not poison the recursive cache when a nested
 	// value is too large. Actual materialization must still fail on every try.
@@ -162,7 +170,12 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 	require(!builder::isBoxKeyedStorageRef(fixedCallback, analysis), "small fixed callback struct was forced to a box");
 	for (int reset = 0; reset < 2; ++reset)
 	{
-		auto const* mapped = dynamic_cast<awst::ARC4Struct const*>(mapper.map(recursive));
+		auto const* mapped = dynamic_cast<awst::ARC4Struct const*>(mapper.mapSolTypeToARC4(recursive));
+		require(mapper.mapSolTypeToARC4(recursive) == mapped && mapper.map(recursive) == mapped,
+			"a provisional projection poisoned the full ARC4 type cache");
+		auto const* array = dynamic_cast<awst::ARC4DynamicArray const*>(mapper.map(
+			TypeProvider::array(DataLocation::Storage, recursive)));
+		require(array && array->elementType() == mapped, "standalone recursive array lost its full element type");
 		require(mapped && mapped->fields().size() == 2, "recursive root lost fields");
 		auto const* children = dynamic_cast<awst::ARC4DynamicArray const*>(mapped->fields()[1].second);
 		auto const* projection = children
@@ -177,10 +190,86 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 		mapper.reset();
 		require(!mapper.solcAggregateFor(mapped), "reset retained stale solc aggregate facts");
 	}
+	std::vector<std::string> shapes;
+	for (bool reverse: {false, true})
+	{
+		mapper.reset();
+		auto const* left = TypeProvider::structType(declaration<StructDefinition>(a, "Left"), DataLocation::Storage);
+		auto const* right = TypeProvider::structType(declaration<StructDefinition>(a, "Right"), DataLocation::Storage);
+		mapper.map(reverse ? right : left);
+		std::vector<std::string> current;
+		for (auto const* root: {left, right})
+		{
+			auto const* full = mapper.mapSolTypeToARC4(root);
+			require(full == mapper.map(root) && full == mapper.mapSolTypeToARC4(root),
+				"mutually recursive full types are unstable");
+			require(full != mapper.mapStruct(root, true), "projection aliased a full value");
+			current.push_back(builder::TypeCoercion::wtypeToABIName(full));
+		}
+		if (reverse) require(shapes == current, "recursive shape depends on mapping order");
+		else shapes = current;
+	}
+}
+
+void testValueAdapters()
+{
+	using namespace puyasol;
+	using namespace builder;
+	awst::SourceLocation loc;
+	awst::ARC4UIntN u8(8), u16(16), i8(8, "int8"), i128(128, "int128");
+	awst::ARC4DynamicArray dynamic(&u16);
+	awst::ARC4StaticArray pair(&dynamic, 2), huge(&dynamic, 10000);
+	awst::ARC4Tuple unsupportedTuple({awst::WType::voidType()});
+	awst::ARC4DynamicArray unsupportedArray(awst::WType::voidType());
+	auto encoded = std::dynamic_pointer_cast<awst::BytesConstant>(TypeCoercion::makeDefaultValue(&pair, loc));
+	require(encoded && encoded->value == std::vector<uint8_t>({0, 4, 0, 6, 0, 0, 0, 0}),
+		"default dynamic offsets disagreed with the size classifier");
+	for (auto const* unsupported: std::vector<awst::WType const*>{&huge, &unsupportedTuple, &unsupportedArray})
+	{
+		bool rejected = false;
+		try { TypeCoercion::makeDefaultValue(unsupported, loc); }
+		catch (SizeError const&) { rejected = true; }
+		require(rejected, "failed ARC4 default became an empty value");
+	}
+	awst::ARC4Tuple signedFields({&i8, &i128});
+	require(TypeCoercion::wtypeToABIName(&signedFields) == "(int8,int128)", "signed wire aliases were erased");
+	require(TypeCoercion::wtypeToABIName(awst::WType::biguintType()) == "uint512", "native Puya wire width was guessed");
+	awst::ARC4StaticArray fixed(&u8, 2), widened(&u16, 4), loopSource(&u8, 257), loopTarget(&u16, 259);
+	std::vector<std::shared_ptr<awst::Statement>> effects;
+	require(bool(tryConvertArc4Array(awst::makeVarExpression("a", &fixed, loc), &widened, &effects, loc))
+		&& effects.empty(), "small copy lost its expression-local strategy");
+	require(!tryConvertArc4Array(awst::makeVarExpression("a", &loopSource, loc), &loopTarget, nullptr, loc),
+		"loop copy claimed a conversion without a statement sink");
+	require(bool(tryConvertArc4Array(awst::makeVarExpression("a", &loopSource, loc), &loopTarget, &effects, loc))
+		&& !effects.empty(), "large integer copy did not use its loop strategy");
+	awst::ARC4DynamicArray bools(awst::WType::arc4BoolType());
+	awst::ARC4StaticArray fixedBools(awst::WType::arc4BoolType(), 9);
+	auto packed = tryConvertArc4Array(awst::makeVarExpression("b", &fixedBools, loc), &bools, nullptr, loc);
+	require(packed && packed->nodeType() == "ConvertArray", "packed bools were treated as byte-strided elements");
+
+	awst::WTuple sourceW({awst::WType::uint64Type(), awst::WType::uint64Type()});
+	awst::WTuple targetW({awst::WType::biguintType(), awst::WType::biguintType()});
+	auto literal = awst::makeTupleExpression(&sourceW, loc);
+	literal->items = {awst::makeOne(loc), awst::makeOne(loc)};
+	auto const* source = TypeProvider::tuple(TypePointers{TypeProvider::integer(8, IntegerType::Modifier::Signed), TypeProvider::integer(8, IntegerType::Modifier::Signed)});
+	auto const* target = TypeProvider::tuple(TypePointers{TypeProvider::integer(128, IntegerType::Modifier::Signed), TypeProvider::integer(128, IntegerType::Modifier::Signed)});
+	auto converted = ConversionPlan{source, target, &targetW, ConversionPlan::Context::Return}.emit(literal, loc);
+	require(converted != literal && literal->wtype == &sourceW && literal->items[0]->wtype == awst::WType::uint64Type(),
+		"tuple adaptation mutated the shared source AST");
+	effects.clear();
+	auto items = awst::tupleItems(literal, loc, &effects);
+	require(items.size() == 2 && effects.size() == 1, "tuple snapshot did not evaluate the complete source once");
+	awst::BytesWType bytes5(5);
+	auto padded = std::dynamic_pointer_cast<awst::ReinterpretCast>(
+		ConversionPlan{TypeProvider::stringLiteral("hi"), TypeProvider::fixedBytes(5),
+			&bytes5, ConversionPlan::Context::Return}.emit(
+				awst::makeVarExpression("literal_snapshot", awst::WType::stringType(), loc), loc));
+	auto concat = padded ? std::dynamic_pointer_cast<awst::IntrinsicCall>(padded->expr) : nullptr;
+	require(concat && concat->opCode == "concat", "literal width was lost behind a tuple snapshot");
 }
 }
 
-int main()
+int main(int argc, char** argv)
 {
 	try
 	{
@@ -199,6 +288,8 @@ struct Holder { uint256[] values; mapping(uint256 => uint256) entries; }
 struct Wrapper { Holder inner; }
 struct RecursiveHolder { RecursiveWrapper[] children; mapping(uint256 => uint256) entries; }
 struct RecursiveWrapper { RecursiveHolder inner; }
+struct Left { uint16 value; Right[] children; }
+struct Right { bool flag; Left parent; }
 )"},
 			{"b.sol", R"(pragma solidity ^0.8.20;
 struct Item { uint16 first; bool second; }
@@ -208,6 +299,28 @@ contract Target {}
 )"},
 		});
 		require(compiler.parseAndAnalyze(), "solc rejected the type identity fixture");
+		if (argc > 1)
+		{
+			using namespace puyasol;
+			auto const* source = TypeProvider::uint256();
+			Type const* target = nullptr;
+			if (std::string(argv[1]) == "udvt")
+			{
+				target = TypeProvider::userDefinedValueType(
+					declaration<UserDefinedValueTypeDefinition>(compiler.ast("a.sol"), "Value"));
+				source = TypeProvider::uint(16);
+				builder::TypeCoercion::assertImplicitlyConvertible(source, target, {}, "UDVT rejection test");
+			}
+			else
+			{
+				auto const* f = TypeProvider::function(TypePointers{source}, TypePointers{}, {"p"}, {}, FunctionType::Kind::External);
+				auto const* g = TypeProvider::function(TypePointers{TypeProvider::boolean()}, TypePointers{}, {"p"}, {}, FunctionType::Kind::External);
+				builder::TypeCoercion::assertImplicitlyConvertible(f, g, {}, "function rejection test");
+			}
+			require(Logger::instance().hasErrors(), "an illegal nominal/function conversion bypassed solc");
+			return 0;
+		}
+		testValueAdapters();
 		for (auto abi: {puyasol::builder::ContractAbi::Arc4, puyasol::builder::ContractAbi::Evm})
 		{
 			puyasol::builder::TargetProfile profile;

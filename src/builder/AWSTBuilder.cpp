@@ -13,7 +13,7 @@
 #include "builder/itxn/AsaIntrinsics.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/storage/StorageMapper.h"
-#include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-ast/SolStatement.h"
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/ReturnFinishing.h"
 #include "builder/sol-types/OverloadSuffix.h"
@@ -90,7 +90,7 @@ void AWSTBuilder::collectHostBoundFunctions()
 		bool const needsConcreteHost = hasFunctionPointerParameter(*function)
 			|| hasModifierDefinition(*function)
 			|| (!m_session.profile.evmStorageLayout
-				&& m_session.analysis.callablesWithStorageAssembly.count(
+				&& m_session.analysis.callablesWithStorageSlotAccess.count(
 					function->id()));
 		if (needsConcreteHost)
 			m_hostBoundFunctionIds.insert(function->id());
@@ -729,7 +729,7 @@ bool AWSTBuilder::prescanEvmStorageLayout(
 	// walk. A reachable assembly sload/sstore still needs the unit runtime even
 	// when every contract has zero declared state.
 	for (auto const callableId:
-		m_session.analysis.callablesWithStorageAssembly)
+		m_session.analysis.callablesWithStorageSlotAccess)
 		if (!m_session.analysis.hasReachabilityGraphs
 			|| m_session.analysis.reachableCallableIds.count(callableId))
 		{

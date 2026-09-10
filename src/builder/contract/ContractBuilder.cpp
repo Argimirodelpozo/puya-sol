@@ -7,7 +7,7 @@
 #include "builder/contract/EvmMemoryCodec.h"
 #include "awst/NameGen.h"
 #include "awst/Visit.h"
-#include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-ast/SolStatement.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-ast/StorageRefPointer.h"

@@ -24,6 +24,7 @@ struct CallParameterPlan
 	unsigned signedDecodeBits = 0;
 	RefParamPassing passing = RefParamPassing::Value;
 
+	void setAbiWireType(TypeMapper& types, solidity::frontend::Type const* solType, bool assembly = false);
 	std::string wireName() const { return wireType == type ? name : "__arc4_" + name; }
 	std::string offsetName() const { return name + "__off"; }
 	std::shared_ptr<awst::Expression> encodeArgument(

@@ -166,4 +166,32 @@ std::shared_ptr<awst::Expression> ContractContext::emitSequencedOperand(
 	return _value;
 }
 
+std::shared_ptr<awst::Expression> ContractContext::emitConditional(
+	std::shared_ptr<awst::Expression> _condition,
+	LoweredValue<std::shared_ptr<awst::Expression>> _true,
+	LoweredValue<std::shared_ptr<awst::Expression>> _false,
+	awst::WType const* _type,
+	awst::SourceLocation const& _loc)
+{
+	if (_true.effects.empty() && _false.effects.empty())
+		return awst::makeConditional(std::move(_condition), std::move(_true.value),
+			std::move(_false.value), _type, _loc);
+	auto result = awst::makeVarExpression("__cond_"
+		+ std::to_string(awst::NameGen::next("ContractContext.conditional")), _type, _loc);
+	auto block = [&](auto branch) {
+		if (_type != awst::WType::voidType())
+			return makeScopedResultBlock(std::move(branch.effects.pre), result,
+				std::move(branch.value), _loc, std::move(branch.effects.post));
+		auto out = awst::makeBlock(_loc);
+		out->body = std::move(branch.effects.pre);
+		out->body.push_back(awst::makeExpressionStatement(std::move(branch.value), _loc));
+		for (auto& stmt: branch.effects.post) out->body.push_back(std::move(stmt));
+		return out;
+	};
+	preEffects().push_back(awst::makeIfElse(std::move(_condition),
+		block(std::move(_true)), block(std::move(_false)), _loc));
+	if (_type == awst::WType::voidType()) return awst::makeVoidConstant(_loc);
+	return result;
+}
+
 } // namespace puyasol::builder::eb

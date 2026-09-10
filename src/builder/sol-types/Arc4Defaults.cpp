@@ -1,5 +1,7 @@
 #include "builder/sol-types/Arc4Defaults.h"
 
+#include <utility>
+
 namespace puyasol::builder
 {
 
@@ -10,85 +12,58 @@ namespace
 // unbounded host allocation. Larger zero regions use size-only creation paths.
 constexpr uint64_t kMaxMaterializedDefault = 32768;
 
+// ARC4 sequence layout: bool runs occupy ceil(N/8) bytes, other fields
+// retain their own layout. Both sizing and default encoding consume these runs.
+template<class Visit>
+bool visitAggregateRuns(std::vector<awst::WType const*> const& fields, Visit visit)
+{
+	uint64_t bools = 0;
+	auto flush = [&]() {
+		auto const count = std::exchange(bools, 0);
+		return !count || visit(nullptr, EncodedSize::fixed(count / 8 + (count % 8 != 0)));
+	};
+	for (auto const* field: fields)
+	{
+		if (field == awst::WType::arc4BoolType()) ++bools;
+		else if (!flush() || !visit(field, computeEncodedElementSize(field))) return false;
+	}
+	return flush();
+}
+
 std::optional<std::vector<uint8_t>> arc4AggregateDefaultEncoding(
 	std::vector<awst::WType const*> const& _fields)
 {
-	// ARC4 structs and tuples share the same sequence encoding: consecutive
-	// bools form packed runs, fixed fields live in the head, and dynamic fields
-	// contribute a uint16 head offset plus their default encoding in the tail.
-	enum Kind { Bool, Static, Dynamic };
-	struct FieldEncoding { Kind kind; std::vector<uint8_t> bytes; };
+	struct FieldEncoding { bool dynamic; std::vector<uint8_t> bytes; };
 	std::vector<FieldEncoding> encodings;
-	encodings.reserve(_fields.size());
-	int64_t headSize = 0;
-	int boolRun = 0;
-	uint64_t totalSize = 0;
-	auto flushBoolRun = [&]() {
-		if (boolRun > 0)
-		{
-			headSize += (boolRun + 7) / 8;
-			boolRun = 0;
-		}
-	};
-	for (auto const* fieldType: _fields)
+	uint64_t headSize = 0, totalSize = 0;
+	bool const valid = visitAggregateRuns(_fields, [&](awst::WType const* field, EncodedSize size) {
+		if (!field && size.bytes > kMaxMaterializedDefault) return false;
+		auto bytes = field ? arc4DefaultEncoding(field)
+			: std::optional<std::vector<uint8_t>>{std::vector<uint8_t>(size.bytes, 0)};
+		if (!bytes) return false;
+		bool const dynamic = size.kind == EncodedSize::Kind::Dynamic;
+		headSize += dynamic ? 2 : bytes->size();
+		totalSize += bytes->size() + (dynamic ? 2 : 0);
+		if (totalSize > kMaxMaterializedDefault) return false;
+		encodings.push_back({dynamic, std::move(*bytes)});
+		return true;
+	});
+	if (!valid || headSize > 0xFFFF) return std::nullopt;
+	std::vector<uint8_t> head, tail;
+	head.reserve(totalSize);
+	for (auto const& field: encodings)
 	{
-		if (fieldType == awst::WType::arc4BoolType())
+		if (field.dynamic)
 		{
-			encodings.push_back({Bool, {}});
-			boolRun++;
-			if (boolRun % 8 == 1) ++totalSize;
-			if (totalSize > kMaxMaterializedDefault) return std::nullopt;
-			continue;
-		}
-		flushBoolRun();
-		auto fieldDefault = arc4DefaultEncoding(fieldType);
-		if (!fieldDefault)
-			return std::nullopt;
-		bool const dynamic = arc4IsDynamic(fieldType);
-		totalSize += fieldDefault->size() + (dynamic ? 2 : 0);
-		if (totalSize > kMaxMaterializedDefault) return std::nullopt;
-		headSize += dynamic ? 2 : static_cast<int64_t>(fieldDefault->size());
-		encodings.push_back({
-			dynamic ? Dynamic : Static, std::move(*fieldDefault)});
-	}
-	flushBoolRun();
-	if (headSize > 0xFFFF)
-		return std::nullopt;
-
-	std::vector<uint8_t> head;
-	std::vector<uint8_t> tail;
-	head.reserve(static_cast<size_t>(headSize));
-	int64_t tailOffset = headSize;
-	int pendingBools = 0;
-	auto emitBoolRun = [&]() {
-		if (pendingBools > 0)
-		{
-			head.insert(
-				head.end(), static_cast<size_t>((pendingBools + 7) / 8), 0);
-			pendingBools = 0;
-		}
-	};
-	for (auto const& encoding: encodings)
-	{
-		if (encoding.kind == Bool)
-		{
-			pendingBools++;
-			continue;
-		}
-		emitBoolRun();
-		if (encoding.kind == Dynamic)
-		{
-			if (tailOffset > 0xFFFF)
-				return std::nullopt;
-			head.push_back(static_cast<uint8_t>((tailOffset >> 8) & 0xFF));
-			head.push_back(static_cast<uint8_t>(tailOffset & 0xFF));
-			tail.insert(tail.end(), encoding.bytes.begin(), encoding.bytes.end());
-			tailOffset += static_cast<int64_t>(encoding.bytes.size());
+			auto const offset = headSize + tail.size();
+			if (offset > 0xFFFF) return std::nullopt;
+			head.push_back(static_cast<uint8_t>(offset >> 8));
+			head.push_back(static_cast<uint8_t>(offset));
+			tail.insert(tail.end(), field.bytes.begin(), field.bytes.end());
 		}
 		else
-			head.insert(head.end(), encoding.bytes.begin(), encoding.bytes.end());
+			head.insert(head.end(), field.bytes.begin(), field.bytes.end());
 	}
-	emitBoolRun();
 	head.insert(head.end(), tail.begin(), tail.end());
 	return head;
 }
@@ -96,25 +71,10 @@ std::optional<std::vector<uint8_t>> arc4AggregateDefaultEncoding(
 EncodedSize arc4AggregateEncodedSize(std::vector<awst::WType const*> const& _fields)
 {
 	auto total = EncodedSize::fixed(0);
-	uint64_t boolRun = 0;
-	auto flushBoolRun = [&]() {
-		if (boolRun > 0)
-		{
-			total = total.plus(EncodedSize::fixed(boolRun / 8 + (boolRun % 8 != 0)));
-			boolRun = 0;
-		}
-	};
-	for (auto const* fieldType: _fields)
-	{
-		if (fieldType == awst::WType::arc4BoolType())
-		{
-			boolRun++;
-			continue;
-		}
-		flushBoolRun();
-		total = total.plus(computeEncodedElementSize(fieldType));
-	}
-	flushBoolRun();
+	visitAggregateRuns(_fields, [&](awst::WType const*, EncodedSize size) {
+		total = total.plus(size);
+		return true; // Validate every field, even after a dynamic field.
+	});
 	return total;
 }
 
@@ -161,53 +121,12 @@ std::shared_ptr<awst::Expression> makeZeroBytesRuntime(
 	return awst::makeReinterpretCast(std::move(bzero), _targetType, _loc);
 }
 
-std::shared_ptr<awst::Expression> prependArc4LengthHeader(
-	std::shared_ptr<awst::Expression> _expr,
-	int64_t /*_length*/,
-	awst::WType const* _targetType,
-	awst::SourceLocation const& _loc)
-{
-	// puya's ConvertArray adds/strips the uint16 length header.
-	return awst::makeConvertArray(std::move(_expr), _targetType, _loc);
-}
-
 bool arc4IsDynamic(awst::WType const* _type)
 {
-	if (!_type)
-		return false;
-	switch (_type->kind())
-	{
-	case awst::WTypeKind::ARC4DynamicArray:
-		return true;
-	case awst::WTypeKind::ARC4StaticArray:
-	{
-		auto const* arr = static_cast<awst::ARC4StaticArray const*>(_type);
-		return arc4IsDynamic(arr->elementType());
-	}
-	case awst::WTypeKind::ARC4Struct:
-	{
-		auto const* st = static_cast<awst::ARC4Struct const*>(_type);
-		for (auto const& [name, ft]: st->fields())
-			if (arc4IsDynamic(ft))
-				return true;
-		return false;
-	}
-	case awst::WTypeKind::ARC4Tuple:
-	{
-		auto const* tu = static_cast<awst::ARC4Tuple const*>(_type);
-		for (auto const* ft: tu->types())
-			if (arc4IsDynamic(ft))
-				return true;
-		return false;
-	}
-	case awst::WTypeKind::Bytes:
-	{
-		auto const* bw = static_cast<awst::BytesWType const*>(_type);
-		return !bw->length().has_value();
-	}
-	default:
-		return false;
-	}
+	if (!_type) return false;
+	auto const size = computeEncodedElementSize(_type);
+	size.fixedBytes(); // Unsupported/overflow must not masquerade as fixed encoding.
+	return size.kind == EncodedSize::Kind::Dynamic;
 }
 
 std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type)
@@ -219,71 +138,37 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 		|| size.kind == EncodedSize::Kind::Unsupported
 		|| (size.kind == EncodedSize::Kind::Fixed && size.bytes > kMaxMaterializedDefault))
 		return std::nullopt;
+	// Every fixed encoding has the same all-zero default. Packed standalone
+	// bools use one byte; dynamic containers below supply their offset/length
+	// headers. This is the same layout used for sizing and classification.
+	if (size.kind == EncodedSize::Kind::Fixed)
+		return std::vector<uint8_t>(static_cast<size_t>(size.bytes), 0);
+	if (size.kind == EncodedSize::Kind::Packed)
+		return std::vector<uint8_t>{0};
 	switch (_type->kind())
 	{
-	case awst::WTypeKind::ARC4UIntN:
-	{
-		auto const* u = static_cast<awst::ARC4UIntN const*>(_type);
-		return std::vector<uint8_t>(static_cast<size_t>(u->n() / 8), 0);
-	}
-	case awst::WTypeKind::ARC4UFixedNxM:
-	{
-		auto const* u = static_cast<awst::ARC4UFixedNxM const*>(_type);
-		return std::vector<uint8_t>(static_cast<size_t>(u->n() / 8), 0);
-	}
 	case awst::WTypeKind::ARC4DynamicArray:
 		return std::vector<uint8_t>{0, 0};
 	case awst::WTypeKind::ARC4StaticArray:
 	{
-		auto const* arr = static_cast<awst::ARC4StaticArray const*>(_type);
-		auto const* elemT = arr->elementType();
-		auto N = static_cast<int64_t>(arr->arraySize());
-		if (N < 0)
-			return std::nullopt;
-		// ARC4 packs consecutive bool array elements eight per byte. Treat the
-		// complete bool run as the array's element encoding boundary here rather
-		// than pretending every bool occupies a byte. An outer fixed array then
-		// recurses normally and repeats this correctly packed inner encoding, so
-		// bool[M][N][...] needs no rank-specific handling.
-		if (elemT == awst::WType::arc4BoolType())
-			return std::vector<uint8_t>(static_cast<size_t>((N + 7) / 8), 0);
-		auto elemDefault = arc4DefaultEncoding(elemT);
-		if (!elemDefault)
-			return std::nullopt;
-
+		auto const* array = static_cast<awst::ARC4StaticArray const*>(_type);
+		auto element = arc4DefaultEncoding(array->elementType());
+		if (!element) return std::nullopt;
+		auto const count = static_cast<uint64_t>(array->arraySize());
+		auto const stride = 2 + element->size();
+		if (count > kMaxMaterializedDefault / stride) return std::nullopt;
+		uint64_t const headSize = count * 2;
 		std::vector<uint8_t> result;
-		if (arc4IsDynamic(elemT))
+		result.reserve(count * stride);
+		for (uint64_t i = 0; i < count; ++i)
 		{
-			if (static_cast<uint64_t>(N) > kMaxMaterializedDefault / (2 + elemDefault->size()))
-				return std::nullopt;
-			int64_t headSize = N * 2;
-			int64_t tailSize = static_cast<int64_t>(elemDefault->size());
-			// ARC4 dynamic-element offsets are uint16; bail out if the final
-			// element's offset (headSize+(N-1)*tailSize) would exceed 0xFFFF
-			// rather than emit a silently wrapped/corrupt offset header.
-			if (headSize > 0xFFFF
-				|| (tailSize > 0 && N > 0 && (N - 1) > (0xFFFF - headSize) / tailSize))
-				return std::nullopt;
-			result.reserve(static_cast<size_t>(headSize + N * tailSize));
-			for (int64_t i = 0; i < N; ++i)
-			{
-				int64_t off = headSize + i * tailSize;
-				result.push_back(static_cast<uint8_t>((off >> 8) & 0xFF));
-				result.push_back(static_cast<uint8_t>(off & 0xFF));
-			}
-			for (int64_t i = 0; i < N; ++i)
-				result.insert(result.end(), elemDefault->begin(), elemDefault->end());
+			auto const offset = headSize + i * element->size();
+			if (offset > 0xFFFF) return std::nullopt;
+			result.push_back(static_cast<uint8_t>(offset >> 8));
+			result.push_back(static_cast<uint8_t>(offset));
 		}
-		else
-		{
-			if (elemDefault->empty())
-				return result;
-			if (static_cast<uint64_t>(N) > kMaxMaterializedDefault / elemDefault->size())
-				return std::nullopt;
-			result.reserve(static_cast<size_t>(N * static_cast<int64_t>(elemDefault->size())));
-			for (int64_t i = 0; i < N; ++i)
-				result.insert(result.end(), elemDefault->begin(), elemDefault->end());
-		}
+		for (uint64_t i = 0; i < count; ++i)
+			result.insert(result.end(), element->begin(), element->end());
 		return result;
 	}
 	case awst::WTypeKind::ARC4Struct:
@@ -297,26 +182,10 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 		return arc4AggregateDefaultEncoding(tuple->types());
 	}
 	case awst::WTypeKind::Bytes:
-	{
-		auto const* bw = static_cast<awst::BytesWType const*>(_type);
-		if (bw->length().has_value())
-			return std::vector<uint8_t>(static_cast<size_t>(*bw->length()), 0);
 		return std::vector<uint8_t>{0, 0};
-	}
 	case awst::WTypeKind::Basic:
-	{
-		if (_type == awst::WType::biguintType())
-			return std::vector<uint8_t>(32, 0);
-		if (_type == awst::WType::uint64Type())
-			return std::vector<uint8_t>(8, 0);
-		if (_type == awst::WType::boolType())
-			return std::vector<uint8_t>{0};
-		if (_type == awst::WType::arc4BoolType())
-			return std::vector<uint8_t>{0};
-		if (_type == awst::WType::accountType())
-			return std::vector<uint8_t>(32, 0);
+		if (_type == awst::WType::stringType()) return std::vector<uint8_t>{0, 0};
 		return std::nullopt;
-	}
 	default:
 		return std::nullopt;
 	}
@@ -363,7 +232,13 @@ EncodedSize computeEncodedElementSize(awst::WType const* _type)
 		return computeEncodedElementSize(arr->elementType()).times(*arr->arraySize());
 	}
 	case awst::WTypeKind::ARC4DynamicArray:
+	{
+		auto const element = computeEncodedElementSize(
+			static_cast<awst::ARC4DynamicArray const*>(_type)->elementType());
+		if (element.kind == EncodedSize::Kind::Unsupported || element.kind == EncodedSize::Kind::Overflow)
+			return element;
 		return {EncodedSize::Kind::Dynamic};
+	}
 	case awst::WTypeKind::Bytes:
 	{
 		auto const* bytesType = static_cast<awst::BytesWType const*>(_type);

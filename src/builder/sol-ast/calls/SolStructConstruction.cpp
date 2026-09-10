@@ -1,6 +1,7 @@
 #include "builder/sol-ast/calls/SolStructConstruction.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
+#include "builder/sol-eb/AssignmentHelper.h"
 
 #include <libsolidity/ast/Types.h>
 
@@ -9,71 +10,25 @@ namespace puyasol::builder::sol_ast
 
 std::shared_ptr<awst::Expression> SolStructConstruction::toAwst()
 {
-	auto* solType = m_call.annotation().type;
-	auto* wtype = m_ctx.typeMapper.map(solType);
+	auto const* structure = dynamic_cast<solidity::frontend::StructType const*>(solType());
+	auto const* representation = dynamic_cast<awst::ARC4Struct const*>(wtype());
+	assert(structure && representation);
 	auto const args = m_call.sortedArguments();
-
-	std::map<std::string, std::shared_ptr<awst::Expression>> fieldValues;
-
-	auto const* tupleType = dynamic_cast<awst::WTuple const*>(wtype);
-	auto const* arc4StructType = dynamic_cast<awst::ARC4Struct const*>(wtype);
-	auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(solType);
-	if (structType)
+	auto const* constructor = structure->constructorType();
+	assert(args.size() == constructor->parameterTypes().size());
+	auto result = awst::makeNewStruct(representation, m_loc);
+	for (size_t i = 0; i < args.size(); ++i)
 	{
-		auto const& members = structType->structDefinition().members();
-		for (size_t i = 0; i < args.size() && i < members.size(); ++i)
-		{
-			auto val = buildExpr(*args[i]);
-			// A bare literal (`S(0x010203)`, `T(0x1111…)`) stays an
-			// IntegerConstant here; assignments coerce it to the declared
-			// bytesN/address representation, so do the same before the
-			// numeric cast and the ARC4 wrap below.
-			if (dynamic_cast<awst::IntegerConstant const*>(val.get()))
-			{
-				auto const* nativeField = m_ctx.typeMapper.map(members[i]->type());
-				if (nativeField && nativeField != awst::WType::uint64Type()
-					&& nativeField != awst::WType::biguintType()
-					&& nativeField != awst::WType::boolType())
-					val = TypeCoercion::coerceForAssignment(std::move(val), nativeField, m_loc);
-			}
-			if (tupleType && i < tupleType->types().size())
-				val = TypeCoercion::implicitNumericCast(std::move(val), tupleType->types()[i], m_loc);
-			else if (arc4StructType && i < arc4StructType->fields().size())
-				val = TypeCoercion::implicitNumericCast(
-					std::move(val), arc4StructType->fields()[i].second, m_loc);
-			fieldValues[members[i]->name()] = std::move(val);
-		}
+		// solc owns the argument/member conversion; ARC4 packing is a separate
+		// representation step, shared with ordinary field assignments.
+		auto const* memberType = constructor->parameterTypes()[i];
+		auto value = ConversionPlan{args[i]->annotation().type, memberType,
+			m_ctx.typeMapper.map(memberType), ConversionPlan::Context::Initialization}
+			.emit(buildExpr(*args[i]), m_loc, &m_ctx.preEffects());
+		result->values[constructor->parameterNames()[i]] = eb::AssignmentHelper::arc4EncodeForType(
+			m_ctx, std::move(value), representation->fields().at(i).second, m_loc);
 	}
-
-	// ARC4Struct: wrap mismatched fields in ARC4Encode
-	if (arc4StructType)
-	{
-		for (auto const& [fname, ftype]: arc4StructType->fields())
-		{
-			auto it = fieldValues.find(fname);
-			if (it != fieldValues.end() && it->second->wtype != ftype)
-			{
-				// String literal → bytes field: coerce to raw bytes first.
-				bool targetIsByteArray = ftype->kind() == awst::WTypeKind::ARC4DynamicArray
-					&& static_cast<awst::ARC4DynamicArray const*>(ftype)->arc4Alias() == "byte[]";
-				if (targetIsByteArray && it->second->wtype == awst::WType::stringType())
-				{
-					auto asBytes = TypeCoercion::stringToBytes(it->second, m_loc);
-					if (asBytes.get() == it->second.get())
-						asBytes = TypeCoercion::reinterpretCast(
-							std::move(it->second), awst::WType::bytesType(), m_loc);
-					it->second = std::move(asBytes);
-				}
-				auto encode = awst::makeARC4Encode(std::move(it->second), ftype, m_loc);
-				it->second = std::move(encode);
-			}
-		}
-		auto newStruct = awst::makeNewStruct(wtype, m_loc);
-		newStruct->values = std::move(fieldValues);
-		return newStruct;
-	}
-
-	return awst::makeNamedTupleExpression(wtype, std::move(fieldValues), m_loc);
+	return result;
 }
 
 } // namespace puyasol::builder::sol_ast

@@ -6,7 +6,7 @@
 #include "builder/contract/SelectorRouter.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-ast/calls/SolNewExpression.h"
-#include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-ast/SolStatement.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-types/Arc4Defaults.h"

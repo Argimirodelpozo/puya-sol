@@ -2,6 +2,7 @@
 /// Centralised type coercion / conversion utilities for AWST expressions.
 
 #include "builder/sol-types/TypeCoercion.h"
+#include "awst/TupleValue.h"
 #include "Logger.h"
 #include "awst/NameGen.h"
 #include "builder/sol-ast/StorageRefPointer.h"
@@ -257,67 +258,14 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 	std::vector<awst::WType const*> wireTypes;
 	for (auto const& p: _plan)
 		wireTypes.push_back(_wire ? p.wireType : p.nativeType);
-	auto makeWireTuple = [&]() {
-		return _typeMapper.createType<awst::WTuple>(
-			std::vector<awst::WType const*>(wireTypes));
-	};
-	// Encode each item of a literal tuple in place (uses the item's own location,
-	// matching the post-pass); retype the tuple to the wire tuple.
-	auto wrapItems = [&](awst::TupleExpression* _t) {
-		if (!_t) return;
-		for (size_t i = 0; i < _t->items.size() && i < _plan.size(); ++i)
-		{
-			auto elemLoc = _t->items[i]->sourceLocation;
-			_t->items[i] = encodeReturnElement(
-				std::move(_t->items[i]), _plan[i], elemLoc, _asmWrap, _wire);
-		}
-		_t->wtype = makeWireTuple();
-	};
-
-	if (auto* tuple = dynamic_cast<awst::TupleExpression*>(_value.get()))
-	{
-		wrapItems(tuple);
-		return _value;
-	}
-	if (auto* cond = dynamic_cast<awst::ConditionalExpression*>(_value.get()))
-	{
-		auto* trueTuple = dynamic_cast<awst::TupleExpression*>(cond->trueExpr.get());
-		auto* falseTuple = dynamic_cast<awst::TupleExpression*>(cond->falseExpr.get());
-		if (trueTuple && falseTuple)
-		{
-			wrapItems(trueTuple);
-			wrapItems(falseTuple);
-			cond->wtype = makeWireTuple();
-			return _value;
-		}
-		// A branch that is a CALL or nested conditional can't be wrapped in
-		// place — retyping the node while leaving it unencoded shipped raw
-		// native values on the wire (minimal-length biguint where arc4.uint256
-		// is expected). Fall through to the opaque spill, which evaluates the
-		// whole conditional into a temp and rebuilds encoded items.
-	}
-	// Opaque tuple value (e.g. `return f()`): spill to a temp, then rebuild as a
-	// literal tuple of encoded items. (Post-pass used per-signedness temp names;
-	// here it's one convention — internal names, non-semantic.)
-	if (_value->wtype && _value->wtype->kind() == awst::WTypeKind::WTuple)
-	{
-		auto const* subTuple = static_cast<awst::WTuple const*>(_value->wtype);
-		std::string tmpName = "__ret_tmp_"
-			+ std::to_string(awst::NameGen::next("TypeCoercion.retTmpCounter"));
-		auto tmpVar = awst::makeVarExpression(tmpName, _value->wtype, _loc);
-		_prepend.push_back(awst::makeAssignmentStatement(tmpVar, std::move(_value), _loc));
-
-		auto newTuple = awst::makeTupleExpression(nullptr, _loc);
-		for (size_t i = 0; i < _plan.size() && i < subTuple->types().size(); ++i)
-		{
-			auto item = awst::makeTupleItem(tmpVar, static_cast<int>(i), subTuple->types()[i], _loc);
-			newTuple->items.push_back(encodeReturnElement(
-				std::move(item), _plan[i], _loc, _asmWrap, _wire));
-		}
-		newTuple->wtype = makeWireTuple();
-		return newTuple;
-	}
-	return _value;
+	auto items = awst::tupleItems(std::move(_value), _loc, &_prepend);
+	assert(items.size() == _plan.size());
+	auto tuple = awst::makeTupleExpression(
+		_typeMapper.createType<awst::WTuple>(std::move(wireTypes)), _loc);
+	for (size_t i = 0; i < items.size(); ++i)
+		tuple->items.push_back(encodeReturnElement(
+			std::move(items[i]), _plan[i], _loc, _asmWrap, _wire));
+	return tuple;
 }
 
 std::shared_ptr<awst::Expression> TypeCoercion::calldataPointerValueRead(
@@ -342,74 +290,19 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	awst::SourceLocation const& _loc
 )
 {
-	// Promote to biguint if needed
-	auto promoted = implicitNumericCast(
-		std::move(_value), awst::WType::biguintType(), _loc);
-
-	// For 256-bit signed types, the value is already in two's complement form
-	// (from our signed arithmetic wrapping). No sign-extension needed.
-	if (_bits == 256)
-		return promoted;
-
-	// Mask to N bits: value & (2^N - 1). Skip for 256-bit (already full width).
-	if (_bits < 256)
-	{
-		solidity::u256 maskVal = (solidity::u256(1) << _bits) - 1;
-		auto maskConst = awst::makeIntegerConstant(maskVal.str(), _loc, awst::WType::biguintType());
-
-		auto masked = awst::makeBigUIntBinOp(promoted, awst::BigUIntBinaryOperator::BitAnd, std::move(maskConst), _loc);
-		promoted = masked;
-	}
-
-	// `promoted` is referenced 3 times below (cond LHS, add LHS, conditional
-	// else-branch). If it's a side-effecting expression — notably `this.h()`
-	// in `return this.h();` from an int<N>-returning function whose body
-	// mutates transient storage via this.g() — naïve AST duplication would
-	// emit the callsub three times, running the side effects thrice. Bind
-	// to a fresh temp variable via an AssignmentExpression so the value is
-	// computed once and the three subsequent references read the temp.
-	//
-	// CommaExpression wraps the (assign-then-conditional) sequence so this
-	// remains an Expression (signExtendToUint256's return contract).
-	std::string tempName = "__signext_tmp_" + std::to_string((awst::NameGen::next("TypeCoercion.s_signExtTempId") + 1));
-	auto tempVar = awst::makeVarExpression(tempName, awst::WType::biguintType(), _loc);
-	auto bind = awst::makeAssignmentExpression(
-		tempVar, std::move(promoted), _loc, awst::WType::biguintType());
-
-	// All subsequent uses reference the temp var (a fresh VarExpression each
-	// time — puya treats local-var reads as cheap and never re-evaluates the
-	// underlying side-effecting source).
-	auto tempRead = [&]() {
-		return awst::makeVarExpression(tempName, awst::WType::biguintType(), _loc);
-	};
-
-	// threshold = 2^(N-1)
-	solidity::u256 threshold = solidity::u256(1) << (_bits - 1);
-	// 2^256 as a string (u256 can't hold it, it overflows to 0)
-	// offset = 2^256 - 2^N: compute using 512-bit int to avoid overflow
-	boost::multiprecision::uint512_t pow256_wide(kPow2_256);
-	boost::multiprecision::uint512_t offset_wide = pow256_wide - (boost::multiprecision::uint512_t(1) << _bits);
-	std::string offsetStr = offset_wide.str();
-
-	auto threshConst = awst::makeIntegerConstant(threshold.str(), _loc, awst::WType::biguintType());
-
-	auto cond = awst::makeNumericCompare(tempRead(), awst::NumericComparison::Gte, threshConst, _loc);
-
-	auto offsetConst = awst::makeIntegerConstant(offsetStr, _loc, awst::WType::biguintType());
-
-	// `add` = masked + (2^256 - 2^N). This branch only runs when the masked
-	// value is in [2^(N-1), 2^N - 1], so the sum lands in [2^256 - 2^(N-1),
-	// 2^256 - 1] — always < 2^256. A `mod 2^256` here would be a guaranteed
-	// no-op, so it's omitted.
-	auto add = awst::makeBigUIntBinOp(tempRead(), awst::BigUIntBinaryOperator::Add, std::move(offsetConst), _loc);
-
-	auto conditional = awst::makeConditional(
-		std::move(cond), std::move(add), tempRead(), awst::WType::biguintType(), _loc);
-
-	auto comma = awst::makeCommaExpression(awst::WType::biguintType(), _loc);
-	comma->expressions.push_back(std::move(bind));
-	comma->expressions.push_back(std::move(conditional));
-	return comma;
+	_value = implicitNumericCast(std::move(_value), awst::WType::biguintType(), _loc);
+	if (_bits == 256) return _value;
+	assert(_bits > 0 && _bits < 256);
+	auto masked = awst::makeEvalOnce(awst::makeBigUIntBinOp(std::move(_value),
+		awst::BigUIntBinaryOperator::BitAnd,
+		awst::makeBiguintConstant(((solidity::u256(1) << _bits) - 1).str(), _loc), _loc), _loc);
+	// Masking makes the conditional addition provably < 2^256.
+	boost::multiprecision::uint512_t offset =
+		boost::multiprecision::uint512_t(kPow2_256) - (boost::multiprecision::uint512_t(1) << _bits);
+	return awst::makeConditional(isNegativeSigned(masked, _bits, _loc),
+		awst::makeBigUIntBinOp(masked, awst::BigUIntBinaryOperator::Add,
+			awst::makeBiguintConstant(offset.str(), _loc), _loc),
+		masked, awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint64(
@@ -418,48 +311,18 @@ std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint64(
 	awst::SourceLocation const& _loc
 )
 {
-	// Full-width or invalid: nothing to extend (int64 decode is already the
-	// 8-byte two's-complement; >=64 has no high bits to fill).
-	if (_bits == 0 || _bits >= 64)
-		return _value;
-
-	// Bind the (possibly side-effecting, e.g. box-backed) source to a temp so
-	// the two reads below evaluate it once. MASK to the low `_bits` bits first
-	// (`mod 2^bits`) so this is correct whether the source is the minimal sub-word
-	// form OR already sign-extended to 64 bits (e.g. an ABI-decoded int8 param):
-	// the add below assumes value ∈ [0, 2^bits), which only holds post-mask.
-	std::string tempName = "__signext64_tmp_" + std::to_string((awst::NameGen::next("TypeCoercion.s_signExt64TempId") + 1));
-	auto masked = awst::makeUInt64BinOp(
-		std::move(_value), awst::UInt64BinaryOperator::Mod,
-		awst::makeIntegerConstant(std::uint64_t(1) << _bits, _loc), _loc);
-	auto bind = awst::makeAssignmentExpression(
-		awst::makeVarExpression(tempName, awst::WType::uint64Type(), _loc),
-		std::move(masked), _loc, awst::WType::uint64Type());
-	auto tempRead = [&]() {
-		return awst::makeVarExpression(tempName, awst::WType::uint64Type(), _loc);
-	};
-
-	// value ∈ [0, 2^bits-1]; reinterpret as signed: if the N-bit sign bit is
-	// set, add (2^64 - 2^bits) to fill the high bits. value + (2^64 - 2^bits)
-	// stays < 2^64 for every value in range, so the add never overflows even if
-	// both conditional arms are evaluated.
-	std::uint64_t threshold = std::uint64_t(1) << (_bits - 1);
-	std::uint64_t offset = ~((std::uint64_t(1) << _bits) - 1); // 2^64 - 2^bits
-
-	auto cond = awst::makeNumericCompare(
-		tempRead(), awst::NumericComparison::Gte,
-		awst::makeIntegerConstant(threshold, _loc), _loc);
-	auto extended = awst::makeUInt64BinOp(
-		tempRead(), awst::UInt64BinaryOperator::Add,
-		awst::makeIntegerConstant(offset, _loc), _loc);
-	auto conditional = awst::makeConditional(
-		std::move(cond), std::move(extended), tempRead(),
-		awst::WType::uint64Type(), _loc);
-
-	auto comma = awst::makeCommaExpression(awst::WType::uint64Type(), _loc);
-	comma->expressions.push_back(std::move(bind));
-	comma->expressions.push_back(std::move(conditional));
-	return comma;
+	if (_bits == 0 || _bits >= 64) return _value;
+	// The source (including any effects) is evaluated once. Masking also
+	// handles input already sign-extended by an earlier ABI decode.
+	auto masked = awst::makeEvalOnce(awst::makeUInt64BinOp(std::move(_value),
+		awst::UInt64BinaryOperator::BitAnd,
+		awst::makeIntegerConstant((uint64_t{1} << _bits) - 1, _loc), _loc), _loc);
+	return awst::makeConditional(awst::makeNumericCompare(
+		masked, awst::NumericComparison::Gte,
+		awst::makeIntegerConstant(uint64_t{1} << (_bits - 1), _loc), _loc),
+		awst::makeUInt64BinOp(masked, awst::UInt64BinaryOperator::Add,
+			awst::makeIntegerConstant(~((uint64_t{1} << _bits) - 1), _loc), _loc),
+		masked, awst::WType::uint64Type(), _loc);
 }
 
 std::shared_ptr<awst::Expression> TypeCoercion::maskUnsignedToWidth(
@@ -643,27 +506,16 @@ void TypeCoercion::assertImplicitlyConvertible(
 	if (!_srcSolType || !_tgtSolType)
 		return;
 	using namespace solidity::frontend;
-	// Function types have call-site special cases (external calldata/memory
-	// param equivalence) looser than bare convertibility — skip.
-	if (dynamic_cast<FunctionType const*>(_srcSolType)
-		|| dynamic_cast<FunctionType const*>(_tgtSolType))
-		return;
-	// A user-defined value type IS its underlying type at runtime, so compare
-	// through the wrapper. solc demands an explicit wrap/unwrap in source, but
-	// the compiler legitimately crosses the boundary where bytes are handed
-	// over by REPRESENTATION rather than by conversion — e.g. the
-	// `address(this).call(abi.encodeWithSelector(this.f.selector, int(-5)))`
-	// self-call rewrite, where the untyped encoder's `int256` becomes the
-	// callee's declared `MyInt`. No sign/width/kind mixup can hide here: the
-	// two spellings share one representation.
-	auto unwrapUserDefined = [](Type const* type)
-	{
-		while (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(type))
-			type = &udvt->underlyingType();
-		return type;
+	// The external callable view is solc's own calldata-to-memory adapter.
+	// Preserve kind, nominal arguments and mutability checks; never waive all
+	// function conversions merely because the runtime handle has equal width.
+	auto externalView = [](Type const* type) -> Type const* {
+		auto const* function = dynamic_cast<FunctionType const*>(type);
+		return function && function->kind() == FunctionType::Kind::External
+			? function->asExternallyCallableFunction(false) : type;
 	};
-	_srcSolType = unwrapUserDefined(_srcSolType);
-	_tgtSolType = unwrapUserDefined(_tgtSolType);
+	_srcSolType = externalView(_srcSolType);
+	_tgtSolType = externalView(_tgtSolType);
 	// Accept when EITHER the raw pair OR the memory-normalized pair converts.
 	// Raw-only: storage→storage array copies convert element types, their
 	// memory forms don't. Normalized-only: internal calls to public fns with
@@ -674,8 +526,15 @@ void TypeCoercion::assertImplicitlyConvertible(
 		return;
 	if (!containsMappingType(_srcSolType) && !containsMappingType(_tgtSolType))
 	{
-		_srcSolType = TypeProvider::withLocationIfReference(DataLocation::Memory, _srcSolType);
-		_tgtSolType = TypeProvider::withLocationIfReference(DataLocation::Memory, _tgtSolType);
+		auto valueLocation = [](Type const* type) -> Type const* {
+			// ArraySliceType explicitly forbids copyForLocation(). Its mobile
+			// type is relocatable only where solc supplies an underlying array.
+			if (dynamic_cast<ArraySliceType const*>(type)) type = type->mobileType();
+			return dynamic_cast<ArrayType const*>(type) || dynamic_cast<StructType const*>(type)
+				? TypeProvider::withLocationIfReference(DataLocation::Memory, type) : type;
+		};
+		_srcSolType = valueLocation(_srcSolType);
+		_tgtSolType = valueLocation(_tgtSolType);
 	}
 	if (!_srcSolType->isImplicitlyConvertibleTo(*_tgtSolType))
 		Logger::instance().error(
@@ -737,16 +596,6 @@ std::shared_ptr<awst::BytesConstant> TypeCoercion::stringToBytesN(
 		std::move(val), _loc, awst::BytesEncoding::Base16, _targetType);
 }
 
-std::shared_ptr<awst::ReinterpretCast> TypeCoercion::reinterpretCast(
-	std::shared_ptr<awst::Expression> _expr,
-	awst::WType const* _targetType,
-	awst::SourceLocation const& _loc
-)
-{
-	auto cast = awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
-	return cast;
-}
-
 std::shared_ptr<awst::Expression> TypeCoercion::stringToBytes(
 	std::shared_ptr<awst::Expression> _expr,
 	awst::SourceLocation const& _loc
@@ -762,139 +611,48 @@ std::shared_ptr<awst::Expression> TypeCoercion::stringToBytes(
 
 // ── ARC4 / ABI ───────────────────────────────────────────────────
 
-std::string TypeCoercion::wtypeToABIName(awst::WType const* _type, BareBiguintName _biguint)
+std::string TypeCoercion::wtypeToABIName(awst::WType const* _type)
 {
-	// ── native wtypes (reachable from the splitter/helper sig builders; the
-	// selector-computation callers pre-map through mapToARC4Type) ──
-	if (!_type || _type == awst::WType::voidType())
-		return "void";
-	if (_type == awst::WType::boolType() || _type == awst::WType::arc4BoolType())
-		return "bool";
-	if (_type == awst::WType::uint64Type())
-		return "uint64";
-	if (_type == awst::WType::biguintType())
-		return _biguint == BareBiguintName::Uint512 ? "uint512" : "uint256";
-	if (_type == awst::WType::accountType())
-		return "address";
-	if (_type == awst::WType::stringType())
-		return "string";
-	if (auto len = awst::fixedBytesLength(_type))
-		return "byte[" + std::to_string(*len) + "]";
-	if (_type->kind() == awst::WTypeKind::Bytes)
-		return "byte[]";
+	// Match Puya's alias-aware name of the actual emitted wire type. Native
+	// biguint is uint512 there; Solidity boundaries explicitly plan uintN.
+	if (!_type || _type == awst::WType::voidType()) return "void";
+	if (_type == awst::WType::boolType() || _type == awst::WType::arc4BoolType()) return "bool";
+	if (_type == awst::WType::uint64Type() || _type == awst::WType::applicationType()) return "uint64";
+	if (_type == awst::WType::biguintType()) return "uint512";
+	if (_type == awst::WType::accountType()) return "address";
+	if (_type == awst::WType::stringType()) return "string";
+	if (auto length = awst::fixedBytesLength(_type))
+		return "byte[" + std::to_string(*length) + "]";
+	if (_type->kind() == awst::WTypeKind::Bytes) return "byte[]";
+	if (auto const* integer = dynamic_cast<awst::ARC4UIntN const*>(_type))
+		return integer->arc4Alias().empty()
+			? "uint" + std::to_string(integer->n()) : integer->arc4Alias();
+	if (auto const* fixed = dynamic_cast<awst::ARC4UFixedNxM const*>(_type))
+		return "ufixed" + std::to_string(fixed->n()) + "x" + std::to_string(fixed->m());
+	if (auto const* array = dynamic_cast<awst::ARC4StaticArray const*>(_type))
+		return array->arc4Alias().empty()
+			? wtypeToABIName(array->elementType()) + "[" + std::to_string(array->arraySize()) + "]"
+			: array->arc4Alias();
+	if (auto const* array = dynamic_cast<awst::ARC4DynamicArray const*>(_type))
+		return array->arc4Alias().empty()
+			? wtypeToABIName(array->elementType()) + "[]" : array->arc4Alias();
 
-	switch (_type->kind())
+	std::vector<awst::WType const*> fields;
+	if (auto const* structure = dynamic_cast<awst::ARC4Struct const*>(_type))
+		for (auto const& [name, type]: structure->fields()) fields.push_back(type);
+	else if (auto const* tuple = dynamic_cast<awst::ARC4Tuple const*>(_type))
+		fields = tuple->types();
+	else if (auto const* tuple = dynamic_cast<awst::WTuple const*>(_type))
+		fields = tuple->types();
+	else
+		throw SizeError("type has no ARC4 wire signature: " + _type->name());
+	std::string result = "(";
+	for (size_t i = 0; i < fields.size(); ++i)
 	{
-	case awst::WTypeKind::ARC4UIntN:
-	{
-		auto const* uintN = static_cast<awst::ARC4UIntN const*>(_type);
-		// puya's canonical name for the 8-bit byte element is "byte", not "uint8"
-		// (selector hashes must match its emitted `method "..."` exactly).
-		if (uintN->arc4Alias() == "byte")
-			return "byte";
-		return "uint" + std::to_string(uintN->n());
+		if (i) result += ",";
+		result += wtypeToABIName(fields[i]);
 	}
-	case awst::WTypeKind::ARC4StaticArray:
-	{
-		auto const* sa = static_cast<awst::ARC4StaticArray const*>(_type);
-		// Honor only puya's CANONICAL aliases ("address", "byte[N]"); an internal
-		// alias (e.g. debug tags) must not leak into a signature.
-		auto const& alias = sa->arc4Alias();
-		if (alias == "address" || alias.rfind("byte[", 0) == 0)
-			return alias;
-		return wtypeToABIName(sa->elementType(), _biguint) + "[" + std::to_string(sa->arraySize()) + "]";
-	}
-	case awst::WTypeKind::ARC4DynamicArray:
-	{
-		auto const* da = static_cast<awst::ARC4DynamicArray const*>(_type);
-		auto const& alias = da->arc4Alias();
-		if (alias == "string" || alias == "byte[]" || alias == "address")
-			return alias;
-		return wtypeToABIName(da->elementType(), _biguint) + "[]";
-	}
-	case awst::WTypeKind::ARC4Struct:
-	{
-		auto const* st = static_cast<awst::ARC4Struct const*>(_type);
-		std::string result = "(";
-		bool first = true;
-		for (auto const& [name, fieldType]: st->fields())
-		{
-			if (!first) result += ",";
-			result += wtypeToABIName(fieldType, _biguint);
-			first = false;
-		}
-		result += ")";
-		return result;
-	}
-	case awst::WTypeKind::ARC4Tuple:
-	{
-		auto const* tp = static_cast<awst::ARC4Tuple const*>(_type);
-		std::string result = "(";
-		bool first = true;
-		for (auto const* elemType: tp->types())
-		{
-			if (!first) result += ",";
-			result += wtypeToABIName(elemType, _biguint);
-			first = false;
-		}
-		result += ")";
-		return result;
-	}
-	case awst::WTypeKind::WTuple:
-	{
-		auto const* tp = static_cast<awst::WTuple const*>(_type);
-		std::string result = "(";
-		bool first = true;
-		for (auto const* elemType: tp->types())
-		{
-			if (!first) result += ",";
-			result += wtypeToABIName(elemType, _biguint);
-			first = false;
-		}
-		result += ")";
-		return result;
-	}
-	case awst::WTypeKind::ReferenceArray:
-		// Splitter chunk sigs encode reference arrays as raw bytes (pre-existing
-		// splitter convention; the selector paths never see one — they pre-map).
-		return "byte[]";
-	default:
-		return _type->name();
-	}
-}
-
-std::optional<std::string> TypeCoercion::intSelectorName(
-	solidity::frontend::Type const* _type)
-{
-	auto it = SolIntType::fromSol(_type);
-	if (!it)
-		return std::nullopt;
-	// <=64-bit collapses to uint64; >64-bit keeps its exact width. Signedness
-	// is always dropped (the callee names int128 as "uint128").
-	return it->bits <= 64 ? std::string("uint64") : ("uint" + std::to_string(it->bits));
-}
-
-std::optional<std::string> TypeCoercion::intSelectorReturnName(
-	solidity::frontend::Type const* _type)
-{
-	auto it = SolIntType::fromSol(_type);
-	if (it)
-	{
-		// A SIGNED integer RETURN is encoded as the full 256-bit two's complement
-		// (sign-extended), so the callee names it "uint256" regardless of width
-		// (verified via TEAL: int8/int64/int128/int256 returns are all "uint256").
-		// Unsigned returns use the same exact-width rule as params. The param vs
-		// return asymmetry for signed ints is why this is separate from
-		// intSelectorName.
-		if (it->isSigned)
-			return std::string("uint256");
-		// Unsigned returns publish the declared width (params keep the
-		// uint64 collapse for sub-word types).
-		return "uint" + std::to_string(it->bits);
-	}
-	if (auto en = SolIntType::fromSolOrEnum(_type); en && !en->isSigned)
-		return "uint" + std::to_string(en->bits);
-	return std::nullopt;
+	return result + ")";
 }
 
 std::string TypeCoercion::buildArc4Selector(
@@ -947,187 +705,56 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 {
 	if (!_type)
 		return awst::makeBytesConstant({}, _loc);
-
-	// Bool → BoolConstant
 	if (_type == awst::WType::boolType())
-	{
 		return awst::makeFalse(_loc);
-	}
-
-	// arc4.bool → 1-byte BytesConstant 0x00. (Without this, arc4Bool falls
-	// through to the bytes-fallback branch and returns *empty* bytes — which
-	// is the wrong wire encoding for an arc4 bool and trips downstream
-	// getbit/length checks. The bool-array and bool-struct-field workarounds
-	// cover their own paths, but a direct arc4Bool local var would surface
-	// this if hit.)
-	if (_type == awst::WType::arc4BoolType())
-	{
-		return awst::makeBytesConstant(
-			std::vector<uint8_t>{0}, _loc, awst::BytesEncoding::Base16, _type);
-	}
-
-	// Integer types → IntegerConstant
 	if (_type == awst::WType::uint64Type())
-	{
-		auto val = awst::makeZero(_loc);
-		return val;
-	}
+		return awst::makeZero(_loc);
 	if (_type == awst::WType::biguintType())
+		return awst::makeBiguintConstant("0", _loc);
+
+	if (isArc4EncodedType(_type))
 	{
-		auto val = awst::makeBiguintConstant("0", _loc);
-		return val;
-	}
-	if (_type->kind() == awst::WTypeKind::ARC4UIntN)
-	{
-		auto const* arc4UInt = static_cast<awst::ARC4UIntN const*>(_type);
-		// ARC4 zero: N/8 zero bytes as BytesConstant with ARC4UIntN type
-		int numBytes = arc4UInt->n() / 8;
-		return awst::makeBytesConstant(
-			std::vector<uint8_t>(numBytes, 0), _loc, awst::BytesEncoding::Base16, _type);
+		// One layout/default implementation owns packed bool runs and dynamic
+		// head/tail offsets. Large fixed zeros use runtime creation; a failed
+		// dynamic encoding is an error, never an empty or guessed value.
+		auto const size = computeEncodedElementSize(_type).fixedBytes<int>();
+		if (size && *size > kLargeBytesRuntimeThreshold)
+			return makeZeroBytesRuntime(*size, _type, _loc);
+		if (auto bytes = arc4DefaultEncoding(_type))
+			return awst::makeBytesConstant(
+				std::move(*bytes), _loc, awst::BytesEncoding::Base16, _type);
+		throw SizeError("ARC4 default encoding is unsupported or exceeds the materialization limit");
 	}
 
-	// Tuple → TupleExpression with component defaults (recursive)
-	if (_type->kind() == awst::WTypeKind::WTuple)
+	if (auto const* tupleType = dynamic_cast<awst::WTuple const*>(_type))
 	{
-		auto const* tupleType = static_cast<awst::WTuple const*>(_type);
 		auto tuple = awst::makeTupleExpression(_type, _loc);
-		for (auto const* componentType: tupleType->types())
-			tuple->items.push_back(makeDefaultValue(componentType, _loc));
+		for (auto const* component: tupleType->types())
+			tuple->items.push_back(makeDefaultValue(component, _loc));
 		return tuple;
 	}
-
-	// ARC4 aggregate → a valid encoded default at the recursive width.
-	//
-	// Why prefer the BytesConstant: puya's NewStruct encoder has a bug
-	// when one or more fields are arc4.bool. The encoder packs consecutive
-	// bools into bits via setbit on a running bytes buffer, but starts
-	// from `bytec_1 // 0x` (empty bytes) instead of bzero(1). The first
-	// getbit/setbit then errors with "index beyond byteslice", which makes
-	// every default-struct read on a mapping that contains bool fields
-	// (Hub.SpokeData, Hub.Asset, etc.) panic at runtime. By emitting the
-	// zero-filled bytes literal at the correct encoded size we skip puya's
-	// encoder entirely for the all-zero case — what comes out is what puya
-	// *should* have produced for an all-zero default. See puyabug.md §2.
-	if (_type->kind() == awst::WTypeKind::ARC4Struct
-		|| _type->kind() == awst::WTypeKind::ARC4Tuple)
+	if (auto const* arrayType = dynamic_cast<awst::ReferenceArray const*>(_type))
 	{
-		int encodedSize = computeEncodedElementSize(_type).fixedBytes<int>().value_or(0);
-		if (encodedSize > 0)
-		{
-			if (encodedSize > kLargeBytesRuntimeThreshold)
-				return makeZeroBytesRuntime(encodedSize, _type, _loc);
-			return awst::makeBytesConstant(
-				std::vector<uint8_t>(static_cast<size_t>(encodedSize), 0),
-				_loc, awst::BytesEncoding::Base16, _type);
-		}
-
-		// Dynamic-size struct (a field has variable encoding). Use the
-		// `arc4DefaultEncoding` helper which builds the correct head+tail
-		// byte layout including dynamic-field offsets — avoids puya's
-		// buggy NewStruct encoder path (which mispacks bools onto an empty
-		// bytes buffer instead of bzero(1)) and produces the right struct
-		// size (head + sum of dynamic-field empty tails) for cases like
-		// `struct { uint a; uint8 b; mapping(K=>V) c; bool d; }` where the
-		// mapping is bytes-typed at the AWST level.
-		if (auto def = arc4DefaultEncoding(_type))
-			return awst::makeBytesConstant(
-				std::move(*def), _loc, awst::BytesEncoding::Base16, _type);
-
-		// Fallback (some field's default isn't statically computable):
-		// NewStruct + recursive defaults. May still hit the puya
-		// bool-packing bug if any field is arc4.bool — not reached today
-		// by AAVE V4 / the bundled tests.
-		if (auto const* structType = dynamic_cast<awst::ARC4Struct const*>(_type))
-		{
-			auto expr = awst::makeNewStruct(_type, _loc);
-			for (auto const& [name, fieldType]: structType->fields())
-				expr->values[name] = makeDefaultValue(fieldType, _loc);
-			return expr;
-		}
-		auto const* tupleType = static_cast<awst::ARC4Tuple const*>(_type);
-		auto tuple = awst::makeTupleExpression(_type, _loc);
-		for (auto const* componentType: tupleType->types())
-			tuple->items.push_back(makeDefaultValue(componentType, _loc));
-		return tuple;
+		auto array = awst::makeNewArray(_type, _loc);
+		for (int64_t i = 0; i < arrayType->arraySize().value_or(0); ++i)
+			array->values.push_back(makeDefaultValue(arrayType->elementType(), _loc));
+		return array;
 	}
 
-	// ReferenceArray → NewArray with default elements
-	if (_type->kind() == awst::WTypeKind::ReferenceArray)
-	{
-		auto const* refArr = static_cast<awst::ReferenceArray const*>(_type);
-		auto arr = awst::makeNewArray(_type, _loc);
-		if (refArr->arraySize().has_value())
-		{
-			for (int64_t i = 0; i < refArr->arraySize().value(); ++i)
-				arr->values.push_back(makeDefaultValue(refArr->elementType(), _loc));
-		}
-		return arr;
-	}
-
-	// ARC4StaticArray → BytesConstant of correct encoded size (zero-filled).
-	// Puya's pushbytes has a ~4KB cap; for anything bigger, emit bzero(N) so
-	// the zero region is allocated at runtime instead of baked into the bytecode.
-	if (_type->kind() == awst::WTypeKind::ARC4StaticArray)
-	{
-		int encodedSize = computeEncodedElementSize(_type).fixedBytes<int>().value_or(0);
-		if (encodedSize > kLargeBytesRuntimeThreshold)
-			return makeZeroBytesRuntime(encodedSize, _type, _loc);
-
-		// For static arrays of DYNAMIC-content elements (e.g.
-		// `uint[][2]` — fixed[2] of `uint[]`), `computeEncodedElementSize`
-		// returns 0 because the element size isn't statically fixed. A
-		// zero-byte default crashes the `static_array_replace_dynamic_element`
-		// helper at the first push (it tries to read uint16 offset from
-		// position 2 of an empty buffer). Build the proper ARC4 default:
-		// N×2-byte offset header pointing at each inner element's default
-		// encoding, followed by the inner defaults concatenated as the
-		// tail.
-		//
-		// Gate on `arc4IsDynamic`, NOT on `encodedSize == 0` — the size
-		// helper also returns 0 for some fixed-content cases that
-		// `computeEncodedElementSize` doesn't enumerate (notably
-		// `bool[N]` where the element is `arc4.bool`, which is
-		// bit-packed and never appears in the switch). Those still want
-		// the existing empty-bytes default; applying the dyn-encoding
-		// shape would corrupt storage shape and break round-trip
-		// (regresses `storage/delete_overlapping_transient_*_storage_array_delete_different_base_type`).
-		if (arc4IsDynamic(_type))
-		{
-			if (auto enc = arc4DefaultEncoding(_type))
-				return awst::makeBytesConstant(
-					std::move(*enc), _loc, awst::BytesEncoding::Base16, _type);
-		}
-
-		std::vector<uint8_t> val;
-		if (encodedSize > 0)
-			val.resize(static_cast<size_t>(encodedSize), 0);
-		return awst::makeBytesConstant(
-			std::move(val), _loc, awst::BytesEncoding::Base16, _type);
-	}
-
-	// ARC4DynamicArray → empty with 2-byte length header (0x0000)
-	if (_type->kind() == awst::WTypeKind::ARC4DynamicArray)
-		return awst::makeBytesConstant(
-			{0x00, 0x00}, _loc, awst::BytesEncoding::Base16, _type);
-
-	// Everything else (bytes, string, account, ARC4 types, etc.)
-	std::vector<uint8_t> val;
+	std::vector<uint8_t> bytes;
 	if (_type == awst::WType::accountType())
-		val.assign(32, 0);
-	else if (auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_type))
+		bytes.assign(32, 0);
+	else if (auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_type);
+		bytesType && bytesType->length())
 	{
-		if (bytesType->length().has_value())
-		{
-			int n = static_cast<int>(*bytesType->length());
-			if (n > kLargeBytesRuntimeThreshold)
-				return makeZeroBytesRuntime(n, _type, _loc);
-			val.assign(static_cast<size_t>(n), 0);
-		}
+		int const size = computeEncodedElementSize(_type).fixedBytes<int>().value();
+		if (size > kLargeBytesRuntimeThreshold)
+			return makeZeroBytesRuntime(size, _type, _loc);
+		bytes.assign(static_cast<size_t>(size), 0);
 	}
 	return awst::makeBytesConstant(
-		std::move(val), _loc, awst::BytesEncoding::Base16, _type);
+		std::move(bytes), _loc, awst::BytesEncoding::Base16, _type);
 }
-
 
 std::vector<uint8_t> TypeCoercion::intLiteralToBytesN(std::string const& _decimal, int _n)
 {
@@ -1196,65 +823,6 @@ std::shared_ptr<awst::Expression> tryWidenArc4ScalarInt(
 		awst::makeConcat(std::move(prefix), once, _loc), _targetType, _loc);
 }
 
-/// Fixed-array copies (ARC4StaticArray source → static/dynamic ARC4 array)
-/// recurse through the same scalar/aggregate conversion rules (not separate
-/// signed/unsigned literal special cases).
-std::shared_ptr<awst::Expression> tryCopyArc4StaticArray(
-	std::shared_ptr<awst::Expression>& _expr,
-	awst::WType const* _targetType,
-	awst::SourceLocation const& _loc)
-{
-	auto const* source = dynamic_cast<awst::ARC4StaticArray const*>(_expr->wtype);
-	if (!source)
-		return nullptr;
-	auto const* targetStatic = dynamic_cast<awst::ARC4StaticArray const*>(_targetType);
-	auto const* targetDynamic = dynamic_cast<awst::ARC4DynamicArray const*>(_targetType);
-	auto const* targetElem = targetStatic ? targetStatic->elementType()
-		: targetDynamic ? targetDynamic->elementType() : nullptr;
-	if (!(targetElem && (!targetStatic || source->arraySize() <= targetStatic->arraySize())))
-		return nullptr;
-	bool const sameElement = awst::structurallyEquivalent(source->elementType(), targetElem);
-	if (sameElement && targetDynamic)
-	{
-		checkedSize<uint16_t>(source->arraySize(), "ARC4 array length");
-		return prependArc4LengthHeader(std::move(_expr), source->arraySize(), _targetType, _loc);
-	}
-	auto const sourceStride = computeEncodedElementSize(source->elementType()).fixedBytes<int>();
-	auto const targetStride = computeEncodedElementSize(targetElem).fixedBytes<int>();
-	if (sameElement && targetStatic && sourceStride)
-	{
-		auto const padding = EncodedSize::fixed(*sourceStride)
-			.times(targetStatic->arraySize() - source->arraySize()).fixedBytes<int>().value();
-		return awst::makeReinterpretCast(
-			awst::makeRightPad(awst::makeAsBytes(std::move(_expr), _loc), padding, _loc),
-			_targetType, _loc);
-	}
-	if (sourceStride && targetStride && source->arraySize() <= 256)
-	{
-		auto once = awst::makeEvalOnce(awst::makeAsBytes(std::move(_expr), _loc), _loc);
-		std::vector<uint8_t> header;
-		if (targetDynamic)
-		{
-			auto const count = checkedSize<uint16_t>(source->arraySize(), "ARC4 array length");
-			header = {static_cast<uint8_t>(count >> 8), static_cast<uint8_t>(count)};
-		}
-		std::shared_ptr<awst::Expression> bytes = awst::makeBytesConstant(std::move(header), _loc);
-		for (int64_t i = 0; i < source->arraySize(); ++i)
-		{
-			auto element = awst::makeReinterpretCast(
-				awst::makeExtract(once, checkedSize<int>(i * *sourceStride, "array element offset"),
-					*sourceStride, _loc), source->elementType(), _loc);
-			bytes = awst::makeConcat(std::move(bytes),
-				awst::makeAsBytes(TypeCoercion::coerceForAssignment(std::move(element), targetElem, _loc), _loc), _loc);
-		}
-		if (targetStatic && targetStatic->arraySize() > source->arraySize())
-			bytes = awst::makeRightPad(std::move(bytes), EncodedSize::fixed(*targetStride)
-				.times(targetStatic->arraySize() - source->arraySize()).fixedBytes<int>().value(), _loc);
-		return awst::makeReinterpretCast(std::move(bytes), _targetType, _loc);
-	}
-	return nullptr;
-}
-
 /// String/bytes source → fixed-size bytes[N] target of a DIFFERENT width.
 /// For fixed-size bytes[N] targets coming from a narrower fixed bytes[M]
 /// (M < N), Solidity right-pads the source with zeros to produce N bytes. A
@@ -1307,6 +875,12 @@ std::shared_ptr<awst::Expression> tryCoerceToBytes(
 	awst::WType const* _targetType,
 	awst::SourceLocation const& _loc)
 {
+	// String storage and byte views use the same bytes on AVM, but retain
+	// distinct AWST types. This belongs at every conversion boundary, not
+	// only in the former scalar-assignment fallback.
+	if (_targetType == awst::WType::stringType()
+		&& _expr->wtype->kind() == awst::WTypeKind::Bytes)
+		return awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
 	if (_targetType->kind() != awst::WTypeKind::Bytes)
 		return nullptr;
 	auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_targetType);
@@ -1361,26 +935,6 @@ std::shared_ptr<awst::Expression> tryAccountBytesReinterpret(
 	return nullptr;
 }
 
-/// application → account: encode the app id into a fake address of
-/// the form (24 zero bytes ++ itob(app_id)). This round-trips
-/// losslessly through the inverse `extract 24 8; btoi` we use in the
-/// account→application path below, so `A a = new A(); a.f();` keeps
-/// the original app id rather than the SHA512_256 on-chain address
-/// (which is opaque and can't be recovered).
-std::shared_ptr<awst::Expression> tryApplicationToAccount(
-	std::shared_ptr<awst::Expression>& _expr,
-	awst::WType const* _targetType,
-	awst::SourceLocation const& _loc)
-{
-	if (!(_targetType == awst::WType::accountType()
-		&& _expr->wtype == awst::WType::applicationType()))
-		return nullptr;
-	auto idBytes = awst::makeAsUInt64(std::move(_expr), _loc);
-	auto itob = awst::makeItob(std::move(idBytes), _loc);
-	auto cat = awst::makeLeftPad(std::move(itob), 24, _loc);
-	return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
-}
-
 /// account → application: extract last 8 bytes (app_id) via btoi
 /// Only meaningful for addresses built from our convention (\x00*24 + app_id).
 std::shared_ptr<awst::Expression> tryAccountToApplication(
@@ -1431,17 +985,12 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	// per element inherits it.
 	if (auto widened = tryWidenArc4ScalarInt(_expr, _targetType, _loc))
 		return widened;
-	// One integer-array emitter handles every shape and shares the scalar
-	// conversion above. It classifies before touching _pre or evaluating _expr.
-	if (auto widened = tryWidenArc4ArrayInt(_expr, _targetType, _pre, _loc))
-		return widened;
-	if (auto copied = tryCopyArc4StaticArray(_expr, _targetType, _loc))
+	// One array emitter owns shape, element conversion, copying and padding.
+	if (auto copied = tryConvertArc4Array(_expr, _targetType, _pre, _loc))
 		return copied;
 	if (auto bytes = tryCoerceToBytes(_expr, _targetType, _loc))
 		return bytes;
 	if (auto cast = tryAccountBytesReinterpret(_expr, _targetType, _loc))
-		return cast;
-	if (auto cast = tryApplicationToAccount(_expr, _targetType, _loc))
 		return cast;
 	if (auto cast = tryAccountToApplication(_expr, _targetType, _loc))
 		return cast;

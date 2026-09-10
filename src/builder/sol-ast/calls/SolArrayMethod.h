@@ -14,6 +14,9 @@ public:
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:
+	/// Typed source conversion followed by the selected element encoding.
+	std::shared_ptr<awst::Expression> buildPushValue(
+		solidity::frontend::Type const* elementType, awst::WType const* representation);
 	// ── toAwst base-shape rungs (SolArrayMethod.cpp) ────────────────────
 	std::shared_ptr<awst::Expression> buildSlotModeBytesPushPop(
 		std::string const& memberName,

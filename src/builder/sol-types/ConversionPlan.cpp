@@ -1,6 +1,9 @@
 #include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
+#include "awst/TupleValue.h"
+
+#include <libsolidity/ast/Types.h>
 
 namespace puyasol::builder
 {
@@ -47,13 +50,58 @@ std::shared_ptr<awst::Expression> ConversionPlan::emit(
 	case Context::Argument: site = "internal-call arg"; break;
 	case Context::Return: site = "return"; break;
 	case Context::AbiArgument: site = "ABI-call arg"; break;
+	case Context::AbiReinterpret: site = "untyped ABI payload adaptation"; break;
 	case Context::ExplicitInteger: break; // handled above; not an implicit conversion
 	}
-	TypeCoercion::assertImplicitlyConvertible(m_source, m_target, _loc, site);
+	auto const* sourceType = m_source;
+	auto const* targetType = m_target;
+	if (m_context == Context::AbiReinterpret)
+	{
+		// Only the untyped encodeWithSelector/Signature self-call adapter
+		// crosses nominal UDVT boundaries by representation, not assignment.
+		auto underlying = [](solidity::frontend::Type const* type) {
+			if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(type))
+				return &udvt->underlyingType();
+			return type;
+		};
+		sourceType = underlying(sourceType);
+		targetType = underlying(targetType);
+	}
+	TypeCoercion::assertImplicitlyConvertible(sourceType, targetType, _loc, site);
+	// A tuple snapshot can hide the literal node, but solc still gives its
+	// exact byte count. Preserve the value's evaluation and pad using that fact.
+	if (auto const* literal = dynamic_cast<solidity::frontend::StringLiteralType const*>(sourceType))
+		if (auto const* bytes = dynamic_cast<solidity::frontend::FixedBytesType const*>(targetType);
+			bytes && literal->value().size() <= bytes->numBytes())
+			_value = awst::makeReinterpretCast(awst::makeRightPad(
+				awst::makeAsBytes(std::move(_value), _loc),
+				static_cast<int>(bytes->numBytes() - literal->value().size()), _loc),
+				m_targetRepresentation, _loc);
+	// Solc gives each tuple component its own conversion. Representation-only
+	// casts lose signed widening, including when the tuple is returned by a call.
+	if (auto const* target = dynamic_cast<solidity::frontend::TupleType const*>(m_target))
+	{
+		if (target->components().empty()) return _value;
+		auto const* source = dynamic_cast<solidity::frontend::TupleType const*>(m_source);
+		auto const* sourceW = dynamic_cast<awst::WTuple const*>(_value->wtype);
+		auto const* targetW = dynamic_cast<awst::WTuple const*>(m_targetRepresentation);
+		assert(source && sourceW && targetW);
+		assert(source->components().size() == target->components().size());
+		assert(sourceW->types().size() == targetW->types().size());
+		auto items = awst::tupleItems(std::move(_value), _loc, _pre);
+		auto result = awst::makeTupleExpression(targetW, _loc);
+		for (size_t i = 0; i < target->components().size(); ++i)
+		{
+			auto item = std::move(items[i]);
+			result->items.push_back(ConversionPlan{source->components()[i],
+				target->components()[i], targetW->types()[i], m_context}.emit(std::move(item), _loc, _pre));
+		}
+		return result;
+	}
 	_value = TypeCoercion::coerceForAssignment(
 		std::move(_value), m_targetRepresentation, _loc, _pre);
 	return TypeCoercion::signExtendSignedWiden(
-		std::move(_value), m_source, m_target, _loc);
+		std::move(_value), sourceType, targetType, _loc);
 }
 
 } // namespace puyasol::builder

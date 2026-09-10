@@ -17,10 +17,10 @@ std::shared_ptr<awst::Expression> tryNarrowUInt64ToArc4UIntN(
 	awst::WType const* _targetType,
 	awst::SourceLocation const& _loc);
 
-/// Integer-element widening across supported fixed/dynamic array shapes.
+/// Fixed array copies and integer widening across fixed/dynamic array shapes.
 /// Selects the conversion before emitting effects; nullptr means no effects
 /// were emitted. The source is evaluated once. Runtime loops need _pre.
-std::shared_ptr<awst::Expression> tryWidenArc4ArrayInt(
+std::shared_ptr<awst::Expression> tryConvertArc4Array(
 	std::shared_ptr<awst::Expression> _value,
 	awst::WType const* _targetType,
 	std::vector<std::shared_ptr<awst::Statement>>* _pre,

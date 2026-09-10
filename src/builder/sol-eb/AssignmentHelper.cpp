@@ -8,8 +8,10 @@
 #include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/TypeMapper.h"
 #include "awst/NameGen.h"
 
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 
 namespace puyasol::builder::eb
@@ -186,22 +188,86 @@ AssignmentHelper::StructFieldCowStore AssignmentHelper::buildStructFieldCowStore
 		std::move(target), std::move(cow.assignValue), std::move(cow.fieldChain)};
 }
 
-std::shared_ptr<awst::Expression> AssignmentHelper::arc4EncodeForTarget(
+std::shared_ptr<awst::Expression> AssignmentHelper::arc4EncodeForType(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _value,
-	std::shared_ptr<awst::Expression> const& _target,
+	awst::WType const* _target,
 	awst::SourceLocation const& _loc)
 {
-	if (_value->wtype == _target->wtype) return _value;
+	if (_value->wtype == _target) return _value;
 
-	bool const targetIsArc4 = builder::isArc4EncodedType(_target->wtype);
+	bool const targetIsArc4 = builder::isArc4EncodedType(_target);
 	if (!targetIsArc4) return _value;
 
 	// Skip encode if types match structurally (TypeMapper may not intern pointers;
 	// double-encoding would corrupt an ARC4 aggregate).
 	bool sameShape = awst::structurallyEquivalent(
-		_value->wtype, _target->wtype);
+		_value->wtype, _target);
 	if (sameShape) return _value;
+
+	// Full recursive values and their finite projections have the same solc
+	// identity, but different encodings. Repack their fields/elements instead
+	// of retagging bytes or leaking a projection into the full-type cache.
+	auto const* sourceSol = _ctx.typeMapper.solcAggregateFor(_value->wtype);
+	auto const* targetSol = _ctx.typeMapper.solcAggregateFor(_target);
+	using solidity::frontend::TypeProvider;
+	using solidity::frontend::DataLocation;
+	if (sourceSol && targetSol
+		&& *TypeProvider::withLocationIfReference(DataLocation::Memory, sourceSol)
+			== *TypeProvider::withLocationIfReference(DataLocation::Memory, targetSol))
+	{
+		if (auto const* targetStruct = dynamic_cast<awst::ARC4Struct const*>(_target))
+		{
+			auto source = awst::makeEvalOnce(std::move(_value), _loc);
+			auto result = awst::makeNewStruct(_target, _loc);
+			for (auto const& [name, type]: targetStruct->fields())
+			{
+				auto const* fieldType = awst::structFieldType(source->wtype, name);
+				assert(fieldType);
+				std::shared_ptr<awst::Expression> field = awst::makeFieldExpression(source, name, fieldType, _loc);
+				// An opaque recursive field stores the complete encoded subtree.
+				if (type == awst::WType::bytesType() && isArc4EncodedType(fieldType))
+					field = awst::makeAsBytes(std::move(field), _loc);
+				else if (fieldType == awst::WType::bytesType() && isArc4EncodedType(type))
+					field = awst::makeReinterpretCast(std::move(field), type, _loc);
+				else
+					field = arc4EncodeForType(_ctx, std::move(field), type, _loc);
+				result->values.emplace(name, std::move(field));
+			}
+			return result;
+		}
+		auto const* targetElement = awst::arrayElementType(_target);
+		auto const* sourceElement = awst::arrayElementType(_value->wtype);
+		if (targetElement && sourceElement)
+		{
+			if (auto const* literal = dynamic_cast<awst::NewArray const*>(_value.get()))
+			{
+				auto result = awst::makeNewArray(_target, _loc);
+				for (auto const& element: literal->values)
+					result->values.push_back(arc4EncodeForType(_ctx, element, targetElement, _loc));
+				return result;
+			}
+			std::string const id = std::to_string(awst::NameGen::next("RecursiveProjection"));
+			auto const* arrayType = _ctx.typeMapper.createType<awst::ARC4DynamicArray>(targetElement);
+			auto result = awst::makeVarExpression("__projection_out_" + id, arrayType, _loc);
+			_ctx.queuePreEffect(awst::makeAssignmentStatement(
+				result, awst::makeNewArray(arrayType, _loc), _loc));
+			auto item = awst::makeVarExpression("__projection_item_" + id, sourceElement, _loc);
+			auto lowered = _ctx.lowerOperand([&] {
+				return arc4EncodeForType(_ctx, item, targetElement, _loc);
+			});
+			auto loop = awst::makeNode<awst::ForInLoop>(_loc);
+			loop->sequence = std::move(_value);
+			loop->items = std::move(item);
+			loop->loopBody = awst::makeBlock(_loc);
+			loop->loopBody->body = std::move(lowered.effects.pre);
+			loop->loopBody->body.push_back(awst::makeExpressionStatement(
+				awst::makeArrayPushOne(result, std::move(lowered.value), arrayType, _loc), _loc));
+			assert(lowered.effects.post.empty());
+			_ctx.queuePreEffect(std::move(loop));
+			return awst::makeConvertArray(std::move(result), _target, _loc);
+		}
+	}
 
 	_value = builder::TypeCoercion::stringToBytes(std::move(_value), _loc);
 
@@ -209,15 +275,23 @@ std::shared_ptr<awst::Expression> AssignmentHelper::arc4EncodeForTarget(
 	// typed ConversionPlan. No speculative source bindings on a failed match.
 	bool const sourceIsArray = _value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
 		|| _value->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
-	bool const targetIsArray = _target->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-		|| _target->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
+	bool const targetIsArray = _target->kind() == awst::WTypeKind::ARC4StaticArray
+		|| _target->kind() == awst::WTypeKind::ARC4DynamicArray;
 	if (sourceIsArray && targetIsArray)
 		return builder::TypeCoercion::coerceForAssignment(
-			std::move(_value), _target->wtype, _loc, &_ctx.preEffects());
+			std::move(_value), _target, _loc, &_ctx.preEffects());
+
+	// Native signed values use canonical 256-bit two's complement, while a
+	// signed ARC4 field carries only its declared N bits. Puya's uintN encoder
+	// checks overflow, so strip the sign fill before encoding that wire value.
+	if (auto const* integer = dynamic_cast<awst::ARC4UIntN const*>(_target);
+		integer && integer->isSigned() && integer->n() < 256
+		&& _value->wtype == awst::WType::biguintType())
+		_value = builder::TypeCoercion::maskUnsignedToWidth(std::move(_value), integer->n(), _loc);
 
 	// Narrowing: uint64 → arc4.uintN (N < 64).
 	if (auto narrowed = builder::tryNarrowUInt64ToArc4UIntN(
-			_value, _target->wtype, _loc))
+			_value, _target, _loc))
 		return narrowed;
 
 	// bytes/string → dynamic ARC4 byte-array (arc4.string / arc4.dynamic_bytes / uint8[]):
@@ -225,22 +299,26 @@ std::shared_ptr<awst::Expression> AssignmentHelper::arc4EncodeForTarget(
 	// Build [uint16 len][raw bytes] directly and reinterpret.
 	// e.g. `string[] s; s[0] = "hi"` hits this path.
 	// (Inverse of the abi.encode string-element fix in encodeFromArc4Bytes.)
-	if (_target->wtype->kind() == awst::WTypeKind::ARC4DynamicArray
+	if (_target->kind() == awst::WTypeKind::ARC4DynamicArray
 		&& (_value->wtype == awst::WType::bytesType()
 			|| (_value->wtype && _value->wtype->kind() == awst::WTypeKind::Bytes)))
 	{
-		auto const* da = static_cast<awst::ARC4DynamicArray const*>(_target->wtype);
+		auto const* da = static_cast<awst::ARC4DynamicArray const*>(_target);
 		if (da->elementType()
 			&& ::puyasol::builder::computeEncodedElementSize(da->elementType()).fixedBytes() == 1)
 		{
 			auto once = awst::makeEvalOnce(std::move(_value), _loc);
 			auto header = awst::makeUInt16Bytes(awst::makeLen(once, _loc), _loc);
 			auto arc4Bytes = awst::makeConcat(std::move(header), once, _loc);
-			return awst::makeReinterpretCast(std::move(arc4Bytes), _target->wtype, _loc);
+			return awst::makeReinterpretCast(std::move(arc4Bytes), _target, _loc);
 		}
 	}
 
-	return awst::makeARC4Encode(std::move(_value), _target->wtype, _loc);
+	// Fixed bytes / function pointers already have the static array's byte encoding.
+	if (_target->kind() == awst::WTypeKind::ARC4StaticArray
+		&& _value->wtype->kind() == awst::WTypeKind::Bytes)
+		return awst::makeARC4FromBytes(std::move(_value), _target, _loc);
+	return awst::makeARC4Encode(std::move(_value), _target, _loc);
 }
 
 void AssignmentHelper::ensureRootBoxPre(
@@ -264,7 +342,7 @@ AssignmentHelper::PlainStore AssignmentHelper::preparePlainStore(
 	awst::SourceLocation const& _loc)
 {
 	_target = awst::makeWritableTarget(std::move(_target));
-	_value = arc4EncodeForTarget(_ctx, std::move(_value), _target, _loc);
+	_value = arc4EncodeForType(_ctx, std::move(_value), _target->wtype, _loc);
 	ensureRootBoxPre(_ctx, _target, _loc);
 	return PlainStore{std::move(_target), std::move(_value)};
 }

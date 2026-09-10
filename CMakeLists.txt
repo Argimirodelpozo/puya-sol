@@ -334,10 +334,9 @@ set(SOURCES
 	src/builder/sol-ast/exprs/SolIndexAccessHandlers.cpp
 	src/builder/sol-ast/MappingPrefix.cpp
 	src/builder/sol-ast/exprs/SolAssignment.cpp
+	src/builder/sol-ast/ResolvedLValue.cpp
 	src/builder/sol-ast/exprs/SolAssignmentEarlyOuts.cpp
 	src/builder/sol-ast/exprs/SolAssignmentTuple.cpp
-	src/builder/sol-ast/exprs/SolAssignmentStructField.cpp
-	src/builder/sol-ast/exprs/SolAssignmentBytesElem.cpp
 	src/builder/sol-ast/stmts/SolExpressionStatement.cpp
 	src/builder/sol-ast/stmts/SolControlFlow.cpp
 	src/builder/sol-ast/stmts/SolEmitStatement.cpp
@@ -479,6 +478,10 @@ if(BUILD_TESTING)
 		tests/cpp/TypeMapperTests.cpp
 		src/builder/sol-types/TypeMapper.cpp
 		src/builder/sol-types/Arc4Defaults.cpp
+		src/builder/sol-types/TypeCoercion.cpp
+		src/builder/sol-types/ConversionPlan.cpp
+		src/builder/sol-types/Arc4ArrayWidening.cpp
+		src/builder/sol-types/SolIntType.cpp
 		src/awst/WType.cpp
 		src/Logger.cpp
 	)
@@ -489,6 +492,8 @@ if(BUILD_TESTING)
 		puya_sol_smtutil puya_sol_solutil Boost::filesystem Threads::Threads
 	)
 	add_test(NAME puya-sol-type-mapper COMMAND puya-sol-type-mapper-tests)
+	add_test(NAME puya-sol-type-function-rejection COMMAND puya-sol-type-mapper-tests function)
+	add_test(NAME puya-sol-type-udvt-rejection COMMAND puya-sol-type-mapper-tests udvt)
 
 	add_executable(puya-sol-encoded-size-tests
 		tests/cpp/EncodedSizeTests.cpp

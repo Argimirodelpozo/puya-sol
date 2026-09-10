@@ -26,55 +26,6 @@ namespace puyasol::builder::sol_ast
 using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
 
-std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransientStateWrite()
-{
-	Token op = m_assignment.assignmentOperator();
-	auto const* lhsIdent = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide());
-	if (!lhsIdent) return std::nullopt;
-	auto const* lhsDecl = dynamic_cast<VariableDeclaration const*>(
-		lhsIdent->annotation().referencedDeclaration);
-	if (!lhsDecl
-		|| !lhsDecl->isStateVariable()
-		|| lhsDecl->referenceLocation() != VariableDeclaration::Location::Transient
-		|| !m_ctx.storageBackend
-		|| !m_ctx.storageBackend->isTransient(*lhsDecl))
-		return std::nullopt;
-
-	auto* sb = m_ctx.storageBackend;
-	auto* varType = m_ctx.typeMapper.map(lhsDecl->type());
-	auto rhs = buildExpr(m_assignment.rightHandSide());
-
-	std::shared_ptr<awst::Expression> newValue;
-	if (op == Token::Assign)
-	{
-		newValue = std::move(rhs);
-	}
-	else
-	{
-		auto currentValue = sb->emitReadForVar(*lhsDecl, m_loc);
-		auto* solType = m_assignment.leftHandSide().annotation().type;
-		rhs = widenSignedCompoundRhs(std::move(rhs));
-		newValue = eb::AssignmentHelper::computeCompoundOrFallback(
-			m_ctx, op, op, solType, std::move(currentValue),
-			std::move(rhs), varType, m_loc);
-	}
-
-	newValue = builder::TypeCoercion::coerceForAssignment(std::move(newValue), varType, m_loc);
-	// Eval-once so the same value feeds BOTH the write and the returned
-	// assignment-expression value (the tree is shared by two parents).
-	newValue = awst::makeEvalOnce(std::move(newValue), m_loc);
-
-	auto stmt = sb->emitWriteForVar(*lhsDecl, newValue, m_loc);
-	if (stmt)
-		m_ctx.postEffects().push_back(std::move(stmt));
-
-	// Yield the ASSIGNED value directly, not a storage re-read: the write is
-	// queued POST-pending, so `uint a = (t = 5)` re-read t BEFORE the write and
-	// got the stale value. The assignment expression's value in Solidity is the
-	// assigned value regardless.
-	return newValue;
-}
-
 std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStoragePointerReassign()
 {
 	Token op = m_assignment.assignmentOperator();
@@ -137,9 +88,8 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 	if (awst::isRawStorageRead(rhsExpr.get()))
 		aliasExpr = StorageMapper::makeStateGetWithDefault(rhsExpr, rhsExpr->wtype, m_loc);
 	m_scope.bindings.storageAliases.set(
-		lhsDecl->id(), StorageAlias::stateRead(std::move(aliasExpr)));
-	auto voidExpr = awst::makeVoidConstant(m_loc);
-	return std::shared_ptr<awst::Expression>(voidExpr);
+		lhsDecl->id(), StorageAlias::stateRead(aliasExpr));
+	return aliasExpr;
 }
 
 std::shared_ptr<awst::Expression> SolAssignment::computeAggregateStoreValue(

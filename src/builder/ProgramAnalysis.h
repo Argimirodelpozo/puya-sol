@@ -52,6 +52,9 @@ struct ProgramAnalysis
 	std::set<int64_t> boxKeyedStructs;
 	std::set<int64_t> refPassedStructs;
 	std::set<int64_t> reassignedMemoryLocals;
+	/// Single-declaration initializer ASTs, indexed once by solc declaration ID.
+	/// Source provenance only: live reference bindings still win after reassignments.
+	std::map<int64_t, solidity::frontend::Expression const*> localInitializers;
 	/// Direct function initializers of locals that solc never marks as written
 	/// and that no assembly block references. Safe specialization, not a
 	/// translation-order-dependent cache of a variable's current value.
@@ -59,12 +62,13 @@ struct ProgramAnalysis
 	std::set<int64_t> structRefOffsetParams;
 	std::set<int64_t> callablesWithInlineAssembly;
 	std::map<int64_t, std::shared_ptr<PreparedAssembly const>> preparedAssemblies;
-	/// Declaration IDs actually assigned via `.slot`, not merely mentioned in Yul.
-	std::set<int64_t> asmAssignedSlotDeclarations;
+	/// Storage declarations carrying runtime logical slots: assigned via Yul
+	/// or receiving slot-return components through the solc transfer graph.
+	std::set<int64_t> slotHandleDeclarations;
 	std::map<int64_t, StorageReferenceReturnFacts> storageReferenceReturns;
-	/// Callables whose parsed Yul contains sload/sstore or exposes a `.slot`
-	/// handle that can be dereferenced by later Solidity expressions.
-	std::set<int64_t> callablesWithStorageAssembly;
+	/// Callables using logical storage slots, through Yul or storage-reference
+	/// return transport. Named-storage hosts need their word dispatcher too.
+	std::set<int64_t> callablesWithStorageSlotAccess;
 	/// IndexAccess AST ids that ARE a storage-ref pointer function's return
 	/// (`function g(uint i) internal returns (R storage) { return m[i]; }`).
 	/// In that position `m[i]` names a LOCATION, not a value: FunctionBuilder

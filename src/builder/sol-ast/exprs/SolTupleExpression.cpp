@@ -1,9 +1,9 @@
 /// @file SolTupleExpression.cpp — tuple/inline-array expression translation.
 
 #include "builder/sol-ast/exprs/SolTupleExpression.h"
-#include "builder/sol-types/Arc4Defaults.h"
+#include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
 // Uses solc AST/Type definitions directly; the hub headers only
 // forward-declare them now.
 #include <libsolidity/ast/AST.h>
@@ -21,140 +21,46 @@ SolTupleExpression::SolTupleExpression(
 
 std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 {
-	// Inline array literals: [val1, val2, ...] → NewArray
 	if (m_tuple.isInlineArray())
 	{
-		auto* wtype = m_ctx.typeMapper.map(m_tuple.annotation().type);
-		awst::WType const* elementType = awst::WType::uint64Type();
-		if (auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(wtype))
-			elementType = refArr->elementType();
-		else if (auto const* arc4Static = dynamic_cast<awst::ARC4StaticArray const*>(wtype))
-			elementType = arc4Static->elementType();
-		else if (auto const* arc4Dyn = dynamic_cast<awst::ARC4DynamicArray const*>(wtype))
-			elementType = arc4Dyn->elementType();
-
-		auto e = awst::makeNewArray(wtype, m_loc);
-		auto const* solArrayType = dynamic_cast<solidity::frontend::ArrayType const*>(
-			m_tuple.annotation().type);
-		auto const* nativeElem = solArrayType
-			? m_ctx.typeMapper.map(solArrayType->baseType()) : nullptr;
-		for (auto const& comp: m_tuple.components())
+		auto const* solType = dynamic_cast<solidity::frontend::ArrayType const*>(m_tuple.annotation().type);
+		assert(solType);
+		auto const* wtype = m_ctx.typeMapper.map(solType);
+		auto const* elementType = awst::arrayElementType(wtype);
+		auto const* nativeElement = m_ctx.typeMapper.map(solType->baseType());
+		auto result = awst::makeNewArray(wtype, m_loc);
+		for (auto const& component: m_tuple.components())
 		{
-			if (comp)
-			{
-				auto val = buildExpr(*comp);
-				// `[bytes3(0x010203), 0x040506]`: a bare literal element is an
-				// IntegerConstant; coerce it to the element's declared
-				// bytesN/address representation like an assignment would.
-				if (nativeElem && dynamic_cast<awst::IntegerConstant const*>(val.get())
-					&& nativeElem != awst::WType::uint64Type()
-					&& nativeElem != awst::WType::biguintType()
-					&& nativeElem != awst::WType::boolType())
-					val = builder::TypeCoercion::coerceForAssignment(
-						std::move(val), nativeElem, m_loc);
-				// Cast to native type first, then ARC4Encode.
-				if (val->wtype != elementType)
-				{
-					awst::WType const* nativeTarget = elementType;
-					if (auto const* arc4uint = dynamic_cast<awst::ARC4UIntN const*>(elementType))
-						nativeTarget = arc4uint->n() <= 64
-							? awst::WType::uint64Type()
-							: awst::WType::biguintType();
-					else if (elementType == awst::WType::arc4BoolType())
-						nativeTarget = awst::WType::boolType();
-
-					if (val->wtype != nativeTarget)
-						val = builder::TypeCoercion::implicitNumericCast(
-							std::move(val), nativeTarget, m_loc);
-
-					if (val->wtype != elementType)
-					{
-						// bytes → ARC4 aggregate (e.g. fn-ptr as ARC4StaticArray<uint8,N>): reinterpret.
-						if (dynamic_cast<awst::BytesWType const*>(val->wtype))
-						{
-							bool const isArc4Aggregate =
-								builder::isArc4EncodedType(elementType)
-								&& elementType != awst::WType::arc4BoolType()
-								&& elementType->kind() != awst::WTypeKind::ARC4UIntN
-								&& elementType->kind() != awst::WTypeKind::ARC4UFixedNxM;
-							if (isArc4Aggregate)
-							{
-								e->values.push_back(awst::makeARC4FromBytes(std::move(val), elementType, m_loc));
-								continue;
-							}
-						}
-						// sub-64 ARC4: encode via uint64 then reinterpret to target width.
-						auto const* arc4uint = dynamic_cast<awst::ARC4UIntN const*>(elementType);
-						if (arc4uint && arc4uint->n() < 64 && val->wtype == awst::WType::uint64Type())
-						{
-								auto fullEncode = awst::makeARC4Encode(std::move(val), m_ctx.typeMapper.createType<awst::ARC4UIntN>(64), m_loc);
-
-								auto startConst = awst::makeIntegerConstant(8 - arc4uint->n() / 8, m_loc);
-							auto lenConst = awst::makeIntegerConstant(arc4uint->n() / 8, m_loc);
-
-							auto castBytes = awst::makeAsBytes(std::move(fullEncode), m_loc);
-							auto extract = awst::makeExtract3(
-								std::move(castBytes), std::move(startConst), std::move(lenConst), m_loc);
-
-							auto cast = awst::makeReinterpretCast(std::move(extract), elementType, m_loc);
-							val = std::move(cast);
-						}
-						else
-						{
-							auto encode = awst::makeARC4Encode(std::move(val), elementType, m_loc);
-							val = std::move(encode);
-						}
-					}
-				}
-				e->values.push_back(std::move(val));
-			}
+			assert(component);
+			auto lowered = m_ctx.lowerOperand([&] {
+				auto value = buildExpr(*component);
+				value = ConversionPlan{component->annotation().type, solType->baseType(),
+					nativeElement, ConversionPlan::Context::Initialization}.emit(
+						std::move(value), m_loc, &m_ctx.preEffects());
+				return eb::AssignmentHelper::arc4EncodeForType(
+					m_ctx, std::move(value), elementType, m_loc);
+			}, false);
+			// Solc evaluates array elements in source order. Finish each value and
+			// its write-backs before a later element can change what it reads.
+			result->values.push_back(m_ctx.emitSequencedOperand(
+				std::move(lowered.effects), std::move(lowered.value), true, m_loc));
 		}
-		return e;
+		return result;
 	}
 
 	// Single-element tuple is parenthesization
 	if (m_tuple.components().size() == 1 && m_tuple.components()[0])
 		return buildExpr(*m_tuple.components()[0]);
 
-	// Multi-element tuple; check for LHS gaps `(,,a) = f()`
-	bool hasNulls = false;
-	for (auto const& comp: m_tuple.components())
-		if (!comp) hasNulls = true;
-
+	// Missing LHS components are represented by empty-name placeholders.
 	auto e = awst::makeTupleExpression(nullptr, m_loc);
 	std::vector<awst::WType const*> types;
-
-	if (hasNulls)
+	for (auto const& comp: m_tuple.components())
 	{
-		// LHS tuple with gaps: null slots → empty-name VarExpression placeholder.
-		for (size_t i = 0; i < m_tuple.components().size(); ++i)
-		{
-			auto const& comp = m_tuple.components()[i];
-			if (comp)
-			{
-				auto translated = buildExpr(*comp);
-				types.push_back(translated->wtype);
-				e->items.push_back(std::move(translated));
-			}
-			else
-			{
-				types.push_back(awst::WType::uint64Type());
-				e->items.push_back(awst::makeVarExpression(
-					"", awst::WType::uint64Type(), m_loc));
-			}
-		}
-	}
-	else
-	{
-		for (auto const& comp: m_tuple.components())
-		{
-			if (comp)
-			{
-				auto translated = buildExpr(*comp);
-				types.push_back(translated->wtype);
-				e->items.push_back(std::move(translated));
-			}
-		}
+		auto value = comp ? buildExpr(*comp)
+			: awst::makeVarExpression("", awst::WType::uint64Type(), m_loc);
+		types.push_back(value->wtype);
+		e->items.push_back(std::move(value));
 	}
 	e->wtype = m_ctx.typeMapper.createType<awst::WTuple>(std::move(types), std::nullopt);
 	return e;

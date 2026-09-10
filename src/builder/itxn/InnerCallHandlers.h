@@ -237,22 +237,10 @@ public:
 
 };
 
-/// Canonical ARC4 ABI type name for a NESTED position (struct field / array element): exact bit width,
-/// signedness PRESERVED (nested int8 = "int8", not "uint8"), recursing structs/arrays. Verified against
-/// puya's emitted `method "..."` signatures — reuse anywhere a cross-contract selector must match the
-/// callee's published ABI (e.g. SolExternalCall typed calls + the .call() path).
-std::string nestedArc4Name(ContractContext& _ctx, solidity::frontend::Type const* _type);
-
-/// Canonical ARC4 ABI type name for a TOP-LEVEL param position (selector computation): scalars
-/// collapse to "uint64"/"uintN" (signedness dropped, matching what puya registers), enums →
-/// "uint64", aggregates recurse via nestedArc4Name, exotics (fn pointers, contracts) fall back to
-/// the ARC4-type mapping the callee publishes. THE single param namer — SolExternalCall's typed
-/// `c.f(...)` path and the `.call(abi.encodeCall(...))` inner-call path both use it; keeping two
-/// copies in lockstep by hand is where the enum uint8-vs-uint64 selector bug came from.
+/// Name the emitted parameter wire plan when only a solc type is available.
 std::string solTypeToArc4ParamName(ContractContext& _ctx, solidity::frontend::Type const* _type);
 
-/// Return-position variant: SIGNED integer returns are named "uint256" (full two's complement,
-/// see intSelectorReturnName); everything else as solTypeToArc4ParamName.
+/// Name the emitted return wire plan (including signed-return promotion).
 std::string solTypeToArc4ReturnName(ContractContext& _ctx, solidity::frontend::Type const* _type);
 
 } // namespace puyasol::builder::eb

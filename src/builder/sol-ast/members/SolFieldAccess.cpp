@@ -6,6 +6,7 @@
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/storage/SlotHandleAccess.h"
 #include "builder/storage/StorageMapper.h"
@@ -181,7 +182,10 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 				m_ctx.typeMapper, std::move(field), m_ctx.preEffects(), m_loc);
 
 		auto* nativeType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
-		if (arc4FieldType && !awst::structurallyEquivalent(arc4FieldType, nativeType))
+		// Aggregates already carry their usable ARC4 representation, which can
+		// be a finite recursive projection. Decode only native scalar fields.
+		if (arc4FieldType && !isArc4EncodedType(nativeType)
+			&& !awst::structurallyEquivalent(arc4FieldType, nativeType))
 		{
 			std::shared_ptr<awst::Expression> decode =
 				awst::makeARC4Decode(std::move(field), nativeType, m_loc);

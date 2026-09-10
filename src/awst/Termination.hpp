@@ -2,7 +2,7 @@
 
 /// @file Termination.hpp
 /// AWST control-flow analysis helpers used by the builder pipeline:
-///   - blockAlwaysTerminates: does this block always terminate (return / revert)?
+///   - statementAlwaysTerminates / blockAlwaysTerminates: no fallthrough
 ///   - removeDeadCode: strip statements after a guaranteed terminator
 ///
 /// `removeDeadCode` is required for puya backend acceptance (puya 5.8.0+
@@ -19,10 +19,8 @@ namespace puyasol::awst
 
 inline bool blockAlwaysTerminates(Block const& _block);
 
-namespace termination_detail
-{
-// No fallthrough in the current block. Loop transfers terminate their body,
-// not the enclosing loop: loops themselves remain conservatively fallthrough.
+/// No fallthrough in the current block. Loop transfers terminate their body,
+/// not the enclosing loop: loops themselves remain conservatively fallthrough.
 inline bool statementAlwaysTerminates(Statement const& _stmt)
 {
 	if (dynamic_cast<ReturnStatement const*>(&_stmt)
@@ -56,13 +54,12 @@ inline bool statementAlwaysTerminates(Statement const& _stmt)
 	}
 	return false;
 }
-} // namespace termination_detail
 
 /// True if every path exits this block, including before an unpruned tail.
 inline bool blockAlwaysTerminates(Block const& _block)
 {
 	return std::any_of(_block.body.begin(), _block.body.end(), [](auto const& statement) {
-		return termination_detail::statementAlwaysTerminates(*statement);
+		return statementAlwaysTerminates(*statement);
 	});
 }
 
@@ -70,7 +67,6 @@ inline bool blockAlwaysTerminates(Block const& _block)
 /// a block body, with container coverage supplied by the shared AWST walker.
 inline void removeDeadCode(std::vector<std::shared_ptr<Statement>>& _body)
 {
-	using termination_detail::statementAlwaysTerminates;
 	for (size_t i = 0; i < _body.size(); ++i)
 	{
 		forEachChildBlock(*_body[i], [](Block& block, bool) {

@@ -1,127 +1,118 @@
 /// @file SolBlock.cpp
 /// Block statement and SolStatementVisitor — central statement dispatcher.
 
-#include "builder/sol-ast/stmts/SolBlock.h"
-#include "builder/sol-ast/SolASTVisitor.h"
+#include "builder/sol-ast/SolStatement.h"
+#include "awst/Termination.hpp"
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
 #include "builder/sol-ast/stmts/SolControlFlow.h"
 #include "builder/sol-ast/stmts/SolEmitStatement.h"
 #include "builder/sol-ast/stmts/SolVariableDeclaration.h"
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
 #include "builder/EvmFeaturePolicy.h"
+#include "builder/CallBoundaryPlan.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
-#include <libsolutil/Common.h>
+#include <libsolidity/ast/ASTVisitor.h>
+#include <libsolutil/Assertions.h>
 
 namespace puyasol::builder::sol_ast
 {
 
 using namespace solidity::frontend;
 
-SolBlock::SolBlock(
-	BlockContext& _blk,
-	Block const& _node,
-	awst::SourceLocation _loc)
-	: SolStatement(_blk, std::move(_loc)), m_block(_node)
-{
-}
-
 namespace
 {
 
 /// Translates Solidity statements into AWST. Holds the BlockContext
 /// (enclosing loop, modifier placeholder factory, effective unchecked flag).
-class SolStatementVisitor: public SolASTVisitor<std::vector<std::shared_ptr<awst::Statement>>>
+/// Handlers own child lowering; returning false disables solc's child walk.
+class SolStatementVisitor: public ASTConstVisitor
 {
 public:
 	explicit SolStatementVisitor(BlockContext& _blk): m_blk(_blk) {}
 
 	using ResultT = std::vector<std::shared_ptr<awst::Statement>>;
 
-	ResultT visitExprStatement(ExpressionStatement const& _n) override
+	ResultT build(Statement const& _n)
 	{
-		SolExpressionStatement handler(m_blk, _n, locOf(_n));
-		return handler.toAwst();
+		_n.accept(*this);
+		return std::move(m_result);
 	}
 
-	ResultT visitReturn(Return const& _n) override
+	bool visit(ExpressionStatement const& _n) override
 	{
-		SolReturnStatement handler(m_blk, _n, locOf(_n));
-		return handler.toAwst();
+		m_result = SolExpressionStatement(m_blk, _n, locOf(_n)).toAwst();
+		return false;
 	}
 
-	ResultT visitRevert(RevertStatement const& _n) override
+	bool visit(Return const& _n) override
 	{
-		SolRevertStatement handler(m_blk, _n, locOf(_n));
-		return handler.toAwst();
+		m_result = SolReturnStatement(m_blk, _n, locOf(_n)).toAwst();
+		return false;
 	}
 
-	ResultT visitEmit(EmitStatement const& _n) override
+	bool visit(RevertStatement const& _n) override
 	{
-		SolEmitStatement handler(m_blk, _n, locOf(_n));
-		return handler.toAwst();
+		m_result = SolRevertStatement(m_blk, _n, locOf(_n)).toAwst();
+		return false;
 	}
 
-	ResultT visitVarDecl(VariableDeclarationStatement const& _n) override
+	bool visit(EmitStatement const& _n) override
 	{
-		SolVariableDeclaration handler(m_blk, _n, locOf(_n));
-		return handler.toAwst();
+		m_result = SolEmitStatement(m_blk, _n, locOf(_n)).toAwst();
+		return false;
 	}
 
-	ResultT visitIfStatement(IfStatement const& _n) override
+	bool visit(VariableDeclarationStatement const& _n) override
 	{
-		SolIfStatement handler(m_blk, _n, locOf(_n));
-		return handler.toAwst();
+		m_result = SolVariableDeclaration(m_blk, _n, locOf(_n)).toAwst();
+		return false;
 	}
 
-	ResultT visitWhile(WhileStatement const& _n) override
+	bool visit(IfStatement const& _n) override
 	{
-		SolWhileStatement handler(m_blk, _n, locOf(_n));
-		return handler.toAwst();
+		m_result = SolIfStatement(m_blk, _n, locOf(_n)).toAwst();
+		return false;
 	}
 
-	ResultT visitFor(ForStatement const& _n) override
+	bool visit(WhileStatement const& _n) override
 	{
-		SolForStatement handler(m_blk, _n, locOf(_n));
-		return handler.toAwst();
+		m_result = SolWhileStatement(m_blk, _n, locOf(_n)).toAwst();
+		return false;
 	}
 
-	ResultT visitInlineAssembly(InlineAssembly const& _n) override
+	bool visit(ForStatement const& _n) override
 	{
-		SolInlineAssembly handler(m_blk, _n, locOf(_n));
-		return handler.toAwst();
+		m_result = SolForStatement(m_blk, _n, locOf(_n)).toAwst();
+		return false;
 	}
 
-	ResultT visitContinue(Continue const& _n) override
+	bool visit(InlineAssembly const& _n) override
+	{
+		m_result = SolInlineAssembly(m_blk, _n, locOf(_n)).toAwst();
+		return false;
+	}
+
+	bool visit(Continue const& _n) override
 	{
 		auto loc = locOf(_n);
 		auto const* loop = m_blk.enclosingLoop;
-		if (loop && loop->forLoopPost)
-		{
-			auto block = awst::makeBlock(loc);
-			block->body.push_back(loop->forLoopPost);
-			block->body.push_back(awst::makeLoopContinue(loc));
-			return {block};
-		}
-		if (loop && loop->doWhileCondBreak)
-		{
-			auto block = awst::makeBlock(loc);
-			block->body.push_back(loop->doWhileCondBreak);
-			block->body.push_back(awst::makeLoopContinue(loc));
-			return {block};
-		}
-		return {awst::makeLoopContinue(loc)};
+		if (loop && loop->continuePrefix)
+			if (auto prefix = loop->continuePrefix()) m_result.push_back(std::move(prefix));
+		m_result.push_back(awst::makeLoopContinue(loc));
+		return false;
 	}
 
-	ResultT visitBreak(Break const& _n) override
+	bool visit(Break const& _n) override
 	{
-		return {awst::makeLoopExit(locOf(_n))};
+		m_result = {awst::makeLoopExit(locOf(_n))};
+		return false;
 	}
 
-	ResultT visitPlaceholder(PlaceholderStatement const& _n) override
+	bool visit(PlaceholderStatement const& _n) override
 	{
 		// The factory constructs a new call block for every `_;`. In particular,
 		// a modifier containing more than one placeholder must not share mutable
@@ -133,22 +124,38 @@ public:
 			if (placeholder)
 				for (auto& s: placeholder->body)
 					block->body.push_back(std::move(s));
-			return {block};
+			m_result = {std::move(block)};
 		}
-		return {};
+		return false;
 	}
 
-	ResultT visitTryCatch(TryStatement const& _n) override
+	bool visit(TryStatement const& _n) override
 	{
-		// AVM has no in-transaction revert recovery: a failing inner txn
-		// aborts the whole outer txn, so CATCH CLAUSES ARE UNREACHABLE by
-		// construction. Lower `try CALL returns (..) { S } catch.. {..}` to
-		// CALL + bind returns + S, and DROP the catch arms — a documented
-		// divergence that surfaces honestly in replay: any historical txn
-		// whose catch path ran on EVM reverts here instead of being
-		// swallowed (Aave supplyWithPermit's `try permit {} catch {}`
-		// front-run-tolerance idiom is the common shape; its success path
-		// is identical on both VMs).
+		m_result = buildTry(_n);
+		return false;
+	}
+
+	bool visit(Block const& _n) override
+	{
+		// Plain lexical blocks flatten; their scope is owned by buildBlock.
+		m_result = std::move(buildBlock(m_blk, _n)->body);
+		return false;
+	}
+
+private:
+	BlockContext& m_blk;
+	ResultT m_result;
+
+	bool visitNode(ASTNode const& _node) override
+	{
+		Logger::instance().error("unhandled statement type", locOf(_node));
+		return false;
+	}
+
+	ResultT buildTry(TryStatement const& _n)
+	{
+		// Accepted AVM adaptation: a failed inner transaction aborts its caller.
+		// Keep the call and success body; report the dropped catch behavior.
 		auto loc = locOf(_n);
 		EvmFeaturePolicy::report(
 			EvmFeature::TryCatch,
@@ -166,77 +173,46 @@ public:
 		auto postEffects = m_blk.builderCtx().takePostEffects();
 		for (auto& effect: preEffects)
 			out.push_back(std::move(effect));
-		auto const& clauses = _n.clauses();
-		TryCatchClause const* success =
-			clauses.empty() ? nullptr : clauses[0].get();
-		auto const* params = success ? success->parameters() : nullptr;
+		auto const& success = *_n.successClause();
+		auto const* params = success.parameters();
 
 		if (params && !params->parameters().empty())
 		{
 			auto const& ps = params->parameters();
-			if (ps.size() == 1 && ps[0])
+			// Solc checked the return declarations against the callee. Our
+			// lowering must preserve that arity and adapt its physical carriers.
+			auto const* tuple = dynamic_cast<awst::WTuple const*>(call->wtype);
+			solAssert(ps.size() == 1 || (tuple && tuple->types().size() == ps.size()),
+				"try-success return arity changed during lowering");
+			std::vector<awst::WType const*> types;
+			std::vector<std::shared_ptr<awst::Expression>> targets;
+			for (auto const& declaration: ps)
 			{
-				auto tgt = awst::makeVarExpression(
-					m_blk.scope.awstVarName(*ps[0]), call->wtype, loc);
-				out.push_back(awst::makeAssignmentStatement(
-					std::move(tgt), std::move(call), loc));
+				types.push_back(m_blk.typeMapper().map(declaration->type()));
+				targets.push_back(awst::makeVarExpression(
+					m_blk.scope.awstVarName(*declaration), types.back(), locOf(*declaration)));
 			}
-			else
+			std::shared_ptr<awst::Expression> target = targets.front();
+			if (targets.size() > 1)
 			{
-				auto const* tup =
-					dynamic_cast<awst::WTuple const*>(call->wtype);
-				auto targets = awst::makeTupleExpression(call->wtype, loc);
-				for (size_t i = 0; i < ps.size(); ++i)
-				{
-					auto const* w = (tup && i < tup->types().size())
-						? tup->types()[i]
-						: m_blk.builderCtx().typeMapper.map(
-							ps[i] ? ps[i]->type() : nullptr);
-					targets->items.push_back(awst::makeVarExpression(
-						ps[i] ? m_blk.scope.awstVarName(*ps[i])
-							  : ("__try_skip" + std::to_string(i)),
-						w, loc));
-				}
-				out.push_back(awst::makeAssignmentStatement(
-					std::move(targets), std::move(call), loc));
+				auto binding = awst::makeTupleExpression(
+					m_blk.typeMapper().createType<awst::WTuple>(std::move(types)), loc);
+				binding->items = std::move(targets);
+				target = std::move(binding);
 			}
+			call = decodeCallResult(std::move(call), target->wtype, loc);
+			solAssert(call && awst::structurallyEquivalent(call->wtype, target->wtype),
+				"try-success return type changed during lowering");
+			out.push_back(awst::makeAssignmentStatement(std::move(target), std::move(call), loc));
 		}
-		else if (call->wtype && call->wtype != awst::WType::voidType())
-			out.push_back(awst::makeExpressionStatement(std::move(call), loc));
 		else
 			out.push_back(awst::makeExpressionStatement(std::move(call), loc));
 		for (auto& effect: postEffects)
 			out.push_back(std::move(effect));
 
-		if (success)
-		{
-			auto childBlk = m_blk.nest();
-			auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk.scope);
-			SolBlock handler(childBlk, success->block(),
-				m_blk.makeLoc(success->block().location()));
-			for (auto& st: handler.toAwst())
-				out.push_back(std::move(st));
-		}
+		out.push_back(buildBlock(m_blk, success.block()));
 		return out;
 	}
-
-	ResultT visitBlock(Block const& _n) override
-	{
-		// Inherit lexical state with fresh block-local control flow.
-		auto childBlk = m_blk.nest();
-		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk.scope);
-		SolBlock handler(childBlk, _n, m_blk.makeLoc(_n.location()));
-		return handler.toAwst();
-	}
-
-	ResultT visitDefault(solidity::frontend::ASTNode const& _node) override
-	{
-		Logger::instance().error("unhandled statement type", m_blk.makeLoc(_node.location()));
-		return {};
-	}
-
-private:
-	BlockContext& m_blk;
 
 	awst::SourceLocation locOf(solidity::frontend::ASTNode const& _n) const
 	{
@@ -246,48 +222,6 @@ private:
 
 } // anonymous namespace
 
-std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
-{
-	auto awstBlock = awst::makeBlock(m_loc);
-
-	solidity::ScopedSaveAndRestore uncheckedGuard(
-		m_blk.scope.unchecked, m_blk.scope.unchecked || m_block.unchecked());
-
-	for (auto const& stmt: m_block.statements())
-	{
-		// Assembly return/revert makes the rest statically dead; puya rejects
-		// unreachable code. EVM sources often have a trailing `return` after one.
-		if (m_blk.terminated)
-			break;
-		if (auto const* innerBlock = dynamic_cast<Block const*>(stmt.get()))
-		{
-			// Flatten nested blocks; unchecked-arithmetic flag propagates through.
-			auto childBlk = m_blk.nest();
-			auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk.scope);
-			SolBlock handler(childBlk, *innerBlock,
-				m_blk.makeLoc(innerBlock->location()));
-			auto translated = handler.toAwstBlock();
-			for (auto& s: translated->body)
-				awstBlock->body.push_back(std::move(s));
-			// Propagate halt from the nested block to the parent.
-			if (childBlk.terminated)
-				m_blk.terminated = true;
-		}
-		else
-		{
-			for (auto& s: buildStatementMulti(m_blk, *stmt))
-				if (s) awstBlock->body.push_back(std::move(s));
-		}
-	}
-
-	return awstBlock;
-}
-
-std::vector<std::shared_ptr<awst::Statement>> SolBlock::toAwst()
-{
-	return {toAwstBlock()};
-}
-
 // ── Free-function entry points ──
 
 std::vector<std::shared_ptr<awst::Statement>> buildStatementMulti(
@@ -296,7 +230,7 @@ std::vector<std::shared_ptr<awst::Statement>> buildStatementMulti(
 {
 	SolStatementVisitor visitor(_blk);
 	auto lowered = _blk.builderCtx().lowerOperand(
-		[&] { return visitor.visit(_stmt); }, false);
+		[&] { return visitor.build(_stmt); }, false);
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	result.reserve(lowered.effects.pre.size() + lowered.value.size()
 		+ lowered.effects.post.size());
@@ -313,9 +247,6 @@ std::shared_ptr<awst::Statement> buildStatement(
 	BlockContext& _blk,
 	solidity::frontend::Statement const& _stmt)
 {
-	if (auto const* block = dynamic_cast<Block const*>(&_stmt))
-		return buildBlock(_blk, *block);
-
 	auto results = buildStatementMulti(_blk, _stmt);
 	if (results.size() == 1) return results[0];
 	if (results.empty()) return nullptr;
@@ -326,12 +257,32 @@ std::shared_ptr<awst::Statement> buildStatement(
 }
 
 std::shared_ptr<awst::Block> buildBlock(
-	BlockContext& _blk,
-	solidity::frontend::Block const& _block)
+	BlockContext const& _parent,
+	solidity::frontend::Statement const& _body)
 {
-	auto loc = _blk.makeLoc(_block.location());
-	SolBlock handler(_blk, _block, loc);
-	return handler.toAwstBlock();
+	auto child = _parent.nest();
+	auto const* sourceBlock = dynamic_cast<Block const*>(&_body);
+	child.scope.unchecked |= sourceBlock && sourceBlock->unchecked();
+	auto guard = child.builderCtx().pushScopeRaii(&child.scope);
+	auto block = awst::makeBlock(child.makeLoc(_body.location()));
+	auto append = [&](Statement const& source) {
+		for (auto& statement: buildStatementMulti(child, source))
+			if (statement)
+			{
+				bool const terminates = awst::statementAlwaysTerminates(*statement);
+				block->body.push_back(std::move(statement));
+				if (terminates) return false;
+			}
+		return true;
+	};
+	if (sourceBlock)
+	{
+		for (auto const& statement: sourceBlock->statements())
+			if (!append(*statement)) break;
+	}
+	else
+		append(_body);
+	return block;
 }
 
 } // namespace puyasol::builder::sol_ast

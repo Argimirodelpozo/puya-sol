@@ -8,6 +8,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/itxn/NativePayment.h"
 #include "builder/contract/PostInitTriggers.h"
@@ -500,8 +501,9 @@ std::vector<std::shared_ptr<awst::Expression>> SolNewExpression::buildEncodedCto
 		auto argVal = buildExpr(*ctorArgs[i]);
 		auto* paramSolType = ctorParams[i]->type();
 		auto* paramWType = m_ctx.typeMapper.map(paramSolType);
-		argVal = builder::TypeCoercion::implicitNumericCast(
-			std::move(argVal), paramWType, m_loc);
+		argVal = builder::ConversionPlan{ctorArgs[i]->annotation().type, paramSolType,
+			paramWType, builder::ConversionPlan::Context::Argument}.emit(
+				std::move(argVal), m_loc, &m_ctx.preEffects());
 		out.push_back(encodeCtorArg(std::move(argVal), paramSolType, _childHasPostInit));
 	}
 	return out;
@@ -645,7 +647,7 @@ void SolNewExpression::emitChildPostInit(
 	// Build __postInit(t1,t2,...)void signature via THE shared
 	// top-level param namer (eb::solTypeToArc4ParamName — enums
 	// collapse to their uint64 carrier, exactly what the callee
-	// publishes; nestedArc4Name would say uint8 and mis-selector).
+	// publishes; the nested enum encoding instead uses uint8).
 	// Replaces a local twin lacking enum/UDVT/bytesN/aggregate
 	// handling (T4 twin drift; the shared return-wire scope: wire
 	// sigs must mirror PUYA's wtype-derived naming, never solc's

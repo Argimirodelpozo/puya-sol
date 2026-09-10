@@ -1,19 +1,62 @@
 /// @file SolControlFlow.cpp
-/// if/while/for control flow wrappers.
-/// Loop bodies derive a LoopContext + BlockContext-with-loop, so
-/// continue/break inside know which post-step / cond-break to splice.
+/// if/while/for lowering with sequenced conditions and fresh continue prefixes.
 
 #include "builder/sol-ast/stmts/SolControlFlow.h"
+#include "awst/Termination.hpp"
 #include "builder/sol-eb/ContractContext.h"
-// Uses solc AST/Type definitions directly; the hub headers only
-// forward-declare them now.
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/Types.h>
+#include <iterator>
 
 namespace puyasol::builder::sol_ast
 {
 
 using namespace solidity::frontend;
+
+namespace
+{
+
+/// Complete condition write-backs before entering a branch/body, retaining
+/// the condition's value if those write-backs can change a referenced local.
+std::shared_ptr<awst::Expression> lowerCondition(
+	BlockContext& blk, Expression const* source,
+	std::vector<std::shared_ptr<awst::Statement>>& effects, awst::SourceLocation const& loc)
+{
+	auto& bc = blk.builderCtx();
+	auto condition = source ? bc.pinIfWriteBacks(bc.lower(*source, false), loc) : awst::makeTrue(loc);
+	bc.appendEffectsTo(effects);
+	return condition;
+}
+
+std::shared_ptr<awst::Block> loopTest(
+	std::shared_ptr<awst::Expression> condition,
+	std::vector<std::shared_ptr<awst::Statement>> effects, awst::SourceLocation const& loc)
+{
+	auto test = awst::makeBlock(loc);
+	test->body = std::move(effects);
+	auto exit = awst::makeBlock(loc);
+	exit->body.push_back(awst::makeLoopExit(loc));
+	test->body.push_back(awst::makeIfElse(
+		awst::makeNot(std::move(condition), loc), std::move(exit), nullptr, loc));
+	return test;
+}
+
+/// Effectful tests run at the top of EVERY iteration, including after continue.
+std::shared_ptr<awst::Statement> lowerLoop(
+	std::shared_ptr<awst::Expression> condition,
+	std::vector<std::shared_ptr<awst::Statement>> effects,
+	std::shared_ptr<awst::Block> body, awst::SourceLocation const& loc)
+{
+	if (!effects.empty())
+	{
+		auto test = loopTest(std::move(condition), std::move(effects), loc);
+		body->body.insert(body->body.begin(),
+			std::make_move_iterator(test->body.begin()), std::make_move_iterator(test->body.end()));
+		condition = awst::makeTrue(loc);
+	}
+	return awst::makeWhileLoop(std::move(condition), std::move(body), loc);
+}
+
+} // namespace
 
 // ── IfStatement ──
 
@@ -28,30 +71,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	auto& bc = m_blk.builderCtx();
 
-	auto cond = bc.buildExpr(m_node.condition());
-
-	auto preEffects = bc.takePreEffects();
-	auto postPending = bc.takePostEffects();
+	auto cond = lowerCondition(m_blk, &m_node.condition(), result, m_loc);
 
 	auto buildBranch = [&](Statement const& body) -> std::shared_ptr<awst::Block> {
 		// Conditionally-executed region: compile-time-only rebinds (storage
 		// pointer aliases) must fail loud inside it.
 		eb::ContractContext::ConditionalRegion region(bc);
-		// A halt inside a branch (assembly return() → BlockContext.terminated)
-		// must not leak out — the branch is conditional, so code after the if
-		// is still reachable. Save/restore the flag around each branch.
-		bool parentTerminated = m_blk.terminated;
-		std::shared_ptr<awst::Block> branch;
-		if (auto const* block = dynamic_cast<Block const*>(&body))
-			branch = buildBlock(m_blk, *block);
-		else
-		{
-			branch = awst::makeBlock(m_blk.makeLoc(body.location()));
-			auto translated = buildStatement(m_blk, body);
-			if (translated) branch->body.push_back(std::move(translated));
-		}
-		m_blk.terminated = parentTerminated;
-		return branch;
+		return buildBlock(m_blk, body);
 	};
 
 	auto ifBranch = buildBranch(m_node.trueStatement());
@@ -59,13 +85,6 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 		? buildBranch(*m_node.falseStatement())
 		: nullptr;
 
-	// BOTH pending kinds precede the IfElse: post-pendings carry effects of
-	// EVALUATING the condition (internal-call storage/memory write-backs,
-	// push/pop box writes) — they must complete before either branch runs.
-	// Emitting them after the IfElse read pre-mutation state in the branches
-	// and LOST the effect entirely when a branch returned/halted.
-	for (auto& p: preEffects) result.push_back(std::move(p));
-	for (auto& p: postPending) result.push_back(std::move(p));
 	result.push_back(awst::makeIfElse(std::move(cond), std::move(ifBranch), std::move(elseBranch), m_loc));
 	return result;
 }
@@ -87,114 +106,30 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 
 	if (m_node.isDoWhile())
 	{
-		auto body = awst::makeBlock(m_blk.makeLoc(m_node.body().location()));
-
-		auto cond = bc.buildExpr(m_node.condition());
-		// Capture the condition build's pendings NOW (bounds asserts, index
-		// temps, write-backs): un-captured they were drained by the first
-		// BODY statement — executing at the TOP of the body while the test
-		// runs at the BOTTOM, one iteration apart (and leaking out of the
-		// loop entirely for bodies that never drain). They re-run with the
-		// test each iteration, bundled in one block so the `continue` splice
-		// (doWhileCondBreak) carries them too.
-		auto condPre = bc.takePreEffects();
-		{ auto cp = bc.takePostEffects(); for (auto& p: cp) condPre.push_back(std::move(p)); }
-		auto notCond = awst::makeNot(std::move(cond), m_loc);
-
-		auto breakBlock = awst::makeBlock(m_loc);
-		breakBlock->body.push_back(awst::makeLoopExit(m_loc));
-
-		std::shared_ptr<awst::Statement> ifBreak =
-			awst::makeIfElse(notCond, breakBlock, nullptr, m_loc);
-		if (!condPre.empty())
-		{
-			auto testBlock = awst::makeBlock(m_loc);
-			for (auto& p: condPre) testBlock->body.push_back(std::move(p));
-			testBlock->body.push_back(std::move(ifBreak));
-			ifBreak = std::move(testBlock);
-		}
-
-		LoopContext loopCtx;
-		loopCtx.doWhileCondBreak = ifBreak;
-		auto bodyBlk = m_blk.withLoop(loopCtx);
-		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk.scope);
-
-		bool bodyTerminated = false;
-		auto pushBodyStmt = [&](std::shared_ptr<awst::Statement> translated)
-		{
-			if (!translated)
-				return;
-			body->body.push_back(std::move(translated));
-			auto const& last = body->body.back();
-			if (dynamic_cast<awst::LoopContinue const*>(last.get())
-				|| dynamic_cast<awst::LoopExit const*>(last.get())
-				|| dynamic_cast<awst::ReturnStatement const*>(last.get()))
-			{ bodyTerminated = true; return; }
-			if (auto const* blk = dynamic_cast<awst::Block const*>(last.get()))
-				if (!blk->body.empty())
-				{
-					auto const& lb = blk->body.back();
-					if (dynamic_cast<awst::LoopContinue const*>(lb.get())
-						|| dynamic_cast<awst::LoopExit const*>(lb.get())
-						|| dynamic_cast<awst::ReturnStatement const*>(lb.get()))
-						bodyTerminated = true;
-				}
-		};
-		if (auto const* block = dynamic_cast<Block const*>(&m_node.body()))
-		{
-			for (auto const& stmt: block->statements())
-			{
-				pushBodyStmt(buildStatement(bodyBlk, *stmt));
-				if (bodyTerminated)
-					break;
-			}
-		}
-		else // brace-less body: `do stmt; while (cond);`
-			pushBodyStmt(buildStatement(bodyBlk, m_node.body()));
-
-		if (!bodyTerminated) body->body.push_back(ifBreak);
+		LoopContext loopCtx{[&] {
+			// A continue may be nested in unchecked; the test belongs to the
+			// loop's original scope. Rebuild from solc so each site has fresh IDs.
+			auto guard = bc.pushScopeRaii(&m_blk.scope);
+			std::vector<std::shared_ptr<awst::Statement>> effects;
+			auto cond = lowerCondition(m_blk, &m_node.condition(), effects, m_loc);
+			return loopTest(std::move(cond), std::move(effects), m_loc);
+		}};
+		auto body = buildBlock(m_blk.withLoop(loopCtx), m_node.body());
+		if (!awst::blockAlwaysTerminates(*body)) body->body.push_back(loopCtx.continuePrefix());
 		return {awst::makeWhileLoop(
 			awst::makeTrue(m_loc), std::move(body), m_loc)};
 	}
 	else
 	{
-		auto cond = bc.buildExpr(m_node.condition());
-
-		// Drain statements emitted while building the condition (e.g. a nested-array
-		// `a[i].length` bounds-check) — same orphaning as the for-loop: a WhileLoop
-		// condition is a pure expression, so they must re-run each iteration before the
-		// test, else the condition reads an undefined temp and reverts.
-		auto condPre = bc.takePreEffects();
-		{ auto cp = bc.takePostEffects(); for (auto& p: cp) condPre.push_back(std::move(p)); }
+		std::vector<std::shared_ptr<awst::Statement>> condPre;
+		auto cond = lowerCondition(m_blk, &m_node.condition(), condPre, m_loc);
 
 		// Empty LoopContext (no for-post / doWhile break); still needed so
 		// continue/break inside the body know they're in a loop.
 		LoopContext loopCtx;
-		auto bodyBlk = m_blk.withLoop(loopCtx);
-		auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk.scope);
+		auto body = buildBlock(m_blk.withLoop(loopCtx), m_node.body());
 
-		std::shared_ptr<awst::Block> body;
-		if (auto const* block = dynamic_cast<Block const*>(&m_node.body()))
-			body = buildBlock(bodyBlk, *block);
-		else
-		{
-			body = awst::makeBlock(m_blk.makeLoc(m_node.body().location()));
-			auto translated = buildStatement(bodyBlk, m_node.body());
-			if (translated) body->body.push_back(std::move(translated));
-		}
-
-		if (condPre.empty())
-			return {awst::makeWhileLoop(std::move(cond), std::move(body), m_loc)};
-
-		// while (true) { <cond-pre>; if (!cond) break; <body> }
-		auto newBody = awst::makeBlock(m_loc);
-		for (auto& p: condPre) newBody->body.push_back(std::move(p));
-		auto breakBlk = awst::makeBlock(m_loc);
-		breakBlk->body.push_back(awst::makeLoopExit(m_loc));
-		newBody->body.push_back(
-			awst::makeIfElse(awst::makeNot(std::move(cond), m_loc), breakBlk, nullptr, m_loc));
-		for (auto& s: body->body) newBody->body.push_back(std::move(s));
-		return {awst::makeWhileLoop(awst::makeTrue(m_loc), std::move(newBody), m_loc)};
+		return {lowerLoop(std::move(cond), std::move(condPre), std::move(body), m_loc)};
 	}
 }
 
@@ -221,65 +156,21 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 	// iteration — a conditionally-executed region for compile-time rebinds.
 	// The init above runs once, straight-line, and stays outside it.
 	eb::ContractContext::ConditionalRegion region(bc);
-	auto cond = m_node.condition()
-		? bc.buildExpr(*m_node.condition())
-		: std::shared_ptr<awst::Expression>(awst::makeTrue(m_loc));
-
-	// Capture statements emitted while building the condition (e.g. the bounds-check
-	// assert + index cache for a nested-array `a[i].length`). A WhileLoop condition is a
-	// pure expression, so otherwise these leak into the loop BODY and run AFTER the test
-	// that consumes them → the condition reads undefined temps and reverts. Run them each
-	// iteration BEFORE the test (mirrors the do-while lowering below):
-	//   while (true) { <cond-pre>; if (!cond) break; <body>; <post> }
-	auto condPre = bc.takePreEffects();
-	{ auto cp = bc.takePostEffects(); for (auto& p: cp) condPre.push_back(std::move(p)); }
-
-	std::shared_ptr<awst::Statement> postStmt;
-	if (m_node.loopExpression())
-		postStmt = buildStatement(m_blk, *m_node.loopExpression());
+	std::vector<std::shared_ptr<awst::Statement>> condPre;
+	auto cond = lowerCondition(m_blk, m_node.condition(), condPre, m_loc);
 
 	LoopContext loopCtx;
-	loopCtx.forLoopPost = postStmt;
-	auto bodyBlk = m_blk.withLoop(loopCtx);
-	auto blkGuard = m_blk.builderCtx().pushScopeRaii(&bodyBlk.scope);
+	if (auto const* post = m_node.loopExpression())
+		loopCtx.continuePrefix = [&, post] {
+			auto guard = bc.pushScopeRaii(&m_blk.scope);
+			return buildStatement(m_blk, *post);
+		};
+	auto loopBody = buildBlock(m_blk.withLoop(loopCtx), m_node.body());
+	if (loopCtx.continuePrefix && !awst::blockAlwaysTerminates(*loopBody))
+		if (auto post = loopCtx.continuePrefix()) loopBody->body.push_back(std::move(post));
 
-	auto loopBody = awst::makeBlock(m_loc);
-
-	if (auto const* block = dynamic_cast<Block const*>(&m_node.body()))
-	{
-		for (auto const& stmt: block->statements())
-		{
-			auto translated = buildStatement(bodyBlk, *stmt);
-			if (translated) loopBody->body.push_back(std::move(translated));
-		}
-	}
-	else
-	{
-		auto translated = buildStatement(bodyBlk, m_node.body());
-		if (translated) loopBody->body.push_back(std::move(translated));
-	}
-
-	if (postStmt) loopBody->body.push_back(postStmt);
-
-	if (condPre.empty())
-	{
-		// No condition pre-statements: keep the direct `while (cond) { body }` form.
-		outerBlock->body.push_back(
-			awst::makeWhileLoop(std::move(cond), std::move(loopBody), m_loc));
-	}
-	else
-	{
-		// Re-evaluate the condition pre-statements + test each iteration before the body.
-		auto newBody = awst::makeBlock(m_loc);
-		for (auto& p: condPre) newBody->body.push_back(std::move(p));
-		auto breakBlk = awst::makeBlock(m_loc);
-		breakBlk->body.push_back(awst::makeLoopExit(m_loc));
-		newBody->body.push_back(
-			awst::makeIfElse(awst::makeNot(std::move(cond), m_loc), breakBlk, nullptr, m_loc));
-		for (auto& s: loopBody->body) newBody->body.push_back(std::move(s));
-		outerBlock->body.push_back(
-			awst::makeWhileLoop(awst::makeTrue(m_loc), std::move(newBody), m_loc));
-	}
+	outerBlock->body.push_back(lowerLoop(
+		std::move(cond), std::move(condPre), std::move(loopBody), m_loc));
 	return {outerBlock};
 }
 

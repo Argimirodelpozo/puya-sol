@@ -185,8 +185,11 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildBigUIntPowOp(
 	// Unchecked sub-256 biguint exp wraps products mod 2^256 (buildBigUIntExp), but Solidity
 	// wraps to 2^N: e.g. `uint128 a ** 2` must be mod 2^128. Mask to the type width (same as the
 	// unchecked sub fix above). Found by the differential fuzzer.
-	if (m_scope.isUnchecked() && !m_int.isSigned && m_int.biguintBacked() && m_int.bits < 256)
+	if (m_scope.isUnchecked() && !m_int.isSigned && m_int.bits < 256)
 		result = TypeCoercion::maskUnsignedToWidth(std::move(result), m_int.bits, _loc);
+	// A wide exponent does not widen the result: solc keeps the base's type.
+	if (!m_int.biguintBacked())
+		result = TypeCoercion::implicitNumericCast(std::move(result), awst::WType::uint64Type(), _loc);
 	return wrap(std::move(result));
 }
 
@@ -271,27 +274,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildUInt64PowOp(
 	// through biguint square-and-multiply then mod 2**m_int.bits. Add/Mult/Sub at uint64 already wrap
 	// (needsBigUInt / backend); exp is the one that fell in the m_int.bits<64 gap (== the uint64-sub gap).
 	if (m_scope.isUnchecked() && !m_int.isSigned && m_int.bits <= 64)
-	{
-		auto biguintResult = buildBigUIntExp(m_ctx, m_scope.isUnchecked(), _e->left, _e->right, _loc);
-
-		// 2^m_int.bits; uint64_t(1)<<64 is UB, so the full-uint64 modulus is spelled out.
-		std::string modValStr = (m_int.bits == 64)
-			? "18446744073709551616"
-			: std::to_string(uint64_t(1) << m_int.bits);
-		auto modConst = awst::makeIntegerConstant(modValStr, _loc, awst::WType::biguintType());
-		auto masked = awst::makeBigUIntBinOp(std::move(biguintResult),
-			awst::BigUIntBinaryOperator::Mod, std::move(modConst), _loc);
-		auto asBytes = awst::makeAsBytes(std::move(masked), _loc);
-		auto leftPadded = awst::makeLeftPad(std::move(asBytes), 8, _loc);
-		auto sub8 = awst::makeUInt64BinOp(
-			awst::makeLen(leftPadded, _loc),
-			awst::UInt64BinaryOperator::Sub,
-			awst::makeIntegerConstant("8", _loc), _loc);
-		auto last8 = awst::makeExtract3(leftPadded, std::move(sub8),
-			awst::makeIntegerConstant("8", _loc), _loc);
-		auto u64 = awst::makeBtoi(std::move(last8), _loc);
-		return wrap(std::move(u64));
-	}
+		return buildBigUIntPowOp(std::move(_e->left), std::move(_e->right), _loc);
 
 	// AVM `exp` asserts on 0^0; Solidity defines 0**0=1.
 	_e->op = awst::UInt64BinaryOperator::Pow;

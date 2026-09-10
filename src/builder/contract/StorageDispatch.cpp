@@ -8,6 +8,7 @@
 #include "builder/storage/SlotHandleAccess.h"
 
 #include <libsolidity/ast/Types.h>
+#include <libsolutil/Keccak256.h>
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
 #include "awst/NameGen.h"
@@ -519,6 +520,96 @@ struct NamedCellDispatch
 		return awst::makeAppStateExpression(std::move(key), v->wtype, loc);
 	}
 
+	// A transported array reference is a logical EVM slot, but named storage
+	// still holds an ARC4 array. Bridge its live scalar-element words in both
+	// directions, using the same solc packing facts as SlotHandleAccess. Do not
+	// reinterpret ARC4 bytes as EVM words: bools and sub-word elements differ.
+	void chainArrayWords(
+		SlotVariable const* v, std::shared_ptr<awst::Block>& otherwise, bool write)
+	{
+		auto const* array = dynamic_cast<solidity::frontend::ArrayType const*>(v->solType);
+		if (!array || array->isByteArrayOrString() || !array->baseType()->isValueType()
+			|| StorageMapper::isMultiBoxArray(v->wtype))
+			return;
+		awst::WType const* element = nullptr;
+		if (auto const* dynamic = dynamic_cast<awst::ARC4DynamicArray const*>(v->wtype))
+			element = dynamic->elementType();
+		else if (auto const* fixed = dynamic_cast<awst::ARC4StaticArray const*>(v->wtype))
+			element = fixed->elementType();
+		auto const layout = SlotHandleAccess::layoutFor(array->baseType());
+		if (!codecSupported({"", 0, 0, layout.size, element, array->baseType()}))
+			return;
+
+		auto u64 = [&](uint64_t n) { return awst::makeIntegerConstant(n, loc); };
+		auto base = v->slot;
+		if (array->isDynamicallySized())
+			base = solidity::u256(solidity::util::keccak256(solidity::toBigEndian(base)));
+		auto baseWord = awst::makeBiguintConstant(base.str(), loc);
+		auto delta = awst::makeBigUIntBinOp(
+			slotVar(), awst::BigUIntBinaryOperator::Sub, baseWord, loc);
+		auto length = awst::makeArrayLength(stateCellRead(v), awst::WType::uint64Type(), loc);
+		auto words = awst::makeUInt64BinOp(
+			awst::makeUInt64BinOp(length, awst::UInt64BinaryOperator::Add,
+				u64(layout.perSlot - 1), loc),
+			awst::UInt64BinaryOperator::FloorDiv, u64(layout.perSlot), loc);
+		auto inRange = awst::makeBoolBinOp(
+			awst::makeNumericCompare(slotVar(), awst::NumericComparison::Gte, baseWord, loc),
+			awst::BinaryBooleanOperator::And,
+			awst::makeNumericCompare(delta, awst::NumericComparison::Lt,
+				awst::makeAsBiguint(awst::makeItob(words, loc), loc), loc), loc);
+		auto arm = awst::makeBlock(loc);
+		auto index = awst::makeVarExpression("__array_index", awst::WType::uint64Type(), loc);
+		auto lane = awst::makeVarExpression("__array_lane", awst::WType::uint64Type(), loc);
+		auto word = awst::makeVarExpression("__array_word", awst::WType::bytesType(), loc);
+		arm->body.push_back(awst::makeAssignmentStatement(index,
+			awst::makeUInt64BinOp(awst::makeBtoi(awst::makeAsBytes(delta, loc), loc),
+				awst::UInt64BinaryOperator::Mult, u64(layout.perSlot), loc), loc));
+		arm->body.push_back(awst::makeAssignmentStatement(lane, u64(0), loc));
+		std::shared_ptr<awst::Expression> initialWord = awst::makeBytesConstant({}, loc);
+		if (write)
+			initialWord = awst::makeLeftPadToN(awst::makeAsBytes(valueVar(), loc), 32, loc);
+		arm->body.push_back(awst::makeAssignmentStatement(word, std::move(initialWord), loc));
+		auto step = awst::makeBlock(loc);
+		if (write)
+		{
+			auto offset = awst::makeUInt64BinOp(u64(32), awst::UInt64BinaryOperator::Sub,
+				awst::makeUInt64BinOp(
+					awst::makeUInt64BinOp(lane, awst::UInt64BinaryOperator::Add, u64(1), loc),
+					awst::UInt64BinaryOperator::Mult, u64(layout.size), loc), loc);
+			auto value = SlotWordCodec::packedBytesToNative(
+				awst::makeExtract3(word, offset, u64(layout.size), loc),
+				element, array->baseType(), layout.size, loc);
+			step->body.push_back(awst::makeAssignmentStatement(
+				awst::makeIndexExpression(structCellTarget(v), index, element, loc),
+				std::move(value), loc));
+		}
+		else
+		{
+			auto value = awst::makeIndexExpression(stateCellRead(v), index, element, loc);
+			step->body.push_back(awst::makeAssignmentStatement(word,
+				awst::makeConcat(SlotWordCodec::nativeToPackedBytes(
+					std::move(value), element, layout.size, loc), word, loc), loc));
+		}
+		if (layout.perSlot == 1)
+			arm->body.insert(arm->body.end(), step->body.begin(), step->body.end());
+		else
+		{
+			for (auto const& counter: {index, lane})
+				step->body.push_back(awst::makeAssignmentStatement(counter,
+					awst::makeUInt64BinOp(counter, awst::UInt64BinaryOperator::Add, u64(1), loc), loc));
+			arm->body.push_back(awst::makeWhileLoop(awst::makeBoolBinOp(
+				awst::makeNumericCompare(index, awst::NumericComparison::Lt, length, loc),
+				awst::BinaryBooleanOperator::And,
+				awst::makeNumericCompare(lane, awst::NumericComparison::Lt, u64(layout.perSlot), loc), loc),
+				std::move(step), loc));
+		}
+		arm->body.push_back(awst::makeReturnStatement(
+			write ? nullptr : awst::makeAsBiguint(word, loc), loc));
+		auto branch = awst::makeIfElse(inRange, std::move(arm), std::move(otherwise), loc);
+		otherwise = awst::makeBlock(loc);
+		otherwise->body.push_back(std::move(branch));
+	}
+
 	// ── __storage_read(slot: uint64) -> biguint ──
 	awst::ContractMethod emitRead(std::vector<DispatchSlot> const& table)
 	{
@@ -544,6 +635,7 @@ struct NamedCellDispatch
 		for (auto const& ds: table)
 		{
 			auto const* v = ds.vars[0];
+			chainArrayWords(v, elseBlock, false);
 			if (ds.kind == DispatchSlot::Kind::Struct)
 			{
 				// One compare per internal slot whose field group the codec
@@ -634,6 +726,7 @@ struct NamedCellDispatch
 		for (auto const& ds: table)
 		{
 			auto const* v = ds.vars[0];
+			chainArrayWords(v, elseBlock, true);
 			if (ds.kind == DispatchSlot::Kind::Struct)
 			{
 				// STRUCT state var (see the read side): split the stored word into

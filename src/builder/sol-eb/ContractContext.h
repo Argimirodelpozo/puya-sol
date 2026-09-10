@@ -297,6 +297,15 @@ public:
 		bool _pin,
 		awst::SourceLocation const& _loc);
 
+	/// Gate each branch's complete pre/value/post sequence behind the condition.
+	/// Pure branches remain expressions; effectful branches share a result local.
+	std::shared_ptr<awst::Expression> emitConditional(
+		std::shared_ptr<awst::Expression> _condition,
+		LoweredValue<std::shared_ptr<awst::Expression>> _true,
+		LoweredValue<std::shared_ptr<awst::Expression>> _false,
+		awst::WType const* _type,
+		awst::SourceLocation const& _loc);
+
 	/// Unconditionally-evaluated operand (ternary condition, short-circuit
 	/// LEFT): re-emit its effects, pinning the value only when it carried
 	/// write-backs so later reads observe them while the pinned value keeps

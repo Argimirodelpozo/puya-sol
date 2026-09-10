@@ -32,6 +32,24 @@ std::shared_ptr<Switch> returningSwitch()
 int main()
 {
 	bool ok = true;
+	for (auto halt: {
+		makeExpressionStatement(makeAssert(makeFalse({}), {}), {}),
+		makeExpressionStatement(makeIntrinsicCall("return", WType::voidType(), {}), {})})
+	{
+		auto deep = makeBlock({});
+		deep->body = {halt};
+		for (int depth = 0; depth < 4; ++depth)
+		{
+			auto parent = makeBlock({});
+			parent->body = {deep};
+			deep = std::move(parent);
+		}
+		ok &= require(statementAlwaysTerminates(*deep), "deeply nested assembly halts must terminate");
+		auto conditional = makeIfElse(makeTrue({}), deep, nullptr, {});
+		ok &= require(!statementAlwaysTerminates(*conditional), "one halting branch must not escape");
+		conditional->elseBranch = returningBlock();
+		ok &= require(statementAlwaysTerminates(*conditional), "both halting branches must terminate");
+	}
 	auto branch = returningSwitch();
 	auto block = makeBlock({});
 	block->body = {branch, makeBlock({})};

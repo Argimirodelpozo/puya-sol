@@ -20,17 +20,17 @@ struct StorageRuntimePlan
 	{
 		// Named AVM state accesses do not use the EVM-word dispatcher. In EVM
 		// layout every declared state access does; in default layout only
-		// sload/sstore-style assembly access does.
+		// assembly and transported storage-reference slots do.
 		return evmLayout
-			? solidityLayout.totalSlots() != 0 || containsInlineAssembly
-			: containsInlineAssembly;
+			? solidityLayout.totalSlots() != 0 || usesSlotAccess
+			: usesSlotAccess;
 	}
 
 	/// Canonical declaration-to-slot/offset assignment supplied by solc. The
 	/// selected backend independently binds those declarations to AVM storage.
 	StorageLayout solidityLayout;
 	bool evmLayout = false;
-	bool containsInlineAssembly = false;
+	bool usesSlotAccess = false;
 	bool requiresSparseSlots = false;
 };
 

@@ -6,7 +6,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
-#include <libsolutil/Common.h>
+#include "builder/sol-types/SolIntType.h"
 
 namespace puyasol::builder
 {
@@ -34,9 +34,9 @@ solidity::frontend::Type const* representationType(solidity::frontend::Type cons
 	return _type;
 }
 
-bool reachesStructBeingMapped(
+bool reachesStruct(
 	solidity::frontend::Type const* _type,
-	std::set<int64_t> const& _inProgress,
+	int64_t _root,
 	std::set<solidity::frontend::Type const*>& _visiting)
 {
 	using namespace solidity::frontend;
@@ -44,46 +44,50 @@ bool reachesStructBeingMapped(
 		return false;
 	if (auto const* structure = dynamic_cast<StructType const*>(_type))
 	{
-		if (_inProgress.count(structure->structDefinition().id()))
+		if (structure->structDefinition().id() == _root)
 			return true;
 		for (auto const& member: structure->structDefinition().members())
-			if (reachesStructBeingMapped(member->type(), _inProgress, _visiting))
+			if (reachesStruct(member->type(), _root, _visiting))
 				return true;
 		return false;
 	}
 	if (auto const* array = dynamic_cast<ArrayType const*>(_type))
-		return reachesStructBeingMapped(array->baseType(), _inProgress, _visiting);
+		return reachesStruct(array->baseType(), _root, _visiting);
 	return false;
 }
+}
+
+awst::WType const* TypeMapper::mapArray(
+	solidity::frontend::Type const* _solType, bool _projection)
+{
+	using namespace solidity::frontend;
+	auto const* array = dynamic_cast<ArrayType const*>(_solType);
+	if (!array || array->isString()) return awst::WType::stringType();
+	if (array->isByteArrayOrString()) return awst::WType::bytesType();
+	auto const* structure = dynamic_cast<StructType const*>(array->baseType());
+	// Only a recursive struct's cycling fields need projected array elements.
+	// Standalone array values retain their full elements. Neither projected
+	// structs nor projected arrays enter the ordinary Solidity/ARC4 caches.
+	auto const* element = _projection && structure && structure->recursive()
+		? mapStruct(structure, true)
+		: _projection && dynamic_cast<ArrayType const*>(array->baseType())
+			? mapArray(array->baseType(), true) : mapSolTypeToARC4(array->baseType());
+	awst::WType const* result;
+	if (array->isDynamicallySized())
+		result = createType<awst::ARC4DynamicArray>(element);
+	else
+	{
+		result = createType<awst::ARC4StaticArray>(element,
+			checkedSize<int64_t>(array->length(), "Solidity array length"));
+		computeEncodedElementSize(result).fixedBytes<int>();
+	}
+	m_aggregateSources.emplace(result, array);
+	return result;
 }
 
 namespace
 {
 using namespace solidity::frontend;
-
-/// Array / StringLiteral category: string, bytes, or ARC4 array of the width-preserving ARC4 element type.
-awst::WType const* mapArrayCategory(TypeMapper& _tm, Type const* _solType)
-{
-	auto const* arrType = dynamic_cast<ArrayType const*>(_solType);
-	if (!arrType)
-		return awst::WType::stringType();
-	if (arrType->isString())
-		return awst::WType::stringType();
-	if (arrType->isByteArrayOrString())
-		return awst::WType::bytesType();
-	// mapSolTypeToARC4 preserves exact bit widths (avoids uint8→uint64→arc4.uint64).
-	awst::WType const* arc4ElemType = _tm.mapSolTypeToARC4(arrType->baseType());
-	if (!arrType->isDynamicallySized())
-	{
-		int64_t len = checkedSize<int64_t>(arrType->length(), "Solidity array length");
-		auto const* result = _tm.createType<awst::ARC4StaticArray>(arc4ElemType, len);
-		// Byte offsets in materialization helpers are host ints. Diagnose an
-		// unsupported shape before default allocation or expression expansion.
-		computeEncodedElementSize(result).fixedBytes<int>();
-		return result;
-	}
-	return _tm.createType<awst::ARC4DynamicArray>(arc4ElemType);
-}
 
 awst::WType const* mapRationalCategory(TypeMapper& _tm, Type const* _solType)
 {
@@ -129,8 +133,7 @@ awst::WType const* mapFallbackCategory(Type const* _solType, std::string const& 
 	auto const cat = _solType->category();
 	if (cat == Type::Category::TypeType || cat == Type::Category::Modifier
 		|| cat == Type::Category::Magic || cat == Type::Category::Module
-		|| cat == Type::Category::InaccessibleDynamic
-		|| cat == Type::Category::ArraySlice)
+		|| cat == Type::Category::InaccessibleDynamic)
 		return awst::WType::bytesType();
 	Logger::instance().error(
 		"unsupported type '" + _typeStr + "' — no AVM mapping; refusing a "
@@ -187,7 +190,11 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 
 	case Type::Category::StringLiteral:
 	case Type::Category::Array:
-		result = mapArrayCategory(*this, _solType);
+		result = mapArray(_solType);
+		break;
+	case Type::Category::ArraySlice:
+		result = mapArray(
+			&static_cast<ArraySliceType const*>(_solType)->arrayType());
 		break;
 
 	case Type::Category::Struct:
@@ -240,9 +247,6 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	if (result)
 	{
 		m_solTypeCache[cacheKey] = result;
-		if (_solType->category() == Type::Category::Array
-			&& !static_cast<ArrayType const*>(_solType)->isByteArrayOrString())
-			m_aggregateSources.emplace(result, _solType);
 	}
 	else
 		result = awst::WType::voidType();
@@ -261,18 +265,7 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 	if (!_type)
 		return nullptr;
 
-	switch (_type->kind())
-	{
-	case awst::WTypeKind::ARC4UIntN:
-	case awst::WTypeKind::ARC4UFixedNxM:
-	case awst::WTypeKind::ARC4Tuple:
-	case awst::WTypeKind::ARC4DynamicArray:
-	case awst::WTypeKind::ARC4StaticArray:
-	case awst::WTypeKind::ARC4Struct:
-		return _type;
-	default:
-		break;
-	}
+	if (isArc4EncodedType(_type)) return _type;
 
 	if (auto const found = m_arc4Cache.find(_type); found != m_arc4Cache.end())
 		return found->second;
@@ -338,87 +331,39 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 	return remember(_type); // best effort
 }
 
-awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _structType)
+awst::WType const* TypeMapper::mapStruct(
+	solidity::frontend::StructType const* _structType, bool _projection)
 {
-	if (!_structType)
-		return awst::WType::voidType();
+	if (!_structType) return awst::WType::voidType();
+	auto const& definition = _structType->structDefinition();
+	auto& cache = _projection ? m_structProjections : m_structTypes;
+	if (auto it = cache.find(definition.id()); it != cache.end()) return it->second;
 
-	auto const& structDef = _structType->structDefinition();
-	std::string name = structDef.name();
-
-	// Cache by AST ID to disambiguate same-named structs from different scopes.
-	std::string cacheKey = "struct:" + std::to_string(structDef.id());
-	auto it = m_namedTypeCache.find(cacheKey);
-	if (it != m_namedTypeCache.end())
-		return it->second;
-
-	// Recursion guard for `struct R { R[] children; }` cycles (ARC4 has no cycle
-	// support). On re-entry, return a FIXED PROJECTION of the struct — its fields,
-	// but recursive (in-progress) array/mapping fields stubbed to a bytes pointer.
-	// Keeps the field SHAPE (so element access like `s.x[i].v` still resolves),
-	// unlike a bare bytes blob, and stays non-recursive so puya accepts it.
-	// (solc's `structDef.annotation().recursive` would short-circuit the whole
-	// struct to bytes, losing outer non-cycling fields — per-cycle is the right model.)
-	if (m_inProgressStructs.count(structDef.id()))
-	{
-		std::string projKey = "structproj:" + std::to_string(structDef.id());
-		auto pit = m_namedTypeCache.find(projKey);
-		if (pit != m_namedTypeCache.end())
-			return pit->second;
-		std::vector<std::pair<std::string, awst::WType const*>> projFields;
-		for (auto const& member: structDef.members())
-		{
-			std::set<solidity::frontend::Type const*> visiting;
-			bool recursiveField =
-				member->type()->category() == solidity::frontend::Type::Category::Mapping
-				|| reachesStructBeingMapped(
-					member->type(), m_inProgressStructs, visiting);
-			projFields.emplace_back(
-				member->name(),
-				recursiveField ? awst::WType::bytesType() : mapSolTypeToARC4(member->type()));
-		}
-		auto* proj = createType<awst::ARC4Struct>(name + "__rec", std::move(projFields),
-			/*_frozen=*/false);
-		m_namedTypeCache[projKey] = proj;
-		m_aggregateSources.emplace(proj, _structType);
-		return proj;
-	}
-	m_inProgressStructs.insert(structDef.id());
-	solidity::ScopeGuard clearProgress([&] { m_inProgressStructs.erase(structDef.id()); });
-	if (!profile().evmStorageLayout)
+	if (!_projection && !profile().evmStorageLayout)
 		if (auto const* inner = transparentMappingWrapper(_structType))
 		{
 			auto const* innerType = dynamic_cast<awst::ARC4Struct const*>(mapStruct(inner));
-			auto* result = createType<awst::ARC4Struct>(name, innerType->fields(), false);
-			m_namedTypeCache[cacheKey] = result;
+			auto* result = createType<awst::ARC4Struct>(definition.name(), innerType->fields(), false);
+			cache.emplace(definition.id(), result);
 			m_aggregateSources.emplace(result, solcAggregateFor(innerType));
 			return result;
 		}
 
 	std::vector<std::pair<std::string, awst::WType const*>> fields;
-
-	for (auto const& member: structDef.members())
+	for (auto const& member: definition.members())
 	{
-		if (member->type()->category() == solidity::frontend::Type::Category::Mapping)
-		{
-			// Mapping fields: bytes placeholder so FieldExpression accesses work;
-			// actual mapping data lives in separate box storage.
-			fields.emplace_back(member->name(), awst::WType::bytesType());
-			continue;
-		}
-		auto const* arc4Type = mapSolTypeToARC4(member->type());
-		fields.emplace_back(member->name(), arc4Type);
+		std::set<solidity::frontend::Type const*> visiting;
+		bool const opaque = member->type()->category() == solidity::frontend::Type::Category::Mapping
+			|| (_projection && reachesStruct(member->type(), definition.id(), visiting));
+		visiting.clear();
+		bool const projectedArray = dynamic_cast<solidity::frontend::ArrayType const*>(member->type())
+			&& reachesStruct(member->type(), definition.id(), visiting);
+		fields.emplace_back(member->name(), opaque ? awst::WType::bytesType()
+			: projectedArray ? mapArray(member->type(), true) : mapSolTypeToARC4(member->type()));
 	}
-
 	auto* result = createType<awst::ARC4Struct>(
-		name,
-		std::move(fields),
-		/*_frozen=*/false  // Mutable: struct-field writes must not hit puya's "immutable"
-		                   // rejection. Value-type semantics enforced by puya-sol's
-		                   // copy-on-write handlers, not this flag.
-	);
-
-	m_namedTypeCache[cacheKey] = result;
+		definition.name() + (_projection ? "__rec" : ""), std::move(fields), false);
+	cache.emplace(definition.id(), result);
 	m_aggregateSources.emplace(result, _structType);
 	return result;
 }
@@ -436,32 +381,16 @@ awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* 
 		_solType = &udvt->underlyingType();
 	awst::WType const* result = nullptr;
 
-	// Preserve exact bit width (don't upcast uint8→uint64).
-	if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(_solType))
+	// Exact widths, signedness, UDVT underlying types and enum encoding types
+	// come from solc, not a duplicated enum-width or source-name convention.
+	if (auto const integer = SolIntType::fromSolOrEnum(_solType))
 	{
-		unsigned bits = intType->numBits();
-		if (intType->isSigned())
-		{
-			std::string alias = "int" + std::to_string(bits);
-			result = createType<awst::ARC4UIntN>(static_cast<int>(bits), alias);
-		}
+		if (!integer->isSigned && integer->bits == 8 && m_arc4ByteType)
+			result = m_arc4ByteType;
 		else
-		{
-			if (bits == 8 && m_arc4ByteType)
-				result = m_arc4ByteType;
-			else
-				result = createType<awst::ARC4UIntN>(static_cast<int>(bits));
-			if (bits == 8)
-				m_arc4ByteType = result;
-		}
-	}
-
-	// Enums → ARC4UIntN(8) (always uint8 in Solidity ABI).
-	else if (dynamic_cast<solidity::frontend::EnumType const*>(_solType))
-	{
-		if (!m_arc4ByteType)
-			m_arc4ByteType = createType<awst::ARC4UIntN>(8);
-		result = m_arc4ByteType;
+			result = createType<awst::ARC4UIntN>(static_cast<int>(integer->bits),
+				integer->isSigned ? "int" + std::to_string(integer->bits) : "");
+		if (!integer->isSigned && integer->bits == 8) m_arc4ByteType = result;
 	}
 	else
 		result = mapToARC4Type(map(_solType));

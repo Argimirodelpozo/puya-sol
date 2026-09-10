@@ -494,7 +494,7 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIndexAccess(
 		auto base = resolve(_ia.baseExpression());
 		if (!base)
 			return std::nullopt;
-		auto key = m_ctx.buildExpr(*_ia.indexExpression());
+		auto key = m_ctx.pinIfWriteBacks(m_ctx.lower(*_ia.indexExpression(), false), m_loc);
 		if (!key)
 			return std::nullopt;
 		auto slot = mappingEntrySlot(base->slot, std::move(key), mt->keyType());
@@ -517,7 +517,8 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIndexAccess(
 		if (!base)
 			return std::nullopt;
 
-		auto idx = toBiguintIndex(m_ctx.buildExpr(*_ia.indexExpression()), m_loc);
+		auto idx = toBiguintIndex(m_ctx.pinIfWriteBacks(
+			m_ctx.lower(*_ia.indexExpression(), false), m_loc), m_loc);
 		if (!idx)
 			return std::nullopt;
 

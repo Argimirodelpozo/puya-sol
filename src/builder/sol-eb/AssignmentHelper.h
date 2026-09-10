@@ -74,15 +74,15 @@ public:
 		bool returnsField = false;
 	};
 
-	/// ARC4-encode `_value` for storage at `_target`'s wtype when needed:
+	/// ARC4-encode `_value` for storage at `_target` when needed:
 	/// structural-equivalence no-op, string→bytes, arc4 array element-width
 	/// widening, uint64→arc4.uintN narrowing, bytes→dynamic byte-array
 	/// header build, else plain ARC4Encode. Moved from SolAssignment
 	/// (m_assignment-independent) so ++/-- and delete share it.
-	static std::shared_ptr<awst::Expression> arc4EncodeForTarget(
+	static std::shared_ptr<awst::Expression> arc4EncodeForType(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _value,
-		std::shared_ptr<awst::Expression> const& _target,
+		awst::WType const* _target,
 		awst::SourceLocation const& _loc);
 
 	/// Queue the lazy-root-box ensure for a partial write target (see

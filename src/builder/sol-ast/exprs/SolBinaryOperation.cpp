@@ -77,29 +77,15 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()
 	if (rhsD.empty())
 		return awst::makeBoolBinOp(std::move(left), boolOp, std::move(right), m_loc);
 
-	// RHS has side effects -> gate them behind the condition (mirror the ternary, SolConditional):
-	//   a && b  ==  a ? b : false   (b runs iff a is true)
-	//   a || b  ==  a ? true : b    (b runs iff a is false)
-	std::string tempName = "__sc_" + std::to_string(awst::NameGen::next("SolBinaryOperation.s_counter"));
-	auto* boolType = awst::WType::boolType();
-	auto tempVar = [&] { return awst::makeVarExpression(tempName, boolType, m_loc); };
-
-	// RHS: its captured pre-statements run, then temp = right, then its
-	// write-backs — all gated with the operand (OperandPlan block).
-	auto rhsBlock = eb::ContractContext::makeScopedResultBlock(
-		std::move(rhsD.pre), tempVar(), std::move(right), m_loc, std::move(rhsD.post));
-	// Short-circuit branch: temp = the constant that skips the RHS.
-	auto shortBlock = eb::ContractContext::makeScopedResultBlock(
-		{}, tempVar(), awst::makeBoolConstant(op == Token::Or, m_loc), m_loc);
-
-	if (op == Token::And)
-		m_ctx.preEffects().push_back(
-			awst::makeIfElse(std::move(left), std::move(rhsBlock), std::move(shortBlock), m_loc));
-	else
-		m_ctx.preEffects().push_back(
-			awst::makeIfElse(std::move(left), std::move(shortBlock), std::move(rhsBlock), m_loc));
-
-	return tempVar();
+	eb::ContractContext::LoweredValue<std::shared_ptr<awst::Expression>> rhs{
+		std::move(right), std::move(rhsD)};
+	eb::ContractContext::LoweredValue<std::shared_ptr<awst::Expression>> skipped{
+		awst::makeBoolConstant(op == Token::Or, m_loc), {}};
+	return op == Token::And
+		? m_ctx.emitConditional(std::move(left), std::move(rhs), std::move(skipped),
+			awst::WType::boolType(), m_loc)
+		: m_ctx.emitConditional(std::move(left), std::move(skipped), std::move(rhs),
+			awst::WType::boolType(), m_loc);
 }
 
 namespace
@@ -213,10 +199,15 @@ std::shared_ptr<awst::Expression> tryArithmeticDispatch(
 			commonLeftHold = ctx.builderForInstance(commonSolType, lv);
 			if (commonLeftHold) arithBuilder = commonLeftHold.get();
 		}
-		if (commonSolType != rightSolType)
+		// Solc converts an exponent to its OWN mobile type, never the base type.
+		// Narrowing here loses high exponent bits before the arithmetic builder sees them.
+		auto const* rhsType = builderOp == eb::BuilderBinaryOp::Pow
+			? rightSolType->mobileType() : commonSolType;
+		if (rhsType != rightSolType)
 		{
-			auto rv = builder::TypeCoercion::coerceToCommonInt(right, rightSolType, commonW, loc);
-			commonRightHold = ctx.builderForInstance(commonSolType, rv);
+			auto rv = builder::TypeCoercion::coerceToCommonInt(
+				right, rightSolType, ctx.typeMapper.map(rhsType), loc);
+			commonRightHold = ctx.builderForInstance(rhsType, rv);
 			if (commonRightHold) arithRight = commonRightHold.get();
 		}
 	}

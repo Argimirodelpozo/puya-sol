@@ -1,4 +1,4 @@
-foreach(case IN ITEMS OversizedEncodedArray OversizedArrayLength)
+foreach(case IN ITEMS OversizedEncodedArray OversizedArrayLength OversizedDynamicDefault)
     execute_process(
         COMMAND "${PUYA_SOL}" --source "${SOURCE_DIR}/${case}.sol"
             --output-dir "${OUTPUT_ROOT}/${case}" --no-puya --log-level error
@@ -10,7 +10,7 @@ foreach(case IN ITEMS OversizedEncodedArray OversizedArrayLength)
     if(NOT "${result}" STREQUAL "1")
         message(FATAL_ERROR "${case}: expected diagnostic exit 1, got ${result}:\n${stdout}\n${stderr}")
     endif()
-    if(NOT "${stdout}\n${stderr}" MATCHES "(encoded element size|Solidity array length) exceeds the compiler's addressable range")
+    if(NOT "${stdout}\n${stderr}" MATCHES "((encoded element size|Solidity array length) exceeds the compiler's addressable range|ARC4 default encoding is unsupported or exceeds the materialization limit)")
         message(FATAL_ERROR "${case}: missing checked-capacity diagnostic:\n${stdout}\n${stderr}")
     endif()
     if(EXISTS "${OUTPUT_ROOT}/${case}/artifact-manifest.json")

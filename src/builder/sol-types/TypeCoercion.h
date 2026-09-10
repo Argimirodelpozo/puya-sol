@@ -104,8 +104,8 @@ public:
 	);
 
 	/// Transform a whole return VALUE (scalar or tuple) per the per-element plan.
-	/// Handles a scalar, a literal tuple, a ternary-of-tuples, and an opaque tuple
-	/// value (`return f()`) which spills to a temp appended to `_prepend`. Returns
+	/// Handles a scalar or a tuple (literal, conditional or opaque), snapshotting
+	/// a tuple before component adaptation into a temp appended to `_prepend`. Returns
 	/// the (possibly new) value; the caller inserts `_prepend` before the return.
 	static std::shared_ptr<awst::Expression> encodeReturnValue(
 		TypeMapper& _typeMapper,
@@ -282,13 +282,6 @@ public:
 	/// beyond N are dropped, missing high bytes stay 0. N<=32 so it fits u256.
 	static std::vector<uint8_t> intLiteralToBytesN(std::string const& _decimal, int _n);
 
-	/// Create a ReinterpretCast wrapping _expr with _targetType.
-	static std::shared_ptr<awst::ReinterpretCast> reinterpretCast(
-		std::shared_ptr<awst::Expression> _expr,
-		awst::WType const* _targetType,
-		awst::SourceLocation const& _loc
-	);
-
 	/// Coerce a string literal to raw bytes if needed for byte-level operations.
 	/// Converts StringConstant → BytesConstant so it can be used in ARC4Encode
 	/// or byte array element assignment without type mismatch.
@@ -311,52 +304,15 @@ public:
 
 	// ── ARC4 / ABI ───────────────────────────────────────────────
 
-	/// How a BARE (native) biguint wtype is named in a signature. The two answers
-	/// are both load-bearing: puya's router publishes a bare-biguint subroutine arg
-	/// as "uint512" (its 64-byte stack width — what the SPLITTER chunk sigs must
-	/// match), while the ABI-selector convention collapses it to "uint256". Callers
-	/// choose explicitly; keeping the choice implicit in per-file copies is how the
-	/// splitter namers silently disagreed.
-	enum class BareBiguintName { Uint512, Uint256 };
-
-	/// THE canonical WType→ABI-signature type name (selector computation, splitter
-	/// chunk sigs, helper method sigs). Handles native wtypes (void/bool/uint64/
-	/// biguint/account/string/bytes), all ARC4 kinds (alias-aware: "byte", "string",
-	/// "byte[]", "address" pass through exactly as puya publishes them), WTuple and
-	/// ReferenceArray. Replaces the three per-file copies (this fn, the splitter's
-	/// abiTypeName, PureHelperExtractor's arc4TypeName) that had drifted.
-	static std::string wtypeToABIName(
-		awst::WType const* _type,
-		BareBiguintName _biguint = BareBiguintName::Uint256);
-
-	/// Canonical ARC4 method-selector type name for a Solidity INTEGER type,
-	/// matching exactly what the callee's on-chain router emits (verified via the
-	/// TEAL `method "..."` strings): `<= 64`-bit → "uint64" (width AND signedness
-	/// collapsed), `> 64`-bit → "uint" + numBits (exact width, signedness
-	/// dropped). E.g. uint8/int40/int64 → "uint64"; uint128/int128 → "uint128".
-	/// Returns nullopt if `_type` (UDVT-unwrapped) is not an integer, so callers
-	/// fall through to their own handling. The three caller-side selector
-	/// builders (SolExternalCall, AbiEncoderBuilder::buildARC4MethodSelector,
-	/// InnerCallHandlers::buildMethodSelector) MUST share this or cross-contract
-	/// selectors mismatch and calls mis-route.
-	static std::optional<std::string> intSelectorName(
-		solidity::frontend::Type const* _type);
-
-	/// Like intSelectorName but for a RETURN-position integer. Identical for
-	/// unsigned, but a SIGNED return is named "uint256" (any width) — the callee
-	/// encodes signed returns as the full 256-bit two's complement. Params and
-	/// returns differ for signed ints, so the caller-side selector builders must
-	/// use this for return types and intSelectorName for params.
-	static std::optional<std::string> intSelectorReturnName(
-		solidity::frontend::Type const* _type);
+	/// Alias-aware name of an emitted wire type, matching Puya's router.
+	/// Solidity parameter/return conventions belong in their boundary plans,
+	/// not in a second traversal of the source type.
+	static std::string wtypeToABIName(awst::WType const* _type);
 
 	/// Assemble an ARC4 method selector from a name and the already-mapped ARC4
 	/// type-name strings for params and returns: `name(p0,p1,...)` followed by the
 	/// return suffix — `(r0,r1,...)` for >1 return, the single name for exactly 1,
-	/// or `void` for none. The four caller/encoder selector builders (SolExternalCall,
-	/// both InnerCallHandlers overloads, AbiEncoderBuilder) hand-rolled this identical
-	/// skeleton; only their per-type name mappers differ, so those stay at each site
-	/// and feed the mapped strings here.
+	/// or `void` for none. Callers supply names from their emitted wire plans.
 	static std::string buildArc4Selector(
 		std::string const& _name,
 		std::vector<std::string> const& _paramNames,

@@ -9,7 +9,7 @@
 #include "builder/AWSTBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/contract/ParamABIValidator.h"
-#include "builder/sol-ast/stmts/SolBlock.h"
+#include "builder/sol-ast/SolStatement.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/proxies/UupsLowering.h"
@@ -84,7 +84,6 @@ void transformReturnValues(
 
 void normalizeNativeReturns(
 	awst::ContractMethod& method,
-	solidity::frontend::FunctionDefinition const& function,
 	TypeMapper& typeMapper,
 	std::vector<ReturnWireElem> plan,
 	bool asmWrap,
@@ -101,37 +100,9 @@ void normalizeNativeReturns(
 	transformReturnValues(
 		method.body->body, typeMapper, plan, asmWrap, /*wire=*/false);
 
-	// A scalar named return can be assigned with the mapped native type while
-	// the ABI method threads a promoted biguint. Keep the assignment itself
-	// type-correct; the return transform above handles its final signed form.
-	auto const& returns = function.returnParameters();
-	if (returns.size() != 1 || returns[0]->name().empty()
-		|| !awst::isNumericWType(plan[0].nativeType))
-		return;
-	std::string const name = returns[0]->name();
-	std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> walk;
-	walk = [&](std::vector<std::shared_ptr<awst::Statement>>& body) {
-		for (auto& statement: body)
-		{
-			if (auto* assignment =
-				dynamic_cast<awst::AssignmentStatement*>(statement.get()))
-				if (auto* target =
-					dynamic_cast<awst::VarExpression*>(assignment->target.get());
-					target && target->name == name && assignment->value
-					&& awst::isNumericWType(assignment->value->wtype)
-					&& assignment->value->wtype != plan[0].nativeType)
-				{
-					auto const loc = assignment->value->sourceLocation;
-					assignment->value = TypeCoercion::implicitNumericCast(
-						std::move(assignment->value), plan[0].nativeType, loc);
-					target->wtype = plan[0].nativeType;
-				}
-			awst::forEachChildBlock(*statement, [&](awst::Block& block, bool) {
-				walk(block.body);
-			});
-		}
-	};
-	walk(method.body->body);
+	// Named return locals retain their solc-mapped type. Only returned values
+	// cross the promoted/wire boundary; changing stores would corrupt the
+	// modifier chain's native input/output locals.
 }
 
 // Value-model reference parameters need an explicit post-call value. Contract
@@ -509,15 +480,17 @@ void emitImplicitReturn(
 	{
 		// Named values, then the augmented args (matches the augmented return type).
 		auto tuple = awst::makeTupleExpression(nullptr, _loc);
-		for (auto const& rpPtr: retParams)
+		for (size_t ri = 0; ri < retParams.size(); ++ri)
 		{
-			auto const& rp = *rpPtr;
+			auto const& rp = *retParams[ri];
 			bool const inMemory = rp.referenceLocation() == VariableDeclaration::Location::Memory;
-			auto const* vt = (_typeMapper.profile().evmStorageLayout
-				&& rp.referenceLocation() == VariableDeclaration::Location::Storage)
-				? awst::WType::biguintType()   // slot handle
+			auto const* vt = rp.referenceLocation() == VariableDeclaration::Location::Storage
+				? _typeMapper.functionReturnPlan(_func).elements[ri].nativeType
 				: _typeMapper.map(rp.type());
-			if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(vt))
+			if (rp.name().empty())
+				// Solc initializes every return parameter, including unnamed ones.
+				tuple->items.push_back(StorageMapper::makeDefaultValue(vt, _loc));
+			else if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(vt))
 				tuple->items.push_back(blobOffVar(rp));
 			else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id()) && !memoryUsesBlob(vt))
 				tuple->items.push_back(materialized(rp, vt));
@@ -528,7 +501,14 @@ void emitImplicitReturn(
 			tuple->items.push_back(augmentedArg(idx));
 		for (size_t idx: memoryIdx)
 			tuple->items.push_back(augmentedArg(idx));
-		tuple->wtype = _returnType;
+		// These are native locals; the outgoing signature can already contain
+		// promoted or encoded carriers. Keep the source tuple valid before its
+		// whole-value snapshot and the subsequent return-boundary conversion.
+		std::vector<awst::WType const*> types;
+		for (auto const& item: tuple->items) types.push_back(item->wtype);
+		auto const* declared = dynamic_cast<awst::WTuple const*>(_returnType);
+		tuple->wtype = _typeMapper.createType<awst::WTuple>(
+			std::move(types), declared ? declared->names() : std::nullopt);
 		retStmt->value = std::move(tuple);
 	}
 	else
@@ -537,8 +517,8 @@ void emitImplicitReturn(
 	// Build-time encoding: the synthesized implicit return is the SECOND return
 	// construction site (SolReturnStatement is the first, for explicit returns);
 	// encode it here too so it matches the wire method.returnType. The value is
-	// a named var (scalar) or a literal tuple of named vars — never an opaque
-	// call, so the spill vector stays empty.
+	// a named var (scalar) or a tuple of named vars; snapshot the tuple before
+	// adapting any component.
 	if (_shape.encodeReturns && retStmt->value)
 	{
 		std::vector<std::shared_ptr<awst::Statement>> prepend;
@@ -795,7 +775,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.returnType = signature.wireType;
 		else
 			normalizeNativeReturns(
-				method, _func, m_typeMapper, returnPlan,
+				method, m_typeMapper, returnPlan,
 				funcHasInlineAssembly,
 				method.arc4MethodConfig.has_value()
 					&& !_func.modifiers().empty());

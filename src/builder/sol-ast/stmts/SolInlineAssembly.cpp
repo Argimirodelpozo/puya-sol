@@ -5,7 +5,6 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/assembly/AssemblyBuilder.h"
-#include "builder/ProgramAnalysis.h"
 #include "builder/sol-types/SolcConstFold.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/storage/EvmLayoutMode.h"
@@ -18,7 +17,6 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTUtils.h>
-#include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/Numeric.h>
 
@@ -30,13 +28,6 @@
 // actually instantiate them pay the ~223k lines.
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
-
-namespace
-{
-// Constant-variable resolution HOISTED to the shared
-// builder::SolcConstFold::constantVarEvmWord (fable-review.md item 1: one
-// canonical constant-folding home) — this file now just consumes it.
-}
 
 namespace puyasol::builder::sol_ast
 {
@@ -54,39 +45,70 @@ SolInlineAssembly::SolInlineAssembly(
 namespace
 {
 
-/// toAwst scan: constant values referenced from Yul (skipping cyclic constant chains, which ConstantEvaluator would recurse into).
-std::map<std::string, std::string> collectAsmConstants(
-	InlineAssembly const& node)
+/// Classify solc's external variable references once for constants, named-cell
+/// routes and live storage-reference locals.
+struct ExternalBindings
 {
-	std::map<std::string, std::string> constants;
-	auto const& annotation = node.annotation();
-	for (auto const& [yulId, extInfo]: annotation.externalReferences)
-	{
-		if (!extInfo.declaration) continue;
-		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
-		if (!varDecl || !varDecl->isConstant()) continue;
-		// Skip cyclic constant chains (`const a = b; const b = a;`) — solc's
-		// isConstantVariableRecursive returns true for cycles. Without this
-		// guard, constantVarEvmWord → ConstantEvaluator could recurse into
-		// the cycle.
-		if (solidity::frontend::isConstantVariableRecursive(*varDecl)) continue;
+	std::map<std::string, std::string> constants, structRefSlotLocals;
+	std::map<std::string, AssemblyBuilder::BoxKeyedSlot> boxKeyedStructSlots;
+	std::map<std::string, AssemblyBuilder::StateVarSlot> stateVarSlots;
+};
 
-		auto resolved = builder::SolcConstFold::constantVarEvmWord(*varDecl);
-		if (resolved)
+ExternalBindings collectExternalBindings(BlockContext& blk, InlineAssembly const& node)
+{
+	ExternalBindings bindings;
+	for (auto const& [yulId, reference]: node.annotation().externalReferences)
+	{
+		auto const* vd = dynamic_cast<VariableDeclaration const*>(reference.declaration);
+		if (!vd) continue;
+		auto const name = yulId->name.str();
+		if (vd->isConstant())
 		{
-			std::ostringstream oss;
-			oss << *resolved;
-			constants[yulId->name.str()] = oss.str();
+			if (!solidity::frontend::isConstantVariableRecursive(*vd))
+				if (auto value = builder::SolcConstFold::constantVarEvmWord(*vd))
+					bindings.constants[name] = value->str();
+			continue;
+		}
+		auto slot = blk.scope.bindings.slotStorageRefs.get(vd->id());
+		if (!vd->isStateVariable() && vd->type()->dataStoredIn(DataLocation::Storage))
+		{
+			// Solc IRGeneratorForStatements::CopyTranslate: reference locals
+			// carry a slot, never a packed-value byte offset.
+			if (reference.suffix == "offset") bindings.constants[name] = "0";
+			else if (reference.suffix == "slot" && (blk.typeMapper().profile().evmStorageLayout || slot))
+			{
+				auto const* local = dynamic_cast<awst::VarExpression const*>(slot.get());
+				bindings.structRefSlotLocals[name] = local ? local->name : blk.scope.awstVarName(*vd);
+			}
+		}
+		if (blk.typeMapper().profile().evmStorageLayout || reference.suffix != "slot") continue;
+		if (vd->isLocalVariable())
+		{
+			auto const* alias = blk.scope.bindings.storageAliases.find(vd->id());
+			if (!alias || alias->kind != StorageAlias::Kind::StateRead) continue;
+			auto value = awst::unwrapStateGet(alias->expr);
+			if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(value.get()))
+				if (dynamic_cast<awst::ARC4Struct const*>(box->wtype))
+					bindings.boxKeyedStructSlots[name] = {box->key, box->wtype};
+		}
+		else if (vd->isStateVariable() && !blk.builderCtx().storageMapper.shouldUseBoxStorage(*vd))
+		{
+			// Only a full-width uint256 maps one EVM word to one named cell.
+			// Packed/signed values and aggregates keep the normal slot route.
+			if (auto const* integer = dynamic_cast<IntegerType const*>(vd->type());
+				integer && !integer->isSigned() && integer->numBits() == 256)
+				bindings.stateVarSlots[name] = {
+					blk.builderCtx().storageMapper.physicalBindingFor(*vd).key, blk.typeMapper().map(vd->type())};
 		}
 	}
-	return constants;
+	return bindings;
 }
 
 /// toAwst scan: local storage aliases (`uint256[] storage x = a;` keeps the initializer in the VariableDeclarationStatement, so …
 void collectStorageLocalAliases(
-	InlineAssembly const& node,
-	std::map<std::string, VariableDeclaration const*>& storageLocalAliases,
-	std::map<std::string, std::pair<VariableDeclaration const*, std::string>>& memberArrayAliases)
+	BlockContext& blk, InlineAssembly const& node,
+	std::map<int64_t, VariableDeclaration const*>& storageLocalAliases,
+	std::map<int64_t, std::pair<VariableDeclaration const*, std::string>>& memberArrayAliases)
 {
 	auto const& annotation = node.annotation();
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
@@ -95,32 +117,14 @@ void collectStorageLocalAliases(
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 		if (!varDecl || !varDecl->isLocalVariable()) continue;
 
-		// solc may report a Block, FunctionDefinition, or ModifierDefinition as
-		// the local's lexical scope. Search that subtree by declaration identity
-		// instead of assuming an immediate block/name match; this also handles
-		// nested scopes and shadowed local names.
-		struct InitializerFinder: ASTConstVisitor
-		{
-			int64_t targetId;
-			Expression const* initial = nullptr;
-			bool visit(VariableDeclarationStatement const& _stmt) override
-			{
-				for (auto const& declaration: _stmt.declarations())
-					if (declaration && declaration->id() == targetId)
-					{
-						initial = _stmt.initialValue();
-						return false;
-					}
-				return true;
-			}
-		} finder;
-		finder.targetId = varDecl->id();
-		if (auto const* scope = varDecl->scope())
-			scope->accept(finder);
-		if (!finder.initial)
-			continue;
+		// The analyzed declaration ID supplies source provenance. A runtime slot
+		// binding supersedes it, including in named storage mode.
+		if (blk.scope.bindings.slotStorageRefs.get(varDecl->id())) continue;
+		auto const& initializers = blk.typeMapper().analysis().localInitializers;
+		auto initial = initializers.find(varDecl->id());
+		if (initial == initializers.end()) continue;
 
-		if (auto const* initMA = dynamic_cast<MemberAccess const*>(finder.initial))
+		if (auto const* initMA = dynamic_cast<MemberAccess const*>(initial->second))
 		{
 			auto const* baseId = dynamic_cast<Identifier const*>(&initMA->expression());
 			auto const* baseVar = baseId
@@ -129,99 +133,18 @@ void collectStorageLocalAliases(
 				: nullptr;
 			if (baseVar && baseVar->isStateVariable()
 				&& dynamic_cast<StructType const*>(baseVar->type()))
-				memberArrayAliases[varDecl->name()] = {
+				memberArrayAliases[varDecl->id()] = {
 					baseVar, initMA->memberName()};
 			continue;
 		}
-		auto const* initId = dynamic_cast<Identifier const*>(finder.initial);
+		auto const* initId = dynamic_cast<Identifier const*>(initial->second);
 		if (!initId)
 			continue;
 		auto const* sv = dynamic_cast<VariableDeclaration const*>(
 			initId->annotation().referencedDeclaration);
 		if (sv && sv->isStateVariable())
-			storageLocalAliases[varDecl->name()] = sv;
+			storageLocalAliases[varDecl->id()] = sv;
 	}
-}
-
-/// toAwst scan: box-keyed struct storage pointers surfaced via `.slot` (a struct-in-box alias such as `TickInfo storage info = …
-std::map<std::string, AssemblyBuilder::BoxKeyedSlot> collectBoxKeyedStructSlots(
-	BlockContext& blk, InlineAssembly const& node)
-{
-	std::map<std::string, AssemblyBuilder::BoxKeyedSlot> boxKeyedStructSlots;
-	auto const& annotation = node.annotation();
-	for (auto const& [yulId, extInfo]: annotation.externalReferences)
-	{
-		if (blk.typeMapper().profile().evmStorageLayout) break;   // slot space is real — no box sentinels
-		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
-		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
-		if (!varDecl || !varDecl->isLocalVariable()) continue;
-		auto const* alias = blk.scope.bindings.storageAliases.find(varDecl->id());
-		if (!alias || !alias->expr || alias->kind != StorageAlias::Kind::StateRead)
-			continue;
-		awst::Expression const* e = alias->expr.get();
-		if (auto const* sg = dynamic_cast<awst::StateGet const*>(e))
-			e = sg->field.get();
-		if (auto const* boxv = dynamic_cast<awst::BoxValueExpression const*>(e))
-			if (dynamic_cast<awst::ARC4Struct const*>(boxv->wtype))
-				boxKeyedStructSlots[yulId->name.str()] = {boxv->key, boxv->wtype};
-	}
-
-	return boxKeyedStructSlots;
-}
-
-/// toAwst scan: `sstore(v.slot, value)` where `v` is a scalar app-global state var — route the write to `v`'s own app-global state …
-std::map<std::string, AssemblyBuilder::StateVarSlot> collectStateVarSlots(
-	BlockContext& blk, InlineAssembly const& node)
-{
-	auto const& annotation = node.annotation();
-	std::map<std::string, AssemblyBuilder::StateVarSlot> stateVarSlots;
-	for (auto const& [yulId, extInfo]: annotation.externalReferences)
-	{
-		if (blk.typeMapper().profile().evmStorageLayout) break;   // sstore(v.slot, w) writes the real slot
-		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
-		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
-		if (!varDecl || !varDecl->isStateVariable() || varDecl->isConstant()) continue;
-		if (blk.builderCtx().storageMapper.shouldUseBoxStorage(*varDecl)) continue;
-		// Restrict to FULL-WIDTH uint256 scalars: `sstore(x.slot, word)` then equals
-		// writing x's value directly. Sub-word vars (uint8/int8/bytesN) are packed
-		// multiple-per-slot in EVM, so `sstore(packedSlot, word)` sets several vars at
-		// once and reads need masking — the route-to-one-var shortcut can't replicate
-		// that (would corrupt e.g. variable_cleanup_sstore). Structs likewise (raw word
-		// vs ARC4 layout). Those keep the numeric-slot/__dyn_storage path.
-		auto const* intType = dynamic_cast<IntegerType const*>(varDecl->type());
-		if (!intType || intType->isSigned() || intType->numBits() != 256) continue;
-		stateVarSlots[yulId->name.str()] =
-			{blk.builderCtx().storageMapper.physicalBindingFor(*varDecl).key,
-				blk.typeMapper().map(varDecl->type())};
-	}
-
-	return stateVarSlots;
-}
-
-/// Assembly slot references consume the bindings chosen by declaration/return planning.
-std::map<std::string, std::string> collectStructRefSlotLocals(
-	BlockContext& blk, InlineAssembly const& node,
-	std::map<std::string, std::string>& constants)
-{
-	std::map<std::string, std::string> slots;
-	for (auto const& [yulId, reference]: node.annotation().externalReferences)
-	{
-		auto const* vd = dynamic_cast<VariableDeclaration const*>(reference.declaration);
-		if (!vd || vd->isStateVariable()
-			|| vd->referenceLocation() != VariableDeclaration::Location::Storage)
-			continue;
-		if (!blk.typeMapper().profile().evmStorageLayout && !blk.scope.bindings.slotStorageRefs.get(vd->id()))
-			continue;
-		if (reference.suffix == "slot")
-		{
-			auto binding = blk.scope.bindings.slotStorageRefs.get(vd->id());
-			auto const* local = dynamic_cast<awst::VarExpression const*>(binding.get());
-			slots[yulId->name.str()] = local ? local->name : blk.scope.awstVarName(*vd);
-		}
-		else if (reference.suffix == "offset")
-			constants[yulId->name.str()] = "0";
-	}
-	return slots;
 }
 
 /// toAwst scan: compile-time slot routes + layout-derived slot/offset constants (StorageLayout of the current or declaring contract).
@@ -287,7 +210,7 @@ void registerStateVarSlotRoutes(
 void registerMemberArrayRoutes(
 	BlockContext& blk, InlineAssembly const& node,
 	StorageLayout const& layout,
-	std::map<std::string, std::pair<VariableDeclaration const*, std::string>> const& memberArrayAliases,
+	std::map<int64_t, std::pair<VariableDeclaration const*, std::string>> const& memberArrayAliases,
 	std::map<std::string, std::string>& constants,
 	std::map<std::string, AssemblyBuilder::SlotRoute>& slotRoutes)
 {
@@ -305,7 +228,7 @@ void registerMemberArrayRoutes(
 		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 		if (!varDecl || !varDecl->isLocalVariable()) continue;
-		auto maIt = memberArrayAliases.find(varDecl->name());
+		auto maIt = memberArrayAliases.find(varDecl->id());
 		if (maIt == memberArrayAliases.end()) continue;
 		auto const* structVar = maIt->second.first;
 		auto const& fieldName = maIt->second.second;
@@ -348,7 +271,7 @@ void registerMemberArrayRoutes(
 void registerLayoutConstants(
 	BlockContext& blk, InlineAssembly const& node,
 	StorageLayout const& layout,
-	std::map<std::string, VariableDeclaration const*> const& storageLocalAliases,
+	std::map<int64_t, VariableDeclaration const*> const& storageLocalAliases,
 	std::map<std::string, std::string>& constants,
 	std::map<std::string, std::string>& storageSlotVars)
 {
@@ -372,8 +295,8 @@ void registerLayoutConstants(
 			// Local storage references: `uint256[] storage x = a;`
 			// The initialiser lives in the parent VariableDeclarationStatement,
 			// not in VariableDeclaration::value(). We must look it up from the
-			// storageLocalAliases map built by traversing the function body.
-			auto aliasIt = storageLocalAliases.find(varDecl->name());
+			// storageLocalAliases map from analyzed declaration-ID provenance.
+			auto aliasIt = storageLocalAliases.find(varDecl->id());
 			if (aliasIt == storageLocalAliases.end()) continue;
 			VariableDeclaration const* sv = aliasIt->second;
 			if (!sv || !sv->isStateVariable()) continue;
@@ -429,8 +352,8 @@ void registerLayoutConstants(
 
 void collectSlotRoutesAndLayoutConstants(
 	BlockContext& blk, InlineAssembly const& node,
-	std::map<std::string, std::pair<VariableDeclaration const*, std::string>> const& memberArrayAliases,
-	std::map<std::string, VariableDeclaration const*> const& storageLocalAliases,
+	std::map<int64_t, std::pair<VariableDeclaration const*, std::string>> const& memberArrayAliases,
+	std::map<int64_t, VariableDeclaration const*> const& storageLocalAliases,
 	std::map<std::string, std::string>& constants,
 	std::map<std::string, AssemblyBuilder::SlotRoute>& slotRoutes,
 	std::vector<AssemblyBuilder::SlotRoute>& slotDataRegions,
@@ -580,7 +503,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	contextName += "_" + std::to_string(m_blk.fn.callableId)
 		+ "_asm_" + std::to_string(m_node.id());
 
-	auto constants = collectAsmConstants(m_node);
+	auto bindings = collectExternalBindings(m_blk, m_node);
 
 	// Resolve a Solidity VariableDeclaration to its AWST name (Context::awstVarName:
 	// locals → name__<declId>, params/returns bare). AssemblyBuilder names outer-var
@@ -589,23 +512,16 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		return m_blk.scope.awstVarName(_vd);
 	};
 
-	std::map<std::string, VariableDeclaration const*> storageLocalAliases;
-	std::map<std::string, std::pair<VariableDeclaration const*, std::string>> memberArrayAliases;
-	collectStorageLocalAliases(m_node, storageLocalAliases, memberArrayAliases);
-
-	auto boxKeyedStructSlots = collectBoxKeyedStructSlots(m_blk, m_node);
-
-	auto stateVarSlots = collectStateVarSlots(m_blk, m_node);
-
-	auto structRefSlotLocals = collectStructRefSlotLocals(
-		m_blk, m_node, constants);
+	std::map<int64_t, VariableDeclaration const*> storageLocalAliases;
+	std::map<int64_t, std::pair<VariableDeclaration const*, std::string>> memberArrayAliases;
+	collectStorageLocalAliases(m_blk, m_node, storageLocalAliases, memberArrayAliases);
 
 	std::map<std::string, AssemblyBuilder::SlotRoute> slotRoutes;
 	std::vector<AssemblyBuilder::SlotRoute> slotDataRegions;
 	std::map<std::string, std::string> storageSlotVars;
 	collectSlotRoutesAndLayoutConstants(
 		m_blk, m_node, memberArrayAliases, storageLocalAliases,
-		constants, slotRoutes, slotDataRegions, storageSlotVars);
+		bindings.constants, slotRoutes, slotDataRegions, storageSlotVars);
 
 	std::map<std::string, unsigned> paramBitWidths;
 	std::map<std::string, std::string> blobOffsetVars;
@@ -632,27 +548,21 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		m_blk.fn.returnAsmWrap);
 	asmTranslator.setSelectorRoutes(
 		builder::SelectorSemantics::routes(m_blk.builderCtx()));
-	auto stmts = asmTranslator.buildBlock(
+	return asmTranslator.buildBlock(
 		*m_blk.typeMapper().analysis().preparedAssemblies.at(m_node.id()),
 		augmentedParams,
 		m_blk.fn.returnType,
-		constants,
+		bindings.constants,
 		paramBitWidths,
 		storageSlotVars,
-		boxKeyedStructSlots,
+		bindings.boxKeyedStructSlots,
 		blobOffsetVars,
-		structRefSlotLocals,
-		stateVarSlots,
+		bindings.structRefSlotLocals,
+		bindings.stateVarSlots,
 		declNameFn,
 		// Only the function's own params are real calldata args; externalReferences appended
 		// to augmentedParams above (return vars, outer locals) are NOT in the EVM calldata buffer.
 		m_blk.fn.params.size());
-	// An unconditional top-level halt (EVM return/revert → AVM program exit) makes
-	// everything after this block dead — flag the enclosing block so SolBlock skips
-	// the rest (puya rejects unreachable code).
-	if (asmTranslator.haltEmitted())
-		m_blk.terminated = true;
-	return stmts;
 }
 
 } // namespace puyasol::builder::sol_ast

@@ -533,85 +533,13 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 		awst::makeAssignmentStatement(lenVar, cumLength, m_loc));
 	cumLength = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
 
-	int sliceIx = 0;
-	for (auto const* rg: slices)
+	for (auto const* range: slices)
 	{
-		std::string sIx = idSuffix + "_" + std::to_string(sliceIx++);
-		std::string startName = "__slice_s_" + sIx;
-		std::string endName = "__slice_e_" + sIx;
-
-		std::shared_ptr<awst::Expression> startExpr;
-		if (rg->startExpression())
-			startExpr = buildExpr(*rg->startExpression());
-		else
-			startExpr = awst::makeZero(m_loc);
-		startExpr = builder::TypeCoercion::checkedIndexToUint64(
-			m_ctx.preEffects(), std::move(startExpr), m_loc);
-
-		std::shared_ptr<awst::Expression> endExpr;
-		if (rg->endExpression())
-			endExpr = buildExpr(*rg->endExpression());
-		else
-			endExpr = cumLength;
-		endExpr = builder::TypeCoercion::checkedIndexToUint64(
-			m_ctx.preEffects(), std::move(endExpr), m_loc);
-
-		// Stash start/end in temps.
-		auto startVar = awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc);
-		m_ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(startVar, startExpr, m_loc));
-		auto endVar = awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc);
-		m_ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(endVar, endExpr, m_loc));
-
-		// assert(start <= end)
-		{
-			auto cmp = awst::makeNumericCompare(
-				awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc),
-				awst::NumericComparison::Lte,
-				awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
-				m_loc);
-			m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-				awst::makeAssert(std::move(cmp), m_loc, "slice: start > end"), m_loc));
-		}
-
-		// assert(end <= parent_length) — cumLength is the length before this slice
-		{
-			auto cmp = awst::makeNumericCompare(
-				awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
-				awst::NumericComparison::Lte,
-				cumLength,
-				m_loc);
-			m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-				awst::makeAssert(std::move(cmp), m_loc, "slice: end > length"), m_loc));
-		}
-
-		// cumOffset += start
-		cumOffset = awst::makeUInt64BinOp(
-			std::move(cumOffset), awst::UInt64BinaryOperator::Add,
-			awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc),
-			m_loc);
-
-		// cumLength = end - start
-		cumLength = awst::makeUInt64BinOp(
-			awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
-			awst::UInt64BinaryOperator::Sub,
-			awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc),
-			m_loc);
-
-		// Stash updated cumLength in a per-level var so next iteration's
-		// bounds check / end-default can reference it symbolically.
-		std::string nextLenName = "__slice_l_" + sIx;
-		auto nextLenVar = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), m_loc);
-		m_ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(nextLenVar, cumLength, m_loc));
-		cumLength = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), m_loc);
-
-		std::string nextOffName = "__slice_o_" + sIx;
-		auto nextOffVar = awst::makeVarExpression(nextOffName, awst::WType::uint64Type(), m_loc);
-		m_ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(nextOffVar, cumOffset, m_loc));
-		cumOffset = awst::makeVarExpression(nextOffName, awst::WType::uint64Type(), m_loc);
+		auto [start, end] = SolIndexRangeAccess::resolveBounds(m_ctx, *range, cumLength, m_loc);
+		cumOffset = m_ctx.emitSequencedOperand({}, awst::makeUInt64BinOp(
+			cumOffset, awst::UInt64BinaryOperator::Add, start, m_loc), true, m_loc);
+		cumLength = m_ctx.emitSequencedOperand({}, awst::makeUInt64BinOp(
+			end, awst::UInt64BinaryOperator::Sub, start, m_loc), true, m_loc);
 	}
 
 	// Now the index access: bounds-check i < cumLength, then access root[cumOffset + i].
@@ -647,12 +575,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 
 	auto indexExpr = awst::makeIndexExpression(awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc), std::move(effective), arc4ElemType, m_loc);
 
-	bool needsDecode = !awst::structurallyEquivalent(rawElemType, arc4ElemType);
-	if (needsDecode)
-	{
-		auto decode = awst::makeARC4Decode(std::move(indexExpr), rawElemType, m_loc);
-		return decode;
-	}
+	if (!awst::structurallyEquivalent(rawElemType, arc4ElemType))
+		return signExtendSignedElement(
+			awst::makeARC4Decode(std::move(indexExpr), rawElemType, m_loc));
 	return indexExpr;
 }
 

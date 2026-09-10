@@ -14,7 +14,7 @@ namespace puyasol::builder
 class ConversionPlan
 {
 public:
-	enum class Context { Assignment, Initialization, Argument, Return, AbiArgument, ExplicitInteger };
+	enum class Context { Assignment, Initialization, Argument, Return, AbiArgument, AbiReinterpret, ExplicitInteger };
 
 	ConversionPlan(
 		solidity::frontend::Type const* _source,
@@ -31,9 +31,6 @@ public:
 		std::shared_ptr<awst::Expression> _value,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>* _pre = nullptr) const;
-
-	solidity::frontend::Type const* sourceType() const { return m_source; }
-	solidity::frontend::Type const* targetType() const { return m_target; }
 
 private:
 	solidity::frontend::Type const* m_source;

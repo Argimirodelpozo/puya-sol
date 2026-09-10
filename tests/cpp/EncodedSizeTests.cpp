@@ -41,6 +41,24 @@ int main()
 	require(!arc4DefaultEncoding(&large), "oversized default was materialized");
 	awst::ARC4StaticArray hugeDynamic(&dynamic, std::numeric_limits<int64_t>::max());
 	require(!arc4DefaultEncoding(&hugeDynamic), "dynamic default allocation was not bounded");
+	awst::ARC4UIntN byte(8);
+	awst::ARC4StaticArray boolRun(awst::WType::arc4BoolType(), 9);
+	std::vector<awst::WType const*> fields(9, awst::WType::arc4BoolType());
+	fields.push_back(&byte);
+	fields.push_back(awst::WType::stringType());
+	awst::ARC4Tuple boolsAndString(fields);
+	require(arc4DefaultEncoding(&boolsAndString) == std::vector<uint8_t>({0, 0, 0, 0, 5, 0, 0}),
+		"packed bool run or string tail offset is invalid");
+	for (auto const* type: std::vector<awst::WType const*>{&word, &small, &boolRun, &empty,
+		&dynamic, &boolsAndString, awst::WType::stringType(), awst::WType::boolType()})
+	{
+		auto size = computeEncodedElementSize(type);
+		require(arc4IsDynamic(type) == (size.kind == Kind::Dynamic), "dynamic classifiers disagreed");
+		auto bytes = arc4DefaultEncoding(type);
+		require(bytes.has_value(), "supported default is missing");
+		if (auto fixed = size.fixedBytes())
+			require(bytes && bytes->size() == *fixed, "fixed default disagreed with encoded size");
+	}
 	try
 	{
 		computeEncodedElementSize(&large).fixedBytes<int>();

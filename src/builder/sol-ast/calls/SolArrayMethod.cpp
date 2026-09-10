@@ -11,6 +11,8 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
+#include "builder/sol-eb/AssignmentHelper.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -51,6 +53,26 @@ Expression const* peelBytesCastBase(Expression const& baseExpr)
 	return effectiveBase;
 }
 } // anonymous namespace
+
+std::shared_ptr<awst::Expression> SolArrayMethod::buildPushValue(
+	Type const* elementType, awst::WType const* representation)
+{
+	auto const* native = m_ctx.typeMapper.map(elementType);
+	std::shared_ptr<awst::Expression> value;
+	if (!m_call.arguments().empty())
+	{
+		auto const& argument = *m_call.arguments()[0];
+		value = EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
+			buildExpr(argument), argument.annotation().type, native, m_loc);
+		value = ConversionPlan{argument.annotation().type, elementType, native,
+			ConversionPlan::Context::Argument}.emit(std::move(value), m_loc, &m_ctx.preEffects());
+	}
+	else if (m_ctx.hasArrayAssignmentValue())
+		value = m_ctx.takeArrayAssignmentValue(); // Converted by the assignment's solc types.
+	else
+		return TypeCoercion::makeDefaultValue(representation, m_loc);
+	return eb::AssignmentHelper::arc4EncodeForType(m_ctx, std::move(value), representation, m_loc);
+}
 
 /// Slot-mode bytes/string push/pop via whole-value read-modify-write: the short↔long form transitions already live in …
 std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeBytesPushPop(
@@ -167,10 +189,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeArrayPushPop(
 	if (memberName == "push")
 	{
 		std::shared_ptr<awst::Expression> value;
-		if (!m_call.arguments().empty())
-			value = buildExpr(*m_call.arguments()[0]);
-		else if (m_ctx.hasArrayAssignmentValue())
-			value = m_ctx.takeArrayAssignmentValue();
+		if (!m_call.arguments().empty() || m_ctx.hasArrayAssignmentValue())
+			value = buildPushValue(elemType, m_ctx.typeMapper.map(elemType));
 		if (mappingElem)
 		{
 			// push() on a mapping element: nothing to write — its
@@ -281,9 +301,9 @@ std::shared_ptr<awst::Expression> SolArrayMethod::emitArc4PushPop(
 	ArrayType const& solArrType)
 {
 	auto* rawElemType = m_ctx.typeMapper.map(solArrType.baseType());
-	auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(solArrType.baseType());
 	auto* arrWType = baseAwst->wtype
 		? baseAwst->wtype : m_ctx.typeMapper.map(&solArrType);
+	auto const* elemType = static_cast<awst::ARC4DynamicArray const*>(arrWType)->elementType();
 
 	if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
 			m_ctx.typeMapper, baseAwst, /*isResize=*/true, m_loc))
@@ -293,23 +313,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::emitArc4PushPop(
 		return awst::makeArrayPopDecode(baseAwst, elemType, rawElemType, m_loc);
 
 	if (!m_call.arguments().empty())
-	{
-		auto val = buildExpr(*m_call.arguments()[0]);
-		auto encoded = awst::makeARC4Encode(std::move(val), elemType, m_loc);
-		return awst::makeArrayPushOne(baseAwst, std::move(encoded), arrWType, m_loc);
-	}
-
-	std::shared_ptr<awst::Expression> elem;
+		return awst::makeArrayPushOne(baseAwst,
+			buildPushValue(solArrType.baseType(), elemType), arrWType, m_loc);
 	bool const fromAssign = m_ctx.hasArrayAssignmentValue();
-	if (fromAssign)
-	{
-		auto coerced = builder::TypeCoercion::coerceForAssignment(
-			m_ctx.takeArrayAssignmentValue(), rawElemType, m_loc);
-		elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
-	}
-	else
-		elem = builder::TypeCoercion::makeDefaultValue(elemType, m_loc);
-
+	auto elem = buildPushValue(solArrType.baseType(), elemType);
 	auto extend = awst::makeArrayPushOne(baseAwst, std::move(elem), arrWType, m_loc);
 	if (fromAssign)
 		return extend;

@@ -12,6 +12,7 @@
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/ConversionPlan.h"
+#include "awst/TupleValue.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -128,70 +129,21 @@ SolReturnStatement::SolReturnStatement(
 namespace
 {
 
-/// Bare `return;` — synthesize a return value from context.
-void synthesizeBareReturnValue(BlockContext& blk, Return const& node,
-	awst::SourceLocation const& loc, awst::ReturnStatement& stmt)
-{
-	auto const& retAnnotation = dynamic_cast<ReturnAnnotation const&>(node.annotation());
-	if (!retAnnotation.functionReturnParameters)
-		return;
-	auto const& retParams = retAnnotation.functionReturnParameters->parameters();
-	// NOTE: bare `return;` in a function that HAS return parameters is
-	// rejected by solc itself ("Return arguments required"), for both
-	// single and multiple (named or not) returns — verified against
-	// solc 0.8.20. So this branch only runs for a void function (no
-	// return params), where retParams is empty and the arm below never
-	// fires. The size()==1 synthesis is therefore effectively dead;
-	// kept as-is. (fable-review-3 M2 was a false positive: the
-	// frontend guards the shape, no null-value tuple can be emitted.)
-	if (retParams.size() == 1)
-	{
-		auto* retType = blk.typeMapper().map(retParams[0]->type());
-		if (!retParams[0]->name().empty())
-			stmt.value = awst::makeVarExpression(retParams[0]->name(), retType, loc);
-		else
-			stmt.value = builder::StorageMapper::makeDefaultValue(retType, loc);
-	}
-}
-
-/// `return <void expression>;` in a function with NO return values — legal Solidity, and the shape forwarding wrappers use (`return …
-bool tryVoidExprReturn(BlockContext& blk, Return const& node,
-	awst::SourceLocation const& loc,
-	std::vector<std::shared_ptr<awst::Statement>>& result)
-{
-	auto const* voidRet = dynamic_cast<ReturnAnnotation const*>(&node.annotation());
-	if (!voidRet || !voidRet->functionReturnParameters
-		|| !voidRet->functionReturnParameters->parameters().empty())
-		return false;
-
-	auto call = blk.builderCtx().buildExpr(*node.expression());
-	for (auto& p: blk.builderCtx().takePreEffects())
-		result.push_back(std::move(p));
-	if (call)
-		result.push_back(awst::makeExpressionStatement(std::move(call), loc));
-	for (auto& p: blk.builderCtx().takePostEffects())
-		result.push_back(std::move(p));
-	result.push_back(awst::makeReturnStatement(nullptr, loc));
-	return true;
-}
-
-/// --evm-storage-layout: `return <storage expr>` in a function declared `returns (T storage)` returns the biguint slot; multi-value …
+/// Storage-reference return components carry logical slots when the wire plan requires them.
 bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 	awst::SourceLocation const& loc,
 	std::shared_ptr<awst::ReturnStatement>& stmt,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
-	if (!blk.typeMapper().profile().evmStorageLayout
-		&& blk.fn.returnType != awst::WType::biguintType())
-		return false;
-	auto const* retAnn = dynamic_cast<ReturnAnnotation const*>(&node.annotation());
-	if (!retAnn || !retAnn->functionReturnParameters)
-		return false;
-
-	auto const& rps = retAnn->functionReturnParameters->parameters();
+	auto const& rps = node.annotation().functionReturnParameters->parameters();
+	auto const* returnTuple = dynamic_cast<awst::WTuple const*>(blk.fn.returnType);
+	auto slotReturn = [&](size_t i) {
+		return rps[i]->referenceLocation() == VariableDeclaration::Location::Storage
+			&& (returnTuple ? returnTuple->types().at(i) : blk.fn.returnType)
+				== awst::WType::biguintType();
+	};
 	if (rps.size() == 1
-		&& rps[0]->referenceLocation()
-			== solidity::frontend::VariableDeclaration::Location::Storage)
+		&& slotReturn(0))
 	{
 		EvmSlotLowering low(blk.builderCtx(), blk.scope, loc);
 		auto addr = low.resolve(*node.expression());
@@ -208,57 +160,79 @@ bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 	// reject it); the declared slot-handle convention wants the
 	// biguint slot in that position. Build component-wise.
 	bool anyStorageRet = false;
-	for (auto const& rp: rps)
-		if (rp->referenceLocation()
-			== solidity::frontend::VariableDeclaration::Location::Storage)
-			anyStorageRet = true;
+	for (size_t i = 0; i < rps.size(); ++i)
+		anyStorageRet |= slotReturn(i);
 	if (rps.size() > 1 && anyStorageRet)
 	{
-		auto const* srcTup = dynamic_cast<
-			solidity::frontend::TupleExpression const*>(
-				node.expression());
-		if (!srcTup
-			|| srcTup->components().size() != rps.size())
-		{
-			Logger::instance().error(
-				"--evm-storage-layout: multi-value return with "
-				"storage refs must be a literal tuple", loc);
-			return true;
-		}
-		EvmSlotLowering low(blk.builderCtx(), blk.scope, loc);
-		auto tup = awst::makeTupleExpression(nullptr, loc);
-		std::vector<awst::WType const*> wts;
-		for (size_t ri = 0; ri < rps.size(); ++ri)
-		{
-			auto const& compExpr = *srcTup->components()[ri];
-			std::shared_ptr<awst::Expression> v;
-			if (rps[ri]->referenceLocation()
-				== solidity::frontend::VariableDeclaration::Location::Storage)
+		auto& ctx = blk.builderCtx();
+		auto build = [&](auto&& self, Expression const* source) -> std::shared_ptr<awst::Expression> {
+			auto const* srcTup = dynamic_cast<solidity::frontend::TupleExpression const*>(source);
+			while (srcTup && !srcTup->isInlineArray() && srcTup->components().size() == 1)
 			{
-				auto addr = low.resolve(compExpr);
-				if (!addr)
-					return true;   // error already logged
-				v = addr->slot;
+				source = srcTup->components()[0].get();
+				srcTup = dynamic_cast<solidity::frontend::TupleExpression const*>(source);
 			}
-			else
+			// Select references, not copies of their values. Each branch keeps its
+			// own effects and applies the declared return-component conversions.
+			if (auto const* conditional = dynamic_cast<Conditional const*>(source))
 			{
-				v = blk.builderCtx().buildExpr(compExpr);
-				if (v)
-					v = builder::ConversionPlan{
-						compExpr.annotation().type,
-						rps[ri]->type(),
-						blk.typeMapper().map(rps[ri]->type()),
-						builder::ConversionPlan::Context::Return}.emit(
-							std::move(v), loc);
+				auto condition = ctx.pinIfWriteBacks(ctx.lower(conditional->condition(), false), loc);
+				condition = ctx.emitSequencedOperand({}, std::move(condition), true, loc);
+				auto whenTrue = ctx.lowerOperand([&] { return self(self, &conditional->trueExpression()); });
+				auto whenFalse = ctx.lowerOperand([&] { return self(self, &conditional->falseExpression()); });
+				if (!whenTrue.value || !whenFalse.value) return nullptr;
+				auto const* type = whenTrue.value->wtype;
+				return ctx.emitConditional(std::move(condition), std::move(whenTrue),
+					std::move(whenFalse), type, loc);
 			}
-			if (!v)
-				return true;
-			wts.push_back(v->wtype);
-			tup->items.push_back(std::move(v));
-		}
-		tup->wtype = blk.typeMapper()
-			.createType<awst::WTuple>(std::move(wts), std::nullopt);
-		stmt->value = std::move(tup);
+			std::vector<std::shared_ptr<awst::Expression>> opaqueItems;
+			auto const* sourceTypes = dynamic_cast<TupleType const*>(source->annotation().type);
+			if (!srcTup)
+			{
+				auto opaque = ctx.pinIfWriteBacks(ctx.lower(*source, false), loc);
+				opaque = ctx.emitSequencedOperand({}, std::move(opaque), true, loc);
+				opaqueItems = awst::tupleItems(std::move(opaque), loc);
+			}
+			EvmSlotLowering low(ctx, blk.scope, loc);
+			auto tup = awst::makeTupleExpression(nullptr, loc);
+			std::vector<awst::WType const*> wts;
+			for (size_t ri = 0; ri < rps.size(); ++ri)
+			{
+				auto const* compExpr = srcTup ? srcTup->components().at(ri).get() : nullptr;
+				auto const* sourceType = compExpr ? compExpr->annotation().type : sourceTypes->components().at(ri);
+				std::shared_ptr<awst::Expression> v;
+				if (!opaqueItems.empty())
+					v = std::move(opaqueItems.at(ri));
+				else if (slotReturn(ri))
+				{
+					auto addr = low.resolve(*compExpr);
+					if (!addr) return nullptr;   // error already logged
+					v = addr->slot;
+				}
+				else
+					v = ctx.buildExpr(*compExpr);
+				if (!slotReturn(ri))
+				{
+					auto const* target = blk.typeMapper().map(rps[ri]->type());
+					v = EvmSlotLowering::materializeRefValue(ctx, blk.scope,
+						std::move(v), sourceType, target, loc);
+					v = builder::ConversionPlan{sourceType, rps[ri]->type(), target,
+						builder::ConversionPlan::Context::Return}.emit(std::move(v), loc, &ctx.preEffects());
+				}
+				if (!v) return nullptr;
+				if (slotReturn(ri) && v->wtype != awst::WType::biguintType())
+				{
+					Logger::instance().error("storage-reference return lost its logical slot", loc);
+					return nullptr;
+				}
+				wts.push_back(v->wtype);
+				tup->items.push_back(std::move(v));
+			}
+			tup->wtype = blk.typeMapper().createType<awst::WTuple>(std::move(wts), std::nullopt);
+			return tup;
+		};
+		stmt->value = build(build, node.expression());
+		if (!stmt->value) return true;
 		blk.builderCtx().appendEffectsTo(result);
 		result.push_back(std::move(stmt));
 		return true;
@@ -272,19 +246,10 @@ bool tryBoxKeyedRefReturn(BlockContext& blk, Return const& node,
 	std::shared_ptr<awst::ReturnStatement>& stmt,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
-	bool storageRefMapReturn = false;
-	if (auto const* retAnn =
-			dynamic_cast<ReturnAnnotation const*>(&node.annotation()))
-		if (retAnn->functionReturnParameters)
-		{
-			auto const& rps = retAnn->functionReturnParameters->parameters();
-			if (rps.size() == 1
-				&& rps[0]->referenceLocation()
-					== solidity::frontend::VariableDeclaration::Location::Storage
-				&& builder::isBoxKeyedStorageRef(
-					rps[0]->type(), blk.typeMapper().analysis())) // widened: plain structs too
-				storageRefMapReturn = true;
-		}
+	auto const& rps = node.annotation().functionReturnParameters->parameters();
+	bool const storageRefMapReturn = rps.size() == 1
+		&& rps[0]->referenceLocation() == VariableDeclaration::Location::Storage
+		&& builder::isBoxKeyedStorageRef(rps[0]->type(), blk.typeMapper().analysis());
 	if (storageRefMapReturn && containsMappingType(node.expression()->annotation().type))
 	{
 		stmt->value = storageReferenceKey(blk.builderCtx(), blk.scope, *node.expression(), loc);
@@ -333,72 +298,33 @@ void convertSingleReturnValue(BlockContext& blk, Return const& node,
 			std::move(stmt.value), loc);
 }
 
-/// Multi-value declared return: coerce each tuple component to its declared type (through a ternary's arms too).
+/// Multi-value returns use the solc component types even for opaque calls and ternaries.
 void convertTupleReturnValue(BlockContext& blk, Return const& node,
 	awst::SourceLocation const& loc,
 	std::vector<ASTPointer<VariableDeclaration>> const& retParams,
 	awst::ReturnStatement& stmt)
 {
-	std::vector<solidity::frontend::Type const*> sourceTypes;
-	if (auto const* sourceTuple = dynamic_cast<
-		solidity::frontend::TupleType const*>(
-			node.expression()->annotation().type))
-		sourceTypes.assign(
-			sourceTuple->components().begin(),
-			sourceTuple->components().end());
-
-	// A tuple literal retains each component's pre-conversion source
-	// annotation, which is more precise than the tuple's common type.
-	if (auto const* sourceTupleExpr = dynamic_cast<
-		solidity::frontend::TupleExpression const*>(
-			node.expression()))
+	auto const* source = dynamic_cast<solidity::frontend::TupleType const*>(
+		node.expression()->annotation().type);
+	assert(source && source->components().size() == retParams.size());
+	auto& ctx = blk.builderCtx();
+	auto items = awst::tupleItems(std::move(stmt.value), loc, &ctx.preEffects());
+	assert(items.size() == retParams.size());
+	auto result = awst::makeTupleExpression(nullptr, loc);
+	std::vector<awst::WType const*> types;
+	for (size_t i = 0; i < retParams.size(); ++i)
 	{
-		sourceTypes.clear();
-		for (auto const& component: sourceTupleExpr->components())
-			sourceTypes.push_back(
-				component ? component->annotation().type : nullptr);
+		auto const* target = retParams[i]->type();
+		auto const* representation = blk.typeMapper().map(target);
+		auto value = EvmSlotLowering::materializeRefValue(
+			ctx, blk.scope, std::move(items[i]), source->components()[i], representation, loc);
+		value = builder::ConversionPlan{source->components()[i], target, representation,
+			builder::ConversionPlan::Context::Return}.emit(std::move(value), loc, &ctx.preEffects());
+		types.push_back(value->wtype);
+		result->items.push_back(std::move(value));
 	}
-
-	auto convertTuple = [&](awst::TupleExpression* tuple) {
-		if (!tuple || tuple->items.size() != retParams.size())
-			return;
-		std::vector<awst::WType const*> targetTypes;
-		for (size_t i = 0; i < retParams.size(); ++i)
-		{
-			auto const* targetSolType = retParams[i]->type();
-			auto const* targetWType =
-				blk.typeMapper().map(targetSolType);
-			auto const* sourceSolType =
-				i < sourceTypes.size() ? sourceTypes[i] : nullptr;
-			tuple->items[i] = EvmSlotLowering::materializeRefValue(
-				blk.builderCtx(), blk.scope,
-				std::move(tuple->items[i]), sourceSolType,
-				targetWType, loc);
-			tuple->items[i] = builder::ConversionPlan{
-				sourceSolType,
-				targetSolType,
-				targetWType,
-				builder::ConversionPlan::Context::Return}.emit(
-					std::move(tuple->items[i]), loc);
-			targetTypes.push_back(tuple->items[i]->wtype);
-		}
-		tuple->wtype = blk.typeMapper().createType<awst::WTuple>(
-			std::move(targetTypes), std::nullopt);
-	};
-
-	if (auto* tuple = dynamic_cast<awst::TupleExpression*>(
-		stmt.value.get()))
-		convertTuple(tuple);
-	else if (auto* conditional =
-		dynamic_cast<awst::ConditionalExpression*>(stmt.value.get()))
-	{
-		convertTuple(dynamic_cast<awst::TupleExpression*>(
-			conditional->trueExpr.get()));
-		convertTuple(dynamic_cast<awst::TupleExpression*>(
-			conditional->falseExpr.get()));
-		if (conditional->trueExpr)
-			conditional->wtype = conditional->trueExpr->wtype;
-	}
+	result->wtype = blk.typeMapper().createType<awst::WTuple>(std::move(types), std::nullopt);
+	stmt.value = std::move(result);
 }
 
 /// Enum range validation on return: EVM panics (0x21) on invalid enum return values.
@@ -408,7 +334,7 @@ void maybeAppendEnumReturnAssert(BlockContext& blk, Return const& node,
 {
 	if (!stmt.value)
 		return;
-	auto const& retAnnotation = dynamic_cast<ReturnAnnotation const&>(node.annotation());
+	auto const& retAnnotation = node.annotation();
 	if (!retAnnotation.functionReturnParameters)
 		return;
 	auto const& retParams = retAnnotation.functionReturnParameters->parameters();
@@ -439,12 +365,19 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 
 	auto stmt = awst::makeReturnStatement(nullptr, m_loc);
 
-	if (!m_node.expression())
-		synthesizeBareReturnValue(m_blk, m_node, m_loc, *stmt);
-	else
+	// Solc rejects bare returns in value-returning functions. Modifier exits
+	// stay bare here; ModifierChainBuilder attaches their threaded results.
+	if (m_node.expression())
 	{
-		if (tryVoidExprReturn(m_blk, m_node, m_loc, result))
+		auto const& retParams = m_node.annotation().functionReturnParameters->parameters();
+		if (retParams.empty())
+		{
+			// `return voidCall();`: complete the call and its write-backs before exit.
+			m_blk.builderCtx().evaluateForEffects(*m_node.expression(), m_loc);
+			m_blk.builderCtx().appendEffectsTo(result);
+			result.push_back(std::move(stmt));
 			return result;
+		}
 		if (trySlotStorageReturn(m_blk, m_node, m_loc, stmt, result))
 			return result;
 		if (tryBoxKeyedRefReturn(m_blk, m_node, m_loc, stmt, result))
@@ -454,29 +387,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 		if (!stmt->value)
 			return result;   // build errored (already logged) — don't deref
 
-		// `return foo();` where foo is void: Solidity allows this when the
-		// surrounding function is also void. The call must run for side effects;
-		// the AWST return must carry no value (puya rejects void value
-		// providers with 'Attempted to assign from expression that has no
-		// result'). Solady's _revertWithPanic / SafeTransferLib internal
-		// helpers tail-call other void functions this way.
-		if (stmt->value->wtype == awst::WType::voidType())
-		{
-			result.push_back(awst::makeExpressionStatement(std::move(stmt->value), m_loc));
-			stmt->value = nullptr;
-			result.push_back(stmt);
-			return result;
-		}
-
-		auto const& retAnnotation = dynamic_cast<ReturnAnnotation const&>(m_node.annotation());
-		if (retAnnotation.functionReturnParameters)
-		{
-			auto const& retParams = retAnnotation.functionReturnParameters->parameters();
-			if (retParams.size() == 1)
-				convertSingleReturnValue(m_blk, m_node, m_loc, retParams, *stmt);
-			else if (retParams.size() > 1)
-				convertTupleReturnValue(m_blk, m_node, m_loc, retParams, *stmt);
-		}
+		if (retParams.size() == 1)
+			convertSingleReturnValue(m_blk, m_node, m_loc, retParams, *stmt);
+		else
+			convertTupleReturnValue(m_blk, m_node, m_loc, retParams, *stmt);
 	}
 
 	m_blk.builderCtx().appendEffectsTo(result);
@@ -486,9 +400,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 	// D2 build-time ABI return encoding: wrap the (already value-coerced) return
 	// value in its ABI wire type right here. Scalar + tuple
 	// (literal / ternary / opaque-spill).
-	// Both the `return expr` and bare `return;`→named-var paths funnel through
-	// stmt->value, so one call covers both. Modifier chains instead normalize
-	// native returns and encode only their outer wrapper.
+	// Modifier chains instead normalize native returns and encode only their
+	// outer wrapper. Implicit named returns are constructed by FunctionBuilder.
 	if (m_blk.fn.encodeReturnsAtBuildTime && stmt->value)
 	{
 		auto valLoc = stmt->value->sourceLocation;

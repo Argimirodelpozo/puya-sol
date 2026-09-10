@@ -8,7 +8,7 @@ namespace puyasol::builder::sol_ast
 /// Struct constructor call: MyStruct({field1: val1, field2: val2})
 /// or positional: MyStruct(val1, val2).
 ///
-/// Produces NewStruct (ARC4Struct) or NamedTupleExpression (WTuple).
+/// Produces a NewStruct using solc's member conversions and ARC4 field encoding.
 class SolStructConstruction: public SolFunctionCall
 {
 public:

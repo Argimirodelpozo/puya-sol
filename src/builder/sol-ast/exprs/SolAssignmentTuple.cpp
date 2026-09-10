@@ -1,5 +1,6 @@
-/// @file SolAssignmentTuple.cpp — handleTupleAssignment + buildTupleWithUpdatedField
+/// @file SolAssignmentTuple.cpp — ordered tuple assignment lowering.
 #include "builder/sol-ast/exprs/SolAssignment.h"
+#include "builder/sol-ast/ResolvedLValue.h"
 
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/contract/ContractBuilder.h"
@@ -12,6 +13,7 @@
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
 
 #include "Logger.h"
 
@@ -22,30 +24,6 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
-
-std::shared_ptr<awst::Expression> SolAssignment::buildTupleWithUpdatedField(
-	std::shared_ptr<awst::Expression> _base,
-	std::string const& _fieldName,
-	std::shared_ptr<awst::Expression> _newValue)
-{
-	auto const* tupleType = dynamic_cast<awst::WTuple const*>(_base->wtype);
-	auto const& names = *tupleType->names();
-	auto const& types = tupleType->types();
-
-	auto tuple = awst::makeTupleExpression(_base->wtype, m_loc);
-
-	for (size_t i = 0; i < names.size(); ++i)
-	{
-		if (names[i] == _fieldName)
-			tuple->items.push_back(std::move(_newValue));
-		else
-		{
-			auto field = awst::makeFieldExpression(_base, names[i], types[i], m_loc);
-			tuple->items.push_back(std::move(field));
-		}
-	}
-	return tuple;
-}
 
 /// Tuple-returning call RHS (`(a,b) = f()`): cache in a temp so each TupleItem reads from the cached tuple — without snapshotting, …
 std::shared_ptr<awst::Expression> SolAssignment::snapshotTupleCallRhs(
@@ -205,7 +183,8 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 				// the compile-time alias below never fires there (slot-handle
 				// reads don't consult the alias map), which silently dropped
 				// `(a, b, c) = g()` rebinds of storage-ref returns.
-				if (m_ctx.typeMapper.profile().evmStorageLayout)
+				if (m_ctx.typeMapper.profile().evmStorageLayout
+					|| m_scope.bindings.slotStorageRefs.get(lhsDecl->id()))
 				{
 					auto const* valueTuple2 =
 						dynamic_cast<awst::WTuple const*>(_value->wtype);
@@ -351,8 +330,8 @@ void SolAssignment::coerceTupleComponentValue(
 {
 	assignValue = builder::TypeCoercion::implicitNumericCast(
 		std::move(assignValue), assignTarget->wtype, m_loc);
-	assignValue = eb::AssignmentHelper::arc4EncodeForTarget(
-		m_ctx, std::move(assignValue), assignTarget, m_loc);
+	assignValue = eb::AssignmentHelper::arc4EncodeForType(
+		m_ctx, std::move(assignValue), assignTarget->wtype, m_loc);
 	assignValue = builder::TypeCoercion::coerceForAssignment(
 		std::move(assignValue), assignTarget->wtype, m_loc, &m_ctx.preEffects());
 }
@@ -363,6 +342,7 @@ bool SolAssignment::emitTupleComponentWrite(
 	std::shared_ptr<awst::Expression> const& itemIn,
 	std::shared_ptr<awst::Expression> const& _value,
 	solidity::frontend::TupleExpression const* _sourceLhs,
+	solidity::frontend::TupleType const* _sourceType,
 	std::vector<size_t>& componentGroupEnds)
 {
 	struct GroupMark
@@ -436,103 +416,52 @@ bool SolAssignment::emitTupleComponentWrite(
 	assignTarget = awst::unwrapStateGet(std::move(assignTarget));
 
 	std::shared_ptr<awst::Expression> assignValue = std::move(itemExpr);
-	coerceTupleComponentValue(assignTarget, assignValue);
-
-	// ARC4Struct field: COW via struct field handler.
-	if (auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(assignTarget.get()))
-	{
-		auto const* structType = dynamic_cast<awst::ARC4Struct const*>(fieldExpr->base->wtype);
-		if (!structType)
-			if (auto const* sg = dynamic_cast<awst::StateGet const*>(fieldExpr->base.get()))
-				structType = dynamic_cast<awst::ARC4Struct const*>(sg->field->wtype);
-
-		if (structType)
-		{
-			// _emitAsStatement=true: helper queues the COW store. Without this,
-			// `(s.a, s.b) = f()` computed f() but never wrote the fields
-			// (previously mis-attributed to a puya DCE bug; see [[uros-multireturn-struct-destructure-dce]]).
-			auto result = handleStructFieldAssignment(
-				fieldExpr, std::move(assignValue), assignTarget, /*_emitAsStatement=*/true);
-			if (result) return true;
-		}
-	}
-
-	if (assignTarget->wtype != assignValue->wtype
-		&& assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
-	{
-		auto enc = awst::makeARC4Encode(std::move(assignValue), assignTarget->wtype, m_loc);
-		assignValue = std::move(enc);
-	}
-
-	// Nested tuple: recursively destructure instead of a direct assignment.
 	if (dynamic_cast<awst::TupleExpression const*>(assignTarget.get()))
 	{
-		handleTupleAssignment(assignTarget, std::move(assignValue));
+		auto const* nested = _sourceLhs ? dynamic_cast<TupleExpression const*>(_sourceLhs->components()[i].get()) : nullptr;
+		while (nested && nested->components().size() == 1 && nested->components()[0])
+			nested = dynamic_cast<TupleExpression const*>(nested->components()[0].get());
+		handleTupleAssignment(assignTarget, std::move(assignValue), nested,
+			_sourceType ? dynamic_cast<TupleType const*>(_sourceType->components()[i]) : nullptr);
 		return true;
 	}
-
-	// Transient var: route through TransientStorage (scratch-slot blob);
-	// an AssignmentExpression targeting a ReinterpretCast isn't an lvalue in puya.
-	if (_sourceLhs && m_ctx.transientStorage
-		&& i < _sourceLhs->components().size() && _sourceLhs->components()[i])
+	if (_sourceLhs && _sourceLhs->components()[i])
 	{
-		if (auto const* srcIdent = dynamic_cast<solidity::frontend::Identifier const*>(
-				_sourceLhs->components()[i].get()))
-		{
-			auto const* srcDecl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
-				srcIdent->annotation().referencedDeclaration);
-			if (srcDecl && srcDecl->isStateVariable()
-				&& srcDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
-				&& m_ctx.transientStorage->isTransient(*srcDecl))
-			{
-				auto* varType = m_ctx.typeMapper.map(srcDecl->type());
-				auto coerced = builder::TypeCoercion::coerceForAssignment(
-					std::move(assignValue), varType, m_loc);
-				auto stmt = m_ctx.transientStorage->buildWrite(*srcDecl, coerced, m_loc);
-				if (stmt)
-					m_ctx.postEffects().push_back(std::move(stmt));
-				return true;
-			}
-		}
+		auto const* target = _sourceLhs->components()[i]->annotation().type;
+		assert(_sourceType);
+		assignValue = ConversionPlan{_sourceType->components()[i], target,
+			m_ctx.typeMapper.map(target), ConversionPlan::Context::Assignment}.emit(
+				std::move(assignValue), m_loc, &m_ctx.preEffects());
 	}
+	if (!_sourceLhs) coerceTupleComponentValue(assignTarget, assignValue);
 
-	// --evm-storage-layout: a storage element/field has no AWST lvalue —
-	// building the LHS lowered it to a __storage_read CALL, which then sat
-	// in the assignment's TARGET position and puya rejected the whole AWST
-	// ("deserialization failed: 'SubroutineCallExpression'", 9 fixtures).
-	// Route these through the slot writer exactly like the scalar path in
-	// SolAssignment does.
-	if (m_ctx.typeMapper.profile().evmStorageLayout && _sourceLhs
-		&& i < _sourceLhs->components().size() && _sourceLhs->components()[i])
+	// The component's store is one ordered group. Address effects were emitted
+	// after the RHS snapshot; read/encode/COW/write effects stay with this store.
+	if (_sourceLhs && _sourceLhs->components()[i])
 	{
-		auto const& lhsComp = *_sourceLhs->components()[i];
-		auto const* compType = lhsComp.annotation().type;
-		if (compType && EvmSlotLowering::isStorageStateRef(lhsComp))
-		{
-			EvmSlotLowering low(m_ctx, m_scope, m_loc);
-			if (auto addr = low.resolve(lhsComp))
-			{
-				std::vector<std::shared_ptr<awst::Statement>> slotOut;
-				if (low.writeAny(*addr, compType, assignValue, slotOut))
-				{
-					for (auto& st: slotOut)
-						m_ctx.postEffects().push_back(std::move(st));
-					return true;
-				}
-			}
-		}
+		auto const& source = *_sourceLhs->components()[i];
+		auto lowered = m_ctx.lowerOperand([&] {
+			auto resolved = m_tupleTargets.find(source.id());
+			if (resolved != m_tupleTargets.end()) return resolved->second->write(assignValue);
+			ResolvedLValue target(m_ctx, source, m_loc, assignTarget);
+			return target.write(assignValue);
+		}, false);
+		for (auto& stmt: lowered.effects.pre) m_ctx.queuePostEffect(std::move(stmt));
+		for (auto& stmt: lowered.effects.post) m_ctx.queuePostEffect(std::move(stmt));
 	}
-	auto e = awst::makeAssignmentExpression(
-		std::move(assignTarget), std::move(assignValue), m_loc);
-	m_ctx.queuePostExpression(e, m_loc);
+	else
+		m_ctx.queuePostExpression(awst::makeAssignmentExpression(
+			std::move(assignTarget), std::move(assignValue), m_loc), m_loc);
 	return true;
 }
 
 std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	std::shared_ptr<awst::Expression> _target,
 	std::shared_ptr<awst::Expression> _value,
-	solidity::frontend::TupleExpression const* _sourceLhs)
+	solidity::frontend::TupleExpression const* _sourceLhs,
+	solidity::frontend::TupleType const* _sourceType)
 {
+	if (!_sourceType) _sourceType = dynamic_cast<TupleType const*>(m_assignment.rightHandSide().annotation().type);
 	auto const* tupleTarget = dynamic_cast<awst::TupleExpression const*>(_target.get());
 	auto const& items = tupleTarget->items;
 
@@ -552,7 +481,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	auto writes = m_ctx.lowerOperand([&]() -> bool {
 		for (size_t i = 0; i < items.size(); ++i)
 			if (!emitTupleComponentWrite(
-					i, items[i], _value, _sourceLhs, componentGroupEnds))
+					i, items[i], _value, _sourceLhs, _sourceType, componentGroupEnds))
 				return false;
 		return true;
 		}, false);

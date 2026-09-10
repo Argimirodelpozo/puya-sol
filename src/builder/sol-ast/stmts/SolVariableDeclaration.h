@@ -29,9 +29,20 @@ private:
 	std::shared_ptr<awst::Expression> buildInitValue(
 		solidity::frontend::VariableDeclaration const& decl,
 		solidity::frontend::Expression const* initialValue,
-		awst::WType const*& type,
-		std::shared_ptr<awst::Expression> const& target,
-		bool& earlyExit);
+		awst::WType const*& type);
+	std::shared_ptr<awst::Expression> convertInitValue(
+		solidity::frontend::VariableDeclaration const& decl,
+		std::shared_ptr<awst::Expression> value,
+		solidity::frontend::Type const* sourceType, awst::WType const* type);
+	void bindValue(
+		solidity::frontend::VariableDeclaration const& decl,
+		solidity::frontend::Expression const* initialValue,
+		std::shared_ptr<awst::Expression> value, awst::WType const* type,
+		std::vector<std::shared_ptr<awst::Statement>>& result);
+	bool tryAsmBytesAllocation(
+		solidity::frontend::VariableDeclaration const& decl,
+		solidity::frontend::Expression const* initialValue,
+		std::vector<std::shared_ptr<awst::Statement>>& result);
 	bool tryStorageAliasBinding(
 		solidity::frontend::VariableDeclaration const& decl,
 		std::shared_ptr<awst::Expression>& value,
@@ -40,7 +51,6 @@ private:
 	bool tryMemoryAliasBinding(
 		solidity::frontend::VariableDeclaration const& decl,
 		solidity::frontend::Expression const* initialValue,
-		std::shared_ptr<awst::Expression>& value,
 		awst::WType const* type,
 		std::vector<std::shared_ptr<awst::Statement>>& result);
 	bool tryBlobOffsetBinding(

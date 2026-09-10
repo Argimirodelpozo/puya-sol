@@ -6,6 +6,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/Numeric.h>
+#include <libsolutil/UTF8.h>
 #include <sstream>
 
 namespace puyasol::builder::sol_ast
@@ -47,9 +48,12 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 		return e;
 	}
 	case Token::StringLiteral:
-	{
-		return awst::makeStringConstant(m_literal.value(), m_loc);
-	}
+		// Solc permits arbitrary escaped bytes for bytes/bytesN, but requires
+		// UTF-8 for string conversion. Keep non-text literals as byte constants
+		// even when a tuple snapshot precedes their destination conversion.
+		if (solidity::util::validateUTF8(m_literal.value()))
+			return awst::makeStringConstant(m_literal.value(), m_loc);
+		[[fallthrough]];
 	case Token::HexStringLiteral:
 	{
 		auto const& raw = m_literal.value();

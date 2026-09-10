@@ -43,9 +43,9 @@ public:
 	/// new CompilerStack with this AWSTBuilder instance.
 	void reset()
 	{
-		m_inProgressStructs.clear();
 		m_solTypeCache.clear();
-		m_namedTypeCache.clear();
+		m_structTypes.clear();
+		m_structProjections.clear();
 		m_arc4Cache.clear();
 		m_solArc4Cache.clear();
 		m_aggregateSources.clear();
@@ -71,8 +71,10 @@ public:
 		solidity::frontend::FunctionDefinition const& _function,
 		solidity::frontend::ContractDefinition const* _mostDerived = nullptr);
 
-	/// Get or create an ARC4Struct WType for a Solidity struct.
-	awst::WType const* mapStruct(solidity::frontend::StructType const* _structType);
+	/// Full struct value, or an explicitly finite recursive-array projection.
+	/// Projections never enter the full Solidity/ARC4 type caches.
+	awst::WType const* mapStruct(
+		solidity::frontend::StructType const* _structType, bool _projection = false);
 
 	/// Solc aggregate facts behind a mapped value/projection. Invocation-local;
 	/// used to recover logical member offsets and array bounds through aliases.
@@ -101,6 +103,8 @@ public:
 	}
 
 private:
+	awst::WType const* mapArray(solidity::frontend::Type const* _type, bool _projection = false);
+
 	ProgramAnalysis const& m_analysis;
 	TargetProfile const& m_profile;
 	SourceMap const& m_sourceMap;
@@ -118,8 +122,8 @@ private:
 	/// These invocation-local keys must never be used as persisted storage keys.
 	std::unordered_map<std::string, awst::WType const*>
 		m_solTypeCache;
-	/// Synthetic keys used only for struct recursion projections.
-	std::map<std::string, awst::WType const*> m_namedTypeCache;
+	/// Separate nominal solc IDs for full values and finite projections.
+	std::map<int64_t, awst::WType const*> m_structTypes, m_structProjections;
 	std::unordered_map<awst::WType const*, solidity::frontend::Type const*> m_aggregateSources;
 
 	/// Session-local interning for the two ARC4 conversion entry points.
@@ -129,10 +133,6 @@ private:
 		m_solArc4Cache;
 	awst::WType const* m_arc4ByteType = nullptr;
 
-	/// Recursion guard for mapStruct: holds AST IDs of structs that are
-	/// currently being mapped, so a recursive struct field returns a
-	/// placeholder instead of stack-overflowing.
-	std::set<int64_t> m_inProgressStructs;
 };
 
 } // namespace puyasol::builder

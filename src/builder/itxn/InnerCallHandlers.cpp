@@ -324,81 +324,21 @@ InnerCallHandlers::buildEvmApplicationArgs(
 	return tuple;
 }
 
-// Nested ARC4 type name (struct-field / array-element position).
-// Differs from top-level: exact bit width (not collapsed to uint64),
-// signedness preserved (e.g. nested int8 = "int8", not "uint8").
-// Verified against puya's `method "..."` output.
-std::string nestedArc4Name(ContractContext& _ctx, solidity::frontend::Type const* _type)
-{
-	using namespace solidity::frontend;
-	if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(_type))
-		_type = &udvt->underlyingType();   // also lets UDVT-wrapped bool/address/bytesN hit their branches below
-	// int (sign-preserving) or enum → its unsigned encoding width — one carrier lookup.
-	if (auto it = builder::SolIntType::fromSolOrEnum(_type))
-		return (it->isSigned ? "int" : "uint") + std::to_string(it->bits);
-	if (dynamic_cast<BoolType const*>(_type)) return "bool";
-	if (dynamic_cast<AddressType const*>(_type)) return "address";
-	if (auto const* fb = dynamic_cast<FixedBytesType const*>(_type))
-		return "byte[" + std::to_string(fb->numBytes()) + "]";
-	if (auto const* arrT = dynamic_cast<ArrayType const*>(_type))
-	{
-		if (arrT->isByteArrayOrString())
-			return arrT->isString() ? "string" : "byte[]";
-		std::string elem = nestedArc4Name(_ctx, arrT->baseType());
-		if (arrT->isDynamicallySized())
-			return elem + "[]";
-		return elem + "[" + arrT->length().str() + "]";
-	}
-	if (auto const* structT = dynamic_cast<StructType const*>(_type))
-	{
-		std::string s = "(";
-		bool first = true;
-		for (auto const& m : structT->structDefinition().members())
-		{
-			if (!first) s += ",";
-			s += nestedArc4Name(_ctx, m->type());
-			first = false;
-		}
-		return s + ")";
-	}
-	// Unhandled (e.g. external function pointers, contracts): name it the SAME way the callee
-	// does — via the ARC4 type mapping — so cross-contract selectors match (toString would
-	// give e.g. "function () external" where puya publishes "byte[12]").
-	return TypeCoercion::wtypeToABIName(_ctx.typeMapper.mapToARC4Type(_ctx.typeMapper.map(_type)));
-}
-
-// Top-level param name: scalars collapse to "uint64"/"uintN" (signedness dropped);
-// enums → "uint64"; aggregates expand via nestedArc4Name to match puya's tuple form.
-// (A plain struct emitted "struct P" previously, silently breaking dispatch.)
 std::string solTypeToArc4ParamName(
 	ContractContext& _ctx, solidity::frontend::Type const* _type)
 {
-	if (auto name = builder::TypeCoercion::intSelectorName(_type))
-		return *name;
-	auto* wtype = _ctx.typeMapper.map(_type);
-	if (wtype == awst::WType::biguintType()) return "uint256";
-	if (wtype == awst::WType::uint64Type()) return "uint64"; // enums, etc.
-	if (wtype == awst::WType::boolType()) return "bool";
-	if (wtype == awst::WType::accountType()) return "address";
-	if (wtype == awst::WType::bytesType()) return "byte[]";
-	if (wtype == awst::WType::stringType()) return "string";
-	if (auto len = awst::fixedBytesLength(wtype))
-		return "byte[" + std::to_string(*len) + "]";
-	if (wtype->kind() == awst::WTypeKind::Bytes)
-		return "byte[]";
-	// Aggregates AND exotics (fn pointers, contracts): nestedArc4Name recurses the
-	// former and falls back to the callee-published ARC4 mapping for the latter —
-	// `toString(true)` here produced "function () external" where puya registers
-	// the profile-selected function-pointer byte array, an unroutable selector.
-	return nestedArc4Name(_ctx, _type);
+	CallParameterPlan parameter;
+	parameter.type = _ctx.typeMapper.map(_type);
+	parameter.setAbiWireType(_ctx.typeMapper, _type);
+	return TypeCoercion::wtypeToABIName(parameter.wireType);
 }
 
 std::string solTypeToArc4ReturnName(
 	ContractContext& _ctx, solidity::frontend::Type const* _type)
 {
-	if (auto name = builder::TypeCoercion::intSelectorReturnName(_type))
-		return *name;
-	return solTypeToArc4ParamName(_ctx, _type);
+	auto const plan = planReturnElement(_ctx.typeMapper, _type,
+		abiReturnNativeType(_ctx.typeMapper, _type));
+	return TypeCoercion::wtypeToABIName(plan.wireType);
 }
 
 std::string InnerCallHandlers::buildMethodSelector(
@@ -419,10 +359,10 @@ std::string InnerCallHandlers::buildMethodSelector(
 	solidity::frontend::FunctionDefinition const* _func)
 {
 	std::vector<std::string> paramNames, retNames;
-	for (auto const& param : _func->parameters())
-		paramNames.push_back(solTypeToArc4ParamName(_ctx, param->type()));
-	for (auto const& retParam : _func->returnParameters())
-		retNames.push_back(solTypeToArc4ReturnName(_ctx, retParam->type()));
+	for (auto const& parameter: _ctx.typeMapper.callBoundaryPlan(*_func).parameters)
+		paramNames.push_back(TypeCoercion::wtypeToABIName(parameter.wireType));
+	for (auto const& element: _ctx.typeMapper.functionReturnPlan(*_func).elements)
+		retNames.push_back(TypeCoercion::wtypeToABIName(element.wireType));
 	return builder::TypeCoercion::buildArc4Selector(_func->name(), paramNames, retNames);
 }
 
@@ -721,7 +661,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::emitDirectSelfCall(
 						argument->annotation().type,
 						parameterType,
 						parameterWType,
-						builder::ConversionPlan::Context::Argument}.emit(
+						encodeName == "encodeCall" ? builder::ConversionPlan::Context::Argument
+							: builder::ConversionPlan::Context::AbiReinterpret}.emit(
 							std::move(value), _loc);
 				}
 				awst::pushCallArg(call->args, std::move(value));

@@ -41,29 +41,29 @@ StorageRuntimePlan StorageRuntimePlan::analyze(
 	result.evmLayout = _typeMapper.profile().evmStorageLayout;
 	result.solidityLayout.computeLayout(_contract, _typeMapper);
 
-	auto const& asmCallables = _typeMapper.analysis().callablesWithStorageAssembly;
+	auto const& slotCallables = _typeMapper.analysis().callablesWithStorageSlotAccess;
 	forEachDefinedFunction(_contract, [&](auto const* _function) {
-		if (_function->isImplemented() && asmCallables.count(_function->id()))
-			result.containsInlineAssembly = true;
+		if (_function->isImplemented() && slotCallables.count(_function->id()))
+			result.usesSlotAccess = true;
 	});
 	// solc's per-contract graph also reaches free/library functions that are
-	// emitted as host-bound methods. Their assembly accesses this contract's
-	// storage and therefore requires this contract's default-layout dispatcher.
+	// emitted as host-bound methods. Their assembly or returned storage handles
+	// require this contract's default-layout dispatcher.
 	if (_typeMapper.analysis().hasContractReachability(_contract.id()))
-		for (int64_t callableId: asmCallables)
+		for (int64_t callableId: slotCallables)
 			if (_typeMapper.analysis().isFunctionReachable(
 				_contract.id(), callableId))
 			{
-				result.containsInlineAssembly = true;
+				result.usesSlotAccess = true;
 				break;
 			}
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
 		if (base)
 			for (auto const* modifier: base->functionModifiers())
 				if (modifier && modifier->isImplemented()
-					&& asmCallables.count(modifier->id()))
-					result.containsInlineAssembly = true;
-	result.requiresSparseSlots = result.containsInlineAssembly;
+					&& slotCallables.count(modifier->id()))
+					result.usesSlotAccess = true;
+	result.requiresSparseSlots = result.usesSlotAccess;
 
 	// Packed addresses use a keccak-derived shadow slot for their high bytes.
 	for (auto const& variable: result.solidityLayout.variables())

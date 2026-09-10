@@ -4,11 +4,13 @@
 
 #include <libsolidity/ast/AST.h>
 #include <optional>
+#include <unordered_map>
 
 namespace puyasol::builder::sol_ast
 {
 
 class EvmSlotLowering;
+class ResolvedLValue;
 
 /// Assignment expressions: =, +=, -=, *=, /=, etc.
 /// Handles tuple decomposition, struct copy-on-write, bytes element assignment,
@@ -28,8 +30,6 @@ private:
 		SlotArray,
 		SlotScalar,
 		Tuple,
-		BytesElement,
-		Field,
 		Generic,
 	};
 
@@ -39,15 +39,14 @@ private:
 	};
 
 	solidity::frontend::Assignment const& m_assignment;
+	std::unordered_map<int64_t, std::shared_ptr<ResolvedLValue>> m_tupleTargets;
 
 	LValuePlan planLValue(std::shared_ptr<awst::Expression> const& _target) const;
 	std::shared_ptr<awst::Expression> emitLValuePlan(
 		LValuePlan _plan,
 		solidity::frontend::Token _op,
 		std::shared_ptr<awst::Expression> _target,
-		std::shared_ptr<awst::Expression> _value,
-		bool _deferTupleLhsEffects,
-		eb::ContractContext::OperandDeltas _tupleLhsEffects);
+		std::shared_ptr<awst::Expression> _value);
 	std::shared_ptr<awst::Expression> emitGenericAssignment(
 		solidity::frontend::Token _op,
 		std::shared_ptr<awst::Expression> _target,
@@ -56,7 +55,8 @@ private:
 	std::shared_ptr<awst::Expression> handleTupleAssignment(
 		std::shared_ptr<awst::Expression> _target,
 		std::shared_ptr<awst::Expression> _value,
-		solidity::frontend::TupleExpression const* _sourceLhs = nullptr);
+		solidity::frontend::TupleExpression const* _sourceLhs = nullptr,
+		solidity::frontend::TupleType const* _sourceType = nullptr);
 
 	// ── handleTupleAssignment pieces (SolAssignmentTuple.cpp) ───────────
 	enum class TupleComponentAction { NotApplicable, Handled, Abort };
@@ -78,32 +78,8 @@ private:
 		std::shared_ptr<awst::Expression> const& itemIn,
 		std::shared_ptr<awst::Expression> const& _value,
 		solidity::frontend::TupleExpression const* _sourceLhs,
+		solidity::frontend::TupleType const* _sourceType,
 		std::vector<size_t>& componentGroupEnds);
-
-	std::shared_ptr<awst::Expression> handleBytesElementAssignment(
-		awst::IndexExpression const* _indexExpr,
-		std::shared_ptr<awst::Expression> _value);
-
-	/// `s.b[i] = v` where `s.b` is bytes (ARC4 byte[]): copy-on-write struct write-back.
-	/// _newBytes is the replace3 result; builds NewStruct chain and emits the assignment.
-	std::shared_ptr<awst::Expression> buildStructFieldBytesWrite(
-		awst::FieldExpression const* _fieldExpr,
-		awst::ARC4Struct const* _structType,
-		std::shared_ptr<awst::Expression> _newBytes);
-
-	// _emitAsStatement: in tuple-destructure context, queue the COW store as a
-	// statement and return a truthy sentinel (tuple path only needs the side effect).
-	std::shared_ptr<awst::Expression> handleStructFieldAssignment(
-		awst::FieldExpression const* _fieldExpr,
-		std::shared_ptr<awst::Expression> _value,
-		std::shared_ptr<awst::Expression> _unwrappedTarget,
-		bool _emitAsStatement = false);
-
-	/// Build a TupleExpression with one field replaced.
-	std::shared_ptr<awst::Expression> buildTupleWithUpdatedField(
-		std::shared_ptr<awst::Expression> _base,
-		std::string const& _fieldName,
-		std::shared_ptr<awst::Expression> _newValue);
 
 	/// The aggregate-root writers' shared VALUE pipeline: compound compute at
 	/// the leaf's native type (current decoded when needed, RHS widened),
@@ -135,26 +111,12 @@ private:
 	/// var lowers to __storage_write at its EVM word address (EvmSlotLowering).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleEvmStorageWrite();
 
-	// ── tryHandleEvmStorageWrite rungs (SolAssignment.cpp), tried in order ──
-	/// A rung's verdict: unclaimed falls through to the next rung; claimed
-	/// ends the handler with `result` (a disengaged result = the handler
-	/// yields nullopt, exactly as the former inline early-outs did).
-	struct EvmWriteRung
-	{
-		bool claimed = false;
-		std::optional<std::shared_ptr<awst::Expression>> result;
-		explicit operator bool() const { return claimed; }
-		static EvmWriteRung done(std::optional<std::shared_ptr<awst::Expression>> _result)
-		{
-			return {true, std::move(_result)};
-		}
-	};
-	/// `ptr = <storage ref>` on a storage local: re-point the slot handle.
-	EvmWriteRung tryEvmStoragePointerRebind(solidity::frontend::Expression const& _lhs);
-	/// `b[i] = v` on storage bytes/string: whole-value replace3 at the asserted index.
-	EvmWriteRung tryEvmBytesElementWrite(solidity::frontend::Expression const& _lhs);
-	/// Whole fixed-array assignment: slot copy, converting copy, or value RHS.
-	EvmWriteRung tryEvmFixedArrayWrite(solidity::frontend::Expression const& _lhs);
+	/// Runtime storage-reference rebinding; nullopt means this is not a rebind.
+	std::optional<std::shared_ptr<awst::Expression>> tryEvmStoragePointerRebind(
+		solidity::frontend::Expression const& _lhs);
+	/// Fixed storage-to-storage copies preserve their slot-copy optimization.
+	std::optional<std::shared_ptr<awst::Expression>> tryEvmFixedArrayWrite(
+		solidity::frontend::Expression const& _lhs);
 	/// Differently shaped fixed arrays: unrolled per-element read/convert/write.
 	std::shared_ptr<awst::Expression> emitEvmConvertingArrayCopy(
 		EvmSlotLowering& _low,
@@ -162,23 +124,12 @@ private:
 		solidity::frontend::ArrayType const* _rat,
 		std::shared_ptr<awst::Expression> const& _lslot,
 		std::shared_ptr<awst::Expression> const& _rslot);
-	/// Whole-struct assignment: per-member slot writes.
-	EvmWriteRung tryEvmStructWrite(solidity::frontend::Expression const& _lhs);
-	/// Whole bytes/string assignment via __evm_bytes_write.
-	EvmWriteRung tryEvmBytesValueWrite(solidity::frontend::Expression const& _lhs);
-	/// Whole storage dynamic-array assignment via the recursive array writer.
-	EvmWriteRung tryEvmDynamicArrayWrite(solidity::frontend::Expression const& _lhs);
-	/// Terminal rung: value-type leaf store (RHS first, pinned; compound
-	/// read-modify-write). Any non-value LHS left over is rejected loudly.
-	std::optional<std::shared_ptr<awst::Expression>> emitEvmScalarWrite(
-		solidity::frontend::Expression const& _lhs);
-
 	/// EVM blob memory: whole-variable assignment to a blob-backed memory
 	/// local/param/named-return RE-SPILLS the value into a fresh blob region
 	/// and re-points the offset var (EVM allocates fresh memory per result).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleBlobRespill();
 
-	std::optional<std::shared_ptr<awst::Expression>> tryHandleTransientStateWrite();
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleAddressedWrite();
 
 	/// `m = m2` for a local storage-pointer: updates compile-time alias (state-var)
 	/// or emits a runtime bytes assignment (mapping-key param).
@@ -198,10 +149,6 @@ private:
 	/// replaces it once, so nested structs and packed bool fields are generic.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleOffsetStructRefFieldWrite();
 
-	/// `a[i] = v` for a >4KB blob-backed aggregate. Computes base+i*elemSize,
-	/// pads rhs to 32 B, emits writeMemWordDirect through the pre-effect frame.
-	std::optional<std::shared_ptr<awst::Expression>> tryHandleBlobAggregateWrite();
-
 	/// `arr.push() = v`: scope RHS as the LHS push call's explicit value;
 	/// SolArrayMethod folds it into ArrayExtend. Returns ArrayExtend or nullopt.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandlePushAssignRewrite(
@@ -211,15 +158,6 @@ private:
 	std::shared_ptr<awst::Expression> applyEnumRangeCheck(
 		std::shared_ptr<awst::Expression> _value,
 		solidity::frontend::Token _op);
-
-	/// Any index/member write rooted in a slot handle. Address derivation and
-	/// value dispatch recurse through the declared Solidity type, so packed
-	/// leaves and arbitrary array/struct depth use one path.
-	std::optional<std::shared_ptr<awst::Expression>> tryHandleSlotHandleElemWrite();
-
-	std::optional<std::shared_ptr<awst::Expression>> tryHandleSlotHandleFieldWrite();
-	std::optional<std::shared_ptr<awst::Expression>> tryHandleSlotHandleWrite(
-		solidity::frontend::Expression const& _lhs);
 
 	/// `slot = arr` (slot is biguint, arr is static-sized): expand to
 	/// per-element __storage_write(slot+j, arr[j]).
@@ -240,18 +178,6 @@ private:
 		std::shared_ptr<awst::Expression>& _target,
 		std::shared_ptr<awst::Expression>& _value);
 
-	/// `b[i] = v` where b is bytes: delegates to handleBytesElementAssignment;
-	/// nullopt if target isn't IndexExpression on bytes.
-	std::optional<std::shared_ptr<awst::Expression>> tryBytesElemAssignment(
-		std::shared_ptr<awst::Expression> const& _target,
-		std::shared_ptr<awst::Expression>& _value);
-
-	/// `s.f = v` for ARC4 struct field or named-WTuple field.
-	std::optional<std::shared_ptr<awst::Expression>> tryStructOrNamedTupleFieldAssignment(
-		solidity::frontend::Token _op,
-		std::shared_ptr<awst::Expression> const& _target,
-		std::shared_ptr<awst::Expression>& _value);
-
 	/// Compound-assign RHS canonicalization: a narrower SIGNED rhs is widened
 	/// to the TARGET type's canonical form (`a op= b` == `a = a op T(b)`)
 	/// before the compound compute — else the target-typed signed-div/mod
@@ -260,17 +186,6 @@ private:
 	std::shared_ptr<awst::Expression> widenSignedCompoundRhs(
 		std::shared_ptr<awst::Expression> _value);
 
-	/// Compound assigns: read current target value, apply op, return new value.
-	/// Simple Assign passes through unchanged.
-	std::shared_ptr<awst::Expression> applyCompoundAssignment(
-		solidity::frontend::Token _op,
-		std::shared_ptr<awst::Expression> const& _target,
-		std::shared_ptr<awst::Expression> _value);
-
-	/// Assignment-boundary coercion: int→bytes[N], string→bytes, string↔bytes reinterpret.
-	std::shared_ptr<awst::Expression> applyAssignmentTypeCoercion(
-		std::shared_ptr<awst::Expression> _value,
-		std::shared_ptr<awst::Expression> const& _target);
 
 
 };

@@ -47,9 +47,10 @@ std::shared_ptr<awst::Statement> buildStatement(
 	BlockContext& _blk,
 	solidity::frontend::Statement const& _stmt);
 
-/// Build a Solidity Block into an AWST Block.
+/// Build a block or brace-less body in a child scope. Stop translating source
+/// statements once the emitted AWST guarantees no fallthrough.
 std::shared_ptr<awst::Block> buildBlock(
-	BlockContext& _blk,
-	solidity::frontend::Block const& _block);
+	BlockContext const& _parent,
+	solidity::frontend::Statement const& _body);
 
 } // namespace puyasol::builder::sol_ast

@@ -12,6 +12,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -114,38 +115,13 @@ std::shared_ptr<awst::Expression> tryStructRefParamValue(
 std::shared_ptr<awst::Expression> buildConstantValue(
 	eb::ContractContext& ctx, VariableDeclaration const& varDecl)
 {
-	auto val = ctx.buildExpr(*varDecl.value());
-
-	// bytes[N] constant from integer literal → BytesConstant
-	auto* targetType = ctx.typeMapper.map(varDecl.type());
-	if (auto const* bytesType = dynamic_cast<awst::BytesWType const*>(targetType))
-	{
-		if (auto* intConst = dynamic_cast<awst::IntegerConstant*>(val.get()))
-		{
-			int len = bytesType->length().value_or(0);
-			return awst::makeBytesConstant(
-				builder::TypeCoercion::intLiteralToBytesN(intConst->value, len),
-				val->sourceLocation, awst::BytesEncoding::Base16, targetType);
-		}
-	}
-	// String → bytes[N] right-pad
-	if (auto const* bwt = dynamic_cast<awst::BytesWType const*>(targetType))
-	{
-		if (bwt->length().has_value() && *bwt->length() > 0)
-		{
-			if (auto padded = builder::TypeCoercion::stringToBytesN(
-					val.get(), targetType, *bwt->length(), val->sourceLocation))
-				return padded;
-		}
-	}
-	// String → bytes cast
-	if (targetType == awst::WType::bytesType()
-		&& val->wtype == awst::WType::stringType())
-	{
-		auto cast = awst::makeAsBytes(std::move(val), val->sourceLocation);
-		return cast;
-	}
-	return val;
+	auto const& initializer = *varDecl.value();
+	auto value = ctx.buildExpr(initializer);
+	auto loc = value->sourceLocation;
+	return builder::ConversionPlan{
+		initializer.annotation().type, varDecl.type(),
+		ctx.typeMapper.map(varDecl.type()), builder::ConversionPlan::Context::Initialization
+	}.emit(std::move(value), loc, &ctx.preEffects());
 }
 
 // --evm-storage-layout: persistent state vars read from their EVM
@@ -329,10 +305,10 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	// Variable references
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
+		if (auto slot = m_scope.bindings.slotStorageRefs.get(varDecl->id()))
+			return slot;
 		if (isSlotStorageLocal(m_ctx, *varDecl))
 		{
-			if (auto slot = m_scope.bindings.slotStorageRefs.get(varDecl->id()))
-				return slot;
 			return awst::makeVarExpression(
 				m_scope.awstVarName(*varDecl), awst::WType::biguintType(), m_loc);
 		}

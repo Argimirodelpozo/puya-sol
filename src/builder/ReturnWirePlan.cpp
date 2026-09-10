@@ -62,7 +62,7 @@ FunctionReturnPlan const& TypeMapper::functionReturnPlan(
 	auto const& returns = function.returnParameters();
 	std::vector<awst::WType const*> nativeTypes, wireTypes;
 	std::vector<std::string> names;
-	bool hasNames = false;
+	bool allNamed = true;
 	for (auto const& parameter: returns)
 	{
 		auto const* native = function.isPartOfExternalInterface()
@@ -78,7 +78,7 @@ FunctionReturnPlan const& TypeMapper::functionReturnPlan(
 		nativeTypes.push_back(native);
 		wireTypes.push_back(plan.elements.back().wireType);
 		names.push_back(parameter->name());
-		hasNames |= !parameter->name().empty();
+		allNamed &= !parameter->name().empty();
 	}
 	if (returns.empty())
 		plan.nativeType = plan.wireType = awst::WType::voidType();
@@ -89,7 +89,9 @@ FunctionReturnPlan const& TypeMapper::functionReturnPlan(
 	}
 	else
 	{
-		plan.nativeType = hasNames
+		// Solidity return tuples are positional. Retain optional AWST field
+		// names only for a fully named list; repeated empty names are invalid.
+		plan.nativeType = allNamed
 			? createType<awst::WTuple>(std::move(nativeTypes), std::move(names), function.name() + "Return")
 			: createType<awst::WTuple>(std::move(nativeTypes));
 		plan.wireType = createType<awst::WTuple>(std::move(wireTypes));

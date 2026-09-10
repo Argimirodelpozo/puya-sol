@@ -147,13 +147,11 @@ def test_function_modifier_loop(harness):
     assert as_int(r.abi_return) == 10
 
 def test_function_modifier_loop_viair(harness):
-    """modifiers/contracts/function_modifier_loop_viair.sol — a modifier that loops `_;`
-    accumulates the named return `r` across every invocation (return params threaded in/out
-    through the modifier-subroutine chain). Used to give 1 (no accumulation); now correct."""
+    """Solc via-IR passes the same return input to every looped placeholder."""
     app = harness.compile_and_deploy("modifiers/contracts/function_modifier_loop_viair.sol", via_yul_behavior=True)
-    # f() -> 10  (repeat(10) runs `_;` ten times, each `r += 1`)
+    # Matches this upstream fixture's f() -> 1 expectation.
     r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 10
+    assert as_int(r.abi_return) == 1
 
 def test_function_modifier_multi_invocation(harness):
     """modifiers/contracts/function_modifier_multi_invocation.sol"""
@@ -166,16 +164,14 @@ def test_function_modifier_multi_invocation(harness):
     assert as_int(r.abi_return) == 2
 
 def test_function_modifier_multi_invocation_viair(harness):
-    """modifiers/contracts/function_modifier_multi_invocation_viair.sol — a modifier with two
-    `_;` runs the body (and accumulates named return `r`) once or twice. Return params are now
-    threaded in/out through the chain, so true -> 2 (was 1: no accumulation)."""
+    """Solc via-IR captures outputs separately from the next placeholder's inputs."""
     app = harness.compile_and_deploy("modifiers/contracts/function_modifier_multi_invocation_viair.sol", via_yul_behavior=True)
     # f(bool): false -> 1  (only the second `_;` runs)
     r = harness.call(app, "f(bool)", False)
     assert as_int(r.abi_return) == 1
-    # f(bool): true -> 2  (both `_;` run, r accumulates)
+    # f(bool): true -> 1  (both `_;` run with the original return input)
     r = harness.call(app, "f(bool)", True)
-    assert as_int(r.abi_return) == 2
+    assert as_int(r.abi_return) == 1
 
 def test_function_modifier_multi_with_return(harness):
     """modifiers/contracts/function_modifier_multi_with_return.sol"""

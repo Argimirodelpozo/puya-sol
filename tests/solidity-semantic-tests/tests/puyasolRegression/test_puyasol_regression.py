@@ -148,8 +148,8 @@ def test_unmapped_value_type_hard_errors(harness):
 
     A value-carrying unmapped type (fixed-point) must HARD-ERROR, not silently fall
     back to bytes (which would diverge from EVM). Guards the selective unmapped-type
-    hard-error in TypeMapper's default case. Meta-types (type(X)/module/abi) and array
-    slices still map to bytes — only genuine value types error.
+    hard-error in TypeMapper's default case. Meta-types (type(X)/module/abi) retain
+    their placeholder representation; slices use their underlying array's type.
     """
     with pytest.raises(CompileError):
         harness.compile_and_deploy("puyasolRegression/contracts/unmapped_type_fixed.sol")

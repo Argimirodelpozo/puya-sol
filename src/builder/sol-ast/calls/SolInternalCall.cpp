@@ -635,8 +635,10 @@ void SolInternalCall::buildSequencedArgs(
 						return off;
 				auto v = buildExpr(memberAccess->expression());
 				if (!paramTypes.empty())
-					v = builder::TypeCoercion::implicitNumericCast(
-						std::move(v), paramTypes[0], m_loc);
+					v = builder::ConversionPlan{memberAccess->expression().annotation().type,
+						_funcDef ? _funcDef->parameters()[0]->type() : functionType->parameterTypes()[0],
+						paramTypes[0], builder::ConversionPlan::Context::Argument}
+						.emit(std::move(v), m_loc, &m_ctx.preEffects());
 				return v;
 			}, /*_conditional=*/false);
 			ca.value = std::move(lowered.value);

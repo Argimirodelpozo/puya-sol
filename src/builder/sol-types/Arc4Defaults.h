@@ -2,8 +2,8 @@
 
 /// @file Arc4Defaults.h
 /// ARC4 type analysis + default-value helpers — pure WType→bytes/size
-/// reasoning, no expression building (except makeZeroBytesRuntime /
-/// prependArc4LengthHeader). Extracted from TypeCoercion.cpp as a
+/// reasoning, no expression building (except makeZeroBytesRuntime).
+/// Extracted from TypeCoercion.cpp as a
 /// cohesive leaf cluster; callers (StorageMapper, SolAssignment*,
 /// SolIndexAccess, SolNewExpression, SolVariableDeclaration,
 /// ApprovalProgramBuilder, FunctionBuilder, AbiDecode) use these directly.
@@ -31,19 +31,12 @@ std::shared_ptr<awst::Expression> makeZeroBytesRuntime(
 	awst::WType const* _targetType,
 	awst::SourceLocation const& _loc);
 
-/// Prepend a 2-byte big-endian element-count header (ARC4StaticArray → DynamicArray).
-std::shared_ptr<awst::Expression> prependArc4LengthHeader(
-	std::shared_ptr<awst::Expression> _expr,
-	int64_t _length,
-	awst::WType const* _targetType,
-	awst::SourceLocation const& _loc);
-
 /// True if T's ARC4 encoding contains any variable-length component
 /// (DynamicArray, dynamic Bytes, or any container of such).
 bool arc4IsDynamic(awst::WType const* _type);
 
 /// ARC4 zero/empty encoding for T. Returns std::nullopt when not statically
-/// computable (e.g. unsized Bytes). Used to initialise box-stored static
+/// computable within the bounded materialization limit. Used to initialise box-stored static
 /// arrays of dynamic-element types so splice writes see a valid head/tail layout.
 std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type);
 

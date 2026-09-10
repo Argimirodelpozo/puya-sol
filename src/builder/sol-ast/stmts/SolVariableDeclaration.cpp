@@ -14,6 +14,7 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/ConversionPlan.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include <libsolutil/Assertions.h>
 
 namespace puyasol::builder::sol_ast
 {
@@ -42,8 +43,7 @@ bool SolVariableDeclaration::tryCalldataSlicePointerBinding(
 	// .length). Bind t's own pointer local `__cd_off_t = __cd_off_x + i*stride`
 	// (solc's calldataStride = the element's calldata head size) and mark t
 	// live, so a later asm `s := t` reads t's byte offset in __cd_blob —
-	// 0x44 + 1*64 = 0x84 in calldata_array_read. The regular value binding
-	// below still runs (non-asm uses of t read the decoded value).
+	// 0x44 + 1*64 = 0x84 in calldata_array_read.
 	if (decl.referenceLocation() == VariableDeclaration::Location::CallData && initialValue)
 		if (auto const* idx = dynamic_cast<IndexAccess const*>(initialValue))
 			if (auto const* baseId = dynamic_cast<Identifier const*>(&idx->baseExpression()))
@@ -56,7 +56,8 @@ bool SolVariableDeclaration::tryCalldataSlicePointerBinding(
 						{
 							auto loc = m_blk.makeLoc(decl.location());
 							auto idxVal = builder::TypeCoercion::implicitNumericCast(
-								m_blk.builderCtx().buildExpr(*idx->indexExpression()),
+								m_blk.builderCtx().pinIfWriteBacks(
+									m_blk.builderCtx().lower(*idx->indexExpression(), false), loc),
 								awst::WType::biguintType(), loc);
 							auto scaled = awst::makeBigUIntBinOp(std::move(idxVal),
 								awst::BigUIntBinaryOperator::Mult,
@@ -71,6 +72,7 @@ bool SolVariableDeclaration::tryCalldataSlicePointerBinding(
 							// through externalRefAwstName (= awstVarName mangling), so
 							// the __cd_off_ local + live-set entry must match it.
 							std::string tName = m_blk.scope.awstVarName(decl);
+							m_blk.builderCtx().appendEffectsTo(result);
 							result.push_back(awst::makeAssignmentStatement(
 								awst::makeVarExpression("__cd_off_" + tName,
 									awst::WType::biguintType(), loc),
@@ -81,7 +83,6 @@ bool SolVariableDeclaration::tryCalldataSlicePointerBinding(
 							// a type mismatch puya rejects, and EVM semantics are the
 							// pointer anyway). A value use of the slice would hit an
 							// undefined local — loud, not silently wrong.
-							m_blk.builderCtx().appendEffectsTo(result);
 							return true;
 						}
 
@@ -96,8 +97,13 @@ bool SolVariableDeclaration::trySlotModeStoragePointer(
 	// --evm-storage-layout: a storage-pointer local IS a biguint slot.
 	// Resolve the initializer's slot on the AST (building the aggregate
 	// value would be wrong/rejected) and bind `name = slot`.
+	auto const& returns = m_blk.typeMapper().analysis().storageReferenceReturns;
+	auto const found = returns.find(m_blk.fn.callableId);
+	bool const tupleSlotBody = dynamic_cast<awst::WTuple const*>(m_blk.fn.returnType)
+		&& found != returns.end() && found->second.slotHandle;
 	if ((m_blk.typeMapper().profile().evmStorageLayout
-			|| m_blk.typeMapper().analysis().asmAssignedSlotDeclarations.contains(decl.id()))
+			|| tupleSlotBody
+			|| m_blk.typeMapper().analysis().slotHandleDeclarations.contains(decl.id()))
 		&& decl.referenceLocation() == VariableDeclaration::Location::Storage)
 	{
 		auto loc = m_blk.makeLoc(decl.location());
@@ -122,45 +128,16 @@ bool SolVariableDeclaration::trySlotModeStoragePointer(
 	return false;
 }
 
-/// Build the initializer value (fn-ptr target tracking, slot-mode storage → memory materialisation, NewArray fixed-size upgrade, …
+/// Lower once, retaining the existing fixed-size NewArray representation upgrade.
 std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 	VariableDeclaration const& decl,
 	Expression const* initialValue,
-	awst::WType const*& type,
-	std::shared_ptr<awst::Expression> const& target,
-	bool& earlyExit)
+	awst::WType const*& type)
 {
 	std::shared_ptr<awst::Expression> value;
 	if (initialValue)
 	{
-		value = m_blk.builderCtx().buildExpr(*initialValue);
-		if (decl.referenceLocation() != VariableDeclaration::Location::Storage)
-			value = StorageMapper::makePartialBoxReadWithDefault(
-				m_blk.typeMapper(), std::move(value), m_blk.builderCtx().preEffects(), m_loc);
-
-		// --evm-storage-layout: a storage-typed initializer builds to its
-		// biguint slot handle; a MEMORY struct local needs the VALUE —
-		// materialise it from the slots (storage → memory copy).
-		if (m_blk.typeMapper().profile().evmStorageLayout && value
-			&& value->wtype == awst::WType::biguintType()
-			&& decl.referenceLocation() != VariableDeclaration::Location::Storage)
-			if (auto const* ist = dynamic_cast<solidity::frontend::StructType const*>(
-					initialValue->annotation().type);
-				ist && ist->dataStoredIn(solidity::frontend::DataLocation::Storage))
-			{
-				auto loc = m_blk.makeLoc(decl.location());
-				EvmSlotLowering low(m_blk.builderCtx(), m_blk.scope, loc);
-				EvmSlotLowering::Addr a;
-				a.slot = std::move(value);
-				a.solType = ist;
-				a.wtype = m_blk.typeMapper().map(ist);
-				value = low.readStructValue(a);
-				if (!value)
-				{
-					earlyExit = true;
-					return nullptr;
-				}
-			}
+		value = m_blk.builderCtx().pinIfWriteBacks(m_blk.builderCtx().lower(*initialValue, false), m_loc);
 
 		// Upgrade dynamic array to fixed-size when N is known
 		if (auto* newArr = dynamic_cast<awst::NewArray*>(value.get()))
@@ -176,7 +153,6 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 						type = m_blk.typeMapper().createType<awst::ReferenceArray>(
 							refArr->elementType(), true, n);
 						newArr->wtype = type;
-						target->wtype = type;
 					}
 				}
 				// Note: don't upgrade ARC4DynamicArray→ARC4StaticArray here.
@@ -185,20 +161,46 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 			}
 		}
 
-		if (initialValue && !dynamic_cast<TupleType const*>(
-				initialValue->annotation().type))
-			value = builder::ConversionPlan{
-				initialValue->annotation().type, decl.type(), type,
-				builder::ConversionPlan::Context::Initialization}.emit(
-					std::move(value), m_loc, &m_blk.builderCtx().preEffects());
-		else
-			value = builder::TypeCoercion::coerceForAssignment(
-				std::move(value), type, m_loc);
+		value = convertInitValue(decl, std::move(value), initialValue->annotation().type, type);
 	}
 	else
 		value = StorageMapper::makeDefaultValue(type, m_loc);
 
 	return value;
+}
+
+/// Both scalar and destructured initializers use solc's source/destination
+/// types, with physical storage handles materialized only for value bindings.
+std::shared_ptr<awst::Expression> SolVariableDeclaration::convertInitValue(
+	VariableDeclaration const& decl, std::shared_ptr<awst::Expression> value,
+	solidity::frontend::Type const* sourceType, awst::WType const* type)
+{
+	if (auto const* tuple = dynamic_cast<TupleType const*>(sourceType);
+		tuple && tuple->components().size() == 1) sourceType = tuple->components().front();
+	if (decl.referenceLocation() != VariableDeclaration::Location::Storage)
+	{
+		value = StorageMapper::makePartialBoxReadWithDefault(
+			m_blk.typeMapper(), std::move(value), m_blk.builderCtx().preEffects(), m_loc);
+		value = EvmSlotLowering::materializeRefValue(
+			m_blk.builderCtx(), m_blk.scope, std::move(value), sourceType, type, m_loc);
+	}
+	return ConversionPlan{sourceType, decl.type(), type, ConversionPlan::Context::Initialization}.emit(
+		std::move(value), m_loc, &m_blk.builderCtx().preEffects());
+}
+
+void SolVariableDeclaration::bindValue(
+	VariableDeclaration const& decl, Expression const* initialValue,
+	std::shared_ptr<awst::Expression> value, awst::WType const* type,
+	std::vector<std::shared_ptr<awst::Statement>>& result)
+{
+	if (!value) return; // lowering already reported the error
+	if (tryStorageAliasBinding(decl, value, initialValue, result)
+		|| tryMemoryAliasBinding(decl, initialValue, type, result)
+		|| tryBlobOffsetBinding(decl, initialValue, value, type, result)
+		|| tryAsmAggregateInit(decl, initialValue, value, type, result)) return;
+	emitDefaultDeclaration(decl,
+		awst::makeVarExpression(m_blk.scope.awstVarName(decl), type, m_blk.makeLoc(decl.location())),
+		std::move(value), type, initialValue, result);
 }
 
 bool SolVariableDeclaration::tryStorageAliasBinding(
@@ -289,6 +291,7 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 					awst::makeReinterpretCast(
 						falsePlace->key, awst::WType::bytesType(), m_loc),
 					awst::WType::bytesType(), m_loc);
+				m_blk.builderCtx().appendEffectsTo(result);
 				result.push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression(keyName, awst::WType::bytesType(), m_loc),
 					std::move(keySel), m_loc));
@@ -302,7 +305,6 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 						std::move(aliasExpr), truePlace->valueType, m_loc);
 				m_blk.scope.bindings.storageAliases.set(decl.id(),
 					StorageAlias::stateRead(std::move(aliasExpr)));
-				m_blk.builderCtx().appendEffectsTo(result);
 				return true;
 			}
 		}
@@ -311,7 +313,13 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 		// Two patterns: (1) bytes return → mappingKeyParam (SolIndexAccess uses
 		// it as box-key prefix, e.g. `Pool.State storage pool = _getPool(id)`);
 		// (2) biguint return → slotStorageRef for __storage_read/write.
-		if (dynamic_cast<awst::SubroutineCallExpression const*>(value.get()))
+		if (dynamic_cast<awst::SubroutineCallExpression const*>(value.get())
+			|| ((dynamic_cast<awst::TupleItemExpression const*>(value.get())
+					|| (dynamic_cast<FunctionCall const*>(initialValue)
+						&& dynamic_cast<awst::VarExpression const*>(value.get())))
+				&& (value->wtype == awst::WType::biguintType()
+					|| value->wtype == awst::WType::uint64Type()
+					|| value->wtype == awst::WType::bytesType())))
 		{
 			bool isMappingPtr = decl.type()
 				&& (decl.type()->category() == solidity::frontend::Type::Category::Mapping
@@ -358,7 +366,6 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 bool SolVariableDeclaration::tryMemoryAliasBinding(
 	VariableDeclaration const& decl,
 	Expression const* initialValue,
-	std::shared_ptr<awst::Expression>& value,
 	awst::WType const* type,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
@@ -366,8 +373,8 @@ bool SolVariableDeclaration::tryMemoryAliasBinding(
 	// another memory-aggregate variable → register b→a so b's references resolve to a's
 	// local; memory→memory ALIASES (matches EVM) instead of copying. Only a plain
 	// memory-aggregate identifier source, and only the small (non-blob) case — >4KB
-	// aggregates alias via the blob offset below. (Reassignment of a/b after the alias
-	// would make this unsafe; not yet guarded — relying on zero-reg to surface it.)
+	// aggregates alias via the blob offset below. Whole-program reassignment facts
+	// disqualify either name before translation, including writes in later branches.
 	if (initialValue
 		&& decl.referenceLocation() == VariableDeclaration::Location::Memory
 		&& decl.type() && !builder::memoryUsesBlob(type))
@@ -410,27 +417,16 @@ bool SolVariableDeclaration::tryMemoryAliasBinding(
 			&& m_blk.typeMapper().analysis().reassignedMemoryLocals.count(decl.id()) == 0
 			&& m_blk.typeMapper().analysis().reassignedMemoryLocals.count(srcVd->id()) == 0)
 		{
-			if (viaByteCast)
-			{
-				// re-resolve the PEELED source (value was built from the
-				// cast); relabel to the declared wtype so uses type-check.
-				auto srcRead = m_blk.builderCtx().buildExpr(*aliasSrc);
-				if (srcRead)
-				{
-					if (srcRead->wtype != type)
-						srcRead = awst::makeReinterpretCast(
-							std::move(srcRead), type, m_loc);
-					m_blk.scope.bindings.memoryAliases.set(decl.id(), std::move(srcRead));
-					m_blk.builderCtx().appendEffectsTo(result);
-					return true;
-				}
-			}
-			else
-			{
-				m_blk.scope.bindings.memoryAliases.set(decl.id(), value); // value = buildExpr(a) = a's (resolved) local read
-				m_blk.builderCtx().appendEffectsTo(result);
-				return true;
-			}
+			// Keep reference identity, not a destructuring temporary's value.
+			// The source is a stable identifier (proven by solc declaration IDs
+			// and the reassignment facts above), so resolving it has no effects.
+			auto source = m_blk.builderCtx().buildExpr(*srcId);
+			if (!source) return false;
+			if (source->wtype != type)
+				source = awst::makeReinterpretCast(std::move(source), type, m_loc);
+			m_blk.scope.bindings.memoryAliases.set(decl.id(), std::move(source));
+			m_blk.builderCtx().appendEffectsTo(result);
+			return true;
 		}
 	}
 
@@ -452,113 +448,60 @@ bool SolVariableDeclaration::tryBlobOffsetBinding(
 		&& builder::memoryUsesBlob(type))
 	{
 		std::string offN = "__blobagg_off_" + std::to_string(decl.id());
+		m_blk.builderCtx().appendEffectsTo(result);
 		result.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
 			builder::TypeCoercion::implicitNumericCast(
 				std::move(value), awst::WType::uint64Type(), m_loc),
 			m_loc));
 		m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
-		m_blk.builderCtx().appendEffectsTo(result);
 		return true;
 	}
 
 	return false;
 }
 
-bool SolVariableDeclaration::tryAsmAggregateInit(
-	VariableDeclaration const& decl,
-	Expression const* initialValue,
-	std::shared_ptr<awst::Expression>& value,
-	awst::WType const* type,
+bool SolVariableDeclaration::tryAsmBytesAllocation(
+	VariableDeclaration const& decl, Expression const* initialValue,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
-	// Memory aggregate used in inline assembly: materialise it in the shared
-	// scratch blob using Solidity's EVM memory layout and bind its base offset.
-	if (initialValue
-		&& decl.referenceLocation() == VariableDeclaration::Location::Memory
-		&& m_blk.scope.bindings.assemblyAggregates.contains(decl.id()))
-	{
-		FunctionCall const* newCall = nullptr;
-		if (auto const* fc = dynamic_cast<FunctionCall const*>(initialValue))
-			if (dynamic_cast<NewExpression const*>(&fc->expression()))
-				newCall = fc;
-		// Any non-`new` initializer whose aggregate is read as a Yul memory
-		// pointer must be spilled into the shared EVM-layout blob. This applies
-		// equally to abi.encode*, calls, casts, and arbitrary expressions; the
-		// scanner already excludes the intentional whole-assignment bridge.
-		// Reuse the previously-built value so side effects run exactly once.
-		if (!newCall)
-		{
-			auto loc2 = m_blk.makeLoc(decl.location());
-			if (!value)
-				return true;
-			m_blk.builderCtx().appendEffectsTo(result);
-			std::string offN = "__blobagg_off_" + std::to_string(decl.id());
-			if (builder::emitBlobBackValue(m_blk.typeMapper(), decl.type(),
-					type, std::move(value), offN,
-					static_cast<int>(decl.id()), loc2, result))
-				m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
-			return true;
-		}
-		if (newCall)
-		{
-			using AB = builder::AssemblyBuilder;
-			std::string offN = "__blobagg_off_" + std::to_string(decl.id());
-			// Dynamic bytes/string (`new bytes(n)` / `new string(n)`): the OZ
-			// Strings.toString buffer idiom. Blob-alloc with a runtime length
-			// word so `add(buf,32)` points at the data and a value-read
-			// materialises [len][data].
-			auto const* at = dynamic_cast<ArrayType const*>(decl.type());
-			if (at && at->isByteArrayOrString() && !newCall->arguments().empty())
-			{
-				auto lenU64 = builder::TypeCoercion::implicitNumericCast(
-					m_blk.builderCtx().buildExpr(*newCall->arguments()[0]),
-					awst::WType::uint64Type(), m_loc);
-				for (auto& s: AB::emitBytesBlobAlloc(
-						m_blk.typeMapper(),
-						std::move(lenU64), offN, static_cast<int>(decl.id()), m_loc))
-					result.push_back(std::move(s));
-				m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
-				m_blk.builderCtx().appendEffectsTo(result);
-				return true;
-			}
-			// All non-bytes arrays use the recursive EVM-memory writer. Besides
-			// the root length/slots, it allocates every reference child and
-			// writes its pointer, so `new S[](n)`, `new T[][](n)`, and deeper
-			// shapes need no allocation-specific cases here.
-			if (at && !at->isByteArrayOrString())
-			{
-				auto loc2 = m_blk.makeLoc(decl.location());
-				// A runtime-sized `new T[](n)` constructs its native array in
-				// queued pre-effects.  Those must precede the recursive spill;
-				// otherwise the writer reads the generated array local before it
-				// has been initialised.
-				m_blk.builderCtx().appendEffectsTo(result);
-				if (builder::emitBlobBackValue(m_blk.typeMapper(), decl.type(),
-						type, std::move(value), offN,
-						static_cast<int>(decl.id()), loc2, result))
-					m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
-				return true;
-			}
-			result.push_back(awst::makeAssignmentStatement(
-				awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
-				awst::makeExtractUInt64(awst::makeLoadSlot(
-					m_blk.typeMapper().profile().scratchLayout.memoryFirst(), m_loc),
-					awst::makeIntegerConstant("88", m_loc), m_loc),
-				m_loc));
-			int sz = builder::computeEncodedElementSize(type).fixedBytes<int>().value_or(0);
-			if (sz > 0)
-				for (auto& s: AB::emitFreeMemoryBump(
-						m_blk.typeMapper().profile().scratchLayout, sz, m_loc,
-						static_cast<int>(decl.id())))
-					result.push_back(std::move(s));
-			m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
-			m_blk.builderCtx().appendEffectsTo(result);
-			return true;
-		}
-	}
+	if (!initialValue || decl.referenceLocation() != VariableDeclaration::Location::Memory
+		|| !m_blk.scope.bindings.assemblyAggregates.contains(decl.id())) return false;
+	auto const* array = dynamic_cast<ArrayType const*>(decl.type());
+	auto const* call = dynamic_cast<FunctionCall const*>(initialValue);
+	if (!array || !array->isByteArrayOrString() || !call
+		|| !dynamic_cast<NewExpression const*>(&call->expression())) return false;
 
-	return false;
+	// Decide the representation before lowering new bytes/string(n): only the
+	// length is needed for blob allocation. Lower it once, including write-backs.
+	auto& bc = m_blk.builderCtx();
+	auto length = TypeCoercion::implicitNumericCast(
+		bc.pinIfWriteBacks(bc.lower(*call->arguments().front(), false), m_loc),
+		awst::WType::uint64Type(), m_loc);
+	bc.appendEffectsTo(result);
+	std::string offset = "__blobagg_off_" + std::to_string(decl.id());
+	for (auto& statement: AssemblyBuilder::emitBytesBlobAlloc(
+		m_blk.typeMapper(), std::move(length), offset, static_cast<int>(decl.id()), m_loc))
+		result.push_back(std::move(statement));
+	m_blk.scope.bindings.blobAggregates.set(decl.id(), offset);
+	return true;
+}
+
+bool SolVariableDeclaration::tryAsmAggregateInit(
+	VariableDeclaration const& decl, Expression const* initialValue,
+	std::shared_ptr<awst::Expression>& value, awst::WType const* type,
+	std::vector<std::shared_ptr<awst::Statement>>& result)
+{
+	if (!initialValue || decl.referenceLocation() != VariableDeclaration::Location::Memory
+		|| !m_blk.scope.bindings.assemblyAggregates.contains(decl.id())) return false;
+	// Calls, casts and new non-bytes arrays all use the recursive EVM-memory
+	// writer. Its input was already lowered once; prerequisites precede the spill.
+	m_blk.builderCtx().appendEffectsTo(result);
+	std::string offset = "__blobagg_off_" + std::to_string(decl.id());
+	if (emitBlobBackValue(m_blk.typeMapper(), decl.type(), type, std::move(value),
+		offset, static_cast<int>(decl.id()), m_blk.makeLoc(decl.location()), result))
+		m_blk.scope.bindings.blobAggregates.set(decl.id(), offset);
+	return true;
 }
 
 /// Default binding: `target = value`, with the fresh-memory FMP bump for uninitialised `T memory t;` (blob-backed >4KB locals bind …
@@ -621,7 +564,9 @@ void SolVariableDeclaration::buildTupleDestructuring(
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
 	auto const& declarations = m_node.declarations();
-	auto rhsExpr = m_blk.builderCtx().buildExpr(*initialValue);
+	auto rhsExpr = m_blk.builderCtx().pinIfWriteBacks(
+		m_blk.builderCtx().lower(*initialValue, false), m_loc);
+	if (!rhsExpr) return;
 	m_blk.builderCtx().appendEffectsTo(result);
 
 	auto const* tupleType = rhsExpr->wtype;
@@ -636,6 +581,9 @@ void SolVariableDeclaration::buildTupleDestructuring(
 	auto const* rhsSolTuple = dynamic_cast<solidity::frontend::TupleType const*>(
 		initialValue->annotation().type);
 	auto const* wtupleType = dynamic_cast<awst::WTuple const*>(tupleType);
+	solAssert(rhsSolTuple && rhsSolTuple->components().size() == declarations.size()
+		&& wtupleType && wtupleType->types().size() == declarations.size(),
+		"tuple initializer shape changed during lowering");
 
 	for (size_t i = 0; i < declarations.size(); ++i)
 	{
@@ -647,7 +595,8 @@ void SolVariableDeclaration::buildTupleDestructuring(
 		// it by the mapped aggregate mislabeled the var (an ARC4Struct
 		// wtype puya then failed to even deserialize) and broke every
 		// `(, S storage y, ) = g()` read.
-		bool slotHandle = m_blk.typeMapper().profile().evmStorageLayout
+		bool slotHandle = (m_blk.typeMapper().profile().evmStorageLayout
+				|| wtupleType->types()[i] == awst::WType::biguintType())
 			&& decl.referenceLocation()
 				== solidity::frontend::VariableDeclaration::Location::Storage;
 		if (slotHandle)
@@ -658,30 +607,24 @@ void SolVariableDeclaration::buildTupleDestructuring(
 				m_blk.makeLoc(decl.location())));
 		}
 
-		// Shadow-safe name: `uint a=100; { (uint a,)=f(); } return a;`
-		// Storage handles use the same declaration binding as ordinary locals.
-		auto target = awst::makeVarExpression(
-			m_blk.scope.awstVarName(decl), type,
-			m_blk.makeLoc(decl.location()));
-
 		// Extract with the slot's ACTUAL wtype (the RHS element type), then
 		// coerce to the declared type. Extracting with the declared type
 		// mislabels the slot and skipped all coercion — `(int128 a,) =
 		// (int8Val,)` bound the raw uint64-backed 0xFF as +255 instead of
 		// sign-extending to -1.
-		auto const* slotType = (wtupleType && i < wtupleType->types().size())
-			? wtupleType->types()[i] : type;
+		auto const* slotType = wtupleType->types()[i];
 		auto baseRef = awst::makeVarExpression(tempName, tupleType, m_loc);
 		std::shared_ptr<awst::Expression> itemExpr = awst::makeTupleItem(
 			std::move(baseRef), static_cast<int>(i), slotType, m_loc);
 
-		itemExpr = builder::TypeCoercion::coerceForAssignment(std::move(itemExpr), type, m_loc);
-		if (rhsSolTuple && i < rhsSolTuple->components().size())
-			itemExpr = builder::TypeCoercion::signExtendSignedWiden(
-				std::move(itemExpr), rhsSolTuple->components()[i], decl.type(), m_loc);
-
-		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(itemExpr), m_loc);
-		result.push_back(assign);
+		auto const* sourceType = rhsSolTuple->components().at(i);
+		itemExpr = convertInitValue(decl, std::move(itemExpr), sourceType, type);
+		// Literal tuple components retain useful alias provenance. Opaque calls
+		// still pass a non-null initializer, without rebuilding the call.
+		auto const* source = initialValue;
+		if (auto const* tuple = dynamic_cast<TupleExpression const*>(initialValue);
+			tuple && !tuple->isInlineArray()) source = tuple->components().at(i).get();
+		bindValue(decl, source, std::move(itemExpr), type, result);
 	}
 }
 
@@ -696,33 +639,16 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		auto const& decl = *declarations[0];
 		auto* type = m_blk.typeMapper().map(decl.type());
 
-		auto target = awst::makeVarExpression(m_blk.scope.awstVarName(decl), type, m_blk.makeLoc(decl.location()));
-
 		if (tryCalldataSlicePointerBinding(decl, initialValue, result))
 			return result;
 
 		if (trySlotModeStoragePointer(decl, initialValue, result))
 			return result;
 
-		bool earlyExit = false;
-		auto value = buildInitValue(decl, initialValue, type, target, earlyExit);
-		if (earlyExit)
+		if (tryAsmBytesAllocation(decl, initialValue, result))
 			return result;
-
-		if (initialValue && decl.referenceLocation() == VariableDeclaration::Location::Storage)
-			if (tryStorageAliasBinding(decl, value, initialValue, result))
-				return result;
-
-		if (tryMemoryAliasBinding(decl, initialValue, value, type, result))
-			return result;
-
-		if (tryBlobOffsetBinding(decl, initialValue, value, type, result))
-			return result;
-
-		if (tryAsmAggregateInit(decl, initialValue, value, type, result))
-			return result;
-
-		emitDefaultDeclaration(decl, std::move(target), std::move(value), type, initialValue, result);
+		auto value = buildInitValue(decl, initialValue, type);
+		bindValue(decl, initialValue, std::move(value), type, result);
 	}
 	else if (declarations.size() > 1 && initialValue)
 		buildTupleDestructuring(initialValue, result);

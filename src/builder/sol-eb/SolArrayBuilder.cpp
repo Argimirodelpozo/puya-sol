@@ -93,17 +93,10 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 	auto e = awst::makeIndexExpression(std::move(base), std::move(index), elemType, _loc);
 
 	auto* expectedType = m_ctx.typeMapper.map(m_arrayType->baseType());
-	// NB: ARC4Struct is intentionally NOT decoded — a struct element is already the
-	// native form (field access reads it directly). For non-recursive struct arrays
-	// elemType == expectedType so this never fired; for a recursive struct array the
-	// element is a recursion-projection (elemType=`S__rec` != full S) and decoding it
-	// to the full struct is both invalid in an lvalue (`s.x[i].v = …`) and semantically
-	// wrong — the projection carries the fields needed for the access.
-	bool const aggregateProjection =
-		elemType->kind() == awst::WTypeKind::ARC4Struct
-		|| elemType->kind() == awst::WTypeKind::ARC4Tuple;
+	// Aggregate elements already have a usable ARC4 representation, including
+	// finite recursive projections; decoding to the full type would lose the place.
 	bool needsDecode = !awst::structurallyEquivalent(elemType, expectedType)
-		&& builder::isArc4EncodedType(elemType) && !aggregateProjection;
+		&& builder::isArc4EncodedType(elemType) && !builder::isArc4EncodedType(expectedType);
 
 	std::shared_ptr<awst::Expression> result = std::move(e);
 	bool signExtendElem = false;

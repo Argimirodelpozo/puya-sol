@@ -302,24 +302,16 @@ struct FunctionContext
 	FunctionContext& operator=(FunctionContext&&) = delete;
 };
 
-/// Control-flow targets for continue inside a loop.
-/// `forLoopPost` is spliced before LoopContinue (the `i++` step).
-/// `doWhileCondBreak` is the bottom-of-body condition for do/while.
-/// At most one is set. Referenced by BlockContext::enclosingLoop.
+/// Fresh lowering of the for-post or do/while test, before continue and at
+/// fallthrough. Each expansion owns its AWST nodes and SingleEvaluation IDs.
 struct LoopContext
 {
-	std::shared_ptr<awst::Statement> forLoopPost;
-	std::shared_ptr<awst::Statement> doWhileCondBreak;
+	std::function<std::shared_ptr<awst::Statement>()> continuePrefix;
 };
 
 /// Block-local control flow and a flat view of the enclosing function.
 struct BlockContext
 {
-	/// Set when a statement in this block unconditionally halts (assembly
-	/// return/revert). SolBlock skips remaining statements to avoid puya's
-	/// "unreachable code" error.
-	bool terminated = false;
-
 	FunctionContext& fn;
 	Context scope;
 	LoopContext const* enclosingLoop = nullptr;
@@ -337,7 +329,7 @@ struct BlockContext
 		  placeholderBody(std::move(_placeholderBody))
 	{}
 
-	/// A child inherits lexical state but starts with no terminating statement.
+	/// A child inherits lexical state and shares declaration-identity bindings.
 	BlockContext nest() const
 	{
 		return {fn, enclosingLoop, placeholderBody, scope.unchecked};

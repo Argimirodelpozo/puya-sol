@@ -209,9 +209,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 		if (!ia->indexExpression()) return nullptr;
 		auto parent = resolveBlobOffset(_ctx, _scope, ia->baseExpression(), _loc);
 		if (!parent) return nullptr;
-		auto idx = _ctx.buildExpr(*ia->indexExpression());
-		idx = builder::TypeCoercion::implicitNumericCast(
-			std::move(idx), awst::WType::uint64Type(), _loc);
+		auto idx = _ctx.pinIfWriteBacks(_ctx.lower(*ia->indexExpression(), false), _loc);
+		idx = builder::TypeCoercion::checkedIndexToUint64(
+			_ctx.preEffects(), std::move(idx), _loc);
 		auto const* baseArr = dynamic_cast<ArrayType const*>(
 			ia->baseExpression().annotation().type);
 		if (!baseArr) return nullptr;
@@ -291,179 +291,68 @@ SolIndexRangeAccess::SolIndexRangeAccess(
 {
 }
 
+SolIndexRangeAccess::Bounds SolIndexRangeAccess::resolveBounds(
+	eb::ContractContext& ctx, IndexRangeAccess const& range,
+	std::shared_ptr<awst::Expression> length, awst::SourceLocation const& loc)
+{
+	auto bound = [&](Expression const* expression, std::shared_ptr<awst::Expression> fallback) {
+		auto value = expression ? ctx.pinIfWriteBacks(ctx.lower(*expression, false), loc) : fallback;
+		value = TypeCoercion::checkedIndexToUint64(ctx.preEffects(), std::move(value), loc);
+		return ctx.emitSequencedOperand({}, std::move(value), true, loc);
+	};
+	auto start = bound(range.startExpression(), awst::makeZero(loc));
+	auto end = bound(range.endExpression(), length);
+	ctx.queuePreExpression(awst::makeAssert(awst::makeNumericCompare(
+		start, awst::NumericComparison::Lte, end, loc), loc, "slice: start > end"), loc);
+	ctx.queuePreExpression(awst::makeAssert(awst::makeNumericCompare(
+		end, awst::NumericComparison::Lte, length, loc), loc, "slice: end > length"), loc);
+	return {std::move(start), std::move(end)};
+}
+
 std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 {
-	// T2: the slice lowering references the base several times (length assert,
-	// start/end scaling, the substring itself) — pin so a call-valued base
-	// evaluates once. Pure leaves pass through.
-	auto base = awst::makeEvalOnce(buildExpr(m_rangeAccess.baseExpression()), m_loc);
-
-	std::shared_ptr<awst::Expression> start;
-	if (m_rangeAccess.startExpression())
-		start = buildExpr(*m_rangeAccess.startExpression());
-	else
-	{
-		auto zero = awst::makeZero(m_loc);
-		start = std::move(zero);
-	}
-
-	std::shared_ptr<awst::Expression> end;
-	if (m_rangeAccess.endExpression())
-		end = buildExpr(*m_rangeAccess.endExpression());
-	else
-	{
-		// Default end for substring3: byte-count via `len` intrinsic,
-		// preserving pre-existing full-slice semantics.
-		end = awst::makeLen(base, m_loc);
-	}
-
-	start = builder::TypeCoercion::implicitNumericCast(
-		std::move(start), awst::WType::uint64Type(), m_loc);
-	end = builder::TypeCoercion::implicitNumericCast(
-		std::move(end), awst::WType::uint64Type(), m_loc);
-
-	// Bounds checks for explicit `arr[start:end]` — Solidity reverts on
-	// start > end or end > arr.length even if the slice result is unused.
-	// Stash bounds in temps and emit asserts via pre-effects so
-	// they survive DCE when the slice expression is discarded. Only applied
-	// when the user supplied at least one explicit bound; default `[:]`
-	// slices are by construction in-range and keep the old semantics.
-	bool hasExplicitBound
-		= m_rangeAccess.startExpression() || m_rangeAccess.endExpression();
-
-	if (hasExplicitBound)
-	{
-		std::string idSuffix = std::to_string(m_rangeAccess.id());
-		std::string startVarName = "__slice_start_" + idSuffix;
-		std::string endVarName = "__slice_end_" + idSuffix;
-
-		auto startVar = awst::makeVarExpression(startVarName, awst::WType::uint64Type(), m_loc);
-		m_ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(startVar, start, m_loc));
-
-		auto endVar = awst::makeVarExpression(endVarName, awst::WType::uint64Type(), m_loc);
-		m_ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(endVar, end, m_loc));
-
-		// Every path below, including the generic substring fallback, must use
-		// the bound values captured above.  Keeping the original expressions
-		// here made side-effecting bounds execute once for the checks and again
-		// for the actual slice.
-		start = awst::makeVarExpression(
-			startVarName, awst::WType::uint64Type(), m_loc);
-		end = awst::makeVarExpression(
-			endVarName, awst::WType::uint64Type(), m_loc);
-
-		// assert(start <= end)
-		{
-			auto cmp = awst::makeNumericCompare(
-				awst::makeVarExpression(startVarName, awst::WType::uint64Type(), m_loc),
-				awst::NumericComparison::Lte,
-				awst::makeVarExpression(endVarName, awst::WType::uint64Type(), m_loc),
-				m_loc);
-			m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-				awst::makeAssert(std::move(cmp), m_loc, "slice: start > end"), m_loc));
-		}
-
-		// assert(end <= base.length) — only for base shapes that support a
-		// length query. Inner slices that fell back to bytes-of-unknown-shape
-		// skip this check.
-		auto const* bt = base->wtype;
-		std::shared_ptr<awst::Expression> lenExpr;
-		if (dynamic_cast<awst::ReferenceArray const*>(bt)
-			|| dynamic_cast<awst::ARC4DynamicArray const*>(bt)
-			|| dynamic_cast<awst::ARC4StaticArray const*>(bt))
-		{
-			lenExpr = awst::makeArrayLength(base, awst::WType::uint64Type(), m_loc);
-		}
-
-		if (lenExpr)
-		{
-			auto cmp = awst::makeNumericCompare(
-				awst::makeVarExpression(endVarName, awst::WType::uint64Type(), m_loc),
-				awst::NumericComparison::Lte,
-				std::move(lenExpr),
-				m_loc);
-			m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-				awst::makeAssert(std::move(cmp), m_loc, "slice: end > length"), m_loc));
-		}
-	}
-
+	auto base = m_ctx.emitSequencedOperand({},
+		m_ctx.pinIfWriteBacks(m_ctx.lower(m_rangeAccess.baseExpression(), false), m_loc), true, m_loc);
+	auto const* element = awst::arrayElementType(base->wtype);
+	auto length = element
+		? awst::makeArrayLength(base, awst::WType::uint64Type(), m_loc)
+		: std::shared_ptr<awst::Expression>(awst::makeLen(base, m_loc));
+	auto [start, end] = resolveBounds(m_ctx, m_rangeAccess, length, m_loc);
 	auto const* resultType = m_ctx.typeMapper.map(m_rangeAccess.annotation().type);
-
-	// For ARC4-encoded array bases (ARC4DynamicArray / ARC4StaticArray) with
-	// fixed-size elements, `start`/`end` are ELEMENT indices — a raw
-	// substring3 would yield malformed bytes. Emit an arc4-aware slice:
-	// concat(uint16 BE (end - start), substring3(base, hdr + s*elem, hdr + e*elem)).
-	// Bytes/string slices fall through to substring3 below.
-	if (hasExplicitBound)
+	if (element)
 	{
-		awst::WType const* elemType = nullptr;
-		int64_t headerBytes = 0;
-		auto const* bt = base->wtype;
-		if (auto const* ad = dynamic_cast<awst::ARC4DynamicArray const*>(bt))
+		auto stride = computeEncodedElementSize(element).fixedBytes<int>();
+		if (stride && element != awst::WType::arc4BoolType())
 		{
-			elemType = ad->elementType();
-			headerBytes = 2;
-		}
-		else if (auto const* as = dynamic_cast<awst::ARC4StaticArray const*>(bt))
-		{
-			elemType = as->elementType();
-			headerBytes = 0;
-		}
-
-		int elemSize = elemType ? builder::computeEncodedElementSize(elemType).fixedBytes<int>().value_or(0) : 0;
-
-		if (elemSize > 0)
-		{
-			std::string idSuffix = std::to_string(m_rangeAccess.id());
-			std::string startVarName = "__slice_start_" + idSuffix;
-			std::string endVarName = "__slice_end_" + idSuffix;
-
-			auto mkStart = [&]() {
-				return awst::makeVarExpression(startVarName, awst::WType::uint64Type(), m_loc);
+			int header = base->wtype->kind() == awst::WTypeKind::ARC4DynamicArray ? 2 : 0;
+			auto offset = [&](auto index) {
+				return awst::makeUInt64BinOp(awst::makeUInt64BinOp(index,
+					awst::UInt64BinaryOperator::Mult, awst::makeIntegerConstant(*stride, m_loc), m_loc),
+					awst::UInt64BinaryOperator::Add, awst::makeIntegerConstant(header, m_loc), m_loc);
 			};
-			auto mkEnd = [&]() {
-				return awst::makeVarExpression(endVarName, awst::WType::uint64Type(), m_loc);
-			};
-
-			auto scaled = [&](std::shared_ptr<awst::Expression> idx) {
-				auto scale = awst::makeUInt64BinOp(
-					std::move(idx),
-					awst::UInt64BinaryOperator::Mult,
-					awst::makeIntegerConstant(elemSize, m_loc),
-					m_loc);
-				if (headerBytes > 0)
-				{
-					return awst::makeUInt64BinOp(
-						std::move(scale),
-						awst::UInt64BinaryOperator::Add,
-						awst::makeIntegerConstant(headerBytes, m_loc),
-						m_loc);
-				}
-				return scale;
-			};
-
-			auto byteStart = scaled(mkStart());
-			auto byteEnd = scaled(mkEnd());
-
-			auto sub = awst::makeIntrinsicCall("substring3", awst::WType::bytesType(), m_loc);
-			sub->stackArgs.push_back(std::move(base));
-			sub->stackArgs.push_back(std::move(byteStart));
-			sub->stackArgs.push_back(std::move(byteEnd));
-
-			auto diff = awst::makeUInt64BinOp(
-				mkEnd(), awst::UInt64BinaryOperator::Sub, mkStart(), m_loc);
-			auto lenHdr = awst::makeUInt16Bytes(std::move(diff), m_loc);
-			auto cat = awst::makeConcat(std::move(lenHdr), std::move(sub), m_loc);
-			return awst::makeReinterpretCast(std::move(cat), resultType, m_loc);
+			auto bytes = awst::makeIntrinsicCall("substring3", awst::WType::bytesType(), m_loc);
+			bytes->stackArgs = {awst::makeAsBytes(base, m_loc), offset(start), offset(end)};
+			auto count = awst::makeUInt64BinOp(end, awst::UInt64BinaryOperator::Sub, start, m_loc);
+			return awst::makeReinterpretCast(awst::makeConcat(
+				awst::makeUInt16Bytes(std::move(count), m_loc), bytes, m_loc), resultType, m_loc);
 		}
+		// ARC4 bool arrays are bit-packed; variable-size elements have offsets.
+		// Let the typed array operations handle those encodings instead of slicing bytes.
+		auto result = m_ctx.emitSequencedOperand({}, awst::makeNewArray(resultType, m_loc), true, m_loc);
+		auto index = awst::makeVarExpression("__slice_copy_" + std::to_string(m_rangeAccess.id()),
+			awst::WType::uint64Type(), m_loc);
+		m_ctx.queuePreEffect(awst::makeAssignmentStatement(index, start, m_loc));
+		auto body = awst::makeBlock(m_loc);
+		body->body.push_back(awst::makeExpressionStatement(awst::makeArrayPushOne(
+			result, awst::makeIndexExpression(base, index, element, m_loc), resultType, m_loc), m_loc));
+		body->body.push_back(awst::makeAssignmentStatement(index, awst::makeUInt64BinOp(index,
+			awst::UInt64BinaryOperator::Add, awst::makeOne(m_loc), m_loc), m_loc));
+		m_ctx.queuePreEffect(awst::makeWhileLoop(awst::makeNumericCompare(
+			index, awst::NumericComparison::Lt, end, m_loc), body, m_loc));
+		return result;
 	}
-
 	auto slice = awst::makeIntrinsicCall("substring3", resultType, m_loc);
-	slice->stackArgs.push_back(std::move(base));
-	slice->stackArgs.push_back(std::move(start));
-	slice->stackArgs.push_back(std::move(end));
+	slice->stackArgs = {base, start, end};
 	return slice;
 }
 

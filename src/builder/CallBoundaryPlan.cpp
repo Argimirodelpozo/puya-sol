@@ -5,6 +5,7 @@
 #include "builder/abi/EvmAbiDecode.h"
 #include "Logger.h"
 #include "awst/Termination.hpp"
+#include "awst/TupleValue.h"
 
 namespace puyasol::builder
 {
@@ -33,7 +34,11 @@ CallBoundaryPlan const& TypeMapper::callBoundaryPlan(
 		parameter.name = declaration.name().empty() ? "_param" + std::to_string(pi) : declaration.name();
 		bool const asmSlot = analysis().asmSlotReferenceDeclarations.contains(declaration.id());
 		if (asmSlot) plan.asmSlotParams.insert(pi);
-		parameter.passing = classifyRefParamPassing(*this, declaration, asmSlot);
+		bool const returnedSlots = function.returnParameters().size() > 1
+			&& storageRefReturnUsesSlot(&function, analysis());
+		parameter.passing = returnedSlots
+			&& declaration.referenceLocation() == VariableDeclaration::Location::Storage
+			? RefParamPassing::SlotHandle : classifyRefParamPassing(*this, declaration, asmSlot);
 		parameter.type = refParamWType(parameter.passing, *this, declaration);
 		parameter.wireType = parameter.type;
 		switch (parameter.passing)
@@ -60,29 +65,36 @@ CallBoundaryPlan const& TypeMapper::callBoundaryPlan(
 		// ABI entries and function-pointer adapters share this recipe, including
 		// the declared underlying width of a user-defined value type.
 		if (function.isPartOfExternalInterface())
-		{
-			if (parameter.type == awst::WType::biguintType())
-			{
-				auto integer = SolIntType::fromSol(declaration.type());
-				unsigned bits = integer ? integer->bits : 256;
-				parameter.wireType = createType<awst::ARC4UIntN>(static_cast<int>(bits));
-				if (integer && integer->isSigned && bits > 64 && bits < 256)
-					parameter.signedDecodeBits = bits;
-			}
-			else if (!assembly && parameter.type)
-			{
-				auto kind = parameter.type->kind();
-				if (kind == awst::WTypeKind::ReferenceArray || kind == awst::WTypeKind::ARC4StaticArray
-					|| kind == awst::WTypeKind::ARC4DynamicArray || kind == awst::WTypeKind::WTuple
-					|| (kind == awst::WTypeKind::Bytes && dynamic_cast<FunctionType const*>(declaration.type())))
-					parameter.wireType = mapToARC4Type(parameter.type);
-			}
-		}
+			parameter.setAbiWireType(*this, declaration.type(), assembly);
 		plan.parameters.push_back(std::move(parameter));
 	}
 	plan.writeBackParams = plan.storageWriteBackParams;
 	plan.writeBackParams.insert(plan.writeBackParams.end(), plan.memoryWriteBackParams.begin(), plan.memoryWriteBackParams.end());
 	return m_callPlans.emplace(key, std::move(plan)).first->second;
+}
+
+void CallParameterPlan::setAbiWireType(
+	TypeMapper& types, solidity::frontend::Type const* solType, bool assembly)
+{
+	wireType = type;
+	signedDecodeBits = 0;
+	if (type == awst::WType::biguintType())
+	{
+		auto integer = SolIntType::fromSol(solType);
+		unsigned bits = integer ? integer->bits : 256;
+		wireType = types.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+		if (integer && integer->isSigned && bits > 64 && bits < 256)
+			signedDecodeBits = bits;
+	}
+	else if (!assembly && type)
+	{
+		auto kind = type->kind();
+		if (kind == awst::WTypeKind::ReferenceArray || kind == awst::WTypeKind::ARC4StaticArray
+			|| kind == awst::WTypeKind::ARC4DynamicArray || kind == awst::WTypeKind::WTuple
+			|| (kind == awst::WTypeKind::Bytes
+				&& dynamic_cast<solidity::frontend::FunctionType const*>(solType)))
+			wireType = types.mapToARC4Type(type);
+	}
 }
 
 awst::WType const* CallBoundaryPlan::augmentReturn(TypeMapper& mapper, awst::WType const* original) const
@@ -107,17 +119,12 @@ void CallBoundaryPlan::augmentReturns(awst::Block& body, awst::WType const* augm
 			return;
 		}
 		auto tuple = awst::makeTupleExpression(augmented, loc);
-		if (auto const* literal = dynamic_cast<awst::TupleExpression const*>(statement.value.get()))
-			tuple->items = literal->items;
-		else if (statement.value)
+		if (statement.value)
 		{
-			if (auto const* original = dynamic_cast<awst::WTuple const*>(statement.value->wtype))
-			{
-				auto value = awst::makeEvalOnce(std::move(statement.value), loc);
-				for (size_t i = 0; i < original->types().size(); ++i)
-					tuple->items.push_back(awst::makeTupleItem(value, static_cast<int>(i), original->types()[i], loc));
-			}
-			else tuple->items.push_back(std::move(statement.value));
+			if (dynamic_cast<awst::WTuple const*>(statement.value->wtype))
+				tuple->items = awst::tupleItems(std::move(statement.value), loc);
+			else
+				tuple->items.push_back(std::move(statement.value));
 		}
 		for (auto pi: writeBackParams)
 			tuple->items.push_back(awst::makeVarExpression(parameters[pi].name, parameters[pi].type, loc));
@@ -140,14 +147,14 @@ std::shared_ptr<awst::Expression> decodeCallResult(
 	std::shared_ptr<awst::Expression> value, awst::WType const* native, awst::SourceLocation const& loc)
 {
 	if (!value || awst::structurallyEquivalent(value->wtype, native)) return value;
-	if (auto const* wire = dynamic_cast<awst::WTuple const*>(value->wtype))
+	if (dynamic_cast<awst::WTuple const*>(value->wtype))
 		if (auto const* tuple = dynamic_cast<awst::WTuple const*>(native))
 		{
-			value = awst::makeEvalOnce(std::move(value), loc);
+			auto items = awst::tupleItems(std::move(value), loc);
 			auto result = awst::makeTupleExpression(native, loc);
 			for (size_t i = 0; i < tuple->types().size(); ++i)
 				result->items.push_back(decodeCallResult(
-					awst::makeTupleItem(value, static_cast<int>(i), wire->types().at(i), loc), tuple->types()[i], loc));
+					std::move(items.at(i)), tuple->types()[i], loc));
 			return result;
 		}
 	if (dynamic_cast<awst::ARC4UIntN const*>(value->wtype))

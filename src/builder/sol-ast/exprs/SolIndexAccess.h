@@ -75,6 +75,13 @@ public:
 	SolIndexRangeAccess(eb::ContractContext& _ctx, solidity::frontend::IndexRangeAccess const& _node);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
+	struct Bounds { std::shared_ptr<awst::Expression> start, end; };
+	/// Evaluate bounds once, reject wide indexes before narrowing, and assert
+	/// solc's start <= end <= parent length even when the result is discarded.
+	static Bounds resolveBounds(eb::ContractContext& _ctx,
+		solidity::frontend::IndexRangeAccess const& _range,
+		std::shared_ptr<awst::Expression> _length, awst::SourceLocation const& _loc);
+
 private:
 	solidity::frontend::IndexRangeAccess const& m_rangeAccess;
 };

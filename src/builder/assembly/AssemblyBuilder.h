@@ -142,9 +142,6 @@ public:
 		m_selectorRoutes = std::move(_routes);
 	}
 
-	/// True when the block emitted an unconditional halt at top level
-	/// (branch-local halts not counted — translateSwitch/If save+restore the flag).
-	bool haltEmitted() const { return m_haltEmitted; }
 	/// When true, EVM `return(o,s)` lowers as a program halt (internal/private frame).
 	/// For public/external functions it lowers as a subroutine return (caller continues).
 	void setFrameIsProgram(bool _v) { m_frameIsProgram = _v; }
