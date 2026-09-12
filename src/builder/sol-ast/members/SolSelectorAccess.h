@@ -13,13 +13,11 @@ public:
 	using SolMemberAccess::SolMemberAccess;
 	std::shared_ptr<awst::Expression> toAwst() override;
 
-private:
-	/// Policy-selected selector as bytes4.
-	std::shared_ptr<awst::Expression> makeSelectorExpr(std::string const& _sig);
-
-	/// Resolve canonical sig from a sub-expression (for ternary distribution).
-	std::string resolveSignature(solidity::frontend::Expression const& _expr);
-	std::string canonicalSelectorSig(solidity::frontend::FunctionType const& _ft);
+	/// Project a selector while preserving receiver/options/branch effects.
+	/// abi.encodeCall always requests the canonical Solidity selector.
+	static std::shared_ptr<awst::Expression> selectorOf(
+		eb::ContractContext&, solidity::frontend::Expression const&, awst::WType const*,
+		awst::SourceLocation const&, bool canonical = false);
 };
 
 } // namespace puyasol::builder::sol_ast

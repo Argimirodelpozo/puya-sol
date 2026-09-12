@@ -31,7 +31,7 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
 	{
 		if (varDecl->isConstant() && varDecl->value())
-			return buildExpr(*varDecl->value());
+			return buildConstantValue(*varDecl);
 
 		// Non-constant state variable: Contract.stateVar → read from storage
 		if (varDecl->isStateVariable() && !varDecl->isConstant())

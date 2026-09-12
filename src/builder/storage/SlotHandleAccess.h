@@ -11,6 +11,7 @@
 #include "awst/Node.h"
 
 #include "builder/sol-types/SolcFwd.h"
+#include <libsolutil/Numeric.h>
 
 namespace puyasol::builder
 {
@@ -22,7 +23,7 @@ struct SlotHandleAccess
 	/// How elements of a fixed array lay out in EVM slots.
 	struct ElemLayout
 	{
-		unsigned strideSlots = 1;  ///< multi-slot elems: slots per element (perSlot==1)
+		solidity::u256 strideSlots = 1; ///< solc logical stride, not a materialized size
 		unsigned perSlot = 1;      ///< packed elems: elements per slot (strideSlots==1)
 		unsigned size = 32;        ///< element byte size within its slot
 	};
@@ -89,25 +90,6 @@ struct SlotHandleAccess
 		solidity::frontend::StructType const* _structType,
 		awst::ARC4Struct const* _structWType);
 
-	/// Struct element write: `_structVal` (ARC4Struct-typed value) split into
-	/// per-slot words at `_elemBaseSlot` (whole element overwritten, gaps zero —
-	/// EVM struct assignment writes full slots).
-	static void writeStructElem(
-		std::vector<std::shared_ptr<awst::Statement>>& _out,
-		std::shared_ptr<awst::Expression> _elemBaseSlot,
-		solidity::frontend::StructType const* _structType,
-		awst::ARC4Struct const* _structWType,
-		std::shared_ptr<awst::Expression> _structVal,
-		awst::SourceLocation const& _loc);
-
-	/// Struct element read → NewStruct value (per-slot words bound to temps via
-	/// _preOut, fields decoded at compile-time offsets).
-	static std::shared_ptr<awst::Expression> readStructElem(
-		std::vector<std::shared_ptr<awst::Statement>>& _preOut,
-		std::shared_ptr<awst::Expression> _elemBaseSlot,
-		solidity::frontend::StructType const* _structType,
-		awst::ARC4Struct const* _structWType,
-		awst::SourceLocation const& _loc);
 };
 
 } // namespace puyasol::builder

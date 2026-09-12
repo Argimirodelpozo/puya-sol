@@ -49,6 +49,28 @@ int main()
 	awst::ARC4Tuple boolsAndString(fields);
 	require(arc4DefaultEncoding(&boolsAndString) == std::vector<uint8_t>({0, 0, 0, 0, 5, 0, 0}),
 		"packed bool run or string tail offset is invalid");
+	std::vector<std::pair<std::string, awst::WType const*>> packedFields{{"tag", &byte}};
+	for (int i = 0; i < 9; ++i)
+		packedFields.emplace_back("flag" + std::to_string(i), awst::WType::arc4BoolType());
+	packedFields.emplace_back("value", &word);
+	packedFields.emplace_back("last", awst::WType::arc4BoolType());
+	awst::ARC4Struct packedStruct("Packed", packedFields);
+	require(arc4FieldBitOffsets(packedStruct) == std::vector<uint64_t>(
+		{0, 8, 9, 10, 11, 12, 13, 14, 15, 16, 24, 280}),
+		"struct field offsets disagreed with packed bool runs");
+	awst::ARC4Struct emptyStruct("Empty", {});
+	require(arc4FieldBitOffsets(emptyStruct) == std::vector<uint64_t>{},
+		"empty struct layout is not fixed");
+	awst::ARC4Struct dynamicStruct("Dynamic", {{"values", &dynamic}});
+	require(!arc4FieldBitOffsets(dynamicStruct), "dynamic struct exposed fixed offsets");
+	try
+	{
+		awst::ARC4StaticArray hugeBytes(&byte, std::numeric_limits<int64_t>::max());
+		awst::ARC4Struct bitOverflow("Overflow", {{"bytes", &hugeBytes}, {"last", &byte}});
+		arc4FieldBitOffsets(bitOverflow);
+		require(false, "struct field bit offset overflow was not rejected");
+	}
+	catch (SizeError const&) {}
 	for (auto const* type: std::vector<awst::WType const*>{&word, &small, &boolRun, &empty,
 		&dynamic, &boolsAndString, awst::WType::stringType(), awst::WType::boolType()})
 	{

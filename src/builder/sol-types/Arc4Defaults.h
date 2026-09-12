@@ -44,6 +44,10 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 /// Fixed zero, dynamic, bit-packed, unsupported and overflow are distinct results.
 EncodedSize computeEncodedElementSize(awst::WType const* _type);
 
+/// Bit offsets of fixed aggregate fields. Consecutive bool fields share
+/// bytes; other fields start at the next byte. Dynamic layouts return null.
+std::optional<std::vector<uint64_t>> arc4FieldBitOffsets(awst::ARC4Struct const& _type);
+
 /// Single control point for "this memory aggregate lives in the scratch
 /// blob/region model (a uint64 (region,offset) pointer) rather than as an ARC4
 /// value". Currently true when the statically encoded size exceeds one 4-KiB

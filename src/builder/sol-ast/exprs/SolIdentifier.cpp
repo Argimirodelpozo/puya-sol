@@ -12,7 +12,6 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "builder/sol-types/ConversionPlan.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -107,21 +106,6 @@ std::shared_ptr<awst::Expression> tryStructRefParamValue(
 	auto boxExpr = awst::makeBoxValueExpression(std::move(boxKey), structType, loc);
 	return builder::StorageMapper::makeStateGetWithDefault(
 		std::move(boxExpr), structType, loc);
-}
-
-// Constants: inline the value. Immutables: DO NOT inline — the constructor
-// may mutate them (e.g. `int immutable x = 1; constructor() { x--; }`).
-// Caller guards isConstant() && value().
-std::shared_ptr<awst::Expression> buildConstantValue(
-	eb::ContractContext& ctx, VariableDeclaration const& varDecl)
-{
-	auto const& initializer = *varDecl.value();
-	auto value = ctx.buildExpr(initializer);
-	auto loc = value->sourceLocation;
-	return builder::ConversionPlan{
-		initializer.annotation().type, varDecl.type(),
-		ctx.typeMapper.map(varDecl.type()), builder::ConversionPlan::Context::Initialization
-	}.emit(std::move(value), loc, &ctx.preEffects());
 }
 
 // --evm-storage-layout: persistent state vars read from their EVM
@@ -223,10 +207,6 @@ std::shared_ptr<awst::Expression> buildStateVarRead(
 		return placeholder;
 	}
 
-	// Constants (redundant guard); immutables always read from state.
-	if (varDecl.isConstant() && varDecl.value())
-		return ctx.buildExpr(*varDecl.value());
-
 	return ctx.storageMapper.createStateRead(
 		binding.key, type, binding.kind, loc);
 }
@@ -324,7 +304,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 			return refValue;
 
 		if (varDecl->isConstant() && varDecl->value())
-			return buildConstantValue(m_ctx, *varDecl);
+			return buildConstantValue(*varDecl);
 
 		if (varDecl->isStateVariable())
 			return buildStateVarRead(m_ctx, m_scope, m_ident, *varDecl, name, m_loc);

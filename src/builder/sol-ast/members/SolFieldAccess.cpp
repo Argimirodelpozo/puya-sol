@@ -3,17 +3,15 @@
 
 #include "builder/sol-ast/members/SolFieldAccess.h"
 #include "builder/sol-ast/MappingPrefix.h"
+#include "builder/SolcFacts.h"
+#include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
-#include "builder/sol-types/Arc4Defaults.h"
-#include "builder/sol-types/SolIntType.h"
-#include "builder/storage/SlotHandleAccess.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "Logger.h"
-#include "awst/NameGen.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -22,81 +20,47 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 {
 	std::string member = memberName();
 
-	// --evm-storage-layout: struct-field reads rooted at a persistent state
-	// var resolve to their EVM word address (writes intercept in SolAssignment).
-	if (m_ctx.typeMapper.profile().evmStorageLayout
-		&& EvmSlotLowering::isStorageStateRef(m_memberAccess))
+	using namespace solidity::frontend;
+	if ((m_ctx.typeMapper.profile().evmStorageLayout && EvmSlotLowering::isStorageStateRef(m_memberAccess))
+		|| (!m_memberAccess.annotation().willBeWrittenTo
+			&& EvmSlotLowering::isSlotHandleRef(m_memberAccess, m_ctx, m_scope)))
 	{
 		EvmSlotLowering low(m_ctx, m_scope, m_loc);
 		auto addr = low.resolve(m_memberAccess);
-		if (!addr)
-			return nullptr;
-		auto const* resType = m_memberAccess.annotation().type;
-		return low.readAny(*addr, resType);
+		return addr ? low.readAny(*addr, m_solType) : nullptr;
 	}
 
-	// Explicit `.slot` handles use the same recursive address/type dispatch.
-	// Peeling the complete member/index chain here avoids duplicating packed,
-	// scalar, struct, and nested-array cases in this expression builder.
-	auto const* slotResultType = m_memberAccess.annotation().type;
-	if (!m_memberAccess.annotation().willBeWrittenTo
-		&& EvmSlotLowering::isSlotHandleRef(m_memberAccess, m_ctx, m_scope))
-	{
-		EvmSlotLowering low(m_ctx, m_scope, m_loc);
-		auto addr = low.resolve(m_memberAccess);
-		return addr ? low.readAny(*addr, slotResultType) : nullptr;
-	}
-
-	// Field read through a LIVE static calldata pointer: `assembly { s := s2 }
-	// r = s.x;` must read the word the (repointed) pointer designates inside
-	// __cd_blob — solc's calldataOffsetOfMember gives the field's byte offset
-	// within the struct's calldata encoding. Only for rvalue reads of int-mapped
-	// fields; anything else falls through to the decoded-value path.
-	if (!m_memberAccess.annotation().willBeWrittenTo)
-		if (auto const* baseId = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpression()))
-			if (auto const* vd = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
-					baseId->annotation().referencedDeclaration))
-				if (vd->referenceLocation()
-						== solidity::frontend::VariableDeclaration::Location::CallData)
-					if (auto* live = m_ctx.currentScope
-							? m_ctx.currentScope->liveCalldataPointers() : nullptr)
-						if (live->count(vd->name()))
-							if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(
-									vd->type()))
-							{
-								auto const* fieldW =
-									m_ctx.typeMapper.map(m_memberAccess.annotation().type);
-								if (fieldW == awst::WType::biguintType()
-									|| fieldW == awst::WType::uint64Type())
-								{
-									unsigned fieldOff = st->calldataOffsetOfMember(member);
-									auto off64 = builder::TypeCoercion::implicitNumericCast(
-										awst::makeVarExpression("__cd_off_" + vd->name(),
-											awst::WType::biguintType(), m_loc),
-										awst::WType::uint64Type(), m_loc);
-									auto pos = awst::makeUInt64BinOp(std::move(off64),
-										awst::UInt64BinaryOperator::Add,
-										awst::makeIntegerConstant(
-											static_cast<uint64_t>(fieldOff), m_loc), m_loc);
-									if (fieldW == awst::WType::uint64Type())
-									{
-										// low 8 bytes of the 32-byte word
-										auto pos8 = awst::makeUInt64BinOp(std::move(pos),
-											awst::UInt64BinaryOperator::Add,
-											awst::makeIntegerConstant(uint64_t(24), m_loc), m_loc);
-										return awst::makeBtoi(awst::makeExtract3(
-											awst::makeVarExpression("__cd_blob",
-												awst::WType::bytesType(), m_loc),
-											std::move(pos8),
-											awst::makeIntegerConstant(uint64_t(8), m_loc), m_loc), m_loc);
-									}
-									return awst::makeAsBiguint(awst::makeExtract3(
-										awst::makeVarExpression("__cd_blob",
-											awst::WType::bytesType(), m_loc),
-										std::move(pos),
-										awst::makeIntegerConstant(uint64_t(32), m_loc), m_loc), m_loc);
-								}
-							}
+	// Live calldata struct fields use solc offsets and the same validated word
+	// decoder as ABI input. Never fall back to a stale decoded parameter.
+	if (auto const* id = dynamic_cast<Identifier const*>(&baseExpression()))
+		if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration);
+			declaration && declaration->referenceLocation() == VariableDeclaration::Location::CallData)
+			if (auto const* live = m_scope.liveCalldataPointers();
+				live && live->contains(m_scope.awstVarName(*declaration)))
+			{
+				auto const* structure = dynamic_cast<StructType const*>(declaration->type());
+				if (!structure || !codec::isWordType(m_solType))
+					throw SizeError("aggregate member reads through a live calldata pointer are not supported");
+				auto name = m_scope.awstVarName(*declaration);
+				auto position = m_ctx.emitSequencedOperand({}, awst::makeBigUIntBinOp(
+					awst::makeBigUIntBinOp(awst::makeVarExpression("__cd_off_" + name,
+						awst::WType::biguintType(), m_loc), awst::BigUIntBinaryOperator::Add,
+						awst::makeIntegerConstant(structure->calldataOffsetOfMember(member),
+							m_loc, awst::WType::biguintType()), m_loc), awst::BigUIntBinaryOperator::Mod,
+					makePow256(m_loc), m_loc), true, m_loc);
+				auto blob = awst::makeVarExpression("__cd_blob", awst::WType::bytesType(), m_loc);
+				auto length = awst::makeLen(blob, m_loc);
+				// calldataload zero-pads, even for a full-width out-of-range pointer.
+				auto offset = awst::makeConditional(awst::makeNumericCompare(position,
+					awst::NumericComparison::Lt, TypeCoercion::implicitNumericCast(
+						length, awst::WType::biguintType(), m_loc), m_loc),
+					TypeCoercion::implicitNumericCast(position, awst::WType::uint64Type(), m_loc),
+					length, awst::WType::uint64Type(), m_loc);
+				auto word = awst::makeExtract3(awst::makeConcat(blob, awst::makeBzero(32, m_loc), m_loc),
+					std::move(offset), awst::makeIntegerConstant(32, m_loc), m_loc);
+				return codec::valueFromEvmWord(m_ctx.typeMapper, m_solType, std::move(word),
+					m_loc, m_ctx.preEffects(), codec::PaddingPolicy::Validate);
+			}
 
 	if (dynamic_cast<solidity::frontend::MappingType const*>(m_memberAccess.annotation().type))
 	{
@@ -111,32 +75,19 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 	// as the box value `ps[id]` lowers to, so member reads and writes address
 	// the entry — bare bytes had no members (reads yielded nothing, writes
 	// were rejected as constants).
-	if (auto const* call = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpression());
-		call && !m_ctx.typeMapper.profile().evmStorageLayout)
+	auto const* call = dynamic_cast<FunctionCall const*>(&baseExpression());
+	auto const* callee = call ? SolcFacts::resolveInternalCall(*call, m_ctx.currentContract) : nullptr;
+	if (callee && !m_ctx.typeMapper.profile().evmStorageLayout
+		&& builder::storageRefReturnIsBytesKeyed(callee, m_ctx.typeMapper.analysis()))
 	{
-		solidity::frontend::FunctionDefinition const* callee = nullptr;
-		if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&call->expression()))
-			callee = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
-				ident->annotation().referencedDeclaration);
-		if (callee && m_ctx.currentContract && callee->virtualSemantics()
-			&& !callee->isFree())
-			callee = &callee->resolveVirtual(*m_ctx.currentContract);
-		if (callee && builder::storageRefReturnIsBytesKeyed(callee, m_ctx.typeMapper.analysis()))
-		{
-			// Pin the returned key: a box key must be a plain value, not a call.
-			std::string keyName = "__ref_key_"
-				+ std::to_string(awst::NameGen::next("SolFieldAccess.refKey"));
-			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-				awst::makeVarExpression(keyName, awst::WType::bytesType(), m_loc),
-				buildExpr(baseExpression()), m_loc));
-			auto key = awst::makeReinterpretCast(
-				awst::makeVarExpression(keyName, awst::WType::bytesType(), m_loc),
-				awst::WType::boxKeyType(), m_loc);
-			auto const* wt = m_ctx.typeMapper.map(baseExpression().annotation().type);
-			base = awst::makeBoxValueExpression(std::move(key), wt, m_loc);
-			if (!m_memberAccess.annotation().willBeWrittenTo)
-				base = StorageMapper::makeStateGetWithDefault(std::move(base), wt, m_loc);
-		}
+		auto receiver = m_ctx.lower(baseExpression(), false);
+		auto key = m_ctx.emitSequencedOperand(
+			std::move(receiver.effects), std::move(receiver.value), true, m_loc);
+		auto const* wt = m_ctx.typeMapper.map(baseExpression().annotation().type);
+		base = awst::makeBoxValueExpression(
+			awst::makeReinterpretCast(std::move(key), awst::WType::boxKeyType(), m_loc), wt, m_loc);
+		if (!m_memberAccess.annotation().willBeWrittenTo)
+			base = StorageMapper::makeStateGetWithDefault(std::move(base), wt, m_loc);
 	}
 	if (!base)
 	{
@@ -146,13 +97,7 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 		// unreadable deserialization error. Fail loud with the working form.
 		// Only user functions: a builtin such as `arr.push()` also arrives as a
 		// FunctionCall and yields a real element reference.
-		auto const* call = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpression());
-		solidity::frontend::FunctionDefinition const* userCallee = nullptr;
-		if (call)
-			if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&call->expression()))
-				userCallee = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
-					ident->annotation().referencedDeclaration);
-		if (userCallee && m_memberAccess.annotation().willBeWrittenTo
+		if (callee && m_memberAccess.annotation().willBeWrittenTo
 			&& !m_ctx.typeMapper.profile().evmStorageLayout)
 			if (auto const* refType = dynamic_cast<solidity::frontend::ReferenceType const*>(
 					baseExpression().annotation().type);
@@ -181,35 +126,8 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 			field = StorageMapper::makePartialBoxReadWithDefault(
 				m_ctx.typeMapper, std::move(field), m_ctx.preEffects(), m_loc);
 
-		auto* nativeType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
-		// Aggregates already carry their usable ARC4 representation, which can
-		// be a finite recursive projection. Decode only native scalar fields.
-		if (arc4FieldType && !isArc4EncodedType(nativeType)
-			&& !awst::structurallyEquivalent(arc4FieldType, nativeType))
-		{
-			std::shared_ptr<awst::Expression> decode =
-				awst::makeARC4Decode(std::move(field), nativeType, m_loc);
-			// Signed sub-word field (arc4.intN, N<64): decode yields raw N-bit
-			// value (-60 int24 → +16777156). Sign-extend to 64-bit two's-complement.
-			// ONLY for rvalue reads: assignment target (willBeWrittenTo) must see
-			// the bare ARC4Decode/FieldExpression for the write-back path
-			// (SolAssignment::tryStructOrNamedTupleFieldAssignment).
-			if (!m_memberAccess.annotation().willBeWrittenTo)
-			{
-				if (auto const* fieldInt = dynamic_cast<solidity::frontend::IntegerType const*>(
-						m_memberAccess.annotation().type))
-					if (fieldInt->isSigned() && fieldInt->numBits() < 64
-						&& nativeType == awst::WType::uint64Type())
-						decode = TypeCoercion::signExtendToUint64(
-							std::move(decode), fieldInt->numBits(), m_loc);
-				// 64<N<256 signed fields (e.g. int128): sign-extend to canonical 256-bit
-				// two's-complement. Same class as int128[] array-element + transient fixes.
-				// No-op for unsigned / int256 / <=64-bit.
-				decode = TypeCoercion::signExtendSignedElement(
-					std::move(decode), m_memberAccess.annotation().type, m_loc);
-			}
-			return decode;
-		}
+		if (!m_memberAccess.annotation().willBeWrittenTo)
+			return codec::valueFromArc4(m_ctx.typeMapper, m_solType, std::move(field), m_loc);
 		return field;
 	}
 

@@ -67,15 +67,25 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	if (_reverse)
 		std::swap(lhs, rhs);
 
-	// Signed add/sub/mul: route through the shared signed-arithmetic helper (mod 2^N two's
-	// complement + signed-overflow check + sub-256 canonicalisation). The biguint/uint64 paths
-	// below are UNSIGNED — fine for `a+b` (SolBinaryOperation uses the same helper directly) but the
-	// COMPOUND path (`x+=d`) reaches binary_op here and otherwise mis-lowered signed assignment
-	// (int128 `x+=1` false-reverted, real overflow wrapped to untruncated garbage).
-	if (m_int.isSigned && (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Sub
-			|| _op == BuilderBinaryOp::Mult))
-		return wrap(buildSignedArithmetic(m_ctx, m_scope.isUnchecked(), _op,
-			std::move(lhs), std::move(rhs), m_int.bits, _loc));
+	// These operations reuse operands for sign, range or 0**0 checks.
+	if (m_int.isSigned || _op == BuilderBinaryOp::Pow)
+	{
+		lhs = awst::makeEvalOnce(std::move(lhs), _loc);
+		rhs = awst::makeEvalOnce(std::move(rhs), _loc);
+	}
+	if (m_int.isSigned)
+	{
+		// Puya's signed-multiply codegen needs a real local for a complex
+		// left operand; SingleEvaluation alone can miscount stack slots.
+		if (_op == BuilderBinaryOp::Mult
+			&& dynamic_cast<awst::SingleEvaluation const*>(lhs.get()))
+			lhs = m_ctx.emitSequencedOperand({}, std::move(lhs), true, _loc);
+		if (_op == BuilderBinaryOp::Add || _op == BuilderBinaryOp::Sub || _op == BuilderBinaryOp::Mult)
+			return wrap(buildSignedArithmetic(m_ctx, m_scope.isUnchecked(), _op,
+				std::move(lhs), std::move(rhs), m_int.bits, _loc));
+		if (_op == BuilderBinaryOp::Pow)
+			return buildSignedPowOp(std::move(lhs), std::move(rhs), _loc);
+	}
 
 	// ── BigUInt path: rungs in shape order (shift → sub → pow → signed div/mod → rest) ──
 	if (needsBigUInt)
@@ -190,6 +200,56 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildBigUIntPowOp(
 	// A wide exponent does not widen the result: solc keeps the base's type.
 	if (!m_int.biguintBacked())
 		result = TypeCoercion::implicitNumericCast(std::move(result), awst::WType::uint64Type(), _loc);
+	return wrap(std::move(result));
+}
+
+std::unique_ptr<InstanceBuilder> SolIntegerBuilder::buildSignedPowOp(
+	std::shared_ptr<awst::Expression> base, std::shared_ptr<awst::Expression> exponent,
+	awst::SourceLocation const& loc)
+{
+	auto const [modulus, half] = TypeCoercion::pow2NAndHalf(m_int.bits);
+	auto constant = [&](std::string const& value) {
+		return awst::makeIntegerConstant(value, loc, awst::WType::biguintType());
+	};
+	base = promoteToBiguint(std::move(base), loc);
+	exponent = promoteToBiguint(std::move(exponent), loc);
+	if (m_int.bits < 256)
+		base = awst::makeBigUIntBinOp(std::move(base), awst::BigUIntBinaryOperator::Mod, constant(modulus), loc);
+	auto negative = awst::makeNumericCompare(base, awst::NumericComparison::Gte, constant(half), loc);
+	auto magnitude = awst::makeConditional(negative,
+		awst::makeBigUIntBinOp(constant(modulus), awst::BigUIntBinaryOperator::Sub, base, loc),
+		base, awst::WType::biguintType(), loc);
+	auto odd = awst::makeNumericCompare(awst::makeBigUIntBinOp(exponent,
+		awst::BigUIntBinaryOperator::Mod, constant("2"), loc),
+		awst::NumericComparison::Ne, constant("0"), loc);
+	auto resultNegative = awst::makeBoolBinOp(negative, awst::BinaryBooleanOperator::And, odd, loc);
+	auto result = buildBigUIntExp(m_ctx, m_scope.isUnchecked(), std::move(magnitude), exponent, loc);
+	if (m_scope.isUnchecked())
+	{
+		// Wrap before negation, which otherwise underflows for an overflowing magnitude.
+		if (m_int.bits < 256)
+			result = awst::makeBigUIntBinOp(std::move(result),
+				awst::BigUIntBinaryOperator::Mod, constant(modulus), loc);
+	}
+	else
+	{
+		auto inRange = awst::makeConditional(resultNegative,
+			awst::makeNumericCompare(result, awst::NumericComparison::Lte, constant(half), loc),
+			awst::makeNumericCompare(result, awst::NumericComparison::Lt, constant(half), loc),
+			awst::WType::boolType(), loc);
+		m_ctx.queuePreExpression(awst::makeAssert(inRange, loc, "signed exp overflow"), loc);
+	}
+	auto negate = awst::makeBoolBinOp(resultNegative, awst::BinaryBooleanOperator::And,
+		awst::makeNumericCompare(result, awst::NumericComparison::Ne, constant("0"), loc), loc);
+	result = awst::makeConditional(negate,
+		awst::makeBigUIntBinOp(constant(modulus), awst::BigUIntBinaryOperator::Sub, result, loc),
+		result, awst::WType::biguintType(), loc);
+	// Every consumer receives the native carrier's canonical two's complement,
+	// including when the power is a subexpression rather than a whole return.
+	if (m_int.bits < 256)
+		result = TypeCoercion::signExtendToUint256(std::move(result), m_int.bits, loc);
+	if (!m_int.biguintBacked())
+		result = TypeCoercion::implicitNumericCast(std::move(result), awst::WType::uint64Type(), loc);
 	return wrap(std::move(result));
 }
 

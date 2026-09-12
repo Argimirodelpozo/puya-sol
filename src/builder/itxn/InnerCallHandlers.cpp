@@ -3,6 +3,7 @@
 /// and precompile routing.
 
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/sol-ast/CallOperands.h"
 #include "builder/AwstShorthand.h"
 #include "awst/NameGen.h"
 #include "builder/EvmFeaturePolicy.h"
@@ -17,6 +18,7 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/itxn/NativePayment.h"
+#include "builder/itxn/ApplicationCall.h"
 #include "Logger.h"
 
 namespace puyasol::builder::eb
@@ -96,50 +98,7 @@ std::shared_ptr<awst::IntrinsicCall> InnerCallHandlers::makeConcat(
 	return awst::makeConcat(std::move(_a), std::move(_b), _loc);
 }
 
-std::shared_ptr<awst::Expression> InnerCallHandlers::addressToAppId(
-	std::shared_ptr<awst::Expression> _receiver, awst::SourceLocation const& _loc)
-{
-	if (_receiver->wtype == awst::WType::applicationType())
-		return _receiver;
 
-	// CurrentApplicationAddress is a hash, not our \x00*24 ++ appId format —
-	// detect it and use CurrentApplicationID directly.
-	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
-	{
-		if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
-		{
-			auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
-			if (imm && *imm == "CurrentApplicationAddress")
-			{
-				auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), _loc);
-
-				auto cast = awst::makeAsApplication(std::move(appId), _loc);
-				return cast;
-			}
-		}
-	}
-
-	std::shared_ptr<awst::Expression> bytesExpr = std::move(_receiver);
-	if (bytesExpr->wtype == awst::WType::accountType())
-	{
-		auto toBytes = awst::makeAsBytes(std::move(bytesExpr), _loc);
-		bytesExpr = std::move(toBytes);
-	}
-
-	auto btoi = awst::makeWord32ToUInt64(std::move(bytesExpr), _loc);
-	return awst::makeAsApplication(std::move(btoi), _loc);
-}
-
-std::shared_ptr<awst::Expression> InnerCallHandlers::captureLastLog(
-	ContractContext& _ctx, awst::SourceLocation const& _loc)
-{
-	std::string tmp = "__itxn_log_"
-		+ std::to_string(awst::NameGen::next("InnerCallHandlers.itxnLogCounter"));
-	_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(tmp, awst::WType::bytesType(), _loc),
-		awst::makeItxn("LastLog", awst::WType::bytesType(), _loc), _loc));
-	return awst::makeVarExpression(tmp, awst::WType::bytesType(), _loc);
-}
 
 std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	ContractContext& _ctx,
@@ -268,6 +227,34 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	}
 }
 
+std::vector<std::shared_ptr<awst::Expression>> InnerCallHandlers::lowerArguments(
+	ContractContext& _ctx,
+	std::vector<solidity::frontend::ASTPointer<
+		solidity::frontend::Expression const>> const& _args,
+	std::vector<solidity::frontend::Type const*> const& _paramTypes,
+	awst::SourceLocation const& _loc, bool reinterpret)
+{
+	std::vector<std::shared_ptr<awst::Expression>> values;
+	for (size_t i = 0; i < _args.size(); ++i)
+	{
+		values.push_back(sol_ast::CallOperands::evaluate(_ctx, *_args[i], _loc, [&] {
+			auto value = _ctx.buildExpr(*_args[i]);
+			if (i < _paramTypes.size() && _paramTypes[i])
+			{
+				auto const* source = _args[i]->annotation().type;
+				auto const* native = _ctx.typeMapper.map(_paramTypes[i]);
+				value = sol_ast::EvmSlotLowering::materializeRefValue(
+					_ctx, std::move(value), source, native, _loc);
+				value = ConversionPlan{source, _paramTypes[i], native,
+					reinterpret ? ConversionPlan::Context::AbiReinterpret
+						: ConversionPlan::Context::AbiArgument}.emit(std::move(value), _loc);
+			}
+			return value;
+		}));
+	}
+	return values;
+}
+
 std::shared_ptr<awst::Expression> InnerCallHandlers::encodeEvmArgumentBody(
 	ContractContext& _ctx,
 	std::vector<solidity::frontend::ASTPointer<
@@ -275,32 +262,17 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeEvmArgumentBody(
 	std::vector<solidity::frontend::Type const*> const& _paramTypes,
 	awst::SourceLocation const& _loc)
 {
-	using namespace solidity::frontend;
-	std::vector<Type const*> types;
-	std::vector<std::shared_ptr<awst::Expression>> values;
+	std::vector<solidity::frontend::Type const*> types;
 	for (size_t i = 0; i < _args.size(); ++i)
 	{
-		auto const* sourceType = _args[i]->annotation().type;
 		auto const* targetType = i < _paramTypes.size() && _paramTypes[i]
-			? _paramTypes[i] : sourceType;
-		if (targetType && targetType->category() == Type::Category::StringLiteral)
+			? _paramTypes[i] : _args[i]->annotation().type;
+		if (targetType && targetType->category() == solidity::frontend::Type::Category::StringLiteral)
 			targetType = targetType->mobileType();
-		auto value = _ctx.buildExpr(*_args[i]);
-		// Slot mode: materialize storage-ref args (see encodeArgToBytes).
-		if (value && i < _paramTypes.size() && _paramTypes[i])
-			value = sol_ast::EvmSlotLowering::materializeRefValue(
-				_ctx, std::move(value), sourceType,
-				_ctx.typeMapper.map(_paramTypes[i]), _loc);
-		if (i < _paramTypes.size() && _paramTypes[i])
-			value = builder::ConversionPlan{
-				sourceType, _paramTypes[i], _ctx.typeMapper.map(_paramTypes[i]),
-				builder::ConversionPlan::Context::AbiArgument}.emit(
-					std::move(value), _loc);
 		types.push_back(targetType);
-		values.push_back(std::move(value));
 	}
 	return AbiEncoderBuilder::encodeValuesAsEvmAbi(
-		_ctx, types, std::move(values), _loc);
+		_ctx, types, lowerArguments(_ctx, _args, _paramTypes, _loc), _loc);
 }
 
 std::shared_ptr<awst::TupleExpression>
@@ -372,7 +344,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleTransfer(
 	ContractContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount, awst::SourceLocation const& _loc)
 {
-	_ctx.postEffects().push_back(buildNativeTransfer(_ctx.typeMapper.profile(), _ctx.preEffects(),
+	_ctx.postEffects().push_back(buildNativeTransfer(_ctx.typeMapper, _ctx.preEffects(),
 		std::move(_receiver), std::move(_amount), _loc));
 
 	auto vc = awst::makeVoidConstant(_loc);
@@ -385,7 +357,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
 {
 	EvmFeaturePolicy::report(
 		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
-	_ctx.postEffects().push_back(buildNativeTransfer(_ctx.typeMapper.profile(), _ctx.preEffects(),
+	_ctx.postEffects().push_back(buildNativeTransfer(_ctx.typeMapper, _ctx.preEffects(),
 		std::move(_receiver), std::move(_amount), _loc));
 
 	return std::make_unique<SolBoolBuilder>(_ctx, awst::makeTrue(_loc));
@@ -426,7 +398,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 	EvmFeaturePolicy::report(
 		EvmFeature::DelegateCall, _ctx.typeMapper.profile(), _loc);
 	for (auto const& arg : _callNode.arguments())
-		_ctx.buildExpr(*arg);
+		_ctx.evaluateForEffects(*arg, _loc);
 	// assert(false) is a compile-time TERMINATOR: puya flags the statements
 	// that consume the (bool, bytes) result as unreachable and rejects the
 	// whole program (fbtc). Use a runtime-opaque always-false condition —
@@ -626,108 +598,32 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::emitDirectSelfCall(
 {
 	using namespace solidity::frontend;
 	auto const* target = &targetFunc;
-	auto const& fnName = form.fnName;
 	auto const* targetIdentityExpr = form.targetIdentityExpr;
 	auto const& resolvedArgs = form.resolvedArgs;
-		if (targetIdentityExpr)
-			_ctx.evaluateForEffects(*targetIdentityExpr, _loc);
-		// AVM rejects self inner-txn calls; rewrite to direct callsub.
-		// Revert isolation differs: reverts propagate instead of
-		// being caught as success=false.
-		EvmFeaturePolicy::report(
-			EvmFeature::SelfCall, _ctx.typeMapper.profile(), _loc);
+	if (targetIdentityExpr)
+		_ctx.evaluateForEffects(*targetIdentityExpr, _loc);
+	// AVM rejects self inner-txn calls; rewrite to direct callsub.
+	// Revert isolation differs: reverts propagate instead of
+	// being caught as success=false.
+	EvmFeaturePolicy::report(
+		EvmFeature::SelfCall, _ctx.typeMapper.profile(), _loc);
 
-		std::string targetName =
-			CallResolver::resolveMethodName(_ctx, *target);
-		size_t nReturns = target->returnParameters().size();
-		auto pushResolvedArgs = [&](auto& call)
-		{
-			for (size_t i = 0; i < resolvedArgs.size(); ++i)
-			{
-				auto const& argument = resolvedArgs[i];
-				auto value = _ctx.buildExpr(*argument);
-				if (value && i < target->parameters().size())
-					value = sol_ast::EvmSlotLowering::materializeRefValue(
-						_ctx, std::move(value),
-						argument->annotation().type,
-						_ctx.typeMapper.map(
-							target->parameters()[i]->type()),
-						_loc);
-				if (i < target->parameters().size())
-				{
-					auto const* parameterType = target->parameters()[i]->type();
-					auto const* parameterWType = _ctx.typeMapper.map(parameterType);
-					value = builder::ConversionPlan{
-						argument->annotation().type,
-						parameterType,
-						parameterWType,
-						encodeName == "encodeCall" ? builder::ConversionPlan::Context::Argument
-							: builder::ConversionPlan::Context::AbiReinterpret}.emit(
-							std::move(value), _loc);
-				}
-				awst::pushCallArg(call->args, std::move(value));
-			}
-		};
-		if (nReturns == 0)
-		{
-			auto call = awst::makeSubroutineCall(
-				awst::InstanceMethodTarget{targetName},
-				awst::WType::voidType(), _loc);
-			pushResolvedArgs(call);
-			auto stmt = awst::makeExpressionStatement(call, _loc);
-			_ctx.preEffects().push_back(std::move(stmt));
-			return std::make_unique<GenericResultBuilder>(_ctx,
-				makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
-		}
-		if (nReturns == 1)
-		{
-			auto* retType = _ctx.typeMapper.map(target->returnParameters()[0]->type());
-			if (!retType) retType = awst::WType::voidType();
-			auto call = awst::makeSubroutineCall(
-				awst::InstanceMethodTarget{targetName},
-				retType, _loc);
-			pushResolvedArgs(call);
-			auto dataBytes = AbiEncoderBuilder::encodeValuesAsEvmAbi(
-				_ctx, {target->returnParameters()[0]->type()},
-				{std::move(call)}, _loc);
-			return std::make_unique<GenericResultBuilder>(_ctx,
-				makeBoolBytesTuple(true, std::move(dataBytes), _loc));
-		}
-
-		// Multi-return: cache the call once, then let the recursive
-		// canonical encoder lay out all static/dynamic return values.
-		std::vector<awst::WType const*> tupleTypes;
-		std::vector<solidity::frontend::Type const*> returnTypes;
-		for (auto const& ret : target->returnParameters())
-		{
-			auto* pt = _ctx.typeMapper.map(ret->type());
-			tupleTypes.push_back(pt ? pt : awst::WType::voidType());
-			returnTypes.push_back(ret->type());
-		}
-		auto* tupleTypeOwned = _ctx.typeMapper.createType<awst::WTuple>(
-			std::move(tupleTypes));
-		auto call = awst::makeSubroutineCall(
-			awst::InstanceMethodTarget{targetName},
-			tupleTypeOwned, _loc);
-		pushResolvedArgs(call);
-		// Intentionally RAW makeSingleEvaluation, not makeEvalOnce: the fresh
-		// SE id is IDENTITY-FORCING — it prevents two attrs-equal calls from
-		// merging (see sol-ast-audit) — so the wrap must be unconditional;
-		// makeEvalOnce's skip-leaf contract must never apply here.
-		auto cachedCall = awst::makeSingleEvaluation(
-			std::move(call), tupleTypeOwned, awst::nextSingleEvalId(), _loc);
-
-		std::vector<std::shared_ptr<awst::Expression>> values;
-		for (size_t i = 0; i < nReturns; ++i)
-		{
-			auto* itemType = tupleTypeOwned->types()[i];
-			auto item = awst::makeTupleItem(cachedCall, static_cast<int>(i), itemType, _loc);
-			values.push_back(std::move(item));
-		}
-		auto dataBytes = AbiEncoderBuilder::encodeValuesAsEvmAbi(
-			_ctx, returnTypes, std::move(values), _loc);
-		return std::make_unique<GenericResultBuilder>(_ctx,
-			makeBoolBytesTuple(true, std::move(dataBytes), _loc));
+	std::string targetName =
+		CallResolver::resolveMethodName(_ctx, *target);
+	auto const& signature = _ctx.typeMapper.functionReturnPlan(*target);
+	auto const& boundary = _ctx.typeMapper.callBoundaryPlan(*target, _ctx.currentContract);
+	auto call = awst::makeSubroutineCall(
+		awst::InstanceMethodTarget{targetName}, signature.wireType, _loc);
+	std::vector<Type const*> paramTypes, returnTypes;
+	for (auto const& parameter: target->parameters()) paramTypes.push_back(parameter->type());
+	for (auto const& result: target->returnParameters()) returnTypes.push_back(result->type());
+	auto values = lowerArguments(_ctx, resolvedArgs, paramTypes, _loc, encodeName != "encodeCall");
+	for (size_t i = 0; i < values.size(); ++i)
+		awst::pushCallArg(call->args, boundary.parameters[i].wireName(),
+			boundary.parameters[i].encodeArgument(std::move(values[i]), _loc));
+	auto bytes = ApplicationCall::setTypedReturnData(_ctx.typeMapper, std::move(call),
+		returnTypes, true, _loc, _ctx.preEffects());
+	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTuple(true, std::move(bytes), _loc));
 }
 
 /// `.call/.staticcall(data)` with a data argument — the encoded-call router: self-call direct rewrites …
@@ -759,7 +655,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 					  "attached (self-calls lower to a direct subroutine call; "
 					  "precompiles have no account). Split into a separate "
 					  "transfer + call.", _loc);
-			_ctx.buildExpr(dataArg);
+			_ctx.evaluateForEffects(dataArg, _loc);
 			return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 		}
 	}
@@ -813,7 +709,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 	// .call(data) to known precompile address → route like .staticcall
 	if (auto precompileAddr = detectPrecompileAddress(_baseExpr))
 	{
-		auto inputData = _ctx.buildExpr(dataArg);
+		auto inputData = sol_ast::CallOperands::evaluate(_ctx, dataArg, _loc);
 		auto result = handleStaticCallPrecompile(_ctx, *precompileAddr, std::move(inputData), _loc);
 		if (result) return result;
 	}
@@ -824,7 +720,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 
 	if (isSelfCall)
 	{
-		auto dataExpr = _ctx.buildExpr(dataArg);
+		auto dataExpr = sol_ast::CallOperands::evaluate(_ctx, dataArg, _loc);
 		if (dataExpr->wtype == awst::WType::stringType())
 		{
 			auto cast = awst::makeAsBytes(std::move(dataExpr), _loc);
@@ -880,7 +776,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 	// Non-self raw .call(data) → inner app call; splits [selector, rest].
 	// Empty calls are only exactly decidable for the literal zero address;
 	// other addresses need open-world account/code state that AVM does not expose.
-	auto dataExpr = _ctx.buildExpr(dataArg);
+	// Preserve literal shape for the empty-data fold while sequencing effects.
+	auto dataOperand = _ctx.lower(dataArg, false);
+	auto dataExpr = _ctx.emitSequencedOperand(
+		std::move(dataOperand.effects), std::move(dataOperand.value), false, _loc);
 	auto isEmptyConst = [](awst::Expression const* e) {
 		// Unwrap ReinterpretCast (string→bytes, etc.) to inspect the inner.
 		while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(e))
@@ -919,14 +818,14 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	// .transfer(amount)
 	if (_memberName == "transfer" && _callNode.arguments().size() == 1)
 	{
-		auto amount = _ctx.buildExpr(*_callNode.arguments()[0]);
+		auto amount = sol_ast::CallOperands::evaluate(_ctx, *_callNode.arguments()[0], _loc);
 		return handleTransfer(_ctx, std::move(_receiver), std::move(amount), _loc);
 	}
 
 	// .send(amount)
 	if (_memberName == "send" && _callNode.arguments().size() == 1)
 	{
-		auto amount = _ctx.buildExpr(*_callNode.arguments()[0]);
+		auto amount = sol_ast::CallOperands::evaluate(_ctx, *_callNode.arguments()[0], _loc);
 		return handleSend(_ctx, std::move(_receiver), std::move(amount), _loc);
 	}
 
@@ -952,14 +851,14 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		auto precompileAddr = detectPrecompileAddress(_baseExpr);
 		if (precompileAddr && !_callNode.arguments().empty())
 		{
-			auto inputData = _ctx.buildExpr(*_callNode.arguments()[0]);
+			auto inputData = sol_ast::CallOperands::evaluate(_ctx, *_callNode.arguments()[0], _loc);
 			auto result = handleStaticCallPrecompile(_ctx, *precompileAddr, std::move(inputData), _loc);
 			if (result) return result;
 		}
 
 		// Hard error: stubbing as (true, "") would make require(ok) pass spuriously.
 		for (auto const& arg : _callNode.arguments())
-			_ctx.buildExpr(*arg);
+			_ctx.evaluateForEffects(*arg, _loc);
 		EvmFeaturePolicy::report(
 			EvmFeature::UnknownLowLevelCall,
 			_ctx.typeMapper.profile(), _loc);

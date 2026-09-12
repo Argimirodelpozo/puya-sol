@@ -3,6 +3,7 @@
 /// Uses FunctionCallKind + FunctionType::Kind for dispatch.
 
 #include "builder/sol-ast/SolExpressionFactory.h"
+#include "builder/ProgramAnalysis.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/abi/Arc4Stdlib.h"
 #include "builder/itxn/AsaIntrinsics.h"
@@ -52,36 +53,17 @@ public:
 
 	std::shared_ptr<awst::Expression> toAwst() override
 	{
-		// `this.f.address` (or `this.f{…}.address`) → CurrentApplicationAddress.
-		{
-			solidity::frontend::Expression const* base = &m_memberAccess.expression();
-			while (auto const* opts = dynamic_cast<
-					solidity::frontend::FunctionCallOptions const*>(base))
-				base = &opts->expression();
-			if (auto const* innerMA = dynamic_cast<solidity::frontend::MemberAccess const*>(base))
-			{
-				if (auto const* baseId = dynamic_cast<solidity::frontend::Identifier const*>(
-						&innerMA->expression()))
-				{
-					if (baseId->name() == "this")
-						return awst::makeGlobal(
-							"CurrentApplicationAddress", awst::WType::accountType(), m_loc);
-				}
-			}
-		}
-
-		auto fnPtr = m_ctx.buildExpr(m_memberAccess.expression());
-		if (fnPtr->wtype != awst::WType::bytesType())
-		{
-			auto cast = awst::makeAsBytes(std::move(fnPtr), m_loc);
-			fnPtr = std::move(cast);
-		}
-		// Extract first 8 bytes = appId (big-endian uint64).
-		auto appIdBytes = awst::makeExtract(std::move(fnPtr), 0, 8, m_loc);
-		// Left-pad to 32 bytes to form an address.
-		auto cat = awst::makeLeftPad(std::move(appIdBytes), 24, m_loc);
-		// Reinterpret as account for assignment to an address-typed target.
-		return awst::makeAsAccount(std::move(cat), m_loc);
+		return projectFunctionValue(m_ctx, baseExpression(), m_wtype, m_loc,
+			[&](solidity::frontend::Expression const& source) -> std::shared_ptr<awst::Expression> {
+				using namespace solidity::frontend;
+				if (auto const* member = dynamic_cast<MemberAccess const*>(&source))
+					if (auto const* receiver = dynamic_cast<Identifier const*>(&member->expression());
+						receiver && receiver->name() == "this")
+						return awst::makeGlobal("CurrentApplicationAddress", awst::WType::accountType(), m_loc);
+				auto pointer = m_ctx.pinIfWriteBacks(m_ctx.lower(source, false), m_loc);
+				return awst::makeAsAccount(awst::makeLeftPad(awst::makeExtract(
+					awst::makeAsBytes(std::move(pointer), m_loc), 0, 8, m_loc), 24, m_loc), m_loc);
+			});
 	}
 };
 
@@ -96,11 +78,12 @@ public:
 
 	std::shared_ptr<awst::Expression> toAwst() override
 	{
-		if (eb::AsaIntrinsics::isBitsBitlenFacade(*m_funcDef))
+		if (auto found = m_ctx.typeMapper.analysis().avmIntrinsics.find(m_funcDef->id());
+			found != m_ctx.typeMapper.analysis().avmIntrinsics.end())
 		{
 			Logger::instance().error(
-				"Bits.bitlen cannot be used as a function value; call "
-				"Bits.bitlen(value) directly",
+				found->second + "." + m_funcDef->name()
+					+ " cannot be used as a function value; call it directly",
 				m_loc);
 			return awst::makeZero(m_loc);
 		}
@@ -193,7 +176,7 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 		|| (funcType->kind() == Kind::External
 			&& funcType->stateMutability() <= solidity::frontend::StateMutability::View))
 		EvmFeaturePolicy::report(EvmFeature::StaticCall, m_ctx.typeMapper.profile(),
-			m_ctx.makeLoc(_node.location().start, _node.location().end));
+			m_ctx.makeLoc(_node.location()));
 
 	switch (funcType->kind())
 	{
@@ -320,28 +303,27 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	auto const& baseExpr = _node.expression();
 	auto const* baseType = baseExpr.annotation().type;
 
-	// 1. Intrinsics: msg.*/block.*/tx.* — dispatched directly without an exploratory call.
-	if (auto const* baseId = dynamic_cast<Identifier const*>(&baseExpr))
-	{
-		std::string const& baseName = baseId->name();
-		bool isIntrinsic =
-			(baseName == "block" && (member == "difficulty" || member == "prevrandao"
-				|| member == "basefee" || member == "blobbasefee" || member == "gaslimit"
-				|| member == "timestamp" || member == "number" || member == "chainid"
-				|| member == "coinbase"))
-			|| (baseName == "msg" && (member == "value" || member == "sig"
-				|| member == "data" || member == "sender"))
-			|| (baseName == "tx" && (member == "origin" || member == "gasprice"));
-		if (isIntrinsic)
-			return std::make_unique<SolIntrinsicAccess>(m_ctx, _node);
-	}
+	// solc owns builtin identity; local variables may legally shadow these names.
+	if (auto const* magic = dynamic_cast<MagicType const*>(baseType);
+		magic && (magic->kind() == MagicType::Kind::Block
+			|| magic->kind() == MagicType::Kind::Message
+			|| magic->kind() == MagicType::Kind::Transaction))
+		return std::make_unique<SolIntrinsicAccess>(m_ctx, _node);
 
 	// 2. Enum value: MyEnum.Value
 	if (dynamic_cast<EnumValue const*>(_node.annotation().referencedDeclaration))
 		return std::make_unique<SolEnumValueAccess>(m_ctx, _node);
 
+	// Struct fields are declarations, even when their names match built-ins.
+	if (dynamic_cast<StructType const*>(baseType))
+		if (dynamic_cast<VariableDeclaration const*>(_node.annotation().referencedDeclaration))
+			return std::make_unique<SolFieldAccess>(m_ctx, _node);
+
 	// 3. Selector: f.selector, E.selector
-	if (member == "selector")
+	auto const* selectorType = baseType;
+	if (auto const* meta = dynamic_cast<TypeType const*>(selectorType))
+		selectorType = meta->actualType();
+	if (member == "selector" && dynamic_cast<FunctionType const*>(selectorType))
 		return std::make_unique<SolSelectorAccess>(m_ctx, _node);
 
 	// 4. Event member access + constant inlining + state variable via contract name
@@ -379,7 +361,8 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	}
 
 	// 6. .length on arrays/bytes
-	if (member == "length")
+	if (member == "length" && (dynamic_cast<ArrayType const*>(baseType)
+		|| dynamic_cast<ArraySliceType const*>(baseType) || dynamic_cast<FixedBytesType const*>(baseType)))
 		return std::make_unique<SolLengthAccess>(m_ctx, _node);
 
 	// 6b. .address on external function pointer values

@@ -8,7 +8,8 @@
 #include "awst/Visit.h"
 #include "Logger.h"
 
-#include <libsolidity/ast/AST.h>
+#include <libsolutil/Numeric.h>
+#include <array>
 
 namespace puyasol::builder::proxies
 {
@@ -16,25 +17,21 @@ namespace puyasol::builder::proxies
 namespace
 {
 
-// The three EIP-1967 slots, as the decimal spellings IntegerConstant carries.
-// keccak256("eip1967.proxy.implementation") - 1
-constexpr char const* IMPL_SLOT_DEC =
-	"24440054405305269366569402256811496959409073762505157381672968839269610695612";
-// keccak256("eip1967.proxy.admin") - 1
-constexpr char const* ADMIN_SLOT_DEC =
-	"81955473079516046949633743016697847541294818689821282749996681496272635257091";
-// keccak256("eip1967.proxy.beacon") - 1
-constexpr char const* BEACON_SLOT_DEC =
-	"74152234768234802001998023604048924213078445070507226371336425913862612794704";
-
-// The same three slots as lowercase hex (no 0x) — the 32-byte BytesConstant
-// spelling a Solidity-level `bytes32 constant` takes outside assembly.
-constexpr char const* IMPL_SLOT_HEX =
-	"360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
-constexpr char const* ADMIN_SLOT_HEX =
-	"b53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
-constexpr char const* BEACON_SLOT_HEX =
-	"a3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50";
+// One canonical numeric word per keccak256("eip1967.proxy.<name>") - 1.
+struct SlotDescriptor
+{
+	Erc1967Slot kind;
+	char const* name;
+	solidity::u256 word;
+};
+std::array<SlotDescriptor, 3> const slots{{
+	{Erc1967Slot::Implementation, "implementation",
+		solidity::u256("0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc")},
+	{Erc1967Slot::Admin, "admin",
+		solidity::u256("0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103")},
+	{Erc1967Slot::Beacon, "beacon",
+		solidity::u256("0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50")},
+}};
 
 std::shared_ptr<awst::Expression> adminTarget(awst::SourceLocation const& _loc)
 {
@@ -75,14 +72,13 @@ std::shared_ptr<awst::Statement> upgradedEventStatement(
 	value->values["implementation"] =
 		awst::makeARC4Encode(std::move(impl), &addrType, _loc);
 	return awst::makeExpressionStatement(
-		awst::makeEmit("Upgraded(address)", std::move(value), _loc), _loc);
+		awst::makeEmit(std::move(value), _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> senderAsBiguint(awst::SourceLocation const& _loc)
 {
-	// msg.sender's stored form everywhere in this compiler is the raw
-	// 32-byte account, so the gate compares the same representation any
-	// Solidity-side admin write produced.
+	// Native escrow authorization deliberately retains the complete sender,
+	// independently of the Solidity logical-address profile.
 	return awst::makeAsBiguint(
 		awst::makeReinterpretCast(
 			awst::makeTxn("Sender", awst::WType::accountType(), _loc),
@@ -98,27 +94,7 @@ std::shared_ptr<awst::Statement> Erc1967Lowering::upgradedEvent(
 	return upgradedEventStatement(_loc);
 }
 
-Erc1967Lowering::UtilsFold Erc1967Lowering::classifyUtilsFunction(
-	solidity::frontend::FunctionDefinition const& _func)
-{
-	auto const* scope = dynamic_cast<solidity::frontend::ContractDefinition const*>(
-		_func.scope());
-	if (!scope || !scope->isLibrary() || scope->name() != "ERC1967Utils")
-		return UtilsFold::None;
-	auto const& name = _func.name();
-	if (name == "getImplementation")
-		return UtilsFold::ImplementationLoad;
-	if (name == "getAdmin")
-		return UtilsFold::AdminLoad;
-	if (name == "_setAdmin")
-		return UtilsFold::AdminStore;
-	if (name == "_setImplementation" || name == "upgradeToAndCall")
-		return UtilsFold::TrapImplementation;
-	if (name == "getBeacon" || name == "_setBeacon"
-		|| name == "upgradeBeaconToAndCall")
-		return UtilsFold::TrapBeacon;
-	return UtilsFold::None;
-}
+
 
 std::shared_ptr<awst::Block> Erc1967Lowering::utilsFoldBody(
 	UtilsFold _fold,
@@ -155,15 +131,9 @@ std::shared_ptr<awst::Block> Erc1967Lowering::utilsFoldBody(
 	case UtilsFold::AdminStore:
 	{
 		_artifacts.noteErc1967AdminUse();
-		std::shared_ptr<awst::Expression> value = _args.empty()
-			? std::shared_ptr<awst::Expression>(
-				awst::makeBiguintConstant("0", _loc))
-			: std::shared_ptr<awst::Expression>(awst::makeAsBiguint(
-				awst::makeReinterpretCast(
-					awst::makeVarExpression(
-						_args[0].name, _args[0].wtype, _loc),
-					awst::WType::bytesType(), _loc),
-				_loc));
+		auto const& arg = _args.at(0); // Signature validated by ProxyFacts.
+		auto value = awst::makeAsBiguint(awst::makeAsBytes(
+			awst::makeVarExpression(arg.name, arg.wtype, _loc), _loc), _loc);
 		adminStore(std::move(value), _loc, body->body);
 		returnDefault();
 		break;
@@ -175,7 +145,7 @@ std::shared_ptr<awst::Block> Erc1967Lowering::utilsFoldBody(
 			_fold == UtilsFold::TrapImplementation
 				? Erc1967Slot::Implementation
 				: Erc1967Slot::Beacon,
-			/*_isStore=*/true, _loc));
+			_loc));
 		break;
 	case UtilsFold::None:
 		returnDefault();
@@ -186,51 +156,29 @@ std::shared_ptr<awst::Block> Erc1967Lowering::utilsFoldBody(
 
 Erc1967Slot Erc1967Lowering::classify(awst::Expression const* _slotExpr)
 {
-	auto const* c = dynamic_cast<awst::IntegerConstant const*>(_slotExpr);
-	if (!c)
-		return Erc1967Slot::None;
-	if (c->value == IMPL_SLOT_DEC)
-		return Erc1967Slot::Implementation;
-	if (c->value == ADMIN_SLOT_DEC)
-		return Erc1967Slot::Admin;
-	if (c->value == BEACON_SLOT_DEC)
-		return Erc1967Slot::Beacon;
+	if (auto const* value = dynamic_cast<awst::IntegerConstant const*>(_slotExpr))
+		for (auto const& slot: slots)
+			if (value->value == slot.word.str()) return slot.kind;
 	return Erc1967Slot::None;
 }
 
 Erc1967Slot Erc1967Lowering::classifyValue(awst::Expression const* _expr)
 {
-	if (auto slot = classify(_expr); slot != Erc1967Slot::None)
-		return slot;
-	auto const* b = dynamic_cast<awst::BytesConstant const*>(_expr);
-	if (!b || b->value.size() != 32)
-		return Erc1967Slot::None;
-	static char const* hexDigits = "0123456789abcdef";
-	std::string hex;
-	hex.reserve(64);
-	for (uint8_t byte: b->value)
+	if (auto slot = classify(_expr); slot != Erc1967Slot::None) return slot;
+	if (auto const* bytes = dynamic_cast<awst::BytesConstant const*>(_expr);
+		bytes && bytes->value.size() == 32)
 	{
-		hex.push_back(hexDigits[byte >> 4]);
-		hex.push_back(hexDigits[byte & 0xf]);
+		auto word = solidity::fromBigEndian<solidity::u256>(bytes->value);
+		for (auto const& slot: slots)
+			if (word == slot.word) return slot.kind;
 	}
-	if (hex == IMPL_SLOT_HEX)
-		return Erc1967Slot::Implementation;
-	if (hex == ADMIN_SLOT_HEX)
-		return Erc1967Slot::Admin;
-	if (hex == BEACON_SLOT_HEX)
-		return Erc1967Slot::Beacon;
 	return Erc1967Slot::None;
 }
 
 char const* Erc1967Lowering::slotName(Erc1967Slot _slot)
 {
-	switch (_slot)
-	{
-	case Erc1967Slot::Admin: return "admin";
-	case Erc1967Slot::Implementation: return "implementation";
-	case Erc1967Slot::Beacon: return "beacon";
-	case Erc1967Slot::None: break;
-	}
+	for (auto const& slot: slots)
+		if (slot.kind == _slot) return slot.name;
 	return "none";
 }
 
@@ -245,12 +193,11 @@ void warnEscapedSlot(
 		return;
 	Logger::instance().warning(
 		std::string("ERC-1967 ") + Erc1967Lowering::slotName(slot)
-		+ " slot constant escapes into a runtime context (function argument, "
-		"memory, or arithmetic) that puya-sol cannot classify — storage "
-		"reads/writes through a DERIVED slot value are NOT lowered to the "
-		"native proxy model and will split from it (e.g. OZ "
-		"StorageSlot.getAddressSlot(SLOT).value). Restructure to sload/sstore "
-		"directly on the slot constant (see proxy.md)",
+		+ " slot constant survives in runtime data. This conservative warning "
+		"does not prove a storage-model split: returning a proxiable UUID is valid. "
+		"If this value reaches a derived storage access, that access is not "
+		"adapted to the native proxy model. Use direct constant sload/sstore or "
+		"explicitly annotated supported dependencies (see proxy.md).",
 		_expression.sourceLocation);
 }
 
@@ -298,7 +245,7 @@ std::shared_ptr<awst::Expression> Erc1967Lowering::implementationLoad(
 }
 
 std::shared_ptr<awst::Statement> Erc1967Lowering::trapStatement(
-	Erc1967Slot _slot, bool _isStore, awst::SourceLocation const& _loc)
+	Erc1967Slot _slot, awst::SourceLocation const& _loc)
 {
 	std::string message;
 	if (_slot == Erc1967Slot::Implementation)
@@ -328,7 +275,8 @@ awst::AppStorageDefinition Erc1967Lowering::adminStateDefinition(
 }
 
 awst::ContractMethod Erc1967Lowering::updateGateMethod(
-	std::string const& _cref, awst::SourceLocation const& _loc)
+	std::string const& _cref, std::shared_ptr<awst::Expression> _logicalSender,
+	awst::SourceLocation const& _loc)
 {
 	auto method = awst::ContractMethod(
 		_cref, "__erc1967_update", awst::WType::voidType(), {}, _loc);
@@ -344,11 +292,16 @@ awst::ContractMethod Erc1967Lowering::updateGateMethod(
 	};
 	body->body.push_back(awst::makeAssignmentStatement(
 		adminVar(), adminLoad(_loc), _loc));
-	// Account-form admin: the raw 32-byte account equals the sender.
+	// Account-form admin uses the same identity as source msg.sender. Small
+	// zero-padded words belong to the distinct native application-id namespace.
 	body->body.push_back(awst::makeAssignmentStatement(
 		okVar(),
-		awst::makeNumericCompare(adminVar(), awst::NumericComparison::Eq,
-			senderAsBiguint(_loc), _loc),
+		awst::makeBoolBinOp(
+			awst::makeNumericCompare(adminVar(), awst::NumericComparison::Gt,
+				awst::makeBiguintConstant("18446744073709551615", _loc), _loc),
+			awst::BinaryBooleanOperator::And,
+			awst::makeNumericCompare(adminVar(), awst::NumericComparison::Eq,
+				awst::makeAsBiguint(awst::makeAsBytes(std::move(_logicalSender), _loc), _loc), _loc), _loc),
 		_loc));
 	// Contract-form admin (bytes24 ++ app id — the ProxyAdmin topology): the
 	// stored word can never equal a sender account (app escrows are sha512_256

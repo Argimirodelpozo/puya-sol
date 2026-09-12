@@ -3,6 +3,8 @@
 /// inner app calls for external.
 
 #include "builder/itxn/FunctionPointerBuilder.h"
+#include "builder/itxn/ApplicationTarget.h"
+#include "builder/itxn/ApplicationCall.h"
 #include "awst/NameGen.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/SelectorSemantics.h"
@@ -217,20 +219,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 
 		if (_receiverAddress)
 		{
-			// Cross-contract: application → itob(u64); address → last 8 bytes
-			// (round-trips with .address, which pads appId to 32 bytes).
-			auto addr = _receiverAddress;
-			if (addr->wtype == awst::WType::applicationType())
-			{
-				auto toU64 = awst::makeAsUInt64(std::move(addr), _loc);
-				appIdBytes = awst::makeItob(std::move(toU64), _loc);
-			}
-			else
-			{
-				if (addr->wtype != awst::WType::bytesType())
-					addr = awst::makeAsBytes(std::move(addr), _loc);
-				appIdBytes = awst::makeExtract(std::move(addr), 24, 8, _loc);
-			}
+			appIdBytes = awst::makeItob(ApplicationTarget::pointerId(
+				_ctx.typeMapper.profile(), _receiverAddress, _loc), _loc);
 
 			// Routing selector: used as ApplicationArgs[0].
 			auto selectorConst = awst::makeMethodConstant(
@@ -391,8 +381,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
 		create->fields["TypeEnum"] = awst::makeIntegerConstant("6", _loc);
 		create->fields["Fee"] = awst::makeZero(_loc);
-		// ApplicationID: reinterpret uint64 appId to application type
-		create->fields["ApplicationID"] = awst::makeAsApplication(extractU64(0), _loc);
+		// Reference zero must not invoke AVM's current-application alias.
+		create->fields["ApplicationID"] = ApplicationTarget::requireApplication(extractU64(0), _loc);
 		create->fields["OnCompletion"] = awst::makeZero(_loc);
 		create->fields["ApplicationArgs"] = std::move(argsTuple);
 
@@ -401,8 +391,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		submit->itxns.push_back(std::move(create));
 
 		auto buildInnerTxnResult = [&](std::vector<std::shared_ptr<awst::Statement>>& out) {
-			auto payload = awst::makeExtract(
-				awst::makeItxn("LastLog", awst::WType::bytesType(), _loc), 4, 0, _loc);
+			auto payload = ApplicationCall::capture(_ctx.typeMapper, _loc, out);
 			return decodeExternalCallResult(_ctx.typeMapper, std::move(payload),
 				_funcType->returnParameterTypes(), retType, _loc, out);
 		};
@@ -412,7 +401,10 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		if (retType == awst::WType::voidType())
 		{
 			ifStmt->ifBranch->body.push_back(awst::makeExpressionStatement(selfCall, _loc));
+			ApplicationCall::setReturnData(_ctx.typeMapper, awst::makeBytesConstant({}, _loc),
+				_loc, ifStmt->ifBranch->body);
 			ifStmt->elseBranch->body.push_back(awst::makeExpressionStatement(submit, _loc));
+			ApplicationCall::capture(_ctx.typeMapper, _loc, ifStmt->elseBranch->body);
 			_ctx.preEffects().push_back(std::move(ifStmt));
 			auto vc = awst::makeVoidConstant(_loc);
 			return vc;
@@ -425,6 +417,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			return awst::makeAssignmentStatement(std::move(target), std::move(_val), _loc);
 		};
 		ifStmt->ifBranch->body.push_back(writeTmp(selfCall));
+		ApplicationCall::setTypedReturnData(_ctx.typeMapper,
+			awst::makeVarExpression(tmpName, retType, _loc), _funcType->returnParameterTypes(),
+			evmContractAbi, _loc, ifStmt->ifBranch->body);
 		ifStmt->elseBranch->body.push_back(awst::makeExpressionStatement(submit, _loc));
 		ifStmt->elseBranch->body.push_back(writeTmp(
 			buildInnerTxnResult(ifStmt->elseBranch->body)));

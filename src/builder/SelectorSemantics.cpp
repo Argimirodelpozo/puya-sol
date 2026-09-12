@@ -4,6 +4,7 @@
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/TypeCoercion.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -65,26 +66,19 @@ std::shared_ptr<awst::Expression> SelectorSemantics::eventSelector(
 std::string SelectorSemantics::eventSignature(
 	eb::ContractContext& _ctx, EventDefinition const& _event)
 {
-	auto arc4Name = [&](Type const* type) -> std::string {
-		auto const* w = _ctx.typeMapper.map(type);
-		if (w == awst::WType::biguintType()) return "uint256";
-		if (w == awst::WType::uint64Type()) return "uint64";
-		if (w == awst::WType::boolType()) return "bool";
-		if (w == awst::WType::accountType()) return "address";
-		if (w == awst::WType::bytesType()) return "byte[]";
-		if (w == awst::WType::stringType()) return "string";
-		if (auto const* bw = dynamic_cast<awst::BytesWType const*>(w))
-			return bw->length().has_value()
-				? "byte[" + std::to_string(*bw->length()) + "]" : "byte[]";
-		return type ? type->toString(true) : std::string{};
-	};
-	std::string result = _event.name() + "(";
+	return _event.name() + TypeCoercion::wtypeToABIName(eventType(_ctx.typeMapper, _event));
+}
+
+awst::ARC4Struct const* SelectorSemantics::eventType(TypeMapper& types, EventDefinition const& _event)
+{
+	std::vector<std::pair<std::string, awst::WType const*>> fields;
 	for (size_t i = 0; i < _event.parameters().size(); ++i)
 	{
-		if (i) result += ",";
-		result += arc4Name(_event.parameters()[i]->type());
+		auto const& parameter = *_event.parameters()[i];
+		fields.emplace_back(parameter.name().empty() ? "_" + std::to_string(i) : parameter.name(),
+			types.mapToARC4Type(types.map(parameter.type())));
 	}
-	return result + ")";
+	return types.createType<awst::ARC4Struct>(_event.name(), std::move(fields), true);
 }
 
 std::vector<SelectorRoute> SelectorSemantics::routes(eb::ContractContext& _ctx)

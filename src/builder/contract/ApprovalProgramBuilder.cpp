@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/contract/ConstructorWirePlan.h"
 #include "builder/abi/EvmAbiDecode.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/assembly/AssemblyBuilder.h"
@@ -211,7 +212,7 @@ void ContractBuilder::emitStateVarInitFor(
 				else if (wtype == awst::WType::boolType() || wtype == awst::WType::uint64Type())
 					zeroVal = awst::makeZero(loc);
 				else
-					zeroVal = StorageMapper::makeDefaultValue(wtype, loc);
+					zeroVal = TypeCoercion::makeDefaultValue(wtype, loc);
 				auto preKey = awst::makeUtf8BytesConstant(
 					binding.key, loc);
 				auto prePut = awst::makeAppGlobalPut(
@@ -249,12 +250,12 @@ void ContractBuilder::emitStateVarInitFor(
 			|| wtype->kind() == awst::WTypeKind::ARC4StaticArray
 			|| wtype->kind() == awst::WTypeKind::ARC4DynamicArray)
 		{
-			defaultVal = StorageMapper::makeDefaultValue(wtype, loc);
+			defaultVal = TypeCoercion::makeDefaultValue(wtype, loc);
 		}
 		else if (wtype->kind() == awst::WTypeKind::ARC4Struct
 			|| wtype->kind() == awst::WTypeKind::WTuple)
 		{
-			defaultVal = StorageMapper::makeDefaultValue(wtype, loc);
+			defaultVal = TypeCoercion::makeDefaultValue(wtype, loc);
 		}
 		else
 		{
@@ -406,94 +407,15 @@ void ContractBuilder::emitCtorParamDecode(
 	}
 	else if (m_typeMapper.profile().contractAbi == ContractAbi::Arc4)
 	{
-	// Decode constructor params from ApplicationArgs (ARC4-encoded, one per slot).
-	int argIndex = 0;
-	for (auto const& param: constructor->parameters())
-	{
-		auto* paramType = m_typeMapper.map(param->type());
-
-		// txna ApplicationArgs i → raw ARC4 bytes
-		auto readArg = awst::makeAppArg(argIndex, loc);
-
-		std::shared_ptr<awst::Expression> paramVal;
-
-		if (paramType == awst::WType::accountType())
+		ConstructorWirePlan wire(m_typeMapper, constructor, false);
+		for (size_t i = 0; i < wire.parameters.size(); ++i)
 		{
-			auto cast = awst::makeAsAccount(std::move(readArg), loc);
-			paramVal = std::move(cast);
+			auto const& parameter = wire.parameters[i];
+			createBlock->body.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(parameter.name, parameter.type, loc),
+				wire.decodeCreate(i, awst::makeAppArg(static_cast<int>(i), loc), loc), loc));
 		}
-		else if (paramType == awst::WType::biguintType())
-		{
-			auto cast = awst::makeAsBiguint(std::move(readArg), loc);
-			paramVal = std::move(cast);
-		}
-		else if (paramType == awst::WType::uint64Type()
-			|| paramType == awst::WType::boolType())
-		{
-			// Args are 32-byte big-endian (EVM ABI); extract last 8 + btoi.
-			auto len = awst::makeLen(readArg, loc);
-
-			auto eight = awst::makeIntegerConstant("8", loc);
-
-			auto offset = awst::makeUInt64BinOp(std::move(len), awst::UInt64BinaryOperator::Sub, eight, loc);
-
-			auto eight2 = awst::makeIntegerConstant("8", loc);
-			auto extract = awst::makeExtract3(
-				std::move(readArg), std::move(offset), std::move(eight2),
-				loc);
-
-			paramVal = awst::makeBtoi(
-				std::move(extract), loc, paramType);
-		}
-		else if (paramType == awst::WType::stringType())
-		{
-			auto cast = awst::makeReinterpretCast(std::move(readArg), awst::WType::stringType(), loc);
-			paramVal = std::move(cast);
-		}
-		else if (paramType->kind() == awst::WTypeKind::ReferenceArray)
-		{
-			auto const* arc4Type = m_typeMapper.mapToARC4Type(paramType);
-			auto cast = awst::makeReinterpretCast(std::move(readArg), arc4Type, loc);
-
-			auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(paramType);
-			if (refArr && !refArr->arraySize().has_value())
-				paramVal = awst::makeConvertArray(std::move(cast), paramType, loc);
-			else
-			{
-				auto decode = awst::makeARC4Decode(std::move(cast), paramType, loc);
-				paramVal = std::move(decode);
-			}
-		}
-		else if (paramType->kind() == awst::WTypeKind::ARC4StaticArray
-			|| paramType->kind() == awst::WTypeKind::ARC4DynamicArray)
-		{
-			auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, loc);
-			paramVal = std::move(cast);
-		}
-		else if (awst::fixedBytesLength(paramType).has_value())
-		{
-			auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, loc);
-			paramVal = std::move(cast);
-		}
-		else if (dynamic_cast<awst::ARC4Struct const*>(paramType))
-		{
-			auto cast = awst::makeReinterpretCast(std::move(readArg), paramType, loc);
-			paramVal = std::move(cast);
-		}
-		else
-		{
-			paramVal = std::move(readArg);
-		}
-
-		auto target = awst::makeVarExpression(param->name(), paramType, loc);
-
-		auto assignment = awst::makeAssignmentStatement(target, std::move(paramVal), loc);
-		createBlock->body.push_back(std::move(assignment));
-
-		++argIndex;
 	}
-	}
-
 }
 
 
@@ -526,16 +448,16 @@ void ContractBuilder::bindBaseCtorArgs(
 			continue;
 		if (storage && !slot)
 		{
-			m_tr->scope.bindings.storageAliases.set(parameter.id(), sol_ast::StorageAlias::classify(std::move(value)));
+			m_functionCtx->scope.bindings.storageAliases.set(parameter.id(), sol_ast::StorageAlias::classify(std::move(value)));
 			m_exprBuilder->appendEffectsTo(body->body);
 			continue;
 		}
 		if (!slot)
 			value = ConversionPlan{args[i]->annotation().type, parameter.type(), type,
 				ConversionPlan::Context::Argument}.emit(std::move(value), loc);
-		auto target = awst::makeVarExpression(m_tr->scope.awstVarName(parameter), type, loc);
+		auto target = awst::makeVarExpression(m_functionCtx->scope.awstVarName(parameter), type, loc);
 		if (slot)
-			m_tr->scope.bindings.slotStorageRefs.set(parameter.id(), target);
+			m_functionCtx->scope.bindings.slotStorageRefs.set(parameter.id(), target);
 		m_exprBuilder->appendEffectsTo(body->body);
 		body->body.push_back(awst::makeAssignmentStatement(target, std::move(value), loc));
 	}
@@ -568,7 +490,7 @@ void ContractBuilder::emitConstructorPlan(
 					auto const* type = m_typeMapper.profile().evmStorageLayout
 						&& param->referenceLocation() == VariableDeclaration::Location::Storage
 						? awst::WType::biguintType() : m_typeMapper.map(param->type());
-					m_tr->scope.bindings.paramRemaps.set(param->id(), sol_ast::ParamRemap{
+					m_functionCtx->scope.bindings.paramRemaps.set(param->id(), sol_ast::ParamRemap{
 						"__ctor_param_" + std::to_string(param->id()), type});
 					remappedParams.push_back(param->id());
 				}
@@ -594,7 +516,7 @@ void ContractBuilder::emitConstructorPlan(
 
 	// Legacy initializes all state before evaluating base arguments. Via-IR
 	// initializes each level immediately before executing its constructor.
-	if (!m_viaIR)
+	if (!m_typeMapper.profile().viaIRSequencing)
 		for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
 			emitStateVarInit(**it, body->body);
 
@@ -605,7 +527,7 @@ void ContractBuilder::emitConstructorPlan(
 		activate(level->constructor());
 		for (auto const* target: linearized)
 			if (auto it = arguments.find(target); it != arguments.end()
-				&& (m_viaIR ? it->second.owner == level : target == level))
+				&& (m_typeMapper.profile().viaIRSequencing ? it->second.owner == level : target == level))
 			{
 				activate(it->second.owner->constructor());
 				bindBaseCtorArgs(*target->constructor(), *it->second.expressions, body);
@@ -629,7 +551,7 @@ void ContractBuilder::emitConstructorPlan(
 	m_functionCtx->inConstructor = false;
 	m_functionCtx->callableId = 0;
 	for (auto id: remappedParams)
-		m_tr->scope.bindings.paramRemaps.erase(id);
+		m_functionCtx->scope.bindings.paramRemaps.erase(id);
 }
 
 /// buildApprovalProgram phase: init the transient-storage blob (transient scratch slot) BEFORE the create/dispatch split so the …
@@ -690,7 +612,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	auto body = method.body;
 
 	// __postInit triggers: box writes, new C(), msg.*, or AVM stdlib calls.
-	bool needsPostInit = computeNeedsPostInit(_contract, m_storageMapper);
+	bool needsPostInit = computeNeedsPostInit(_contract, m_storageMapper, m_typeMapper.analysis());
 
 	// Create-time check: if (Txn.ApplicationID == 0) { base_ctors; ctor_body; return true; }
 	{

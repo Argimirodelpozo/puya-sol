@@ -1,10 +1,11 @@
 /// @file CalldataMapOps.cpp
 /// EVM-calldata offset map + flat-element access for Yul translation.
 /// computeFlatElementCount/computeARC4ByteSize: pure type walks.
-/// initializeCalldataMap: populates m_calldataMap + m_localConstants per block.
+/// initializeCalldataMap: populates m_frame.calldataMap + m_frame.localConstants per block.
 /// accessFlatElement: AWST expression for the i-th 32-byte EVM calldata slot.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-types/Arc4Defaults.h"
 // yul nodes BY VALUE (the AST aliases are std::variant, which needs
 // complete types). Kept out of AssemblyBuilder.h so only the TUs that
 // actually instantiate them pay the ~223k lines.
@@ -48,25 +49,9 @@ int AssemblyBuilder::computeFlatElementCount(awst::WType const* _type)
 
 int AssemblyBuilder::computeARC4ByteSize(awst::WType const* _type)
 {
-	if (!_type)
-		return 32;
-	if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(_type))
-		return uintN->n() / 8;
-	if (auto const* arr = dynamic_cast<awst::ARC4StaticArray const*>(_type))
-		return arr->arraySize() * computeARC4ByteSize(arr->elementType());
-	if (auto const* s = dynamic_cast<awst::ARC4Struct const*>(_type))
-	{
-		int total = 0;
-		for (auto const& [name, fieldType]: s->fields())
-			total += computeARC4ByteSize(fieldType);
-		return total;
-	}
-	if (auto const* bytesType = dynamic_cast<awst::BytesWType const*>(_type))
-	{
-		if (bytesType->length())
-			return *bytesType->length();
-	}
-	return 32; // default
+	auto size = computeEncodedElementSize(_type).fixedBytes<int>();
+	if (!size) throw SizeError("assembly requires a fixed byte-aligned ARC4 value");
+	return *size;
 }
 
 void AssemblyBuilder::initializeCalldataMap(
@@ -84,15 +69,15 @@ void AssemblyBuilder::initializeCalldataMap(
 		// WORD index; the retrieval navigates the solc structure (accessEvmLeaf).
 		int words = static_cast<int>(headBytes / 32);
 		if (words < 1) words = 1;
-		m_localConstants[name] = offset;
-		m_calldataParamNames.insert(name);
+		m_frame.localConstants[name] = offset;
+		m_frame.calldataParamNames.insert(name);
 		for (int i = 0; i < words; ++i)
 		{
 			CalldataElement elem;
 			elem.paramName = name;
 			elem.flatIndex = i;
 			elem.paramType = type;
-			m_calldataMap[offset + static_cast<uint64_t>(i) * 32] = elem;
+			m_frame.calldataMap[offset + static_cast<uint64_t>(i) * 32] = elem;
 		}
 		offset += headBytes;
 	}

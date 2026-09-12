@@ -417,6 +417,7 @@ library Address {
  * @dev This library provides getters and event emitting update functions for
  * https://eips.ethereum.org/EIPS/eip-1967[ERC-1967] slots.
  */
+/// @custom:avm-proxy erc1967-utils
 library ERC1967Utils {
     /**
      * @dev Storage slot with the address of the current implementation.
@@ -596,6 +597,7 @@ library ERC1967Utils {
  *
  * The success and return data of the delegated call will be returned back to the caller of the proxy.
  */
+/// @custom:avm-proxy proxy
 abstract contract Proxy {
     /**
      * @dev Delegates the current call to `implementation`.

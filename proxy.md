@@ -8,6 +8,27 @@ proxy update gate is synthesized. Unsupported delegation remains subject to
 the normal compiler policy. Opting in accepts the native-update semantics and
 recognized-idiom limitations below; it is not a claim of EVM proxy equivalence.
 
+Function-body adaptation additionally requires an explicit declaration annotation:
+
+```solidity
+/// @custom:avm-proxy uups
+abstract contract UUPSUpgradeable { /* supported UUPS declarations */ }
+
+/// @custom:avm-proxy erc1967-utils
+library ERC1967Utils { /* supported ERC-1967 utility declarations */ }
+
+/// @custom:avm-proxy proxy
+abstract contract Proxy { /* supported delegation core */ }
+```
+
+Apply the annotation to the defining dependency declaration, including in
+flattened sources. This is the developer's explicit grant to adapt that role,
+not a certificate of OpenZeppelin provenance. Solc validates the supported
+parameter/return types, visibility and mutability; declaration IDs bind the
+folds. Names and paths alone never grant adaptation. Overrides outside the
+annotated defining declaration retain their bodies. Direct constant slot
+adaptation still needs only the flag. Annotations have no effect without it.
+
 Every EVM proxy pattern is a workaround for one protocol fact: **deployed EVM
 bytecode is immutable**. The AVM does not share that fact — an application's
 approval program is natively replaceable via an `UpdateApplication`
@@ -21,7 +42,7 @@ This document goes pattern by pattern. "Replay support" refers to the
 chainwide-historical-diff harness; "compile support" refers to lowering
 user-written proxy code.
 
-Documentation reconciled with the in-tree lowerings on 2026-09-05. Replay
+Documentation reconciled with the in-tree lowerings on 2026-09-12. Replay
 figures below are historical observations, not a fresh validation of this
 revision. The main branch has no automatic contract splitter.
 
@@ -72,9 +93,10 @@ sstore(s, v)`, the OZ `ERC1967Utils` body shape; such lets are folded so the
 slot classifies). A slot constant that instead ESCAPES into runtime data flow
 (function argument, memory store, arithmetic — e.g. OZ
 `StorageSlot.getAddressSlot(SLOT).value`, where the slot travels through a
-param) cannot be classified; the compiler emits a warning naming the slot,
-because storage through a derived slot value is NOT mapped to the lowerings
-below and splits from them. Admin-slot uses reached through a **library or
+param) cannot be classified; the compiler emits a conservative warning naming
+the slot and source. A surviving constant is not proof of a storage-model split
+(returning a proxiable UUID is valid), but an eventual derived storage access
+would not receive the native adaptation. Admin-slot uses reached through a **library or
 free function** attach the gate to every contract whose call graph reaches
 that function (not to whichever contract compiles first).
 
@@ -82,13 +104,14 @@ that function (not to whichever contract compiles first).
   `__erc1967_admin` (unset reads 0, EVM semantics), and any contract that
   touches it grows an ARC-4 `__erc1967_update()` method — declared in
   ARC-56 with `call: ["UpdateApplication"]`, never on create — that asserts
-  `Txn.Sender == admin` and emits ARC-28 **`Upgraded(address)`** (EIP-1967's
+  the selected sender identity equals the admin and emits ARC-28 **`Upgraded(address)`** (EIP-1967's
   event signature; the implementation arg is the app's own identity), so
   indexers see the same upgrade history as on EVM. The update txn carries
   the method selector in `ApplicationArgs[0]`; zero admin ⇒ rejected, and a
   selector-less bare update is rejected too (fail-closed both ways).
-  The stored admin may be an ACCOUNT (raw 32 bytes, compared against
-  `Txn.Sender` directly) or a CONTRACT identity (`bytes24 ++ app id` — the
+  The stored admin may be an ACCOUNT (full native sender in ARC-4; the same
+  low-160-bit or verified xchain identity as `msg.sender` in EVM profile)
+  or a CONTRACT identity (`bytes24 ++ app id` — the
   transparent-proxy ProxyAdmin topology): the gate then matches the sender
   against that application's ESCROW address via `app_params_get AppAddress`,
   so an admin app driving an inner `UpdateApplication` authorizes. A missing
@@ -109,6 +132,13 @@ updates remain rejected unless another recognized gate is synthesized:
 concrete OZ UUPS implementations with `_authorizeUpgrade` now receive the
 separate §3 update method. An arbitrary implementation-slot write is not
 enough to authorize updates.
+
+Exactly one native update policy is selected per contract. Combining reachable
+admin-slot adaptation with a UUPS authorization hook is diagnosed as ambiguous;
+the compiler does not synthesize independent alternative permissions. Lifecycle
+methods are finalized before EVM routing, regardless of whether the contract
+needs deferred constructor work. Both ABI profiles expose the native gate as
+an ARC-4 lifecycle method.
 
 Guard: `puyasolRegression/test_erc1967.py` — full flow (fail-closed update,
 admin round-trip, upgradeTo trap, admin-signed native update preserving
@@ -173,33 +203,38 @@ by `onlyProxy`/`notDelegated` checks via the immutable `__self` address.
   `onlyProxy → constant-true`, `notDelegated → constant-true` — both
   reachable-code-preserving constants, worth doing via a recognized-idiom
   fold rather than a blanket rule.
-- `_authorizeUpgrade(address)` — the user-defined permission hook — is the
-  ONE piece worth carrying over verbatim: its body becomes the update
-  branch's permission check. This is the cleanest seam for a compile-mode
-  feature: "your `_authorizeUpgrade` is your update gate."
+- `_authorizeUpgrade(address)` supplies the permission check only when its
+  implementation parameter is unreferenced. Solc resolves the exact virtual
+  override; its full body and modifier chain are called by the update gate.
+  An owner-only hook with an unused address parameter is supported. A reference
+  in the body, modifier arguments, super/helper forwarding or inline Yul is
+  conservatively rejected, even if later optimization might erase it. Native
+  updates carry program bytes, not an EVM implementation address: a hook that
+  consumes that argument needs an explicit native authorization adaptation.
+  The unused ABI parameter receives zero, not a fictitious proposed identity.
 
 **Replay: ✅** mechanically identical to §1 (the latch patch IS the UUPS
 artifact). **Compile: ✅** (`src/builder/proxies/UupsLowering`). Recognized-
-idiom folds over the OZ artifacts, by defining-contract name:
+idiom folds over explicitly annotated, solc-validated declarations:
 
 - `UUPSUpgradeable._checkProxy/_checkNotDelegated` → no-op (checks pass);
   `upgradeTo(AndCall)/_upgradeToAndCallUUPS` → runtime trap. Trapping the
   upgrade family also cuts UUPSUpgradeable's poison out of the demand graph
   (the rescue-mode delegatecall, the ERC-1822 staticcall probe).
-- `ERC1967Utils` FUNCTION-level folds (`Erc1967Lowering::classifyUtilsFunction`)
+- `ERC1967Utils` FUNCTION-level folds (registered in `ProxyFacts`)
   close the escaped-slot gap for OZ v5's `StorageSlot.getAddressSlot(SLOT)`
   shape: `getImplementation` → own identity, `getAdmin/_setAdmin` → the
   synthesized admin global (arming the §1 gate), setters/beacon → traps.
 - A concrete contract inheriting `UUPSUpgradeable` with an implemented
   `_authorizeUpgrade` gets `__uups_update()` — an UpdateApplication-only
   ABI method that calls the hook (its inlined modifiers ARE the permission
-  check) and emits ARC-28 `Upgraded(address)`. "Your `_authorizeUpgrade` is
-  your update gate", exactly as designed above.
+  check) and emits ARC-28 `Upgraded(address)`, subject to the unused-argument
+  and single-policy conditions above.
 Guard: `puyasolRegression/test_uups.py` over a flattened OZ v5 closure
 (business logic + proxiableUUID work, upgradeToAndCall traps, stranger/bare
 updates rejected, owner updates natively with state preserved). Deployed
 proof: **FBTC (Base) replays 197/200 with zero divergences** under
-`--evm-storage-layout` — a live UUPS implementation compiling verbatim.
+`--evm-storage-layout` — a historical observation predating required annotations.
 
 ---
 

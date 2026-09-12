@@ -42,6 +42,19 @@ std::shared_ptr<awst::Expression> tryConvertArc4Array(
 		return awst::makeConvertArray(std::move(_value), _targetType, _loc);
 	auto const sourceStride = computeEncodedElementSize(sourceElem).fixedBytes<int>();
 	auto const targetStride = computeEncodedElementSize(targetElem).fixedBytes<int>();
+	if (ss && ts && (!sourceStride || !targetStride) && ts->arraySize() <= 256)
+	{
+		// Dynamic elements need new head/tail offsets, not byte padding.
+		// Puya's typed array encoder also owns packed-bool layout.
+		auto source = awst::makeEvalOnce(std::move(_value), _loc);
+		auto result = awst::makeNewArray(_targetType, _loc);
+		for (int64_t i = 0; i < ts->arraySize(); ++i)
+			result->values.push_back(i < ss->arraySize()
+				? TypeCoercion::coerceForAssignment(awst::makeIndexExpression(source,
+					awst::makeIntegerConstant(i, _loc), sourceElem, _loc), targetElem, _loc, _pre)
+				: TypeCoercion::makeDefaultValue(targetElem, _loc));
+		return result;
+	}
 	if (sameElement && ss && ts && sourceStride)
 		return awst::makeReinterpretCast(awst::makeRightPad(
 			awst::makeAsBytes(std::move(_value), _loc), EncodedSize::fixed(*sourceStride)

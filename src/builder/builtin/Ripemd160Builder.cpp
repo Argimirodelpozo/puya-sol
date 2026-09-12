@@ -11,16 +11,15 @@
 ///   - All static data (shifts, two index tables, fn-ids, ks per line) lives
 ///     in byte tables read with `getbyte`.
 ///   - Outer round and inner 16-step loops are runtime `while` loops, not
-///     unrolled — each line is a body that processes 5×16 steps.
+///     unrolled — both lines share one body that processes 5×16 steps.
 ///   - The 5 round-functions f1..f5 dispatch through a ConditionalExpression
 ///     chain on the round-indexed fn-id.
 ///   - x[idx] (the 16 LE words per chunk) is computed on demand via
-///     `readLeWord(padded, pos + idx*4)` — avoids materializing 16 locals.
+///     `readLeWord(chunk, idx*4)` — avoids materializing 16 locals.
 ///
 /// Body structure (high level):
 ///   1. Initialize digest state h0..h4 with the canonical IV.
-///   2. Pad input: append 0x80, zero-fill, append 8-byte length-in-bits LE.
-///      This yields a multiple of 64 bytes.
+///   2. Pad only the final partial block (at most 128 bytes including length).
 ///   3. For each 64-byte chunk:
 ///        a. Run the "left line" — 5×16 step round loop with the identity
 ///           initial index permutation, fns[1..5], constants_left.
@@ -87,27 +86,16 @@ std::shared_ptr<Expression> add32(
 	return mask32(u64BinOp(std::move(a), UInt64BinaryOperator::Add, std::move(b), loc), loc);
 }
 
-/// ROL32(<var name>, <var name>) — rotate uint64-as-uint32 left by `nName`.
+/// Rotate a uint64-as-uint32 variable left by a pure shift expression.
 /// Result: ((x << n) | (x >> (32-n))) & 0xFFFFFFFF.
-std::shared_ptr<Expression> rol32Var(
-	std::string const& xName, std::string const& nName, SourceLocation const& loc)
+std::shared_ptr<Expression> rol32(
+	std::string const& xName, std::shared_ptr<Expression> n, SourceLocation const& loc)
 {
 	auto lo = u64BinOp(u64Var(xName, loc), UInt64BinaryOperator::LShift,
-		u64Var(nName, loc), loc);
-	auto comp = u64BinOp(u64Const(32, loc), UInt64BinaryOperator::Sub, u64Var(nName, loc), loc);
+		n, loc);
+	auto comp = u64BinOp(u64Const(32, loc), UInt64BinaryOperator::Sub, std::move(n), loc);
 	auto hi = u64BinOp(u64Var(xName, loc), UInt64BinaryOperator::RShift,
 		std::move(comp), loc);
-	return mask32(u64BinOp(std::move(lo), UInt64BinaryOperator::BitOr, std::move(hi), loc), loc);
-}
-
-/// ROL32 with compile-time `n` (used for the fixed `ROL(w2, 10)` step).
-std::shared_ptr<Expression> rol32Const(
-	std::string const& xName, uint64_t n, SourceLocation const& loc)
-{
-	auto lo = u64BinOp(u64Var(xName, loc), UInt64BinaryOperator::LShift,
-		u64Const(n, loc), loc);
-	auto hi = u64BinOp(u64Var(xName, loc), UInt64BinaryOperator::RShift,
-		u64Const(32 - n, loc), loc);
 	return mask32(u64BinOp(std::move(lo), UInt64BinaryOperator::BitOr, std::move(hi), loc), loc);
 }
 
@@ -121,19 +109,6 @@ std::shared_ptr<Statement> assignStmt(
 	SourceLocation const& loc)
 {
 	return makeAssignmentStatement(std::move(target), std::move(value), loc);
-}
-
-std::shared_ptr<Expression> bytesLen(std::shared_ptr<Expression> b, SourceLocation const& loc)
-{
-	auto call = makeIntrinsicCall("len", WType::uint64Type(), loc);
-	call->stackArgs.push_back(std::move(b));
-	return call;
-}
-
-std::shared_ptr<Expression> concatBytes(
-	std::shared_ptr<Expression> a, std::shared_ptr<Expression> b, SourceLocation const& loc)
-{
-	return makeConcat(std::move(a), std::move(b), loc);
 }
 
 std::shared_ptr<Expression> getByte(
@@ -243,9 +218,6 @@ std::vector<uint8_t> fullIndexTable(std::vector<uint8_t> initial)
 	return all;
 }
 
-// 5-byte k-id table (we look up the actual constant via a switch).
-// Not strictly needed since we encode round directly.
-
 // ── Round function dispatch via ConditionalExpression chain ────────────
 // Builds: (fn==1 ? f1 : (fn==2 ? f2 : (fn==3 ? f3 : (fn==4 ? f4 : f5))))
 // where each f_n is built from var names. Each branch references w1/w2/w3
@@ -266,17 +238,6 @@ std::shared_ptr<Expression> buildFnDispatch(
 	auto eq = [&](uint64_t v) {
 		return makeNumericCompare(u64Var(fnName, loc), NumericComparison::Eq, u64Const(v, loc), loc);
 	};
-	auto cond = [&](std::shared_ptr<Expression> c0,
-					std::shared_ptr<Expression> t,
-					std::shared_ptr<Expression> e) {
-		auto ce = std::make_shared<ConditionalExpression>();
-		ce->sourceLocation = loc;
-		ce->wtype = WType::uint64Type();
-		ce->condition = std::move(c0);
-		ce->trueExpr = std::move(t);
-		ce->falseExpr = std::move(e);
-		return ce;
-	};
 
 	// f1: b ^ c ^ d
 	auto f1 = Xor(Xor(b(), c()), d());
@@ -290,207 +251,112 @@ std::shared_ptr<Expression> buildFnDispatch(
 	auto f5 = Xor(b(), Or(c(), not32(d(), loc)));
 
 	// Nested ternaries
-	auto inner4 = cond(eq(4), std::move(f4), std::move(f5));
-	auto inner3 = cond(eq(3), std::move(f3), std::move(inner4));
-	auto inner2 = cond(eq(2), std::move(f2), std::move(inner3));
-	return cond(eq(1), std::move(f1), std::move(inner2));
+	auto inner4 = makeConditional(eq(4), std::move(f4), std::move(f5), WType::uint64Type(), loc);
+	auto inner3 = makeConditional(eq(3), std::move(f3), std::move(inner4), WType::uint64Type(), loc);
+	auto inner2 = makeConditional(eq(2), std::move(f2), std::move(inner3), WType::uint64Type(), loc);
+	return makeConditional(eq(1), std::move(f1), std::move(inner2), WType::uint64Type(), loc);
 }
 
-// ── One-line body emitter (left or right) ─────────────────────────────
-//
-// Initializes Lw0..Lw4 (or Rw0..Rw4) from h0..h4, then runs a 2-level
-// runtime loop:
-//   for round in [0..5):
-//     for i in [0..16):
-//       idx   = getbyte(idxTable, round*16 + i)
-//       shift = getbyte(shTable, round*16 + i)
-//       fn    = getbyte(fnTable, round)         // 1..5
-//       k     = lookupK(round)                  // ConditionalExpression chain
-//       xi    = readLeWord(padded, pos + idx*4)
-//       sum   = w0 + f_fn(w1,w2,w3) + xi + k
-//       sum   = ROL(sum, shift) + w4
-//       // rotate
-//       tmp = sum
-//       w0  = w4
-//       w4  = w3
-//       w3  = ROL(w2, 10)
-//       w2  = w1
-//       w1  = tmp
-void emitLine(
-	Block& body,
-	std::vector<uint8_t> const& indexTbl,    // 80-byte
-	std::vector<uint8_t> const& fnTbl,       // 5-byte
-	std::vector<uint64_t> const& ksTbl,      // 5 entries
-	std::string const& wPfx,
-	SourceLocation const& loc)
+// Both RIPEMD lines execute this one generated round body. Tables are selected
+// once per line; the five round constants are packed as big-endian uint32s.
+void emitLine(Block& body, SourceLocation const& loc)
 {
-	// Initialize w0..w4 from digest h0..h4.
+	using O = UInt64BinaryOperator;
+	auto left = [&] {
+		return makeNumericCompare(u64Var("line", loc), NumericComparison::Eq, u64Const(0, loc), loc);
+	};
 	for (int i = 0; i < 5; ++i)
-		body.body.push_back(assignStmt(
-			u64Var(wPfx + std::to_string(i), loc),
+		body.body.push_back(assignStmt(u64Var("W" + std::to_string(i), loc),
 			u64Var("h" + std::to_string(i), loc), loc));
+	body.body.push_back(assignStmt(bytesVar("indices", loc), makeConditional(
+		left(), makeBytesConstant(fullIndexTable(indexLine(0, 1)), loc, BytesEncoding::Base16),
+		makeBytesConstant(fullIndexTable(indexLine(5, 9)), loc, BytesEncoding::Base16),
+		WType::bytesType(), loc), loc));
 
-	// Bake constants tables as bytes literals — we let puya hoist these
-	// to bytecblock constants in the TEAL output.
-	std::string const idxTblName = wPfx + "_idx";
-	std::string const fnTblName = wPfx + "_fn";
-	body.body.push_back(assignStmt(bytesVar(idxTblName, loc),
-		makeBytesConstant(indexTbl, loc, BytesEncoding::Base16), loc));
-	body.body.push_back(assignStmt(bytesVar(fnTblName, loc),
-		makeBytesConstant(fnTbl, loc, BytesEncoding::Base16), loc));
-	// Emit a shared shifts table (unique per call but symbolically the same
-	// constant — puya dedupes across calls).
-	std::string const shTblName = wPfx + "_sh";
-	body.body.push_back(assignStmt(bytesVar(shTblName, loc),
-		makeBytesConstant(shiftsTable(), loc, BytesEncoding::Base16), loc));
+	std::vector<uint8_t> constants;
+	for (uint32_t k: {0x00000000U, 0x5a827999U, 0x6ed9eba1U, 0x8f1bbcdcU, 0xa953fd4eU,
+		0x50a28be6U, 0x5c4dd124U, 0x6d703ef3U, 0x7a6d76e9U, 0x00000000U})
+		for (int shift = 24; shift >= 0; shift -= 8)
+			constants.push_back(static_cast<uint8_t>(k >> shift));
 
-	// Round loop: round = 0; while round < 5: ...
 	body.body.push_back(assignStmt(u64Var("round", loc), u64Const(0, loc), loc));
-
-	auto roundLoop = std::make_shared<WhileLoop>();
-	roundLoop->sourceLocation = loc;
-	roundLoop->condition = makeNumericCompare(
-		u64Var("round", loc), NumericComparison::Lt, u64Const(5, loc), loc);
 	auto roundBody = makeBlock(loc);
-
-	// fn = getbyte(fnTbl, round)
-	roundBody->body.push_back(assignStmt(u64Var("fn", loc),
-		getByte(bytesVar(fnTblName, loc), u64Var("round", loc), loc), loc));
-
-	// k = lookupK(round) — a 4-way ternary chain on the 5 ks.
-	{
-		auto eq = [&](uint64_t v) {
-			return makeNumericCompare(u64Var("round", loc), NumericComparison::Eq, u64Const(v, loc), loc);
-		};
-		auto cond = [&](std::shared_ptr<Expression> c0,
-						std::shared_ptr<Expression> t,
-						std::shared_ptr<Expression> e) {
-			auto ce = std::make_shared<ConditionalExpression>();
-			ce->sourceLocation = loc;
-			ce->wtype = WType::uint64Type();
-			ce->condition = std::move(c0);
-			ce->trueExpr = std::move(t);
-			ce->falseExpr = std::move(e);
-			return ce;
-		};
-		auto k = cond(eq(0), u64Const(ksTbl[0], loc),
-			cond(eq(1), u64Const(ksTbl[1], loc),
-				cond(eq(2), u64Const(ksTbl[2], loc),
-					cond(eq(3), u64Const(ksTbl[3], loc), u64Const(ksTbl[4], loc)))));
-		roundBody->body.push_back(assignStmt(u64Var("k", loc), std::move(k), loc));
-	}
-
-	// roundBase = round * 16
+	roundBody->body.push_back(assignStmt(u64Var("fn", loc), makeConditional(
+		left(), u64BinOp(u64Var("round", loc), O::Add, 1, loc),
+		u64BinOp(u64Const(5, loc), O::Sub, u64Var("round", loc), loc),
+		WType::uint64Type(), loc), loc));
+	auto constantOffset = u64BinOp(
+		u64BinOp(u64BinOp(u64Var("line", loc), O::Mult, 5, loc),
+			O::Add, u64Var("round", loc), loc), O::Mult, 4, loc);
+	roundBody->body.push_back(assignStmt(u64Var("k", loc), makeBtoi(makeExtract3(
+		makeBytesConstant(std::move(constants), loc, BytesEncoding::Base16),
+		std::move(constantOffset), u64Const(4, loc), loc), loc), loc));
 	roundBody->body.push_back(assignStmt(u64Var("roundBase", loc),
-		u64BinOp(u64Var("round", loc), UInt64BinaryOperator::Mult, 16, loc), loc));
-
-	// Inner loop: i = 0; while i < 16: ...
+		u64BinOp(u64Var("round", loc), O::Mult, 16, loc), loc));
 	roundBody->body.push_back(assignStmt(u64Var("i", loc), u64Const(0, loc), loc));
 
-	auto innerLoop = std::make_shared<WhileLoop>();
-	innerLoop->sourceLocation = loc;
-	innerLoop->condition = makeNumericCompare(
-		u64Var("i", loc), NumericComparison::Lt, u64Const(16, loc), loc);
 	auto innerBody = makeBlock(loc);
-
-	// idx   = getbyte(idxTbl, roundBase + i)
-	// shift = getbyte(shTbl,  roundBase + idx)   // shift indexed by index[i]
-	auto roundBasePlusI = [&] {
-		return u64BinOp(u64Var("roundBase", loc), UInt64BinaryOperator::Add,
-			u64Var("i", loc), loc);
-	};
-	innerBody->body.push_back(assignStmt(u64Var("idx", loc),
-		getByte(bytesVar(idxTblName, loc), roundBasePlusI(), loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("shift", loc),
-		getByte(bytesVar(shTblName, loc),
-			u64BinOp(u64Var("roundBase", loc), UInt64BinaryOperator::Add,
-				u64Var("idx", loc), loc), loc), loc));
-
-	// xOff = pos + idx * 4   (padded byte offset of word x[idx])
+	innerBody->body.push_back(assignStmt(u64Var("idx", loc), getByte(
+		bytesVar("indices", loc),
+		u64BinOp(u64Var("roundBase", loc), O::Add, u64Var("i", loc), loc), loc), loc));
+	// Shifts are indexed by the permuted word index, not the step index.
+	innerBody->body.push_back(assignStmt(u64Var("shift", loc), getByte(
+		makeBytesConstant(shiftsTable(), loc, BytesEncoding::Base16),
+		u64BinOp(u64Var("roundBase", loc), O::Add, u64Var("idx", loc), loc), loc), loc));
 	innerBody->body.push_back(assignStmt(u64Var("xOff", loc),
-		u64BinOp(u64Var("pos", loc), UInt64BinaryOperator::Add,
-			u64BinOp(u64Var("idx", loc), UInt64BinaryOperator::Mult, 4, loc), loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("xi", loc),
-		readLeWord("padded", "xOff", loc), loc));
-
-	// fnVal = dispatch(fn, w1, w2, w3)
+		u64BinOp(u64Var("idx", loc), O::Mult, 4, loc), loc));
+	innerBody->body.push_back(assignStmt(u64Var("xi", loc), readLeWord("chunk", "xOff", loc), loc));
 	innerBody->body.push_back(assignStmt(u64Var("fnVal", loc),
-		buildFnDispatch("fn", wPfx + "1", wPfx + "2", wPfx + "3", loc), loc));
-
-	// sum = w0 + fnVal + xi + k
-	auto sum = add32(
-		add32(
-			add32(u64Var(wPfx + "0", loc), u64Var("fnVal", loc), loc),
-			u64Var("xi", loc), loc),
-		u64Var("k", loc), loc);
+		buildFnDispatch("fn", "W1", "W2", "W3", loc), loc));
+	auto sum = add32(add32(add32(u64Var("W0", loc), u64Var("fnVal", loc), loc),
+		u64Var("xi", loc), loc), u64Var("k", loc), loc);
 	innerBody->body.push_back(assignStmt(u64Var("sum", loc), std::move(sum), loc));
-
-	// sum = ROL(sum, shift) + w4
-	auto rolSum = rol32Var("sum", "shift", loc);
 	innerBody->body.push_back(assignStmt(u64Var("sum", loc),
-		add32(std::move(rolSum), u64Var(wPfx + "4", loc), loc), loc));
-
-	// Word rotation: tmp = sum; w0 = w4; w4 = w3; w3 = ROL(w2, 10);
-	// w2 = w1; w1 = tmp
-	innerBody->body.push_back(assignStmt(u64Var("tmp", loc), u64Var("sum", loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var(wPfx + "0", loc),
-		u64Var(wPfx + "4", loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var(wPfx + "4", loc),
-		u64Var(wPfx + "3", loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var(wPfx + "3", loc),
-		rol32Const(wPfx + "2", 10, loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var(wPfx + "2", loc),
-		u64Var(wPfx + "1", loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var(wPfx + "1", loc),
-		u64Var("tmp", loc), loc));
-
-	// i = i + 1
+		add32(rol32("sum", u64Var("shift", loc), loc), u64Var("W4", loc), loc), loc));
+	innerBody->body.push_back(assignStmt(u64Var("W0", loc), u64Var("W4", loc), loc));
+	innerBody->body.push_back(assignStmt(u64Var("W4", loc), u64Var("W3", loc), loc));
+	innerBody->body.push_back(assignStmt(u64Var("W3", loc), rol32("W2", u64Const(10, loc), loc), loc));
+	innerBody->body.push_back(assignStmt(u64Var("W2", loc), u64Var("W1", loc), loc));
+	innerBody->body.push_back(assignStmt(u64Var("W1", loc), u64Var("sum", loc), loc));
 	innerBody->body.push_back(assignStmt(u64Var("i", loc),
-		u64BinOp(u64Var("i", loc), UInt64BinaryOperator::Add, 1, loc), loc));
-	innerLoop->loopBody = std::move(innerBody);
-	roundBody->body.push_back(innerLoop);
-
-	// round = round + 1
+		u64BinOp(u64Var("i", loc), O::Add, 1, loc), loc));
+	roundBody->body.push_back(makeWhileLoop(makeNumericCompare(
+		u64Var("i", loc), NumericComparison::Lt, u64Const(16, loc), loc), std::move(innerBody), loc));
 	roundBody->body.push_back(assignStmt(u64Var("round", loc),
-		u64BinOp(u64Var("round", loc), UInt64BinaryOperator::Add, 1, loc), loc));
-	roundLoop->loopBody = std::move(roundBody);
-	body.body.push_back(roundLoop);
+		u64BinOp(u64Var("round", loc), O::Add, 1, loc), loc));
+	body.body.push_back(makeWhileLoop(makeNumericCompare(
+		u64Var("round", loc), NumericComparison::Lt, u64Const(5, loc), loc), std::move(roundBody), loc));
 }
 
 void emitProcessChunk(Block& body, SourceLocation const& loc)
 {
-	// Left line.
-	auto leftIdx = fullIndexTable(indexLine(0, 1));
-	std::vector<uint8_t> fnLeftTbl = { 1, 2, 3, 4, 5 };
-	std::vector<uint64_t> ksLeftTbl =
-		{ 0x00000000ULL, 0x5a827999ULL, 0x6ed9eba1ULL, 0x8f1bbcdcULL, 0xa953fd4eULL };
-	emitLine(body, leftIdx, fnLeftTbl, ksLeftTbl, "L", loc);
+	// L retains the first line; W contains the second line after the loop.
+	// Initialize both outside loops so the AWST has no undefined incoming values.
+	for (int i = 0; i < 5; ++i)
+		for (auto const* prefix: {"L", "W"})
+			body.body.push_back(assignStmt(u64Var(prefix + std::to_string(i), loc), u64Const(0, loc), loc));
+	body.body.push_back(assignStmt(u64Var("line", loc), u64Const(0, loc), loc));
+	auto lineBody = makeBlock(loc);
+	emitLine(*lineBody, loc);
+	auto saveLeft = makeBlock(loc);
+	for (int i = 0; i < 5; ++i)
+		saveLeft->body.push_back(assignStmt(u64Var("L" + std::to_string(i), loc),
+			u64Var("W" + std::to_string(i), loc), loc));
+	lineBody->body.push_back(makeIfElse(makeNumericCompare(
+		u64Var("line", loc), NumericComparison::Eq, u64Const(0, loc), loc),
+		std::move(saveLeft), nullptr, loc));
+	lineBody->body.push_back(assignStmt(u64Var("line", loc),
+		u64BinOp(u64Var("line", loc), UInt64BinaryOperator::Add, 1, loc), loc));
+	body.body.push_back(makeWhileLoop(makeNumericCompare(
+		u64Var("line", loc), NumericComparison::Lt, u64Const(2, loc), loc), std::move(lineBody), loc));
 
-	// Right line.
-	auto rightIdx = fullIndexTable(indexLine(5, 9));
-	std::vector<uint8_t> fnRightTbl = { 5, 4, 3, 2, 1 };
-	std::vector<uint64_t> ksRightTbl =
-		{ 0x50a28be6ULL, 0x5c4dd124ULL, 0x6d703ef3ULL, 0x7a6d76e9ULL, 0x00000000ULL };
-	emitLine(body, rightIdx, fnRightTbl, ksRightTbl, "R", loc);
-
-	// Combine + final rotation:
-	//   t  = h0 + L1 + R2
-	//   h0 = h1 + L2 + R3
-	//   h1 = h2 + L3 + R4
-	//   h2 = h3 + L4 + R0
-	//   h3 = h4 + L0 + R1
-	//   h4 = t
+	// Cross-combine the two lines, retaining h0 until the final rotation.
 	auto combine = [&](std::string const& dst, std::string const& hSrc, int li, int ri) {
-		auto val = add32(
-			add32(u64Var(hSrc, loc),
-				u64Var("L" + std::to_string(li), loc), loc),
-			u64Var("R" + std::to_string(ri), loc), loc);
-		body.body.push_back(assignStmt(u64Var(dst, loc), std::move(val), loc));
+		body.body.push_back(assignStmt(u64Var(dst, loc), add32(
+			add32(u64Var(hSrc, loc), u64Var("L" + std::to_string(li), loc), loc),
+			u64Var("W" + std::to_string(ri), loc), loc), loc));
 	};
-	body.body.push_back(assignStmt(
-		u64Var("htmp", loc),
-		add32(add32(u64Var("h0", loc), u64Var("L1", loc), loc),
-			u64Var("R2", loc), loc), loc));
+	combine("htmp", "h0", 1, 2);
 	combine("h0", "h1", 2, 3);
 	combine("h1", "h2", 3, 4);
 	combine("h2", "h3", 4, 0);
@@ -525,26 +391,29 @@ std::shared_ptr<Subroutine> buildRipemd160Subroutine(SourceLocation loc)
 
 	// dataLen = len(data); bits = dataLen * 8
 	body->body.push_back(assignStmt(u64Var("dataLen", loc),
-		bytesLen(bytesVar("data", loc), loc), loc));
+		makeLen(bytesVar("data", loc), loc), loc));
 	body->body.push_back(assignStmt(u64Var("bits", loc),
 		u64BinOp(u64Var("dataLen", loc), UInt64BinaryOperator::Mult, 8, loc), loc));
 
-	// padLen = ((dataLen + 72) >> 6) << 6.
+	// Keep the original full blocks in data. Only the remainder is padded;
+	// even a 4096-byte input therefore never creates an oversized AVM value.
+	body->body.push_back(assignStmt(u64Var("remainder", loc),
+		u64BinOp(u64Var("dataLen", loc), UInt64BinaryOperator::Mod, 64, loc), loc));
+	body->body.push_back(assignStmt(u64Var("fullLen", loc),
+		u64BinOp(u64Var("dataLen", loc), UInt64BinaryOperator::Sub, u64Var("remainder", loc), loc), loc));
+	body->body.push_back(assignStmt(u64Var("tailLen", loc), makeConditional(
+		makeNumericCompare(u64Var("remainder", loc), NumericComparison::Lt, u64Const(56, loc), loc),
+		u64Const(64, loc), u64Const(128, loc), WType::uint64Type(), loc), loc));
 	body->body.push_back(assignStmt(u64Var("padLen", loc),
-		u64BinOp(
-			u64BinOp(
-				u64BinOp(u64Var("dataLen", loc), UInt64BinaryOperator::Add, 72, loc),
-				UInt64BinaryOperator::RShift, 6, loc),
-			UInt64BinaryOperator::LShift, 6, loc), loc));
-
-	// padded = data ++ 0x80 ++ bzero(padLen - dataLen - 9)
+		u64BinOp(u64Var("fullLen", loc), UInt64BinaryOperator::Add, u64Var("tailLen", loc), loc), loc));
 	auto zerosLen = u64BinOp(
-		u64BinOp(u64Var("padLen", loc), UInt64BinaryOperator::Sub, u64Var("dataLen", loc), loc),
+		u64BinOp(u64Var("tailLen", loc), UInt64BinaryOperator::Sub, u64Var("remainder", loc), loc),
 		UInt64BinaryOperator::Sub, u64Const(9, loc), loc);
-	auto firstPart = concatBytes(
-		concatBytes(bytesVar("data", loc), oneByte(0x80, loc), loc),
+	auto firstPart = makeConcat(
+		makeConcat(makeExtract3(bytesVar("data", loc), u64Var("fullLen", loc),
+			u64Var("remainder", loc), loc), oneByte(0x80, loc), loc),
 		makeBzero(std::move(zerosLen), loc), loc);
-	body->body.push_back(assignStmt(bytesVar("padded", loc), std::move(firstPart), loc));
+	body->body.push_back(assignStmt(bytesVar("tail", loc), std::move(firstPart), loc));
 
 	// 8-byte LE length of bits at the end of the last chunk.
 	auto bitsByte = [&](uint64_t shift) {
@@ -555,27 +424,29 @@ std::shared_ptr<Subroutine> buildRipemd160Subroutine(SourceLocation loc)
 	std::shared_ptr<Expression> lenLeBuf = makeBzero(u64Const(8, loc), loc);
 	for (int i = 0; i < 8; ++i)
 		lenLeBuf = setByte(std::move(lenLeBuf), u64Const(i, loc), bitsByte(i * 8), loc);
-	body->body.push_back(assignStmt(bytesVar("padded", loc),
-		concatBytes(bytesVar("padded", loc), std::move(lenLeBuf), loc), loc));
+	body->body.push_back(assignStmt(bytesVar("tail", loc),
+		makeConcat(bytesVar("tail", loc), std::move(lenLeBuf), loc), loc));
 
 	// Chunk loop: for pos = 0; pos < padLen; pos += 64
 	body->body.push_back(assignStmt(u64Var("pos", loc), u64Const(0, loc), loc));
-	auto chunkLoop = std::make_shared<WhileLoop>();
-	chunkLoop->sourceLocation = loc;
-	chunkLoop->condition = makeNumericCompare(
-		u64Var("pos", loc), NumericComparison::Lt, u64Var("padLen", loc), loc);
 	auto chunkBody = makeBlock(loc);
+	chunkBody->body.push_back(assignStmt(bytesVar("chunk", loc), makeConditional(
+		makeNumericCompare(u64Var("pos", loc), NumericComparison::Lt, u64Var("fullLen", loc), loc),
+		makeExtract3(bytesVar("data", loc), u64Var("pos", loc), u64Const(64, loc), loc),
+		makeExtract3(bytesVar("tail", loc),
+			u64BinOp(u64Var("pos", loc), UInt64BinaryOperator::Sub, u64Var("fullLen", loc), loc),
+			u64Const(64, loc), loc), WType::bytesType(), loc), loc));
 	emitProcessChunk(*chunkBody, loc);
 	chunkBody->body.push_back(assignStmt(u64Var("pos", loc),
 		u64BinOp(u64Var("pos", loc), UInt64BinaryOperator::Add, 64, loc), loc));
-	chunkLoop->loopBody = std::move(chunkBody);
-	body->body.push_back(chunkLoop);
+	body->body.push_back(makeWhileLoop(makeNumericCompare(
+		u64Var("pos", loc), NumericComparison::Lt, u64Var("padLen", loc), loc), std::move(chunkBody), loc));
 
 	// Final digest as 20 LE bytes.
-	auto digest = concatBytes(
-		concatBytes(
-			concatBytes(
-				concatBytes(
+	auto digest = makeConcat(
+		makeConcat(
+			makeConcat(
+				makeConcat(
 					wordLeBytes("h0", loc),
 					wordLeBytes("h1", loc), loc),
 				wordLeBytes("h2", loc), loc),

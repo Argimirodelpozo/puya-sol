@@ -8,6 +8,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -24,8 +25,8 @@ namespace puyasol::builder
 struct BuildArtifacts
 {
 	std::vector<std::shared_ptr<awst::Subroutine>> pendingYulSubroutines;
-	/// Shared scratch-memory primitives; unit-wide, not reset between contracts.
-	std::map<std::string, std::shared_ptr<awst::Subroutine>> memoryWordSubroutines;
+	/// Shared scratch-memory and byte-buffer primitives; unit-wide.
+	std::map<std::string, std::shared_ptr<awst::Subroutine>> bufferSubroutines;
 	/// --evm-storage-layout: RECURSIVE struct types (S{S[] x}) cannot inline
 	/// their delete — clearing recurses through a per-type runtime subroutine
 	/// instead. Canonical type identifier -> unit-global SubroutineID target;
@@ -34,16 +35,36 @@ struct BuildArtifacts
 	std::map<std::string, std::string> evmClearSubs;
 	std::vector<std::pair<std::string, solidity::frontend::Type const*>> pendingEvmClearSubs;
 	std::set<std::string> childContracts;
-	/// Children whose `new C()` create loads the approval program from a
-	/// "__cp_<Child>" box (--child-programs-via-box). The contract that owns
-	/// such creates gets the synthesized __provisionChildProg method.
-	/// Snapshot-and-reset per ContractBuilder::build (like usesErc1967Admin).
-	std::set<std::string> boxProvisionedChildren;
-	/// EVM-router calldata decoders memoized per struct: canonical struct id
-	/// -> contract-method name (`__evm_decs_<id>`), bodies queued here and
-	/// appended to the contract after dispatch is built. Per-contract.
-	std::map<std::string, std::string> evmDecodeStructMethods;
-	std::vector<awst::ContractMethod> pendingEvmDecodeMethods;
+	/// Derived unit-wide storage runtime facts, not target configuration.
+	bool denseOnlyStorage = false;
+	bool singlePageStorage = false;
+
+	struct ContractEmission
+	{
+		std::set<std::string> boxProvisionedChildren;
+		std::map<std::string, std::string> helpers;
+		std::vector<awst::ContractMethod> pendingHelpers;
+		bool usesErc1967Admin = false;
+	};
+	/// Stack-owned emission state; recursive/nested builds restore their host.
+	class ContractScope
+	{
+	public:
+		explicit ContractScope(BuildArtifacts& owner)
+			: m_owner(owner), m_previous(std::exchange(owner.m_contract, &m_value)) {}
+		~ContractScope() { m_owner.m_contract = m_previous; }
+		ContractScope(ContractScope const&) = delete;
+		ContractScope& operator=(ContractScope const&) = delete;
+	private:
+		BuildArtifacts& m_owner;
+		ContractEmission m_value;
+		ContractEmission* m_previous;
+	};
+	ContractEmission& contract()
+	{
+		if (!m_contract) throw std::logic_error("Contract emission requested outside a contract build");
+		return *m_contract;
+	}
 
 	/// Interior aggregate storage references passed by reference (OpenZeppelin
 	/// `Checkpoints.push(Trace storage self)` → `_insert(self._checkpoints, …)`):
@@ -66,11 +87,9 @@ struct BuildArtifacts
 	std::map<std::string, std::string> pathSpecializationIds;
 	std::vector<PathSpecialization> pendingPathSpecializations;
 	bool needsRipemd160 = false;
-	/// An EIP-1967 admin-slot use was lowered while translating the CURRENT
-	/// contract's bodies: it gets the synthesized "__erc1967_admin" global and
-	/// the UpdateApplication gate method (proxies/Erc1967Lowering).
-	/// Snapshot-and-reset per ContractBuilder::build.
-	bool usesErc1967Admin = false;
+	/// Shared by outlined Yul helpers and their Solidity host frame. Unit-wide
+	/// so uses in freestanding functions also reserve and initialize the slot.
+	bool usesReturnData = false;
 	/// AST id of the freestanding (library/free) function currently being
 	/// translated, or -1 during contract translation. Freestanding bodies
 	/// lower BEFORE any contract builds, so their admin-slot uses must not
@@ -86,26 +105,17 @@ struct BuildArtifacts
 		if (currentFreestandingFunctionId >= 0)
 			erc1967AdminFunctions.insert(currentFreestandingFunctionId);
 		else
-			usesErc1967Admin = true;
+			contract().usesErc1967Admin = true;
 	}
 
 	void clear()
 	{
-		pendingYulSubroutines.clear();
-		memoryWordSubroutines.clear();
-		evmClearSubs.clear();
-		pendingEvmClearSubs.clear();
-		childContracts.clear();
-		boxProvisionedChildren.clear();
-		evmDecodeStructMethods.clear();
-		pendingEvmDecodeMethods.clear();
-		pathSpecializationIds.clear();
-		pendingPathSpecializations.clear();
-		needsRipemd160 = false;
-		usesErc1967Admin = false;
-		currentFreestandingFunctionId = -1;
-		erc1967AdminFunctions.clear();
+		if (m_contract) throw std::logic_error("Cannot reset artifacts during a contract build");
+		*this = {};
 	}
+
+private:
+	ContractEmission* m_contract = nullptr;
 };
 
 } // namespace puyasol::builder

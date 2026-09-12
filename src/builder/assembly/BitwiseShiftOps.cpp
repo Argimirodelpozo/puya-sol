@@ -1,6 +1,7 @@
 /// @file BitwiseShiftOps.cpp
 /// Bitwise and shift operations: shl, shr, div, byte, signextend, buildPowerOf2.
 
+#include "builder/sol-types/TypeCoercion.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/AwstShorthand.h"
 #include "builder/EvmFeaturePolicy.h"
@@ -61,8 +62,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryRouteConstSlotLoad(
 		return nullptr;
 	auto u64c = [&](uint64_t v) { return shorthand::u64(v, _loc); };
 
-	auto it = m_slotRoutes.find(ic->value);
-	if (it != m_slotRoutes.end())
+	auto it = m_context->slotRoutes.find(ic->value);
+	if (it != m_context->slotRoutes.end())
 	{
 		auto const& r = it->second;
 		if (r.kind == SlotRoute::Kind::Scalar)
@@ -116,7 +117,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryRouteConstSlotLoad(
 
 	// Data regions: slot in [K, K + 2^32) reads element (slot - K).
 	boost::multiprecision::cpp_int slot(ic->value);
-	for (auto const& reg: m_slotDataRegions)
+	for (auto const& reg: m_context->slotDataRegions)
 	{
 		boost::multiprecision::cpp_int base(reg.dataBase);
 		if (slot < base || slot - base >= (boost::multiprecision::cpp_int(1) << 32))
@@ -150,8 +151,8 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 	auto u64c = [&](uint64_t v) { return shorthand::u64(v, _loc); };
 	auto nameBytes = [&](std::string const& n) { return awst::makeUtf8BytesConstant(n, _loc); };
 
-	auto it = m_slotRoutes.find(ic->value);
-	if (it != m_slotRoutes.end())
+	auto it = m_context->slotRoutes.find(ic->value);
+	if (it != m_context->slotRoutes.end())
 	{
 		auto const& r = it->second;
 		if (r.kind == SlotRoute::Kind::Scalar)
@@ -205,7 +206,7 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 				auto grow = awst::makeBlock(_loc);
 				grow->body.push_back(awst::makeExpressionStatement(
 					awst::makeArrayPushOne(
-						boxValue(), StorageMapper::makeDefaultValue(
+						boxValue(), TypeCoercion::makeDefaultValue(
 							arrayType->elementType(), _loc), r.wtype, _loc), _loc));
 				grow->body.push_back(awst::makeAssignmentStatement(
 					curVar(), awst::makeUInt64BinOp(
@@ -321,7 +322,7 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 				auto loop = awst::makeBlock(_loc);
 				loop->body.push_back(awst::makeExpressionStatement(
 					awst::makeArrayPushOne(
-						arrVar(), StorageMapper::makeDefaultValue(
+						arrVar(), TypeCoercion::makeDefaultValue(
 							arrayType->elementType(), _loc), fieldType, _loc), _loc));
 				loop->body.push_back(awst::makeAssignmentStatement(
 					idxVar(), awst::makeUInt64BinOp(
@@ -352,7 +353,7 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 	}
 
 	boost::multiprecision::cpp_int slot(ic->value);
-	for (auto const& reg: m_slotDataRegions)
+	for (auto const& reg: m_context->slotDataRegions)
 	{
 		boost::multiprecision::cpp_int base(reg.dataBase);
 		if (slot < base || slot - base >= (boost::multiprecision::cpp_int(1) << 32))

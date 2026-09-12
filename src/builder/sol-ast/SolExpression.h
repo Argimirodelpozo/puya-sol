@@ -58,6 +58,10 @@ protected:
 	{
 		return m_ctx.buildExpr(_expr);
 	}
+
+	/// Inline a constant in its declared Solidity type, for bare and qualified access.
+	std::shared_ptr<awst::Expression> buildConstantValue(
+		solidity::frontend::VariableDeclaration const& _declaration);
 };
 
 } // namespace puyasol::builder::sol_ast

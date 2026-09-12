@@ -106,9 +106,11 @@ def test_operand_effect_facts(harness, via_ir, method):
 
 
 @pytest.mark.parametrize("slot_layout", [False, True])
-def test_call_boundary_facts(harness, slot_layout):
+@pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+def test_call_boundary_facts(harness, slot_layout, via_ir):
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/call_boundary_facts.sol",
+        via_yul_behavior=via_ir,
         extra_args=["--evm-storage-layout"] if slot_layout else [])
     assert as_int(harness.call(app, "literalCall()").abi_return) == 3
     assert as_int(harness.call(app, "literalPointer()").abi_return) == 4
@@ -116,7 +118,8 @@ def test_call_boundary_facts(harness, slot_layout):
         result = harness.call(app, "run(bool)", bound, extra_fee=20_000).abi_return
         assert tuple(map(as_int, result)) == (0, expected)
     result = harness.call(app, "sequenced()", extra_fee=20_000).abi_return
-    assert tuple(map(as_int, result)) == (1, 14)
+    # Pinned solc evaluates the bound receiver last in legacy, first in IR.
+    assert tuple(map(as_int, result)) == ((1, 14) if via_ir else (0, 15))
     result = harness.call(app, "memoryReturn()").abi_return
     assert tuple(map(as_int, result)) == (4, 5, 10)
 

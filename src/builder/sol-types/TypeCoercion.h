@@ -253,6 +253,12 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Check solc's 64-bit allocation-length ceiling before narrowing. The
+	/// allocation emitter additionally checks its AVM representation capacity.
+	static std::shared_ptr<awst::Expression> checkedAllocationSizeToUint64(
+		std::vector<std::shared_ptr<awst::Statement>>& pre,
+		std::shared_ptr<awst::Expression> size, awst::SourceLocation const& loc);
+
 	/// Truncate a MONETARY amount (`.transfer`/`.send`/`{value:}`/ASA amount) to
 	/// uint64 with an overflow PRE-check: a biguint amount >= 2^64 reverts rather
 	/// than silently sending `amount mod 2^64` microAlgos/units — the AVM amount

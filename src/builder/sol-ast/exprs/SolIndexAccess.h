@@ -25,6 +25,13 @@ public:
 		solidity::frontend::Expression const& _node,
 		awst::SourceLocation const& _loc);
 
+	/// Optional reference together with its scoped address-evaluation effects.
+	/// Failure publishes no effects, so a fresh-value fallback evaluates the
+	/// source only once. Modifier parameters use this same physical resolver.
+	static std::optional<eb::ContractContext::LoweredExpression> resolveBlobReference(
+		eb::ContractContext& _ctx, Context& _scope,
+		solidity::frontend::Expression const& _node, awst::SourceLocation const& _loc);
+
 	/// Materialise a VALUE read from the blob at `_off` for a leaf of Solidity
 	/// type `_solType`: a scalar leaf → `asBiguint(readMemWordDirect)`; a small
 	/// (<=SLOT_SIZE) struct/static-array leaf → `reinterpret(readMemRangeDirect,
@@ -43,14 +50,9 @@ private:
 	std::shared_ptr<awst::Expression> handleRegularIndex();
 	std::shared_ptr<awst::Expression> handleSlicedIndex();
 
-	/// Sign-extend a decoded signed sub-256 array element (e.g. `int128`) from
-	/// its raw N-bit two's complement to the canonical 256-bit biguint, so that
-	/// `a[i]` compares/arithmetics equal to a sign-extended scalar of the same
-	/// type. No-op for unsigned, int256 (already canonical), and <=64-bit
-	/// (uint64-backed) elements. `_decoded` is the post-ARC4Decode native value;
-	/// the Solidity element type is read from `m_indexAccess.annotation().type`.
-	std::shared_ptr<awst::Expression> signExtendSignedElement(
-		std::shared_ptr<awst::Expression> _decoded);
+	/// Decode to the solc element type, including canonical signed carriers.
+	std::shared_ptr<awst::Expression> readElement(
+		std::shared_ptr<awst::Expression> _value);
 
 	/// Multi-box state-var array access: emits page-aware box_extract/box_replace.
 	/// `_idxExpr` is the element index (uint64 or biguint, will be coerced).
@@ -76,6 +78,10 @@ public:
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 	struct Bounds { std::shared_ptr<awst::Expression> start, end; };
+	struct Slice { std::shared_ptr<awst::Expression> base, offset, length; };
+	/// Flatten non-byte array slices for indexing/length without materializing them.
+	static std::optional<Slice> resolveSlice(eb::ContractContext& _ctx,
+		solidity::frontend::Expression const& _source, awst::SourceLocation const& _loc);
 	/// Evaluate bounds once, reject wide indexes before narrowing, and assert
 	/// solc's start <= end <= parent length even when the result is discarded.
 	static Bounds resolveBounds(eb::ContractContext& _ctx,

@@ -94,6 +94,9 @@ run_frontend(
     bits_function_pointer BitsFunctionPointer.sol failure
     "Bits.bitlen cannot be used as a function value")
 run_frontend(
+    crypto_function_pointer CryptoFunctionPointer.sol failure
+    "Crypto.sha3_256 cannot be used as a function value")
+run_frontend(
     old_syntax Arc4OldSyntax.sol failure
     "Undeclared identifier")
 run_frontend(user_named_arc4 UserNamedArc4.sol success "")

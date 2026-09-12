@@ -1,53 +1,7 @@
-==== Source: AVM.sol ====
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-library AVM {
-    function asaCreate(
-        uint64 total,
-        uint8 decimals,
-        string memory name,
-        string memory symbol
-    ) internal returns (uint64) {
-        total; decimals; name; symbol;
-        revert();
-    }
-
-    function asaOptIn(uint64 assetId) internal {
-        assetId;
-        revert();
-    }
-
-    function asaTransfer(
-        uint64 assetId,
-        address from,
-        address to,
-        uint256 amount
-    ) internal {
-        assetId; from; to; amount;
-        revert();
-    }
-
-    function asaBalance(address holder, uint64 assetId)
-        internal view returns (uint256)
-    {
-        holder; assetId;
-        revert();
-    }
-
-    function asaTotalSupply(uint64 assetId) internal view returns (uint256) {
-        assetId;
-        revert();
-    }
-
-    function asaDestroy(uint64 assetId) internal {
-        assetId;
-        revert();
-    }
-}
-
-==== Source: contract.sol ====
-import {AVM} from "AVM.sol";
+import {AVM} from "libs/AVM.sol";
 
 contract C {
     uint64 public createdAsa;

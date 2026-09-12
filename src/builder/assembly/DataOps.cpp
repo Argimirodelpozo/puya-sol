@@ -2,11 +2,15 @@
 /// Data operations: calldataload, resolveConstantYulValue, keccak256.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/codec/ByteSlice.h"
+#include "builder/itxn/ApplicationCall.h"
+#include "builder/SolcFacts.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 #include <libsolutil/Keccak256.h>
 
 #include <sstream>
+#include <limits>
 // yul nodes BY VALUE (the AST aliases are std::variant, which needs
 // complete types). Kept out of AssemblyBuilder.h so only the TUs that
 // actually instantiate them pay the ~223k lines.
@@ -31,27 +35,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 	// block must read that view. This includes constant offsets: a constant can
 	// point into a dynamic tail, and the head word of a dynamically encoded
 	// parameter is its offset rather than the parameter's decoded value. The
-	// old split sent those two shapes through m_calldataMap and either rejected
+	// old split sent those two shapes through m_frame.calldataMap and either rejected
 	// them or returned the wrong word.
-	if (m_useSyntheticCalldata)
+	if (m_frame.useSyntheticCalldata)
 	{
-		// EVM calldataload ZERO-PADS reads at/past calldatasize; a bare
-		// extract3 would panic when off+32 > len(blob) (the standard
-		// tail-word loop `calldataload(off+i)` with a non-word-multiple
-		// length hits this). Append 32 zero bytes and clamp the start to
-		// len: extract3(blob ++ bzero(32), min(off,len), 32) reads real
-		// bytes then the appended zeros — all-zero when off >= len.
-		auto blob = awst::makeEvalOnce(
-			awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc), _loc);
-		auto len = awst::makeLen(blob, _loc);
-		auto off = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
-		auto safeOff = awst::makeConditional(
-			awst::makeNumericCompare(off, awst::NumericComparison::Lt, len, _loc),
-			off, awst::makeLen(blob, _loc), awst::WType::uint64Type(), _loc);
-		auto padded = awst::makeConcat(blob, awst::makeBzero(32, _loc), _loc);
-		auto extractCall = awst::makeExtract3(std::move(padded), std::move(safeOff),
-			awst::makeIntegerConstant("32", _loc), _loc);
-		return awst::makeAsBiguint(std::move(extractCall), _loc);
+		return awst::makeAsBiguint(readPaddedBytes(
+			awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc),
+			_args[0], awst::makeIntegerConstant("32", _loc), _loc), _loc);
 	}
 
 	auto offset = resolveConstantOffset(_args[0]);
@@ -63,13 +53,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 		return nullptr;
 	}
 
-	auto it = m_calldataMap.find(*offset);
-	if (it != m_calldataMap.end())
+	auto it = m_frame.calldataMap.find(*offset);
+	if (it != m_frame.calldataMap.end())
 	{
 		auto const& elem = it->second;
 
-		auto base = awst::makeVarExpression(elem.paramName, m_locals.count(elem.paramName)
-			? m_locals[elem.paramName]
+		auto base = awst::makeVarExpression(elem.paramName, m_frame.locals.count(elem.paramName)
+			? m_frame.locals[elem.paramName]
 			: awst::WType::biguintType(), _loc);
 
 		// bytes/string: calldataload reads 32 bytes at a relative offset.
@@ -78,8 +68,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 				|| elem.paramType == awst::WType::stringType()))
 		{
 			// Use find() not operator[]: operator[] would insert a spurious 0 entry.
-			auto lcIt = m_localConstants.find(elem.paramName);
-			uint64_t paramBase = lcIt != m_localConstants.end() ? lcIt->second : 0;
+			auto lcIt = m_frame.localConstants.find(elem.paramName);
+			uint64_t paramBase = lcIt != m_frame.localConstants.end() ? lcIt->second : 0;
 			uint64_t relativeOffset = *offset - paramBase;
 
 			auto offArg = awst::makeIntegerConstant(relativeOffset, _loc);
@@ -125,104 +115,52 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 	return zero;
 }
 
-std::optional<uint64_t> AssemblyBuilder::resolveConstantYulValue(
-	solidity::yul::Expression const& _expr
-)
+std::shared_ptr<awst::Expression> AssemblyBuilder::readPaddedBytes(
+	std::shared_ptr<awst::Expression> _bytes,
+	std::shared_ptr<awst::Expression> _offset,
+	std::shared_ptr<awst::Expression> _length, awst::SourceLocation const& _loc)
 {
-	if (auto const* lit = std::get_if<solidity::yul::Literal>(&_expr))
+	return builder::readPaddedBytes(m_typeMapper, std::move(_bytes), std::move(_offset),
+		offsetToUint64(std::move(_length), _loc), _loc);
+}
+
+std::optional<std::string> AssemblyBuilder::resolveConstantYulWord(
+	solidity::yul::Expression const& _expr)
+{
+	if (!m_context->dialect) return std::nullopt;
+	return SolcFacts::yulConstantValue(_expr, *m_context->dialect,
+		[this](solidity::yul::Identifier const& id) -> std::optional<std::string> {
+			auto name = resolveVarRef(id);
+			if (auto it = m_context->constants.find(name); it != m_context->constants.end())
+				return it->second;
+			if (m_frame.calldataParamNames.count(name)) return std::nullopt;
+			if (auto it = m_frame.localWideConstants.find(name); it != m_frame.localWideConstants.end())
+				return it->second;
+			if (auto it = m_frame.localConstants.find(name); it != m_frame.localConstants.end())
+				return std::to_string(it->second);
+			return std::nullopt;
+		});
+}
+
+std::optional<uint64_t> AssemblyBuilder::resolveConstantYulValue(
+	solidity::yul::Expression const& _expr)
+{
+	if (auto constant = resolveConstantYulWord(_expr))
 	{
-		if (lit->kind == solidity::yul::LiteralKind::Number)
-		{
-			auto const& val = lit->value.value();
-			try
-			{
-				std::ostringstream oss;
-				oss << val;
-				return std::stoull(oss.str());
-			}
-			catch (...)
-			{
-				return std::nullopt;
-			}
-		}
+		solidity::u256 value{*constant};
+		if (value <= std::numeric_limits<uint64_t>::max())
+			return static_cast<uint64_t>(value);
 	}
-
-	if (auto const* id = std::get_if<solidity::yul::Identifier>(&_expr))
-	{
-		std::string name = id->name.str();
-
-		// Handle .offset/.length suffix: _pubSignals.offset → calldata byte offset.
-		auto dotPos = name.rfind('.');
-		if (dotPos != std::string::npos)
+	// Contents of target scratch memory are our facts, not solc constants.
+	if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_expr);
+		call && getFunctionName(call->functionName) == "mload" && call->arguments.size() == 1)
+		if (auto offset = resolveConstantYulValue(call->arguments[0]))
 		{
-			std::string suffix = name.substr(dotPos + 1);
-			std::string baseName = name.substr(0, dotPos);
-			if (suffix == "offset")
-			{
-				auto it = m_localConstants.find(baseName);
-				if (it != m_localConstants.end())
-					return it->second;
-			}
-			else if (suffix == "length")
-			{
-				// .length for bytes/string not known at compile time; fall through.
-			}
+			std::ostringstream key;
+			key << "mem_0x" << std::hex << *offset;
+			if (auto it = m_frame.localConstants.find(key.str()); it != m_frame.localConstants.end())
+				return it->second;
 		}
-
-		// Skip calldata params: their m_localConstants entry is the calldata HEAD OFFSET (for the
-		// `.offset`/`.length` paths), not a value. A bare param used as a value (memory offset etc.)
-		// must resolve to its runtime value, so fall through to the runtime VarExpression.
-		auto it = m_localConstants.find(name);
-		if (it != m_localConstants.end() && !m_calldataParamNames.count(name))
-			return it->second;
-
-		auto cit = m_constants.find(name);
-		if (cit != m_constants.end())
-		{
-			try
-			{
-				return std::stoull(cit->second);
-			}
-			catch (...)
-			{
-				return std::nullopt;
-			}
-		}
-	}
-
-	if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_expr))
-	{
-		std::string name = getFunctionName(call->functionName);
-		if (call->arguments.size() == 2)
-		{
-			auto left = resolveConstantYulValue(call->arguments[0]);
-			auto right = resolveConstantYulValue(call->arguments[1]);
-			if (left && right)
-			{
-				if (name == "add")
-					return *left + *right;
-				if (name == "sub")
-					return *left - *right;
-				if (name == "mul")
-					return *left * *right;
-			}
-		}
-
-		if (name == "mload" && call->arguments.size() == 1)
-		{
-			auto offset = resolveConstantYulValue(call->arguments[0]);
-			if (offset)
-			{
-				// Check if we tracked a constant stored at this offset
-				std::ostringstream oss;
-				oss << "mem_0x" << std::hex << *offset;
-				auto cit = m_localConstants.find(oss.str());
-				if (cit != m_localConstants.end())
-					return cit->second;
-			}
-		}
-	}
-
 	return std::nullopt;
 }
 
@@ -237,12 +175,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	auto length = resolveConstantOffset(_args[1]);
 
 	// Check for WTuple FIRST: initializeCalldataMap stores calldata offsets in
-	// m_localConstants, causing struct params to resolve as false-positive constants.
+	// m_frame.localConstants, causing struct params to resolve as false-positive constants.
 	auto const* varExprForTuple = dynamic_cast<awst::VarExpression const*>(_args[0].get());
 	if (varExprForTuple && length)
 	{
-		auto it = m_locals.find(varExprForTuple->name);
-		if (it != m_locals.end() && it->second && it->second->kind() == awst::WTypeKind::WTuple)
+		auto it = m_frame.locals.find(varExprForTuple->name);
+		if (it != m_frame.locals.end() && it->second && it->second->kind() == awst::WTypeKind::WTuple)
 		{
 			auto const* tupleType = dynamic_cast<awst::WTuple const*>(it->second);
 			if (tupleType)
@@ -276,7 +214,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 	// COMPILE-TIME keccak over known memory content: `mstore(0, <const>);
 	// keccak256(0, 0x20)` is solc's slot-derivation idiom (array data slots).
-	// handleMstore records constant stores in m_localConstants["mem_0x.."];
+	// handleMstore records constant stores in m_frame.localConstants["mem_0x.."];
 	// hash the known 32-byte word HERE (zero opcodes) so the derived slot
 	// becomes a constant the SlotRoute machinery routes — never a runtime
 	// keccak for storage routing (project hashing policy).
@@ -284,8 +222,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	{
 		std::ostringstream memKey;
 		memKey << "mem_0x" << std::hex << *offset;
-		auto memIt = m_localConstants.find(memKey.str());
-		if (memIt != m_localConstants.end())
+		auto memIt = m_frame.localConstants.find(memKey.str());
+		if (memIt != m_frame.localConstants.end())
 		{
 			solidity::bytes word(32, 0);
 			uint64_t v = memIt->second;
@@ -302,8 +240,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_args[0].get());
 		if (varExpr)
 		{
-			auto it = m_locals.find(varExpr->name);
-			if (it != m_locals.end() && it->second && it->second->kind() == awst::WTypeKind::WTuple)
+			auto it = m_frame.locals.find(varExpr->name);
+			if (it != m_frame.locals.end() && it->second && it->second->kind() == awst::WTypeKind::WTuple)
 			{
 				auto const* tupleType = dynamic_cast<awst::WTuple const*>(it->second);
 				if (tupleType)
@@ -345,12 +283,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		// Constant offset, dynamic length.
 		// Pattern: keccak256(begin, add(paramLen, 0x20)) from deriveMapping(string/bytes).
 		// Hashes param_bytes ++ padTo32(last mstored value).
-		for (auto const& [cdOffset, elem] : m_calldataMap)
+		for (auto const& [cdOffset, elem] : m_frame.calldataMap)
 		{
-			if (*offset == cdOffset + 0x20 && m_lastMstoreValue)
+			if (*offset == cdOffset + 0x20 && m_frame.lastMstoreValue)
 			{
-				auto paramType = m_locals.find(elem.paramName);
-				auto const* paramWtype = (paramType != m_locals.end() && paramType->second)
+				auto paramType = m_frame.locals.find(elem.paramName);
+				auto const* paramWtype = (paramType != m_frame.locals.end() && paramType->second)
 					? paramType->second : awst::WType::bytesType();
 				auto paramVar = awst::makeVarExpression(elem.paramName, paramWtype, _loc);
 
@@ -363,7 +301,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 				else
 					paramBytes = std::move(paramVar);
 
-				auto slotPadded = padTo32Bytes(m_lastMstoreValue, _loc);
+				auto slotPadded = padTo32Bytes(m_frame.lastMstoreValue, _loc);
 
 				auto concat = awst::makeConcat(std::move(paramBytes), std::move(slotPadded), _loc);
 				auto keccak = awst::makeKeccak256(std::move(concat), _loc);
@@ -418,15 +356,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		}
 		// Check if offset = calldataParam + 0x20 (string/bytes data region)
 		// Pattern: keccak256(add(param, 0x20), mload(param)) hashes string data
-		for (auto const& [cdOffset, elem] : m_calldataMap)
+		for (auto const& [cdOffset, elem] : m_frame.calldataMap)
 		{
 			if (*offset == cdOffset + 0x20)
 			{
 				// Found: offset points to the string data area of a calldata parameter.
 				// On AVM, the parameter IS the string bytes. Hash them directly.
 				// The parameter might be bytes or biguint — need bytes for keccak
-				auto paramType = m_locals.find(elem.paramName);
-				auto const* paramWtype = (paramType != m_locals.end() && paramType->second)
+				auto paramType = m_frame.locals.find(elem.paramName);
+				auto const* paramWtype = (paramType != m_frame.locals.end() && paramType->second)
 					? paramType->second : awst::WType::bytesType();
 				auto paramVar = awst::makeVarExpression(elem.paramName, paramWtype, _loc);
 
@@ -453,10 +391,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		return awst::makeAsBiguint(awst::makeKeccak256(awst::makeBzero(32, _loc), _loc), _loc);
 	}
 
-	// If offset falls in m_calldataMap (e.g. Yul optimizer elided abi_encode buffer copy
+	// If offset falls in m_frame.calldataMap (e.g. Yul optimizer elided abi_encode buffer copy
 	// for a struct param like PoolKey), extract fields and pad each to 32 bytes.
-	auto firstSlotIt = m_calldataMap.find(*offset);
-	if (firstSlotIt != m_calldataMap.end())
+	auto firstSlotIt = m_frame.calldataMap.find(*offset);
+	if (firstSlotIt != m_frame.calldataMap.end())
 	{
 		auto const& elem = firstSlotIt->second;
 		auto const* structType = dynamic_cast<awst::ARC4Struct const*>(elem.paramType);
@@ -465,8 +403,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		if (structType && *length % 0x20 == 0
 			&& numSlots == static_cast<int>(structType->fields().size()))
 		{
-			auto base = awst::makeVarExpression(elem.paramName, m_locals.count(elem.paramName)
-				? m_locals[elem.paramName] : elem.paramType, _loc);
+			auto base = awst::makeVarExpression(elem.paramName, m_frame.locals.count(elem.paramName)
+				? m_frame.locals[elem.paramName] : elem.paramType, _loc);
 			auto structBytes = awst::makeAsBytes(base, _loc);
 			std::shared_ptr<awst::Expression> data;
 			int fieldByteOffset = 0;
@@ -498,23 +436,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::returndataBytes(
 	awst::SourceLocation const& _loc
 )
 {
-	// The app-call return log is 0x151f7c75 ++ ARC4(value); EVM returndata is
-	// the raw payload. Strip the prefix when present so size/copy consumers
-	// see EVM-shaped data (M8). Non-prefixed logs (event as last log, empty)
-	// pass through unchanged.
-	auto log = awst::makeEvalOnce(
-		awst::makeItxn("LastLog", awst::WType::bytesType(), _loc), _loc);
-	auto lenOk = awst::makeNumericCompare(awst::makeLen(log, _loc),
-		awst::NumericComparison::Gte, awst::makeIntegerConstant("4", _loc), _loc);
-	auto prefixEq = awst::makeBytesComparison(
-		awst::makeExtract3(log, awst::makeIntegerConstant("0", _loc),
-			awst::makeIntegerConstant("4", _loc), _loc),
-		awst::EqualityComparison::Eq,
-		awst::makeBytesConstant({0x15, 0x1f, 0x7c, 0x75}, _loc), _loc);
-	auto isPrefixed = awst::makeConditional(std::move(lenOk), std::move(prefixEq),
-		awst::makeBoolConstant(false, _loc), awst::WType::boolType(), _loc);
-	return awst::makeConditional(std::move(isPrefixed),
-		awst::makeExtract(log, 4, 0, _loc), log, awst::WType::bytesType(), _loc);
+	return ApplicationCall::returnData(m_typeMapper, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatasize(
@@ -601,14 +523,14 @@ void AssemblyBuilder::emitReturndatacopy(
 	// extract3 reverts on OOB, matching EVM returndatacopy semantics.
 	// returndataBytes strips the ARC4 return prefix (M8) so offsets index the
 	// EVM-shaped payload, consistent with returndatasize().
-	auto destOff = offsetToUint64(_args[0], _loc);
+	auto destOff = _args[0];
 	auto srcOff = offsetToUint64(_args[1], _loc);
 	auto size = offsetToUint64(_args[2], _loc);
 
 	auto slice = awst::makeExtract3(returndataBytes(_loc), std::move(srcOff), std::move(size), _loc);
 	// writeMemWordDyn is length-driven (replace3 writes len(slice) bytes), so it
 	// handles the slot-0/slot-1+ conditional and bounds assert for the full slice.
-	writeMemWordDyn(std::move(destOff), std::move(slice), _loc, _out);
+	writeMemRangeDyn(std::move(destOff), std::move(slice), _loc, _out);
 }
 
 void AssemblyBuilder::handleRevert(
@@ -631,7 +553,7 @@ void AssemblyBuilder::handleRevert(
 			&& (lenC->value.size() > 4 || std::stoull(lenC->value) > 1024);
 		if (!constZeroLen && !constOversize)
 		{
-			flushMemoryToScratch(_loc, _out);
+
 			std::shared_ptr<awst::Expression> payload;
 			if (lenC)
 			{
@@ -711,7 +633,7 @@ void AssemblyBuilder::handleRevert(
 	_out.push_back(awst::makeExpressionStatement(std::move(failAssert), _loc));
 	// Mark halted: assert(false) is unconditional; trailing blob writeback
 	// would be unreachable — puya's IR validator rejects it.
-	m_haltEmitted = true;
+	m_frame.haltEmitted = true;
 }
 
 

@@ -18,10 +18,6 @@ private:
 	std::string buildMethodSelector(
 		solidity::frontend::MemberAccess const& _memberAccess);
 
-	/// Convert an address/account expression to an application ID.
-	std::shared_ptr<awst::Expression> addressToAppId(
-		std::shared_ptr<awst::Expression> _addrExpr);
-
 	/// Build and submit the inner app transaction, return the result.
 	/// _solReturnType is the Solidity result type (single or tuple) — needed to decode signed narrow
 	/// ints, which the callee encodes as a 32-byte uint256 (not the 8-byte uint64 their WType implies).

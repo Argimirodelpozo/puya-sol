@@ -1,4 +1,5 @@
 #include "builder/codec/EvmValueCodec.h"
+#include "builder/itxn/ApplicationTarget.h"
 
 #include "Logger.h"
 #include "builder/sol-types/FunctionPointerKind.h"
@@ -20,6 +21,23 @@ Type const* underlyingType(Type const* type)
 	return type;
 }
 
+ScalarBoundary scalarBoundary(Type const* type, PaddingPolicy padding, ScalarBoundarySite site)
+{
+	ScalarBoundary result;
+	result.type = underlyingType(type);
+	result.integer = SolIntType::fromSolOrEnum(result.type);
+	result.boolean = dynamic_cast<BoolType const*>(result.type) != nullptr;
+	result.validatePadding = padding == PaddingPolicy::Validate;
+	if (auto const* enumeration = dynamic_cast<EnumType const*>(result.type))
+	{
+		result.enumMembers = enumeration->numberOfMembers();
+		// solc's cleanup_t_enum is itself a validator; there is no enum mask
+		// for memory reads. The native v1 getter-key compatibility is explicit.
+		result.validateEnum = site != ScalarBoundarySite::NativeGetter || result.validatePadding;
+	}
+	return result;
+}
+
 bool isWordType(Type const* type)
 {
 	type = underlyingType(type);
@@ -30,6 +48,13 @@ bool isWordType(Type const* type)
 		|| dynamic_cast<EnumType const*>(type)
 		|| dynamic_cast<FixedBytesType const*>(type)
 		|| isExternalFunctionPointer(dynamic_cast<FunctionType const*>(type));
+}
+
+bool isByteIdenticalEvmWord(Type const* type)
+{
+	type = underlyingType(type);
+	return (dynamic_cast<IntegerType const*>(type) || dynamic_cast<FixedBytesType const*>(type))
+		&& type->calldataEncodedSize(false) == 32;
 }
 
 namespace
@@ -73,16 +98,16 @@ void assertZeroBytes(
 
 void assertIntegerPadding(
 	std::shared_ptr<awst::Expression> value,
-	IntegerType const& integer,
+	SolIntType const& integer,
 	awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out)
 {
-	int const width = static_cast<int>(integer.numBits() / 8);
+	int const width = static_cast<int>(integer.bits / 8);
 	int const prefixLength = 32 - width;
 	if (prefixLength == 0)
 		return;
 	auto prefix = awst::makeExtract(value, 0, prefixLength, loc);
-	if (!integer.isSigned())
+	if (!integer.isSigned)
 	{
 		assertZeroBytes(std::move(prefix), prefixLength, loc, out,
 			"invalid EVM ABI unsigned integer padding");
@@ -133,37 +158,38 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 	std::vector<std::shared_ptr<awst::Statement>>& out,
 	PaddingPolicy padding)
 {
-	auto const* type = underlyingType(solType);
+	auto const boundary = scalarBoundary(solType, padding);
+	auto const* type = boundary.type;
 	auto const* native = typeMapper.map(solType);
 
-	if (auto const* integer = dynamic_cast<IntegerType const*>(type))
+	if (auto const& integer = boundary.integer; integer && !boundary.enumMembers)
 	{
 		word = awst::makeEvalOnce(std::move(word), loc);
-		if (padding == PaddingPolicy::Validate)
+		if (boundary.validatePadding)
 			assertIntegerPadding(word, *integer, loc, out);
 		else
 		{
 			// solc's cleanup_t_uintN / signextend: keep the declared width and
 			// rebuild the word from it, discarding whatever sat above.
-			int const width = static_cast<int>(integer->numBits() / 8);
+			int const width = static_cast<int>(integer->bits / 8);
 			if (width < 32)
 			{
 				auto low = awst::makeExtract(std::move(word), 32 - width, width, loc);
-				word = integer->isSigned()
+				word = integer->isSigned
 					? signExtendToWord(std::move(low), loc)
 					: awst::makeLeftPadToN(std::move(low), 32, loc);
 			}
 		}
-		if (integer->numBits() <= 64)
+		if (integer->bits <= 64)
 			return awst::makeWord32ToUInt64(std::move(word), loc);
 		return awst::makeAsBiguint(std::move(word), loc);
 	}
-	if (dynamic_cast<BoolType const*>(type))
+	if (boundary.boolean)
 	{
 		auto fullWord = awst::makeEvalOnce(std::move(word), loc);
 		// solc's cleanup_t_bool is iszero(iszero(v)) -- any non-zero word is
 		// true. Only the decoder insists on a canonical 0/1.
-		if (padding == PaddingPolicy::Validate)
+		if (boundary.validatePadding)
 		{
 			auto fullValue = awst::makeAsBiguint(fullWord, loc);
 			out.push_back(awst::makeExpressionStatement(
@@ -186,7 +212,7 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 		// The extract below already truncates, which IS solc's cleanup for
 		// bytesN. A `bytes memory` element read carries the following array
 		// bytes in the same word, so validating here rejects normal programs.
-		if (padding == PaddingPolicy::Validate)
+		if (boundary.validatePadding)
 			assertZeroBytes(awst::makeExtract(word, n, 32 - n, loc),
 				32 - n, loc, out, "invalid EVM ABI fixed-bytes padding");
 		auto result = awst::makeExtract(std::move(word), 0, n, loc);
@@ -197,7 +223,7 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 		|| dynamic_cast<ContractType const*>(type))
 	{
 		auto value = awst::makeEvalOnce(std::move(word), loc);
-		if (padding == PaddingPolicy::Validate)
+		if (boundary.validatePadding)
 			out.push_back(awst::makeExpressionStatement(
 				awst::makeAssert(
 					awst::makeBytesComparison(
@@ -216,10 +242,13 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 		isExternalFunctionPointer(function))
 	{
 		auto value = awst::makeEvalOnce(std::move(word), loc);
-		if (padding == PaddingPolicy::Validate)
+		if (boundary.validatePadding)
 			assertZeroBytes(awst::makeExtract(value, 24, 8, loc),
 				8, loc, out, "invalid EVM ABI external-function padding");
-		auto appId = awst::makeExtract(value, 12, 8, loc);
+		// solc's word is address[20] ++ selector[4] ++ padding[8]. Validate
+		// the entire address before the native pointer discards any bytes.
+		auto appId = awst::makeItob(ApplicationTarget::pointerId(typeMapper.profile(),
+			awst::makeLeftPad(awst::makeExtract(value, 0, 20, loc), 12, loc), loc), loc);
 		auto selector = awst::makeEvalOnce(
 			awst::makeExtract(value, 20, 4, loc), loc);
 		auto pointer = awst::makeConcat(
@@ -229,7 +258,7 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 				std::move(pointer), selector, loc);
 		return awst::makeReinterpretCast(std::move(pointer), native, loc);
 	}
-	if (auto const* enumeration = dynamic_cast<EnumType const*>(type))
+	if (boundary.validateEnum)
 	{
 		auto fullWord = awst::makeEvalOnce(std::move(word), loc);
 		assertZeroBytes(awst::makeExtract(fullWord, 0, 24, loc),
@@ -237,7 +266,7 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 		auto value = awst::makeEvalOnce(
 			awst::makeWord32ToUInt64(fullWord, loc), loc);
 		out.push_back(awst::makeExpressionStatement(
-			awst::makeEnumRangeAssert(value, enumeration->numberOfMembers(), loc), loc));
+			awst::makeEnumRangeAssert(value, boundary.enumMembers, loc), loc));
 		return value;
 	}
 	return awst::makeReinterpretCast(std::move(word), native, loc);
@@ -278,22 +307,24 @@ std::shared_ptr<awst::Expression> valueFromArc4(
 
 	if (auto const* array = dynamic_cast<ArrayType const*>(type);
 		array && array->isByteArrayOrString())
-	{
-		auto bytes = awst::makeEvalOnce(rawBytes(std::move(value), loc), loc);
-		auto count = awst::makeExtractUInt16(
-			bytes, awst::makeIntegerConstant(uint64_t{0}, loc), loc);
-		auto payload = awst::makeExtract3(
-			bytes, awst::makeIntegerConstant(uint64_t{2}, loc), std::move(count), loc);
-		if (array->isString())
-			return awst::makeReinterpretCast(
-				std::move(payload), awst::WType::stringType(), loc);
-		return payload;
-	}
+		// Preserve the typed view: a bytes field can be the receiver of a
+		// later element write, which must recover its underlying place.
+		return awst::makeARC4Decode(std::move(value), native, loc);
 
 	// Arrays and structs are already represented by their ARC4 aggregate type.
 	if (dynamic_cast<ArrayType const*>(type) || dynamic_cast<StructType const*>(type))
 		return value;
-	return awst::makeARC4Decode(std::move(value), native, loc);
+	auto decoded = awst::makeARC4Decode(std::move(value), native, loc);
+	// ARC4 integers carry only their declared bits. Reads must recover the
+	// native signed carrier, including fields/elements wrapped in a UDVT.
+	if (auto const* integer = dynamic_cast<IntegerType const*>(type);
+		integer && integer->isSigned())
+	{
+		if (integer->numBits() < 64)
+			return TypeCoercion::signExtendToUint64(std::move(decoded), integer->numBits(), loc);
+		return TypeCoercion::signExtendSignedElement(std::move(decoded), type, loc);
+	}
+	return decoded;
 }
 
 std::shared_ptr<awst::Expression> valueToArc4(
@@ -353,10 +384,23 @@ std::shared_ptr<awst::Expression> valueToEvmWord(
 	}
 
 	auto bytes = rawBytes(std::move(value), loc);
-	if (auto const* integer = dynamic_cast<IntegerType const*>(type);
-		integer && integer->isSigned())
-		return signExtendToWord(std::move(bytes), loc);
+	if (auto const* integer = dynamic_cast<IntegerType const*>(type))
+	{
+		// Numeric carriers can retain wider zero padding (e.g. ARC4 uint512)
+		// or dirty assembly bits. solc's declared width owns ABI cleanup.
+		int width = static_cast<int>(integer->numBits() / 8);
+		bytes = awst::makeExtractLastN(awst::makeLeftPadToN(std::move(bytes), width, loc), width, loc);
+		if (integer->isSigned()) return signExtendToWord(std::move(bytes), loc);
+	}
 	return awst::makeLeftPadToN(std::move(bytes), 32, loc);
+}
+
+bool canRoundTripEvmAbi(std::vector<Type const*> const& types)
+{
+	std::set<int64_t> visiting;
+	for (auto const* type: types)
+		if (!canRoundTripEvmAbi(type, visiting)) return false;
+	return true;
 }
 
 bool canRoundTripEvmAbi(solidity::frontend::Type const* type, std::set<int64_t>& visiting)

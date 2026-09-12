@@ -145,6 +145,13 @@ include that missing behavior. Both options fail with status 2 before source
 processing, even when logs are filtered. The implemented storage-only subset
 remains available explicitly as `--evm-storage-layout`.
 
+Named-cell storage chooses physical placement from actual AVM encoded sizes.
+Small fixed arrays/structs use global state when their encoding and key fit;
+types requiring boxes remain boxed. This default can move cells previously
+boxed by the conservative placement policy, so existing applications may need
+state migration before an update. EVM-slot storage is unchanged. See
+[storage format and compatibility](docs/storage-format.md#named-cell-placement-policy).
+
 Add `--evm-selectors` when Solidity-visible selector values must match solc/EVM
 keccak semantics. ARC-4 selectors remain the AVM application-call routing
 identity, and the compiler translates them at Solidity-visible boundaries such

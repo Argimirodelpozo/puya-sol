@@ -439,7 +439,8 @@ library Bits {
 /// storage (TSTORE), but scoped to the group — perfect for flash-accounting
 /// deltas that must net to zero across a group of top-level calls and then
 /// vanish. There is NO Yul/EVM equivalent (EVM "scratch" is memory 0x00-0x40,
-/// unrelated), so these are stub bodies that puya-sol intercepts by library name
+/// unrelated), so these are stub bodies that puya-sol intercepts by their
+/// validated declaration in the canonical libs/AVM.sol source unit
 /// (AsaIntrinsics dispatchScratch): store->`stores`, loadSelf->`loads`,
 /// load->`gloadss`.
 ///

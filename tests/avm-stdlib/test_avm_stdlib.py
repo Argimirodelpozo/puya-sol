@@ -1,7 +1,7 @@
-"""Tests for the AVM standard-library Solidity surface (WIP/tokens/AVM.sol).
+"""Tests for the canonical AVM standard-library Solidity surface (libs/AVM.sol).
 
-Each fixture imports the relevant library subset from a `==== Source: AVM.sol ====`
-block, exercises one method per AVM intrinsic the library wraps, and verifies
+Each fixture imports the compiler's staged standard library, exercises one
+method per AVM intrinsic the library wraps, and verifies
 the runtime behavior matches the underlying AVM opcode.
 
 Categories:

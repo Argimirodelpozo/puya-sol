@@ -1,6 +1,7 @@
 #pragma once
 
 #include "builder/sol-ast/SolExpression.h"
+#include "builder/sol-ast/CallOperands.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>

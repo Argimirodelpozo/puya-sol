@@ -32,7 +32,7 @@ std::shared_ptr<awst::Expression> SolFunctionCall::extractCallValue()
 	{
 		if (*optNames[i] == "value" && i < optValues.size())
 		{
-			auto val = buildExpr(*optValues[i]);
+			auto val = CallOperands::evaluate(m_ctx, *optValues[i], m_loc);
 			// {value: X}: assert X fits in uint64 before truncating (a >2^64
 			// value would silently send `X mod 2^64` microAlgos).
 			value = TypeCoercion::checkedAmountToUint64(
@@ -45,11 +45,7 @@ std::shared_ptr<awst::Expression> SolFunctionCall::extractCallValue()
 			// unevaluated would lose `{gas: f()}` side effects. Evaluate and
 			// discard; effect-free shapes (the common `{gas: 200}` literal,
 			// a bare local) stay unemitted.
-			auto gasExpr = buildExpr(*optValues[i]);
-			if (gasExpr && !awst::isConstantExpression(gasExpr.get())
-				&& !dynamic_cast<awst::VarExpression const*>(gasExpr.get()))
-				m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-					std::move(gasExpr), m_loc));
+			m_ctx.evaluateForEffects(*optValues[i], m_loc);
 		}
 	}
 	return value;

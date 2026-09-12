@@ -1,6 +1,7 @@
 /// @file SolVariableDeclaration.cpp
 
 #include "builder/sol-ast/stmts/SolVariableDeclaration.h"
+#include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "Logger.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
@@ -164,7 +165,7 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 		value = convertInitValue(decl, std::move(value), initialValue->annotation().type, type);
 	}
 	else
-		value = StorageMapper::makeDefaultValue(type, m_loc);
+		value = TypeCoercion::makeDefaultValue(type, m_loc);
 
 	return value;
 }
@@ -647,6 +648,20 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 
 		if (tryAsmBytesAllocation(decl, initialValue, result))
 			return result;
+		if (initialValue && decl.referenceLocation() == VariableDeclaration::Location::Memory)
+			if (auto reference = SolIndexAccess::resolveBlobReference(
+				m_blk.builderCtx(), m_blk.scope, *initialValue, m_loc))
+			{
+				auto& ctx = m_blk.builderCtx();
+				auto offset = ctx.emitSequencedOperand(std::move(reference->effects),
+					std::move(reference->value), true, m_loc);
+				ctx.appendEffectsTo(result);
+				std::string name = "__blobagg_off_" + std::to_string(decl.id());
+				result.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(name, awst::WType::uint64Type(), m_loc), std::move(offset), m_loc));
+				m_blk.scope.bindings.blobAggregates.set(decl.id(), name);
+				return result;
+			}
 		auto value = buildInitValue(decl, initialValue, type);
 		bindValue(decl, initialValue, std::move(value), type, result);
 	}

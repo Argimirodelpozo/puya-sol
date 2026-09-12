@@ -90,3 +90,47 @@ The other approved placement change on `rev-2` moves default-layout dynamic
 aggregates containing internal function pointers from globals to boxes.
 Mapping-free roots retain their source-name keys, and small fixed callback
 aggregates stay global. This placement fix is also fresh-deployment-only.
+
+## Named-cell placement policy
+
+Named-cell storage uses actual AVM encoded sizes for placement by default;
+there is no separate placement flag. Solc storage spans describe EVM words,
+not ARC4 encoded byte sizes. For example, `uint8[64]` needs 64 value bytes,
+and `bool[64]` needs 8, rather than the legacy conservative EVM-slot upper
+bound. A mapping-free
+fixed value can use global state when its actual encoding and key fit the
+128-byte limit. Mapping holders, dynamic aggregates and structs whose reference
+transport requires a box key retain their box representation (including root
+values of struct types also used as mapping values). Strings retain their
+existing global-state policy and capacity limitations.
+
+This policy changes physical box/global placement relative to the earlier
+conservative policy, not solc's logical slots, mapping-holder derivations, or
+value encoding. ARC-56 publishes the chosen physical cells. Existing named-
+layout applications may need explicit state migration before recompilation
+and update: there is no automatic migration or fallback read from old boxes.
+EVM-slot storage (`--evm-storage-layout`) retains its existing behavior.
+
+Immutables are named cells even in EVM-slot mode. Same-named inherited
+immutable declarations receive distinct physical keys; noncolliding keys are
+unchanged. Their cells must be included in ARC-56/schema allocation. Previously
+colliding immutable deployments require recreation or explicit migration;
+the compiler cannot recover values already overwritten in the shared cell.
+
+## Copying and addressing limits
+
+Fixed-array storage copies use solc's declared element types and layout.
+Equivalent scalar arrays can copy words, clearing unused bytes and the partial
+last word. Aggregate/converting copies use the typed readers and writers, so
+nested dynamic contents are copied and a shorter source clears the destination
+tail. Self-copy is a no-op; struct copies retain unrelated padding bits.
+Named-cell copies rebuild ARC4 offsets when the fixed array contains dynamic
+elements. Native addresses retain their full AVM representation.
+
+Logical lengths and EVM element strides remain full-width solc facts. Sparse
+element access does not require materializing the entire declared array.
+Whole-value operations still have target limits: the fixed scalar-copy fast
+path unrolls at most 256 slots, converting/aggregate slot copies at most 64
+outer elements, and materialized byte values must fit AVM's 4 KiB stack limit.
+These are implementation capacities, not Solidity layout limits; this is not
+an unbounded streaming-copy implementation.

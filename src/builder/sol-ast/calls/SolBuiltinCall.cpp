@@ -146,9 +146,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 	// All other builtins: delegate to BuiltinCallableRegistry
 	eb::BuiltinCallableRegistry registry;
-	std::vector<std::shared_ptr<awst::Expression>> args;
-	for (auto const& arg: m_call.arguments())
-		args.push_back(buildExpr(*arg));
+	auto args = CallOperands::build(m_ctx, m_call, m_loc);
 
 	auto result = registry.tryCall(m_ctx, m_builtinName, args, m_loc);
 	if (result)

@@ -28,6 +28,21 @@ The semantic-test harness opts into every listed adaptation because its job is
 to measure and classify EVM/AVM differences. That harness policy does not alter
 the compiler's default policy or add runtime enforcement for accepted adaptations.
 
+## Block seed and calldata conventions
+
+`block.difficulty` and `block.prevrandao` (including their Yul opcodes), when explicitly opted in, read the
+Algorand seed at transaction `FirstValid - 1` (zero when FirstValid is zero).
+This lies in the AVM block-read window independently of simulation/submission
+timing. It is known in advance and the caller can select the validity window:
+it is **not secure randomness** and does not reproduce EVM prevrandao.
+
+In the EVM profile, `msg.data` is the selector plus the ABI body only; xchain
+claims and other transport metadata are excluded. Native ARC4 retains its
+compatibility concatenation of routed selector and ARC4 argument values.
+Unknown ARC4 fallback calls recognize only the two-argument raw carrier.
+`msg.sig` is the first four bytes, right-zero-padded for short/empty data.
+Direct constructor reads have empty calldata and a zero selector.
+
 ## Address identity and native value transfer (EVM profile)
 
 The EVM profile (`--contract-abi evm`) gives Solidity one 160-bit address
@@ -55,6 +70,15 @@ the application's escrow at runtime; a nonexistent application fails the
 lookup instead of receiving a payment at its keyless encoding. This convention
 applies in both ABI profiles. Zero remains the zero address, not application
 ID zero. Every payment amount is checked before narrowing to AVM's uint64.
+
+Direct typed, low-level Solidity, and Yul application calls validate this same
+address convention; an unrelated address cannot select an application merely
+by sharing its last eight bytes. Invalid or nonexistent targets abort, consistent with the existing
+uncatchable inner-call failure adaptation. Metadata queries instead return no
+code. Runtime self aliases resolve to the current application for metadata,
+but AVM still rejects self inner transactions: only statically resolved self
+calls use the existing direct-subroutine rewrite. This does not expand native
+payment permissions or waive the xchain/account-mapping opt-in.
 
 `transfer` and `send` to a contract-convention receiver submit a grouped payment
 and zero-argument application call, executing `receive()` or `fallback()` even
@@ -101,6 +125,54 @@ and shared by internal subroutine calls. They create no persistent cells.
 Declared transient state is limited to five logical words; raw Yul supports
 slots 0–127. These are target capacities, not changes to solc's packing rules.
 
+## Bounded buffers, precompiles and call results
+
+Yul memory remains a bounded, scratch-backed address space, configured by
+`--evm-memory-slots` (4096 bytes per page). Memory and calldata are separate;
+equal offsets do not alias them. Word accesses check the full 32-byte extent,
+and byte-range operations preserve partial tails and cross-page data. Operations
+that materialize a single AVM byte value are limited to 4096 bytes, even when
+the configured memory capacity is larger. Nonempty out-of-range accesses abort;
+zero-length memory ranges ignore their unused offset. This is not an unbounded
+EVM memory implementation or a redesign of Solidity's typed memory representation.
+
+Solidity and Yul precompile adapters share the byte-level implementation for
+constant targets 1, 2, 4, 5, 6, 7 and 8.
+Fixed-width cryptographic inputs are right-zero-padded or truncated as required;
+BN254 pairing accepts complete 192-byte pairs within the buffer limit, including
+the empty product. Modexp is still restricted to 32-byte base, exponent and
+modulus fields. Unsupported target implementations, nonzero value sent to a
+precompile, and unsupported operand layouts fail loudly. AVM cryptographic or
+inner-transaction failures abort the transaction rather than yielding a catchable
+EVM call failure. Invalid ecrecover `v`/`r`/`s` ranges return empty bytes; other
+recovery failures can still abort in the AVM intrinsic.
+
+Yul calls keep the complete supported result in a separate return-data buffer
+and copy only `min(output length, result length)` bytes into memory; the remaining
+destination bytes are unchanged. Empty raw Yul application calls invoke
+`receive()`/`fallback()`, including value-bearing calls. This differs from the
+existing high-level empty value-call adaptation described below. Both precompile
+adapters replace the return-data buffer, including when the result is empty.
+
+Modeled external self-calls also replace that buffer, including void calls,
+getters and external function-pointer dispatch. The EVM profile and explicitly
+EVM-encoded self-call payloads publish EVM ABI bytes; typed ARC4-profile calls
+retain their ARC4 return encoding. Genuine internal calls do not replace it.
+Fallback/receive handlers publish an explicit empty result when they return
+nothing, so a handler's last event cannot be mistaken for return data.
+Application result capture accepts only the `0x151f7c75`-prefixed return record;
+unprefixed event logs are not return values, including for native ARC4 void calls.
+Void public-method routes do not add an empty record: no record means empty
+data, while an explicit assembly `return` keeps its actual payload even if
+the Solidity declaration has no return parameters.
+
+External function pointers retain the compact application-id/selector layout.
+Their full address is checked against the selected profile's application
+namespace before compaction, including when decoding an EVM ABI function word.
+The zero address is allowed as a pointer value but cannot be invoked. This
+namespace restriction is an AVM policy, not an EVM address rule. Opaque pointer
+ABI round trips still require `--evm-selectors` to retain the EVM selector.
+
 ## Other standing entries (summaries; see tests' xfail reasons)
 
 - Proxy-to-native-update adaptations require the separate, default-off
@@ -114,9 +186,21 @@ slots 0–127. These are target capacities, not changes to solc's packing rules.
   foreign execution. Yul `create2`, `selfdestruct`, and metamorphic patterns
   remain hard errors. Dead (solc-pruned) delegatecall is exempt via the
   call-graph reachability gate.
-- `address(other).code`, `extcodesize/extcodehash` of arbitrary addresses:
-  hard errors — an arbitrary address cannot be dereferenced to code on the
-  AVM; `address.code` of a KNOWN app resolves via the app id convention.
+- Address code metadata is a warning-only AVM adaptation, not EVM bytecode
+  identity. `.code` returns approval-program bytes; `.code.length` returns
+  **allocated program capacity**, not exact length (including for self).
+  Solidity metadata and Yul `extcodesize` resolve self and canonical `zero24 ++ uint64(appId)`
+  addresses; other forms and missing apps read as no code. Foreign apps must
+  be available transaction resources. Program bytes exceeding the AVM stack
+  byte-value limit cannot be materialised; the capacity query avoids this.
+  During construction only self reads as empty; other deployed apps remain
+  queryable, and receiver effects are preserved.
+- `.codehash` supports direct self (approval-program hash, empty-code hash
+  during construction) and the existing constant zero/precompile convention
+  (zero for address 0, empty-code hash for addresses 1–10). These constants
+  are not account-existence facts. Other receivers, including arbitrary
+  nonzero literals, are compile errors. Yul `extcodehash` remains unsupported;
+  The shared size query retains the AVM allocated-capacity adaptation.
 - `address.balance` is denominated in microAlgos, not wei, and requires
   `--allow-divergence address-balance-units`.
 - try/catch catch-clauses: unreachable — a failing inner txn aborts the whole
@@ -141,7 +225,7 @@ slots 0–127. These are target capacities, not changes to solc's packing rules.
   `(true, "")` — fabricating that success would let error handling pass
   spuriously. Zero-value `t.call("")` on a real contract executes the
   callee's `receive()`/`fallback()` like solc (zero-arg app call).
-  `{value:}` + empty calldata stays a bare payment: the receive BODY does
+  Solidity `{value:}` + empty calldata stays a bare payment: the receive BODY does
   not run (see the value-transfer section above).
 - Default-layout storage uses [versioned holder keys](docs/storage-format.md),
   not EVM slot arithmetic. ARC-56 records exact roots, not prefix maps for

@@ -5,8 +5,13 @@
 #include "builder/AwstShorthand.h"
 #include "builder/CallBoundaryPlan.h"
 #include "builder/SolcFacts.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/sol-types/ConversionPlan.h"
+#include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/itxn/NativePayment.h"
+#include "builder/itxn/ApplicationTarget.h"
+#include "builder/itxn/ApplicationCall.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -23,70 +28,14 @@ static constexpr int TxnTypeAppl = 6;
 
 std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAccess)
 {
-	// One canonical namer family (eb::solTypeToArc4ParamName/ReturnName, shared with the
-	// `.call(abi.encodeCall(...))` inner-call path). This method used to carry its own
-	// lambda copy of the same ladder; the two drifted (enum uint8-vs-uint64 selector bug,
-	// fuzzer-found) — exactly the divergence a single namer makes impossible.
-	auto const* extRefDecl = _memberAccess.annotation().referencedDeclaration;
+	auto const* type = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
+	assert(type);
 	std::vector<std::string> paramNames, retNames;
-	if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(extRefDecl))
-	{
-		for (auto const& param: funcDef->parameters())
-			paramNames.push_back(eb::solTypeToArc4ParamName(m_ctx, param->type()));
-		for (auto const& retParam: funcDef->returnParameters())
-			retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, retParam->type()));
-	}
-	else if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extRefDecl))
-	{
-		// Public state-var getter. KEYED getters (mapping/array vars) take
-		// key/index params — derive them from the bound getter FunctionType,
-		// matching what the callee's router publishes; the old return-only
-		// form emitted `m()T` and every keyed cross-contract getter call
-		// reverted on selector mismatch. Param-less getters keep the
-		// var-type return name (byte-identical to the shipped form).
-		auto const* getterType =
-			dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
-		if (getterType && !getterType->parameterTypes().empty())
-		{
-			for (auto const& t: getterType->parameterTypes())
-				paramNames.push_back(eb::solTypeToArc4ParamName(m_ctx, t));
-			for (auto const& t: getterType->returnParameterTypes())
-				retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, t));
-		}
-		else
-			retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, varDecl->type()));
-	}
-	// else: no params/returns -> "name()void"
-
+	for (auto const* param: type->parameterTypes())
+		paramNames.push_back(eb::solTypeToArc4ParamName(m_ctx, param));
+	for (auto const* result: type->returnParameterTypes())
+		retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, result));
 	return builder::TypeCoercion::buildArc4Selector(_memberAccess.memberName(), paramNames, retNames);
-}
-
-std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
-	std::shared_ptr<awst::Expression> _addrExpr)
-{
-	if (_addrExpr->wtype == awst::WType::applicationType())
-		return _addrExpr;
-
-	// `this` (CurrentApplicationAddress) is a hash, not \x00*24+app_id;
-	// use CurrentApplicationID directly.
-	if (builder::shorthand::isCurrentAppAddressGlobal(_addrExpr.get()))
-	{
-		auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
-
-		auto cast = awst::makeAsApplication(std::move(appId), m_loc);
-		return cast;
-	}
-
-	std::shared_ptr<awst::Expression> bytesExpr = std::move(_addrExpr);
-	if (bytesExpr->wtype == awst::WType::accountType())
-	{
-		auto toBytes = awst::makeAsBytes(std::move(bytesExpr), m_loc);
-		bytesExpr = std::move(toBytes);
-	}
-
-	// low 8 bytes of the 32-byte address → app id
-	auto btoi = awst::makeWord32ToUInt64(std::move(bytesExpr), m_loc);
-	return awst::makeAsApplication(std::move(btoi), m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
@@ -101,20 +50,15 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 		submit->itxns.push_back(std::move(_payTxn));
 	submit->itxns.push_back(std::move(_create));
 
-	// For void returns
-	if (!_returnType || _returnType == awst::WType::voidType())
-		return submit;
-
 	// Submit as pre-pending statement, then CAPTURE this call's log immediately
 	// (a later inner txn built in the same statement — tuple of calls — clobbers
 	// the itxn context; a live LastLog read would see the LAST submit's log).
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
 	m_ctx.preEffects().push_back(std::move(submitStmt));
 
-	auto readLog = eb::InnerCallHandlers::captureLastLog(m_ctx, m_loc);
-
-	// Strip the 4-byte AVM return-log carrier prefix.
-	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, m_loc);
+	auto stripPrefix = ApplicationCall::capture(m_ctx.typeMapper, m_loc, m_ctx.preEffects());
+	if (!_returnType || _returnType == awst::WType::voidType())
+		return awst::makeVoidConstant(m_loc);
 	std::vector<Type const*> components;
 	if (auto const* tuple = dynamic_cast<TupleType const*>(_solReturnType))
 		components = tuple->components();
@@ -163,9 +107,13 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	// evaluates a {gas: expr} option for its side effects (the amount itself
 	// has no AVM analogue). Previously this path never read the options and
 	// the value was SILENTLY DROPPED (callee saw msg.value == 0).
+	auto receiver = m_ctx.lowerOperand([&] {
+		return ApplicationTarget::resolve(m_ctx.typeMapper.profile(),
+			buildExpr(memberAccess->expression()), m_loc);
+	}, false);
+	auto baseTranslated = m_ctx.emitSequencedOperand(
+		std::move(receiver.effects), std::move(receiver.value), true, m_loc);
 	auto callValue = extractCallValue();
-
-	auto baseTranslated = buildExpr(memberAccess->expression());
 
 	// Build selector. The selected contract profile owns the transport; Solidity
 	// `abi.*` expression semantics remain canonical independently.
@@ -188,57 +136,35 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 		selector = awst::makeMethodConstant(
 			buildMethodSelector(*memberAccess), awst::WType::bytesType(), m_loc);
 
-	// Get parameter types for encoding
-	auto const* extRefDecl = memberAccess->annotation().referencedDeclaration;
-	std::vector<Type const*> paramSolTypes;
-	if (auto const* fd = dynamic_cast<FunctionDefinition const*>(extRefDecl))
-	{
-		for (auto const& param: fd->parameters())
-			paramSolTypes.push_back(param->type());
-	}
-	else if (dynamic_cast<VariableDeclaration const*>(extRefDecl))
-	{
-		// Keyed public getter: encode key/index args at the getter's declared
-		// param types (a nullptr paramType would encode biguint keys at the
-		// 32-byte backing width while the callee decodes the declared width).
-		if (auto const* getterType =
-				dynamic_cast<FunctionType const*>(memberAccess->annotation().type))
-			for (auto const& t: getterType->parameterTypes())
-				paramSolTypes.push_back(t);
-	}
-
-	std::shared_ptr<awst::TupleExpression> argsTuple;
-	if (m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
-	{
-		std::vector<ASTPointer<Expression const>> args;
-		for (auto const& argument: m_call.sortedArguments())
-			args.push_back(argument);
-		argsTuple = eb::InnerCallHandlers::buildEvmApplicationArgs(
-			m_ctx, std::move(selector), args, paramSolTypes, m_loc);
-	}
+	auto const* functionType = dynamic_cast<FunctionType const*>(memberAccess->annotation().type);
+	assert(functionType);
+	auto const& paramSolTypes = functionType->parameterTypes();
+	bool const evm = m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm;
+	auto values = CallOperands::build(m_ctx, m_call, m_loc,
+		[&](Expression const& source, size_t i) {
+			auto value = buildExpr(source);
+			auto const* param = paramSolTypes.at(i);
+			value = EvmSlotLowering::materializeRefValue(m_ctx, std::move(value),
+				source.annotation().type, m_ctx.typeMapper.map(param), m_loc);
+			return ConversionPlan{source.annotation().type, param, m_ctx.typeMapper.map(param),
+				ConversionPlan::Context::AbiArgument}.emit(std::move(value), m_loc);
+		});
+	auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
+	argsTuple->items.push_back(std::move(selector));
+	if (evm)
+		argsTuple->items.push_back(eb::AbiEncoderBuilder::encodeValuesAsEvmAbi(
+			m_ctx, paramSolTypes, std::move(values), m_loc));
 	else
-	{
-		argsTuple = awst::makeTupleExpression(nullptr, m_loc);
-		argsTuple->items.push_back(std::move(selector));
-		size_t argIdx = 0;
-		for (auto const& arg: m_call.sortedArguments())
-		{
-			Type const* paramType = argIdx < paramSolTypes.size()
-				? paramSolTypes[argIdx] : nullptr;
-			++argIdx;
-			auto argExpr = buildExpr(*arg);
-			argsTuple->items.push_back(eb::InnerCallHandlers::encodeArgToBytes(
-				m_ctx, std::move(argExpr), arg->annotation().type, paramType, m_loc));
-		}
-		std::vector<awst::WType const*> argTypes;
-		for (auto const& item: argsTuple->items)
-			argTypes.push_back(item->wtype);
-		argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-			std::move(argTypes), std::nullopt);
-	}
-
+		for (size_t i = 0; i < values.size(); ++i)
+			argsTuple->items.push_back(eb::InnerCallHandlers::encodeArgToBytes(m_ctx,
+				std::move(values[i]), paramSolTypes[i], paramSolTypes[i], m_loc));
+	std::vector<awst::WType const*> argTypes;
+	for (auto const& item: argsTuple->items)
+		argTypes.push_back(item->wtype);
+	argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+		std::move(argTypes), std::nullopt);
 	// Convert receiver to app ID
-	auto appId = addressToAppId(std::move(baseTranslated));
+	auto appId = ApplicationTarget::requireApplication(std::move(baseTranslated), m_loc);
 
 	// The {value:} payment pays the called app's ESCROW, derived from the
 	// same app id (a contract-value address paid verbatim lands on a keyless

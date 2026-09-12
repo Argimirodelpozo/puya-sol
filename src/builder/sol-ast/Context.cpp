@@ -62,7 +62,7 @@ FunctionContext::FunctionContext(TranslationContext& _tr,
 			if (slotReturns)
 				scope.bindings.slotStorageRefs.set(result->id(), awst::makeVarExpression(
 					result->name(), awst::WType::biguintType(), tr.makeLoc(result->location())));
-			else if (isBoxKeyedStorageRef(result->type(), types.analysis())
+			else if (types.isBoxKeyedStorageRef(result->type())
 				|| types.analysis().asmSlotReferenceDeclarations.contains(result->id())
 				|| storageRefReturnIsBytesKeyed(&function, types.analysis()))
 				scope.bindings.mappingKeyParams.set(result->id(), result->name());

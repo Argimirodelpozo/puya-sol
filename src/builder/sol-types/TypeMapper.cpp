@@ -260,6 +260,26 @@ awst::WType const* TypeMapper::tryMapStorageRepresentation(solidity::frontend::T
 	catch (SizeError const&) { return nullptr; }
 }
 
+bool TypeMapper::isBoxKeyedStorageRef(solidity::frontend::Type const* _solType)
+{
+	if (containsMappingType(_solType)) return true;
+	if (auto const* structure = dynamic_cast<solidity::frontend::StructType const*>(_solType))
+	{
+		if (hasDynamicStorageShape(structure)) return true;
+		auto id = structure->structDefinition().id();
+		if (m_analysis.boxKeyedStructs.contains(id) || m_analysis.refPassedStructs.contains(id))
+			return true;
+		// At least 128 encoded bytes cannot fit global state with any nonempty
+		// key. Solc's EVM-slot upper bound does not describe this representation.
+		auto const* representation = tryMapStorageRepresentation(structure);
+		return !representation
+			|| computeEncodedElementSize(representation).fixedBytes().value_or(0) >= 128;
+	}
+	if (auto const* array = dynamic_cast<solidity::frontend::ArrayType const*>(_solType))
+		return !array->isByteArrayOrString() && hasDynamicStorageShape(array);
+	return false;
+}
+
 awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 {
 	if (!_type)

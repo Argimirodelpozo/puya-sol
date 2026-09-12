@@ -28,9 +28,9 @@ SolUnaryOperation::SolUnaryOperation(
 }
 
 std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
-	std::shared_ptr<awst::Expression> _operand)
+	std::shared_ptr<awst::Expression> _operand, ResolvedLValue::Resolution _resolution)
 {
-	ResolvedLValue target(m_ctx, m_unaryOp.subExpression(), m_loc, std::move(_operand));
+	ResolvedLValue target(m_ctx, m_unaryOp.subExpression(), m_loc, std::move(_resolution), std::move(_operand));
 	auto old = m_ctx.emitSequencedOperand({}, target.read(), true, m_loc);
 	auto const integer = SolIntType::fromSol(m_unaryOp.subExpression().annotation().type);
 	assert(integer);
@@ -81,7 +81,7 @@ bool SolUnaryOperation::clearMultiBoxElement(
 }
 
 std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
-	std::shared_ptr<awst::Expression> _operand)
+	std::shared_ptr<awst::Expression> _operand, ResolvedLValue::Resolution _resolution)
 {
 	if (!_operand)
 	{
@@ -143,7 +143,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 					return _operand;
 			}
 
-	ResolvedLValue(m_ctx, m_unaryOp.subExpression(), m_loc, std::move(_operand)).clear();
+	ResolvedLValue(m_ctx, m_unaryOp.subExpression(), m_loc, std::move(_resolution), std::move(_operand)).clear();
 	return awst::makeVoidConstant(m_loc);
 }
 
@@ -169,7 +169,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::toAwst()
 	bool const modifies = op == Token::Inc || op == Token::Dec || op == Token::Delete;
 	// Addressed destinations are resolved by the shared lvalue, not first read
 	// as expressions and then resolved again for the write.
-	auto operand = modifies && ResolvedLValue::isAddressed(m_ctx, m_unaryOp.subExpression())
+	auto resolution = modifies ? ResolvedLValue::classify(m_ctx, m_unaryOp.subExpression()) : ResolvedLValue::Resolution{};
+	auto operand = resolution.isAddressed()
 		? nullptr : buildExpr(m_unaryOp.subExpression());
 	// Try sol-eb builder dispatch for Not/Sub/BitNot
 	{
@@ -214,8 +215,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::toAwst()
 	case Token::Sub:
 		throw std::logic_error("Missing sol-eb unary operation for solc-checked type");
 	case Token::Inc:
-	case Token::Dec:    return handleIncDec(std::move(operand));
-	case Token::Delete: return handleDelete(std::move(operand));
+	case Token::Dec:    return handleIncDec(std::move(operand), std::move(resolution));
+	case Token::Delete: return handleDelete(std::move(operand), std::move(resolution));
 	default:            return operand;
 	}
 }

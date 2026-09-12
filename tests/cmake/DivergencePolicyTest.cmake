@@ -91,6 +91,16 @@ run_frontend(
     basefee_allowed BlockBaseFee.sol 0 ""
     --allow-divergence block-basefee)
 
+run_frontend(seed_denied BlockSeed.sol 1 "--allow-divergence block-prevrandao")
+run_frontend(seed_allowed BlockSeed.sol 0 "not secure randomness"
+    --allow-divergence block-prevrandao --allow-divergence block-difficulty)
+file(READ "${frontend_awst_path}" seed_awst)
+string(FIND "${seed_awst}" "FirstValid" first_valid_read)
+string(FIND "${seed_awst}" "\"Round\"" execution_round_read)
+if(first_valid_read EQUAL -1 OR NOT execution_round_read EQUAL -1)
+    message(FATAL_ERROR "block seed must use transaction FirstValid, not execution Round")
+endif()
+
 run_frontend(
     address_balance_denied AddressBalance.sol 1
     "--allow-divergence address-balance-units")
@@ -120,7 +130,7 @@ set(payment_template "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
 foreach(payment_source NativeValueTransfer NativeValueSelfdestruct NativeValueAssembly)
     # A Yul `call` to a runtime address is also the low-level call adaptation.
     if(payment_source STREQUAL "NativeValueAssembly")
-        set(call_outcome --allow-divergence low-level-call-outcome)
+        set(call_outcome --allow-divergence low-level-call-outcome --allow-divergence gasleft)
     else()
         set(call_outcome "")
     endif()
@@ -160,8 +170,12 @@ run_frontend(
     native_zero_assembly_denied NativeValueZeroAssembly.sol 1
     "--allow-divergence low-level-call-outcome" --contract-abi evm)
 run_frontend(
-    native_zero_assembly NativeValueZeroAssembly.sol 0 ""
+    native_zero_assembly_gas_denied NativeValueZeroAssembly.sol 1
+    "--allow-divergence gasleft"
     --contract-abi evm --allow-divergence low-level-call-outcome)
+run_frontend(
+    native_zero_assembly NativeValueZeroAssembly.sol 0 ""
+    --contract-abi evm --allow-divergence low-level-call-outcome --allow-divergence gasleft)
 run_frontend(native_known_app NativeValueKnownApp.sol 0 "" --contract-abi evm)
 
 # Missing static-call write protection only warns. The independent low-level

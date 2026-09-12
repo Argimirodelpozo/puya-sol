@@ -34,41 +34,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 )
 {
 	auto const _name = getFunctionName(_call.functionName);
-	// Yul evaluates arguments right-to-left, including their READS. Translating
-	// right-to-left but deferring mload/sload until after a later argument's
-	// call observes the wrong state. Keep literals and local reads (solc forbids
-	// capturing caller stack variables); materialize everything else here.
-	std::vector<std::shared_ptr<awst::Expression>> _args(_call.arguments.size());
-	for (size_t i = _call.arguments.size(); i-- > 0; )
-	{
-		auto value = buildExpression(_call.arguments[i]);
-		drainPendingStatements(_out);
-		if (!value)
-			return nullptr;
-		if (dynamic_cast<awst::VarExpression const*>(value.get())
-			|| dynamic_cast<awst::IntegerConstant const*>(value.get()))
-			_args[i] = std::move(value);
-		else
-		{
-			auto name = "__yularg_" + std::to_string(awst::NameGen::next("UserFunctionOps.arg"));
-			m_locals[name] = value->wtype;
-			if (auto constant = resolveConstantOffset(value))
-				m_localConstants[name] = *constant;
-			if (alignmentMod32(*value).value_or(1u) == 0u)
-				m_alignedLocals.insert(name);
-			_args[i] = awst::makeVarExpression(name, value->wtype, _loc);
-			_out.push_back(awst::makeAssignmentStatement(_args[i], std::move(value), _loc));
-		}
-	}
-	m_yulSubReturnTemps.clear();
+	auto _args = buildCallOperands(_call, _out);
+	for (auto const& arg: _args)
+		if (!arg) return nullptr;
+	m_frame.yulSubReturnTemps.clear();
 
 	// Preserve the function boundary through initial SSA construction. Puya can
 	// still selectively inline the resulting IR after each function is built.
-	auto subIt = m_yulFuncSubroutineIds.find(_name);
-	if (subIt != m_yulFuncSubroutineIds.end())
+	auto subIt = m_context->yulFuncSubroutineIds.find(_name);
+	if (subIt != m_context->yulFuncSubroutineIds.end())
 	{
-		auto defIt = m_asmFunctions.find(_name);
-		if (defIt == m_asmFunctions.end())
+		auto defIt = m_context->asmFunctions.find(_name);
+		if (defIt == m_context->asmFunctions.end())
 		{
 			Logger::instance().error("unknown assembly function: " + _name, _loc);
 			return nullptr;
@@ -90,10 +67,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		auto call = awst::makeSubroutineCall(awst::SubroutineID{subIt->second}, callRetType, _loc);
 		for (auto const& a: _args)
 			awst::pushCallArg(call->args, ensureBiguint(a, _loc));
-		if (m_yulCalldataFunctions.count(_name))
+		if (m_context->yulCalldataFunctions.count(_name))
 			awst::pushCallArg(call->args,
 				awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc));
-		if (m_yulMemoryWritingFunctions.count(_name))
+		if (m_context->yulMemoryWritingFunctions.count(_name))
 			invalidateMemConstants();
 
 		int callId = (awst::NameGen::next("UserFunctionOps.s_yulCallId") + 1);
@@ -106,7 +83,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 
 		// Fresh temps __yulret_<id>_<i>: decoupled from the function's return-var names
 		// so a recursive call can't clobber the caller's live values. Multi-return wraps
-		// call in SingleEvaluation. Callers map temps via m_yulSubReturnTemps.
+		// call in SingleEvaluation. Callers map temps via m_frame.yulSubReturnTemps.
 		std::shared_ptr<awst::Expression> resultSrc;
 		if (nRet == 1)
 			resultSrc = call;
@@ -116,24 +93,24 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		for (size_t i = 0; i < nRet; ++i)
 		{
 			std::string t = "__yulret_" + std::to_string(callId) + "_" + std::to_string(i);
-			m_locals[t] = awst::WType::biguintType();
+			m_frame.locals[t] = awst::WType::biguintType();
 			std::shared_ptr<awst::Expression> value = (nRet == 1)
 				? resultSrc
 				: awst::makeTupleItem(resultSrc, static_cast<int>(i), awst::WType::biguintType(), _loc);
 			auto target = awst::makeVarExpression(t, awst::WType::biguintType(), _loc);
 			_out.push_back(awst::makeAssignmentStatement(std::move(target), std::move(value), _loc));
-			m_yulSubReturnTemps.push_back(t);
+			m_frame.yulSubReturnTemps.push_back(t);
 		}
 
 		// Single-return may be used in expression context — return the temp.
 		if (nRet == 1)
-			return awst::makeVarExpression(m_yulSubReturnTemps[0], awst::WType::biguintType(), _loc);
+			return awst::makeVarExpression(m_frame.yulSubReturnTemps[0], awst::WType::biguintType(), _loc);
 		return nullptr;
 	}
 
 	// Depth backstop: genuine recursion is detected above; reaching >64 means a
 	// very deep non-recursive chain or a detection gap — NOT unsupported recursion.
-	if (m_inlineDepth > 64)
+	if (m_frame.inlineDepth > 64)
 	{
 		Logger::instance().error(
 			"assembly function '" + _name + "' exceeded the inline-expansion depth "
@@ -145,8 +122,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		return nullptr;
 	}
 
-	auto it = m_asmFunctions.find(_name);
-	if (it == m_asmFunctions.end())
+	auto it = m_context->asmFunctions.find(_name);
+	if (it == m_context->asmFunctions.end())
 	{
 		Logger::instance().error("unknown assembly function: " + _name, _loc);
 		return nullptr;
@@ -164,16 +141,16 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 
 	// Per-inline-call unique names: a fn's bare params/returns (x, y) are renamed to
 	// __yul_<uid>_<name> so sibling (sq(a)+cube(b)) and nested (cube calls sq) calls don't
-	// clobber the same runtime vars. resolveVarRef applies m_yulInlineRenames to the body;
+	// clobber the same runtime vars. resolveVarRef applies m_frame.yulInlineRenames to the body;
 	// saved/restored per frame so an outer/sibling frame's renames are unaffected.
 	int uid = (awst::NameGen::next("UserFunctionOps.s_yulInlineUid") + 1);
 	auto uniqueName = [&](std::string const& n) { return "__yul_" + std::to_string(uid) + "_" + n; };
 	std::vector<std::tuple<std::string, bool, std::string>> savedRenames;
 	auto pushRename = [&](std::string const& bare, std::string const& unique) {
-		auto it = m_yulInlineRenames.find(bare);
-		savedRenames.emplace_back(bare, it != m_yulInlineRenames.end(),
-			it != m_yulInlineRenames.end() ? it->second : std::string());
-		m_yulInlineRenames[bare] = unique;
+		auto it = m_frame.yulInlineRenames.find(bare);
+		savedRenames.emplace_back(bare, it != m_frame.yulInlineRenames.end(),
+			it != m_frame.yulInlineRenames.end() ? it->second : std::string());
+		m_frame.yulInlineRenames[bare] = unique;
 	};
 
 	// Bind parameters; use arg's actual type (handles arrays passed to assembly fns).
@@ -183,13 +160,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		std::string uName = uniqueName(paramName);
 		pushRename(paramName, uName);
 		awst::WType const* paramType = _args[i]->wtype;
-		m_locals[uName] = paramType;
+		m_frame.locals[uName] = paramType;
 		// Only single-assignment params: the fn body's `paramName := …` sites were
 		// collected under the ORIGINAL name; a reassigned param's bound constant
 		// would go stale mid-body (same rule as `let` locals).
 		auto constVal = resolveConstantOffset(_args[i]);
-		if (constVal && !m_reassignedLocals.count(paramName))
-			m_localConstants[uName] = *constVal;
+		if (constVal && !m_context->reassignedLocals.count(paramName))
+			m_frame.localConstants[uName] = *constVal;
 		_out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(uName, paramType, _loc), _args[i], _loc));
 	}
@@ -202,7 +179,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		std::string uName = uniqueName(retName);
 		pushRename(retName, uName);
 		uniqueRetNames.push_back(uName);
-		m_locals[uName] = awst::WType::biguintType();
+		m_frame.locals[uName] = awst::WType::biguintType();
 		_out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(uName, awst::WType::biguintType(), _loc),
 			awst::makeBiguintConstant("0", _loc), _loc));
@@ -275,16 +252,16 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 	scanLeave(funcDef.body.statements);
 
 	std::vector<std::shared_ptr<awst::Statement>> bodyStmts;
-	auto savedLeaveFlag = m_yulLeaveFlag;
+	auto savedLeaveFlag = m_frame.yulLeaveFlag;
 	if (hasLeave)
 	{
-		m_yulLeaveFlag = "__yul_leave_" + std::to_string(uid);
+		m_frame.yulLeaveFlag = "__yul_leave_" + std::to_string(uid);
 		_out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(
-				m_yulLeaveFlag, awst::WType::boolType(), _loc),
+				m_frame.yulLeaveFlag, awst::WType::boolType(), _loc),
 			awst::makeFalse(_loc), _loc));
 	}
-	++m_inlineDepth;
+	++m_frame.inlineDepth;
 	for (auto const& stmt: funcDef.body.statements)
 	{
 		buildStatement(stmt, bodyStmts);
@@ -293,8 +270,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		if (std::holds_alternative<solidity::yul::Leave>(stmt))
 			break;
 	}
-	--m_inlineDepth;
-	m_yulLeaveFlag = savedLeaveFlag;
+	--m_frame.inlineDepth;
+	m_frame.yulLeaveFlag = savedLeaveFlag;
 
 	if (hasLeave)
 	{
@@ -316,14 +293,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 	{
 		auto const& [bare, had, old] = *it;
 		if (had)
-			m_yulInlineRenames[bare] = old;
+			m_frame.yulInlineRenames[bare] = old;
 		else
-			m_yulInlineRenames.erase(bare);
+			m_frame.yulInlineRenames.erase(bare);
 	}
 
 	// Publish this call's return temps (unique names) so the caller reads the right vars, not the
 	// shared bare return-var name. Single-return also returns it as the expression value.
-	m_yulSubReturnTemps = uniqueRetNames;
+	m_frame.yulSubReturnTemps = uniqueRetNames;
 	if (uniqueRetNames.size() == 1)
 		return awst::makeVarExpression(uniqueRetNames[0], awst::WType::biguintType(), _loc);
 	return nullptr;

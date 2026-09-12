@@ -4,6 +4,8 @@
 
 #include <cctype>
 #include <cstdint>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -11,6 +13,8 @@
 #include "builder/TargetProfile.h"
 
 #include <string_view>
+
+namespace puyasol::awst { struct Expression; }
 
 namespace puyasol::builder
 {
@@ -84,6 +88,10 @@ public:
 		awst::SourceLocation const& _loc);
 };
 
+/// One opted-in seed mapping for Solidity and Yul: FirstValid - 1, or zero
+/// at FirstValid 0. Predictable/caller-selectable, not secure randomness.
+std::shared_ptr<awst::Expression> buildBlockSeed(
+	EvmFeature, TargetProfile const&, awst::SourceLocation const&);
 
 /// 20-byte coinbase address from the profile's `--evm-coinbase` hex.
 /// Case-insensitive, so the asm and Solidity lowerings can never diverge on
@@ -95,11 +103,10 @@ inline std::vector<uint8_t> decodeEvmCoinbase20(std::string const& _hex)
 	// nibble loop indexed 40 characters without checking the length — an
 	// out-of-bounds read on short input — and mapped a non-hex character to a
 	// garbage nibble. `--evm-coinbase` is validated by CliOptions'
-	// parseAddressHex, so the fallback is unreachable through the CLI; it
-	// exists so a producer that bypasses it cannot read past the string.
+	// parseAddressHex; programmatic producers must also fail closed.
 	if (auto bytes = hexToBytes(_hex, 20))
 		return *bytes;
-	return std::vector<uint8_t>(20, 0);
+	throw std::invalid_argument("EVM coinbase must be exactly 20 hex-encoded bytes");
 }
 
 } // namespace puyasol::builder

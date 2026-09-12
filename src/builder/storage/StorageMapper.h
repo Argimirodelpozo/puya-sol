@@ -44,6 +44,11 @@ public:
 		{
 			return storageClass == StorageClass::Persistent || storageClass == StorageClass::Immutable;
 		}
+		bool preservesEmptyBox() const
+		{
+			return initialization == RootInitialization::DeferredArrayBox
+				&& StorageMapper::hasDynamicBoxValue(wtype);
+		}
 		awst::WType const* valueType(TypeMapper& _mapper) const
 		{
 			// An actual value access must diagnose an unavailable representation,
@@ -71,10 +76,7 @@ public:
 		solidity::frontend::VariableDeclaration const& _var) const;
 
 	std::shared_ptr<awst::Expression> createStateRead(
-		PhysicalBinding const& _binding, awst::SourceLocation const& _loc)
-	{
-		return createStateRead(_binding.key, _binding.valueType(m_typeMapper), _binding.kind, _loc);
-	}
+		PhysicalBinding const& _binding, awst::SourceLocation const& _loc);
 	std::shared_ptr<awst::Expression> createStateWrite(
 		PhysicalBinding const& _binding, std::shared_ptr<awst::Expression> _value,
 		awst::SourceLocation const& _loc)
@@ -150,12 +152,6 @@ public:
 	static std::shared_ptr<awst::Statement> ensureArrayPage(
 		ArrayPage const& _page, awst::SourceLocation const& _loc);
 
-	/// Create a type-correct default value expression (0/false/empty) for the given wtype.
-	static std::shared_ptr<awst::Expression> makeDefaultValue(
-		awst::WType const* _type,
-		awst::SourceLocation const& _loc
-	);
-
 	/// StateGet(field, default) for most types. For box-backed types that exceed
 	/// AVM's 4 KB stack-value cap (oversized fixed arrays, dyn arrays/bytes),
 	/// returns the bare BoxValueExpression instead — see puyabug.md §4c/4d.
@@ -184,29 +180,17 @@ public:
 		std::shared_ptr<awst::Expression> _offset, awst::WType const* _type,
 		awst::SourceLocation const& _loc);
 
-	/// Slot argument for __storage_read/write: the FULL-WIDTH (biguint) slot.
-	/// (Historically truncated to the low 8 bytes — only sound under the
-	/// mod-256 fallback, removed with the box-per-slot store.)
-	static std::shared_ptr<awst::Expression> biguintSlotToBtoi(
-		std::shared_ptr<awst::Expression> const& _slotExpr,
-		awst::SourceLocation const& _loc
-	);
-
-	/// Canonical top-level state-var box: BoxValueExpression keyed by _varName.
-	/// Carries explicit declaration origin; key expression shape is irrelevant.
+	/// Known declaration/synthetic root. Dynamic arrays are initialized during
+	/// postInit and retain their valid empty box on delete; runtime keys are lazy.
 	static std::shared_ptr<awst::BoxValueExpression> makeTopLevelBoxExpr(
 		std::string const& _varName,
 		awst::WType const* _type,
 		awst::SourceLocation const& _loc
 	);
 
-	/// True iff _box is a top-level dynamic-typed state-var box
-	/// (ARC4DynamicArray / ReferenceArray / dynamic bytes) eagerly created in
-	/// __postInit (m_boxArrayVars), so bare BoxValueExpression reads are safe.
-	/// Declaration origin is explicit; runtime mapping values are lazy and don't
-	/// qualify. Shared by makeStateGetWithDefault (read skip)
-	/// and handleDelete (box_put-empty instead of box_del).
-	static bool isTopLevelDynamicBox(awst::BoxValueExpression const* _box);
+	/// Shape eligible for the initialized-empty-box policy. Initialization is
+	/// a separate binding fact; this predicate alone never proves existence.
+	static bool hasDynamicBoxValue(awst::WType const* _type);
 
 	/// box_len(<key>) as WTuple(uint64, bool); callers pick item 0 (len) or 1 (exists).
 	static std::shared_ptr<awst::Expression> makeBoxLenTuple(

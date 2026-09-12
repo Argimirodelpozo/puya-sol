@@ -34,8 +34,6 @@ struct TargetProfile
 	/// Disabled by default: ordinary source names and EIP-1967 slots retain
 	/// their source semantics, and unsupported delegatecall stays policy-gated.
 	bool proxyAdaptation = false;
-	bool denseOnlyStorage = false;
-	bool singlePageStorage = false;
 	/// Explicit EVM environment inputs. Decimal uint256 strings are retained
 	/// losslessly; coinbase is a normalized 40-hex-digit Solidity address.
 	std::optional<std::string> evmChainId;

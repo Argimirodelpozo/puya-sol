@@ -1,11 +1,16 @@
 #include "builder/CallBoundaryPlan.h"
+#include "builder/contract/EvmMemoryCodec.h"
+#include "awst/StatementWalk.h"
+#include <functional>
 #include "builder/sol-types/RefParamPassing.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/abi/EvmAbiDecode.h"
+#include "builder/codec/EvmValueCodec.h"
 #include "Logger.h"
 #include "awst/Termination.hpp"
 #include "awst/TupleValue.h"
+#include <stdexcept>
 
 namespace puyasol::builder
 {
@@ -18,12 +23,14 @@ CallBoundaryPlan const& TypeMapper::callBoundaryPlan(
 	auto const* owner = function.annotation().contract;
 	bool const freestanding = function.isFree() || (owner && owner->isLibrary());
 	if (freestanding) mostDerived = nullptr;
+	// Declaration-only ABI queries have no caller context. The defining
+	// contract is their solc lookup context; internal callers supply their
+	// actual most-derived host (and therefore get a separate cached plan).
+	else if (!mostDerived) mostDerived = owner;
 	auto key = std::make_pair(mostDerived ? mostDerived->id() : int64_t{0}, function.id());
 	if (auto it = m_callPlans.find(key); it != m_callPlans.end()) return it->second;
 	CallBoundaryPlan plan;
-	bool const internalMethod = !freestanding && function.visibility() == Visibility::Internal;
-	bool const threadReferences = function.isImplemented()
-		&& (internalMethod || (freestanding && function.visibility() != Visibility::Private));
+	bool const threadReferences = function.isImplemented();
 	auto const* mutations = threadReferences ? &analysis().parameterMutations(mostDerived, function) : nullptr;
 	bool const assembly = analysis().callablesWithInlineAssembly.contains(function.id());
 	for (size_t pi = 0; pi < function.parameters().size(); ++pi)
@@ -59,7 +66,7 @@ CallBoundaryPlan const& TypeMapper::callBoundaryPlan(
 		if (mutations && mutations->mutates(pi)
 			&& declaration.referenceLocation() == VariableDeclaration::Location::Memory
 			&& isMemoryRefWriteBackType(declaration.type())
-			&& (internalMethod || parameter.passing != RefParamPassing::BlobOffset))
+			&& parameter.passing != RefParamPassing::BlobOffset)
 			plan.memoryWriteBackParams.push_back(pi);
 
 		// ABI entries and function-pointer adapters share this recipe, including
@@ -107,29 +114,90 @@ awst::WType const* CallBoundaryPlan::augmentReturn(TypeMapper& mapper, awst::WTy
 	return types.size() == 1 ? types.front() : mapper.createType<awst::WTuple>(std::move(types));
 }
 
-void CallBoundaryPlan::augmentReturns(awst::Block& body, awst::WType const* augmented) const
+std::pair<std::shared_ptr<awst::Expression>, std::vector<std::shared_ptr<awst::Expression>>>
+CallBoundaryPlan::unpackReturn(std::shared_ptr<awst::Expression> value,
+	awst::WType const* original, awst::SourceLocation const& loc) const
+{
+	auto const* tuple = dynamic_cast<awst::WTuple const*>(original);
+	size_t const count = tuple ? tuple->types().size() : original == awst::WType::voidType() ? 0 : 1;
+	std::vector<std::shared_ptr<awst::Expression>> items;
+	// One augmented value is bare even when that value itself is a tuple.
+	if (count + writeBackParams.size() != 1)
+		items = awst::tupleItems(std::move(value), loc);
+	else items.push_back(std::move(value));
+	if (items.size() != count + writeBackParams.size())
+		throw std::logic_error("Call return does not match its boundary plan");
+	std::shared_ptr<awst::Expression> result;
+	if (tuple)
+	{
+		auto rebuilt = awst::makeTupleExpression(original, loc);
+		rebuilt->items.assign(items.begin(), items.begin() + count);
+		result = std::move(rebuilt);
+	}
+	else result = count ? items.front() : awst::makeVoidConstant(loc);
+	items.erase(items.begin(), items.begin() + count);
+	return {std::move(result), std::move(items)};
+}
+
+void CallBoundaryPlan::augmentReturns(awst::Block& body, awst::WType const* augmented,
+	TypeMapper& types, std::map<int64_t, std::string> const& originalMemoryParams) const
 {
 	if (writeBackParams.empty()) return;
-	awst::forEachReturnStatement(body.body, [&](awst::ReturnStatement& statement) {
-		auto const& loc = statement.sourceLocation;
-		if (!dynamic_cast<awst::WTuple const*>(augmented))
+	if (!awst::blockAlwaysTerminates(body))
+		body.body.push_back(awst::makeReturnStatement(nullptr, body.sourceLocation));
+	std::function<void(awst::Block&)> finish = [&](awst::Block& block) {
+		for (size_t i = 0; i < block.body.size(); ++i)
 		{
-			auto const& parameter = parameters[writeBackParams.front()];
-			statement.value = awst::makeVarExpression(parameter.name, parameter.type, loc);
-			return;
-		}
-		auto tuple = awst::makeTupleExpression(augmented, loc);
-		if (statement.value)
-		{
-			if (dynamic_cast<awst::WTuple const*>(statement.value->wtype))
-				tuple->items = awst::tupleItems(std::move(statement.value), loc);
+			auto* statement = dynamic_cast<awst::ReturnStatement*>(block.body[i].get());
+			if (!statement)
+			{
+				awst::forEachChildBlock(*block.body[i], [&](awst::Block& child, bool) { finish(child); });
+				continue;
+			}
+			auto const loc = statement->sourceLocation;
+			std::vector<std::shared_ptr<awst::Statement>> before;
+			// Evaluate the declared return before reading entry referents: it can
+			// itself call a mutator. Rebinding the live parameter never changes
+			// which memory object is materialized for the caller's write-back.
+			if (statement->value && !originalMemoryParams.empty())
+			{
+				auto saved = awst::makeVarExpression("__reference_return_" + std::to_string(
+					awst::NameGen::next("CallBoundaryPlan.return")), statement->value->wtype, loc);
+				before.push_back(awst::makeAssignmentStatement(saved, std::move(statement->value), loc));
+				statement->value = std::move(saved);
+			}
+			std::vector<std::shared_ptr<awst::Expression>> values;
+			if (statement->value)
+			{
+				if (dynamic_cast<awst::WTuple const*>(statement->value->wtype))
+					values = awst::tupleItems(std::move(statement->value), loc);
+				else values.push_back(std::move(statement->value));
+			}
+			for (auto pi: writeBackParams)
+			{
+				auto const& parameter = parameters[pi];
+				auto original = originalMemoryParams.find(parameter.declaration->id());
+				auto value = original == originalMemoryParams.end()
+					? awst::makeVarExpression(parameter.name, parameter.type, loc)
+					: materializeEvmMemoryValue(types, parameter.declaration->type(), parameter.type,
+						awst::makeVarExpression(original->second, awst::WType::uint64Type(), loc), loc, before);
+				if (!value) throw std::logic_error("Cannot materialize reference write-back");
+				values.push_back(std::move(value));
+			}
+			if (values.size() == 1) statement->value = std::move(values.front());
 			else
-				tuple->items.push_back(std::move(statement.value));
+			{
+				auto tuple = awst::makeTupleExpression(augmented, loc);
+				tuple->items = std::move(values);
+				statement->value = std::move(tuple);
+			}
+			auto count = before.size();
+			block.body.insert(block.body.begin() + static_cast<std::ptrdiff_t>(i),
+				std::make_move_iterator(before.begin()), std::make_move_iterator(before.end()));
+			i += count;
 		}
-		for (auto pi: writeBackParams)
-			tuple->items.push_back(awst::makeVarExpression(parameters[pi].name, parameters[pi].type, loc));
-		statement.value = std::move(tuple);
-	});
+	};
+	finish(body);
 }
 
 std::shared_ptr<awst::Expression> CallParameterPlan::encodeArgument(
@@ -172,7 +240,7 @@ std::shared_ptr<awst::Expression> decodeExternalCallResult(
 {
 	if (types.profile().contractAbi == ContractAbi::Evm)
 	{
-		if (!abi::canDecodeEvmAbi(returns))
+		if (!codec::canRoundTripEvmAbi(returns))
 		{
 			Logger::instance().error("external return type is not representable in canonical Solidity ABI", loc);
 			return awst::makeVoidConstant(loc);

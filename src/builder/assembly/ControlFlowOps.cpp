@@ -19,9 +19,11 @@ namespace puyasol::builder
 void AssemblyBuilder::drainPendingStatements(
 	std::vector<std::shared_ptr<awst::Statement>>& _out, size_t _from)
 {
-	for (size_t i = _from; i < m_pendingStatements.size(); ++i)
-		_out.push_back(std::move(m_pendingStatements[i]));
-	m_pendingStatements.resize(_from);
+	if (&_out == &m_frame.pendingStatements)
+		return;
+	for (size_t i = _from; i < m_frame.pendingStatements.size(); ++i)
+		_out.push_back(std::move(m_frame.pendingStatements[i]));
+	m_frame.pendingStatements.resize(_from);
 }
 
 void AssemblyBuilder::buildIfStatement(
@@ -56,7 +58,7 @@ void AssemblyBuilder::buildIfStatement(
 	// Condition may produce pending statements; drain before the if (same as buildForLoop).
 	if (isRevertBody)
 	{
-		size_t pendingBefore = m_pendingStatements.size();
+		size_t pendingBefore = m_frame.pendingStatements.size();
 		auto cond = ensureBool(buildExpression(*_node.condition), loc);
 		drainPendingStatements(_out, pendingBefore);
 		auto notCond = awst::makeNot(std::move(cond), loc);
@@ -65,16 +67,16 @@ void AssemblyBuilder::buildIfStatement(
 	}
 	else
 	{
-		size_t pendingBefore = m_pendingStatements.size();
+		size_t pendingBefore = m_frame.pendingStatements.size();
 		auto cond = ensureBool(buildExpression(*_node.condition), loc);
 		drainPendingStatements(_out, pendingBefore);
 
 		auto ifBlock = awst::makeBlock(loc);
-		// Don't latch m_haltEmitted for a conditional body: post-block code stays reachable.
-		bool savedHalt = m_haltEmitted;
+		// Don't latch m_frame.haltEmitted for a conditional body: post-block code stays reachable.
+		bool savedHalt = m_frame.haltEmitted;
 		for (auto const& innerStmt: _node.body.statements)
 			buildStatement(innerStmt, ifBlock->body);
-		m_haltEmitted = savedHalt;
+		m_frame.haltEmitted = savedHalt;
 		// Memory-content constants recorded inside the conditional body must not
 		// fold in code after the if.
 		invalidateMemConstants();
@@ -99,26 +101,26 @@ void AssemblyBuilder::buildForLoop(
 
 	// Condition may produce pending statements (e.g. sideeffect() inside cond);
 	// they must run before every check, not leak into the body.
-	size_t pendingBefore = m_pendingStatements.size();
+	size_t pendingBefore = m_frame.pendingStatements.size();
 	auto cond = ensureBool(buildExpression(*_node.condition), loc);
 	std::vector<std::shared_ptr<awst::Statement>> condStmts;
-	for (size_t i = pendingBefore; i < m_pendingStatements.size(); ++i)
-		condStmts.push_back(std::move(m_pendingStatements[i]));
-	m_pendingStatements.resize(pendingBefore);
+	for (size_t i = pendingBefore; i < m_frame.pendingStatements.size(); ++i)
+		condStmts.push_back(std::move(m_frame.pendingStatements[i]));
+	m_frame.pendingStatements.resize(pendingBefore);
 
-	auto* savedPost = m_forLoopPost;
-	m_forLoopPost = &_node.post.statements;
+	auto* savedPost = m_frame.forLoopPost;
+	m_frame.forLoopPost = &_node.post.statements;
 
 	auto body = awst::makeBlock(loc);
-	bool savedHalt = m_haltEmitted; // loop body halts are conditional
+	bool savedHalt = m_frame.haltEmitted; // loop body halts are conditional
 	for (auto const& bodyStmt: _node.body.statements)
 		buildStatement(bodyStmt, body->body);
 	// Post statements at end of body (normal iteration path)
 	for (auto const& postStmt: _node.post.statements)
 		buildStatement(postStmt, body->body);
-	m_haltEmitted = savedHalt;
+	m_frame.haltEmitted = savedHalt;
 
-	m_forLoopPost = savedPost;
+	m_frame.forLoopPost = savedPost;
 	// Body/post recordings must not survive the loop.
 	invalidateMemConstants();
 
@@ -145,13 +147,13 @@ void AssemblyBuilder::buildForLoop(
 	// A leave inside this Yul loop first exits the nearest AWST loop. Propagate
 	// the per-inline-function flag outward until it reaches the synthetic
 	// function wrapper loop.
-	if (!m_yulLeaveFlag.empty())
+	if (!m_frame.yulLeaveFlag.empty())
 	{
 		auto leaveBlock = awst::makeBlock(loc);
 		leaveBlock->body.push_back(awst::makeLoopExit(loc));
 		_out.push_back(awst::makeIfElse(
 			awst::makeVarExpression(
-				m_yulLeaveFlag, awst::WType::boolType(), loc),
+				m_frame.yulLeaveFlag, awst::WType::boolType(), loc),
 			std::move(leaveBlock), nullptr, loc));
 	}
 }
@@ -170,9 +172,9 @@ void AssemblyBuilder::buildContinueStatement(
 )
 {
 	// Yul `continue` jumps to the post expression, not the condition.
-	if (m_forLoopPost)
+	if (m_frame.forLoopPost)
 	{
-		for (auto const& postStmt: *m_forLoopPost)
+		for (auto const& postStmt: *m_frame.forLoopPost)
 			buildStatement(postStmt, _out);
 	}
 	_out.push_back(awst::makeLoopContinue(makeLoc(_node.debugData)));
@@ -183,19 +185,19 @@ void AssemblyBuilder::buildLeaveStatement(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (m_yulSubroutine)
+	if (m_frame.yulSubroutine)
 	{
 		emitYulSubroutineReturn(makeLoc(_node.debugData), _out);
 		return;
 	}
 	// Inlined Yul functions are wrapped in `while true {…break}`;
 	// `leave` breaks out. Outside an inlined function it's a no-op.
-	if (m_inlineDepth > 0)
+	if (m_frame.inlineDepth > 0)
 	{
-		if (!m_yulLeaveFlag.empty())
+		if (!m_frame.yulLeaveFlag.empty())
 			_out.push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(
-					m_yulLeaveFlag, awst::WType::boolType(), makeLoc(_node.debugData)),
+					m_frame.yulLeaveFlag, awst::WType::boolType(), makeLoc(_node.debugData)),
 				awst::makeTrue(makeLoc(_node.debugData)), makeLoc(_node.debugData)));
 		_out.push_back(awst::makeLoopExit(makeLoc(_node.debugData)));
 	}
@@ -207,7 +209,7 @@ void AssemblyBuilder::buildSwitchStatement(
 )
 {
 	auto loc = makeLoc(_node.debugData);
-	size_t pendingBefore = m_pendingStatements.size();
+	size_t pendingBefore = m_frame.pendingStatements.size();
 	auto switchExpr = buildExpression(*_node.expression);
 	drainPendingStatements(_out, pendingBefore);
 
@@ -254,10 +256,10 @@ void AssemblyBuilder::buildSwitchStatement(
 		switchNode->value = switchExpr;
 	}
 
-	bool savedHalt = m_haltEmitted; // switch-case halts are conditional
+	bool savedHalt = m_frame.haltEmitted; // switch-case halts are conditional
 	for (auto const& yulCase: _node.cases)
 	{
-		m_haltEmitted = savedHalt;
+		m_frame.haltEmitted = savedHalt;
 		// Each case body starts fresh: recordings from a SIBLING case (translated
 		// just before) never execute on this case's path.
 		invalidateMemConstants();
@@ -301,7 +303,7 @@ void AssemblyBuilder::buildSwitchStatement(
 			}
 		}
 	}
-	m_haltEmitted = savedHalt;
+	m_frame.haltEmitted = savedHalt;
 	// Case-body recordings are conditional — must not fold after the switch.
 	invalidateMemConstants();
 

@@ -76,16 +76,14 @@ public:
 		std::shared_ptr<awst::Expression> _idx,
 		solidity::frontend::Type const* _elemType);
 
-	/// Address of a struct member relative to `_base`. `_widenStandaloneAccount`
-	/// preserves the direct-member convention where an address that owns its
-	/// slot uses the full 32-byte AVM account; aggregate materialisation passes
-	/// false and keeps the declared EVM field width.
+	/// Address of a struct member relative to `_base`. An account owning its
+	/// whole slot uses 32 bytes; packed accounts use the declared 20-byte window
+	/// plus auxiliary bytes. Direct and aggregate accesses share this policy.
 	Addr memberAddr(
 		std::shared_ptr<awst::Expression> _base,
 		solidity::frontend::StructType const* _structType,
 		std::string const& _memberName,
-		solidity::frontend::Type const* _memberType,
-		bool _widenStandaloneAccount = false);
+		solidity::frontend::Type const* _memberType);
 
 	/// Coerce a built value to the leaf's native carrier (numeric casts, ARC4
 	/// decode, unsized-bytes relabel) — what writeValue expects.
@@ -169,8 +167,8 @@ public:
 		awst::SourceLocation const& _loc);
 
 	/// Materialise a whole STRUCT at `_a.slot` as a NewStruct value (per-slot
-	/// word reads via SlotHandleAccess::readStructElem; temps go to
-	/// ctx.preEffects()). Null + loud error when `_a` isn't a struct.
+	/// word reads are shared, typed leaf decoding matches direct access;
+	/// temps go to ctx.preEffects()). Null + loud error when `_a` isn't a struct.
 	/// Read direction of lowerStructValue.
 	std::shared_ptr<awst::Expression> readStructValue(Addr const& _a);
 
@@ -189,7 +187,8 @@ public:
 		std::vector<std::shared_ptr<awst::Statement>>& _out);
 
 	/// Leaf read: storage word → native value (Addr::wtype).
-	std::shared_ptr<awst::Expression> readValue(Addr const& _a);
+	std::shared_ptr<awst::Expression> readValue(Addr const& _a,
+		std::shared_ptr<awst::Expression> _word = nullptr);
 
 	/// Leaf write: statements appended to `_out`. `_value` must already be the
 	/// native repr of Addr::wtype (sub-word writes read-modify-write the word).
@@ -266,8 +265,7 @@ private:
 	bool lowerFixedArray(
 		Addr const& _a, solidity::frontend::ArrayType const* _at, ValueDir& _d);
 
-	/// Struct at `_a.slot`: per-member recursion off a pinned base (reads of
-	/// flat value-only structs take SlotHandleAccess::readStructElem instead).
+	/// Struct at `_a.slot`: per-member recursion with shared main-word reads.
 	bool lowerStructValue(Addr const& _a, ValueDir& _d);
 
 	eb::ContractContext& m_ctx;

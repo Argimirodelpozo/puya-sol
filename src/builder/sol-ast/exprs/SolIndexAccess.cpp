@@ -30,6 +30,9 @@ SolIndexAccess::SolIndexAccess(eb::ContractContext& _ctx, IndexAccess const& _no
 
 std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 {
+	// `S[7][]` in expression position is an array type, not an element read.
+	if (dynamic_cast<TypeType const*>(m_indexAccess.annotation().type))
+		return awst::makeVoidConstant(m_loc);
 	auto const* baseType = m_indexAccess.baseExpression().annotation().type;
 
 	// --evm-storage-layout: reads rooted at a persistent state var resolve to
@@ -109,25 +112,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 		return low.readAny(*addr, slotResultType);
 	}
 
-	// Slice indexing `root[a:b]...[i]`: fold the slice chain into a direct index;
-	// bytes-substring3 would produce bytes[1] instead of the declared element type.
-	{
-		auto const* peeled = &m_indexAccess.baseExpression();
-		while (auto const* call = dynamic_cast<solidity::frontend::FunctionCall const*>(peeled))
-		{
-			if (call->annotation().kind.set()
-				&& *call->annotation().kind == solidity::frontend::FunctionCallKind::TypeConversion
-				&& !call->arguments().empty())
-				peeled = call->arguments()[0].get();
-			else
-				break;
-		}
-		if (dynamic_cast<solidity::frontend::IndexRangeAccess const*>(peeled))
-		{
-			if (auto result = handleSlicedIndex())
-				return result;
-		}
-	}
+	if (auto result = handleSlicedIndex()) return result;
 
 	// Box-backed array access. State variables need this direct route for
 	// dynamic roots; storage-ref params need it for every recursively dynamic
@@ -153,21 +138,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 	if (isDynamicArrayAccess)
 		return handleDynamicArrayAccess();
 
-	// Nested mapping check
-	bool isNestedMappingAccess = false;
-	if (auto const* baseIndexAccess = dynamic_cast<IndexAccess const*>(
-			&m_indexAccess.baseExpression()))
-	{
-		auto const* innerBaseType = baseIndexAccess->baseExpression().annotation().type;
-		if (innerBaseType && innerBaseType->category() == Type::Category::Mapping)
-		{
-			auto const* innerMapping = dynamic_cast<MappingType const*>(innerBaseType);
-			if (innerMapping && innerMapping->valueType()->category() == Type::Category::Mapping)
-				isNestedMappingAccess = true;
-		}
-	}
-
-	if (baseType && (baseType->category() == Type::Category::Mapping || isNestedMappingAccess))
+	if (dynamic_cast<MappingType const*>(baseType))
 		return handleMappingAccess();
 
 	// Blob-backed memory aggregate scalar-leaf READ: `a[i]`, `p.field[i][j]`,
@@ -185,11 +156,69 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 	return handleRegularIndex();
 }
 
+std::optional<eb::ContractContext::LoweredExpression> SolIndexAccess::resolveBlobReference(
+	eb::ContractContext& ctx, Context& scope, solidity::frontend::Expression const& node,
+	awst::SourceLocation const& loc)
+{
+	auto result = ctx.lowerOperand([&] { return resolveBlobOffset(ctx, scope, node, loc); }, false);
+	if (!result.value) return std::nullopt;
+	return eb::ContractContext::LoweredExpression{std::move(result.value), std::move(result.effects), node.annotation().type};
+}
+
 std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	eb::ContractContext& _ctx, Context& _scope,
 	solidity::frontend::Expression const& _node, awst::SourceLocation const& _loc)
 {
 	using namespace solidity::frontend;
+
+	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_node);
+		tuple && tuple->components().size() == 1 && tuple->components()[0])
+		return resolveBlobOffset(_ctx, _scope, *tuple->components()[0], _loc);
+	if (auto const* call = dynamic_cast<FunctionCall const*>(&_node);
+		call && call->annotation().kind.set() && *call->annotation().kind == FunctionCallKind::TypeConversion
+		&& call->arguments().size() == 1 && !_node.annotation().type->isValueType())
+		return resolveBlobOffset(_ctx, _scope, *call->arguments()[0], _loc);
+	if (auto const* conditional = dynamic_cast<Conditional const*>(&_node))
+	{
+		auto branch = [&](auto const& expression) {
+			return _ctx.lowerOperand([&] { return resolveBlobOffset(_ctx, _scope, expression, _loc); });
+		};
+		auto yes = branch(conditional->trueExpression()), no = branch(conditional->falseExpression());
+		// A fresh branch must not force an existing reference into the value
+		// model: that would copy its object and lose alias identity. Allocate
+		// only the fresh branch, inside its conditional effect region.
+		auto const* referenceType = dynamic_cast<ReferenceType const*>(_node.annotation().type);
+		if ((yes.value || no.value) && referenceType
+			&& referenceType->location() == DataLocation::Memory)
+		{
+			auto spill = [&](auto const& expression) {
+				return _ctx.lowerOperand([&]() -> std::shared_ptr<awst::Expression> {
+					auto value = _ctx.pinIfWriteBacks(_ctx.lower(expression, false), _loc);
+					if (!value) return nullptr;
+					auto const* wtype = _ctx.typeMapper.map(referenceType);
+					value = TypeCoercion::coerceForAssignment(std::move(value), wtype, _loc);
+					auto id = awst::NameGen::next("SolIndexAccess.freshReference");
+					auto name = "__ref_fresh_" + std::to_string(id);
+					if (!spillEvmMemoryValue(_ctx.typeMapper, referenceType, wtype,
+						std::move(value), name, id, _loc, _ctx.preEffects()))
+						return nullptr;
+					return awst::makeVarExpression(name, awst::WType::uint64Type(), _loc);
+				});
+			};
+			if (!yes.value) yes = spill(conditional->trueExpression());
+			if (!no.value) no = spill(conditional->falseExpression());
+		}
+		if (!yes.value || !no.value) return nullptr;
+		auto condition = _ctx.pinIfWriteBacks(_ctx.lower(conditional->condition(), false), _loc);
+		auto pointer = awst::makeVarExpression("__ref_select_" + std::to_string(
+			awst::NameGen::next("SolIndexAccess.pointerSelect")), awst::WType::uint64Type(), _loc);
+		auto yesBlock = eb::ContractContext::makeScopedResultBlock(std::move(yes.effects.pre),
+			pointer, std::move(yes.value), _loc, std::move(yes.effects.post));
+		auto noBlock = eb::ContractContext::makeScopedResultBlock(std::move(no.effects.pre),
+			pointer, std::move(no.value), _loc, std::move(no.effects.post));
+		_ctx.preEffects().push_back(awst::makeIfElse(std::move(condition), std::move(yesBlock), std::move(noBlock), _loc));
+		return pointer;
+	}
 
 	// Root: Identifier referencing a blob-backed aggregate local → its base offset.
 	if (auto const* ident = dynamic_cast<Identifier const*>(&_node))
@@ -207,14 +236,13 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	if (auto const* ia = dynamic_cast<IndexAccess const*>(&_node))
 	{
 		if (!ia->indexExpression()) return nullptr;
+		auto const* baseArr = dynamic_cast<ArrayType const*>(ia->baseExpression().annotation().type);
+		if (!baseArr) return nullptr;
 		auto parent = resolveBlobOffset(_ctx, _scope, ia->baseExpression(), _loc);
 		if (!parent) return nullptr;
 		auto idx = _ctx.pinIfWriteBacks(_ctx.lower(*ia->indexExpression(), false), _loc);
 		idx = builder::TypeCoercion::checkedIndexToUint64(
 			_ctx.preEffects(), std::move(idx), _loc);
-		auto const* baseArr = dynamic_cast<ArrayType const*>(
-			ia->baseExpression().annotation().type);
-		if (!baseArr) return nullptr;
 		std::shared_ptr<awst::Expression> base = std::move(parent);
 		std::shared_ptr<awst::Expression> count;
 		if (baseArr->isDynamicallySized())
@@ -250,11 +278,11 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	// `base.field` → parentOffset + sum of encoded sizes of preceding members.
 	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_node))
 	{
-		auto parent = resolveBlobOffset(_ctx, _scope, ma->expression(), _loc);
-		if (!parent) return nullptr;
 		auto const* structType = dynamic_cast<StructType const*>(
 			ma->expression().annotation().type);
 		if (!structType) return nullptr;
+		auto parent = resolveBlobOffset(_ctx, _scope, ma->expression(), _loc);
+		if (!parent) return nullptr;
 		uint64_t fieldOff = static_cast<uint64_t>(
 			structType->memoryOffsetOfMember(ma->memberName()));
 		auto slot = fieldOff == 0 ? std::move(parent)
@@ -289,6 +317,49 @@ SolIndexRangeAccess::SolIndexRangeAccess(
 	eb::ContractContext& _ctx, IndexRangeAccess const& _node)
 	: SolExpression(_ctx, _node), m_rangeAccess(_node)
 {
+}
+
+std::optional<SolIndexRangeAccess::Slice> SolIndexRangeAccess::resolveSlice(
+	eb::ContractContext& ctx, Expression const& source, awst::SourceLocation const& loc)
+{
+	auto peel = [](Expression const& expression) {
+		auto const* current = &expression;
+		for (;;)
+		{
+			if (auto const* tuple = dynamic_cast<TupleExpression const*>(current);
+				tuple && tuple->components().size() == 1 && tuple->components()[0])
+				current = tuple->components()[0].get();
+			else if (auto const* call = dynamic_cast<FunctionCall const*>(current);
+				call && *call->annotation().kind == FunctionCallKind::TypeConversion)
+				current = call->arguments()[0].get();
+			else return current;
+		}
+	};
+	std::vector<IndexRangeAccess const*> ranges;
+	auto const* root = peel(source);
+	while (auto const* range = dynamic_cast<IndexRangeAccess const*>(root))
+	{
+		ranges.push_back(range);
+		root = peel(range->baseExpression());
+	}
+	auto const* type = dynamic_cast<ArrayType const*>(root->annotation().type);
+	if (ranges.empty() || !type || type->isByteArrayOrString()) return std::nullopt;
+
+	auto lowered = ctx.lower(*root, false);
+	auto base = ctx.emitSequencedOperand(
+		std::move(lowered.effects), std::move(lowered.value), true, loc);
+	std::shared_ptr<awst::Expression> offset = awst::makeZero(loc);
+	auto length = ctx.emitSequencedOperand({},
+		awst::makeArrayLength(base, awst::WType::uint64Type(), loc), true, loc);
+	for (auto range = ranges.rbegin(); range != ranges.rend(); ++range)
+	{
+		auto [start, end] = resolveBounds(ctx, **range, length, loc);
+		offset = ctx.emitSequencedOperand({}, awst::makeUInt64BinOp(
+			offset, awst::UInt64BinaryOperator::Add, start, loc), true, loc);
+		length = ctx.emitSequencedOperand({}, awst::makeUInt64BinOp(
+			end, awst::UInt64BinaryOperator::Sub, start, loc), true, loc);
+	}
+	return Slice{std::move(base), std::move(offset), std::move(length)};
 }
 
 SolIndexRangeAccess::Bounds SolIndexRangeAccess::resolveBounds(

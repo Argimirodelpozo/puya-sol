@@ -4,8 +4,10 @@
 #include "awst/NameGen.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/Arc4Defaults.h"
 
-#include <set>
+#include "Logger.h"
+#include <stdexcept>
 #include <string>
 // solc AST nodes used completely (dynamic_cast / member access); the hub
 // headers only forward-declare them now.
@@ -48,9 +50,6 @@ std::shared_ptr<awst::Expression> concat(
 	return result;
 }
 
-
-
-
 class Encoder
 {
 public:
@@ -64,6 +63,7 @@ public:
 		std::vector<std::shared_ptr<awst::Expression>> values,
 		Statements& out)
 	{
+		if (types.size() != values.size()) throw std::logic_error("ABI type/value arity mismatch");
 		uint64_t headSize = 0;
 		for (auto const* type: types)
 			headSize += codec::underlyingType(type)->calldataHeadSize();
@@ -74,8 +74,8 @@ public:
 		for (size_t i = 0; i < types.size(); ++i)
 		{
 			auto const* type = codec::underlyingType(types[i]);
-			auto value = i < values.size() ? std::move(values[i])
-				: awst::makeBytesConstant({}, m_loc);
+			auto value = std::move(values[i]);
+			if (!value) throw std::logic_error("Missing ABI value");
 			if (!type->isDynamicallyEncoded())
 			{
 				heads.push_back(inlineValue(type, std::move(value), out));
@@ -94,6 +94,43 @@ public:
 			std::move(head), concat(std::move(tails), m_loc), m_loc);
 	}
 
+	std::shared_ptr<awst::Expression> packed(
+		std::vector<Type const*> const& types,
+		std::vector<std::shared_ptr<awst::Expression>> values, Statements& out)
+	{
+		if (types.size() != values.size()) throw std::logic_error("Packed ABI arity mismatch");
+		std::vector<std::shared_ptr<awst::Expression>> parts;
+		for (size_t i = 0; i < types.size(); ++i)
+		{
+			auto const* type = codec::underlyingType(types[i]);
+			if (!type || !values[i]) throw std::logic_error("Missing packed ABI type/value");
+			auto const* encoding = type->fullEncodingType(false, true, true);
+			if (!encoding) throw std::logic_error("Missing solc packed encoding type");
+			if (auto const* array = dynamic_cast<ArrayType const*>(type))
+			{
+				if (array->isByteArrayOrString())
+					parts.push_back(awst::makeAsBytes(codec::valueFromArc4(
+						m_typeMapper, type, std::move(values[i]), m_loc), m_loc));
+				else
+				{
+					if (!codec::isWordType(array->baseType()))
+						throw std::logic_error("solc packed array has a non-value element");
+					parts.push_back(arrayValue(array, std::move(values[i]), out, false));
+				}
+			}
+			else
+			{
+				auto width = encoding->calldataEncodedSize(false);
+				if (!codec::isWordType(type) || !width || width > 32)
+					throw std::logic_error("Unsupported solc packed scalar");
+				auto bytes = codec::valueToEvmWord(m_typeMapper, type, std::move(values[i]), m_loc);
+				parts.push_back(width == 32 ? std::move(bytes) : awst::makeExtract(
+					std::move(bytes), encoding->leftAligned() ? 0 : 32 - width, width, m_loc));
+			}
+		}
+		return concat(std::move(parts), m_loc);
+	}
+
 private:
 	std::shared_ptr<awst::Expression> inlineValue(
 		Type const* type, std::shared_ptr<awst::Expression> value,
@@ -108,7 +145,7 @@ private:
 			return structValue(structure, std::move(value), out);
 		if (auto const* tuple = dynamic_cast<TupleType const*>(type))
 			return tupleValue(tuple, std::move(value), out);
-		return awst::makeBytesConstant({}, m_loc);
+		throw std::logic_error("Unsupported ABI encoder leaf");
 	}
 
 	std::shared_ptr<awst::Expression> payload(
@@ -159,6 +196,17 @@ private:
 				awst::makeArrayLength(arrayValue, awst::WType::uint64Type(), m_loc))
 			: u64(static_cast<uint64_t>(array->length()), m_loc);
 		count = awst::makeEvalOnce(std::move(count), m_loc);
+
+		// solc's 256-bit integers and bytes32 have no padding to validate or
+		// clean. Their ARC4 array body already is the required EVM word sequence.
+		if (codec::isByteIdenticalEvmWord(elemType) && isArc4EncodedType(arrayValue->wtype))
+		{
+			std::shared_ptr<awst::Expression> bytes = awst::makeAsBytes(arrayValue, m_loc);
+			if (array->isDynamicallySized())
+				bytes = awst::makeExtract3(bytes, u64(2, m_loc),
+					multiply(count, u64(32, m_loc), m_loc), m_loc);
+			return includeLength ? awst::makeConcat(word(count, m_loc), std::move(bytes), m_loc) : bytes;
+		}
 
 		int id = awst::NameGen::next("EvmAbiEncode.array");
 		std::string suffix = std::to_string(id);
@@ -260,15 +308,6 @@ private:
 };
 }
 
-bool canEncodeEvmAbi(std::vector<Type const*> const& components)
-{
-	std::set<int64_t> visiting;
-	for (auto const* component: components)
-		if (!codec::canRoundTripEvmAbi(component, visiting))
-			return false;
-	return true;
-}
-
 std::shared_ptr<awst::Expression> encodeEvmAbi(
 	TypeMapper& typeMapper,
 	std::vector<Type const*> const& components,
@@ -276,7 +315,20 @@ std::shared_ptr<awst::Expression> encodeEvmAbi(
 	awst::SourceLocation const& loc,
 	Statements& out)
 {
+	if (!codec::canRoundTripEvmAbi(components))
+	{
+		Logger::instance().error("type is not representable in canonical Solidity ABI encoding", loc);
+		return awst::makeBytesConstant({}, loc);
+	}
 	return Encoder(typeMapper, loc).sequence(components, std::move(values), out);
+}
+
+std::shared_ptr<awst::Expression> encodePackedEvmAbi(
+	TypeMapper& typeMapper, std::vector<Type const*> const& components,
+	std::vector<std::shared_ptr<awst::Expression>> values,
+	awst::SourceLocation const& loc, Statements& out)
+{
+	return Encoder(typeMapper, loc).packed(components, std::move(values), out);
 }
 
 } // namespace puyasol::builder::abi

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "builder/sol-ast/SolExpression.h"
+#include "builder/sol-ast/ResolvedLValue.h"
 
 #include <libsolidity/ast/ASTForward.h>
 
@@ -18,8 +19,10 @@ public:
 private:
 	solidity::frontend::UnaryOperation const& m_unaryOp;
 
-	std::shared_ptr<awst::Expression> handleIncDec(std::shared_ptr<awst::Expression> _operand);
-	std::shared_ptr<awst::Expression> handleDelete(std::shared_ptr<awst::Expression> _operand);
+	std::shared_ptr<awst::Expression> handleIncDec(std::shared_ptr<awst::Expression> _operand,
+		ResolvedLValue::Resolution _resolution);
+	std::shared_ptr<awst::Expression> handleDelete(std::shared_ptr<awst::Expression> _operand,
+		ResolvedLValue::Resolution _resolution);
 	/// `delete arr[i]` where `arr` is multi-box paged: zero the element's slice
 	/// via box_replace at its page/offset. False when the element's width is
 	/// unknown, leaving the caller's generic path in charge.

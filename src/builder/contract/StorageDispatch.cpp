@@ -51,28 +51,6 @@ struct DispatchSlot
 	std::vector<StructSlotGroup> groups;
 };
 
-// Can SlotWordCodec handle this field? Leaf scalars only — array/struct/
-// mapping members occupy their own slots (solc storageBytes==32 for them),
-// and their slots keep the box-per-slot fallback. byte[N] passes only when
-// the arc4 array length EQUALS the field's packed byte size (a true bytesN;
-// uint8[2] arrays report storageBytes 32 and are rejected here).
-bool codecSupported(SlotHandleAccess::FieldPos const& f)
-{
-	auto const* w = f.wtype;
-	if (!w) return false;
-	if (w == awst::WType::uint64Type() || w == awst::WType::boolType()
-		|| w == awst::WType::biguintType() || w == awst::WType::accountType()
-		|| w == awst::WType::arc4BoolType())
-		return true;
-	if (w->kind() == awst::WTypeKind::ARC4UIntN || w->kind() == awst::WTypeKind::Bytes)
-		return true;
-	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(w))
-		if (auto const* el = dynamic_cast<awst::ARC4UIntN const*>(sa->elementType()))
-			return el->n() == 8
-				&& sa->arraySize() == static_cast<int64_t>(f.size);   // bytesN-as-byte[N]
-	return false;
-}
-
 // A struct var's dispatchable internal slots: one group per slot whose
 // field set the codec fully supports; the others keep the fallback.
 std::vector<StructSlotGroup> structSlotGroups(
@@ -91,7 +69,7 @@ std::vector<StructSlotGroup> structSlotGroups(
 		for (auto const& f: fields)
 			if (f.slot == k)
 			{
-				if (!codecSupported(f) || f.size == 0 || f.size > 32)
+				if (!SlotWordCodec::supportsField(f.wtype, f.solType, f.size))
 					ok = false;
 				group.fields.push_back(f);
 			}
@@ -463,7 +441,7 @@ struct NamedCellDispatch
 				auto grow = awst::makeBlock(loc);
 				grow->body.push_back(awst::makeExpressionStatement(
 					awst::makeArrayPushOne(
-						target(), StorageMapper::makeDefaultValue(
+						target(), TypeCoercion::makeDefaultValue(
 							da->elementType(), loc), v->wtype, loc), loc));
 				grow->body.push_back(awst::makeAssignmentStatement(
 					currentVar(), awst::makeUInt64BinOp(
@@ -537,7 +515,7 @@ struct NamedCellDispatch
 		else if (auto const* fixed = dynamic_cast<awst::ARC4StaticArray const*>(v->wtype))
 			element = fixed->elementType();
 		auto const layout = SlotHandleAccess::layoutFor(array->baseType());
-		if (!codecSupported({"", 0, 0, layout.size, element, array->baseType()}))
+		if (!SlotWordCodec::supportsField(element, array->baseType(), layout.size))
 			return;
 
 		auto u64 = [&](uint64_t n) { return awst::makeIntegerConstant(n, loc); };

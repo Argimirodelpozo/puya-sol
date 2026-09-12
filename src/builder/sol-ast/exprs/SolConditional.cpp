@@ -34,7 +34,13 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 			auto value = buildExpr(expression);
 			value = EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
 				std::move(value), expression.annotation().type, wtype, m_loc);
-			return ConversionPlan{expression.annotation().type, solType, wtype,
+			auto const* sourceType = expression.annotation().type;
+			// TypeChecker::visit(Conditional) combines mobile types. A literal
+			// becomes string memory here even for non-UTF8 bytes; this is not
+			// the ordinary implicit literal-to-string assignment rule.
+			if (dynamic_cast<solidity::frontend::StringLiteralType const*>(sourceType))
+				sourceType = sourceType->mobileType();
+			return ConversionPlan{sourceType, solType, wtype,
 				ConversionPlan::Context::Initialization}.emit(
 					std::move(value), m_loc, &m_ctx.preEffects());
 		});

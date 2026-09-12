@@ -8,6 +8,8 @@
 #include "builder/sol-types/SolIntType.h"
 #include "Logger.h"
 
+#include <libsolidity/ast/Types.h>
+
 namespace puyasol::builder
 {
 
@@ -88,9 +90,8 @@ std::shared_ptr<awst::Expression> tryPackScalarWord(
 	{
 		// Canonical 256-bit TC (signed) / plain magnitude (unsigned): the
 		// trailing `size` bytes of the 32-byte form are the packed content.
-		auto padded = awst::makeZeroExtendToN(awst::makeAsBytes(std::move(_value), _loc), 32, _loc);
-		return awst::makeExtract(std::move(padded),
-			static_cast<int>(32 - _size), static_cast<int>(_size), _loc);
+		auto padded = awst::makeLeftPadToN(awst::makeAsBytes(std::move(_value), _loc), _size, _loc);
+		return awst::makeExtractLastN(std::move(padded), static_cast<int>(_size), _loc);
 	}
 	if (_wtype == awst::WType::accountType())
 	{
@@ -178,6 +179,19 @@ bool SlotWordCodec::isByteShaped(awst::WType const* _wtype)
 		return false;
 	auto const* e = dynamic_cast<awst::ARC4UIntN const*>(sa->elementType());
 	return e && e->n() == 8;
+}
+
+bool SlotWordCodec::supportsField(awst::WType const* type,
+	solidity::frontend::Type const* solType, unsigned size)
+{
+	if (!type || !solType || !solType->isValueType() || size == 0 || size > 32
+		|| solType->storageBytes() != size) return false;
+	if (type == awst::WType::uint64Type() || type == awst::WType::boolType()
+		|| type == awst::WType::biguintType() || type == awst::WType::accountType()
+		|| type == awst::WType::arc4BoolType()) return true;
+	return type->kind() == awst::WTypeKind::ARC4UIntN
+		|| type->kind() == awst::WTypeKind::Bytes || isByteArray(type, size)
+		|| isArc4Address(type, size);
 }
 
 std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(

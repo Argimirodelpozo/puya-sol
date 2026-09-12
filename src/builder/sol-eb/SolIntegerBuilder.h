@@ -80,6 +80,10 @@ private:
 	std::unique_ptr<InstanceBuilder> buildBigUIntPowOp(
 		std::shared_ptr<awst::Expression> _lhs, std::shared_ptr<awst::Expression> _rhs,
 		awst::SourceLocation const& _loc);
+	/// Signed `**`: magnitude, signed range check and canonical two's complement.
+	std::unique_ptr<InstanceBuilder> buildSignedPowOp(
+		std::shared_ptr<awst::Expression> _lhs, std::shared_ptr<awst::Expression> _rhs,
+		awst::SourceLocation const& _loc);
 	/// Signed `/` `%`: sign-extend each operand from ITS OWN width
 	/// (`_lhsBits` / `_rhsBits`), then the shared buildSignedModDiv.
 	std::unique_ptr<InstanceBuilder> buildSignedModDivOp(

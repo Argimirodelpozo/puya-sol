@@ -17,17 +17,19 @@ std::shared_ptr<awst::Expression> SolStructConstruction::toAwst()
 	auto const* constructor = structure->constructorType();
 	assert(args.size() == constructor->parameterTypes().size());
 	auto result = awst::makeNewStruct(representation, m_loc);
-	for (size_t i = 0; i < args.size(); ++i)
-	{
+	auto values = CallOperands::build(m_ctx, m_call, m_loc,
+		[&](solidity::frontend::Expression const& source, size_t i) {
 		// solc owns the argument/member conversion; ARC4 packing is a separate
 		// representation step, shared with ordinary field assignments.
 		auto const* memberType = constructor->parameterTypes()[i];
-		auto value = ConversionPlan{args[i]->annotation().type, memberType,
+		auto value = ConversionPlan{source.annotation().type, memberType,
 			m_ctx.typeMapper.map(memberType), ConversionPlan::Context::Initialization}
-			.emit(buildExpr(*args[i]), m_loc, &m_ctx.preEffects());
-		result->values[constructor->parameterNames()[i]] = eb::AssignmentHelper::arc4EncodeForType(
+			.emit(buildExpr(source), m_loc, &m_ctx.preEffects());
+		return eb::AssignmentHelper::arc4EncodeForType(
 			m_ctx, std::move(value), representation->fields().at(i).second, m_loc);
-	}
+	});
+	for (size_t i = 0; i < values.size(); ++i)
+		result->values[constructor->parameterNames()[i]] = std::move(values[i]);
 	return result;
 }
 

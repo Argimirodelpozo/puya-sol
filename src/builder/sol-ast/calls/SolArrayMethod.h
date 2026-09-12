@@ -6,7 +6,7 @@ namespace puyasol::builder::sol_ast
 {
 
 /// array.push(val), array.push(), and array.pop().
-/// Handles both box-backed (state variable) and in-memory arrays.
+/// Solc storage arrays lowered through slot, box or mutable-value carriers.
 class SolArrayMethod: public SolFunctionCall
 {
 public:
@@ -14,14 +14,15 @@ public:
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:
+	std::shared_ptr<awst::Expression> buildArrayTarget(solidity::frontend::Expression const& source);
 	/// Typed source conversion followed by the selected element encoding.
 	std::shared_ptr<awst::Expression> buildPushValue(
 		solidity::frontend::Type const* elementType, awst::WType const* representation);
 	// ── toAwst base-shape rungs (SolArrayMethod.cpp) ────────────────────
-	std::shared_ptr<awst::Expression> buildSlotModeBytesPushPop(
+	std::shared_ptr<awst::Expression> buildBytesPushPop(
 		std::string const& memberName,
 		solidity::frontend::Expression const& baseExpr,
-		solidity::frontend::ArrayType const* arrT);
+		solidity::frontend::ArrayType const& array);
 	std::shared_ptr<awst::Expression> buildSlotModeArrayPushPop(
 		std::string const& memberName,
 		solidity::frontend::Expression const& baseExpr,
@@ -32,10 +33,7 @@ private:
 	std::shared_ptr<awst::Expression> tryStoragePointerPushPop(
 		std::string const& memberName,
 		solidity::frontend::Expression const& baseExpr);
-	std::shared_ptr<awst::Expression> tryStateBytesPushPop(
-		std::string const& memberName,
-		solidity::frontend::VariableDeclaration const& _varDecl);
-	std::shared_ptr<awst::Expression> emitArc4PushPop(
+	std::shared_ptr<awst::Expression> emitArrayPushPop(
 		std::string const& memberName,
 		std::shared_ptr<awst::Expression> baseAwst,
 		solidity::frontend::ArrayType const& solArrType);
@@ -50,18 +48,6 @@ private:
 		solidity::frontend::Expression const& _baseExpr,
 		solidity::frontend::VariableDeclaration const& _varDecl,
 		std::shared_ptr<awst::Expression> _runtimeKey = nullptr);
-
-	/// Handle push/pop on in-memory arrays.
-	std::shared_ptr<awst::Expression> handleMemoryArray(
-		std::string const& _memberName,
-		solidity::frontend::Expression const& _baseExpr);
-
-	/// Handle push/pop on a dynamic array field of a storage struct via
-	/// a copy-on-write pattern (read struct → mutate tmp → write back).
-	std::shared_ptr<awst::Expression> handleStructFieldArrayMethod(
-		std::string const& _memberName,
-		solidity::frontend::MemberAccess const& _fieldAccess,
-		solidity::frontend::VariableDeclaration const& _structVar);
 
 	/// Length-only push/pop for arrays whose element type is a mapping
 	/// (`mapping(K=>V)[] a`). The box only stores a 2-byte length header;

@@ -3,9 +3,9 @@
 // See inline comments for AVM adaptation notes.
 // ============================================================================
 contract C {
-    // AVM: block.difficulty returns 0 — Algorand has no proof-of-work.
-    // Pre-Paris EVM returned the mining difficulty; post-Paris it was
-    // replaced by prevrandao. On AVM, use block.prevrandao for randomness.
+    // Opted-in AVM adaptation: seed at transaction FirstValid - 1 (zero
+    // at FirstValid 0), not mining difficulty. Known in advance and
+    // caller-selectable; neither this nor block.prevrandao is secure randomness.
     // Original EVM expected:
     //   f() -> 200000000 (x3)
     function f() public returns (uint) {

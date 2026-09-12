@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <optional>
+#include <limits>
 #include <set>
 #include <functional>
 #include <sstream>
@@ -34,54 +35,9 @@ std::string AssemblyBuilder::getFunctionName(
 		return ident->name.str();
 	if (auto const* builtin = std::get_if<solidity::yul::BuiltinName>(&_name))
 	{
-		// Use the same EVM version the Solidity front-end parsed with:
-		// BuiltinHandle is dialect-specific; a different dialect silently resolves
-		// to the wrong builtin or throws.
-		using solidity::langutil::EVMVersion;
-		EVMVersion const ver =
-			EVMVersion::fromString(m_typeMapper.profile().evmVersionName)
-				.value_or(EVMVersion::cancun());
-		try
-		{
-			auto const& dialect = solidity::yul::EVMDialect::strictAssemblyForEVMObjects(ver, std::nullopt);
-			auto const& b = dialect.builtin(builtin->handle);
-			return std::string(b.name);
-		}
-		catch (...)
-		{
-			// Fallback: try each dialect in version order. Last-resort when
-			// the global isn't set (e.g. unit-test paths).
-			static const std::array<EVMVersion, 14> versions = {
-				EVMVersion::osaka(),
-				EVMVersion::prague(),
-				EVMVersion::cancun(),
-				EVMVersion::shanghai(),
-				EVMVersion::paris(),
-				EVMVersion::london(),
-				EVMVersion::berlin(),
-				EVMVersion::istanbul(),
-				EVMVersion::petersburg(),
-				EVMVersion::constantinople(),
-				EVMVersion::byzantium(),
-				EVMVersion::spuriousDragon(),
-				EVMVersion::tangerineWhistle(),
-				EVMVersion::homestead(),
-			};
-			for (auto const& v: versions)
-			{
-				try
-				{
-					auto const& dialect = solidity::yul::EVMDialect::strictAssemblyForEVMObjects(v, std::nullopt);
-					auto const& b = dialect.builtin(builtin->handle);
-					return std::string(b.name);
-				}
-				catch (...)
-				{
-					continue;
-				}
-			}
-		}
-		return "<unknown_builtin>";
+		if (!m_context->dialect)
+			throw std::logic_error("Yul builtin has no prepared solc dialect");
+		return std::string(m_context->dialect->builtin(builtin->handle).name);
 	}
 	return "<unknown>";
 }
@@ -89,10 +45,15 @@ std::string AssemblyBuilder::getFunctionName(
 AssemblyBuilder::AssemblyBuilder(
 	TypeMapper& _typeMapper,
 	std::string const& _sourceFile,
-	std::string const& _contextName
+	std::string const& _contextName,
+	bool _inConstructor
 )
-	: m_typeMapper(_typeMapper), m_sourceFile(_sourceFile), m_contextName(_contextName)
+	: m_typeMapper(_typeMapper), m_preparingContext(std::make_shared<Context>()),
+	  m_context(m_preparingContext)
 {
+	m_preparingContext->sourceFile = _sourceFile;
+	m_preparingContext->contextName = _contextName;
+	m_preparingContext->inConstructor = _inConstructor;
 }
 
 // ─── Public entry point ─────────────────────────────────────────────────────
@@ -112,61 +73,63 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	size_t _numCalldataParams
 )
 {
+	auto& context = prepareContext();
 	auto const& _block = _assembly.block;
-	m_returnType = _returnType;
-	m_locals.clear();
-	m_localConstants.clear();
-	m_localWideConstants.clear();
-	m_yulConstantValues.clear();
-	m_alignedLocals.clear();
-	m_fmpStaysAligned = false;
-	m_localSlotConstants.clear();
-	m_reassignedLocals.clear();
+	context.dialect = _assembly.dialect;
+	m_frame.returnType = _returnType;
+	m_frame.locals.clear();
+	m_frame.localConstants.clear();
+	m_frame.localWideConstants.clear();
+	context.yulConstantValues.clear();
+	m_frame.alignedLocals.clear();
+	context.fmpStaysAligned = false;
+	m_frame.localSlotConstants.clear();
+	context.reassignedLocals.clear();
 	auto const& yulFacts = _assembly.facts;
-	m_reassignedLocals = yulFacts.assignedVariables;
-	m_yulConstantValues = yulFacts.constantValues;
-	m_calldataParamNames.clear();
-	m_calldataMap.clear();
-	m_asmFunctions.clear();
-	m_upgradedLocals.clear();
-	m_paramBitWidths = _paramBitWidths;
-	m_constants = _constants;
+	context.reassignedLocals = yulFacts.assignedVariables;
+	context.yulConstantValues = yulFacts.constantValues;
+	m_frame.calldataParamNames.clear();
+	m_frame.calldataMap.clear();
+	context.asmFunctions.clear();
+	m_frame.upgradedLocals.clear();
+	context.paramBitWidths = _paramBitWidths;
+	context.constants = _constants;
 	auto argumentFacts = SolcFacts::yulArgumentFacts(_assembly, _constants);
-	m_yulConstantValues.insert(argumentFacts.constants.begin(), argumentFacts.constants.end());
-	m_yulArgumentAlignments = std::move(argumentFacts.residuesMod32);
-	// AFTER m_constants: verifiers bump the free-memory pointer by a SOLIDITY
+	context.yulConstantValues.insert(argumentFacts.constants.begin(), argumentFacts.constants.end());
+	context.yulArgumentAlignments = std::move(argumentFacts.residuesMod32);
+	// AFTER m_context->constants: verifiers bump the free-memory pointer by a SOLIDITY
 	// constant (`uint16 constant pLastMem`), and an unresolvable bump poisons
-	// the invariant for the whole block. Also needs m_reassignedLocals and
-	// m_yulConstantValues, both set above.
-	m_fmpStaysAligned = freeMemoryPointerStaysAligned(_block);
-	m_storageSlotVars = _storageSlotVars;
-	m_boxKeyedStructSlots = _boxKeyedStructSlots;
-	m_blobOffsetVars = _blobOffsetVars;
-	m_structRefSlotLocals = _structRefSlotLocals;
-	m_stateVarSlots = _stateVarSlots;
-	m_externalRefs = _assembly.externalReferences;
-	m_declName = std::move(_declName);
-	m_arrayParamName.clear();
-	m_arrayParamType = nullptr;
-	m_arrayParamSize = 0;
-	m_signedShadow.clear();
-	m_haltEmitted = false;
+	// the invariant for the whole block. Also needs m_context->reassignedLocals and
+	// m_context->yulConstantValues, both set above.
+	context.fmpStaysAligned = freeMemoryPointerStaysAligned(_block);
+	context.storageSlotVars = _storageSlotVars;
+	context.boxKeyedStructSlots = _boxKeyedStructSlots;
+	m_frame.blobOffsetVars = _blobOffsetVars;
+	context.structRefSlotLocals = _structRefSlotLocals;
+	context.stateVarSlots = _stateVarSlots;
+	context.externalRefs = _assembly.externalReferences;
+	context.declName = std::move(_declName);
+	m_frame.arrayParamName.clear();
+	m_frame.arrayParamType = nullptr;
+	m_frame.arrayParamSize = 0;
+	m_frame.signedShadow.clear();
+	m_frame.haltEmitted = false;
 
 	for (auto const& [name, type]: _params)
-		m_locals[name] = type ? type : awst::WType::biguintType();
+		m_frame.locals[name] = type ? type : awst::WType::biguintType();
 
 	// The synthetic calldata blob + offset map model the EVM calldata buffer, which holds ONLY
 	// the function's real input args — not the external refs / return vars SolInlineAssembly
 	// appends to _params. Slice to the leading calldata params so the EVM-ABI head/tail layout
 	// (and thus .offset/.length) is correct.
 	size_t nCd = std::min(_numCalldataParams, _params.size());
-	m_calldataParams.assign(_params.begin(), _params.begin() + nCd);
+	context.calldataParams.assign(_params.begin(), _params.begin() + nCd);
 
-	initializeCalldataMap(m_calldataParams);
+	initializeCalldataMap(m_context->calldataParams);
 
 	// Enable synthetic-calldata blob if Yul accesses calldata at non-constant offsets / calldatasize
 	// / a dynamic param's .offset|.length. Blob is emitted in the prelude below, after array-param init.
-	m_useSyntheticCalldata = detectDynamicCalldataAccess(_block)
+	m_frame.useSyntheticCalldata = detectDynamicCalldataAccess(_block)
 		|| !yulFacts.calldataFunctions.empty();
 
 	// Detect array parameter for blob initialization
@@ -177,18 +140,18 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 			auto const* refArray = dynamic_cast<awst::ReferenceArray const*>(type);
 			if (!refArray)
 				continue;
-			m_arrayParamName = name;
-			m_arrayParamType = type;
-			m_arrayParamSize = refArray->arraySize().value_or(0);
+			m_frame.arrayParamName = name;
+			m_frame.arrayParamType = type;
+			m_frame.arrayParamSize = refArray->arraySize().value_or(0);
 			break;
 		}
 	}
 
 	// solc owns Yul function discovery, reachability, and recursion semantics.
-	m_asmFunctions = yulFacts.functions;
-	m_yulFuncSubroutineIds.clear();
-	m_yulCalldataFunctions = yulFacts.calldataFunctions;
-	m_yulMemoryWritingFunctions = yulFacts.memoryWritingFunctions;
+	context.asmFunctions = yulFacts.functions;
+	context.yulFuncSubroutineIds.clear();
+	context.yulCalldataFunctions = yulFacts.calldataFunctions;
+	context.yulMemoryWritingFunctions = yulFacts.memoryWritingFunctions;
 	for (auto const& name: yulFacts.reachableFunctions)
 	{
 		if (yulFacts.terminatingFunctions.count(name))
@@ -196,19 +159,20 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 			if (yulFacts.recursiveFunctions.count(name))
 				Logger::instance().error(
 					"recursive Yul function with EVM return/stop requires a program-exit calling convention",
-					makeLoc(m_asmFunctions.at(name)->debugData));
+					makeLoc(m_context->asmFunctions.at(name)->debugData));
 			continue;
 		}
-		m_yulFuncSubroutineIds[name] = m_sourceFile + "." + m_contextName + "::__yul_" + name;
+		context.yulFuncSubroutineIds[name] = m_context->sourceFile + "." + m_context->contextName + "::__yul_" + name;
 	}
+	m_preparingContext.reset(); // publish immutable context before outlining children
 	// Register every ID before lowering any body, including mutually recursive
 	// and forward calls. Definition/map order must not affect dispatch.
-	for (auto const& [name, subId]: m_yulFuncSubroutineIds)
+	for (auto const& [name, subId]: m_context->yulFuncSubroutineIds)
 	{
-		std::string safeCtx = m_contextName;
+		std::string safeCtx = m_context->contextName;
 		std::replace(safeCtx.begin(), safeCtx.end(), '.', '_');
 		std::string subName = "__yul_" + safeCtx + "_" + name;
-		buildYulSubroutine(*m_asmFunctions.at(name), subId, subName);
+		buildYulSubroutine(*m_context->asmFunctions.at(name), subId, subName);
 	}
 
 	// Second pass: translate statements (skip function definitions already collected)
@@ -217,21 +181,21 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	initializeMemoryBlob(_params, result);
 
 	// Signed intN (N<=64) locals: seed a biguint SHADOW with the sign-extended
-	// 256-bit word (see m_signedShadow). Reads/writes in the block hit the shadow.
-	for (auto const& [name, bits]: m_signedParamBits)
+	// 256-bit word (see m_frame.signedShadow). Reads/writes in the block hit the shadow.
+	for (auto const& [name, bits]: m_context->signedParamBits)
 	{
-		auto lit = m_locals.find(name);
-		if (lit == m_locals.end() || lit->second != awst::WType::uint64Type())
+		auto lit = m_frame.locals.find(name);
+		if (lit == m_frame.locals.end() || lit->second != awst::WType::uint64Type())
 			continue;
-		awst::SourceLocation loc(m_sourceFile);
+		awst::SourceLocation loc(m_context->sourceFile);
 		std::string shadow = "__asmsx_" + name;
 		result.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(shadow, awst::WType::biguintType(), loc),
 			TypeCoercion::signExtendToUint256(
 				awst::makeVarExpression(name, awst::WType::uint64Type(), loc), bits, loc),
 			loc));
-		m_locals[shadow] = awst::WType::biguintType();
-		m_signedShadow[name] = shadow;
+		m_frame.locals[shadow] = awst::WType::biguintType();
+		m_frame.signedShadow[name] = shadow;
 	}
 
 	for (auto const& stmt: _block.statements)
@@ -247,40 +211,33 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	// memory write silently vanished.
 	drainPendingStatements(result);
 
-	// Flush blob at block end; skip when halt already emitted (trailing store = unreachable).
-	if (!m_haltEmitted)
-	{
-		awst::SourceLocation loc(m_sourceFile);
-		flushMemoryToScratch(loc, result);
-	}
-
 	// Write the signed shadows' low 8 bytes back to their typed locals (the
 	// 64-bit-TC view of the possibly-dirty word — EVM keeps asm dirt too).
-	if (m_haltEmitted)
-		m_signedShadow.clear();
-	for (auto const& [name, shadow]: m_signedShadow)
+	if (m_frame.haltEmitted)
+		m_frame.signedShadow.clear();
+	for (auto const& [name, shadow]: m_frame.signedShadow)
 	{
-		awst::SourceLocation loc(m_sourceFile);
+		awst::SourceLocation loc(m_context->sourceFile);
 		result.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(name, awst::WType::uint64Type(), loc),
 			safeBtoi(awst::makeVarExpression(shadow, awst::WType::biguintType(), loc), loc),
 			loc));
 	}
-	m_signedShadow.clear();
+	m_frame.signedShadow.clear();
 
 	// Coerce biguint-upgraded variables back to their original types at block end.
-	if (m_haltEmitted)
-		m_upgradedLocals.clear();
-	for (auto const& [name, origType]: m_upgradedLocals)
+	if (m_frame.haltEmitted)
+		m_frame.upgradedLocals.clear();
+	for (auto const& [name, origType]: m_frame.upgradedLocals)
 	{
-		awst::SourceLocation loc(m_sourceFile);
+		awst::SourceLocation loc(m_context->sourceFile);
 
 		auto src = awst::makeVarExpression(name, awst::WType::biguintType(), loc);
 		// For sub-64-bit Solidity types, mask to width before converting to uint64
 		// (e.g. uint16 a := 0x0f0f0f0f0f → mask to 0x0f0f).
 		std::shared_ptr<awst::Expression> valueToCast = src;
-		auto bwIt = m_paramBitWidths.find(name);
-		if (bwIt != m_paramBitWidths.end() && bwIt->second < 64)
+		auto bwIt = m_context->paramBitWidths.find(name);
+		if (bwIt != m_context->paramBitWidths.end() && bwIt->second < 64)
 		{
 			// mask = (1 << bitWidth) - 1
 			solidity::u256 mask = (solidity::u256(1) << bwIt->second) - 1;
@@ -296,7 +253,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		auto converted = safeBtoi(std::move(valueToCast), loc);
 		auto target = awst::makeVarExpression(name, origType, loc);
 		result.push_back(awst::makeAssignmentStatement(std::move(target), std::move(converted), loc));
-		m_locals[name] = origType;
+		m_frame.locals[name] = origType;
 	}
 
 	return result;
@@ -430,45 +387,34 @@ void AssemblyBuilder::initializeMemoryBlob(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	awst::SourceLocation loc(m_sourceFile);
+	awst::SourceLocation loc(m_context->sourceFile);
 
-	// Slot 0 lives directly in scratch (no __evm_memory local cache).
-	// MEMORY_VAR declared as vestigial; memoryVar()/assignMemoryVar() go straight to scratch slot 0.
-	m_locals[MEMORY_VAR] = awst::WType::bytesType();
-	{
-		// loadMemoryBlob takes a PAGE index (it adds memorySlotFirst() itself).
-		// Passing memorySlotFirst() here double-added the base: page 0 became
-		// slot 2*base — an unreserved, unseeded slot whose uint64 0 then
-		// clobbered page 0 (the --evm-memory-slots 16 aave failure). Under the
-		// default base-0 layout the same bug was an invisible `load 0; store 0`.
-		auto blob = loadMemoryBlob(loc, 0);
-		assignMemoryVar(std::move(blob), loc, _out);
-	}
-
+	// Memory is initialized once by the approval preamble; block entry and
+	// exit do not reload or flush any local cache.
 	// Do NOT re-initialize FMP: it's set to 0x80 in the approval preamble and
 	// subsequent blocks must not reset it (previous blocks may have advanced it).
 	// __free_memory_ptr is the initial value; mstore(0x40,...) may change it at runtime.
-	m_localConstants["__free_memory_ptr"] = 0x80;
+	m_frame.localConstants["__free_memory_ptr"] = 0x80;
 
 	// Build __cd_blob (selector + head + tail) for dynamic-offset calldataload/calldatasize,
 	// then seed the mutable (__cd_off_x, __cd_len_x) pointer locals from it. The seeding MUST
 	// be inside the guard: without the blob the seeds read an unassigned __cd_blob (was a
 	// missing-braces bug, latent only because re-seeding made the bad seeds dead stores).
-	if (m_useSyntheticCalldata)
+	if (m_frame.useSyntheticCalldata)
 	{
-		buildSyntheticCalldataBlob(m_calldataParams, _out, loc);
+		buildSyntheticCalldataBlob(m_context->calldataParams, _out, loc);
 		initCalldataPointerLocals(_out, loc);
 	}
 
 	// Write array param elements into blob at 0x80 + i*0x20
-	if (!m_arrayParamName.empty() && m_arrayParamSize > 0)
+	if (!m_frame.arrayParamName.empty() && m_frame.arrayParamSize > 0)
 	{
-		for (int64_t i = 0; i < m_arrayParamSize; ++i)
+		for (int64_t i = 0; i < m_frame.arrayParamSize; ++i)
 		{
 			uint64_t offset = 0x80 + static_cast<uint64_t>(i) * 0x20;
 
 			// Access param[i]
-			auto base = awst::makeVarExpression(m_arrayParamName, m_arrayParamType, loc);
+			auto base = awst::makeVarExpression(m_frame.arrayParamName, m_frame.arrayParamType, loc);
 			auto index = awst::makeIntegerConstant(i, loc);
 			auto indexExpr = awst::makeIndexExpression(std::move(base), std::move(index), awst::WType::biguintType(), loc);
 			auto padded = padTo32Bytes(std::move(indexExpr), loc);
@@ -517,16 +463,6 @@ void AssemblyBuilder::storeMemoryBlob(
 	_out.push_back(std::move(exprStmt));
 }
 
-void AssemblyBuilder::flushMemoryToScratch(
-	awst::SourceLocation const& _loc,
-	std::vector<std::shared_ptr<awst::Statement>>& _out
-)
-{
-	// Not a no-op: emits store(slot0, load(slot0)). Memory already lives in
-	// scratch, so this only re-writes the current blob.
-	storeMemoryBlob(memoryVar(_loc), _loc, _out, 0);
-}
-
 std::shared_ptr<awst::Expression> AssemblyBuilder::offsetToUint64(
 	std::shared_ptr<awst::Expression> _offset,
 	awst::SourceLocation const& _loc
@@ -534,76 +470,67 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::offsetToUint64(
 {
 	if (_offset->wtype == awst::WType::uint64Type())
 		return _offset;
+	if (auto constant = resolveConstantOffset(_offset))
+		return awst::makeIntegerConstant(*constant, _loc);
 
-	// biguint → bytes → btoi (safe for offsets that fit in uint64)
-	return safeBtoi(ensureBiguint(std::move(_offset), _loc), _loc);
+	// Keep the high bits until validation. Truncating first could turn an
+	// out-of-range Yul address into an unrelated valid scratch-memory address.
+	std::string const id = "__puyasol_checked_offset";
+	auto call = awst::makeSubroutineCall(awst::SubroutineID{id}, awst::WType::uint64Type(), _loc);
+	awst::pushCallArg(call->args, ensureBiguint(std::move(_offset), _loc));
+	auto& subs = m_typeMapper.artifacts().bufferSubroutines;
+	if (subs.count(id)) return call;
+	auto word = awst::makeVarExpression("word", awst::WType::biguintType(), _loc);
+	auto fits = awst::makeNumericCompare(word, awst::NumericComparison::Lte,
+		awst::makeBiguintConstant("18446744073709551615", _loc), _loc);
+	static awst::WTuple type({awst::WType::uint64Type(), awst::WType::boolType()});
+	auto pair = awst::makeTupleExpression(&type, _loc);
+	pair->items = {safeBtoi(word, _loc), std::move(fits)};
+	auto checked = std::make_shared<awst::CheckedMaybe>();
+	checked->sourceLocation = _loc;
+	checked->wtype = awst::WType::uint64Type();
+	checked->expr = std::move(pair);
+	checked->comment = "EVM offset exceeds AVM uint64 range";
+	auto body = awst::makeBlock(_loc);
+	body->body.push_back(awst::makeReturnStatement(std::move(checked), _loc));
+	auto sub = awst::makeSubroutine(id, id, {{"word", awst::WType::biguintType(), _loc}},
+		awst::WType::uint64Type(), std::move(body), false, _loc);
+	sub->inlineOpt = false;
+	subs.emplace(id, std::move(sub));
+	return call;
 }
 
 
 void AssemblyBuilder::invalidateMemConstants()
 {
-	for (auto it = m_localConstants.begin(); it != m_localConstants.end();)
+	for (auto it = m_frame.localConstants.begin(); it != m_frame.localConstants.end();)
 	{
 		if (it->first.rfind("mem_0x", 0) == 0)
-			it = m_localConstants.erase(it);
+			it = m_frame.localConstants.erase(it);
 		else
 			++it;
 	}
-	m_lastMstoreValue = nullptr;
+	m_frame.lastMstoreValue = nullptr;
 }
 
 
 std::optional<uint64_t> AssemblyBuilder::resolveConstantOffset(
-	std::shared_ptr<awst::Expression> const& _expr
-)
+	std::shared_ptr<awst::Expression> const& _expr)
 {
-	if (auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(_expr.get()))
+	if (auto const* literal = dynamic_cast<awst::IntegerConstant const*>(_expr.get()))
 	{
-		try
-		{
-			return std::stoull(intConst->value);
-		}
-		catch (...)
-		{
+		if (literal->value.empty() || literal->value.find_first_not_of("0123456789") != std::string::npos)
 			return std::nullopt;
-		}
+		solidity::bigint value{literal->value};
+		if (value <= std::numeric_limits<uint64_t>::max())
+			return static_cast<uint64_t>(value);
 	}
-
-	if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_expr.get()))
-	{
-		// Calldata params: m_localConstants holds their calldata head offset (for `.offset`), not a
-		// value — a bare param used as an offset must resolve to its runtime value (skip here).
-		auto it = m_localConstants.find(varExpr->name);
-		if (it != m_localConstants.end() && !m_calldataParamNames.count(varExpr->name))
+	if (auto const* var = dynamic_cast<awst::VarExpression const*>(_expr.get());
+		var && !m_frame.calldataParamNames.count(var->name))
+		if (auto it = m_frame.localConstants.find(var->name); it != m_frame.localConstants.end())
 			return it->second;
-	}
-
-	if (auto const* binOp = dynamic_cast<awst::BigUIntBinaryOperation const*>(_expr.get()))
-	{
-		auto left = resolveConstantOffset(binOp->left);
-		auto right = resolveConstantOffset(binOp->right);
-		if (left && right)
-		{
-			if (binOp->op == awst::BigUIntBinaryOperator::Add)
-				return *left + *right;
-			if (binOp->op == awst::BigUIntBinaryOperator::Sub)
-				return *left - *right;
-			if (binOp->op == awst::BigUIntBinaryOperator::Mult)
-				return *left * *right;
-			if (binOp->op == awst::BigUIntBinaryOperator::Mod && *right > 0)
-				return *left % *right;
-			if (binOp->op == awst::BigUIntBinaryOperator::FloorDiv && *right > 0)
-				return *left / *right;
-		}
-		// Mod where right > uint64_t (e.g. 2^256): if left resolves, it's a no-op (left < right).
-		if (binOp->op == awst::BigUIntBinaryOperator::Mod && left && !right)
-		{
-			auto const* rc = dynamic_cast<awst::IntegerConstant const*>(binOp->right.get());
-			if (rc && rc->value.length() > 18)
-				return *left;
-		}
-	}
-
+	// Source arithmetic is folded by solc before lowering. Never reinterpret
+	// arbitrary AWST biguint arithmetic as wrapping native uint64 arithmetic.
 	return std::nullopt;
 }
 
@@ -615,8 +542,8 @@ awst::SourceLocation AssemblyBuilder::makeLoc(
 {
 	if (_debugData)
 		return m_typeMapper.sourceMap().toAwstLoc(
-			m_sourceFile, _debugData->nativeLocation);
-	return awst::SourceLocation(m_sourceFile);
+			m_context->sourceFile, _debugData->nativeLocation);
+	return awst::SourceLocation(m_context->sourceFile);
 }
 
 // ─── AWST helper ────────────────────────────────────────────────────────────
@@ -840,14 +767,14 @@ std::optional<unsigned> AssemblyBuilder::yulAlignmentMod32(
 		std::string const name = id->name.str();
 		if (_fmpLocals.count(name))
 			return 0u;   // induction hypothesis
-		auto it = m_yulConstantValues.find(name);
-		if (it != m_yulConstantValues.end())
+		auto it = m_context->yulConstantValues.find(name);
+		if (it != m_context->yulConstantValues.end())
 			return decimalMod32(it->second);
 		// Solidity `constant` referenced from assembly (poseidon and every
 		// snarkjs verifier bump the pointer by one: `uint16 constant pLastMem`).
 		// These are not Yul locals, so SSAValueTracker never sees them.
-		auto cit = m_constants.find(name);
-		if (cit != m_constants.end())
+		auto cit = m_context->constants.find(name);
+		if (cit != m_context->constants.end())
 			return decimalMod32(cit->second);
 		return std::nullopt;
 	}
@@ -902,7 +829,7 @@ bool AssemblyBuilder::freeMemoryPointerStaysAligned(
 						&& isYulLiteral(c->arguments[0], 0x40))
 					{
 						std::string const n = vd->variables.front().name.str();
-						if (!m_reassignedLocals.count(n))
+						if (!m_context->reassignedLocals.count(n))
 							fmpLocals.insert(n);
 					}
 				}
@@ -952,12 +879,12 @@ std::optional<unsigned> AssemblyBuilder::alignmentMod32(
 		return rc->expr ? alignmentMod32(*rc->expr) : std::nullopt;
 	if (auto const* var = dynamic_cast<awst::VarExpression const*>(&_offset))
 	{
-		if (m_alignedLocals.count(var->name))
+		if (m_frame.alignedLocals.count(var->name))
 			return 0u;
-		if (auto fact = m_yulArgumentAlignments.find(var->name); fact != m_yulArgumentAlignments.end())
+		if (auto fact = m_context->yulArgumentAlignments.find(var->name); fact != m_context->yulArgumentAlignments.end())
 			return fact->second;
-		auto it = m_yulConstantValues.find(var->name);
-		if (it != m_yulConstantValues.end())
+		auto it = m_context->yulConstantValues.find(var->name);
+		if (it != m_context->yulConstantValues.end())
 			return decimalMod32(it->second);
 		return std::nullopt;
 	}
@@ -1032,14 +959,14 @@ std::optional<unsigned> AssemblyBuilder::alignmentMod32(
 
 bool AssemblyBuilder::divisorIsKnownNonZero(awst::Expression const& _divisor) const
 {
-	// Only m_localWideConstants (let-bound number literals) and literal nodes
-	// qualify. m_localConstants is deliberately NOT consulted: it doubles as the
+	// Only m_frame.localWideConstants (let-bound number literals) and literal nodes
+	// qualify. m_frame.localConstants is deliberately NOT consulted: it doubles as the
 	// calldata-param head-offset table, where the recorded number is an offset
 	// and not the local's value.
 	if (auto const* var = dynamic_cast<awst::VarExpression const*>(&_divisor))
 	{
-		auto it = m_localWideConstants.find(var->name);
-		return it != m_localWideConstants.end() && isNonZeroDecimal(it->second);
+		auto it = m_frame.localWideConstants.find(var->name);
+		return it != m_frame.localWideConstants.end() && isNonZeroDecimal(it->second);
 	}
 	if (auto const* num = dynamic_cast<awst::IntegerConstant const*>(&_divisor))
 		return isNonZeroDecimal(num->value);
@@ -1099,61 +1026,37 @@ void AssemblyBuilder::buildYulSubroutine(
 	// scope. solc forbids capturing outer stack variables in a Yul function.
 	// Scratch memory/returndata/transient state are already shared by callsub;
 	// calldata is the sole synthetic buffer passed explicitly below.
-	AssemblyBuilder child = *this;
-	child.m_locals.clear();
-	child.m_localConstants.clear();
-	child.m_localWideConstants.clear();
-	child.m_alignedLocals.clear();
-	child.m_localSlotConstants.clear();
-	child.m_calldataMap.clear();
-	child.m_calldataParamNames.clear();
-	child.m_calldataPointerNames.clear();
-	child.m_calldataStaticPtrNames.clear();
-	child.m_blobOffsetVars.clear();
-	child.m_upgradedLocals.clear();
-	child.m_signedShadow.clear();
-	child.m_pendingStatements.clear();
-	child.m_lastMstoreValue = nullptr;
-	child.m_haltEmitted = false;
-	child.m_inlineDepth = 0;
-	child.m_yulLeaveFlag.clear();
-	child.m_yulInlineRenames.clear();
-	child.m_yulSubReturnTemps.clear();
-	child.m_forLoopPost = nullptr;
-	child.m_arrayParamName.clear();
-	child.m_arrayParamType = nullptr;
-	child.m_arrayParamSize = 0;
-	child.m_yulSubroutine = &_funcDef;
-	child.m_useSyntheticCalldata = m_yulCalldataFunctions.count(_funcDef.name.str());
+	AssemblyBuilder child(m_typeMapper, m_context);
+	child.m_frame.yulSubroutine = &_funcDef;
+	child.m_frame.useSyntheticCalldata = m_context->yulCalldataFunctions.count(_funcDef.name.str());
 
 	size_t nRet = _funcDef.returnVariables.size();
 	awst::WType const* retType = nRet == 0 ? awst::WType::voidType()
 		: nRet == 1 ? awst::WType::biguintType()
 		: m_typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>(nRet, awst::WType::biguintType()));
-	child.m_returnType = retType;
+	child.m_frame.returnType = retType;
 
 	std::vector<awst::SubroutineArgument> subArgs;
 	for (auto const& p: _funcDef.parameters)
 	{
 		std::string pName = p.name.str();
-		if (auto constant = m_yulConstantValues.find(pName); constant != m_yulConstantValues.end())
+		if (auto constant = m_context->yulConstantValues.find(pName); constant != m_context->yulConstantValues.end())
 		{
-			child.m_constants[pName] = constant->second;
-			child.m_localWideConstants[pName] = constant->second;
+			child.m_frame.localWideConstants[pName] = constant->second;
 		}
-		child.m_locals[pName] = awst::WType::biguintType();
+		child.m_frame.locals[pName] = awst::WType::biguintType();
 		subArgs.emplace_back(
 			pName, awst::WType::biguintType(), makeLoc(p.debugData));
 	}
-	if (child.m_useSyntheticCalldata)
+	if (child.m_frame.useSyntheticCalldata)
 	{
 		subArgs.emplace_back(CD_BLOB_VAR, awst::WType::bytesType(), loc);
-		child.m_locals[CD_BLOB_VAR] = awst::WType::bytesType();
+		child.m_frame.locals[CD_BLOB_VAR] = awst::WType::bytesType();
 	}
 
 	for (auto const& r: _funcDef.returnVariables)
-		child.m_locals[r.name.str()] = awst::WType::biguintType();
+		child.m_frame.locals[r.name.str()] = awst::WType::biguintType();
 
 	std::vector<std::shared_ptr<awst::Statement>> bodyStmts;
 	// Init return vars to 0 (Yul default)
@@ -1169,7 +1072,7 @@ void AssemblyBuilder::buildYulSubroutine(
 	for (auto const& stmt: _funcDef.body.statements)
 		child.buildStatement(stmt, bodyStmts);
 	child.drainPendingStatements(bodyStmts);
-	if (!child.m_haltEmitted)
+	if (!child.m_frame.haltEmitted)
 		child.emitYulSubroutineReturn(loc, bodyStmts);
 
 	auto block = awst::makeBlock(loc);
@@ -1187,18 +1090,18 @@ void AssemblyBuilder::emitYulSubroutineReturn(
 	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
 	std::shared_ptr<awst::Expression> value;
-	auto const& returns = m_yulSubroutine->returnVariables;
+	auto const& returns = m_frame.yulSubroutine->returnVariables;
 	if (returns.size() == 1)
 		value = awst::makeVarExpression(returns[0].name.str(), awst::WType::biguintType(), _loc);
 	else if (returns.size() > 1)
 	{
-		auto tuple = awst::makeTupleExpression(m_returnType, _loc);
+		auto tuple = awst::makeTupleExpression(m_frame.returnType, _loc);
 		for (auto const& r: returns)
 			tuple->items.push_back(awst::makeVarExpression(r.name.str(), awst::WType::biguintType(), _loc));
 		value = std::move(tuple);
 	}
 	_out.push_back(awst::makeReturnStatement(std::move(value), _loc));
-	m_haltEmitted = true;
+	m_frame.haltEmitted = true;
 }
 
 // ─── Expression translation ─────────────────────────────────────────────────

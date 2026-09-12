@@ -1,205 +1,85 @@
 #include "builder/abi/AbiSelectorCalldataBuilder.h"
-#include "Logger.h"
 #include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/sol-ast/CallOperands.h"
+#include "builder/sol-ast/members/SolSelectorAccess.h"
 #include "builder/SolcFacts.h"
 #include "builder/sol-types/ConversionPlan.h"
-#include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
+
+#include <libsolidity/ast/TypeProvider.h>
+#include <stdexcept>
 
 namespace puyasol::builder::eb
 {
+using namespace solidity::frontend;
 
-// ── encodeCall ──
-
-std::unique_ptr<InstanceBuilder> handleEncodeCall(
-	ContractContext& _ctx,
-	solidity::frontend::FunctionCall const& _callNode,
-	awst::SourceLocation const& _loc)
+std::shared_ptr<awst::Expression> handleEncodeCall(
+	ContractContext& ctx, FunctionCall const& call, awst::SourceLocation const& loc)
 {
-	using namespace solidity::frontend;
-	if (_callNode.arguments().size() < 2)
-		return nullptr;
-
-	auto const& targetFnExpr = *_callNode.arguments()[0];
-	FunctionDefinition const* targetFuncDef = nullptr;
-	FunctionType const* fnType = dynamic_cast<FunctionType const*>(targetFnExpr.annotation().type);
-	if (fnType && fnType->hasDeclaration())
-		targetFuncDef = dynamic_cast<FunctionDefinition const*>(&fnType->declaration());
-
-	// Compile-time selector when we have a function definition; otherwise
-	// runtime-extract the Solidity-visible selector from the fn-ptr value. It is
-	// always bytes 8..12; the flagged 16-byte layout appends an ARC-4 route.
-	std::shared_ptr<awst::Expression> selector;
-	if (targetFuncDef)
+	if (call.arguments().size() != 2) throw std::logic_error("Invalid solc encodeCall arity");
+	auto const& source = *call.arguments()[0];
+	auto const* function = dynamic_cast<FunctionType const*>(source.annotation().type);
+	auto const* external = function ? function->asExternallyCallableFunction(false) : nullptr;
+	if (!external) throw std::logic_error("encodeCall target has no externally callable solc type");
+	// Selector folding and receiver evaluation are independent. Reuse the
+	// selector projection's scoped effects instead of constructing a compact
+	// application pointer merely to discard its address.
+	auto selector = sol_ast::SolSelectorAccess::selectorOf(
+		ctx, source, awst::WType::bytesType(), loc, true);
+	auto const paramTypes = external->parameterTypes();
+	std::vector<ASTPointer<Expression const>> arguments;
+	// Inline arrays also use TupleExpression; only solc's TupleType denotes
+	// multiple call arguments. Match TypeChecker::typeCheckABIEncodeCallFunction.
+	if (dynamic_cast<TupleType const*>(call.arguments()[1]->annotation().type))
 	{
-		auto const* externalType = fnType
-			? fnType : targetFuncDef->functionType(false);
-		if (!externalType)
-			return nullptr;
-		// Solidity fixes this selector to keccak256(signature)[:4]. Entry
-		// transport selection must never change the meaning of an `abi.*`
-		// expression: --evm-selectors governs this contract's own identity
-		// surface (msg.sig, fn-pointer values, EIP-165), not the calldata the
-		// abi builtins construct, which is canonical EVM in both profiles.
-		selector = awst::makeBytesConstant(
-			builder::SolcFacts::externalSelector(*externalType), _loc,
-			awst::BytesEncoding::Base16, awst::WType::bytesType());
+		auto const* tuple = dynamic_cast<TupleExpression const*>(call.arguments()[1].get());
+		if (!tuple) throw std::logic_error("encodeCall tuple is not inline");
+		arguments.assign(tuple->components().begin(), tuple->components().end());
 	}
-	else if (fnType && fnType->kind() == FunctionType::Kind::External)
-	{
-		if (!_ctx.typeMapper.profile().evmSelectors)
-		{
-			Logger::instance().error(
-				"abi.encodeCall with an opaque runtime external-function pointer "
-				"requires --evm-selectors (the default compact pointer stores only "
-				"its ARC4 route, not the Solidity selector)", _loc);
-			return nullptr;
-		}
-		auto fnVal = _ctx.buildExpr(targetFnExpr);
-		if (!fnVal)
-			return nullptr;
-		// Coerce the profile-sized external fn-ptr value to plain bytes.
-		if (fnVal->wtype && fnVal->wtype->kind() == awst::WTypeKind::Bytes)
-			fnVal = awst::makeAsBytes(std::move(fnVal), _loc);
-		// Extract the public Solidity selector field at bytes 8..12.
-		selector = awst::makeExtract(std::move(fnVal), 8, 4, _loc);
-	}
-	else
-	{
-		// Unsupported function-pointer kind (internal, library, etc.).
-		return nullptr;
-	}
-
-	std::vector<std::shared_ptr<awst::Expression>> parts;
-	parts.push_back(std::move(selector));
-
-	auto const& argsExpr = *_callNode.arguments()[1];
-	std::vector<ASTPointer<Expression const>> callArgs;
-	if (auto const* tupleExpr = dynamic_cast<TupleExpression const*>(&argsExpr))
-	{
-		for (auto const& comp : tupleExpr->components())
-			if (comp) callArgs.push_back(comp);
-	}
-	else
-		callArgs.push_back(_callNode.arguments()[1]);
-
-	// Encode each argument at the callee's declared Solidity type. This is
-	// canonical EVM calldata regardless of the contract entry profile.
-	std::vector<solidity::frontend::Type const*> paramTypes;
-	if (targetFuncDef)
-	{
-		for (auto const& p : targetFuncDef->parameters())
-			paramTypes.push_back(p ? p->type() : nullptr);
-	}
-	else if (fnType)
-	{
-		for (auto const* pt : fnType->parameterTypes())
-			paramTypes.push_back(pt);
-	}
-
+	else arguments.push_back(call.arguments()[1]);
+	if (arguments.size() != paramTypes.size())
+		throw std::logic_error("encodeCall arguments disagree with solc parameter types");
 	std::vector<std::shared_ptr<awst::Expression>> values;
-	for (size_t i = 0; i < callArgs.size(); ++i)
+	for (size_t i = 0; i < arguments.size(); ++i)
 	{
-		auto value = _ctx.buildExpr(*callArgs[i]);
-		if (i < paramTypes.size() && paramTypes[i])
-			if (auto const* target = _ctx.typeMapper.map(paramTypes[i]))
-				value = builder::ConversionPlan{
-					callArgs[i]->annotation().type, paramTypes[i], target,
-					builder::ConversionPlan::Context::AbiArgument}.emit(
-						std::move(value), _loc);
-		values.push_back(std::move(value));
+		if (!arguments[i]) throw std::logic_error("Missing encodeCall argument");
+		auto value = sol_ast::CallOperands::evaluate(ctx, *arguments[i], loc);
+		values.push_back(ConversionPlan{arguments[i]->annotation().type, paramTypes[i],
+			ctx.typeMapper.map(paramTypes[i]), ConversionPlan::Context::AbiArgument}.emit(std::move(value), loc));
 	}
-	parts.push_back(AbiEncoderBuilder::encodeValuesAsEvmAbi(
-		_ctx, paramTypes, std::move(values), _loc));
-
-	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
+	return awst::makeConcat(std::move(selector),
+		AbiEncoderBuilder::encodeValuesAsEvmAbi(ctx, paramTypes, std::move(values), loc), loc);
 }
 
-// ── encodeWithSelector ──
-
-std::unique_ptr<InstanceBuilder> handleEncodeWithSelector(
-	ContractContext& _ctx,
-	solidity::frontend::FunctionCall const& _callNode,
-	awst::SourceLocation const& _loc)
+std::shared_ptr<awst::Expression> handleEncodeWithSelector(
+	ContractContext& ctx, FunctionCall const& call, awst::SourceLocation const& loc)
 {
-	using namespace solidity::frontend;
-	auto const& args = _callNode.arguments();
-	if (args.empty()) return nullptr;
-
-	// selector (4 bytes) + abi.encode(remaining args). Solidity types the selector
-	// bytes4, but buildExpr may hand back uint64/biguint for literals — coerce to 4B.
-	auto selector = _ctx.buildExpr(*args[0]);
-	auto const* selType = args[0]->annotation().type;
-	bool selIsBytesN = false;
-	if (auto const* fb = dynamic_cast<solidity::frontend::FixedBytesType const*>(selType))
-		selIsBytesN = fb->numBytes() == 4;
-	if (!selIsBytesN)
-	{
-		// Integer/biguint → itob → take last 4 bytes (big-endian, so the
-		// low-order 4 bytes hold the selector value).
-		std::shared_ptr<awst::Expression> asBytes = selector;
-		if (selector->wtype == awst::WType::uint64Type())
-		{
-			asBytes = awst::makeItob(std::move(selector), _loc);
-		}
-		else if (selector->wtype == awst::WType::biguintType())
-		{
-			auto cast = awst::makeAsBytes(std::move(selector), _loc);
-			asBytes = std::move(cast);
-		}
-
-		// Left-pad to ≥4B, take the last 4. makeExtractLastN wraps its input in
-		// a SingleEvaluation, so a side-effecting selector evaluates once.
-		selector = awst::makeExtractLastN(
-			awst::makeLeftPad(std::move(asBytes), 4, _loc), 4, _loc);
-	}
-
-	if (args.size() == 1)
-		return std::make_unique<GenericAbiResult>(_ctx, std::move(selector));
-
-	std::vector<std::shared_ptr<awst::Expression>> parts;
-	parts.push_back(std::move(selector));
-	parts.push_back(AbiEncoderBuilder::encodeArgsAsEvmAbi(_ctx, args, 1, _loc));
-	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
+	auto const& args = call.arguments();
+	if (args.empty()) throw std::logic_error("Missing ABI selector");
+	auto const* type = TypeProvider::fixedBytes(4);
+	auto selector = ConversionPlan{args[0]->annotation().type, type, ctx.typeMapper.map(type),
+		ConversionPlan::Context::AbiArgument}.emit(
+			sol_ast::CallOperands::evaluate(ctx, *args[0], loc), loc);
+	return awst::makeConcat(std::move(selector),
+		AbiEncoderBuilder::encodeArgsAsEvmAbi(ctx, args, 1, loc), loc);
 }
 
-// ── encodeWithSignature ──
-
-std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
-	ContractContext& _ctx,
-	solidity::frontend::FunctionCall const& _callNode,
-	awst::SourceLocation const& _loc)
+std::shared_ptr<awst::Expression> handleEncodeWithSignature(
+	ContractContext& ctx, FunctionCall const& call, awst::SourceLocation const& loc)
 {
-	auto const& args = _callNode.arguments();
-	if (args.empty()) return nullptr;
-
-	std::vector<std::shared_ptr<awst::Expression>> parts;
-
-	// Solidity fixes this selector to keccak256(signature)[:4]. Entry transport
-	// selection must never change the meaning of an `abi.*` expression, so this
-	// stays keccak in both profiles — matching the runtime-signature arm below,
-	// which would otherwise hash the same call differently just because the
-	// signature was not a literal.
-	if (auto const* sigLit = dynamic_cast<solidity::frontend::Literal const*>(args[0].get()))
-	{
-		parts.push_back(awst::makeBytesConstant(
-			builder::SolcFacts::externalSelector(sigLit->value()), _loc,
-			awst::BytesEncoding::Base16, awst::WType::bytesType()));
-	}
+	auto const& args = call.arguments();
+	if (args.empty()) throw std::logic_error("Missing ABI signature");
+	std::shared_ptr<awst::Expression> selector;
+	if (auto const* literal = dynamic_cast<Literal const*>(args[0].get()))
+		selector = awst::makeBytesConstant(SolcFacts::externalSelector(literal->value()),
+			loc, awst::BytesEncoding::Base16, awst::WType::bytesType());
 	else
 	{
-		auto sigExpr = _ctx.buildExpr(*args[0]);
-		auto hash = awst::makeIntrinsicCall(
-			"keccak256", awst::WType::bytesType(), _loc);
-		hash->stackArgs.push_back(std::move(sigExpr));
-		parts.push_back(awst::makeExtract(std::move(hash), 0, 4, _loc));
+		auto hash = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), loc);
+		hash->stackArgs.push_back(sol_ast::CallOperands::evaluate(ctx, *args[0], loc));
+		selector = awst::makeExtract(std::move(hash), 0, 4, loc);
 	}
-
-	if (args.size() == 1)
-		return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
-
-	parts.push_back(AbiEncoderBuilder::encodeArgsAsEvmAbi(_ctx, args, 1, _loc));
-	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
+	return awst::makeConcat(std::move(selector),
+		AbiEncoderBuilder::encodeArgsAsEvmAbi(ctx, args, 1, loc), loc);
 }
-
 } // namespace puyasol::builder::eb

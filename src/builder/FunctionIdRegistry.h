@@ -9,21 +9,18 @@
 
 #include "builder/FunctionSymbolTable.h"
 
-#include <libsolidity/interface/CompilerStack.h>
-
-#include <string>
-
 namespace puyasol::builder
 {
 
 namespace eb { struct FunctionPointerRegistry; }
+struct ProgramAnalysis;
 
 void registerFunctionIds(
-	solidity::frontend::CompilerStack& _compiler,
+	ProgramAnalysis const& _analysis,
 	FunctionSymbolTable& _functionSymbols);
 
 void presetDispatchCref(
-	solidity::frontend::CompilerStack& _compiler,
+	ProgramAnalysis const& _analysis,
 	eb::FunctionPointerRegistry& _functionPointers);
 
 } // namespace puyasol::builder

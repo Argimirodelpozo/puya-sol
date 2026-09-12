@@ -1,5 +1,6 @@
 #include "builder/sol-ast/calls/SolBareCall.h"
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/AwstShorthand.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -14,7 +15,10 @@ std::shared_ptr<awst::Expression> SolBareCall::toAwst()
 		return vc;
 	}
 
-	auto receiver = buildExpr(memberAccess->expression());
+	auto operand = m_ctx.lower(memberAccess->expression(), false);
+	bool const pin = !shorthand::isCurrentAppAddressGlobal(operand.value.get());
+	auto receiver = m_ctx.emitSequencedOperand(
+		std::move(operand.effects), std::move(operand.value), pin, m_loc);
 
 	auto result = eb::InnerCallHandlers::tryHandleAddressCall(
 		m_ctx, receiver, memberAccess->memberName(),

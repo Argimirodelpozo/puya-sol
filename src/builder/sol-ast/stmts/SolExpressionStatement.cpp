@@ -78,38 +78,11 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
 
-	// Resolve via solc's ASTNode::referencedDeclaration helper so we get
-	// the ErrorDefinition's name regardless of whether the source wrote
-	// `revert MyError()` (Identifier), `revert Lib.MyError()`
-	// (MemberAccess), or used an IdentifierPath.
-	std::string errorName = "revert";
-	if (auto const* errorDef = dynamic_cast<ErrorDefinition const*>(
-			ASTNode::referencedDeclaration(m_node.errorCall().expression())))
-	{
-		errorName = errorDef->name();
-
-		// Custom-error payload, logged before the failing `err` so clients read it
-		// via simulate. Selector policy follows Error.selector; argument transport
-		// remains ARC-4 until a full EVM ABI mode exists.
-		auto const* errorType = errorDef->functionType(true);
-		auto sig = errorType->externalSignature();
-		std::shared_ptr<awst::Expression> blob =
-			builder::SelectorSemantics::functionSelector(
-				m_blk.builderCtx(), *errorType, sig, m_loc);
-		auto const errorArgs = m_node.errorCall().sortedArguments();
-		if (!errorArgs.empty())
-			blob = awst::makeConcat(
-				std::move(blob),
-				eb::AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
-					m_blk.builderCtx(), errorArgs,
-					errorDef->functionType(true)->parameterTypes(), m_loc),
-				m_loc);
-		// Arg builds may hoist side effects / loop encoders to pre-effects.
-		for (auto& pstmt: m_blk.builderCtx().takePreEffects())
-			result.push_back(std::move(pstmt));
-		result.push_back(makeRevertLogStmt(std::move(blob), m_loc));
-	}
-
+	RevertPayload payload(m_blk.builderCtx(), m_node.errorCall(), m_loc);
+	for (auto& stmt: m_blk.builderCtx().takePreEffects())
+		result.push_back(std::move(stmt));
+	result.push_back(makeRevertLogStmt(std::move(payload.blob), m_loc));
+	auto const& errorName = payload.message;
 	auto failNode = awst::makeAssert(awst::makeFalse(m_loc), m_loc, errorName);
 	// The log (when present) carries the user-visible revert contract; let
 	// puya's optimizer strip the fail when provably unreachable.
@@ -249,7 +222,7 @@ bool tryBoxKeyedRefReturn(BlockContext& blk, Return const& node,
 	auto const& rps = node.annotation().functionReturnParameters->parameters();
 	bool const storageRefMapReturn = rps.size() == 1
 		&& rps[0]->referenceLocation() == VariableDeclaration::Location::Storage
-		&& builder::isBoxKeyedStorageRef(rps[0]->type(), blk.typeMapper().analysis());
+		&& blk.typeMapper().isBoxKeyedStorageRef(rps[0]->type());
 	if (storageRefMapReturn && containsMappingType(node.expression()->annotation().type))
 	{
 		stmt->value = storageReferenceKey(blk.builderCtx(), blk.scope, *node.expression(), loc);

@@ -3,8 +3,8 @@
 // See inline comments for AVM adaptation notes.
 // ============================================================================
 contract C {
-    // AVM: block.difficulty returns 0 — Algorand has no proof-of-work.
-    // Post-Paris EVM returns prevrandao here; on AVM use block.prevrandao.
+    // Opted-in AVM adaptation: seed at transaction FirstValid - 1 (zero
+    // at FirstValid 0). Same as adapted block.prevrandao, not secure randomness.
     // Original EVM expected:
     //   f() -> 0xa86c2e601b6c44eb... (x3, same as prevrandao)
     function f() public returns (uint) {

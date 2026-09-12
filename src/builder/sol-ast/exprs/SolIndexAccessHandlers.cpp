@@ -3,6 +3,7 @@
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/sol-ast/MappingPrefix.h"
+#include "builder/codec/EvmValueCodec.h"
 #include "builder/storage/StoragePathWalker.h"
 #include "awst/NameGen.h"
 #include "builder/ProgramAnalysis.h"
@@ -26,19 +27,17 @@ using namespace solidity::frontend;
 namespace puyasol::builder::sol_ast
 {
 
-std::shared_ptr<awst::Expression> SolIndexAccess::signExtendSignedElement(
-	std::shared_ptr<awst::Expression> _decoded)
+std::shared_ptr<awst::Expression> SolIndexAccess::readElement(
+	std::shared_ptr<awst::Expression> value)
 {
-	// Delegate to shared TypeCoercion helper so this and sol-eb array builder agree.
-	return builder::TypeCoercion::signExtendSignedElement(
-		std::move(_decoded), m_indexAccess.annotation().type, m_loc);
+	return codec::valueFromArc4(m_ctx.typeMapper,
+		m_indexAccess.annotation().type, std::move(value), m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 {
 	auto const* arrType = dynamic_cast<ArrayType const*>(
 		m_indexAccess.baseExpression().annotation().type);
-	auto* rawElemType = m_ctx.typeMapper.map(arrType->baseType());
 	auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(arrType->baseType());
 	auto* arrWType = m_ctx.typeMapper.map(arrType);
 
@@ -167,11 +166,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	if (m_indexAccess.annotation().willBeWrittenTo)
 		return indexExpr;
 
-	bool needsDecode = !awst::structurallyEquivalent(rawElemType, elemType);
-	if (needsDecode)
-		return signExtendSignedElement(
-			awst::makeARC4Decode(std::move(indexExpr), rawElemType, m_loc));
-	return indexExpr;
+	return readElement(std::move(indexExpr));
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
@@ -247,7 +242,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 		if (!dynamic_cast<ArrayType const*>(rootMappingType))
 			holder.value = nullptr;
 		StoragePathWalker walker(
-			m_ctx.typeMapper, StoragePathPolicy::indexAccess(), rootMappingType, m_loc);
+			m_ctx.typeMapper, rootMappingType, m_loc, StoragePathWalker::ValueTracking::NestedArrays);
 		for (auto const* indexExpr: indexExprs)
 		{
 			auto index = buildExpr(*indexExpr);
@@ -294,9 +289,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 			&& !m_ctx.typeMapper.analysis().storageRefPointerReturnAccesses
 					.count(m_indexAccess.id()))
 		{
-			// Read context only — write context is owned by SolAssignment's
-			// tryHandleMultiBoxArrayWrite early-out (which emits box_replace
-			// at the right page/offset). A ReinterpretCast cannot be a valid
+			// Read context only — ResolvedLValue writes with box_replace at
+			// the resolved page/offset. A ReinterpretCast cannot be a valid
 			// Lvalue in puya, so we never return one here.
 			auto* baseWtype = m_ctx.typeMapper.map(varDecl->type());
 			if (builder::StorageMapper::isMultiBoxArray(baseWtype))
@@ -373,77 +367,30 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		}
 	}
 
-	// Regular array index
-	if (index && index->wtype == awst::WType::biguintType())
-	{
-		// biguint→uint64 cast duplicates its operand (slices concat(bzero(8),idx)
-		// and takes its length), so side-effecting idx like `a[--i]` or
-		// `a[f()]` runs twice. Pin to temp first (T2: call-valued escaped).
-		if (dynamic_cast<awst::AssignmentExpression const*>(index.get())
-			|| dynamic_cast<awst::SubroutineCallExpression const*>(index.get()))
-		{
-			std::string tempName = "__sol_ixc_" + std::to_string(
-				awst::NameGen::next("SolIndexAccess.coercedIndex"));
-			auto tempVar = awst::makeVarExpression(tempName, index->wtype, m_loc);
-			m_ctx.preEffects().push_back(
-				awst::makeAssignmentStatement(tempVar, std::move(index), m_loc));
-			index = tempVar;
-		}
-		index = builder::TypeCoercion::checkedIndexToUint64(
-			m_ctx.preEffects(), std::move(index), m_loc);
-	}
+	if (index)
+		index = TypeCoercion::checkedIndexToUint64(m_ctx.preEffects(), std::move(index), m_loc);
 
-	// bytes/bytesN index: puya rejects IndexExpression on bytes; use extract3.
-	// Write context unsupported (needs replace3-based handler).
+	// Bytes reads use extract3; the writable byte view is consumed by
+	// ResolvedLValue's replace3 store, not emitted as an array operation.
 	if (base->wtype
 		&& (base->wtype == awst::WType::bytesType()
 			|| base->wtype->kind() == awst::WTypeKind::Bytes)
-		&& !m_indexAccess.annotation().willBeWrittenTo
 		&& index)
 	{
 		auto* bytes1Type = m_ctx.typeMapper.createType<awst::BytesWType>(1);
+		if (m_indexAccess.annotation().willBeWrittenTo)
+			return awst::makeIndexExpression(std::move(base), std::move(index), bytes1Type, m_loc);
 		auto one = awst::makeOne(m_loc);
 		return awst::makeExtract3(
 			std::move(base), std::move(index), std::move(one), m_loc, bytes1Type);
 	}
 
-	auto* expectedType = m_ctx.typeMapper.map(m_indexAccess.annotation().type);
-	auto* actualElemType = expectedType;
-	if (base->wtype && base->wtype->kind() == awst::WTypeKind::ReferenceArray)
-	{
-		auto const* refArr = static_cast<awst::ReferenceArray const*>(base->wtype);
-		actualElemType = const_cast<awst::WType*>(refArr->elementType());
-	}
-	else if (base->wtype && base->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
-	{
-		auto const* arc4Arr = static_cast<awst::ARC4StaticArray const*>(base->wtype);
-		actualElemType = const_cast<awst::WType*>(arc4Arr->elementType());
-	}
-	else if (base->wtype && base->wtype->kind() == awst::WTypeKind::ARC4DynamicArray)
-	{
-		auto const* arc4Arr = static_cast<awst::ARC4DynamicArray const*>(base->wtype);
-		actualElemType = const_cast<awst::WType*>(arc4Arr->elementType());
-	}
-
-	auto e = awst::makeIndexExpression(std::move(base), std::move(index), actualElemType, m_loc);
-
-	// Decode ARC4 element to native type if needed (for rvalue usage)
-	// Only decode when element is ARC4 and expected type is native (not ARC4)
-	if (!awst::structurallyEquivalent(actualElemType, expectedType))
-	{
-		bool const elemIsArc4 = builder::isArc4EncodedType(actualElemType);
-		bool const expectedIsNative = !builder::isArc4EncodedType(expectedType);
-		if (elemIsArc4 && expectedIsNative)
-		{
-			std::shared_ptr<awst::Expression> decode =
-				awst::makeARC4Decode(std::move(e), expectedType, m_loc);
-			// Sign-extend only for reads; write targets need bare decode (valid lvalue).
-			if (!m_indexAccess.annotation().willBeWrittenTo)
-				decode = signExtendSignedElement(std::move(decode));
-			return decode;
-		}
-	}
-	return e;
+	auto const* elementType = awst::arrayElementType(base->wtype);
+	if (!elementType) throw std::logic_error("Index receiver has no array element type");
+	auto value = awst::makeIndexExpression(std::move(base), std::move(index), elementType, m_loc);
+	if (!m_indexAccess.annotation().willBeWrittenTo)
+		return readElement(std::move(value));
+	return value;
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
@@ -456,129 +403,24 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 		_varName, _arrWtype, std::move(_idxExpr), m_ctx.preEffects(), m_loc);
 	auto cast = StorageMapper::makeBoxWindowRead(
 		m_ctx.typeMapper, page.key, page.offset, page.elementType, m_loc);
-	auto* expectedType = m_ctx.typeMapper.map(m_indexAccess.annotation().type);
-	auto* elemArc4 = page.elementType;
-
-	if (expectedType && !awst::structurallyEquivalent(expectedType, elemArc4))
-	{
-		bool const elemIsArc4 = builder::isArc4EncodedType(elemArc4);
-		bool const expectedIsNative = !builder::isArc4EncodedType(expectedType);
-		if (elemIsArc4 && expectedIsNative)
-			return signExtendSignedElement(
-				awst::makeARC4Decode(std::move(cast), expectedType, m_loc));
-	}
-	return cast;
+	return readElement(std::move(cast));
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 {
-	// Fold `root[a:b][c:d]...[i]` into `root[cumOffset + i]`.
-	// Each slice level reverts on start>end / end>parent_length / i>=slice_length.
-	// Chains flatten bottom-up: cumOffset = sum of starts, cumLength = end-start.
-
-	using namespace solidity::frontend;
-
-	// Walk IndexRangeAccess chain to root, peeling type-conversion wrappers
-	// like `uint256[](x[s:e])` that Solidity inserts for typed slice locals.
-	auto peelCast = [](Expression const& e) -> Expression const& {
-		Expression const* cur = &e;
-		while (auto const* call = dynamic_cast<FunctionCall const*>(cur))
-		{
-			if (call->annotation().kind.set()
-				&& *call->annotation().kind == FunctionCallKind::TypeConversion
-				&& !call->arguments().empty())
-				cur = call->arguments()[0].get();
-			else
-				break;
-		}
-		return *cur;
-	};
-	std::vector<IndexRangeAccess const*> slices;
-	Expression const* cur = &peelCast(m_indexAccess.baseExpression());
-	while (auto const* r = dynamic_cast<IndexRangeAccess const*>(cur))
-	{
-		slices.push_back(r);
-		cur = &peelCast(r->baseExpression());
-	}
-	// Reverse so we process innermost (closest-to-root) slice first.
-	std::reverse(slices.begin(), slices.end());
-
-	auto const* rootArrType = dynamic_cast<ArrayType const*>(cur->annotation().type);
-	if (!rootArrType || rootArrType->isByteArrayOrString())
-		return nullptr; // fall through to default handling
-
-	auto rootBase = buildExpr(*cur);
-
-	// Stash root in temp to avoid duplicating possibly-expensive evaluation.
-	std::string idSuffix = std::to_string(m_indexAccess.id());
-	std::string rootVarName = "__slice_root_" + idSuffix;
-	auto rootVar = awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc);
-	m_ctx.preEffects().push_back(
-		awst::makeAssignmentStatement(rootVar, rootBase, m_loc));
-
-	auto makeLen = [&](std::shared_ptr<awst::Expression> arr) -> std::shared_ptr<awst::Expression> {
-		return awst::makeArrayLength(std::move(arr), awst::WType::uint64Type(), m_loc);
-	};
-
-	// Initial cumulative offset = 0, length = len(root)
-	std::shared_ptr<awst::Expression> cumOffset
-		= awst::makeZero(m_loc);
-	std::shared_ptr<awst::Expression> cumLength = makeLen(
-		awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc));
-
-	// Stash length in temp for end-default and bounds check.
-	std::string lenVarName = "__slice_rootlen_" + idSuffix;
-	auto lenVar = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
-	m_ctx.preEffects().push_back(
-		awst::makeAssignmentStatement(lenVar, cumLength, m_loc));
-	cumLength = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
-
-	for (auto const* range: slices)
-	{
-		auto [start, end] = SolIndexRangeAccess::resolveBounds(m_ctx, *range, cumLength, m_loc);
-		cumOffset = m_ctx.emitSequencedOperand({}, awst::makeUInt64BinOp(
-			cumOffset, awst::UInt64BinaryOperator::Add, start, m_loc), true, m_loc);
-		cumLength = m_ctx.emitSequencedOperand({}, awst::makeUInt64BinOp(
-			end, awst::UInt64BinaryOperator::Sub, start, m_loc), true, m_loc);
-	}
-
-	// Now the index access: bounds-check i < cumLength, then access root[cumOffset + i].
-	auto idx = buildExpr(*m_indexAccess.indexExpression());
-	idx = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.preEffects(), std::move(idx), m_loc);
-
-	std::string idxName = "__slice_i_" + idSuffix;
-	auto idxVar = awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc);
-	m_ctx.preEffects().push_back(
-		awst::makeAssignmentStatement(idxVar, idx, m_loc));
-
-	// assert(index < slice_length)
-	{
-		auto cmp = awst::makeNumericCompare(
-			awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc),
-			awst::NumericComparison::Lt,
-			cumLength,
-			m_loc);
-		m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-			awst::makeAssert(std::move(cmp), m_loc, "slice index out of bounds"), m_loc));
-	}
-
-	// effective = offset + i
+	auto slice = SolIndexRangeAccess::resolveSlice(m_ctx, m_indexAccess.baseExpression(), m_loc);
+	if (!slice) return nullptr;
+	auto index = m_ctx.pinIfWriteBacks(m_ctx.lower(*m_indexAccess.indexExpression(), false), m_loc);
+	index = m_ctx.emitSequencedOperand({}, TypeCoercion::checkedIndexToUint64(
+		m_ctx.preEffects(), std::move(index), m_loc), true, m_loc);
+	m_ctx.queuePreExpression(awst::makeAssert(awst::makeNumericCompare(
+		index, awst::NumericComparison::Lt, slice->length, m_loc), m_loc,
+		"slice index out of bounds"), m_loc);
 	auto effective = awst::makeUInt64BinOp(
-		std::move(cumOffset), awst::UInt64BinaryOperator::Add,
-		awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc),
-		m_loc);
-
-	// Determine element type on the root array
-	auto* rawElemType = m_ctx.typeMapper.map(rootArrType->baseType());
-	auto* arc4ElemType = m_ctx.typeMapper.mapSolTypeToARC4(rootArrType->baseType());
-
-	auto indexExpr = awst::makeIndexExpression(awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc), std::move(effective), arc4ElemType, m_loc);
-
-	if (!awst::structurallyEquivalent(rawElemType, arc4ElemType))
-		return signExtendSignedElement(
-			awst::makeARC4Decode(std::move(indexExpr), rawElemType, m_loc));
-	return indexExpr;
+		slice->offset, awst::UInt64BinaryOperator::Add, index, m_loc);
+	auto value = awst::makeIndexExpression(slice->base, std::move(effective),
+		awst::arrayElementType(slice->base->wtype), m_loc);
+	return readElement(std::move(value));
 }
 
 

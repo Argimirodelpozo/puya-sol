@@ -630,9 +630,11 @@ def test_storage_boundary_array_assignment(harness):
     # TODO: verify structural decoding matches expected: 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
     assert not r.reverted
 
-def test_storage_boundary_array_copy(harness):  # currently fails
+def test_storage_boundary_array_copy(harness):
     """storage/contracts/storage_boundary_array_copy.sol"""
-    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_copy.sol')
+    # Ten independent slot boxes require resource-sharing app calls even when
+    # constant folding makes the constructor fit within one opcode budget.
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_copy.sol', postinit_budget_pool=4)
     r = harness.call(app, 'x()')
     assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,)
     r = harness.call(app, 'y()')

@@ -3,8 +3,8 @@
 // See inline comments for AVM adaptation notes.
 // ============================================================================
 contract C {
-    // AVM: block.prevrandao maps to block seed of round-1 (see block_prevrandao.sol).
-    // Pre-Paris EVM returned block difficulty; on AVM both map to the same block seed.
+    // Opted-in AVM seed at FirstValid - 1, not secure randomness (see block_prevrandao.sol).
+    // Pre-Paris EVM returned mining difficulty; AVM uses the same adapted seed for both names.
     // Original EVM expected: f() -> 200000000
     function f() public view returns (bool) {
         return block.prevrandao > 0;

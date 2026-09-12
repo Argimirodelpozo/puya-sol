@@ -27,8 +27,10 @@ namespace puyasol::builder::builtin
 std::string const& ripemd160SubroutineId();
 
 
-/// Build the AWST Subroutine that computes RIPEMD-160 of an arbitrary-length
-/// `bytes` input and returns a 20-byte digest. Takes one source location
+/// Build the AWST Subroutine that hashes one AVM byte value (at most 4096
+/// bytes) and returns a 20-byte digest. Padding uses at most 128 extra bytes.
+/// Callers must supply sufficient opcode budget; the byte limit is not a
+/// promise that every input fits the transaction's budget. Takes one source location
 /// (used for every node inside the body — there's no real source for these).
 std::shared_ptr<awst::Subroutine> buildRipemd160Subroutine(
 	awst::SourceLocation loc);

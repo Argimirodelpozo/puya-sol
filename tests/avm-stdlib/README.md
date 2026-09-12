@@ -47,10 +47,10 @@ xdist works: `-n auto` runs tests in parallel under separate output dirs.
    the call before the body runs.
 2. Add a dispatch handler in
    [`src/builder/itxn/AsaIntrinsics.cpp`](../../src/builder/itxn/AsaIntrinsics.cpp)
-   under the matching `dispatchX` (or `handleAsaXxx` for ASA).
-3. Add a test fixture + test here. Reuse the existing
-   `==== Source: AVM.sol ====` + `==== Source: contract.sol ====`
-   pattern so fixtures are self-contained.
+   under the matching `dispatchX` (or `handleAsaXxx` for ASA), and register
+   the exact signature in `facadeLibrary`.
+3. Add a test fixture + test here, importing the canonical `libs/AVM.sol`.
+   A user library with the same name is ordinary Solidity, not an intrinsic.
 
 ## Coverage limits
 

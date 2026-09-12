@@ -77,9 +77,12 @@ bool Logger::hasErrors() const
 	return m_errorCount > 0;
 }
 
-void Logger::setOutputLogFile(std::string const& _path)
+bool Logger::setOutputLogFile(std::string const& _path)
 {
+	if (m_logFile.is_open()) m_logFile.close();
+	m_logFile.clear();
 	m_logFile.open(_path, std::ios::out | std::ios::trunc);
+	return static_cast<bool>(m_logFile);
 }
 
 void Logger::log(LogLevel _level, std::string const& _msg, awst::SourceLocation const* _loc)

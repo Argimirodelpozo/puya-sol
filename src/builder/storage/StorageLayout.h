@@ -36,7 +36,6 @@ struct SlotInfo
 	/// Indices into StorageLayout::variables(). Indices remain valid while the
 	/// backing vector grows; pointers into it would not.
 	std::vector<size_t> variableIndices;
-	unsigned bytesUsed = 0;
 	bool isDynamic = false;  ///< True for mappings/arrays (box storage, not packed)
 };
 

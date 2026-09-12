@@ -92,18 +92,6 @@ private:
 		std::shared_ptr<awst::Expression> _rhs,
 		awst::WType const* _nativeW);
 
-	/// The boxed-path/offset-struct writers' shared TAIL: pin the computed
-	/// value, ARC4-encode it at the leaf type, replace the leaf inside the
-	/// root temp (post-effect), then run the site's root write-back
-	/// statement. Returns the pinned value (the assignment-expression
-	/// result); nullptr when `_value` is null.
-	std::shared_ptr<awst::Expression> emitAggregateLeafStore(
-		std::shared_ptr<awst::Expression> _target,
-		std::shared_ptr<awst::Expression> _value,
-		std::string const& _tempStem,
-		char const* _nameGenKey,
-		std::shared_ptr<awst::Statement> _rootWriteback);
-
 	/// Pre-buildExpr early-out handlers (each claims the shape or returns nullopt).
 
 	/// `tx = v` / `tx += v` for a transient state var; routes through TransientStorage.
@@ -114,10 +102,10 @@ private:
 	/// Runtime storage-reference rebinding; nullopt means this is not a rebind.
 	std::optional<std::shared_ptr<awst::Expression>> tryEvmStoragePointerRebind(
 		solidity::frontend::Expression const& _lhs);
-	/// Fixed storage-to-storage copies preserve their slot-copy optimization.
+	/// Fixed storage copies use solc's scalar-word or recursive value strategy.
 	std::optional<std::shared_ptr<awst::Expression>> tryEvmFixedArrayWrite(
 		solidity::frontend::Expression const& _lhs);
-	/// Differently shaped fixed arrays: unrolled per-element read/convert/write.
+	/// Aggregate/converting fixed arrays: recursive per-element read/convert/write.
 	std::shared_ptr<awst::Expression> emitEvmConvertingArrayCopy(
 		EvmSlotLowering& _low,
 		solidity::frontend::ArrayType const* _lat,
@@ -134,20 +122,6 @@ private:
 	/// `m = m2` for a local storage-pointer: updates compile-time alias (state-var)
 	/// or emits a runtime bytes assignment (mapping-key param).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleStoragePointerReassign();
-
-	/// Write anywhere below a multi-box array (>32KB): select the outer
-	/// element-aligned page, recursively mutate that element, and replace it.
-	std::optional<std::shared_ptr<awst::Expression>> tryHandleMultiBoxArrayWrite();
-
-	/// Write through any single-box aggregate root (a box-backed state variable
-	/// or a box-keyed storage-ref parameter). Replays an arbitrary member/index
-	/// path over a complete root value and persists it once.
-	std::optional<std::shared_ptr<awst::Expression>> tryHandleBoxedAggregatePathWrite();
-
-	/// A member-chain write rooted in a struct storage-ref PARAM carrying a
-	/// runtime OFFSET. Rebuilds the complete fixed-layout struct slice and
-	/// replaces it once, so nested structs and packed bool fields are generic.
-	std::optional<std::shared_ptr<awst::Expression>> tryHandleOffsetStructRefFieldWrite();
 
 	/// `arr.push() = v`: scope RHS as the LHS push call's explicit value;
 	/// SolArrayMethod folds it into ArrayExtend. Returns ArrayExtend or nullopt.

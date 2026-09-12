@@ -160,7 +160,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleExp(
 	// Solidity-level unchecked `**` uses; the loop lands in the pending
 	// statements the enclosing statement handler drains.
 	return eb::buildBigUIntExpInto(
-		m_pendingStatements, /*_isUnchecked=*/true,
+		m_frame.pendingStatements, /*_isUnchecked=*/true,
 		ensureBiguint(_args[0], _loc), ensureBiguint(_args[1], _loc), _loc);
 }
 

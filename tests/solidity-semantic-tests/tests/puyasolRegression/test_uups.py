@@ -29,7 +29,7 @@ def _funded_account(harness, microalgos=1_000_000):
 
 
 def _update_app(harness, app, artifacts, name, sender_addr, sender_sk,
-                bare=False):
+                bare=False, boxes=None):
     """Native UpdateApplication through the synthesized __uups_update gate."""
     client = harness.localnet.algod
     entry = artifacts.by_contract[name]
@@ -41,7 +41,7 @@ def _update_app(harness, app, artifacts, name, sender_addr, sender_sk,
     selector = Method.from_signature("__uups_update()void").get_selector()
     txn = transaction.ApplicationUpdateTxn(
         sender_addr, params, app.app_id, approval, clear,
-        app_args=None if bare else [selector])
+        app_args=None if bare else [selector], boxes=boxes)
     txid = client.send_transaction(txn.sign(sender_sk))
     return transaction.wait_for_confirmation(client, txid, 4)
 

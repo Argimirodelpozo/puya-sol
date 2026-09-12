@@ -1,9 +1,12 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <map>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace solidity::frontend { class VariableDeclaration; class Type; }
@@ -40,7 +43,13 @@ struct CallBoundaryPlan
 	std::vector<size_t> offsetParams, storageWriteBackParams, memoryWriteBackParams, writeBackParams;
 
 	awst::WType const* augmentReturn(TypeMapper& types, awst::WType const* original) const;
-	void augmentReturns(awst::Block& body, awst::WType const* augmented) const;
+	void augmentReturns(awst::Block& body, awst::WType const* augmented, TypeMapper& types,
+		std::map<int64_t, std::string> const& originalMemoryParams) const;
+	/// Split the emitted signature into the source return and write-back values,
+	/// in writeBackParams order. The caller evaluates the call before unpacking.
+	std::pair<std::shared_ptr<awst::Expression>, std::vector<std::shared_ptr<awst::Expression>>>
+		unpackReturn(std::shared_ptr<awst::Expression> value, awst::WType const* original,
+			awst::SourceLocation const& loc) const;
 };
 
 /// Adapt the actual emitted callee return to its caller's native carrier.

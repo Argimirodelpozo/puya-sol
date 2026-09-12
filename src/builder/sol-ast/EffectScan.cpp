@@ -9,7 +9,7 @@
 namespace puyasol::builder
 {
 
-bool EffectScan::mayWrite(solidity::frontend::Expression const& expression,
+bool EffectScan::requiresSequencing(solidity::frontend::Expression const& expression,
 	eb::ContractContext& context)
 {
 	using namespace solidity::frontend;
@@ -32,12 +32,13 @@ bool EffectScan::mayWrite(solidity::frontend::Expression const& expression,
 				auto const& analysis = context.typeMapper.analysis();
 				auto const* function = SolcFacts::resolveInternalCall(call, context.currentContract);
 				if (function)
-					found |= !analysis.parameterMutations(context.currentContract, *function)
-						.mutatedParameterIndices.empty()
-						|| analysis.callablesWithInlineAssembly.contains(function->id());
+				{
+					auto const& effects = analysis.parameterMutations(context.currentContract, *function);
+					found |= !effects.mutatedParameterIndices.empty()
+						|| !effects.assemblyEffects.canBeRemoved;
+				}
 				else if (type->kind() == FunctionType::Kind::Internal)
-					for (auto const* parameter: type->parameterTypes())
-						found |= parameter->dataStoredIn(DataLocation::Memory);
+					found = true;
 			}
 			return !found;
 		}

@@ -2,10 +2,9 @@
 /// array.length, bytes.length, box-backed array length.
 
 #include "builder/sol-ast/members/SolLengthAccess.h"
-#include "builder/AwstShorthand.h"
-#include "Logger.h"
-#include "builder/builtin/AppCodeSizeLowering.h"
+#include "builder/sol-ast/members/SolAddressProperty.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -17,202 +16,14 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
-#include <variant>
 
 namespace puyasol::builder::sol_ast
 {
 
 using namespace solidity::frontend;
 
-namespace {
-
-// Peel a type-conversion FunctionCall wrapping an IndexRangeAccess:
-// `uint256[](x[s:e])` → returns the inner IndexRangeAccess. Direct
-// IndexRangeAccess passes through unchanged. Returns nullptr for anything
-// else.
-IndexRangeAccess const* peelToSlice(Expression const& expr)
-{
-	if (auto const* rg = dynamic_cast<IndexRangeAccess const*>(&expr))
-		return rg;
-	if (auto const* call = dynamic_cast<FunctionCall const*>(&expr))
-	{
-		if (call->annotation().kind.set()
-			&& *call->annotation().kind == FunctionCallKind::TypeConversion
-			&& !call->arguments().empty())
-		{
-			return peelToSlice(*call->arguments()[0]);
-		}
-	}
-	return nullptr;
-}
-
-} // namespace
-
 namespace
 {
-
-// `addressExpr.code.length` must not build the intermediate `.code` bytes.
-// Approval programs can be larger than AVM's maximum stack byte value, so
-// fetching AppApprovalProgram merely to apply `len` fails for exactly the
-// larger contracts that this predicate is commonly used to inspect.  Query
-// small application metadata instead; Yul extcodesize uses the same helper.
-// Caller guards the `.code` member-access shape.
-std::shared_ptr<awst::Expression> buildCodeSizeLength(
-	eb::ContractContext& ctx, Context& scope,
-	MemberAccess const& codeAccess, awst::SourceLocation const& loc)
-{
-	// EVM stores runtime code only after initcode completes.
-	if (scope.isInConstructor())
-		return awst::makeZero(loc, awst::WType::uint64Type());
-
-	auto const& addressExpr = codeAccess.expression();
-	// Literal/precompile/EOA addresses are not applications under the
-	// compiler's contract-value convention and therefore have no code.
-	if (auto const* fc = dynamic_cast<FunctionCall const*>(&addressExpr);
-		fc && fc->annotation().kind.set()
-		&& *fc->annotation().kind == FunctionCallKind::TypeConversion
-		&& fc->arguments().size() == 1)
-	{
-		if (auto const* lit = dynamic_cast<Literal const*>(fc->arguments()[0].get());
-			lit && lit->token() == Token::Number)
-		{
-			return awst::makeZero(loc, awst::WType::uint64Type());
-		}
-	}
-
-	auto address = ctx.buildExpr(addressExpr);
-	std::shared_ptr<awst::Expression> application;
-	if (builder::shorthand::isCurrentAppAddressGlobal(address.get()))
-	{
-		application = awst::makeAsApplication(
-			awst::makeGlobal("CurrentApplicationID",
-				awst::WType::uint64Type(), loc), loc);
-	}
-	else
-	{
-		Logger::instance().warning(
-			"`address(addr).code.length` resolves the application id from "
-			"the address's last 8 bytes (this compiler's contract-value "
-			"convention). It returns zero for a missing application and the "
-			"allocated AVM program capacity for an existing one; AVM cannot "
-			"observe an oversized program's exact byte length without "
-			"materialising it.", loc);
-		application = awst::makeAsApplication(
-			awst::makeWord32ToUInt64(awst::makeAsBytes(address, loc), loc),
-			loc);
-	}
-
-	return AppCodeSizeLowering::lower(
-		ctx.typeMapper, std::move(application), loc, ctx.preEffects());
-}
-
-// Slice length: `x[s:e].length`, or the cast form `uint256[](x[s:e]).length`.
-// Walk the slice chain, emit bounds asserts, and compute
-//   final_length = end_outer - start_outer - ... (per-level clamped)
-// without materialising the intermediate substring3 bytes.
-// Returns nullptr when the peeled root is not a non-byte array (falls
-// through to the generic build).
-std::shared_ptr<awst::Expression> trySliceLength(
-	eb::ContractContext& ctx, IndexRangeAccess const& rg,
-	int64_t memberAccessId, awst::SourceLocation const& loc)
-{
-	std::vector<IndexRangeAccess const*> slices;
-	Expression const* cur = &rg;
-	while (auto const* r = dynamic_cast<IndexRangeAccess const*>(cur))
-	{
-		slices.push_back(r);
-		cur = &r->baseExpression();
-	}
-	std::reverse(slices.begin(), slices.end());
-
-	auto const* rootArrType = dynamic_cast<ArrayType const*>(cur->annotation().type);
-	if (!rootArrType || rootArrType->isByteArrayOrString())
-		return nullptr;
-
-	auto rootBase = ctx.buildExpr(*cur);
-	std::string idSuffix = std::to_string(memberAccessId);
-	std::string rootVarName = "__slice_root_" + idSuffix;
-	auto rootVar = awst::makeVarExpression(rootVarName, rootBase->wtype, loc);
-	ctx.preEffects().push_back(
-		awst::makeAssignmentStatement(rootVar, rootBase, loc));
-
-	auto makeLen = [&](std::shared_ptr<awst::Expression> arr) -> std::shared_ptr<awst::Expression> {
-		return awst::makeArrayLength(std::move(arr), awst::WType::uint64Type(), loc);
-	};
-
-	std::string lenVarName = "__slice_rootlen_" + idSuffix;
-	auto lenSeed = makeLen(
-		awst::makeVarExpression(rootVarName, rootBase->wtype, loc));
-	auto lenVar = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), loc);
-	ctx.preEffects().push_back(
-		awst::makeAssignmentStatement(lenVar, lenSeed, loc));
-	std::shared_ptr<awst::Expression> cumLength
-		= awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), loc);
-
-	int sliceIx = 0;
-	for (auto const* slice: slices)
-	{
-		std::string sIx = idSuffix + "_" + std::to_string(sliceIx++);
-		std::string startName = "__slice_s_" + sIx;
-		std::string endName = "__slice_e_" + sIx;
-
-		std::shared_ptr<awst::Expression> startExpr;
-		if (slice->startExpression())
-			startExpr = ctx.buildExpr(*slice->startExpression());
-		else
-			startExpr = awst::makeZero(loc);
-		startExpr = builder::TypeCoercion::implicitNumericCast(
-			std::move(startExpr), awst::WType::uint64Type(), loc);
-
-		std::shared_ptr<awst::Expression> endExpr;
-		if (slice->endExpression())
-			endExpr = ctx.buildExpr(*slice->endExpression());
-		else
-			endExpr = cumLength;
-		endExpr = builder::TypeCoercion::implicitNumericCast(
-			std::move(endExpr), awst::WType::uint64Type(), loc);
-
-		auto startVar = awst::makeVarExpression(startName, awst::WType::uint64Type(), loc);
-		ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(startVar, startExpr, loc));
-		auto endVar = awst::makeVarExpression(endName, awst::WType::uint64Type(), loc);
-		ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(endVar, endExpr, loc));
-
-		{
-			auto cmp = awst::makeNumericCompare(
-				awst::makeVarExpression(startName, awst::WType::uint64Type(), loc),
-				awst::NumericComparison::Lte,
-				awst::makeVarExpression(endName, awst::WType::uint64Type(), loc),
-				loc);
-			ctx.preEffects().push_back(awst::makeExpressionStatement(
-				awst::makeAssert(std::move(cmp), loc, "slice: start > end"), loc));
-		}
-		{
-			auto cmp = awst::makeNumericCompare(
-				awst::makeVarExpression(endName, awst::WType::uint64Type(), loc),
-				awst::NumericComparison::Lte,
-				cumLength,
-				loc);
-			ctx.preEffects().push_back(awst::makeExpressionStatement(
-				awst::makeAssert(std::move(cmp), loc, "slice: end > length"), loc));
-		}
-
-		auto diff = awst::makeUInt64BinOp(
-			awst::makeVarExpression(endName, awst::WType::uint64Type(), loc),
-			awst::UInt64BinaryOperator::Sub,
-			awst::makeVarExpression(startName, awst::WType::uint64Type(), loc),
-			loc);
-
-		std::string nextLenName = "__slice_l_" + sIx;
-		auto nextLenVar = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), loc);
-		ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(nextLenVar, diff, loc));
-		cumLength = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), loc);
-	}
-
-	return cumLength;
-}
 
 // --evm-storage-layout: dynamic storage array length = its slot's word.
 // Engaged result may hold nullptr (resolve error, already logged);
@@ -221,34 +32,25 @@ std::optional<std::shared_ptr<awst::Expression>> trySlotModeArrayLength(
 	eb::ContractContext& ctx, Context& scope, Expression const& baseExpr,
 	awst::SourceLocation const& loc)
 {
-	if (!ctx.typeMapper.profile().evmStorageLayout)
-		return std::nullopt;
-	auto const* arrType = dynamic_cast<ArrayType const*>(
-		baseExpr.annotation().type);
-	if (!arrType || !arrType->dataStoredIn(solidity::frontend::DataLocation::Storage)
-		|| !EvmSlotLowering::isStorageStateRef(baseExpr))
+	auto const* arrType = dynamic_cast<ArrayType const*>(baseExpr.annotation().type);
+	if (!arrType || !arrType->dataStoredIn(DataLocation::Storage)
+		|| !((ctx.typeMapper.profile().evmStorageLayout && EvmSlotLowering::isStorageStateRef(baseExpr))
+			|| EvmSlotLowering::isSlotHandleRef(baseExpr, ctx, scope)))
 		return std::nullopt;
 
-	if (!arrType->isDynamicallySized() && !arrType->isByteArrayOrString())
+	EvmSlotLowering low(ctx, scope, loc);
+	auto addr = low.resolve(baseExpr);
+	if (!addr) return std::shared_ptr<awst::Expression>{};
+	// Resolve/evaluate the receiver even when solc provides a constant length.
+	if (!arrType->isDynamicallySized())
 	{
-		std::ostringstream oss;
-		oss << arrType->length();
-		return awst::makeIntegerConstant(oss.str(), loc,
+		ctx.emitSequencedOperand({}, addr->slot, true, loc);
+		return awst::makeIntegerConstant(arrType->length().str(), loc,
 			arrType->length() > std::numeric_limits<uint64_t>::max()
 				? awst::WType::biguintType() : awst::WType::uint64Type());
 	}
 	if (arrType->isByteArrayOrString())
-	{
-		EvmSlotLowering low(ctx, scope, loc);
-		auto addr = low.resolve(baseExpr);
-		if (!addr)
-			return std::shared_ptr<awst::Expression>{};
 		return awst::makeLen(low.readBytesValue(*addr), loc);
-	}
-	EvmSlotLowering low(ctx, scope, loc);
-	auto addr = low.resolve(baseExpr);
-	if (!addr)
-		return std::shared_ptr<awst::Expression>{};
 	return EvmSlotLowering::readSlotWord(addr->slot, loc);
 }
 
@@ -347,12 +149,13 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 	auto const& baseExpr = baseExpression();
 
 	if (auto const* codeAccess = dynamic_cast<MemberAccess const*>(&baseExpr);
-		codeAccess && codeAccess->memberName() == "code")
-		return buildCodeSizeLength(m_ctx, m_scope, *codeAccess, m_loc);
+		codeAccess && codeAccess->memberName() == "code"
+		&& dynamic_cast<AddressType const*>(codeAccess->expression().annotation().type))
+		return SolAddressProperty::buildCodeMetadata(m_ctx, m_scope,
+			codeAccess->expression(), SolAddressProperty::CodeProperty::Size, m_loc);
 
-	if (auto const* rg = peelToSlice(baseExpr))
-		if (auto sliceLen = trySliceLength(m_ctx, *rg, m_memberAccess.id(), m_loc))
-			return sliceLen;
+	if (auto slice = SolIndexRangeAccess::resolveSlice(m_ctx, baseExpr, m_loc))
+		return slice->length;
 
 	if (auto slotLen = trySlotModeArrayLength(m_ctx, m_scope, baseExpr, m_loc))
 		return *slotLen;
@@ -368,16 +171,11 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				return boxLen;
 		}
 
-	auto base = buildExpr(baseExpr);
-
-	// bytesN.length → compile-time constant N (fixed-size bytes)
-	if (auto const* fixedBytes = dynamic_cast<awst::BytesWType const*>(base->wtype))
+	auto base = m_ctx.pinIfWriteBacks(m_ctx.lower(baseExpr, false), m_loc);
+	if (auto const* fixedBytes = dynamic_cast<FixedBytesType const*>(baseExpr.annotation().type))
 	{
-		if (fixedBytes->length().has_value())
-		{
-			auto c = awst::makeIntegerConstant(*fixedBytes->length(), m_loc);
-			return c;
-		}
+		m_ctx.queuePreExpression(std::move(base), m_loc);
+		return awst::makeIntegerConstant(fixedBytes->numBytes(), m_loc);
 	}
 
 	// bytes.length → len intrinsic

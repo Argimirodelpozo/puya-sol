@@ -110,6 +110,33 @@ bool isArc4EncodedType(awst::WType const* _type)
 	}
 }
 
+std::optional<std::vector<uint64_t>> arc4FieldBitOffsets(awst::ARC4Struct const& _type)
+{
+	auto const fields = arc4StructFieldTypes(&_type);
+	std::vector<uint64_t> offsets;
+	auto total = EncodedSize::fixed(0);
+	size_t index = 0;
+	bool valid = visitAggregateRuns(fields, [&](awst::WType const* field, EncodedSize size) {
+		if (!size.fixedBytes()) return false;
+		auto bit = total.times(8).fixedBytes().value();
+		if (field)
+		{
+			offsets.push_back(bit);
+			++index;
+		}
+		else
+			while (index < fields.size() && fields[index] == awst::WType::arc4BoolType())
+			{
+				offsets.push_back(bit++);
+				++index;
+			}
+		total = total.plus(size);
+		return total.fixedBytes().has_value();
+	});
+	if (!valid) return std::nullopt;
+	return offsets;
+}
+
 std::shared_ptr<awst::Expression> makeZeroBytesRuntime(
 	int _n,
 	awst::WType const* _targetType,

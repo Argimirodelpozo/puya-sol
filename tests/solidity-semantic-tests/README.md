@@ -621,6 +621,456 @@ snapshots, typed constant chains, and non-UTF-8 byte literals. No LocalNet
 reset, dependency change, memory-model redesign, CI change, or XPASS review
 was performed for this batch.
 
+### Expression/member refactor verification (2026-09-10)
+
+The `sol-ast/exprs` and `sol-ast/members` audit items 1–7 are implemented:
+
+1. Paged-array, boxed-aggregate and offset-reference stores share
+   `ResolvedLValue`. RHS evaluation precedes address effects; snapshots happen
+   afterwards, and each tuple store observes earlier component writes.
+2. Selectors use solc declarations or runtime external-function values, with
+   receivers, conditional branches and call options evaluated exactly once.
+3. Array lengths recognize logical storage handles in either layout; fixed
+   lengths preserve receiver effects. Slice indexing/length share checked,
+   full-width bounds and offset calculation.
+4. Bare and qualified constants share declared-type `ConversionPlan` lowering.
+5. Live calldata struct scalar fields use solc member offsets and the shared
+   validated EVM-word decoder. Unsupported runtime members are errors, while
+   solc metadata-only type/function expressions remain inert.
+6. Signed arithmetic lives in the integer builder, with common/mobile operand
+   types supplied by solc. The existing signed-multiply backend workaround is
+   retained, and both integer and bytesN shifts use the RHS's own mobile type.
+7. Field/element reads share typed ARC4 decoding, including signed carriers
+   and writable bytes views. Enum ordinals and internal-call resolution use
+   solc facts instead of local reconstruction.
+
+The calldata field tests also required the existing synthetic encoder to unwrap
+UDVTs before choosing word padding. This is a narrow signed/bytesN encoding
+correction, not the deferred canonical-calldata redesign (item 8). Address
+metadata policy (item 9) and the memory model were unchanged at this checkpoint;
+item 9 is verified separately below.
+
+The added matrix covers legacy/via-IR behavior, named/slot storage and ARC4/EVM
+ABI profiles: **32 cases, 296 runtime checks**. The same assertions pass **74
+independent solc 0.8.34/PyEVM checks** (37 per codegen). The final repair-focused
+run reports **63 passed, 2 xpassed, 1 known failure**.
+
+Final full verification: **2,118 passed, 1 failed, 100 xfailed, 39 xpassed**
+(2,258 total), in 648.64 seconds. Case-by-case comparison confirms all **2,226
+pre-existing outcomes are unchanged**, all **32 added cases pass**, and no
+cases were removed. The sole failure remains
+`test_dce_reverting_subexpr_literal_folds`: the pinned Puya backend returns zero
+for `divdivShl(uint256)(0)` instead of reverting. It is still an ordinary
+failure, not an accepted divergence or an xfail. Native CTests pass **21/21**,
+standard-library runtime tests **20/20**, and chainwide harness unit tests
+**91/91**.
+
+Compiler SHA-256, unchanged throughout final validation:
+`3119e56eeace9d845e29f56a54f09da942ac19eca4be371b9627d7b9f68420d5`.
+Against `513468b7e1a75b112cb40ba965855406423bc9c3`, `src/` has **582 added,
+1,707 removed lines (net −1,125)**. Excluding comments/blanks with cloc 1.90,
+the reduction is **819 code lines**; `src/builder` now contains **47,975**.
+
+Evidence is retained locally in `/tmp/puya-sol-exprs-members-20260910.UIp7Rk/`:
+`semantic-final.xml`, `semantic-final.log`, `semantic-comparison.json`,
+`focused-repair-2.xml`, `oracle.log`, `ctest-verified-2.log`,
+`stdlib-verified.xml`, and `chainwide-verified.xml`. Earlier failed runs remain
+for diagnosis and are not the final result. The full run used
+`PUYASOL_LOCALNET_RESET=0`, the `semantic-cache` in that directory, and
+`pytest tests/ framework/ -q -n 3 --tb=short` with a reporting-only live-failure
+hook. No ledger reset, marker changes, dependency changes, CI changes, or XPASS
+review were performed. `memory_redesign.md` remains untracked.
+
+### Address metadata verification (2026-09-10)
+
+Expression/member audit item 9 now shares `.code`, `.code.length` and
+`.codehash` receiver lowering. Only self is hidden during construction;
+deployed foreign applications remain queryable and receiver effects run once.
+Zero cannot alias the current AVM application, and noncanonical address prefixes
+do not resolve by matching low application-id bits. Solc's receiver type also
+distinguishes an ordinary struct field named `code` from address metadata.
+
+Approval-program bytes/hashes and capacity-based sizes remain warning-only AVM
+adaptations. Arbitrary `.codehash` receivers, including nonzero literals outside
+the recognized precompile convention, are compile errors. Direct self hashes
+empty code during construction. No canonical-calldata or memory-model redesign
+was included. See [EVM divergences](../../EVM_DIVERGENCE.md).
+
+The new tests cover both sequencing modes and ABI profiles, constructor
+inspection, receiver effects, runtime self aliases, zero/prefix validation,
+literal application ids, actual approval-program bytes/hashes and diagnostics.
+All **13 new cases pass**; final focused verification is **16 passed**.
+Independent solc 0.8.34/PyEVM checks pass **20 portable assertions** (10 per
+codegen). AVM program bytes/hashes are compared with algod's actual program,
+not with EVM bytecode identity.
+
+Final full suite: **2,131 passed, 1 failed, 100 xfailed, 39 xpassed** (2,271
+total), in 632.40 seconds. Case-by-case comparison confirms all **2,258 prior
+outcomes are unchanged**, all 13 new cases pass, and none were removed. The
+sole failure is still `test_dce_reverting_subexpr_literal_folds`, the known
+Puya DCE issue described above. Native CTests pass **21/21**, standard-library
+runtime tests **20/20**, and chainwide harness units **91/91**. The first full
+run caught a regression involving an unused `.transfer` member reference;
+its prior handling was restored before this complete rerun.
+
+Final compiler SHA-256:
+`76af14c939542aa65f492ad473706cd9d60c9ccaa3564bc67865f4d7f8b7fa92`.
+This item alone removes **85 total lines / 30 code lines** from `src/`, relative
+to the preceding 1–7 checkpoint. `src/builder` contains **47,945 code lines**
+(cloc 1.90, excluding comments and blanks).
+
+Evidence: `/tmp/puya-sol-address-metadata-20260910.sLp6IJ/`, particularly
+`semantic-verified.xml`, `semantic-verified.log`, `semantic-comparison.json`,
+`focused-verified.xml`, `oracle.log`, `ctest-verified.log`,
+`stdlib-verified.xml`, and `chainwide-verified.xml`. Earlier failed runs are
+retained for diagnosis. The full run used `PUYASOL_LOCALNET_RESET=0` and the
+preceding checkpoint's content-addressed `semantic-cache`; no ledger reset,
+dependency change or marker change was made. Additional calls-audit probes in
+the evidence directory identify open issues; they are not passing regression
+tests or fixes included in this batch.
+
+### Assembly audit (all nine items) — 2026-09-11
+
+This working-tree batch uses solc's 256-bit constant and side-effect facts for
+Yul arithmetic, operand capture and operation-specific offset conversion. It
+separates calldata from scratch memory, checks complete access extents, preserves
+partial and cross-page copies, shares Yul application-call transport and
+precompile buffer handling, and reuses the canonical ABI codec and solc storage
+layout facts. ARC4 field offsets remain target-owned. Outlined Yul functions now
+share an immutable context and construct fresh lowering frames; obsolete memory
+self-stores are removed. There is no general memory-model or terminating-Yul
+calling-convention redesign. See the [bounded-buffer policy](../../EVM_DIVERGENCE.md#bounded-yul-buffers-and-precompiles)
+for retained capacities, precompile restrictions and high-level-call differences.
+
+Thirty-two new parameterized cases cover both Solidity sequencing modes, ABI
+profiles and storage layouts. They exercise word signedness, read/write order,
+full-width constants, distant calldata offsets, empty ranges, page boundaries,
+exact output windows, return-data sharing, packed fields, nested ABI values and
+nonzero BN254 pairing products. Independent pinned-solc/PyEVM oracles passed
+**176 checks** across both codegens (54 words/order, 102 precompile buffers,
+8 layout, 2 receive, 10 nonzero pairing checks).
+
+The preceding frozen calls checkpoint had **2,178 passed, 9 failed, 100 xfailed,
+39 xpassed** (2,326 cases). Eight of those failures are fixed here:
+`abi.encodeCall` now retains canonical EVM selectors/results even on the ARC4
+transport fast path, and packed signed deferred-constructor values select their
+low declared-width bytes from the native carrier. Tests also now distinguish
+`receive()` from `fallback()` for empty Yul call data, independently confirmed
+against solc, and explicitly provide the ten-box array-copy fixture's post-init
+resource budget. No value assertions were relaxed. CLI gas policy tests now
+acknowledge `gas()` because its previously skipped operand is actually evaluated.
+
+Final compiler SHA-256:
+`a94c1487d6b2d1226a2e0e3f4cd20c679187442ef434761ce8baabbffbec681a`.
+Focused LocalNet checks pass **49/49**, AVM stdlib **20/20**, native CTests
+**21/21**, and offline harness/chainwide units **104/104**. The final full
+semantic/harness run completed in **830.91 seconds** with three workers:
+**2,218 passed, 1 failed, 100 xfailed, 39 xpassed** (2,358 cases).
+Case-by-case comparison confirms eight baseline failures became passes,
+the other 2,318 prior outcomes are unchanged, all 32 new cases pass, and
+none were removed. The sole failure remains
+`test_dce_reverting_subexpr_literal_folds`, the pinned Puya DCE/divide-by-zero
+bug described above. This is not an all-green suite or an accepted divergence.
+No expectation markers were changed. The compiler hash stayed fixed throughout.
+
+Source code lines, including new files and excluding comments/blanks (cloc):
+`src/` **53,434 → 52,377 (−1,057)**; `src/builder/assembly/`
+**8,434 → 7,229 (−1,205)**. These are relative to the dirty pre-assembly
+snapshot, not to branch HEAD, which also predates the expression/calls work.
+
+Generated approval sizes are a separate measurement. With identical cached
+historical inputs and profiles, PLONK is **16,624 → 14,033 bytes** and Groth16
+is **8,182 → 8,820 bytes**. Initial buffer-correctness changes grew both programs;
+sharing checked offset, padded-read and exact-range routines recovered that
+growth for PLONK but leaves a 638-byte increase for Groth16. Honk still fails
+the pinned backend's signed branch-displacement encoding on both baseline and
+final compilers. These are compile-only measurements, not proof replay or
+deployment certification.
+
+Evidence: `/tmp/puya-sol-assembly-20260911.2PlqIp/`, including
+`build-stage5-repaired.log`, `focused-stage5-retry.xml`, `native-stage5.log`,
+`semantic-final.xml`, `semantic-final.log`, `outcome-comparison.json`,
+`stdlib-stage5.xml`, `offline-stage5.xml`, `historical-baseline/summary.json`,
+`historical-stage5/summary.json`, oracle scripts/logs and cloc reports.
+Earlier partial/failed runs are retained. The resumed build repaired four
+empty object files left by interruption; the initial stage5 focused attempt
+had KMD setup errors, not runtime outcomes. Only the stopped KMD service was
+started, with its existing configuration. `PUYASOL_LOCALNET_RESET=0` remained
+set; there was no ledger reset, dependency change, CI change or marker review.
+At that checkpoint, the codec/contract/itxn audit was discussion-only; its
+subsequent implementation is recorded below. `memory_redesign.md` remains
+untouched and untracked.
+
+### Codec, contract and inner-call checkpoint — 2026-09-11
+
+The nine approved boundary changes share scalar/slot facts, precompile byte
+algorithms, canonical AVM intrinsic declarations, getter projections, creation
+reachability, reference resolution, calldata reconstruction and return-data
+publication. Full application addresses are validated before compacting them.
+Only prefixed return records are returndata; ordinary void-method events are
+not, and explicit Yul return bytes remain observable. Mixed fresh/existing
+modifier arguments preserve the selected reference without a memory-model change.
+
+The frozen pre-ABI compiler was
+`6e7afe54ab3669ad1293807f4f06053f1daeea052ed2f798c33483fa9c9c322c`.
+Its completed semantic/harness run had **2,264 passed, 3 failed, 100 xfailed,
+39 xpassed** (2,406 cases including 13 harness units, 1,439.33 seconds).
+Besides the known Puya DCE failure, it exposed
+an obsolete pairing-length expectation and the timing-sensitive `Round - 2`
+seed mapping. The pairing test now accepts every whole 192-byte pair count
+and passed a targeted rerun; the seed mapping is fixed in the next batch.
+Those reruns are not substituted into the full-run totals.
+
+Code-only `src/` size was **52,377 → 51,924 (−453)**. Evidence is retained in
+`build/boundary-validation.Z1Rx57/`, including the full JUnit report and
+98 solc/PyEVM boundary/reference oracle checks across legacy and via-IR.
+
+### ABI and environment intrinsics — 2026-09-11
+
+All nine approved findings are implemented. Packed encoding shares solc-derived
+width/alignment facts and the canonical word codec, including UDVTs. Decode
+operands are captured once; selector folding preserves receiver/branch effects.
+Decode accepts solc's bounded unaligned offsets while retaining bounds and
+scalar-padding checks. Raw literals retain their bytes, including non-UTF8
+values; conditional literal branches follow solc's mobile-type rule.
+
+Intrinsic dispatch uses solc `MagicType`, so locals named `block`, `msg` or
+`tx` no longer collide with builtins. The obsolete `IntrinsicMapper` files,
+string-based ABI dispatch, result wrappers and duplicate capability checks are
+removed. Calldata source selection is shared and explicit; xchain claims are
+excluded, short selectors are padded, and direct constructor reads are empty.
+The opted-in Solidity/Yul seed mapping uses `FirstValid - 1`, with a warning
+that this predictable, caller-selectable seed is **not secure randomness**.
+See [the transport/seed conventions](../../EVM_DIVERGENCE.md#block-seed-and-calldata-conventions).
+
+Aggregate decoder helpers share one per-contract registry. Fixed-layout arrays
+preallocate buffers and use typed indexed writes; dynamic tails retain ARC4
+rebasing. Arrays of 256-bit integers or `bytes32` use a type-proven word copy;
+addresses and function pointers do not. One/two-element fixed arrays remain
+unrolled. These choices were measured: general small-word loops save code but
+can cost more opcodes, so this is not an unconditional runtime improvement.
+
+Final compiler SHA-256:
+`b1387784eb122126464d86e02b042fea305d6eeaea5df5cd16ac2d09c0a5178d`.
+Focused ABI/fallback runtime tests pass **47/47**, native CTests **21/21**,
+AVM stdlib **20/20**, offline harness/historical units **104/104**, and the
+independent solc 0.8.34/PyEVM oracle **104/104** across legacy and via-IR.
+The fresh complete semantic run finished in **936.02 seconds** with three
+workers: **2,273 passed, 1 failed, 100 xfailed, 39 xpassed** (2,413 cases).
+The sole failure is the known pinned-Puya
+`test_dce_reverting_subexpr_literal_folds`: `divdivShl(0)` returns zero instead
+of reverting. This remains an open backend bug, not an accepted divergence
+or an all-green suite.
+
+Case-by-case comparison confirms the two other baseline semantic failures now
+pass, the other **2,391 existing semantic outcomes are unchanged**, all
+**20 added cases pass**, and no semantic cases were removed. The baseline's
+13 harness units all pass in the separate final 104-test offline run; they
+are not silently added to the new full semantic totals. The compiler hash
+remained unchanged throughout the complete run.
+
+Code-only size, excluding comments/blanks: `src/` **51,924 → 51,299 (−625)**;
+`abi/` **1,712 → 1,182 (−530)**, and the 40-code-line intrinsic mapper is gone.
+Same-source cached historical compilation produces PLONK SP1Verifier
+**13,982 → 13,857 bytes** and Groth16 SP1Verifier **8,718 → 7,909 bytes**.
+These are compile/size measurements, not historical replay or production
+deployment certification. LocalNet was not reset; dependency pins, CI and
+expectation markers are unchanged. `memory_redesign.md` is untouched/untracked.
+
+Evidence is retained in `build/abi-fixes.zUDpmO/`: final compiler, build/native
+logs, focused/full/stdlib/offline JUnit reports, oracle script/log, cloc reports
+and before/after array size/opcode measurements. Earlier failed and partial
+runs are retained separately, including the packed raw-literal regression
+found during the first full attempt and corrected before the final run.
+
+### Storage refactors — 2026-09-11
+
+All eight approved storage findings are implemented. Fixed-array copies use
+solc element/layout facts: recursive aggregate copies retain nested dynamic
+contents, scalar word copies mask padding/tails, and self-copy is a no-op.
+Named-layout copies rebuild ARC4 offsets for fixed arrays of dynamic elements.
+Inherited immutables have distinct physical identities and their named cells
+are included in slot-mode ARC-56/schema allocation. Sparse element strides
+retain solc's full width instead of an unsigned-int implementation limit.
+
+Storage paths share logical bounds, single evaluation and checked AVM narrowing.
+Projection traversal and explicit box lifecycle facts replace duplicated shape
+tests. Runtime planning uses solc's reachable callables, including modifiers;
+transient declarations alone no longer require persistent sparse storage.
+Unused layout data, default-value forwarding and duplicate copy code are gone.
+Actual AVM encoded sizes drive capacity checks. At this checkpoint placement
+changes were opt-in; encoded-size placement became the named-layout default
+on 2026-09-12 and the flag was removed. See
+[compatibility and retained copy limits](../../docs/storage-format.md#named-cell-placement-policy).
+
+Final compiler SHA-256:
+`729d1811311fbfa2007c627ae5b1bd6f7602a2536008ebb761397bef3d4b0bfd`.
+The complete semantic run selected `tests/` with three workers and finished
+in **1,297.16 seconds**: **2,306 passed, 1 failed, 100 xfailed, 39 xpassed**
+(2,446 cases). The sole failure remains the pinned-Puya DCE bug
+`test_dce_reverting_subexpr_literal_folds`: `divdivShl(0)` does not revert.
+All **2,413 baseline outcomes are unchanged**, all **33 added cases pass**,
+and no cases were removed. This is not an all-green suite.
+
+The focused storage/array/getter run finished with **360 passed, 4 xfailed,
+1 xpassed**, no failures. Native CTests pass **21/21**, AVM stdlib **20/20**,
+offline harness/historical units **104/104**, and independent solc 0.8.34/PyEVM
+reference checks **48/48**, covering legacy and via-IR. Compiler and test-input
+hashes remained unchanged throughout the full run.
+
+Code-only counts exclude comments and blank lines: `src/` **51,299 → 51,053
+(−246)**, `src/builder/` **44,601 → 44,341 (−260)**, and `storage/` **2,247 →
+2,079 (−168)** across 20 storage files. The unused-assembly/transient fixture
+shrinks **585 → 474 bytes**. At this checkpoint the legacy-placement fixture
+remained byte-for-byte identical at **1,558 bytes**; encoded-size placement
+produced **1,536 bytes**.
+Cached PLONK and Groth16 SP1 verifiers remain byte-for-byte identical at
+**13,857** and **7,909 bytes**. These are compile/size checks, not replay or
+deployment certification. The initial sandboxed historical compiler-service
+attempt stalled; the completed measurement used the one-shot backend.
+
+Evidence is retained in `build/storage-refactors.NtmHTk/`: frozen compiler,
+build/native logs, focused/full/stdlib/offline reports, outcome comparison,
+oracle script/log, input hashes, cloc reports and bytecode measurements.
+Earlier failed/stopped attempts are retained separately. LocalNet was not
+reset; backend pins, CI and expectation markers are unchanged.
+`memory_redesign.md` remains untouched and untracked.
+
+### Default named-cell placement — 2026-09-12
+
+Encoded-size placement is now the default outside EVM-slot storage; the
+placement flag has been removed. Reference transport uses the same actual
+AVM encoding facts instead of solc's conservative EVM-slot upper bound.
+Struct types used as mapping values retain box-backed roots so their shared
+box-key reference representation remains consistent. EVM-slot placement is
+unchanged. Existing named-layout applications may require explicit migration;
+see [storage compatibility](../../docs/storage-format.md#named-cell-placement-policy).
+
+Final compiler SHA-256:
+`7b781f8dd3a571dd09a40eba591cb1a0bc7c6faa4c4f012e18353e91f168794a`.
+The full `tests/` run with four workers finished in **1,399.54 seconds**:
+**2,326 passed, 1 failed, 100 xfailed, 39 xpassed** (2,466 cases). The sole
+failure is the unchanged pinned-Puya DCE bug
+`test_dce_reverting_subexpr_literal_folds`: `divdivShl(0)` does not revert.
+All **2,441 retained baseline outcomes are unchanged**. Four old placement
+cases and the old flag-conflict case were intentionally replaced; all **25
+added/replacement cases pass**, for a net increase of 20. No expectation
+markers were changed, and this is not an all-green suite.
+
+Focused storage facts pass **53/53**, native CTests **21/21**, AVM stdlib
+**20/20**, offline units **104/104**, and solc 0.8.34/PyEVM reference checks
+**54/54**. Coverage includes both ABIs, legacy/via-IR, named/slot storage,
+exact schema allocation, the 128/129-byte placement boundary, mutation,
+getters, delete, library/free references and mapping-valued struct roots.
+The boundary fixture's bytecode and schema are identical in four comparisons:
+new named default versus the former opt-in, and slot mode versus the previous
+slot mode, each with both ABIs. Compiler and test-input hashes stayed fixed.
+
+Code-only counts: `src/` **51,053 → 51,038 (−15)**, `src/builder/`
+**44,341 → 44,340 (−1)**, and `storage/` **2,079 → 2,081 (+2)**.
+Evidence is in `build/storage-default.kcRAgt/`, including frozen compilers,
+JUnit reports, the per-case comparison, oracle checks and emission comparisons.
+The concurrent top-level builder/runner audit had separate scratch probes and
+unimplemented findings at this checkpoint; they are not part of these totals.
+LocalNet was not reset; backend pins and CI are unchanged.
+
+### Top-level builder and runner fixes — 2026-09-12
+
+The nine audited items are implemented. Reference-boundary plans now cover
+private and internally called public methods, follow declaration-ID alias
+facts, and distinguish local rebinding from referent mutation. Original entry
+references survive local rebinding; named return parameters retain their
+initialization, and mutation summaries use the actual solc host context.
+This is a repair of the existing mixed representation, not the deferred
+whole-memory redesign or a claim of complete memory-alias support.
+
+The name-based `efficientKeccak256` body substitution is gone. LogicSig roots
+use the bundled declaration identity and a unique resolved entry, retaining
+reachable helpers. Event selectors and logs share their encoding types, with
+declared argument conversions and delayed encoding of mutable references;
+EVM selectors still use solc's canonical signature. All portable library ABI
+roots are emitted; host-only reference interfaces diagnose the missing
+standalone artifact explicitly. Existing event/topic divergences remain.
+
+Orchestration reuses the analyzed contract/function inventory. Returned roots
+retain their WType arena; naming and contract emission have scoped lifetimes;
+target choices are separated from derived storage facts. Source spans use
+their owning imported file and solc positions. The direct-exec runner now
+distinguishes launch failures and supports caller-controlled cancellation or
+deadlines with process-group cleanup, without imposing a CLI timeout.
+
+Final compiler SHA-256:
+`6e53d707e6c64cf2b0d4a5a5d9ff5326e79848ca5c0f6ce37aece55d82eed321`.
+Full semantic validation: **2,349 passed, 1 failed, 100 xfailed, 39 xpassed**
+(2,489 cases), **1,075.32 seconds**. All **2,466 retained baseline outcomes
+are unchanged** and all **23 new cases pass**. The sole failure remains
+`test_dce_reverting_subexpr_literal_folds`, the known pinned-Puya DCE bug;
+this is not an all-green suite. No expectation markers were changed.
+
+The expanded focused run passes **82 tests with 2 expected failures**;
+native CTests pass **22/22**, AVM stdlib **20/20**, offline units **104/104**,
+and independent solc 0.8.34/PyEVM checks **50/50** across legacy/via-IR.
+Compiler and source/test-input hashes stayed fixed throughout the final run.
+Earlier failing attempts and their corrections are retained as separate evidence.
+
+Code-only counts: `src/` **51,038 → 50,966 (−72)**; `src/builder/`
+**44,340 → 44,199 (−141)**. Evidence: `build/builder-runner.aNBDlP/`.
+LocalNet was not reset; backend pins and CI are unchanged.
+`memory_redesign.md` remains untouched and untracked.
+
+### Loose sol-ast fixes and cleanup — 2026-09-12
+
+All nine approved items are implemented. Local bindings now belong to each
+emitted function frame, with explicit scoped modifier/constructor sharing.
+Member dispatch uses solc receiver types and declarations; function-address,
+selector and unused-option projections preserve evaluation effects. Expression
+locations retain their complete solc source identity.
+
+Storage-pointer shortcuts consume one cached, exact solc type/layout proof
+and the normal named/bound argument sequencing. Unproven shapes keep their
+call bodies. Prepared solc/Yul effects propagate through the existing host-aware
+call graph and reference-mutation summaries. Slot reads, writes and clears share
+declared-type leaf rules, including fixed arrays, packed account auxiliary
+words, dynamic bool packing and nested-array tail clearing.
+
+ResolvedLValue has a typed destination and reusable source classification;
+it freezes an address without permanently snapshotting the container's contents.
+Delayed writes reload the container before changing the selected field. Small
+move-order, pinning, fact-lookup and stale-comment cleanup is included. This
+repairs the existing representation; it does not implement the deferred memory
+redesign or change the accepted staticcall policy.
+
+Final compiler SHA-256:
+`2e4dde55f3a00d0a715d7b36013f4a9ac5dbc23d21224c9425bca6a0e4e07d79`.
+Final full semantic run: **2,381 passed, 1 failed, 100 xfailed, 39 xpassed**
+(2,521 cases), **347.68 seconds**. All **2,489 retained baseline outcomes
+are unchanged**, and all **32 new cases pass**. The sole failure remains
+`test_dce_reverting_subexpr_literal_folds`, the known pinned-Puya backend bug;
+this is not an all-green result. No failure markers or backend pins changed.
+Native CTests pass **22/22**, offline units **104/104**, AVM stdlib **20/20**,
+and independent solc 0.8.34/PyEVM reference checks **64/64**.
+
+The first full run exposed two assertions expecting the old fixed-array cap
+diagnostic. The compiler still rejected length 258 at the unchanged 64-element
+limit; only the expected message was updated. All four conversion-loop checks
+then passed. A subsequent full repeat encountered a LocalNet outage; its
+connection-failure totals are preserved separately, not counted as successful
+validation. After Algod/KMD recovered, the final full run above completed on the
+same compiler. Frozen compiler/source/test/config hashes were verified. No
+LocalNet restart or ledger reset was performed.
+
+Code-only counts: `src/` **50,966 → 50,881 (−85)**; `src/builder/`
+**44,199 → 44,114 (−85)**. One packed-struct/nested-array measurement shrinks
+approval code **761 → 706 bytes** and simulation budget **667 → 576**, with
+identical results for all three inputs. Concurrent compile timings were noisy;
+no universal size/runtime improvement or compile-speed claim is made.
+
+Evidence: `build/sol-ast-fixes.5PjauP/`, especially `semantic6.log/xml`,
+`outcome-comparison6.log`, frozen manifests, oracle logs and measurement scripts.
+The subsequent `proxies-audit.md` and `builtin-audit.md` in that directory are
+read-only findings, not additional implemented changes. The worktree remains
+uncommitted; `memory_redesign.md` is unchanged and untracked.
+
 ### Commands
 
 Build the frontend and set up the pinned Puya environment as described in the

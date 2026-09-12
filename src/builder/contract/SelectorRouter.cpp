@@ -8,6 +8,54 @@
 namespace puyasol::builder
 {
 
+std::shared_ptr<awst::Expression> reconstructCalldata(
+	CalldataTransport transport, awst::SourceLocation const& loc,
+	std::shared_ptr<awst::Expression> selector)
+{
+	auto count = awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc);
+	auto data = selector ? std::move(selector) : awst::makeAppArg(0, loc);
+	// Explicit native compatibility: values remain in their ARC4 wire format.
+	int const slots = transport == CalldataTransport::Arc4Arguments ? 16 : 2;
+	for (int i = 1; i < slots; ++i)
+	{
+		auto present = awst::makeNumericCompare(count,
+			transport == CalldataTransport::Arc4Fallback ? awst::NumericComparison::Eq : awst::NumericComparison::Gte,
+			awst::makeIntegerConstant(i + 1, loc), loc);
+		data = awst::makeConcat(std::move(data), awst::makeConditional(
+			std::move(present), awst::makeAppArg(i, loc), awst::makeBytesConstant({}, loc),
+			awst::WType::bytesType(), loc), loc);
+	}
+	return awst::makeConditional(awst::makeNumericCompare(count,
+		awst::NumericComparison::Gt, awst::makeZero(loc), loc),
+		std::move(data), awst::makeBytesConstant({}, loc), awst::WType::bytesType(), loc);
+}
+
+void emitReturnLog(std::shared_ptr<awst::Expression> payload,
+	awst::SourceLocation const& loc, std::vector<std::shared_ptr<awst::Statement>>& out)
+{
+	auto log = awst::makeIntrinsicCall("log", awst::WType::voidType(), loc);
+	log->stackArgs.push_back(awst::makeConcat(
+		awst::makeBytesConstant({0x15, 0x1f, 0x7c, 0x75}, loc), std::move(payload), loc));
+	out.push_back(awst::makeExpressionStatement(std::move(log), loc));
+}
+
+void emitFallbackCall(solidity::frontend::FunctionDefinition const& function,
+	std::string const& method, std::shared_ptr<awst::Expression> calldata,
+	awst::SourceLocation const& loc, std::vector<std::shared_ptr<awst::Statement>>& out)
+{
+	bool const returnsBytes = !function.returnParameters().empty();
+	auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{method},
+		returnsBytes ? awst::WType::bytesType() : awst::WType::voidType(), loc);
+	if (!function.parameters().empty()) awst::pushCallArg(call->args, std::move(calldata));
+	if (returnsBytes) emitReturnLog(std::move(call), loc, out);
+	else
+	{
+		out.push_back(awst::makeExpressionStatement(std::move(call), loc));
+		// A void handler can emit events, but its final event is not returndata.
+		emitReturnLog(awst::makeBytesConstant({}, loc), loc, out);
+	}
+}
+
 void emitSelectorDispatch(
 	awst::Block& _body,
 	solidity::frontend::FunctionDefinition const* _fallbackFunc,
@@ -35,51 +83,6 @@ void emitSelectorDispatch(
 	// CloseOut) that dodge the router's per-method OnCompletion gating by
 	// arriving bare or with an unmatched selector.
 
-	// isBareCall: pass empty bytes; else pass ApplicationArgs[0].
-	auto makeCall = [&](std::string const& _name,
-		solidity::frontend::FunctionDefinition const* _func,
-		bool _isBareCall)
-		-> std::shared_ptr<awst::Statement>
-	{
-		// Solidity's typed fallback form
-		//
-		//   fallback(bytes calldata) external returns (bytes memory)
-		//
-		// returns RAW EVM returndata.  Keep that value on the subroutine edge and
-		// publish it through the same structured-log carrier low-level inner calls
-		// consume.  Treating every fallback as void discarded the value entirely;
-		// callers then observed successful calls with empty returndata.
-		bool const returnsBytes = _func && _func->isFallback()
-			&& !_func->returnParameters().empty();
-		auto call = awst::makeSubroutineCall(
-			awst::InstanceMethodTarget{_name},
-			returnsBytes ? awst::WType::bytesType() : awst::WType::voidType(), _loc);
-		if (_func && _func->parameters().size() == 1) // fallback takes `bytes calldata _input`
-		{
-			std::shared_ptr<awst::Expression> argExpr;
-			if (_isBareCall)
-			{
-				// No calldata in bare calls — pass empty bytes
-				argExpr = awst::makeBytesConstant({}, _loc);
-			}
-			else
-			{
-				argExpr = awst::makeAppArg(0, _loc);
-			}
-
-			awst::pushCallArg(call->args, std::move(argExpr));
-		}
-
-		if (!returnsBytes)
-			return awst::makeExpressionStatement(std::move(call), _loc);
-
-		auto log = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
-		log->stackArgs.push_back(awst::makeConcat(
-			awst::makeBytesConstant({0x15, 0x1f, 0x7c, 0x75}, _loc),
-			std::move(call), _loc));
-		return awst::makeExpressionStatement(std::move(log), _loc);
-	};
-
 	auto makeTrueLit = [&]() {
 		return awst::makeTrue(_loc);
 	};
@@ -104,9 +107,9 @@ void emitSelectorDispatch(
 
 		auto bareBlock = awst::makeBlock(_loc);
 		if (_receiveFunc)
-			bareBlock->body.push_back(makeCall("__receive", _receiveFunc, true));
+			emitFallbackCall(*_receiveFunc, "__receive", awst::makeBytesConstant({}, _loc), _loc, bareBlock->body);
 		else if (_fallbackFunc)
-			bareBlock->body.push_back(makeCall("__fallback", _fallbackFunc, true));
+			emitFallbackCall(*_fallbackFunc, "__fallback", awst::makeBytesConstant({}, _loc), _loc, bareBlock->body);
 		bareBlock->body.push_back(makeReturnTrue());
 
 		_body.body.push_back(awst::makeIfElse(
@@ -134,7 +137,8 @@ void emitSelectorDispatch(
 			awst::BinaryBooleanOperator::And, makeIsNoOp(), _loc);
 
 		auto dispatchBlock = awst::makeBlock(_loc);
-		dispatchBlock->body.push_back(makeCall("__fallback", _fallbackFunc, false));
+		emitFallbackCall(*_fallbackFunc, "__fallback", reconstructCalldata(CalldataTransport::Arc4Fallback, _loc),
+			_loc, dispatchBlock->body);
 
 		auto matchVarWrite = awst::makeVarExpression(matchVarName, awst::WType::boolType(), _loc);
 

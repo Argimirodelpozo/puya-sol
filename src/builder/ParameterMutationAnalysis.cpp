@@ -1,7 +1,7 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/SolcFacts.h"
 
-#include "builder/sol-ast/AsmScan.h"
+#include "builder/PreparedAssembly.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
@@ -54,19 +54,14 @@ class DirectMutationScanner: public ASTConstVisitor
 {
 public:
 	DirectMutationScanner(
+		ProgramAnalysis const& _analysis,
 		ContractDefinition const* _mostDerived,
 		FunctionDefinition const& _caller,
 		NodeFacts& _facts)
-		: m_mostDerived(_mostDerived), m_facts(_facts)
+		: m_analysis(_analysis), m_mostDerived(_mostDerived), m_facts(_facts)
 	{
 		for (size_t i = 0; i < _caller.parameters().size(); ++i)
 			m_parameterIndexById[_caller.parameters()[i]->id()] = i;
-	}
-
-	bool visit(Identifier const& _expression) override
-	{
-		recordIfWritten(_expression);
-		return true;
 	}
 
 	bool visit(MemberAccess const& _expression) override
@@ -87,9 +82,25 @@ public:
 		return true;
 	}
 
-	bool visit(TupleExpression const& _expression) override
+	bool visit(InlineAssembly const& assembly) override
 	{
-		recordIfWritten(_expression);
+		auto const& prepared = *m_analysis.preparedAssemblies.at(assembly.id());
+		m_facts.direct.assemblyEffects += prepared.facts.rootEffects;
+		if (prepared.facts.rootEffects.memory == solidity::yul::SideEffects::Write)
+			for (auto const& [_, reference]: prepared.externalReferences)
+				if (auto const* variable = dynamic_cast<VariableDeclaration const*>(reference.declaration);
+					variable && !variable->type()->isValueType()
+					&& variable->type()->dataStoredIn(DataLocation::Memory))
+					recordDeclarationRoots(variable->id(), m_facts.direct.mutatedParameterIndices);
+		return false;
+	}
+
+	// Only referent writes count: bare names (including tuple components)
+	// rebind. Delete, unlike assignment, clears the referenced object.
+	bool visit(UnaryOperation const& expression) override
+	{
+		if (expression.getOperator() == Token::Delete)
+			recordRoots(&expression.subExpression(), m_facts.direct.mutatedParameterIndices);
 		return true;
 	}
 
@@ -107,22 +118,23 @@ public:
 
 		auto const* target = SolcFacts::resolveInternalCall(_call, m_mostDerived);
 		if (!target)
+		{
+			// Indirect internal calls may write any reference argument. Unknown
+			// targets must not turn a mutating wrapper into a read-only summary.
+			if (functionType && functionType->kind() == FunctionType::Kind::Internal)
+			{
+				m_facts.direct.assemblyEffects = solidity::yul::SideEffects::worst();
+				for (auto const& argument: _call.arguments())
+					recordRoots(argument.get(), m_facts.direct.mutatedParameterIndices);
+			}
 			return true;
+		}
 
 		MutationEdge edge;
 		edge.target = target;
-		auto const& params = target->parameters();
-		bool const bound = functionType && functionType->hasBoundFirstArgument();
-		if (bound && !params.empty())
-			if (auto const* member = dynamic_cast<MemberAccess const*>(
-				&SolcFacts::functionExpression(_call.expression())))
-				mapArgument(edge, 0, member->expression());
-
-		auto arguments = _call.sortedArguments();
-		size_t const shift = bound ? 1 : 0;
+		auto arguments = SolcFacts::callArguments(_call);
 		for (size_t i = 0; i < arguments.size(); ++i)
-			if (arguments[i] && i + shift < params.size())
-				mapArgument(edge, i + shift, *arguments[i]);
+			if (arguments[i]) mapArgument(edge, i, *arguments[i]);
 
 		m_facts.edges.push_back(std::move(edge));
 		return true;
@@ -134,6 +146,7 @@ public:
 	}
 
 private:
+	ProgramAnalysis const& m_analysis;
 	ContractDefinition const* m_mostDerived;
 	NodeFacts& m_facts;
 	std::map<int64_t, size_t> m_parameterIndexById;
@@ -159,71 +172,41 @@ private:
 			_edge.parameterMap.emplace_back(_targetParameterIndex, root);
 	}
 
-	void recordRoots(Expression const* _expression, std::set<size_t>& _out)
+	void recordRoots(Expression const* expression, std::set<size_t>& out)
 	{
-		while (_expression)
+		if (!expression) return;
+		for (auto const* source: SolcFacts::referenceSources(*expression))
 		{
-			if (auto const* index = dynamic_cast<IndexAccess const*>(_expression))
-			{
-				_expression = &index->baseExpression();
-				continue;
-			}
-			if (auto const* range = dynamic_cast<IndexRangeAccess const*>(_expression))
-			{
-				_expression = &range->baseExpression();
-				continue;
-			}
-			if (auto const* member = dynamic_cast<MemberAccess const*>(_expression))
-			{
-				_expression = &member->expression();
-				continue;
-			}
-			// StorageSlot-style helpers return a storage pointer whose `.value`
-			// aliases one of their arguments. Follow that declared alias instead
-			// of treating the call result as a fresh value.
-			if (auto const* call = dynamic_cast<FunctionCall const*>(_expression))
-			{
+			if (auto const* call = dynamic_cast<FunctionCall const*>(source))
 				if (auto const* function = SolcFacts::resolveInternalCall(*call, m_mostDerived))
-					if (auto alias = storagePointerAliasParam(*function))
+					if (auto const& alias = m_analysis.storageReturnFacts(function).pointerAlias)
 					{
-						auto arguments = call->sortedArguments();
-						if (alias->first < arguments.size() && arguments[alias->first])
-						{
-							_expression = arguments[alias->first].get();
-							continue;
-						}
+						auto arguments = SolcFacts::callArguments(*call);
+						if (alias->parameter < arguments.size())
+							recordRoots(arguments[alias->parameter], out);
 					}
-			}
-			if (auto const* tuple = dynamic_cast<TupleExpression const*>(_expression))
-			{
-				for (auto const& component: tuple->components())
-					if (component)
-						recordRoots(component.get(), _out);
-				return;
-			}
-			if (auto const* conditional = dynamic_cast<Conditional const*>(_expression))
-			{
-				recordRoots(&conditional->trueExpression(), _out);
-				recordRoots(&conditional->falseExpression(), _out);
-				return;
-			}
-			if (auto const* conversion = dynamic_cast<FunctionCall const*>(_expression);
-				conversion && conversion->annotation().kind.set()
-				&& *conversion->annotation().kind == FunctionCallKind::TypeConversion
-				&& conversion->arguments().size() == 1)
-			{
-				_expression = conversion->arguments()[0].get();
-				continue;
-			}
-			break;
+			if (auto const* identifier = dynamic_cast<Identifier const*>(source))
+				if (auto const* declaration = identifier->annotation().referencedDeclaration)
+					recordDeclarationRoots(declaration->id(), out);
 		}
-
-		if (auto const* identifier = dynamic_cast<Identifier const*>(_expression))
-			if (auto const* declaration = identifier->annotation().referencedDeclaration)
-				if (auto found = m_parameterIndexById.find(declaration->id());
-					found != m_parameterIndexById.end())
-					_out.insert(found->second);
 	}
+
+	void recordDeclarationRoots(int64_t declaration, std::set<size_t>& out)
+	{
+		std::set<int64_t> seen;
+		std::vector<int64_t> pending{declaration};
+		for (size_t i = 0; i < pending.size(); ++i)
+		{
+			auto id = pending[i];
+			if (!seen.insert(id).second) continue;
+			if (auto found = m_parameterIndexById.find(id); found != m_parameterIndexById.end())
+				out.insert(found->second);
+			if (auto aliases = m_analysis.referenceAssignments.find(id);
+				aliases != m_analysis.referenceAssignments.end())
+				pending.insert(pending.end(), aliases->second.begin(), aliases->second.end());
+		}
+	}
+
 };
 
 ParameterMutationSummary const& analyzeFrom(
@@ -240,11 +223,12 @@ ParameterMutationSummary const& analyzeFrom(
 	std::map<int64_t, NodeFacts> facts;
 	std::function<void(FunctionDefinition const&)> discover;
 	discover = [&](FunctionDefinition const& function) {
-		if (facts.count(function.id()))
+		if (facts.count(function.id())
+			|| _analysis.parameterMutationSummaries.contains({context, function.id()}))
 			return;
 		auto [it, _] = facts.emplace(function.id(), NodeFacts{});
 		auto& node = it->second;
-		DirectMutationScanner scanner(_mostDerived, function, node);
+		DirectMutationScanner scanner(_analysis, _mostDerived, function, node);
 		if (function.isImplemented())
 			function.body().accept(scanner);
 		// A modifier's memory-reference parameter aliases its argument. The
@@ -257,6 +241,8 @@ ParameterMutationSummary const& analyzeFrom(
 			auto const* modifier = SolcFacts::resolveModifier(
 				*invocation, _mostDerived);
 			auto const* arguments = invocation->arguments();
+			if (arguments) for (auto const& argument: *arguments) argument->accept(scanner);
+			if (modifier && modifier->isImplemented()) modifier->body().accept(scanner);
 			if (!modifier || !arguments)
 				continue;
 			auto const& parameters = modifier->parameters();
@@ -286,10 +272,14 @@ ParameterMutationSummary const& analyzeFrom(
 				if (!edge.target)
 					continue;
 				auto const target = summaries.find(edge.target->id());
-				if (target == summaries.end())
-					continue;
+				auto const& summary = target != summaries.end() ? target->second
+					: _analysis.parameterMutationSummaries.at({context, edge.target->id()});
+				auto& effects = summaries[id].assemblyEffects;
+				auto combined = effects + summary.assemblyEffects;
+				changed |= combined != effects;
+				effects = combined;
 				for (auto const& [targetParam, callerParam]: edge.parameterMap)
-					if (target->second.mutates(targetParam))
+					if (summary.mutates(targetParam))
 						changed = summaries[id].mutatedParameterIndices
 							.insert(callerParam).second || changed;
 			}

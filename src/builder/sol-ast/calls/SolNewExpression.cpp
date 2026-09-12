@@ -2,6 +2,7 @@
 /// new bytes(N), new T[](N), new Contract(...).
 
 #include "builder/sol-ast/calls/SolNewExpression.h"
+#include "builder/itxn/ApplicationCall.h"
 #include "builder/BuildArtifacts.h"
 #include "awst/NameGen.h"
 #include "builder/contract/StateVarWalker.h"
@@ -9,9 +10,12 @@
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/ConversionPlan.h"
-#include "builder/itxn/InnerCallHandlers.h"
+#include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/contract/ConstructorWirePlan.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/itxn/NativePayment.h"
 #include "builder/contract/PostInitTriggers.h"
+#include "builder/contract/ChildDeployment.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/EvmLayoutMode.h"
@@ -25,232 +29,85 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
+std::shared_ptr<awst::Expression> SolNewExpression::allocationSize(uint64_t capacity)
+{
+	auto size = CallOperands::evaluate(m_ctx, *arguments().at(0), m_loc);
+	size = TypeCoercion::checkedAllocationSizeToUint64(m_ctx.preEffects(), std::move(size), m_loc);
+	m_ctx.preEffects().push_back(awst::makeExpressionStatement(awst::makeAssert(
+		awst::makeNumericCompare(size, awst::NumericComparison::Lte,
+			awst::makeIntegerConstant(capacity, m_loc), m_loc),
+		m_loc, "allocation exceeds AVM value capacity"), m_loc));
+	return size;
+}
+
 std::shared_ptr<awst::Expression> SolNewExpression::handleNewBytes()
 {
-	auto* resultType = m_ctx.typeMapper.map(m_call.annotation().type);
-	auto sizeExpr = !m_call.arguments().empty()
-		? buildExpr(*m_call.arguments()[0])
-		: nullptr;
-	if (sizeExpr)
-		sizeExpr = builder::TypeCoercion::implicitNumericCast(
-			std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
-
-	auto e = awst::makeIntrinsicCall("bzero", resultType, m_loc);
-	if (sizeExpr)
-		e->stackArgs.push_back(std::move(sizeExpr));
-	return e;
+	auto zero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
+	zero->stackArgs.push_back(allocationSize(4096));
+	auto const* resultType = m_ctx.typeMapper.map(m_call.annotation().type);
+	if (resultType == awst::WType::bytesType()) return zero;
+	return awst::makeReinterpretCast(std::move(zero), resultType, m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 {
-	auto* resultType = m_ctx.typeMapper.map(m_call.annotation().type);
-	awst::WType const* elemType = nullptr;
-	if (auto* refArr = dynamic_cast<awst::ReferenceArray const*>(resultType))
-		elemType = refArr->elementType();
-	else if (auto* arc4Static = dynamic_cast<awst::ARC4StaticArray const*>(resultType))
-		elemType = arc4Static->elementType();
-	else if (auto* arc4Dyn = dynamic_cast<awst::ARC4DynamicArray const*>(resultType))
-		elemType = arc4Dyn->elementType();
+	auto const* array = dynamic_cast<ArrayType const*>(m_call.annotation().type);
+	assert(array);
+	auto const* resultType = m_ctx.typeMapper.map(array);
+	auto const* elemType = m_ctx.typeMapper.mapSolTypeToARC4(array->baseType());
+	bool const packedBool = elemType == awst::WType::arc4BoolType()
+		&& resultType->kind() == awst::WTypeKind::ARC4DynamicArray;
+	auto const encodedDefault = builder::arc4DefaultEncoding(elemType);
+	uint64_t const header = resultType->kind() == awst::WTypeKind::ARC4DynamicArray ? 2 : 0;
+	uint64_t const elementBytes = encodedDefault
+		? encodedDefault->size() + (builder::arc4IsDynamic(elemType) ? 2 : 0) : 0;
+	uint64_t const capacity = packedBool ? (4096 - header) * 8
+		: elementBytes ? (4096 - header) / elementBytes : 65535;
+	auto size = allocationSize(capacity);
 
-	auto e = awst::makeNewArray(resultType, m_loc);
-
-	if (!m_call.arguments().empty() && elemType)
+	// Packed bools bypass Puya's empty-array setbit encoder. Both constant
+	// and runtime sizes use the same uint16 length + zeroed packed body.
+	if (packedBool)
 	{
-		// Try compile-time size resolution
-		unsigned long long n = 0;
-		auto const* argType = m_call.arguments()[0]->annotation().type;
-		if (auto const* ratType = dynamic_cast<RationalNumberType const*>(argType))
+		auto byteLen = awst::makeUInt64BinOp(
+			awst::makeUInt64BinOp(size, awst::UInt64BinaryOperator::Add,
+				awst::makeIntegerConstant(7, m_loc), m_loc),
+			awst::UInt64BinaryOperator::FloorDiv, awst::makeIntegerConstant(8, m_loc), m_loc);
+		auto zero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
+		zero->stackArgs.push_back(std::move(byteLen));
+		return awst::makeReinterpretCast(awst::makeConcat(
+			awst::makeExtract(awst::makeItob(size, m_loc), 6, 2, m_loc),
+			std::move(zero), m_loc), resultType, m_loc);
+	}
+
+	auto initial = awst::makeNewArray(resultType, m_loc);
+	// solc rational facts are safe to fold; a local initializer is not proof
+	// that the local still has that value at this allocation site.
+	if (auto const* rational = dynamic_cast<RationalNumberType const*>(arguments()[0]->annotation().type))
+	{
+		auto const n = rational->literalValue(nullptr);
+		if (n <= capacity && header + n * elementBytes <= 4000)
 		{
-			auto val = ratType->literalValue(nullptr);
-			if (val > 0 && val <= 0xFFFF) // Reasonable compile-time array limit
-				n = static_cast<unsigned long long>(val);
-		}
-		// `findConstantLocal` fold for Identifiers removed: never invalidated
-		// on reassignment — silently folded loop counters to initial value
-		// (hit by test_memory_arrays_of_various_sizes Pascal triangle).
-		// Literals still fold via RationalNumberType.
-
-		if (n > 0)
-		{
-			// `new bool[](N)`: bypass puya's ARC4 encoder (bug: setbit on empty
-			// bytes → "index beyond byteslice"). Emit uint16(N)++bzero(ceil(N/8)).
-			if (elemType == awst::WType::arc4BoolType()
-				&& resultType->kind() == awst::WTypeKind::ARC4DynamicArray)
-			{
-				auto byteLen = static_cast<size_t>((n + 7) / 8);
-				std::vector<uint8_t> data;
-				data.reserve(2 + byteLen);
-				data.push_back(static_cast<uint8_t>((n >> 8) & 0xFF));
-				data.push_back(static_cast<uint8_t>(n & 0xFF));
-				data.insert(data.end(), byteLen, 0);
-				return awst::makeBytesConstant(
-					std::move(data), m_loc, awst::BytesEncoding::Base16, resultType);
-			}
-
-			// Estimate encoded size: puya inlines as single pushbytes;
-			// >4096 → rejects ("Invalid Bytes value"). Fall through to
-			// runtime loop if over safety threshold.
-			auto estimateEncodedSize = [](unsigned long long _n, awst::WType const* _resultType, awst::WType const* _elemType) -> uint64_t {
-				uint64_t elemSize = 0;
-				if (auto encoded = builder::arc4DefaultEncoding(_elemType))
-					elemSize = encoded->size();
-				bool elemIsDynamic = builder::arc4IsDynamic(_elemType);
-				uint64_t headPerElem = elemIsDynamic ? 2 : elemSize;
-				uint64_t tailPerElem = elemIsDynamic ? elemSize : 0;
-				uint64_t outerHeader =
-					_resultType->kind() == awst::WTypeKind::ARC4DynamicArray ? 2 : 0;
-				return outerHeader + _n * headPerElem + _n * tailPerElem;
-			};
-
-			constexpr uint64_t kPushBytesSafetyLimit = 4000;
-			if (estimateEncodedSize(n, resultType, elemType) <= kPushBytesSafetyLimit)
-			{
-				// Fits in pushbytes: emit N defaults.
-				for (unsigned long long i = 0; i < n; ++i)
-					e->values.push_back(
-						builder::StorageMapper::makeDefaultValue(elemType, m_loc));
-			}
-			else
-			{
-				// Too large: fall through to runtime loop with literal size N.
-				e->values.clear();
-				auto fakeSizeExpr = awst::makeIntegerConstant(std::to_string(n), m_loc);
-				int tc = awst::NameGen::next("SolNewExpression.rtArrayCounter");
-				std::string arrName = "__rt_arr_" + std::to_string(tc);
-				std::string idxName = "__rt_idx_" + std::to_string(tc);
-
-				auto arrVar = awst::makeVarExpression(arrName, resultType, m_loc);
-				m_ctx.preEffects().push_back(
-					awst::makeAssignmentStatement(arrVar, e, m_loc));
-
-				auto idxVar = awst::makeVarExpression(
-					idxName, awst::WType::uint64Type(), m_loc);
-				m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-					idxVar, awst::makeIntegerConstant("0", m_loc), m_loc));
-
-				auto cond = awst::makeNumericCompare(
-					idxVar, awst::NumericComparison::Lt, fakeSizeExpr, m_loc);
-				auto loopBody = awst::makeBlock(m_loc);
-
-				auto defaultElem = builder::StorageMapper::makeDefaultValue(elemType, m_loc);
-				auto singleArr = awst::makeNewArray(resultType, m_loc);
-				singleArr->values.push_back(std::move(defaultElem));
-
-				auto extend = awst::makeArrayExtend(arrVar, std::move(singleArr), m_loc);
-				loopBody->body.push_back(awst::makeExpressionStatement(extend, m_loc));
-
-				auto incr = awst::makeUInt64BinOp(idxVar, awst::UInt64BinaryOperator::Add,
-					awst::makeIntegerConstant("1", m_loc), m_loc);
-				loopBody->body.push_back(awst::makeAssignmentStatement(idxVar, incr, m_loc));
-
-				m_ctx.preEffects().push_back(
-					awst::makeWhileLoop(std::move(cond), std::move(loopBody), m_loc));
-
-				return arrVar;
-			}
-		}
-		else
-		{
-			// Runtime-sized: loop pattern
-			int tc = awst::NameGen::next("SolNewExpression.rtArrayCounter");
-			std::string arrName = "__rt_arr_" + std::to_string(tc);
-			std::string idxName = "__rt_idx_" + std::to_string(tc);
-
-			auto sizeExpr = buildExpr(*m_call.arguments()[0]);
-			sizeExpr = builder::TypeCoercion::implicitNumericCast(
-				std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
-
-			// Pin size to pre-loop temp: while-condition is re-evaluated each
-			// iteration; `new T[](f())` would re-run f() otherwise. SingleEvaluation
-			// materialises inside the loop header (still re-executes). Skip for
-			// stable leaves (vars/constants).
-			if (!dynamic_cast<awst::VarExpression const*>(sizeExpr.get())
-				&& !dynamic_cast<awst::IntegerConstant const*>(sizeExpr.get()))
-			{
-				std::string sizeName = "__rt_size_" + std::to_string(tc);
-				m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-					awst::makeVarExpression(sizeName, awst::WType::uint64Type(), m_loc),
-					std::move(sizeExpr), m_loc));
-				sizeExpr = awst::makeVarExpression(
-					sizeName, awst::WType::uint64Type(), m_loc);
-			}
-
-			// `new bool[](n)` runtime: same puya bug as compile-time path.
-			// Emit uint16(n)++bzero((n+7)/8) directly.
-			if (elemType == awst::WType::arc4BoolType()
-				&& resultType->kind() == awst::WTypeKind::ARC4DynamicArray)
-			{
-				auto sizeItob = awst::makeItob(sizeExpr, m_loc);
-				auto lenHeader = awst::makeExtract(std::move(sizeItob), 6, 2, m_loc);
-				auto plus7 = awst::makeUInt64BinOp(
-					sizeExpr, awst::UInt64BinaryOperator::Add,
-					awst::makeIntegerConstant("7", m_loc), m_loc);
-				auto byteLen = awst::makeUInt64BinOp(
-					std::move(plus7), awst::UInt64BinaryOperator::FloorDiv,
-					awst::makeIntegerConstant("8", m_loc), m_loc);
-				auto bzero = awst::makeIntrinsicCall(
-					"bzero", awst::WType::bytesType(), m_loc);
-				bzero->stackArgs.push_back(std::move(byteLen));
-				auto concat = awst::makeConcat(
-					std::move(lenHeader), std::move(bzero), m_loc);
-				return awst::makeReinterpretCast(
-					std::move(concat), resultType, m_loc);
-			}
-
-			// __arr = NewArray()
-			auto arrVar = awst::makeVarExpression(arrName, resultType, m_loc);
-
-			auto initArr = awst::makeAssignmentStatement(arrVar, e, m_loc);
-			m_ctx.preEffects().push_back(std::move(initArr));
-
-			// __i = 0
-			auto idxVar = awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc);
-
-			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-				idxVar, awst::makeIntegerConstant("0", m_loc), m_loc));
-
-			// while (__i < n)
-			auto cond = awst::makeNumericCompare(idxVar, awst::NumericComparison::Lt, sizeExpr, m_loc);
-			auto loopBody = awst::makeBlock(m_loc);
-
-			// extend with default
-			auto defaultElem = builder::StorageMapper::makeDefaultValue(elemType, m_loc);
-			auto singleArr = awst::makeNewArray(resultType, m_loc);
-			singleArr->values.push_back(std::move(defaultElem));
-
-			auto extend = awst::makeArrayExtend(arrVar, std::move(singleArr), m_loc);
-			loopBody->body.push_back(awst::makeExpressionStatement(extend, m_loc));
-
-			// __i++
-			auto incr = awst::makeUInt64BinOp(idxVar, awst::UInt64BinaryOperator::Add,
-				awst::makeIntegerConstant("1", m_loc), m_loc);
-			loopBody->body.push_back(awst::makeAssignmentStatement(idxVar, incr, m_loc));
-
-			m_ctx.preEffects().push_back(
-				awst::makeWhileLoop(std::move(cond), std::move(loopBody), m_loc));
-
-			return arrVar;
+			for (uint64_t i = 0; i < n; ++i)
+				initial->values.push_back(TypeCoercion::makeDefaultValue(elemType, m_loc));
+			return initial;
 		}
 	}
 
-	return e;
-}
-
-std::shared_ptr<awst::Expression> SolNewExpression::handleNewString()
-{
-	// `new string(N)` allocates an N-byte string. Reuse the bytes handler's
-	// shape (`bzero(N)`) and reinterpret the result as string.
-	auto sizeExpr = !m_call.arguments().empty()
-		? buildExpr(*m_call.arguments()[0])
-		: nullptr;
-	if (sizeExpr)
-		sizeExpr = builder::TypeCoercion::implicitNumericCast(
-			std::move(sizeExpr), awst::WType::uint64Type(), m_loc);
-	auto bzero = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), m_loc);
-	if (sizeExpr)
-		bzero->stackArgs.push_back(std::move(sizeExpr));
-	auto cast = awst::makeReinterpretCast(std::move(bzero), awst::WType::stringType(), m_loc);
-	return cast;
+	auto const suffix = std::to_string(awst::NameGen::next("SolNewExpression.rtArrayCounter"));
+	auto arr = awst::makeVarExpression("__rt_arr_" + suffix, resultType, m_loc);
+	auto idx = awst::makeVarExpression("__rt_idx_" + suffix, awst::WType::uint64Type(), m_loc);
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(arr, std::move(initial), m_loc));
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(idx, awst::makeZero(m_loc), m_loc));
+	auto body = awst::makeBlock(m_loc);
+	auto one = awst::makeNewArray(resultType, m_loc);
+	one->values.push_back(TypeCoercion::makeDefaultValue(elemType, m_loc));
+	body->body.push_back(awst::makeExpressionStatement(awst::makeArrayExtend(arr, std::move(one), m_loc), m_loc));
+	body->body.push_back(awst::makeAssignmentStatement(idx, awst::makeUInt64BinOp(
+		idx, awst::UInt64BinaryOperator::Add, awst::makeOne(m_loc), m_loc), m_loc));
+	m_ctx.preEffects().push_back(awst::makeWhileLoop(
+		awst::makeNumericCompare(idx, awst::NumericComparison::Lt, size, m_loc), std::move(body), m_loc));
+	return arr;
 }
 
 std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
@@ -261,7 +118,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 		return handleNewBytes();
 
 	if (resultType == awst::WType::stringType())
-		return handleNewString();
+		return handleNewBytes();
 
 	if (resultType && (resultType->kind() == awst::WTypeKind::ReferenceArray
 		|| resultType->kind() == awst::WTypeKind::ARC4StaticArray
@@ -269,8 +126,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 		return handleNewArray();
 
 	// new Contract(...) — deploy child contract via inner app creation transaction.
-	// Uses minimal stub programs since we can't embed the child's compiled bytecode
-	// at this stage. The created app won't be functional but the address is valid.
+	// The deployment artifact pass supplies the child's compiled programs.
 	rejectCreate2Salt();
 
 	auto const& funcExpr = funcExpression();
@@ -332,7 +188,21 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewContract(
 	// and never called __postInit -> child deployed with NO state, failing only
 	// on the first read (arrays_in_constructors).
 	bool childHasPostInit = computeNeedsPostInit(
-		_contractType.contractDefinition(), m_ctx.storageMapper);
+		_contractType.contractDefinition(), m_ctx.storageMapper, m_ctx.typeMapper.analysis());
+
+	ConstructorWirePlan wire(m_ctx.typeMapper, childCtor, childHasPostInit);
+	// Solidity evaluates options and source arguments before creating the child.
+	// Encoding consumes those captured operands; funding/postInit never re-lower them.
+	auto callValue = extractCallValue();
+	auto values = CallOperands::build(m_ctx, m_call, m_loc,
+		[&](Expression const& source, size_t i) {
+			auto const& parameter = wire.parameters.at(i);
+			auto value = EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
+				buildExpr(source), source.annotation().type, parameter.type, m_loc);
+			return ConversionPlan{source.annotation().type, parameter.declaration->type(), parameter.type,
+				ConversionPlan::Context::Argument}.emit(std::move(value), m_loc, &m_ctx.preEffects());
+		});
+	auto applicationArgs = buildChildArgs(wire, std::move(values), childHasPostInit);
 
 	// Build inner appl create transaction with TemplateVar programs
 	static awst::WInnerTransactionFields s_applFieldsType(6); // appl
@@ -344,23 +214,32 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewContract(
 	};
 	create->fields["TypeEnum"] = makeU64("6");
 	create->fields["Fee"] = makeU64("0");
-	// Extra program pages for large child contracts
-	create->fields["ExtraProgramPages"] = makeU64("3");
-	// Global/local state schema — generous defaults
-	create->fields["GlobalNumUint"] = makeU64("16");
-	create->fields["GlobalNumByteSlice"] = makeU64("16");
-
-	create->fields["ApprovalProgramPages"] = buildChildApprovalPages(childName);
+	for (auto const& field: childSchemaFields)
+		create->fields[field.transactionField] = awst::makeTemplateVar(
+			"TMPL_CHILD_" + childName + "_" + field.transactionField, awst::WType::uint64Type(), m_loc);
+	auto pages = buildChildApprovalPages(childName);
+	create->fields["ApprovalProgramPages"] = pages;
 
 	// ClearStateProgram = TemplateVar("TMPL_CLEAR_ChildName")
 	create->fields["ClearStateProgram"] = awst::makeTemplateVar(
 		"TMPL_CLEAR_" + childName, awst::WType::bytesType(), m_loc);
+	// ExtraProgramPages counts 2 KiB of combined approval + clear bytes,
+	// independently of the 4 KiB AVM byte-value chunks used above. Measuring
+	// the actual supplied programs also covers box-provisioned children.
+	std::shared_ptr<awst::Expression> programBytes = awst::makeLen(create->fields["ClearStateProgram"], m_loc);
+	for (auto const& page: pages->items)
+		programBytes = awst::makeUInt64BinOp(std::move(programBytes),
+			awst::UInt64BinaryOperator::Add, awst::makeLen(page, m_loc), m_loc);
+	create->fields["ExtraProgramPages"] = awst::makeUInt64BinOp(
+		awst::makeUInt64BinOp(awst::makeUInt64BinOp(std::move(programBytes),
+			awst::UInt64BinaryOperator::Add, awst::makeIntegerConstant(2047, m_loc), m_loc),
+			awst::UInt64BinaryOperator::FloorDiv, awst::makeIntegerConstant(2048, m_loc), m_loc),
+		awst::UInt64BinaryOperator::Sub, awst::makeOne(m_loc), m_loc);
 
 	// No __postInit: ctor runs during AppCreate. EVM profile carries one
 	// canonical constructor body; ARC4 profile keeps one encoded arg per slot.
-	if (!childHasPostInit && childCtor && !m_call.arguments().empty())
-		if (auto argsTuple = buildChildCreateArgs(*childCtor, childHasPostInit))
-			create->fields["ApplicationArgs"] = std::move(argsTuple);
+	if (!childHasPostInit && applicationArgs)
+		create->fields["ApplicationArgs"] = applicationArgs;
 
 	// Submit the inner transaction
 	static awst::WInnerTransaction s_applTxnType(6);
@@ -384,129 +263,17 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewContract(
 	// Use the stored app ID from now on
 	auto createdAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
 
-	emitChildFunding(createdAppId, childHasPostInit);
+	emitChildFunding(createdAppId, childHasPostInit ? nullptr : callValue);
 
 	if (childHasPostInit)
-		emitChildPostInit(childCtor, newAppIdVarName);
+		emitChildPostInit(createdAppId, std::move(applicationArgs), std::move(callValue));
+	ApplicationCall::setReturnData(m_ctx.typeMapper, awst::makeBytesConstant({}, m_loc),
+		m_loc, m_ctx.preEffects());
 
 	// Return as applicationType (avoids address-hash conversion for calls).
 	auto appIdCast = awst::makeAsApplication(std::move(createdAppId), m_loc);
 
 	return appIdCast;
-}
-
-std::shared_ptr<awst::Expression> SolNewExpression::encodeCtorArg(
-	std::shared_ptr<awst::Expression> _argVal, Type const* _paramSolType, bool _childHasPostInit)
-{
-	if (auto const* fixedB = dynamic_cast<FixedBytesType const*>(_paramSolType))
-	{
-		// bytesN param: the callee decodes exactly N bytes (its
-		// reader asserts the length). A hex-literal arg arrives
-		// NUMERIC (uint64/biguint, leading zero bytes stripped)
-		// — to bytes, then left-pad/trim to N.
-		std::shared_ptr<awst::Expression> asB;
-		if (_argVal->wtype == awst::WType::uint64Type())
-			asB = awst::makeItob(std::move(_argVal), m_loc);
-		else
-			asB = awst::makeAsBytes(std::move(_argVal), m_loc);
-		_argVal = awst::makeExtractLastN(
-			awst::makeLeftPadToN(std::move(asB),
-				static_cast<int>(fixedB->numBytes()), m_loc),
-			static_cast<int>(fixedB->numBytes()), m_loc);
-	}
-	else if (_argVal->wtype == awst::WType::biguintType())
-	{
-		auto it = builder::SolIntType::fromSol(_paramSolType);
-		if (_childHasPostInit && (!it || it->isSigned))
-		{
-			// SIGNED params stay biguint in __postInit (arc56
-			// renders them uint512; the router asserts 64
-			// bytes) — send the canonical value zero-extended.
-			_argVal = awst::makeLeftPadToN(
-				awst::makeAsBytes(std::move(_argVal), m_loc), 64,
-				m_loc);
-		}
-		else
-		{
-			unsigned bits = 256;
-			if (it && !it->isSigned)
-				bits = it->bits;
-			auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-			auto encode = awst::makeARC4Encode(std::move(_argVal), arc4T, m_loc);
-			_argVal = std::move(encode);
-		}
-	}
-	else if (_argVal->wtype == awst::WType::uint64Type())
-	{
-		if (_childHasPostInit)
-		{
-			// __postInit keeps uint64-wtype params as declared
-			// uint64 (router: btoi of an 8-byte arg).
-			auto itob64 = awst::makeIntrinsicCall(
-				"itob", awst::WType::bytesType(), m_loc);
-			itob64->stackArgs.push_back(std::move(_argVal));
-			_argVal = std::move(itob64);
-		}
-		else
-		{
-			unsigned bits = 64;
-			auto const* intT = dynamic_cast<IntegerType const*>(_paramSolType);
-			if (intT) bits = intT->numBits();
-			auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-			auto encode = awst::makeARC4Encode(std::move(_argVal), arc4T, m_loc);
-			_argVal = std::move(encode);
-		}
-	}
-	else if (_argVal->wtype == awst::WType::boolType())
-	{
-		if (_childHasPostInit)
-		{
-			// __postInit declares the param as arc4 bool (its
-			// router asserts len==1); the 8-byte itob form is
-			// the CREATE-path reader's convention only.
-			_argVal = awst::makeARC4Encode(std::move(_argVal),
-				awst::WType::arc4BoolType(), m_loc);
-		}
-		else
-		{
-			auto asU64 = awst::makeAsUInt64(std::move(_argVal), m_loc);
-			auto itob = awst::makeIntrinsicCall(
-				"itob", awst::WType::bytesType(), m_loc);
-			itob->stackArgs.push_back(std::move(asU64));
-			_argVal = std::move(itob);
-		}
-	}
-	else if (_argVal->wtype
-		&& _argVal->wtype->kind() == awst::WTypeKind::ReferenceArray)
-	{
-		// Aggregate ctor arg: the child's create/postInit reader expects the
-		// ARC4 wire form (2-byte count header + elements — it reinterprets to
-		// the arc4 type then ConvertArray's back). Encode the native array.
-		auto const* arc4T = m_ctx.typeMapper.mapToARC4Type(_argVal->wtype);
-		if (arc4T != _argVal->wtype)
-			_argVal = awst::makeARC4Encode(std::move(_argVal), arc4T, m_loc);
-	}
-	return _argVal;
-}
-
-std::vector<std::shared_ptr<awst::Expression>> SolNewExpression::buildEncodedCtorArgs(
-	FunctionDefinition const* _childCtor, bool _childHasPostInit)
-{
-	std::vector<std::shared_ptr<awst::Expression>> out;
-	if (!_childCtor) return out;
-	auto const ctorArgs = m_call.sortedArguments();
-	auto const& ctorParams = _childCtor->parameters();
-	for (size_t i = 0; i < ctorArgs.size() && i < ctorParams.size(); ++i)
-	{
-		auto argVal = buildExpr(*ctorArgs[i]);
-		auto* paramSolType = ctorParams[i]->type();
-		auto* paramWType = m_ctx.typeMapper.map(paramSolType);
-		argVal = builder::ConversionPlan{ctorArgs[i]->annotation().type, paramSolType,
-			paramWType, builder::ConversionPlan::Context::Argument}.emit(
-				std::move(argVal), m_loc, &m_ctx.preEffects());
-		out.push_back(encodeCtorArg(std::move(argVal), paramSolType, _childHasPostInit));
-	}
-	return out;
 }
 
 std::shared_ptr<awst::TupleExpression> SolNewExpression::buildChildApprovalPages(
@@ -525,7 +292,7 @@ std::shared_ptr<awst::TupleExpression> SolNewExpression::buildChildApprovalPages
 	auto pages = awst::makeTupleExpression(nullptr, m_loc);
 	if (m_ctx.typeMapper.profile().childProgramsViaBox)
 	{
-		m_ctx.typeMapper.artifacts().boxProvisionedChildren
+		m_ctx.typeMapper.artifacts().contract().boxProvisionedChildren
 			.insert(_childName);
 		auto boxKey = [&]() {
 			return awst::makeUtf8BytesConstant(
@@ -568,42 +335,34 @@ std::shared_ptr<awst::TupleExpression> SolNewExpression::buildChildApprovalPages
 	return pages;
 }
 
-std::shared_ptr<awst::TupleExpression> SolNewExpression::buildChildCreateArgs(
-	FunctionDefinition const& _childCtor, bool _childHasPostInit)
+std::shared_ptr<awst::TupleExpression> SolNewExpression::buildChildArgs(
+	ConstructorWirePlan const& wire,
+	std::vector<std::shared_ptr<awst::Expression>> values, bool postInit)
 {
-	if (m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
+	auto args = awst::makeTupleExpression(nullptr, m_loc);
+	if (postInit)
+		args->items.push_back(awst::makeMethodConstant(wire.postInitSignature(), awst::WType::bytesType(), m_loc));
+	if (!postInit && m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm && !values.empty())
 	{
-		std::vector<Type const*> parameterTypes;
-		for (auto const& parameter: _childCtor.parameters())
-			parameterTypes.push_back(parameter->type());
-		auto body = eb::InnerCallHandlers::encodeEvmArgumentBody(
-			m_ctx, m_call.sortedArguments(), parameterTypes, m_loc);
-		auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
-		argsTuple->items.push_back(std::move(body));
-		std::vector<awst::WType const*> argTypes{
-			awst::WType::bytesType()};
-		argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-			std::move(argTypes), std::nullopt);
-		return argsTuple;
+		std::vector<Type const*> types;
+		for (auto const& parameter: wire.parameters) types.push_back(parameter.declaration->type());
+		args->items.push_back(m_ctx.emitSequencedOperand({},
+			eb::AbiEncoderBuilder::encodeValuesAsEvmAbi(m_ctx, types, std::move(values), m_loc), true, m_loc));
 	}
-
-	auto encodedArgs = buildEncodedCtorArgs(&_childCtor, _childHasPostInit);
-	if (encodedArgs.empty())
-		return nullptr;
-	auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
-	std::vector<awst::WType const*> argTypes;
-	for (auto& argument: encodedArgs)
-	{
-		argTypes.push_back(argument->wtype);
-		argsTuple->items.push_back(std::move(argument));
-	}
-	argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-		std::move(argTypes), std::nullopt);
-	return argsTuple;
+	else
+		for (size_t i = 0; i < values.size(); ++i)
+			args->items.push_back(m_ctx.emitSequencedOperand({},
+				wire.encode(i, std::move(values[i]), m_loc), true, m_loc));
+	if (args->items.empty()) return nullptr;
+	std::vector<awst::WType const*> types;
+	for (auto const& value: args->items) types.push_back(value->wtype);
+	args->wtype = m_ctx.typeMapper.createType<awst::WTuple>(std::move(types));
+	return args;
 }
 
 void SolNewExpression::emitChildFunding(
-	std::shared_ptr<awst::Expression> const& _createdAppId, bool _childHasPostInit)
+	std::shared_ptr<awst::Expression> const& _createdAppId,
+	std::shared_ptr<awst::Expression> ctorValueForFund)
 {
 	// Fund the newly created app's proven native escrow.
 	// MBR (1M) + value ONLY when no __postInit: with postInit, value
@@ -617,8 +376,6 @@ void SolNewExpression::emitChildFunding(
 	// sparse slots.
 	auto baseMbr = awst::makeIntegerConstant(
 		m_ctx.typeMapper.profile().evmStorageLayout ? "4000000" : "1000000", m_loc);
-	std::shared_ptr<awst::Expression> ctorValueForFund =
-		_childHasPostInit ? nullptr : extractCallValue();
 	std::shared_ptr<awst::Expression> totalFundAmount;
 	if (ctorValueForFund)
 	{
@@ -642,53 +399,11 @@ void SolNewExpression::emitChildFunding(
 }
 
 void SolNewExpression::emitChildPostInit(
-	FunctionDefinition const* _childCtor, std::string const& _newAppIdVarName)
+	std::shared_ptr<awst::Expression> postAppId,
+	std::shared_ptr<awst::Expression> argsTuple,
+	std::shared_ptr<awst::Expression> callValue)
 {
-	// Build __postInit(t1,t2,...)void signature via THE shared
-	// top-level param namer (eb::solTypeToArc4ParamName — enums
-	// collapse to their uint64 carrier, exactly what the callee
-	// publishes; the nested enum encoding instead uses uint8).
-	// Replaces a local twin lacking enum/UDVT/bytesN/aggregate
-	// handling (T4 twin drift; the shared return-wire scope: wire
-	// sigs must mirror PUYA's wtype-derived naming, never solc's
-	// EVM-canonical spelling).
-	std::string postInitSig = "__postInit(";
-	bool first = true;
-	// ctor-less child can still need __postInit (box state-var initializers).
-	std::vector<solidity::frontend::ASTPointer<solidity::frontend::VariableDeclaration>> const noParams;
-	for (auto const& p: _childCtor ? _childCtor->parameters() : noParams)
-	{
-		if (!first) postInitSig += ",";
-		postInitSig += eb::solTypeToArc4ParamName(m_ctx, p->type());
-		first = false;
-	}
-	postInitSig += ")void";
-
-	auto methodConst = awst::makeMethodConstant(
-		postInitSig, awst::WType::bytesType(), m_loc);
-
-	auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
-	argsTuple->items.push_back(std::move(methodConst));
-
-	auto encodedArgs = buildEncodedCtorArgs(_childCtor, /*_childHasPostInit=*/true);
-	for (auto& e: encodedArgs)
-		argsTuple->items.push_back(std::move(e));
-
-	// wtype required: puya rejects WInnerTxn ApplicationArgs with void wtype.
-	{
-		std::vector<awst::WType const*> argTypes;
-		for (auto const& item: argsTuple->items)
-			argTypes.push_back(item->wtype);
-		argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-			std::move(argTypes), std::nullopt);
-	}
-
-	// Payment txn: sets msg.value for __postInit.
-	std::shared_ptr<awst::Expression> callValue = extractCallValue();
-	if (!callValue)
-		callValue = awst::makeZero(m_loc);
-
-	auto postAppId = awst::makeVarExpression(_newAppIdVarName, awst::WType::uint64Type(), m_loc);
+	if (!callValue) callValue = awst::makeZero(m_loc);
 
 	// PaymentTxn (sets msg.value for __postInit)
 	auto payTxn = buildNativePayment(m_ctx.typeMapper.profile(), m_ctx.preEffects(),

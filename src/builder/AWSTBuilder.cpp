@@ -1,6 +1,7 @@
 #include <unordered_set>
 #include "builder/SourceLocConvert.h"
 #include "builder/AWSTBuilder.h"
+#include "builder/SolcFacts.h"
 #include "builder/sol-types/RefParamPassing.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-types/SolIntType.h"
@@ -82,7 +83,7 @@ void AWSTBuilder::collectHostBoundFunctions()
 		if (!function->isFree() && (!scope || !scope->isLibrary()))
 			return;
 		if (m_session.analysis.hasReachabilityGraphs
-			&& !m_session.analysis.reachableFunctionIds.count(function->id()))
+			&& !m_session.analysis.reachableCallableIds.count(function->id()))
 			return;
 
 		candidates.emplace(function->id(), function);
@@ -120,12 +121,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	std::string const& _sourceFile,
 	uint64_t _opupBudget,
 	std::map<std::string, uint64_t> const& _ensureBudget,
-	bool _viaYulBehavior,
 	std::map<std::string, std::string> const& _sourceAliases,
 	TargetProfile _targetProfile
 )
 {
-	_targetProfile.viaIRSequencing = _viaYulBehavior;
+	awst::NameGen::Scope namingScope;
 	m_session.begin(_compiler, _sourceAliases, std::move(_targetProfile));
 	m_storageMapper = std::make_unique<StorageMapper>(m_session.typeMapper);
 	m_hostBoundFunctions.clear();
@@ -149,9 +149,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 			friendly.insert(friendly.begin(), '_');
 		m_artifactNames[qualifiedName] = friendly;
 	}
-	for (auto const& sourceName: _compiler.sourceNames())
-		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
-			solidity::frontend::ContractDefinition>(_compiler.ast(sourceName).nodes()))
+	for (auto const* contract: m_session.analysis.contracts)
 			if (contract && !contract->isInterface() && !contract->abstract()
 				&& !contract->isLibrary())
 				m_selectorContracts.push_back(contract);
@@ -162,15 +160,14 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 		m_session.artifacts.pendingYulSubroutines.clear();
 	};
 
-	registerFunctionIds(_compiler, m_functionSymbols);
-	presetDispatchCref(_compiler, m_session.functionPointers);
+	registerFunctionIds(m_session.analysis, m_functionSymbols);
+	presetDispatchCref(m_session.analysis, m_session.functionPointers);
 	collectHostBoundFunctions();
-	translateLibraryFunctions(_compiler, _sourceFile, roots);
-	translateFreeFunctions(_compiler, _sourceFile, roots);
+	translateFreestandingFunctions(_sourceFile, roots);
 	// Root helpers must survive the per-contract sink reset below. Host-bound
 	// helpers are drained and storage-scoped by their own ContractBuilder.
 	collectYulSubroutines();
-	translateContracts(_compiler, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior, roots);
+	translateContracts(_sourceFile, _opupBudget, _ensureBudget, roots);
 
 	// Callees specialized on an interior field path (requested by call sites
 	// above; a specialized body may request further ones).
@@ -186,7 +183,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 
 	// Builtin helpers are requested by their lowering sites, so unused
 	// algorithms never enter the root set.
-	for (auto const& [_, sub]: m_session.artifacts.memoryWordSubroutines)
+	for (auto const& [_, sub]: m_session.artifacts.bufferSubroutines)
 		roots.push_back(sub);
 	if (m_session.artifacts.needsRipemd160)
 	{
@@ -199,134 +196,46 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	// pass as contract methods: an asm `return()` ending a library body
 	// leaves the synthesized epilogue unreachable, which puya rejects.
 	for (auto& root: roots)
+	{
+		root->typeArena = m_session.typeMapper.typeArena();
+		if (auto* lsig = dynamic_cast<awst::LogicSignature*>(root.get()))
+			lsig->program->typeArena = root->typeArena;
 		if (auto* sub = dynamic_cast<awst::Subroutine*>(root.get()))
 			if (sub->body)
 				awst::removeDeadCode(sub->body->body);
+	}
 	return roots;
 }
 
 
-void AWSTBuilder::translateLibraryFunctions(
-	solidity::frontend::CompilerStack& _compiler,
-	std::string const& _sourceFile,
-	std::vector<std::shared_ptr<awst::RootNode>>& roots)
+void AWSTBuilder::translateFreestandingFunctions(
+	std::string const& sourceFile, std::vector<std::shared_ptr<awst::RootNode>>& roots)
 {
-	for (auto const& sourceName: _compiler.sourceNames())
+	for (auto const& [id, function]: m_session.analysis.functionDeclarations)
 	{
-		auto const& sourceUnit = _compiler.ast(sourceName);
-
-		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
-			solidity::frontend::ContractDefinition>(sourceUnit.nodes()))
+		auto const* owner = function->annotation().contract;
+		bool const library = owner && owner->isLibrary();
+		if ((!function->isFree() && !library) || !function->isImplemented()
+			|| function->isConstructor() || eb::Arc4Stdlib::isFacadeFunction(*function)
+			|| m_session.analysis.avmIntrinsics.contains(id))
+			continue;
+		if (m_session.analysis.hasReachabilityGraphs
+			&& !m_session.analysis.reachableCallableIds.contains(id)) continue;
+		std::string ownerName = library ? owner->name() : "";
+		std::string name = library ? ownerName + "." + function->name() : function->name();
+		if (m_hostBoundFunctionIds.contains(id))
 		{
-			if (!contract->isLibrary())
-				continue;
-
-
-			std::string libraryName = contract->name();
-			Logger::instance().info("Translating library: " + libraryName);
-
-			for (auto const* func: contract->definedFunctions())
-			{
-				if (!func->isImplemented())
-					continue;
-				// Compiler-recognised stdlib facades are consumed at their call sites;
-				// their reverting safety-net bodies are not executable subroutines.
-				if (eb::Arc4Stdlib::isFacadeFunction(*func)
-					|| eb::AsaIntrinsics::isBitsBitlenFacade(*func))
-					continue;
-
-				std::string qualifiedName = libraryName + "." + func->name();
-				auto const* symbol = m_functionSymbols.resolve(func->id());
-				if (!symbol)
-				{
-					Logger::instance().error(
-						"missing declaration identity for library function " +
-						qualifiedName);
-					continue;
-				}
-				auto const& subroutineId = *symbol;
-
-				if (m_session.analysis.hasReachabilityGraphs
-					&& !m_session.analysis.reachableFunctionIds.count(func->id()))
-				{
-					Logger::instance().debug(
-						"skipping library function `" + qualifiedName + "`: no "
-						"contract call graph reaches it (solc prunes it too)");
-					continue;
-				}
-
-				// Modifier chains and function-pointer/storage-assembly callees need
-				// instance-method targets. collectHostBoundFunctions also closes this
-				// set over root callers, so no emitted SubroutineID is left dangling.
-				if (m_hostBoundFunctionIds.count(func->id()))
-				{
-					if (hasFunctionPointerParameter(*func)
-						&& func->visibility() == solidity::frontend::Visibility::External)
-					{
-						awst::SourceLocation warnLoc(_sourceFile);
-						Logger::instance().warning(
-							"external library function `" + qualifiedName + "` internalized "
-							"into using-contract — Solidity would normally deploy this as a "
-							"separate contract and DELEGATECALL it; AVM has no DELEGATECALL "
-							"equivalent. Behaviour may diverge for storage-mutating bodies.",
-							warnLoc);
-					}
-					Logger::instance().debug(
-						"Registering host-bound library function: " + qualifiedName);
-					continue;
-				}
-
-				Logger::instance().debug("Translating library function: " + qualifiedName);
-				roots.push_back(buildFreestandingSubroutine(
-					*func, _sourceFile, qualifiedName, subroutineId, libraryName));
-			}
+			if (library && hasFunctionPointerParameter(*function)
+				&& function->visibility() == solidity::frontend::Visibility::External)
+				Logger::instance().warning("external library function " + name
+					+ " internalized into its host; AVM has no DELEGATECALL semantics",
+					m_session.sourceMap.toAwstLoc(sourceFile, function->location()));
+			continue;
 		}
-	}
-}
-
-
-void AWSTBuilder::translateFreeFunctions(
-	solidity::frontend::CompilerStack& _compiler,
-	std::string const& _sourceFile,
-	std::vector<std::shared_ptr<awst::RootNode>>& roots)
-{
-	for (auto const& sourceName: _compiler.sourceNames())
-	{
-		auto const& sourceUnit = _compiler.ast(sourceName);
-
-		for (auto const* func: solidity::frontend::ASTNode::filteredNodes<
-			solidity::frontend::FunctionDefinition>(sourceUnit.nodes()))
-		{
-			if (!func->isImplemented() || !func->isFree())
-				continue;
-			if (m_session.analysis.hasReachabilityGraphs
-				&& !m_session.analysis.reachableFunctionIds.count(func->id()))
-			{
-				Logger::instance().debug(
-					"skipping free function `" + func->name()
-					+ "`: no contract call graph reaches it");
-				continue;
-			}
-
-			std::string qualifiedName = func->name();
-			if (m_hostBoundFunctionIds.count(func->id()))
-			{
-				Logger::instance().debug(
-					"Registering host-bound free function: " + qualifiedName);
-				continue;
-			}
-			auto const* symbol = m_functionSymbols.resolve(func->id());
-			if (!symbol)
-			{
-				Logger::instance().error(
-					"missing declaration identity for free function " + qualifiedName);
-				continue;
-			}
-
-			Logger::instance().debug("Translating free function: " + qualifiedName);
-			roots.push_back(buildFreestandingSubroutine(
-				*func, _sourceFile, qualifiedName, *symbol, /*libraryName=*/""));
-		}
+		auto const* symbol = m_functionSymbols.resolve(id);
+		if (!symbol) throw std::logic_error("Missing function declaration identity: " + name);
+		Logger::instance().debug("Translating freestanding function: " + name);
+		roots.push_back(buildFreestandingSubroutine(*function, sourceFile, name, *symbol, ownerName));
 	}
 }
 
@@ -369,16 +278,10 @@ void AWSTBuilder::synthesizeFreestandingImplicitReturn(
 	solidity::frontend::FunctionDefinition const& _func,
 	awst::Subroutine& sub,
 	sol_ast::FunctionContext& fnCtx,
-	std::vector<size_t> const& storageParamIndices,
-	std::vector<size_t> const& memoryRefParamIndices,
 	awst::SourceLocation const& loc)
 {
 	ImplicitReturnShape shape;
-	shape.hasReturnValue = !_func.returnParameters().empty()
-		|| !storageParamIndices.empty() || !memoryRefParamIndices.empty();
-	shape.storageParamIndices = &storageParamIndices;
-	shape.memoryRefParamIndices = &memoryRefParamIndices;
-	shape.args = &sub.args;
+	shape.hasReturnValue = !_func.returnParameters().empty();
 	shape.blobReturnsAsOffset = true;
 	emitImplicitReturn(
 		*sub.body, sub.returnType, _func, m_session.typeMapper, fnCtx, shape, loc);
@@ -417,11 +320,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		sub->documentation.description = *_func.documentation()->text();
 
 	auto const& plan = m_session.typeMapper.callBoundaryPlan(_func);
-	auto const& storageParamIndices = plan.storageWriteBackParams;
-	auto const& memoryRefParamIndices = plan.memoryWriteBackParams;
 	buildFreestandingParams(_func, _sourceFile, *sub);
-	sub->returnType = plan.augmentReturn(m_session.typeMapper,
-		m_session.typeMapper.functionReturnPlan(_func).internalType);
+	sub->returnType = m_session.typeMapper.functionReturnPlan(_func).internalType;
 
 	sub->pure = _func.stateMutability() == solidity::frontend::StateMutability::Pure;
 
@@ -483,11 +383,10 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// reach the 1967 slots through StorageSlot (the escaped-slot shape) and
 	// would drag the storage-dispatch runtime + delegatecall into the demand
 	// graph; each has an exact native meaning instead.
-	if (auto fold = proxies::Erc1967Lowering::classifyUtilsFunction(_func);
-		m_session.typeMapper.profile().proxyAdaptation
-			&& fold != proxies::Erc1967Lowering::UtilsFold::None)
+	auto const& proxyFunctions = m_session.analysis.proxy.utilsFunctions;
+	if (auto fold = proxyFunctions.find(_func.id()); fold != proxyFunctions.end())
 		sub->body = proxies::Erc1967Lowering::utilsFoldBody(
-			fold, sub->returnType, sub->args, m_session.artifacts, loc);
+			fold->second, sub->returnType, sub->args, m_session.artifacts, loc);
 	else
 		sub->body = sol_ast::buildBlock(blk, _func.body());
 	if (!asmParamSpills.empty())
@@ -497,23 +396,10 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 	prependFreestandingReturnInits(_func, *sub, loc);
 
-	plan.augmentReturns(*sub->body, sub->returnType);
-
-	// Synthesize body for assembly-only library functions with known semantics.
-	if (sub->body->body.empty() && _func.name() == "efficientKeccak256"
-		&& _func.parameters().size() == 2)
-	{
-		auto varA = awst::makeVarExpression(_func.parameters()[0]->name(), m_session.typeMapper.map(_func.parameters()[0]->type()), loc);
-		auto varB = awst::makeVarExpression(_func.parameters()[1]->name(), m_session.typeMapper.map(_func.parameters()[1]->type()), loc);
-		auto concat = awst::makeConcat(std::move(varA), std::move(varB), loc);
-		auto hash = awst::makeKeccak256(std::move(concat), loc);
-		auto cast = awst::makeReinterpretCast(std::move(hash), sub->returnType, loc);
-		auto ret = awst::makeReturnStatement(std::move(cast), loc);
-		sub->body->body.push_back(std::move(ret));
-	}
-
 	synthesizeFreestandingImplicitReturn(
-		_func, *sub, fnCtx, storageParamIndices, memoryRefParamIndices, loc);
+		_func, *sub, fnCtx, loc);
+	sub->returnType = plan.augmentReturn(m_session.typeMapper, sub->returnType);
+	plan.augmentReturns(*sub->body, sub->returnType, m_session.typeMapper, fnCtx.originalMemoryParams);
 
 	// 1967 slot constants surviving in a library/free body escaped into
 	// runtime data flow (the OZ StorageSlot shape) — warn here; contract
@@ -535,62 +421,78 @@ namespace
 /// a library itself when the unit has no deployable contract.
 bool isDeployableLibrary(solidity::frontend::ContractDefinition const& _library)
 {
+	using namespace solidity::frontend;
+	bool entry = false;
 	for (auto const* f: _library.definedFunctions())
 		if (f->isImplemented() && !f->isConstructor()
 			&& (f->visibility() == solidity::frontend::Visibility::Public
 				|| f->visibility() == solidity::frontend::Visibility::External))
-			return true;
-	return false;
-}
-
-/// `contract X is LogicSig` (AVM.sol).
-bool isLogicSigContract(solidity::frontend::ContractDefinition const& _contract)
-{
-	for (auto const* base: _contract.annotation().linearizedBaseContracts)
-		if (base->name() == "LogicSig")
-			return true;
-	return false;
-}
-
-/// LogicSig entry: the function carrying the `logicsig` modifier, else the
-/// sole public/external ARC4 method. Null when neither rule selects one.
-awst::ContractMethod const* logicSigEntry(
-	solidity::frontend::ContractDefinition const& _contract,
-	awst::Contract const& _awstContract)
-{
-	std::string entryName;
-	for (auto const* f: _contract.definedFunctions())
-	{
-		if (f->isConstructor() || !f->isImplemented())
-			continue;
-		for (auto const& modInv: f->modifiers())
 		{
-			auto const& p = modInv->name().path();
-			if (!p.empty() && p.back() == "logicsig")
+			entry = true;
+			auto portable = [](auto const& parameters) {
+				return std::all_of(parameters.begin(), parameters.end(), [](auto const& parameter) {
+					return parameter->referenceLocation() != VariableDeclaration::Location::Storage
+						&& bool(parameter->type()->interfaceType(false));
+				});
+			};
+			if (!portable(f->parameters()) || !portable(f->returnParameters()))
 			{
-				entryName = f->name();
-				break;
+				Logger::instance().warning("Library " + _library.fullyQualifiedName()
+					+ " requires host-only reference parameters; no standalone application artifact is emitted");
+				return false;
 			}
 		}
-		if (!entryName.empty())
-			break;
-	}
-	awst::ContractMethod const* entry = nullptr;
-	if (!entryName.empty())
-	{
-		for (auto const& m: _awstContract.methods)
-			if (m.memberName == entryName) { entry = &m; break; }
-	}
-	else
-	{
-		// Fallback: sole public/external ARC4 method.
-		int pubCount = 0;
-		for (auto const& m: _awstContract.methods)
-			if (m.arc4MethodConfig.has_value()) { entry = &m; ++pubCount; }
-		if (pubCount != 1)
-			entry = nullptr;
-	}
 	return entry;
+}
+
+/// Resolve the bundled marker declaration once through solc inheritance.
+solidity::frontend::ModifierDefinition const* logicSigMarker(
+	solidity::frontend::ContractDefinition const& contract)
+{
+	using namespace solidity::frontend;
+	for (auto const* base: contract.annotation().linearizedBaseContracts)
+		if (base->sourceUnitName() == "libs/AVM.sol" && base->name() == "LogicSig"
+			&& base->abstract() && base->functionModifiers().size() == 1)
+		{
+			auto const* marker = base->functionModifiers().front();
+			if (marker->name() == "logicsig" && marker->parameters().empty()
+				&& marker->isImplemented() && marker->body().statements().size() == 1
+				&& dynamic_cast<PlaceholderStatement const*>(marker->body().statements()[0].get()))
+				return marker;
+		}
+	return nullptr;
+}
+
+/// Public entry selection uses resolved solc declarations, including inheritance
+/// and overloads. A stateless program has no ABI arguments and returns bool.
+awst::ContractMethod const* logicSigEntry(
+	solidity::frontend::ContractDefinition const& contract, awst::Contract const& translated)
+{
+	using namespace solidity::frontend;
+	auto const* marker = logicSigMarker(contract);
+	std::map<int64_t, FunctionDefinition const*> entries, marked;
+	for (auto const& [_, type]: contract.interfaceFunctionList())
+		if (type->hasDeclaration())
+			if (auto const* function = dynamic_cast<FunctionDefinition const*>(&type->declaration()))
+			{
+				function = &function->resolveVirtual(contract);
+				entries.emplace(function->id(), function);
+				for (auto const& invocation: function->modifiers())
+					if (SolcFacts::resolveModifier(*invocation, &contract) == marker)
+						marked.emplace(function->id(), function);
+			}
+	auto const& candidates = marked.empty() ? entries : marked;
+	if (candidates.size() != 1) return nullptr;
+	auto const& function = *candidates.begin()->second;
+	if (!function.parameters().empty() || function.returnParameters().size() != 1
+		|| !dynamic_cast<BoolType const*>(function.returnParameters()[0]->type()))
+		return nullptr;
+	// The unique zero-parameter declaration may have an overload suffix.
+	for (auto const& method: translated.methods)
+		if ((method.memberName == function.name() || method.memberName == function.name() + "()")
+			&& method.args.empty() && method.returnType == awst::WType::boolType())
+			return &method;
+	return nullptr;
 }
 
 std::shared_ptr<awst::LogicSignature> makeLogicSignature(
@@ -630,11 +532,37 @@ bool emitLogicSignature(
 	{
 		Logger::instance().error(
 			"contract `" + _contract.name() + "` is LogicSig but has no single "
-			"entry function — mark exactly one function with the `logicsig` modifier",
+			"public/external zero-argument bool entry — mark exactly one with the bundled `logicsig` modifier",
 			_awstContract.sourceLocation);
 		return false;
 	}
-	_roots.push_back(makeLogicSignature(_awstContract, *entry));
+	auto lsig = makeLogicSignature(_awstContract, *entry);
+	// A LogicSignature has no instance methods. Retain only its reachable helper
+	// closure and relocate instance calls to unique root subroutine identities.
+	std::map<std::string, awst::ContractMethod const*> methods;
+	for (auto const& method: _awstContract.methods) methods.emplace(method.memberName, &method);
+	std::vector<std::shared_ptr<awst::Subroutine>> pending{lsig->program};
+	std::set<std::string> included;
+	for (size_t i = 0; i < pending.size(); ++i)
+		awst::visitExpressions(*pending[i]->body, [&](awst::Expression& expression) {
+			auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&expression);
+			if (!call) return;
+			auto const* target = std::get_if<awst::InstanceMethodTarget>(&call->target);
+			if (!target) return;
+			std::string name = target->memberName;
+			auto found = methods.find(name);
+			if (found == methods.end()) throw std::logic_error("Unresolved LogicSig helper: " + name);
+			std::string id = _awstContract.id + ".lsig." + name;
+			call->target = awst::SubroutineID{id};
+			if (included.insert(name).second)
+			{
+				auto sub = makeLogicSignature(_awstContract, *found->second)->program;
+				sub->id = id;
+				pending.push_back(std::move(sub));
+			}
+		});
+	for (size_t i = 1; i < pending.size(); ++i) _roots.push_back(std::move(pending[i]));
+	_roots.push_back(std::move(lsig));
 	Logger::instance().info("Emitted LogicSignature: " + _contract.name());
 	return true;
 }
@@ -697,8 +625,7 @@ bool emitDeployableContract(
 
 } // namespace
 
-bool AWSTBuilder::prescanEvmStorageLayout(
-	solidity::frontend::CompilerStack& _compiler)
+bool AWSTBuilder::prescanEvmStorageLayout()
 {
 	// Slot-mode unit pre-scan: the storage runtime subroutines share one
 	// SubroutineID across the whole unit, so their bodies must be IDENTICAL for
@@ -710,9 +637,7 @@ bool AWSTBuilder::prescanEvmStorageLayout(
 	bool evmStorageRuntimeNeeded = false;
 	bool anySparse = false;
 	unsigned long long maxSlots = 0;
-	for (auto const& sourceName: _compiler.sourceNames())
-		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
-			solidity::frontend::ContractDefinition>(_compiler.ast(sourceName).nodes()))
+	for (auto const* contract: m_session.analysis.contracts)
 		{
 			if (!contract || contract->isInterface())
 				continue;
@@ -737,8 +662,8 @@ bool AWSTBuilder::prescanEvmStorageLayout(
 			anySparse = true;
 			break;
 		}
-	m_session.profile.denseOnlyStorage = !anySparse;
-	m_session.profile.singlePageStorage =
+	m_session.artifacts.denseOnlyStorage = !anySparse;
+	m_session.artifacts.singlePageStorage =
 		maxSlots <= builder::kEvmSlotsPerPage;
 	Logger::instance().debug("PRESCAN dense=" + std::to_string(!anySparse)
 		+ " singlePage=" + std::to_string(maxSlots <= builder::kEvmSlotsPerPage)
@@ -751,7 +676,6 @@ std::shared_ptr<awst::Contract> AWSTBuilder::translateContract(
 	std::string const& _sourceFile,
 	uint64_t _opupBudget,
 	std::map<std::string, uint64_t> const& _ensureBudget,
-	bool _viaYulBehavior,
 	bool _evmStorageRuntimeNeeded,
 	bool& _emittedEvmStorageRuntime,
 	std::vector<std::shared_ptr<awst::RootNode>>& _roots)
@@ -759,7 +683,7 @@ std::shared_ptr<awst::Contract> AWSTBuilder::translateContract(
 	ContractBuilder translator(
 		m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
 		_sourceFile, m_functionSymbols,
-		_opupBudget, _ensureBudget, _viaYulBehavior,
+		_opupBudget, _ensureBudget,
 		m_hostBoundFunctions
 	);
 	translator.setArtifactNames(m_artifactNames);
@@ -779,84 +703,24 @@ std::shared_ptr<awst::Contract> AWSTBuilder::translateContract(
 }
 
 void AWSTBuilder::translateContracts(
-	solidity::frontend::CompilerStack& _compiler,
-	std::string const& _sourceFile,
-	uint64_t _opupBudget,
-	std::map<std::string, uint64_t> const& _ensureBudget,
-	bool _viaYulBehavior,
+	std::string const& sourceFile, uint64_t opupBudget,
+	std::map<std::string, uint64_t> const& ensureBudget,
 	std::vector<std::shared_ptr<awst::RootNode>>& roots)
 {
-	bool const evmStorageRuntimeNeeded = prescanEvmStorageLayout(_compiler);
-
-	bool emittedDeployable = false;
-	bool emittedEvmStorageRuntime = false;
-	std::vector<solidity::frontend::ContractDefinition const*> deployableLibraries;
-	for (auto const& sourceName: _compiler.sourceNames())
+	bool const storageRuntimeNeeded = prescanEvmStorageLayout();
+	bool emittedStorageRuntime = false;
+	for (auto const* contract: m_session.analysis.contracts)
 	{
-		auto const& sourceUnit = _compiler.ast(sourceName);
-
-		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
-			solidity::frontend::ContractDefinition>(sourceUnit.nodes()))
-		{
-			// Skip interfaces, abstract contracts, and libraries (already handled)
-			if (contract->isInterface())
-			{
-				Logger::instance().debug("Skipping interface: " + contract->name());
-				continue;
-			}
-
-			if (contract->abstract())
-			{
-				Logger::instance().debug("Skipping abstract contract: " + contract->name());
-				continue;
-			}
-
-			if (contract->isLibrary())
-			{
-				// Remember libraries with externally-callable functions: if the
-				// source has NO deployable contract, EVM deploys the library
-				// itself (public/external fns get external dispatch) — mirrored
-				// after the loop.
-				if (isDeployableLibrary(*contract))
-					deployableLibraries.push_back(contract);
-				continue;
-			}
-
-			Logger::instance().info("Translating contract: " + contract->name());
-			auto awstContract = translateContract(
-				*contract, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior,
-				evmStorageRuntimeNeeded, emittedEvmStorageRuntime, roots);
-
-			if (isLogicSigContract(*contract))
-			{
-				if (emitLogicSignature(*contract, *awstContract, roots))
-					emittedDeployable = true;
-				continue;
-			}
-
-			if (emitDeployableContract(*contract, std::move(awstContract), roots))
-				emittedDeployable = true;
-		}
+		if (contract->isInterface() || contract->abstract()) continue;
+		if (contract->isLibrary() && !isDeployableLibrary(*contract)) continue;
+		Logger::instance().info("Translating deployable root: " + contract->name());
+		auto translated = translateContract(*contract, sourceFile, opupBudget, ensureBudget,
+			storageRuntimeNeeded, emittedStorageRuntime, roots);
+		if (logicSigMarker(*contract))
+			emitLogicSignature(*contract, *translated, roots);
+		else
+			emitDeployableContract(*contract, std::move(translated), roots);
 	}
-
-	// Library-only source: EVM deploys the library itself (public/external fns
-	// get external dispatch). Mirror that by building the first such library as
-	// a deployable contract — its fns are ALSO root subroutines (the library
-	// pass above), which is fine: self-calls resolve to the subroutines, and
-	// unused copies are DCE'd.
-	if (!emittedDeployable)
-		for (auto const* lib: deployableLibraries)
-		{
-			Logger::instance().info("Translating library as deployable contract: " + lib->name());
-			auto awstContract = translateContract(
-				*lib, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior,
-				evmStorageRuntimeNeeded, emittedEvmStorageRuntime, roots);
-			if (!hasArc4Method(*awstContract))
-				continue;
-			eliminateDeadCode(*awstContract);
-			roots.push_back(std::move(awstContract));
-			break;
-		}
 }
 
 } // namespace puyasol::builder

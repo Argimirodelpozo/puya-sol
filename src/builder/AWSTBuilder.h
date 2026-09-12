@@ -40,7 +40,6 @@ public:
 		std::string const& _sourceFile,
 		uint64_t _opupBudget = 0,
 		std::map<std::string, uint64_t> const& _ensureBudget = {},
-		bool _viaYulBehavior = false,
 		std::map<std::string, std::string> const& _sourceAliases = {},
 		TargetProfile _targetProfile = {}
 	);
@@ -68,32 +67,23 @@ private:
 	// Both defined in builder/FunctionIdRegistry.h.
 	void collectHostBoundFunctions();
 
-	/// Phase 2: translate library functions into Subroutine root nodes.
-	void translateLibraryFunctions(
-		solidity::frontend::CompilerStack& _compiler,
-		std::string const& _sourceFile,
-		std::vector<std::shared_ptr<awst::RootNode>>& _roots);
-
-	/// Phase 3: translate file-level free functions into Subroutine root nodes.
-	void translateFreeFunctions(
-		solidity::frontend::CompilerStack& _compiler,
+	/// Free/library bodies share eligibility, symbols and host-bound decisions.
+	void translateFreestandingFunctions(
 		std::string const& _sourceFile,
 		std::vector<std::shared_ptr<awst::RootNode>>& _roots);
 
 	/// Phase 4: translate concrete contracts via ContractBuilder; DCE method
 	/// bodies; synthesize a `__dummy` ARC4 method for constructor-only contracts.
 	void translateContracts(
-		solidity::frontend::CompilerStack& _compiler,
 		std::string const& _sourceFile,
 		uint64_t _opupBudget,
 		std::map<std::string, uint64_t> const& _ensureBudget,
-		bool _viaYulBehavior,
 		std::vector<std::shared_ptr<awst::RootNode>>& _roots);
 
 	// ── translateContracts phases ───────────────────────────────────────
 	/// --evm-storage-layout unit pre-scan (dense-only / single-page profile
 	/// flags); returns whether the unit-global storage runtime is needed.
-	bool prescanEvmStorageLayout(solidity::frontend::CompilerStack& _compiler);
+	bool prescanEvmStorageLayout();
 
 	/// One ContractBuilder run over `_contract`; its dispatch subroutines go
 	/// straight to `_roots`. The unit-global EVM storage runtime is emitted
@@ -103,7 +93,6 @@ private:
 		std::string const& _sourceFile,
 		uint64_t _opupBudget,
 		std::map<std::string, uint64_t> const& _ensureBudget,
-		bool _viaYulBehavior,
 		bool _evmStorageRuntimeNeeded,
 		bool& _emittedEvmStorageRuntime,
 		std::vector<std::shared_ptr<awst::RootNode>>& _roots);
@@ -131,8 +120,6 @@ private:
 		solidity::frontend::FunctionDefinition const& _func,
 		awst::Subroutine& sub,
 		sol_ast::FunctionContext& fnCtx,
-		std::vector<size_t> const& storageParamIndices,
-		std::vector<size_t> const& memoryRefParamIndices,
 		awst::SourceLocation const& loc);
 };
 

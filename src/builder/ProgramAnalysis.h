@@ -1,11 +1,18 @@
 #pragma once
 
+#include "builder/proxies/ProxyFacts.h"
+
+#include <libyul/SideEffects.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace solidity::frontend
 {
@@ -22,11 +29,31 @@ namespace puyasol::builder
 
 struct PreparedAssembly;
 
+/// Reachable creation effects, before selecting an AVM storage backend.
+/// The callable set is creation-only, plus explicit target-adaptation edges;
+/// it is never closed over the union of deployed source references.
+struct CreationEffects
+{
+	std::set<int64_t> reachableCallables;
+	std::set<int64_t> stateReferences;
+	bool createsContract = false;
+	bool externalCall = false;
+	bool messageContext = false;
+	bool nativeContext = false;
+	bool assembly = false;
+};
+
 /// Source provenance for a single storage reference return. AVM carrier types
 /// are selected by TypeMapper; these facts are independent of the call site.
 struct StorageReferenceReturnFacts
 {
+	struct PointerAlias
+	{
+		size_t parameter;
+		std::string field;
+	};
 	solidity::frontend::IndexAccess const* indexedReturn = nullptr;
+	std::optional<PointerAlias> pointerAlias;
 	bool bytesKeyed = false;
 	bool slotHandle = false;
 };
@@ -37,6 +64,10 @@ struct StorageReferenceReturnFacts
 struct ParameterMutationSummary
 {
 	std::set<size_t> mutatedParameterIndices;
+	/// Actual solc/Yul effects, closed over host-resolved Solidity call edges.
+	/// Separate from referent mutation: memory reads and non-removable control
+	/// flow are not writes, and local scratch writes need not mutate a parameter.
+	solidity::yul::SideEffects assemblyEffects;
 
 	bool mutates(size_t _index) const
 	{
@@ -49,9 +80,21 @@ struct ParameterMutationSummary
 /// lets multiple compiler sessions coexist safely.
 struct ProgramAnalysis
 {
+	proxies::ProxyFacts proxy;
+	/// Source-unit order, including abstract contracts, libraries and interfaces.
+	std::vector<solidity::frontend::ContractDefinition const*> contracts;
+	/// Validated libs/AVM.sol function declaration id -> native library.
+	std::map<int64_t, std::string> avmIntrinsics;
+	std::map<int64_t, CreationEffects> creationEffects;
 	std::set<int64_t> boxKeyedStructs;
 	std::set<int64_t> refPassedStructs;
 	std::set<int64_t> reassignedMemoryLocals;
+	/// Conservative reference-assignment edges (destination -> possible sources),
+	/// using solc declaration IDs and data locations. Not a runtime points-to map.
+	std::map<int64_t, std::set<int64_t>> referenceAssignments;
+	/// Aliases connected to a rebound memory name need the existing pointer
+	/// representation locally; stable aliases keep their value/write-back path.
+	std::set<int64_t> memoryIdentityDeclarations;
 	/// Single-declaration initializer ASTs, indexed once by solc declaration ID.
 	/// Source provenance only: live reference bindings still win after reassignments.
 	std::map<int64_t, solidity::frontend::Expression const*> localInitializers;
@@ -66,6 +109,8 @@ struct ProgramAnalysis
 	/// or receiving slot-return components through the solc transfer graph.
 	std::set<int64_t> slotHandleDeclarations;
 	std::map<int64_t, StorageReferenceReturnFacts> storageReferenceReturns;
+	StorageReferenceReturnFacts const& storageReturnFacts(
+		solidity::frontend::FunctionDefinition const* _function) const;
 	/// Callables using logical storage slots, through Yul or storage-reference
 	/// return transport. Named-storage hosts need their word dispatcher too.
 	std::set<int64_t> callablesWithStorageSlotAccess;
@@ -83,10 +128,8 @@ struct ProgramAnalysis
 	/// Contract AST id → function ids reached through an internal call edge.
 	/// Entry-only public methods are absent; internal-dispatch targets are present.
 	std::map<int64_t, std::set<int64_t>> internallyCalledFunctions;
-	std::set<int64_t> contractsWithReachabilityGraphs;
-	std::map<int64_t, std::set<int64_t>> reachableFunctionsByContract;
+	std::map<int64_t, std::set<int64_t>> reachableCallablesByContract;
 	bool hasReachabilityGraphs = false;
-	std::set<int64_t> reachableFunctionIds;
 	std::set<int64_t> reachableCallableIds;
 	/// Cached from solc's library graphs and resolved declaration references. Complements the
 	/// context-specific creation/deployed graphs, which can stop at library
@@ -106,13 +149,13 @@ struct ProgramAnalysis
 
 	bool hasContractReachability(int64_t _contractId) const
 	{
-		return contractsWithReachabilityGraphs.count(_contractId) != 0;
+		return reachableCallablesByContract.contains(_contractId);
 	}
 
-	bool isFunctionReachable(int64_t _contractId, int64_t _functionId) const
+	bool isCallableReachable(int64_t _contractId, int64_t _functionId) const
 	{
-		auto const contract = reachableFunctionsByContract.find(_contractId);
-		return contract != reachableFunctionsByContract.end()
+		auto const contract = reachableCallablesByContract.find(_contractId);
+		return contract != reachableCallablesByContract.end()
 			&& contract->second.count(_functionId) != 0;
 	}
 

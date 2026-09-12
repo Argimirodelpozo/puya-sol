@@ -9,6 +9,10 @@
 namespace puyasol::awst
 {
 
+class WType;
+/// One invocation's parameterized types, retained by its returned AWST roots.
+using WTypeArena = std::vector<std::unique_ptr<WType>>;
+
 /// Mirrors puya's awst/wtypes.py — the AWST type system.
 /// Basic types are singletons; parameterized types are constructed on demand.
 

@@ -438,6 +438,7 @@ library Address {
  * @dev This library provides getters and event emitting update functions for
  * https://eips.ethereum.org/EIPS/eip-1967[ERC-1967] slots.
  */
+/// @custom:avm-proxy erc1967-utils
 library ERC1967Utils {
     /**
      * @dev Storage slot with the address of the current implementation.
@@ -620,6 +621,7 @@ library ERC1967Utils {
  *
  * The {_authorizeUpgrade} function must be overridden to include access restriction to the upgrade mechanism.
  */
+/// @custom:avm-proxy uups
 abstract contract UUPSUpgradeable is IERC1822Proxiable {
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address private immutable __self = address(this);

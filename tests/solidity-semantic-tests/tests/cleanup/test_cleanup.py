@@ -42,61 +42,32 @@ def test_byte_array_to_storage_cleanup(harness):
     assert tuple(as_int(x) for x in r.abi_return) == (0x20, 0x22, 0, 0xff00000000000000000000000000000000000000000000000000000000000000,)
 
 def test_cleanup_address_types_shortening(harness):
-    """cleanup/contracts/cleanup_address_types_shortening.sol
-
-    ARCH NOTE: Solidity addresses are 20 bytes; AVM accounts are 32 bytes.
-    The contract casts bytes21→bytes20→address and compares to a 20-byte
-    literal — within puya-sol both sides are 20-byte bytes, so the
-    internal require passes. The function returns `address r` whose
-    underlying 20-byte representation matches the EVM expected value
-    `0x11..00`, but the ARC4 return slot type doesn't render through the
-    harness's address-decode path the same way as a real AVM 32-byte
-    address would. The call succeeds; the returned bytes don't decode to
-    a sensible AVM address — that's the architectural difference.
-    """
+    """Address literals and bytes20 casts share a zero-extended 32-byte carrier."""
     app = harness.compile_and_deploy("cleanup/contracts/cleanup_address_types_shortening.sol")
-    # Both functions deploy and execute (internal require passes); the
-    # return values are bytes20-shaped under the hood and don't map to a
-    # 32-byte AVM Account, so we just verify the call succeeded.
-    assert not harness.call(app, "f()").reverted
-    assert not harness.call(app, "g()").reverted
+    expected = encoding.encode_address(bytes(12) + bytes.fromhex("1122334455667788990011223344556677889900"))
+    for method in ("f()", "g()"):
+        result = harness.call(app, method)
+        assert not result.reverted
+        assert result.abi_return == expected
 
 def test_cleanup_address_types_v1(harness):
-    """cleanup/contracts/cleanup_address_types_v1.sol
+    """Valid native arguments compare in the same namespace as address literals.
 
-    ARCH NOTE: Solidity addresses are 20 bytes; AVM accounts are 32 bytes.
-    The original test passes an EVM "overlong" 22-byte address that EVM
-    truncates to 20 bytes and matches the contract's literal
-    `0x1234567890123456789012345678901234567890`. AVM ApplicationArgs
-    addresses are always 32 bytes (algosdk rejects oversized payloads at
-    encode time), and puya-sol compiles the address literal as 20 raw
-    bytes — so the comparison `a != literal` is always true (length
-    mismatch). Function always returns 1.
-
-    Test the AVM-observable behavior: any valid 32-byte address passed in
-    will never match the 20-byte literal, so `f()/g()` always return 1.
+    ARC4 cannot exercise EVM v1's dirty overlong address-calldata cleanup.
     """
     app = harness.compile_and_deploy("cleanup/contracts/cleanup_address_types_v1.sol")
-    # Any valid AVM address never matches the 20-byte EVM literal.
-    addr = harness.localnet.account.address
-    assert as_int(harness.call(app, "f(address)", addr).abi_return) == 1
-    assert as_int(harness.call(app, "g(address)", addr).abi_return) == 1
+    match = encoding.encode_address(bytes(12) + bytes.fromhex("1234567890123456789012345678901234567890"))
+    for method in ("f(address)", "g(address)"):
+        assert as_int(harness.call(app, method, match).abi_return) == 0
+        assert as_int(harness.call(app, method, harness.localnet.account.address).abi_return) == 1
 
 def test_cleanup_address_types_v2(harness):
-    """cleanup/contracts/cleanup_address_types_v2.sol
-
-    ARCH NOTE: same arch mismatch as test_cleanup_address_types_v1 — EVM
-    20-byte address literal vs AVM 32-byte ApplicationArgs address. The
-    EVM v2 abicoder reverts on overlong calldata; AVM never receives
-    overlong calldata in the first place (algosdk encoder rejects it).
-
-    Test the AVM-observable behavior: function returns 1 for any valid
-    address (never matches the 20-byte literal).
-    """
+    """The v2 decoder has the same valid-address comparison semantics."""
     app = harness.compile_and_deploy("cleanup/contracts/cleanup_address_types_v2.sol")
-    addr = harness.localnet.account.address
-    assert as_int(harness.call(app, "f(address)", addr).abi_return) == 1
-    assert as_int(harness.call(app, "g(address)", addr).abi_return) == 1
+    match = encoding.encode_address(bytes(12) + bytes.fromhex("1234567890123456789012345678901234567890"))
+    for method in ("f(address)", "g(address)"):
+        assert as_int(harness.call(app, method, match).abi_return) == 0
+        assert as_int(harness.call(app, method, harness.localnet.account.address).abi_return) == 1
 
 def test_cleanup_bytes_types_shortening_OldCodeGen(harness):
     """cleanup/contracts/cleanup_bytes_types_shortening_OldCodeGen.sol

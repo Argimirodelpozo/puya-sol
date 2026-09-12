@@ -11,6 +11,7 @@
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/proxies/Erc1967Lowering.h"
 #include "builder/BuildArtifacts.h"
 #include "builder/EvmFeaturePolicy.h"
@@ -46,53 +47,35 @@ struct BoxStructSlotField
 };
 
 std::optional<std::vector<BoxStructSlotField>> boxStructSlotLayout(
-	awst::ARC4Struct const& _struct,
-	std::string const& _operation,
-	awst::SourceLocation const& _loc)
+	TypeMapper& types, awst::ARC4Struct const& _struct,
+	std::string const& _operation, awst::SourceLocation const& _loc)
 {
-	std::vector<BoxStructSlotField> fields;
-	fields.reserve(_struct.fields().size());
-	int arc4Bit = 0;
-	int evmSlot = 0;
-	int evmBit = 0;
-	for (auto const& [name, fieldType]: _struct.fields())
+	auto const* source = dynamic_cast<solidity::frontend::StructType const*>(
+		types.solcAggregateFor(&_struct));
+	auto offsets = arc4FieldBitOffsets(_struct);
+	if (!source || !offsets)
 	{
-		(void)name;
-		bool const isBool = fieldType == awst::WType::arc4BoolType();
-		int fieldBits = 0;
-		if (isBool)
-			fieldBits = 8; // Solidity storage gives bool a complete byte lane.
-		else if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(fieldType);
-			uintN && (uintN->n() % 8) == 0)
-			fieldBits = uintN->n();
-		else
+		Logger::instance().error(_operation + " requires a fixed box struct with solc storage facts", _loc);
+		return std::nullopt;
+	}
+	std::vector<BoxStructSlotField> fields;
+	for (size_t i = 0; i < _struct.fields().size(); ++i)
+	{
+		auto const& [name, fieldType] = _struct.fields()[i];
+		auto const* member = source->memberType(name);
+		bool isBool = fieldType == awst::WType::arc4BoolType();
+		auto const* integer = dynamic_cast<awst::ARC4UIntN const*>(fieldType);
+		if (!member || !member->isValueType()
+			|| (!isBool && (!integer || integer->n() != member->storageBytes() * 8)))
 		{
-			Logger::instance().error(
-				_operation + " of a box-keyed struct slot supports fixed-width "
-				"integer and bool fields; field type '"
-				+ std::string(fieldType ? fieldType->name() : "<null>")
-				+ "' has no scalar EVM/ARC-4 slot mapping", _loc);
+			Logger::instance().error(_operation
+				+ " of a box struct supports only matching fixed-width integer and bool fields", _loc);
 			return std::nullopt;
 		}
-
-		if (evmBit + fieldBits > 256)
-		{
-			++evmSlot;
-			evmBit = 0;
-		}
-
-		// An ARC-4 bool run occupies consecutive bits. The next non-bool
-		// starts after the run's final (possibly partial) byte.
-		if (!isBool && (arc4Bit % 8) != 0)
-			arc4Bit = ((arc4Bit + 7) / 8) * 8;
-		fields.push_back({arc4Bit, evmSlot, evmBit, fieldBits, isBool});
-		arc4Bit += isBool ? 1 : fieldBits;
-		evmBit += fieldBits;
-		if (evmBit == 256)
-		{
-			++evmSlot;
-			evmBit = 0;
-		}
+		auto const& [slot, byte] = source->storageOffsetsOfMember(name);
+		fields.push_back({checkedSize<int>((*offsets)[i], "ARC4 field bit offset"),
+			checkedSize<int>(slot, "struct member slot"), checkedSize<int>(byte * 8, "storage bit offset"),
+			checkedSize<int>(member->storageBytes() * 8, "storage field width"), isBool});
 	}
 	return fields;
 }
@@ -137,7 +120,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	// opaquely. Assert slot < 128 (fail loud on the unsupported cases), then
 	// safeBtoi handles the now-bounded value.
 	auto slot = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
-	emitTransientSlotBound(slot, _loc, m_pendingStatements);
+	emitTransientSlotBound(slot, _loc, m_frame.pendingStatements);
 	auto slotU64 = safeBtoi(slot, _loc);
 	auto offset = awst::makeUInt64BinOp(std::move(slotU64), awst::UInt64BinaryOperator::Mult,
 		awst::makeIntegerConstant("32", _loc), _loc);
@@ -171,8 +154,8 @@ void AssemblyBuilder::handleTstore(
 	// Direct scratch write: side-effectful, can't be DCE'd, persists across callsub.
 	_out.push_back(awst::makeExpressionStatement(
 		awst::makeStoreSlot(transientSlot(), std::move(replace), _loc), _loc));
-	if (m_transientStorage)
-		m_transientStorage->clearAddressShadowForWord(slot, _out, _loc);
+	if (m_context->transientStorage)
+		m_context->transientStorage->clearAddressShadowForWord(slot, _out, _loc);
 }
 
 
@@ -205,14 +188,14 @@ void AssemblyBuilder::handleSstore(
 			"failure — the AVM upgrade is a native UpdateApplication submitted "
 			"by the admin with the new program (see proxy.md)", _loc);
 		_out.push_back(proxies::Erc1967Lowering::trapStatement(
-			proxies::Erc1967Slot::Implementation, /*_isStore=*/true, _loc));
+			proxies::Erc1967Slot::Implementation, _loc));
 		return;
 	case proxies::Erc1967Slot::Beacon:
 		Logger::instance().warning(
 			"ERC-1967 beacon slot write lowers to a runtime failure (see "
 			"proxy.md)", _loc);
 		_out.push_back(proxies::Erc1967Lowering::trapStatement(
-			proxies::Erc1967Slot::Beacon, /*_isStore=*/true, _loc));
+			proxies::Erc1967Slot::Beacon, _loc));
 		return;
 	case proxies::Erc1967Slot::None:
 		break;
@@ -256,7 +239,7 @@ void AssemblyBuilder::handleBoxKeyedStructSlotStore(
 	auto const* st = dynamic_cast<awst::ARC4Struct const*>(_slotBox->wtype);
 	if (!st) return; // guaranteed by caller; defensive
 
-	auto maybeFields = boxStructSlotLayout(*st, "sstore", _loc);
+	auto maybeFields = boxStructSlotLayout(m_typeMapper, *st, "sstore", _loc);
 	if (!maybeFields) return;
 	auto const& fields = *maybeFields;
 
@@ -343,7 +326,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleBoxKeyedStructSlotLoad(
 	auto const* st = dynamic_cast<awst::ARC4Struct const*>(_slotBox->wtype);
 	if (!st) return nullptr;
 
-	auto maybeFields = boxStructSlotLayout(*st, "sload", _loc);
+	auto maybeFields = boxStructSlotLayout(m_typeMapper, *st, "sload", _loc);
 	if (!maybeFields) return nullptr;
 	auto const& fields = *maybeFields;
 
@@ -411,8 +394,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 		Logger::instance().warning(
 			"ERC-1967 beacon slot read lowers to a runtime failure — this call "
 			"site REVERTS if ever reached (see proxy.md)", _loc);
-		m_pendingStatements.push_back(proxies::Erc1967Lowering::trapStatement(
-			proxies::Erc1967Slot::Beacon, /*_isStore=*/false, _loc));
+		m_frame.pendingStatements.push_back(proxies::Erc1967Lowering::trapStatement(
+			proxies::Erc1967Slot::Beacon, _loc));
 		return awst::makeBiguintConstant("0", _loc);
 	case proxies::Erc1967Slot::None:
 		break;

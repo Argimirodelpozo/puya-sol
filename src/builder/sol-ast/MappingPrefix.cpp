@@ -4,7 +4,6 @@
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/StoragePlace.hpp"
-#include "awst/NameGen.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -14,21 +13,10 @@ using namespace solidity::frontend;
 
 namespace
 {
-std::shared_ptr<awst::Expression> pin(eb::ContractContext& ctx,
-	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc)
-{
-	if (dynamic_cast<awst::BytesConstant const*>(value.get())
-		|| dynamic_cast<awst::IntegerConstant const*>(value.get())) return value;
-	auto variable = awst::makeVarExpression("__holder_" + std::to_string(
-		awst::NameGen::next("MappingPrefix.pin")), value->wtype, loc);
-	ctx.preEffects().push_back(awst::makeAssignmentStatement(variable, std::move(value), loc));
-	return variable;
-}
-
 StorageHolder withValue(eb::ContractContext& ctx, std::shared_ptr<awst::Expression> key,
 	Type const* type, awst::SourceLocation const& loc)
 {
-	key = pin(ctx, std::move(key), loc);
+	key = ctx.emitSequencedOperand({}, std::move(key), true, loc);
 	if (dynamic_cast<MappingType const*>(type)) return {key, key};
 	return {key, StoragePathWalker::boxedValue(ctx.typeMapper, key, type, loc)};
 }
@@ -37,7 +25,7 @@ StorageHolder element(eb::ContractContext& ctx, StorageHolder base, ArrayType co
 	std::shared_ptr<awst::Expression> index, awst::SourceLocation const& loc)
 {
 	if (!base.key || !base.value) return {};
-	return StoragePathWalker(ctx.typeMapper, StoragePathPolicy::holder(), &type, loc)
+	return StoragePathWalker(ctx.typeMapper, &type, loc)
 		.step(std::move(base), std::move(index), ctx.preEffects());
 }
 }
@@ -46,33 +34,18 @@ StorageHolder resolveBuiltStorageHolder(eb::ContractContext& ctx,
 	std::shared_ptr<awst::Expression> const& value, awst::SourceLocation const& loc)
 {
 	if (!value) return {};
-	if (auto box = std::dynamic_pointer_cast<awst::BoxValueExpression>(value))
+	if (dynamic_cast<awst::BoxValueExpression const*>(value.get())
+		|| dynamic_cast<awst::AppStateExpression const*>(value.get()))
 	{
-		auto copy = std::make_shared<awst::BoxValueExpression>(*box);
-		copy->key = pin(ctx, box->key, loc);
-		return {copy->key, copy};
+		auto place = StoragePlace::fromRead(value);
+		auto key = ctx.emitSequencedOperand({}, place->key, true, loc);
+		return {key, place->makeField(key, loc)};
 	}
-	if (auto cell = std::dynamic_pointer_cast<awst::AppStateExpression>(value))
+	if (dynamic_cast<awst::StateGet const*>(value.get())
+		|| dynamic_cast<awst::ReinterpretCast const*>(value.get()))
 	{
-		auto copy = std::make_shared<awst::AppStateExpression>(*cell);
-		copy->key = pin(ctx, cell->key, loc);
-		return {copy->key, copy};
-	}
-	if (auto get = std::dynamic_pointer_cast<awst::StateGet>(value))
-	{
-		auto result = resolveBuiltStorageHolder(ctx, get->field, loc);
-		if (result.key)
-		{
-			auto copy = std::make_shared<awst::StateGet>(*get);
-			copy->field = std::move(result.value);
-			result.value = std::move(copy);
-		}
-		return result;
-	}
-	if (auto cast = std::dynamic_pointer_cast<awst::ReinterpretCast>(value))
-	{
-		auto result = resolveBuiltStorageHolder(ctx, cast->expr, loc);
-		if (result.key) result.value = awst::makeReinterpretCast(std::move(result.value), value->wtype, loc);
+		auto result = resolveBuiltStorageHolder(ctx, StoragePlace::projectionBase(value), loc);
+		if (result.key) result.value = StoragePlace::withProjectionBase(value, std::move(result.value));
 		return result;
 	}
 	if (auto field = std::dynamic_pointer_cast<awst::FieldExpression>(value))
@@ -89,7 +62,7 @@ StorageHolder resolveBuiltStorageHolder(eb::ContractContext& ctx,
 	}
 	if (value->wtype == awst::WType::bytesType() || value->wtype == awst::WType::boxKeyType())
 	{
-		auto key = pin(ctx, value, loc);
+		auto key = ctx.emitSequencedOperand({}, value, true, loc);
 		return {key, key};
 	}
 	return {};

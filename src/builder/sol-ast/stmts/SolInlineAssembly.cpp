@@ -532,7 +532,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		m_blk, m_node, declNameFn, paramBitWidths, blobOffsetVars,
 		calldataPointerNames, calldataStaticPtrNames, signedParamBits);
 
-	AssemblyBuilder asmTranslator(m_blk.typeMapper(), m_blk.sourceFile(), contextName);
+	AssemblyBuilder asmTranslator(m_blk.typeMapper(), m_blk.sourceFile(), contextName,
+		m_blk.scope.isInConstructor());
 	asmTranslator.setTransientStorage(m_blk.builderCtx().transientStorage);
 	asmTranslator.setFrameIsProgram(m_blk.fn.frameIsProgram);
 	asmTranslator.setSeededCalldataPointers(&m_blk.fn.seededCalldataPointers);

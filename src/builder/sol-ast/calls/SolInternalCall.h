@@ -9,6 +9,7 @@
 
 namespace puyasol::builder::sol_ast
 {
+class ResolvedLValue;
 
 /// Internal function calls: direct calls, library calls, free functions,
 /// super calls, base internal calls, using-for directive calls.
@@ -23,6 +24,7 @@ private:
 	/// Interior field paths requested for reference params of THIS call
 	/// (param index → path, enclosing box wtype); see BuildArtifacts::PathSpecialization.
 	std::map<size_t, std::pair<std::vector<std::string>, awst::WType const*>> m_pathSpecs;
+	std::map<size_t, std::shared_ptr<ResolvedLValue>> m_writeBacks;
 	/// Resolve an identifier-based function call target.
 	std::shared_ptr<awst::Expression> resolveIdentifierCall(
 		solidity::frontend::Identifier const& _ident);
@@ -41,8 +43,7 @@ private:
 	std::shared_ptr<awst::Expression> buildSubroutineCall(
 		awst::SubroutineTarget _target,
 		awst::WType const* _returnType,
-		solidity::frontend::FunctionDefinition const* _funcDef,
-		bool _isUsingForCall);
+		solidity::frontend::FunctionDefinition const* _funcDef);
 
 	// ── buildSubroutineCall phases ──────────────────────────────────────
 	/// Storage-ref-pointer result: reconstitute IndexExpression (or pass through slot handles / bytes box-key returns).
@@ -52,16 +53,14 @@ private:
 	/// Box-key prefix for a mapping/storage-ref argument.
 	std::shared_ptr<awst::Expression> extractMappingKeyPrefix(
 		solidity::frontend::Expression const& argExpr);
-	/// Build all call args (using-for receiver first) with EVM left-to-right effect sequencing.
+	/// Bind source operands in the selected solc codegen's evaluation order.
 	void buildSequencedArgs(
 		std::vector<awst::CallArg>& args,
 		solidity::frontend::FunctionDefinition const* _funcDef,
-		bool _isUsingForCall,
-		awst::SubroutineTarget const* target = nullptr,
-		bool followingEffects = false);
-	/// Companion byte offset for an offset-convention struct-ref argument.
-	std::shared_ptr<awst::Expression> offsetForArg(
-		solidity::frontend::Expression const* argExpr);
+		awst::SubroutineTarget const* target = nullptr);
+	/// One physical binding for a key-plus-byte-offset struct reference.
+	std::pair<std::shared_ptr<awst::Expression>, std::shared_ptr<awst::Expression>> bindBoxedReference(
+		solidity::frontend::Expression const& argExpr);
 	awst::WType const* returnTypeFrom(solidity::frontend::FunctionDefinition const* _funcDef);
 
 };

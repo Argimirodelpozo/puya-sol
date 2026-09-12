@@ -261,7 +261,7 @@ def _write_child_deploy_templates(out_dir: Path, options: dict) -> list[dict]:
     )
     if not children:
         return []
-    tmpl: dict[str, str] = {}
+    tmpl: dict[str, int | str] = {}
     records: list[dict] = []
     for child in children:
         approval = out_dir / f"{child}.approval.bin"
@@ -280,11 +280,22 @@ def _write_child_deploy_templates(out_dir: Path, options: dict) -> list[dict]:
         tmpl[f"TMPL_APPROVAL_{child}_P0"] = page0
         tmpl[f"TMPL_APPROVAL_{child}_P1"] = page1
         tmpl[f"TMPL_CLEAR_{child}"] = clear_data.hex()
+        schema_path = out_dir / f"{child}.arc56.json"
+        schema_data = schema_path.read_bytes()
+        schema = json.loads(schema_data)["state"]["schema"]
+        for scope, limit in (("global", 64), ("local", 16)):
+            counts = schema[scope]
+            if any(type(counts.get(kind)) is not int or not 0 <= counts[kind] <= limit
+                   for kind in ("ints", "bytes")) or counts["ints"] + counts["bytes"] > limit:
+                raise ValueError(f"invalid child state schema: {child}")
+            for kind, suffix in (("ints", "NumUint"), ("bytes", "NumByteSlice")):
+                tmpl[f"TMPL_CHILD_{child}_{scope.title()}{suffix}"] = counts[kind]
         records += [
             _artifact_record(approval, "child-approval-bytecode", approval_data),
             _artifact_record(clear, "child-clear-bytecode", clear_data),
+            _artifact_record(schema_path, "child-schema", schema_data),
         ]
-    if len(tmpl) != len(children) * 3:
+    if len(tmpl) != len(children) * 7:
         raise ValueError("deployment template failed schema validation")
     template_path = out_dir / "deploy.tmpl.json"
     payload = _atomic_write_json(template_path, tmpl)

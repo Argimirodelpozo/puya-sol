@@ -19,13 +19,13 @@ contract AsmCallValueCallee {
         got = msg.value;
     }
 
-    receive() external payable {}
+    receive() external payable { hits += 10; got = msg.value; }
 }
 
 contract AsmCallValueCaller {
     // M8-value: plain value transfer (Solady safeTransferETH shape) — the
-    // garbage 4-byte selector routes to the callee's fallback, whose
-    // msg.value must see the grouped payment.
+    // empty calldata selects receive(), whose msg.value must see the
+    // grouped payment. No fabricated selector may force fallback().
     // M8-output: selector-addressed call; r must be the RAW return value
     // (prefix stripped) and rds its EVM-shaped size.
     function run(uint256 amt, uint256 x)

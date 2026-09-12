@@ -17,12 +17,9 @@ namespace puyasol::builder::eb
 class AsaIntrinsics
 {
 public:
-	/// True only for the canonical `Bits.bitlen(uint256)` declaration in
-	/// `libs/AVM.sol`. Its body is a fail-fast Solidity stub; direct calls are
-	/// lowered to the native AVM `bitlen` opcode.
-	static bool isBitsBitlenFacade(
-		solidity::frontend::FunctionDefinition const& _function);
-
+	/// Validate the canonical source unit, library and resolved signature once
+	/// during program analysis. Call sites use the resulting declaration IDs.
+	static std::string facadeLibrary(solidity::frontend::FunctionDefinition const& _function);
 	/// Try to handle `<base>.<member>(...)`; returns built expression iff
 	/// base is an AVM stdlib library and member is a known intrinsic.
 	/// Returns nullopt to fall through to the generic resolver.

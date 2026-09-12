@@ -162,7 +162,7 @@ def test_proxy_adaptation_default_off_slots(harness, layout):
         assert _addr_bytes(harness.call(app, method).abi_return) == decode_address(owner.address)
     harness.call(app, "setValue(uint256)", 41)
     assert as_int(harness.call(app, "rawValue()").abi_return) == 41
-    assert "escapes into a runtime context" not in (harness.out_dir / "puya-sol.log").read_text()
+    assert "slot constant survives in runtime data" not in (harness.out_dir / "puya-sol.log").read_text()
 
 
 @pytest.mark.parametrize("layout", [[], ["--evm-storage-layout"]], ids=["native", "slots"])
@@ -256,7 +256,8 @@ def test_erc1967_escaped_slot_warning(harness):
     harness.compile("puyasolRegression/contracts/erc1967_slot_flow.sol",
                     extra_args=["--proxy-adaptation"])
     log = (harness.out_dir / "puya-sol.log").read_text()
-    assert "escapes into a runtime context" in log
+    assert "slot constant survives in runtime data" in log
+    assert "does not prove a storage-model split" in log
 
 
 def test_erc1967_contract_valued_admin(harness):

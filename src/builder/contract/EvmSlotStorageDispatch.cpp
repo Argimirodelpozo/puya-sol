@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/BuildArtifacts.h"
 #include "builder/contract/StorageDispatchSupport.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/storage/EvmLayoutMode.h"
@@ -988,14 +989,14 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	// UNIT-GLOBAL, not per-contract: the runtime subroutines share one
 	// SubroutineID across the whole unit, so variant bodies clobber each other
 	// (AWSTBuilder pre-scans and sets the flags before any contract builds).
-	bool const denseOnly = m_typeMapper.profile().denseOnlyStorage;
+	bool const denseOnly = m_typeMapper.artifacts().denseOnlyStorage;
 
 	auto const& cref = m_contractId;
 	awst::SourceLocation loc(m_sourceFile);
 
 	// Single-page dense layouts skip the mod and the wide btoi normalisation.
 	bool const singlePage = denseOnly
-		&& m_typeMapper.profile().singlePageStorage;
+		&& m_typeMapper.artifacts().singlePageStorage;
 
 	EvmSlotCodec codec{m_typeMapper, loc, cref, denseOnly, singlePage, "__eslot64"};
 	codec.emitStorageRead(_contractNode);

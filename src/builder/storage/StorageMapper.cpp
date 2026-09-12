@@ -1,6 +1,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/StorageKey.h"
 #include "builder/storage/StorageLayout.h"
+#include "builder/storage/StoragePlace.hpp"
 #include "builder/SourceLocConvert.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -41,14 +42,6 @@ std::shared_ptr<awst::BytesConstant> StorageMapper::makeKeyExpr(
 			: awst::WType::stateKeyType());
 }
 
-std::shared_ptr<awst::Expression> StorageMapper::makeDefaultValue(
-	awst::WType const* _type,
-	awst::SourceLocation const& _loc
-)
-{
-	return TypeCoercion::makeDefaultValue(_type, _loc);
-}
-
 std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 	std::shared_ptr<awst::Expression> _field,
 	awst::WType const* _type,
@@ -72,26 +65,15 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStateGetWithDefault(
 		if (builder::computeEncodedElementSize(_type).fixedBytes().value_or(0) > kAvmStackValueMax)
 			return _field;
 		// (b) Top-level dynamic state vars — eagerly created in __postInit.
-		if (isTopLevelDynamicBox(bv.get()))
+		if (bv->preserveEmptyBox)
 			return _field;
 	}
-	auto def = makeDefaultValue(_type, _loc);
+	auto def = TypeCoercion::makeDefaultValue(_type, _loc);
 	return awst::makeStateGet(std::move(_field), std::move(def), _type, _loc);
 }
 
 namespace
 {
-// Only address-preserving projections are transparent. A previously
-// materialized local is a value, not evidence of a backing box's existence.
-std::shared_ptr<awst::Expression> projectionBase(std::shared_ptr<awst::Expression> const& value)
-{
-	if (auto index = std::dynamic_pointer_cast<awst::IndexExpression>(value)) return index->base;
-	if (auto field = std::dynamic_pointer_cast<awst::FieldExpression>(value)) return field->base;
-	if (auto cast = std::dynamic_pointer_cast<awst::ReinterpretCast>(value)) return cast->expr;
-	if (auto decode = std::dynamic_pointer_cast<awst::ARC4Decode>(value)) return decode->value;
-	return nullptr;
-}
-
 std::shared_ptr<awst::Expression> defaultAbsentBox(
 	TypeMapper& mapper, std::shared_ptr<awst::Expression> key,
 	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc)
@@ -101,7 +83,7 @@ std::shared_ptr<awst::Expression> defaultAbsentBox(
 		StorageMapper::makeBoxLenTuple(mapper, std::move(key), loc),
 		1, awst::WType::boolType(), loc);
 	return awst::makeConditional(std::move(exists), std::move(value),
-		StorageMapper::makeDefaultValue(type, loc), type, loc);
+		TypeCoercion::makeDefaultValue(type, loc), type, loc);
 }
 }
 
@@ -111,7 +93,12 @@ std::shared_ptr<awst::Expression> StorageMapper::makePartialBoxReadWithDefault(
 	awst::SourceLocation const& _loc)
 {
 	auto root = _value;
-	while (auto base = projectionBase(root)) root = std::move(base);
+	while (!dynamic_cast<awst::StateGet const*>(root.get()))
+	{
+		auto base = StoragePlace::projectionBase(root);
+		if (!base) break;
+		root = std::move(base);
+	}
 	auto box = std::dynamic_pointer_cast<awst::BoxValueExpression>(root);
 	if (!box) return _value;
 	auto rootSize = computeEncodedElementSize(box->wtype).fixedBytes().value_or(0);
@@ -141,7 +128,7 @@ std::shared_ptr<awst::Expression> StorageMapper::makePartialBoxReadWithDefault(
 			result->key = key;
 			return result;
 		}
-		auto base = clone(projectionBase(value));
+		auto base = clone(StoragePlace::projectionBase(value));
 		if (auto index = std::dynamic_pointer_cast<awst::IndexExpression>(value))
 		{
 			auto const* array = dynamic_cast<awst::ARC4StaticArray const*>(index->base->wtype);
@@ -183,20 +170,18 @@ std::shared_ptr<awst::BoxValueExpression> StorageMapper::makeTopLevelBoxExpr(
 {
 	auto key = awst::makeUtf8BytesConstant(_varName, _loc, awst::WType::boxKeyType());
 	auto box = awst::makeBoxValueExpression(std::move(key), _type, _loc);
-	box->isDeclarationRoot = true;
+	box->preserveEmptyBox = hasDynamicBoxValue(_type);
 	return box;
 }
 
-bool StorageMapper::isTopLevelDynamicBox(awst::BoxValueExpression const* _box)
+bool StorageMapper::hasDynamicBoxValue(awst::WType const* _type)
 {
-	if (!_box || !_box->wtype) return false;
-	auto kind = _box->wtype->kind();
-	bool dynamicSized =
+	if (!_type) return false;
+	auto kind = _type->kind();
+	return
 		kind == awst::WTypeKind::ARC4DynamicArray
 		|| kind == awst::WTypeKind::ReferenceArray
-		|| awst::isDynamicBytes(_box->wtype);
-	if (!dynamicSized) return false;
-	return _box->isDeclarationRoot;
+		|| awst::isDynamicBytes(_type);
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::makeBoxLenTuple(
@@ -218,26 +203,15 @@ std::shared_ptr<awst::Statement> StorageMapper::makeEnsureRootBoxForWrite(
 {
 	// Walk to the root BoxValue, noting whether an element or field projection
 	// is crossed (a partial write). Read/decode wrappers do not change the root.
-	awst::Expression const* cur = _target.get();
+	auto cur = _target;
 	bool hasProjection = false;
-	awst::BoxValueExpression const* root = nullptr;
-	while (cur)
+	while (auto base = StoragePlace::projectionBase(cur))
 	{
-		if (auto const* sg = dynamic_cast<awst::StateGet const*>(cur))
-			cur = sg->field.get();
-		else if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(cur))
-		{ hasProjection = true; cur = idx->base.get(); }
-		else if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(cur))
-		{ hasProjection = true; cur = fe->base.get(); }
-		else if (auto const* decode = dynamic_cast<awst::ARC4Decode const*>(cur))
-			cur = decode->value.get();
-		else if (auto const* cast = dynamic_cast<awst::ReinterpretCast const*>(cur))
-			cur = cast->expr.get();
-		else if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(cur))
-		{ root = bv; break; }
-		else
-			break;
+		hasProjection |= dynamic_cast<awst::IndexExpression const*>(cur.get())
+			|| dynamic_cast<awst::FieldExpression const*>(cur.get());
+		cur = std::move(base);
 	}
+	auto const* root = dynamic_cast<awst::BoxValueExpression const*>(cur.get());
 	if (!root || !root->key)
 		return nullptr;
 	// A whole-box assignment (`st = S(...)`, `arr = [...]`) creates its own box (box_put of the value);
@@ -401,22 +375,27 @@ bool StorageMapper::classifyBoxStorage(
 			return true;
 	}
 
-	// Structs passed by reference somewhere → box (handle-model Stage 1b): boxing makes the
-	// ref a box-key handle that writes through into contract methods. Targeted to ref-passed
-	// types so never-ref-passed structs keep their app-global layout.
+	// Struct reference transport and root placement must agree. A type used as
+	// a mapping value also travels as a box key, even for its standalone roots.
 	if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(type))
-		if (m_typeMapper.analysis().refPassedStructs.count(st->structDefinition().id()) > 0)
+		if (m_typeMapper.analysis().refPassedStructs.contains(st->structDefinition().id())
+			|| (!profile().evmStorageLayout
+				&& m_typeMapper.analysis().boxKeyedStructs.contains(st->structDefinition().id())))
 			return true;
 
-	// AVM global-state limit is 128B (key+value). storageSizeUpperBound()*32 estimates value size.
+	// AVM capacity is a fact about OUR stored representation, not EVM slots.
+	// Named cells use that encoded size directly. Slot mode retains its existing
+	// classification, including the named cells used for immutable declarations.
 	try
 	{
-		auto slotsUpperBound = type->storageSizeUpperBound();
-		auto estimatedBytes = slotsUpperBound * 32;
 		auto keyBytes = _name.size();
 		unsigned maxValueBytes = (128 > keyBytes) ? (128 - keyBytes) : 0;
-		if (estimatedBytes > maxValueBytes)
-			return true;
+		auto const* representation = m_typeMapper.tryMapStorageRepresentation(type);
+		if (!representation) return true;
+		auto bytes = computeEncodedElementSize(representation).fixedBytes();
+		if (bytes && *bytes > maxValueBytes) return true;
+		if (profile().evmStorageLayout)
+			return type->storageSizeUpperBound() * 32 > maxValueBytes;
 	}
 	catch (std::exception const& e)
 	{
@@ -498,9 +477,9 @@ void StorageMapper::beginContract(StorageLayout const& _layout, std::string cons
 		if (m_bindings.count(var->id()))
 			return;
 		std::string keyName = var->name();
-		// Preserve the existing named-cell namespace, including immutables.
-		// Slot mode historically uses plain names for its non-slot cells.
-		if (!profile().evmStorageLayout && !var->isConstant()
+		// Immutables remain named cells in both layouts. Declaration identity,
+		// not a base contract's spelling, determines which physical cell is used.
+		if ((!profile().evmStorageLayout || var->immutable()) && !var->isConstant()
 			&& var->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Transient)
 		{
 			if (usedNames.count(keyName))
@@ -532,6 +511,8 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 	forEachStateVar(_contract, [&](auto const* var)
 	{
 		auto binding = physicalBindingFor(*var);
+		if (profile().evmStorageLayout && binding.storageClass != StorageClass::Immutable)
+			return;
 		if (!binding.hasPersistentCell() || !seen.insert(var->id()).second)
 			return;
 		if (!binding.wtype)
@@ -601,7 +582,7 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStorageTarget(
 	if (_kind == awst::AppStorageKind::Box)
 	{
 		auto box = awst::makeBoxValueExpression(_key, _type, _loc);
-		box->isDeclarationRoot = true;
+		box->preserveEmptyBox = hasDynamicBoxValue(_type);
 		return box;
 	}
 	// AppGlobal (Transient is dispatched by StorageBackend before reaching here).
@@ -625,6 +606,16 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	// Child-constructor planning queries placement before entering the child's
 	// contract context. Classification needs no physical key or parent layout.
 	return classifyBoxStorage(_var, _var.name());
+}
+
+std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
+	PhysicalBinding const& _binding, awst::SourceLocation const& _loc)
+{
+	auto const* type = _binding.valueType(m_typeMapper);
+	auto field = makeStorageTarget(makeKeyExpr(_binding.key, _loc, _binding.kind), type, _binding.kind, _loc);
+	if (auto box = std::dynamic_pointer_cast<awst::BoxValueExpression>(field))
+		box->preserveEmptyBox = _binding.preservesEmptyBox();
+	return makeStateGetWithDefault(std::move(field), type, _loc);
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
@@ -656,21 +647,6 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateWrite(
 	auto key = makeKeyExpr(_varName, _loc, _kind);
 	auto target = makeStorageTarget(key, _type, _kind, _loc);
 	return awst::makeAssignmentExpression(std::move(target), std::move(_value), _loc, _type);
-}
-
-std::shared_ptr<awst::Expression> StorageMapper::biguintSlotToBtoi(
-	std::shared_ptr<awst::Expression> const& _slotExpr,
-	awst::SourceLocation const& _loc
-)
-{
-	// FULL-WIDTH slots: __storage_read/write now take the 256-bit slot (the
-	// box-per-slot store keys on all 32 bytes). The old low-8 truncation was
-	// only sound under the mod-256 __dyn_storage fold (last byte survives
-	// either way); with per-slot boxes every caller must pass the same full
-	// value the asm side uses. (Name kept for diff locality; it no longer btois.)
-	if (_slotExpr->wtype == awst::WType::biguintType())
-		return _slotExpr;
-	return awst::makeAsBiguint(awst::makeItob(_slotExpr, _loc), _loc);
 }
 
 } // namespace puyasol::builder

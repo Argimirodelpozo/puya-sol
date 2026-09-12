@@ -12,8 +12,23 @@
 #include <string>
 #include <vector>
 
+namespace solidity::frontend { class FunctionCall; }
+namespace puyasol::builder::eb { class ContractContext; }
+
 namespace puyasol::builder::sol_ast
 {
+
+/// Shared payload construction for require, revert(string), and revert Error.
+/// Error/Panic use EVM bytes; custom errors retain the private ARC4 transport.
+struct RevertPayload
+{
+	std::string message = "assertion failed";
+	std::shared_ptr<awst::Expression> blob;
+	RevertPayload() = default;
+	RevertPayload(std::shared_ptr<awst::Expression> reason, awst::SourceLocation const& loc);
+	RevertPayload(eb::ContractContext& ctx, solidity::frontend::FunctionCall const& error,
+		awst::SourceLocation const& loc);
+};
 
 inline void appendRevertWord(std::vector<uint8_t>& _out, uint64_t _v)
 {

@@ -18,6 +18,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace puyasol::awst
 {
@@ -25,6 +26,18 @@ namespace puyasol::awst
 class NameGen
 {
 public:
+	/// Isolate a nested/reused compiler invocation and restore its caller's
+	/// naming context even if lowering throws. Counters never cross threads.
+	class Scope
+	{
+	public:
+		Scope(): previous(std::exchange(counters(), {})) {}
+		~Scope() { counters() = std::move(previous); }
+		Scope(Scope const&) = delete;
+		Scope& operator=(Scope const&) = delete;
+	private:
+		std::unordered_map<std::string, int> previous;
+	};
 	/// Current value for _prefix, then increment. Thread-local state.
 	static int next(std::string const& _prefix)
 	{

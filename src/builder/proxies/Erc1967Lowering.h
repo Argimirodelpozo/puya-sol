@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
+#include "builder/proxies/ProxyFacts.h"
 
 #include "builder/sol-types/SolcFwd.h"
 
@@ -25,7 +26,7 @@ namespace puyasol::builder::proxies
 /// wherever inline assembly sloads/sstores them and lowers each to the
 /// corresponding native fact:
 ///   admin slot          → a synthesized app global ("__erc1967_admin"),
-///                         which also arms a bare UpdateApplication method
+///                         which also arms an ABI UpdateApplication method
 ///                         gating native updates on that admin
 ///   implementation slot → this application's own identity on read
 ///                         (bytes24 ++ app id, the contract-value
@@ -61,11 +62,8 @@ public:
 
 	/// Warn (once per slot kind, via _warned) for every 1967 slot constant
 	/// SURVIVING in a translated body. classify() consumes the constants in
-	/// direct sload/sstore position, so a survivor means the slot value
-	/// escaped into runtime data flow (function argument, memory store,
-	/// arithmetic — e.g. OZ StorageSlot.getAddressSlot(SLOT).value) where
-	/// storage accesses are NOT mapped to the native proxy model and split
-	/// from the synthesized admin global / identity read / traps.
+	/// direct sload/sstore position. A survivor is a conservative data-flow
+	/// warning, not proof of a storage-model split (a returned UUID is valid).
 	static void warnEscapedSlotConstants(
 		awst::ContractMethod const& _method, std::set<Erc1967Slot>& _warned);
 	static void warnEscapedSlotConstants(
@@ -92,7 +90,7 @@ public:
 	/// reads (assert(false) with an explanatory message; unreachable sites
 	/// are stripped by puya's DCE — the delegatecall precedent).
 	static std::shared_ptr<awst::Statement> trapStatement(
-		Erc1967Slot _slot, bool _isStore, awst::SourceLocation const& _loc);
+		Erc1967Slot _slot, awst::SourceLocation const& _loc);
 
 	/// The synthesized admin global's declaration (appended to the
 	/// contract's app_state when any admin-slot use was lowered).
@@ -111,19 +109,7 @@ public:
 	//   getImplementation → this app's own identity
 	//   getAdmin/_setAdmin → the synthesized admin global (arms the gate)
 	//   _setImplementation / upgradeToAndCall / beacon family → runtime trap
-	enum class UtilsFold
-	{
-		None,
-		ImplementationLoad,
-		AdminLoad,
-		AdminStore,
-		TrapImplementation,
-		TrapBeacon,
-	};
-
-	/// Classify a member function of a library named "ERC1967Utils".
-	static UtilsFold classifyUtilsFunction(
-		solidity::frontend::FunctionDefinition const& _func);
+	using UtilsFold = Erc1967UtilsFold;
 
 	/// Replacement body for a folded ERC1967Utils function. `_returnType` and
 	/// `_args` are the built subroutine's (fold bodies must satisfy them);
@@ -138,14 +124,15 @@ public:
 
 	/// The UpdateApplication method gating native updates on the 1967 admin:
 	/// allowed ONLY for OnCompletion=UpdateApplication. The stored admin may
-	/// be an ACCOUNT (raw 32 bytes → compared against Txn.Sender directly) or
+	/// be an ACCOUNT (compared in the selected Solidity sender namespace) or
 	/// a CONTRACT identity (bytes24 ++ app id, this compiler's contract-value
 	/// convention — the transparent-proxy ProxyAdmin topology): then the
 	/// sender must be that application's ESCROW address, so an admin app
 	/// driving an inner UpdateApplication authorizes. A zero (never-set)
 	/// admin locks updates out entirely — fail closed.
 	static awst::ContractMethod updateGateMethod(
-		std::string const& _cref, awst::SourceLocation const& _loc);
+		std::string const& _cref, std::shared_ptr<awst::Expression> _logicalSender,
+		awst::SourceLocation const& _loc);
 };
 
 } // namespace puyasol::builder::proxies

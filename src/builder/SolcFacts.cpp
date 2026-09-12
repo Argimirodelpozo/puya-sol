@@ -18,6 +18,8 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
+#include <libyul/optimiser/SimplificationRules.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <algorithm>
 #include <functional>
@@ -39,6 +41,50 @@ solidity::frontend::Expression const& SolcFacts::functionExpression(
 		tuple && tuple->components().size() == 1 && tuple->components()[0])
 		return functionExpression(*tuple->components()[0]);
 	return expression;
+}
+
+std::vector<solidity::frontend::Expression const*> SolcFacts::callArguments(
+	solidity::frontend::FunctionCall const& call)
+{
+	using namespace solidity::frontend;
+	std::vector<solidity::frontend::Expression const*> arguments;
+	auto const* type = dynamic_cast<FunctionType const*>(call.expression().annotation().type);
+	if (type && type->hasBoundFirstArgument())
+		arguments.push_back(&dynamic_cast<MemberAccess const&>(functionExpression(call.expression())).expression());
+	for (auto const& argument: call.sortedArguments()) arguments.push_back(argument.get());
+	return arguments;
+}
+
+std::vector<solidity::frontend::Expression const*> SolcFacts::referenceSources(
+	solidity::frontend::Expression const& expression)
+{
+	using namespace solidity::frontend;
+	std::vector<solidity::frontend::Expression const*> result;
+	std::function<void(solidity::frontend::Expression const&)> walk = [&](auto const& value) {
+		if (auto const* member = dynamic_cast<MemberAccess const*>(&value))
+			return walk(member->expression());
+		if (auto const* index = dynamic_cast<IndexAccess const*>(&value))
+			return walk(index->baseExpression());
+		if (auto const* range = dynamic_cast<IndexRangeAccess const*>(&value))
+			return walk(range->baseExpression());
+		if (auto const* conditional = dynamic_cast<Conditional const*>(&value))
+		{
+			walk(conditional->trueExpression());
+			return walk(conditional->falseExpression());
+		}
+		if (auto const* tuple = dynamic_cast<TupleExpression const*>(&value))
+		{
+			for (auto const& component: tuple->components()) if (component) walk(*component);
+			return;
+		}
+		if (auto const* call = dynamic_cast<solidity::frontend::FunctionCall const*>(&value);
+			call && call->annotation().kind.set() && *call->annotation().kind == FunctionCallKind::TypeConversion
+			&& call->arguments().size() == 1)
+			return walk(*call->arguments()[0]);
+		result.push_back(&value);
+	};
+	walk(expression);
+	return result;
 }
 
 solidity::frontend::FunctionDefinition const* SolcFacts::resolveFunction(
@@ -196,6 +242,7 @@ SolcFacts::YulAnalysis SolcFacts::analyzeYul(
 	// SCCs. The termination test is deliberately conservative: even a dead
 	// return builtin retains its enclosing Solidity-frame lowering for now.
 	auto const effects = SideEffectsPropagator::sideEffects(_dialect, graph);
+	result.rootEffects = effects.at(FunctionHandle{YulName{}});
 	std::set<FunctionHandle> calldata, terminating;
 	std::set<BuiltinHandle> calldataBuiltins;
 	for (auto const* name: {"calldataload", "calldatacopy", "calldatasize"})
@@ -316,6 +363,42 @@ std::shared_ptr<PreparedAssembly const> SolcFacts::prepareAssembly(
 	for (auto const& [_, reference]: result->externalReferences)
 		result->facts.usesStorage |= reference.suffix == "slot";
 	return result;
+}
+
+bool SolcFacts::yulExpressionIsMovable(
+	Expression const& _expression, Dialect const& _dialect)
+{
+	return SideEffectsCollector(_dialect, _expression).movable();
+}
+
+std::optional<std::string> SolcFacts::yulConstantValue(
+	Expression const& _expression, Dialect const& _dialect,
+	std::function<std::optional<std::string>(Identifier const&)> const& _value)
+{
+	if (auto const* literal = std::get_if<Literal>(&_expression))
+		return literal->value.unlimited() ? std::nullopt
+			: std::optional<std::string>(literal->value.value().str());
+	if (auto const* identifier = std::get_if<Identifier>(&_expression))
+		return _value(*identifier);
+	auto const* call = std::get_if<FunctionCall>(&_expression);
+	auto const* evm = dynamic_cast<EVMDialect const*>(&_dialect);
+	if (!call || !evm || !std::holds_alternative<BuiltinName>(call->functionName)
+		|| !yulExpressionIsMovable(_expression, _dialect))
+		return std::nullopt;
+	FunctionCall constantCall = *call;
+	for (auto& argument: constantCall.arguments)
+	{
+		auto constant = yulConstantValue(argument, _dialect, _value);
+		if (!constant) return std::nullopt;
+		argument = Literal{{}, LiteralKind::Number, LiteralValue(solidity::u256{*constant})};
+	}
+	Expression folded = std::move(constantCall);
+	while (auto const* match = SimplificationRules::findFirstMatch(
+		folded, _dialect, [](YulName) -> AssignedValue const* { return nullptr; }))
+		folded = match->action().toExpression({}, *evm);
+	if (auto const* literal = std::get_if<Literal>(&folded))
+		return literal->value.value().str();
+	return std::nullopt;
 }
 
 SolcFacts::YulArgumentFacts SolcFacts::yulArgumentFacts(

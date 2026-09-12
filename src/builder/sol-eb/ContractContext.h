@@ -23,6 +23,8 @@ class Declaration;
 class ContractDefinition;
 }
 
+namespace solidity::langutil { struct SourceLocation; }
+
 namespace puyasol::builder
 {
 class TypeMapper;
@@ -415,6 +417,7 @@ public:
 	}
 
 	awst::SourceLocation makeLoc(int _start, int _end) const;
+	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _location) const;
 
 private:
 	std::shared_ptr<awst::Expression> buildValue(

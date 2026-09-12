@@ -2,8 +2,9 @@
 
 /// @file PostInitTriggers.h
 /// True when constructor must defer to __postInit (run after AppCreate).
-/// Triggers: (1) box writes (need MBR), (2) new C() deploy,
-/// (3) msg.{value,sender,data}, (4) AVM stdlib (inner-txn MBR+ASA).
+/// Uses solc creation reachability plus target-specific self/library edges.
+/// Box access, child/external calls, message/native context and inline assembly
+/// require post-create resources; slot-layout constructors remain conservative.
 
 #include <libsolidity/ast/ASTForward.h>
 
@@ -11,9 +12,11 @@ namespace puyasol::builder
 {
 
 class StorageMapper;
+struct ProgramAnalysis;
 
 bool computeNeedsPostInit(
 	solidity::frontend::ContractDefinition const& _contract,
-	StorageMapper const& _storageMapper);
+	StorageMapper const& _storageMapper,
+	ProgramAnalysis const& _analysis);
 
 } // namespace puyasol::builder

@@ -1,4 +1,7 @@
 #include "builder/itxn/NativePayment.h"
+#include "builder/itxn/ApplicationCall.h"
+#include "builder/sol-types/TypeMapper.h"
+#include "builder/itxn/ApplicationTarget.h"
 #include "awst/NameGen.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/XchainAccounts.h"
@@ -49,11 +52,7 @@ NativeReceiver paymentReceiver(
 	// Solidity contract values can be stored/passed as bzero24 ++ appId.
 	// Resolve that convention to an escrow, never pay the keyless encoding.
 	// Zero is still the zero address, not an application identity.
-	auto appId = awst::makeEvalOnce(awst::makeConditional(
-		awst::makeBytesComparison(awst::makeExtract(bytes, 0, 24, _loc),
-			awst::EqualityComparison::Eq, awst::makeBzero(24, _loc), _loc),
-		awst::makeWord32ToUInt64(bytes, _loc), awst::makeZero(_loc),
-		awst::WType::uint64Type(), _loc), _loc);
+	auto appId = awst::makeEvalOnce(ApplicationTarget::canonicalId(bytes, _loc), _loc);
 	auto account = awst::makeConditional(
 		awst::makeNumericCompare(appId, awst::NumericComparison::Ne, awst::makeZero(_loc), _loc),
 		applicationEscrow(appId, _loc),
@@ -91,13 +90,13 @@ std::shared_ptr<awst::CreateInnerTransaction> buildNativePayment(
 }
 
 std::shared_ptr<awst::Statement> buildNativeTransfer(
-	TargetProfile const& _profile,
+	TypeMapper& _types,
 	std::vector<std::shared_ptr<awst::Statement>>& _preEffects,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount,
 	awst::SourceLocation const& _loc)
 {
-	auto receiver = paymentReceiver(_profile, std::move(_receiver), _loc);
+	auto receiver = paymentReceiver(_types.profile(), std::move(_receiver), _loc);
 	auto amount = TypeCoercion::checkedAmountToUint64(_preEffects, std::move(_amount), _loc);
 	auto block = awst::makeBlock(_loc);
 	// A shared field can contain nested SingleEvaluation nodes (e.g. amount
@@ -130,8 +129,10 @@ std::shared_ptr<awst::Statement> buildNativeTransfer(
 	payAndCall->itxns = {std::move(payment), std::move(call)};
 	auto appBranch = awst::makeBlock(_loc);
 	appBranch->body.push_back(awst::makeExpressionStatement(std::move(payAndCall), _loc));
+	ApplicationCall::capture(_types, _loc, appBranch->body);
 	auto accountBranch = awst::makeBlock(_loc);
 	accountBranch->body.push_back(awst::makeExpressionStatement(std::move(payOnly), _loc));
+	ApplicationCall::setReturnData(_types, awst::makeBytesConstant({}, _loc), _loc, accountBranch->body);
 	block->body.push_back(awst::makeIfElse(
 		awst::makeNumericCompare(receiver.appId, awst::NumericComparison::Ne,
 			awst::makeZero(_loc), _loc),

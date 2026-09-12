@@ -5,6 +5,7 @@
 
 namespace puyasol::builder
 {
+class TypeMapper;
 
 /// Shared native-payment boundary: resolve the receiver, enforce the EVM
 /// identity policy, and check the amount before narrowing to AVM uint64.
@@ -20,7 +21,7 @@ std::shared_ptr<awst::CreateInnerTransaction> buildNativePayment(
 /// Solidity transfer/send: invoke receive/fallback for application identities
 /// in the same inner group as the payment; ordinary accounts receive only pay.
 std::shared_ptr<awst::Statement> buildNativeTransfer(
-	TargetProfile const& _profile,
+	TypeMapper& _types,
 	std::vector<std::shared_ptr<awst::Statement>>& _preEffects,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount,

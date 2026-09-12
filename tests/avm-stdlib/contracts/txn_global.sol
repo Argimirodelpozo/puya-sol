@@ -1,37 +1,7 @@
-==== Source: AVM.sol ====
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-library Txn {
-    function sender() internal view returns (address) { revert(); }
-    function fee() internal view returns (uint64) { revert(); }
-    function firstValid() internal view returns (uint64) { revert(); }
-    function lastValid() internal view returns (uint64) { revert(); }
-    function groupIndex() internal view returns (uint64) { revert(); }
-    function typeEnum() internal view returns (uint64) { revert(); }
-    function applicationId() internal view returns (uint64) { revert(); }
-    function onCompletion() internal view returns (uint64) { revert(); }
-    function numAppArgs() internal view returns (uint64) { revert(); }
-}
-
-library Global {
-    function currentApplicationId() internal view returns (uint64) { revert(); }
-    function currentApplicationAddress() internal view returns (address) { revert(); }
-    function latestTimestamp() internal view returns (uint64) { revert(); }
-    function round() internal view returns (uint64) { revert(); }
-    function opcodeBudget() internal view returns (uint64) { revert(); }
-    function callerApplicationId() internal view returns (uint64) { revert(); }
-    function minBalance(address account) internal view returns (uint64) { revert(); }
-    function balance(address account) internal view returns (uint64) { revert(); }
-}
-
-library Group {
-    function size() internal view returns (uint64) { revert(); }
-    function index() internal view returns (uint64) { revert(); }
-}
-
-==== Source: contract.sol ====
-import {Txn, Global, Group} from "AVM.sol";
+import {Txn, Global, Group} from "libs/AVM.sol";
 
 contract C {
     function txnSender() public view returns (address) { return Txn.sender(); }

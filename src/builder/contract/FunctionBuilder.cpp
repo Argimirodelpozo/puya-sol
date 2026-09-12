@@ -105,59 +105,17 @@ void normalizeNativeReturns(
 	// modifier chain's native input/output locals.
 }
 
-// Value-model reference parameters need an explicit post-call value. Contract
-// internal methods only need this for mutated memory structs; host-bound
-// library/free functions also mirror the storage write-backs of root
-// subroutines. The returned indices are threaded through modifier placeholders.
+// Physical write-backs belong to internal carriers, never ABI entry methods.
 std::vector<size_t> augmentMethodForReferenceParams(
-	awst::ContractMethod& method,
-	solidity::frontend::FunctionDefinition const& func,
-	TypeMapper& typeMapper,
-	solidity::frontend::ContractDefinition const* mostDerived,
-	bool asInternalCopy)
+	awst::ContractMethod& method, solidity::frontend::FunctionDefinition const& function,
+	TypeMapper& types, solidity::frontend::ContractDefinition const* mostDerived,
+	sol_ast::FunctionContext const& context)
 {
-	using namespace solidity::frontend;
-	if (!func.isImplemented() || !method.body) return {};
-
-	auto const* scope = func.annotation().contract;
-	bool const isFreestanding = func.isFree() || (scope && scope->isLibrary());
-	bool const isInternalMethod = !isFreestanding
-		&& func.visibility() == Visibility::Internal;
-	bool const isHostedFreestanding = asInternalCopy && isFreestanding
-		&& func.visibility() != Visibility::Private;
-	if (!isInternalMethod && !isHostedFreestanding)
-		return {};
-
-	auto const& plan = typeMapper.callBoundaryPlan(func, mostDerived);
-	auto const& writeBackParams = plan.writeBackParams;
-	if (writeBackParams.empty()) return {};
-	auto const& loc = method.sourceLocation;
-	auto const* newRetType = plan.augmentReturn(typeMapper, method.returnType);
-	method.returnType = newRetType;
-	bool newIsTuple = dynamic_cast<awst::WTuple const*>(newRetType) != nullptr;
-
-	plan.augmentReturns(*method.body, newRetType);
-
-	// Fall-through: only void methods reach here un-terminated (buildFunction
-	// already synthesized non-void returns). Return the reference params.
-	if (!awst::blockAlwaysTerminates(*method.body))
-	{
-		auto implicit = awst::makeReturnStatement(nullptr, loc);
-		if (!newIsTuple && writeBackParams.size() == 1)
-			implicit->value = awst::makeVarExpression(
-				method.args[writeBackParams[0]].name,
-				method.args[writeBackParams[0]].wtype, loc);
-		else
-		{
-			auto tuple = awst::makeTupleExpression(newRetType, loc);
-			for (size_t idx : writeBackParams)
-				tuple->items.push_back(awst::makeVarExpression(
-					method.args[idx].name, method.args[idx].wtype, loc));
-			implicit->value = std::move(tuple);
-		}
-		method.body->body.push_back(std::move(implicit));
-	}
-	return writeBackParams;
+	if (!function.isImplemented() || !method.body || method.arc4MethodConfig) return {};
+	auto const& plan = types.callBoundaryPlan(function, mostDerived);
+	method.returnType = plan.augmentReturn(types, method.returnType);
+	plan.augmentReturns(*method.body, method.returnType, types, context.originalMemoryParams);
+	return plan.writeBackParams;
 }
 } // namespace
 
@@ -362,7 +320,7 @@ void emitNamedReturnInits(
 			continue;
 
 		auto target = awst::makeVarExpression(rp->name(), rpType, _loc);
-		auto zeroVal = StorageMapper::makeDefaultValue(rpType, _loc);
+		auto zeroVal = TypeCoercion::makeDefaultValue(rpType, _loc);
 		inits.push_back(awst::makeAssignmentStatement(std::move(target), std::move(zeroVal), _loc));
 	}
 	for (auto const& rp: retParams)
@@ -416,14 +374,6 @@ void emitImplicitReturn(
 		if (!rp->name().empty())
 			hasNamedReturns = true;
 
-	static std::vector<size_t> const s_noAugmentation;
-	auto const& storageIdx = _shape.storageParamIndices ? *_shape.storageParamIndices : s_noAugmentation;
-	auto const& memoryIdx = _shape.memoryRefParamIndices ? *_shape.memoryRefParamIndices : s_noAugmentation;
-	size_t const totalAugmented = storageIdx.size() + memoryIdx.size();
-	auto augmentedArg = [&](size_t idx) {
-		auto const& arg = (*_shape.args)[idx];
-		return awst::makeVarExpression(arg.name, arg.wtype, _loc);
-	};
 	auto blobOffVar = [&](VariableDeclaration const& rp) {
 		return awst::makeVarExpression(
 			"__blobagg_off_" + std::to_string(rp.id()), awst::WType::uint64Type(), _loc);
@@ -441,22 +391,7 @@ void emitImplicitReturn(
 	};
 
 	auto retStmt = awst::makeReturnStatement(nullptr, _loc);
-	if (!hasNamedReturns && retParams.empty() && totalAugmented > 0)
-	{
-		// Void + augmentation: return augmented args in storage-then-memory order.
-		if (totalAugmented == 1)
-			retStmt->value = augmentedArg(!storageIdx.empty() ? storageIdx[0] : memoryIdx[0]);
-		else
-		{
-			auto tuple = awst::makeTupleExpression(_returnType, _loc);
-			for (size_t idx: storageIdx)
-				tuple->items.push_back(augmentedArg(idx));
-			for (size_t idx: memoryIdx)
-				tuple->items.push_back(augmentedArg(idx));
-			retStmt->value = std::move(tuple);
-		}
-	}
-	else if (hasNamedReturns && retParams.size() == 1 && totalAugmented == 0)
+	if (hasNamedReturns && retParams.size() == 1)
 	{
 		auto const& rp = *retParams[0];
 		bool const inMemory = rp.referenceLocation() == VariableDeclaration::Location::Memory;
@@ -489,7 +424,7 @@ void emitImplicitReturn(
 				: _typeMapper.map(rp.type());
 			if (rp.name().empty())
 				// Solc initializes every return parameter, including unnamed ones.
-				tuple->items.push_back(StorageMapper::makeDefaultValue(vt, _loc));
+				tuple->items.push_back(TypeCoercion::makeDefaultValue(vt, _loc));
 			else if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(vt))
 				tuple->items.push_back(blobOffVar(rp));
 			else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id()) && !memoryUsesBlob(vt))
@@ -497,10 +432,6 @@ void emitImplicitReturn(
 			else
 				tuple->items.push_back(awst::makeVarExpression(rp.name(), vt, _loc));
 		}
-		for (size_t idx: storageIdx)
-			tuple->items.push_back(augmentedArg(idx));
-		for (size_t idx: memoryIdx)
-			tuple->items.push_back(augmentedArg(idx));
 		// These are native locals; the outgoing signature can already contain
 		// promoted or encoded carriers. Keep the source tuple valid before its
 		// whole-value snapshot and the subsequent return-boundary conversion.
@@ -512,7 +443,7 @@ void emitImplicitReturn(
 		retStmt->value = std::move(tuple);
 	}
 	else
-		retStmt->value = StorageMapper::makeDefaultValue(_returnType, _loc);
+		retStmt->value = TypeCoercion::makeDefaultValue(_returnType, _loc);
 
 	// Build-time encoding: the synthesized implicit return is the SECOND return
 	// construction site (SolReturnStatement is the first, for explicit returns);
@@ -712,6 +643,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	if (_func.isImplemented())
 	{
 		m_functionCtx.emplace(*m_tr, _func, method.args, method.returnType);
+		auto functionScope = m_exprBuilder->pushScopeRaii(&m_functionCtx->scope);
 
 		// ABI return encoding belongs at construction time. Plain methods encode
 		// each source return immediately; modifier methods first normalize native
@@ -751,10 +683,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// context checks pass and the in-contract upgrade path traps; the
 		// real bodies would drag delegatecall + escaped-1967-slot storage
 		// into the demand graph.
-		if (auto fold = proxies::UupsLowering::classify(_func);
-			m_typeMapper.profile().proxyAdaptation && fold != proxies::UupsFold::None)
+		auto const& proxyFunctions = m_typeMapper.analysis().proxy.uupsFunctions;
+		if (auto fold = proxyFunctions.find(_func.id()); fold != proxyFunctions.end())
 			method.body = proxies::UupsLowering::foldedBody(
-				fold, method.sourceLocation);
+				fold->second, method.sourceLocation);
 		else
 			method.body = buildBlock(_func.body());
 		m_functionCtx->inConstructor = false;
@@ -789,7 +721,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// captures and forwards the updated parameter values.
 		auto writeBackParams = augmentMethodForReferenceParams(
 			method, _func, m_typeMapper, m_currentContract,
-			_asInternalCopy);
+			*m_functionCtx);
 
 		// Transient blob init is in the approval-program preamble (transient slot);
 		// per-method init would reset it mid-dispatch, clobbering earlier writes.

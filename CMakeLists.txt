@@ -213,6 +213,7 @@ set(SOURCES
 	src/builder/contract/ParamABIValidator.cpp
 	src/builder/contract/PostInitTriggers.cpp
 	src/builder/contract/PostInitBuilder.cpp
+	src/builder/contract/ConstructorWirePlan.cpp
 	src/builder/contract/PublicGetterBuilder.cpp
 	src/builder/contract/SelectorRouter.cpp
 	src/builder/contract/SuperCallResolution.cpp
@@ -233,7 +234,8 @@ set(SOURCES
 	src/builder/assembly/DataOps.cpp
 	src/builder/assembly/MemoryHelpers.cpp
 	src/builder/assembly/PrecompileDispatch.cpp
-	src/builder/assembly/PrecompileHandlers.cpp
+	src/builder/itxn/Precompile.cpp
+	src/builder/codec/ByteSlice.cpp
 	src/builder/assembly/MemoryOps.cpp
 	src/builder/assembly/StatementOps.cpp
 	src/builder/assembly/SyntheticCalldataOps.cpp
@@ -250,6 +252,7 @@ set(SOURCES
 	# Storage, type, and intrinsic mappers
 	src/builder/proxies/Erc1967Lowering.cpp
 	src/builder/proxies/UupsLowering.cpp
+	src/builder/proxies/ProxyFacts.cpp
 	src/builder/storage/StorageMapper.cpp
 	src/builder/storage/StoragePathWalker.cpp
 	src/builder/storage/StorageKey.cpp
@@ -259,7 +262,6 @@ set(SOURCES
 	src/builder/storage/SlotWordCodec.cpp
 	src/builder/storage/TransientStorage.cpp
 	src/builder/sol-types/TypeMapper.cpp
-	src/builder/sol-intrinsics/IntrinsicMapper.cpp
 
 	# Expression builder helpers (sol-eb/)
 	src/builder/abi/AbiSelectorCalldataBuilder.cpp
@@ -271,6 +273,8 @@ set(SOURCES
 	src/builder/itxn/InnerCallHandlers.cpp
 	src/builder/itxn/InnerCallShapes.cpp
 	src/builder/itxn/NativePayment.cpp
+	src/builder/itxn/ApplicationTarget.cpp
+	src/builder/itxn/ApplicationCall.cpp
 	src/builder/sol-eb/NodeBuilder.cpp
 	src/builder/sol-eb/SolArrayBuilder.cpp
 	src/builder/sol-eb/SolBoolBuilder.cpp
@@ -296,10 +300,12 @@ set(SOURCES
 	src/builder/sol-ast/EvmSlotValueLowering.cpp
 	src/builder/sol-ast/SolExpression.cpp
 	src/builder/sol-ast/SolFunctionCall.cpp
+	src/builder/sol-ast/CallOperands.cpp
 	src/builder/sol-ast/SolExpressionFactory.cpp
 	src/builder/sol-ast/SolExpressionDispatch.cpp
 	src/builder/sol-ast/calls/SolRequireAssert.cpp
 	src/builder/sol-ast/calls/SolRevert.cpp
+	src/builder/sol-ast/calls/RevertBlob.cpp
 	src/builder/sol-ast/calls/SolBuiltinCall.cpp
 	src/builder/sol-ast/calls/SolTypeConversion.cpp
 	src/builder/sol-ast/calls/SolWrapUnwrap.cpp
@@ -442,6 +448,11 @@ if(BUILD_TESTING)
 			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
 			-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/source-identity-test-output
 			-P ${CMAKE_SOURCE_DIR}/tests/cmake/SourceIdentityTest.cmake)
+	add_test(NAME puya-sol-main-driver
+		COMMAND ${CMAKE_COMMAND}
+			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
+			-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/main-driver-test-output
+			-P ${CMAKE_SOURCE_DIR}/tests/cmake/MainDriverTest.cmake)
 
 	add_executable(puya-sol-runner-tests
 		tests/cpp/PuyaRunnerTests.cpp
@@ -450,6 +461,15 @@ if(BUILD_TESTING)
 	)
 	target_include_directories(puya-sol-runner-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	add_test(NAME puya-sol-runner-paths COMMAND puya-sol-runner-tests)
+	target_link_libraries(puya-sol-runner-tests Threads::Threads)
+
+	add_executable(puya-sol-source-map-tests
+		tests/cpp/SourceMapTests.cpp src/builder/SourceLocConvert.cpp)
+	target_include_directories(puya-sol-source-map-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_dependencies(puya-sol-source-map-tests puya-sol-verify-solidity-build)
+	target_link_libraries(puya-sol-source-map-tests
+		puya_sol_langutil puya_sol_solutil Boost::filesystem Threads::Threads)
+	add_test(NAME puya-sol-source-map COMMAND puya-sol-source-map-tests)
 
 	add_executable(puya-sol-source-compat-tests
 		tests/cpp/SourceCompatTests.cpp
@@ -475,7 +495,9 @@ if(BUILD_TESTING)
 	add_test(NAME puya-sol-wtype-equivalence COMMAND puya-sol-wtype-tests)
 
 	add_executable(puya-sol-type-mapper-tests
+		src/builder/itxn/ApplicationTarget.cpp
 		tests/cpp/TypeMapperTests.cpp
+		src/builder/storage/SlotWordCodec.cpp
 		src/builder/sol-types/TypeMapper.cpp
 		src/builder/sol-types/Arc4Defaults.cpp
 		src/builder/sol-types/TypeCoercion.cpp

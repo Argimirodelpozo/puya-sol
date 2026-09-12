@@ -4,7 +4,7 @@
 /// policy can evolve independently.
 
 #include "builder/sol-ast/EvmSlotLowering.h"
-#include "builder/sol-ast/AsmScan.h"
+#include "builder/SolcFacts.h"
 #include "builder/sol-ast/Context.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageLayout.h"
@@ -172,24 +172,16 @@ bool EvmSlotLowering::isSlotHandleRef(
 			&& *call->annotation().kind == FunctionCallKind::TypeConversion
 			&& !call->arguments().empty())
 			return isSlotHandleRef(*call->arguments()[0], _ctx, _scope);
-		auto const* fd = dynamic_cast<FunctionDefinition const*>(
-			ASTNode::referencedDeclaration(call->expression()));
+		auto const* fd = SolcFacts::resolveInternalCall(*call, _ctx.currentContract);
 		if (fd && fd->returnParameters().size() == 1
 			&& fd->returnParameters()[0]->referenceLocation()
 				== VariableDeclaration::Location::Storage)
 		{
 			if (_ctx.typeMapper.profile().evmStorageLayout)
 				return true;
-			// A pure POINTER ALIAS (`r.slot := param.slot` over a one-field
-			// wrapper) denotes the parameter ITSELF, and the default profile
-			// resolves it that way in SolExpressionDispatch::visitMemberAccess.
-			// It uses inline assembly, so claiming it here as a slot handle
-			// captures the write first and routes it through helpers that only
-			// exist under --evm-storage-layout — OZ ShortStrings then fails to
-			// compile at all with an unresolved __puyasol___evm_bytes_write.
-			// Other asm `.slot` helpers (solady's box-key handles) do NOT match
-			// the alias shape and keep the slot-handle route.
-			if (storagePointerAliasParam(*fd))
+			// Default-layout wrapper projections preserve the argument's location.
+			// Other slot-returning helpers retain normal call execution/transport.
+			if (_ctx.typeMapper.analysis().storageReturnFacts(fd).pointerAlias)
 				return false;
 			return storageRefReturnUsesSlot(fd, _ctx.typeMapper.analysis());
 		}
@@ -597,9 +589,7 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveMemberAccess(
 		return std::nullopt;
 
 	auto const* fieldType = _ma.annotation().type;
-	return memberAddr(
-		base->slot, st, _ma.memberName(), fieldType,
-		/*_widenStandaloneAccount=*/true);
+	return memberAddr(base->slot, st, _ma.memberName(), fieldType);
 }
 
 EvmSlotLowering::Addr EvmSlotLowering::elemAddr(
@@ -613,7 +603,7 @@ EvmSlotLowering::Addr EvmSlotLowering::elemAddr(
 		auto slot = awst::makeBigUIntBinOp(std::move(_dataBase),
 			awst::BigUIntBinaryOperator::Add,
 			awst::makeBigUIntBinOp(std::move(_idx), awst::BigUIntBinaryOperator::Mult,
-				biguintConst(std::to_string(l.strideSlots)), m_loc),
+				biguintConst(l.strideSlots.str()), m_loc),
 			m_loc);
 		return makeLeafAddr(std::move(slot), nullptr, 32, true, _elemType);
 	}
@@ -642,12 +632,11 @@ EvmSlotLowering::Addr EvmSlotLowering::memberAddr(
 	std::shared_ptr<awst::Expression> _base,
 	StructType const* _structType,
 	std::string const& _memberName,
-	Type const* _memberType,
-	bool _widenStandaloneAccount)
+	Type const* _memberType)
 {
 	auto const& off = _structType->storageOffsetsOfMember(_memberName);
-	bool alone = _widenStandaloneAccount;
-	if (alone)
+	bool alone = true;
+	if (_memberType && m_ctx.typeMapper.map(_memberType) == awst::WType::accountType())
 		for (auto const& member: _structType->structDefinition().members())
 		{
 			if (!member || member->name() == _memberName)
@@ -686,14 +675,15 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::coerceToNative(
 	if (_a.wtype == awst::WType::boolType()
 		&& (_value->wtype == awst::WType::uint64Type()
 			|| _value->wtype == awst::WType::biguintType()))
+	{
 		// bool carried numerically (0/1): the word codec's ternary needs a
 		// REAL bool condition (frxeth/erc6160 backend rejection).
+		auto const* carrier = _value->wtype;
 		return awst::makeNumericCompare(std::move(_value),
 			awst::NumericComparison::Ne,
-			awst::makeIntegerConstant("0", m_loc,
-				_value->wtype == awst::WType::biguintType()
-					? awst::WType::biguintType() : awst::WType::uint64Type()),
+			awst::makeIntegerConstant("0", m_loc, carrier),
 			m_loc);
+	}
 	if (_value->wtype && _value->wtype->kind() == awst::WTypeKind::ARC4UIntN)
 		_value = awst::makeARC4Decode(std::move(_value), awst::WType::biguintType(), m_loc);
 	bool valueNum = _value->wtype == awst::WType::uint64Type()

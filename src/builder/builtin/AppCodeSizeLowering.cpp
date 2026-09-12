@@ -10,57 +10,43 @@ std::shared_ptr<awst::Expression> AppCodeSizeLowering::lower(
 	TypeMapper& _typeMapper,
 	std::shared_ptr<awst::Expression> _application,
 	awst::SourceLocation const& _loc,
-	std::vector<std::shared_ptr<awst::Statement>>& _effects)
+	std::vector<std::shared_ptr<awst::Statement>>& _effects,
+	bool _inConstructor)
 {
-	std::string const idName = "__app_code_id_" + std::to_string(
-		awst::NameGen::next("AppCodeSizeLowering.s_idCounter") + 1);
-	_effects.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(idName, awst::WType::uint64Type(), _loc),
-		awst::makeAsUInt64(std::move(_application), _loc), _loc));
+	using namespace awst;
+	std::string const prefix = "__app_code_" + std::to_string(
+		NameGen::next("AppCodeSizeLowering.s_idCounter") + 1);
+	auto id = [&] { return makeVarExpression(prefix + "_id", WType::uint64Type(), _loc); };
+	auto size = [&] { return makeVarExpression(prefix + "_size", WType::uint64Type(), _loc); };
+	_effects.push_back(makeAssignmentStatement(id(), makeAsUInt64(std::move(_application), _loc), _loc));
+	_effects.push_back(makeAssignmentStatement(size(), makeZero(_loc), _loc));
 
-	auto* tupleType = _typeMapper.createType<awst::WTuple>(
-		std::vector<awst::WType const*>{
-			awst::WType::uint64Type(), awst::WType::boolType()});
-	auto query = [&]() {
-		return awst::makeAppParamsGet(
-			"AppExtraProgramPages",
-			awst::makeVarExpression(idName, awst::WType::uint64Type(), _loc),
-			tupleType, _loc);
-	};
+	// AVM reference zero aliases self, not an EOA. Construction also has no
+	// deployed self code. Apply both guards here for Solidity and Yul callers.
+	auto readable = makeNumericCompare(id(), NumericComparison::Ne, makeZero(_loc), _loc);
+	if (_inConstructor)
+		readable = makeNumericCompare(
+			makeConditional(readable, id(), makeGlobal("CurrentApplicationID", WType::uint64Type(), _loc),
+				WType::uint64Type(), _loc), NumericComparison::Ne,
+			makeGlobal("CurrentApplicationID", WType::uint64Type(), _loc), _loc);
 
-	// Keep the tuple values inside the conditional branches instead of
-	// assigning the pair to a long-lived temp.  In Yul this expression is often
-	// nested beside returndata/memory expressions; a live tuple then expands
-	// across that whole expression and can corrupt stack allocation.  The
-	// metadata lookup is deliberately repeated only on the existing-app path:
-	// one scalar lookup for existence, one for the page count.
-	auto exists = awst::makeTupleItem(
-		query(), 1, awst::WType::boolType(), _loc);
-	auto extraPages = awst::makeTupleItem(
-		query(), 0, awst::WType::uint64Type(), _loc);
-	auto pageCount = awst::makeUInt64BinOp(
-		std::move(extraPages), awst::UInt64BinaryOperator::Add,
-		awst::makeIntegerConstant("1", _loc), _loc);
-	auto allocatedBytes = awst::makeUInt64BinOp(
-		std::move(pageCount), awst::UInt64BinaryOperator::Mult,
-		awst::makeIntegerConstant("2048", _loc), _loc);
-
-	auto sizeIfExists = awst::makeConditional(
-		std::move(exists), std::move(allocatedBytes),
-		awst::makeZero(_loc, awst::WType::uint64Type()),
-		awst::WType::uint64Type(), _loc);
-
-	// AVM uses app reference 0 as an alias for the current application.  In
-	// the compiler's zero-padded contract-address convention, however, a low
-	// 64-bit id of zero is an EOA/non-contract.  Mask that alias explicitly.
-	auto nonZeroId = awst::makeNumericCompare(
-		awst::makeVarExpression(idName, awst::WType::uint64Type(), _loc),
-		awst::NumericComparison::Ne,
-		awst::makeZero(_loc, awst::WType::uint64Type()), _loc);
-	return awst::makeConditional(
-		std::move(nonZeroId), std::move(sizeIfExists),
-		awst::makeZero(_loc, awst::WType::uint64Type()),
-		awst::WType::uint64Type(), _loc);
+	auto* tupleType = _typeMapper.createType<WTuple>(
+		std::vector<WType const*>{WType::uint64Type(), WType::boolType()});
+	auto tuple = [&] { return makeVarExpression(prefix + "_query", tupleType, _loc); };
+	auto body = makeBlock(_loc);
+	body->body.push_back(makeAssignmentStatement(tuple(),
+		makeAppParamsGet("AppExtraProgramPages", id(), tupleType, _loc), _loc));
+	auto capacity = makeUInt64BinOp(makeUInt64BinOp(
+		makeTupleItem(tuple(), 0, WType::uint64Type(), _loc),
+		UInt64BinaryOperator::Add, makeIntegerConstant(1, _loc), _loc),
+		UInt64BinaryOperator::Mult, makeIntegerConstant(2048, _loc), _loc);
+	// Consume the tuple immediately in this branch. Only a scalar escapes into
+	// the surrounding expression, including Yul memory/returndata expressions.
+	body->body.push_back(makeAssignmentStatement(size(), makeConditional(
+		makeTupleItem(tuple(), 1, WType::boolType(), _loc), std::move(capacity),
+		makeZero(_loc), WType::uint64Type(), _loc), _loc));
+	_effects.push_back(makeIfElse(std::move(readable), std::move(body), nullptr, _loc));
+	return size();
 }
 
 } // namespace puyasol::builder

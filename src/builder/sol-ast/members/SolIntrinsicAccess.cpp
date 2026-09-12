@@ -1,12 +1,14 @@
 /// @file SolIntrinsicAccess.cpp
 /// msg.sender, block.timestamp, block.prevrandao, block.difficulty, etc.
-/// Registry shape: exact (base, member) rows dispatch to one handler each; a handler returning nullptr falls through to …
+/// Resolved solc MagicType/member pairs select the environment lowering.
 
 #include "builder/sol-ast/members/SolIntrinsicAccess.h"
 #include "builder/contract/RouterConditions.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/SelectorSemantics.h"
-#include "builder/sol-intrinsics/IntrinsicMapper.h"
+#include "builder/codec/ByteSlice.h"
+#include "builder/contract/SelectorRouter.h"
+#include <stdexcept>
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/XchainAccounts.h"
 #include "builder/BuildArtifacts.h"
@@ -25,64 +27,12 @@ namespace
 // identity must use the same representation; otherwise storing an address
 // argument and later indexing by msg.sender can never hit the same slot for
 // an Algorand user account (whose native sender is 32 bytes).
-// Non-EVM abi: fall through to IntrinsicMapper's standard mapping.
+// Native ARC4 keeps the complete Algorand sender.
 std::shared_ptr<awst::Expression> buildEvmMsgSenderInline(
 	eb::ContractContext& ctx,
 	builder::TargetProfile::XchainAccounts const& xc,
 	awst::SourceLocation const& loc);
 
-std::shared_ptr<awst::Expression> buildEvmMsgSender(
-	eb::ContractContext& ctx, Context&, std::string const&,
-	awst::SourceLocation const& loc)
-{
-	if (ctx.typeMapper.profile().contractAbi != builder::ContractAbi::Evm)
-		return nullptr;
-	auto sender = awst::makeTxn(
-		"Sender", awst::WType::accountType(), loc);
-	auto low160 = awst::makeExtractLastN(std::move(sender), 20, loc);
-	std::shared_ptr<awst::Expression> projected = awst::makeAsAccount(
-		awst::makeLeftPadToN(std::move(low160), 32, loc), loc);
-	// xchain account model: a caller that presented a valid owner claim
-	// (ApplicationArgs[2]: 20 bytes whose derived LogicSig address IS the
-	// sender) is that EVM identity. The check is fully SELF-VERIFYING at
-	// the read site — arity alone must not gate it, because __postInit and
-	// ARC-4-routed calls legitimately carry 3+ args that are NOT claims
-	// (a multi-arg ctor once adopted its own second argument as the
-	// minting identity). The hash comparison cannot pass accidentally.
-	// The low-20 projection of the raw sender survives only as the
-	// unclaimed-caller compatibility shim (deploy/creator paths).
-	if (auto const& xc = ctx.typeMapper.profile().xchainAccounts)
-	{
-		// Root subroutines (library / free functions, currentContract unset)
-		// cannot invoke a contract instance method: inline the claim check
-		// there (Permit2's PermitHash library reads msg.sender). Contract
-		// methods share the memoized __evm_sender below.
-		if (!ctx.currentContract)
-			return buildEvmMsgSenderInline(ctx, *xc, loc);
-		// One contract method per contract: the claim check (two app-arg
-		// reads, a sha512_256, a compare) was inlined at EVERY msg.sender use
-		// — 39 copies in CTFExchange.
-		auto& arts = ctx.typeMapper.artifacts();
-		std::string const key = "msg.sender";
-		auto found = arts.evmDecodeStructMethods.find(key);
-		std::string name = found != arts.evmDecodeStructMethods.end()
-			? found->second : std::string();
-		if (name.empty())
-		{
-			name = "__evm_sender";
-			arts.evmDecodeStructMethods[key] = name;
-			// cref is stamped when the pending methods are attached.
-			auto method = awst::ContractMethod(
-				"", name, awst::WType::accountType(), {}, loc);
-			method.body->body.push_back(awst::makeReturnStatement(
-				buildEvmMsgSenderInline(ctx, *xc, loc), loc));
-			arts.pendingEvmDecodeMethods.push_back(std::move(method));
-		}
-		return awst::makeSubroutineCall(
-			awst::InstanceMethodTarget{name}, awst::WType::accountType(), loc);
-	}
-	return projected;
-}
 
 /// The claim-verifying msg.sender expression (xchain profile), inlined
 /// once into the shared __evm_sender method.
@@ -179,37 +129,15 @@ std::shared_ptr<awst::Expression> buildBlockGasLimit(
 			awst::makeIntegerConstant("700", loc), loc), loc), loc);
 }
 
-// block.prevrandao / block.difficulty → block BlkSeed (Round - 2).
-// difficulty == prevrandao post-Paris (same EVM opcode); one lowering.
+// EVM randomness is unavailable. The opted-in native seed mapping is anchored
+// to transaction validity, so submission/simulation timing cannot invalidate it.
 std::shared_ptr<awst::Expression> buildBlockRandao(
 	eb::ContractContext& ctx, Context&, std::string const& member,
 	awst::SourceLocation const& loc)
 {
-	builder::EvmFeaturePolicy::report(
-		member == "difficulty" ? builder::EvmFeature::BlockDifficulty
-			: builder::EvmFeature::BlockPrevrandao,
+	return builder::buildBlockSeed(
+		member == "difficulty" ? builder::EvmFeature::BlockDifficulty : builder::EvmFeature::BlockPrevrandao,
 		ctx.typeMapper.profile(), loc);
-
-	// Round - 2, clamped: uint64 Sub panics on underflow and the first
-	// rounds of a fresh chain (create at round 1) would hard-panic.
-	auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc);
-	auto isEarly = awst::makeNumericCompare(
-		awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc),
-		awst::NumericComparison::Lt,
-		awst::makeIntegerConstant("2", loc), loc);
-	auto prevRound = awst::makeConditional(
-		std::move(isEarly),
-		awst::makeZero(loc),
-		awst::makeUInt64BinOp(
-			std::move(round), awst::UInt64BinaryOperator::Sub,
-			awst::makeIntegerConstant("2", loc), loc),
-		awst::WType::uint64Type(), loc);
-
-	auto blockSeed = awst::makeBlock(
-		"BlkSeed", std::move(prevRound), awst::WType::bytesType(), loc);
-
-	auto cast = awst::makeAsBiguint(std::move(blockSeed), loc);
-	return cast;
 }
 
 std::shared_ptr<awst::Expression> buildBlockCoinbase(
@@ -260,86 +188,34 @@ std::shared_ptr<awst::Expression> buildMsgValue(
 	return awst::makeAsBiguint(std::move(itob), loc);
 }
 
-// msg.sig is the routed ARC-4 selector in compatibility mode. Under
-// --evm-selectors the explicit transport map recovers the corresponding
-// Solidity selector while preserving the outer selector across internal calls.
-std::shared_ptr<awst::Expression> buildMsgSig(
-	eb::ContractContext& ctx, Context&, std::string const&,
-	awst::SourceLocation const& loc)
-{
-	if (!builder::SelectorSemantics::enabled(ctx.typeMapper))
-		return awst::makeAppArg(
-			0, loc, ctx.typeMapper.createType<awst::BytesWType>(4));
-
-	auto hasSelector = awst::makeNumericCompare(
-		awst::makeTxn(
-			std::string("NumAppArgs"), awst::WType::uint64Type(), loc),
-		awst::NumericComparison::Gt, awst::makeZero(loc), loc);
-	auto raw = awst::makeConditional(
-		std::move(hasSelector), awst::makeAppArg(0, loc),
-		awst::makeBytesConstant(std::vector<uint8_t>(4, 0), loc),
-		awst::WType::bytesType(), loc);
-	auto selector = builder::SelectorSemantics::runtimeSelector(
-		ctx, std::move(raw), loc);
-	return awst::makeReinterpretCast(
-		std::move(selector),
-		ctx.typeMapper.createType<awst::BytesWType>(4), loc);
-}
-
-// msg.data → concatenate ApplicationArgs[0..15] (selector + ARC4 args).
-// ARC4 args are already left-padded; result approximates EVM head encoding
-// for scalar args. Bare calls return bzero(0). Cap at 16 slots (AVM hard limit).
 std::shared_ptr<awst::Expression> buildMsgData(
 	eb::ContractContext& ctx, Context& scope, std::string const&,
 	awst::SourceLocation const& loc)
 {
-	// EVM calldata is empty during construction (ctor args in initcode, not calldata).
-	// AVM runs ctor as __postInit with ApplicationArgs; return empty to match
-	// (various/create_calldata asserts msg.data.length == 0 in the ctor).
-	if (scope.isInConstructor())
-		return awst::makeBytesConstant({}, loc);
+	if (scope.isInConstructor()) return awst::makeBytesConstant({}, loc);
+	if (ctx.typeMapper.profile().contractAbi == builder::ContractAbi::Evm)
+		return builder::reconstructCalldata(builder::CalldataTransport::SplitEvm, loc);
+	return builder::reconstructCalldata(builder::CalldataTransport::Arc4Arguments, loc,
+		builder::SelectorSemantics::runtimeSelector(ctx, awst::makeAppArg(0, loc), loc));
+}
 
-	auto numAppArgs = awst::makeTxn(std::string("NumAppArgs"), awst::WType::uint64Type(), loc);
+std::shared_ptr<awst::Expression> buildMsgSig(
+	eb::ContractContext& ctx, Context& scope, std::string const&,
+	awst::SourceLocation const& loc)
+{
+	// solc: the first four calldata bytes, right-zero-padded. Constructors
+	// have no calldata; empty/short fallback inputs are valid.
+	auto data = buildMsgData(ctx, scope, {}, loc);
+	return awst::makeReinterpretCast(builder::readPaddedBytes(ctx.typeMapper, std::move(data),
+		awst::makeZero(loc), awst::makeIntegerConstant(4, loc), loc),
+		ctx.typeMapper.createType<awst::BytesWType>(4), loc);
+}
 
-	auto zero = awst::makeZero(loc);
-
-	auto hasData = awst::makeNumericCompare(std::move(numAppArgs), awst::NumericComparison::Gt, std::move(zero), loc);
-
-	// Concatenate slots 0..15; absent slots contribute bzero(0).
-	std::shared_ptr<awst::Expression> calldataConcat;
-	for (int slot = 0; slot < 16; ++slot)
-	{
-		auto slotIdx = awst::makeIntegerConstant(slot, loc);
-
-		auto numArgsCheck = awst::makeTxn(std::string("NumAppArgs"), awst::WType::uint64Type(), loc);
-
-		auto slotIdxCmp = awst::makeIntegerConstant(slot, loc);
-
-		auto slotPresent = awst::makeNumericCompare(std::move(numArgsCheck), awst::NumericComparison::Gt, std::move(slotIdxCmp), loc);
-
-		std::shared_ptr<awst::Expression> slotBytes =
-			awst::makeAppArg(slot, loc);
-		if (slot == 0)
-			slotBytes = builder::SelectorSemantics::runtimeSelector(
-				ctx, std::move(slotBytes), loc);
-
-		auto slotChoice = awst::makeConditional(
-			std::move(slotPresent), std::move(slotBytes),
-			awst::makeBzero(0, loc),
-			awst::WType::bytesType(), loc);
-
-		if (!calldataConcat)
-		{
-			calldataConcat = std::move(slotChoice);
-		}
-		else
-			calldataConcat = awst::makeConcat(std::move(calldataConcat), std::move(slotChoice), loc);
-	}
-
-	return awst::makeConditional(
-		std::move(hasData), std::move(calldataConcat),
-		awst::makeBzero(0, loc),
-		awst::WType::bytesType(), loc);
+std::shared_ptr<awst::Expression> buildBlockClock(
+	eb::ContractContext&, Context&, std::string const& member, awst::SourceLocation const& loc)
+{
+	return awst::makeAsBiguint(awst::makeItob(awst::makeGlobal(
+		member == "number" ? "Round" : "LatestTimestamp", awst::WType::uint64Type(), loc), loc), loc);
 }
 
 using MemberHandler = std::shared_ptr<awst::Expression> (*)(
@@ -348,64 +224,94 @@ using MemberHandler = std::shared_ptr<awst::Expression> (*)(
 
 struct MemberEntry
 {
-	char const* base;
+	solidity::frontend::MagicType::Kind kind;
 	char const* member;
 	MemberHandler fn;
 };
 
+using MagicKind = solidity::frontend::MagicType::Kind;
 constexpr MemberEntry kIntrinsicMembers[] = {
-	{"msg", "sender", buildEvmMsgSender},
-	{"msg", "value", buildMsgValue},
-	{"msg", "sig", buildMsgSig},
-	{"msg", "data", buildMsgData},
-	{"block", "chainid", buildBlockChainId},
-	{"block", "basefee", buildBlockFeeZero},
-	{"block", "blobbasefee", buildBlockFeeZero},
-	{"block", "gaslimit", buildBlockGasLimit},
-	{"block", "prevrandao", buildBlockRandao},
-	{"block", "difficulty", buildBlockRandao},
-	{"block", "coinbase", buildBlockCoinbase},
-	{"tx", "origin", buildTxOrigin},
-	{"tx", "gasprice", buildTxGasPrice},
+	{MagicKind::Message, "sender", [](eb::ContractContext& ctx, Context&, std::string const&,
+		awst::SourceLocation const& loc) { return SolIntrinsicAccess::sender(ctx, loc); }},
+	{MagicKind::Message, "value", buildMsgValue},
+	{MagicKind::Message, "sig", buildMsgSig},
+	{MagicKind::Message, "data", buildMsgData},
+	{MagicKind::Block, "chainid", buildBlockChainId},
+	{MagicKind::Block, "number", buildBlockClock},
+	{MagicKind::Block, "timestamp", buildBlockClock},
+	{MagicKind::Block, "basefee", buildBlockFeeZero},
+	{MagicKind::Block, "blobbasefee", buildBlockFeeZero},
+	{MagicKind::Block, "gaslimit", buildBlockGasLimit},
+	{MagicKind::Block, "prevrandao", buildBlockRandao},
+	{MagicKind::Block, "difficulty", buildBlockRandao},
+	{MagicKind::Block, "coinbase", buildBlockCoinbase},
+	{MagicKind::Transaction, "origin", buildTxOrigin},
+	{MagicKind::Transaction, "gasprice", buildTxGasPrice},
 };
 
 } // anonymous namespace
 
+std::shared_ptr<awst::Expression> SolIntrinsicAccess::sender(
+	eb::ContractContext& ctx,
+	awst::SourceLocation const& loc)
+{
+	if (ctx.typeMapper.profile().contractAbi != builder::ContractAbi::Evm)
+		return awst::makeTxn("Sender", awst::WType::accountType(), loc);
+	auto sender = awst::makeTxn(
+		"Sender", awst::WType::accountType(), loc);
+	auto low160 = awst::makeExtractLastN(std::move(sender), 20, loc);
+	std::shared_ptr<awst::Expression> projected = awst::makeAsAccount(
+		awst::makeLeftPadToN(std::move(low160), 32, loc), loc);
+	// xchain account model: a caller that presented a valid owner claim
+	// (ApplicationArgs[2]: 20 bytes whose derived LogicSig address IS the
+	// sender) is that EVM identity. The check is fully SELF-VERIFYING at
+	// the read site — arity alone must not gate it, because __postInit and
+	// ARC-4-routed calls legitimately carry 3+ args that are NOT claims
+	// (a multi-arg ctor once adopted its own second argument as the
+	// minting identity). The hash comparison cannot pass accidentally.
+	// The low-20 projection of the raw sender survives only as the
+	// unclaimed-caller compatibility shim (deploy/creator paths).
+	if (auto const& xc = ctx.typeMapper.profile().xchainAccounts)
+	{
+		// Root subroutines (library / free functions, currentContract unset)
+		// cannot invoke a contract instance method: inline the claim check
+		// there (Permit2's PermitHash library reads msg.sender). Contract
+		// methods share the memoized __evm_sender below.
+		if (!ctx.currentContract)
+			return buildEvmMsgSenderInline(ctx, *xc, loc);
+		// One contract method per contract: the claim check (two app-arg
+		// reads, a sha512_256, a compare) was inlined at EVERY msg.sender use
+		// — 39 copies in CTFExchange.
+		auto& arts = ctx.typeMapper.artifacts();
+		std::string const key = "environment:msg.sender";
+		auto found = arts.contract().helpers.find(key);
+		std::string name = found != arts.contract().helpers.end()
+			? found->second : std::string();
+		if (name.empty())
+		{
+			name = "__evm_sender";
+			arts.contract().helpers[key] = name;
+			// cref is stamped when the pending methods are attached.
+			auto method = awst::ContractMethod(
+				"", name, awst::WType::accountType(), {}, loc);
+			method.body->body.push_back(awst::makeReturnStatement(
+				buildEvmMsgSenderInline(ctx, *xc, loc), loc));
+			arts.contract().pendingHelpers.push_back(std::move(method));
+		}
+		return awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{name}, awst::WType::accountType(), loc);
+	}
+	return projected;
+}
+
 std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 {
-	auto const* baseId = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpression());
-	if (!baseId) return nullptr;
-
-	std::string baseName = baseId->name();
-	std::string member = memberName();
-
+	auto const* magic = dynamic_cast<solidity::frontend::MagicType const*>(baseExpression().annotation().type);
+	if (!magic) throw std::logic_error("Intrinsic receiver has no solc MagicType");
 	for (auto const& entry: kIntrinsicMembers)
-		if (baseName == entry.base && member == entry.member)
-		{
-			if (auto result = entry.fn(m_ctx, m_scope, member, m_loc))
-				return result;
-			break; // handler declined (e.g. msg.sender outside EVM abi) — fall through
-		}
-
-	// Fall through to IntrinsicMapper for standard intrinsics (block.timestamp, etc.)
-	auto intrinsic = builder::IntrinsicMapper::tryMapMemberAccess(baseName, member, m_loc);
-	if (intrinsic)
-	{
-		auto* solType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
-		if (intrinsic->wtype == awst::WType::uint64Type()
-			&& solType == awst::WType::biguintType())
-			return awst::makeAsBiguint(
-				awst::makeItob(std::move(intrinsic), m_loc), m_loc);
-		if (intrinsic->wtype == awst::WType::bytesType()
-			&& solType == awst::WType::biguintType())
-		{
-			auto cast = awst::makeAsBiguint(std::move(intrinsic), m_loc);
-			return cast;
-		}
-		return intrinsic;
-	}
-
-	return nullptr;
+		if (magic->kind() == entry.kind && memberName() == entry.member)
+			return entry.fn(m_ctx, m_scope, memberName(), m_loc);
+	throw std::logic_error("Unsupported solc intrinsic member");
 }
 
 } // namespace puyasol::builder::sol_ast

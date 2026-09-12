@@ -9,6 +9,7 @@
 #include "builder/contract/ParamABIValidator.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
+#include "builder/codec/EvmValueCodec.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -18,72 +19,35 @@ namespace puyasol::builder
 namespace
 {
 
-solidity::frontend::Type const* unwrapUDVT(solidity::frontend::Type const* t)
+std::shared_ptr<awst::Expression> getterFieldValue(
+	TypeMapper& types, solidity::frontend::Type const* solType,
+	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc)
 {
-	if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(t))
-		return &udvt->underlyingType();
-	return t;
+	auto plan = planReturnElement(types, solType, abiReturnNativeType(types, solType));
+	return TypeCoercion::encodeReturnElement(
+		codec::valueFromArc4(types, solType, std::move(value), loc), plan, loc, false, false);
 }
 
-// Project a Solidity struct value into its public-accessor field list:
-// skip mapping members and non-bytes array members (matches solc's getter),
-// reading each remaining field off `base` and ARC4-decoding it to its native
-// type when the stored ARC4 field type differs. Returns the projected items.
-// Shared by the simple-var, array-element, and mapping-value getter paths;
-// callers either move the items into a tuple or use them directly.
+/// solc's getter FunctionType owns the projection, including one-field
+/// structs and hidden mapping/array members. The physical stored struct can
+/// still contain placeholders for members that are absent from this interface.
 std::vector<std::shared_ptr<awst::Expression>> projectStructFields(
-	TypeMapper& typeMapper,
-	solidity::frontend::StructType const* solStruct,
-	awst::ARC4Struct const* arc4Struct,
-	std::shared_ptr<awst::Expression> const& base,
-	std::vector<std::shared_ptr<awst::Statement>>& pre,
-	awst::SourceLocation const& loc)
+	TypeMapper& types, solidity::frontend::FunctionType const& getter,
+	awst::ARC4Struct const* stored, std::shared_ptr<awst::Expression> const& base,
+	std::vector<std::shared_ptr<awst::Statement>>& pre, awst::SourceLocation const& loc)
 {
 	std::vector<std::shared_ptr<awst::Expression>> items;
-	for (auto const& member: solStruct->members(nullptr))
+	auto const& names = getter.returnParameterNames();
+	auto const& returns = getter.returnParameterTypes();
+	for (size_t i = 0; i < returns.size(); ++i)
 	{
-		if (member.type->category() == solidity::frontend::Type::Category::Mapping)
-			continue;
-		if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(member.type))
-			if (!at->isByteArrayOrString())
-				continue;
-
-		awst::WType const* arc4FieldType = nullptr;
-		if (arc4Struct)
-			for (auto const& [fname, ftype]: arc4Struct->fields())
-				if (fname == member.name)
-				{
-					arc4FieldType = ftype;
-					break;
-				}
-
-		std::shared_ptr<awst::Expression> fieldExpr = awst::makeFieldExpression(
-			base, member.name,
-			arc4FieldType ? arc4FieldType : typeMapper.map(member.type), loc);
-		fieldExpr = StorageMapper::makePartialBoxReadWithDefault(
-			typeMapper, std::move(fieldExpr), pre, loc);
-
-		auto* nativeType = typeMapper.map(member.type);
-		if (arc4FieldType && arc4FieldType != nativeType)
-		{
-			std::shared_ptr<awst::Expression> decode =
-				awst::makeARC4Decode(std::move(fieldExpr), nativeType, loc);
-			// Signed fields → canonical 256-bit two's-complement biguint, matching how
-			// FunctionBuilder lowers a signed tuple RETURN (mappedType=biguint +
-			// signExtendToUint256, so the ABI element is uint256-on-wire and the client
-			// int{N} patch reads it signed). A raw ARC4Decode is the unsigned N-bit value
-			// (int128 INT128_MIN → +2^127); a 64-bit-only extension would still leave a
-			// sub-64 field (int16) uint64-shaped in the ABI tuple. No-op unsigned / int256.
-			// The tuple element WType uses the shared ABI return representation.
-			if (auto const* fieldInt = dynamic_cast<solidity::frontend::IntegerType const*>(
-					unwrapUDVT(member.type)))
-				if (fieldInt->isSigned() && fieldInt->numBits() < 256)
-					decode = TypeCoercion::signExtendToUint256(
-						std::move(decode), fieldInt->numBits(), loc);
-			items.push_back(std::move(decode));
-		}
-		else
-			items.push_back(std::move(fieldExpr));
+		auto const* fieldType = types.map(returns[i]);
+		if (stored)
+			for (auto const& [name, type]: stored->fields())
+				if (name == names[i]) { fieldType = type; break; }
+		auto field = StorageMapper::makePartialBoxReadWithDefault(types,
+			awst::makeFieldExpression(base, names[i], fieldType, loc), pre, loc);
+		items.push_back(getterFieldValue(types, returns[i], std::move(field), loc));
 	}
 	return items;
 }
@@ -194,30 +158,15 @@ std::shared_ptr<awst::Expression> buildSlotModeGetterRead(
 		else if (auto const* st =
 				dynamic_cast<solidity::frontend::StructType const*>(walk))
 		{
-			// project fields flat, skipping mapping/array members
-			// (solc's public-accessor rule); string/bytes stay.
+			auto const* function = var->functionType(false);
+			auto const& names = function->returnParameterNames();
+			auto const& returns = function->returnParameterTypes();
 			std::vector<std::shared_ptr<awst::Expression>> items;
-			for (auto const& m: st->structDefinition().members())
+			for (size_t i = 0; i < returns.size(); ++i)
 			{
-				if (!m)
-					continue;
-				auto const* mtOfM = m->type();
-				if (dynamic_cast<solidity::frontend::MappingType const*>(mtOfM))
-					continue;
-				if (auto const* ma2 = dynamic_cast<
-						solidity::frontend::ArrayType const*>(mtOfM);
-					ma2 && !ma2->isByteArrayOrString())
-					continue;
-				auto fa = low.memberAddr(addr->slot, st, m->name(), mtOfM,
-					/*_widenStandaloneAccount=*/true);
-				auto item = low.readAny(fa, mtOfM);
-				if (auto it2 = builder::SolIntType::fromSol(mtOfM);
-					item && it2 && it2->isSigned && it2->bits < 256)
-					item = TypeCoercion::signExtendToUint256(
-						TypeCoercion::implicitNumericCast(std::move(item),
-							awst::WType::biguintType(), loc),
-						it2->bits, loc);
-				items.push_back(std::move(item));
+				auto const* storedType = st->memberType(names[i]);
+				auto field = low.memberAddr(addr->slot, st, names[i], storedType);
+				items.push_back(getterFieldValue(tm, returns[i], low.readAny(field, storedType), loc));
 			}
 			if (supported && items.size() == 1)
 				readExpr = std::move(items[0]);
@@ -260,7 +209,7 @@ std::shared_ptr<awst::Expression> buildConstantGetterRead(
 	if (var->value())
 		readExpr = exprBuilder.buildExpr(*var->value());
 	if (!readExpr)
-		readExpr = StorageMapper::makeDefaultValue(returnType, loc);
+		readExpr = TypeCoercion::makeDefaultValue(returnType, loc);
 	if (readExpr && readExpr->wtype != returnType)
 		readExpr = TypeCoercion::implicitNumericCast(
 			std::move(readExpr), returnType, loc
@@ -317,7 +266,7 @@ std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 		auto fullStruct = sm.createStateRead(binding, loc);
 
 		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
-		auto items = projectStructFields(tm, solStructType, arc4Struct, fullStruct, body.body, loc);
+		auto items = projectStructFields(tm, *var->functionType(false), arc4Struct, fullStruct, body.body, loc);
 
 		// One returnable field keeps the scalar return type; >1 packs a tuple.
 		// Either way each field is sign-extended inside projectStructFields.
@@ -430,7 +379,7 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 		// arrays) is still projected: decoding the whole placeholder-bearing
 		// element as that scalar returned nothing (`Pool[] public pools`).
 		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(elemARC4);
-		auto items = projectStructFields(tm, solStructElem, arc4Struct, result, body.body, loc);
+		auto items = projectStructFields(tm, *var->functionType(false), arc4Struct, result, body.body, loc);
 		if (items.size() == 1)
 			readExpr = std::move(items[0]);
 		else
@@ -549,7 +498,7 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 				solidity::frontend::ArrayType const*>(var->type()))
 			holder.value = sm.createStateRead(
 				binding.key, tm.map(rootArray), binding.kind, loc);
-		StoragePathWalker keys(tm, StoragePathPolicy::getterKey(), var->type(), loc);
+		StoragePathWalker keys(tm, var->type(), loc, StoragePathWalker::ValueTracking::NestedArrays);
 		for (size_t i = 0; i < keyArgCount; ++i)
 			holder = keys.step(std::move(holder), argRef(i), body.body);
 
@@ -563,7 +512,7 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 	// against the loaded value's length (Privacy Pools' associationSets(uint256)
 	// answered where the EVM reverted).
 	StorageHolder inlineHolder{nullptr, std::move(storageRead)};
-	StoragePathWalker ranks(tm, StoragePathPolicy::getterInline(), storedValueType, loc);
+	StoragePathWalker ranks(tm, storedValueType, loc);
 	for (size_t i = 0; i < indexArgCount
 		&& dynamic_cast<solidity::frontend::ArrayType const*>(ranks.current()); ++i)
 		inlineHolder = ranks.step(std::move(inlineHolder), argRef(keyArgCount + i), body.body);
@@ -578,7 +527,7 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 			auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(fullStruct->wtype);
 
 			auto items = projectStructFields(
-				tm, structType, arc4Struct, fullStruct, body.body, loc);
+				tm, *var->functionType(false), arc4Struct, fullStruct, body.body, loc);
 
 			if (items.size() == 1)
 			{

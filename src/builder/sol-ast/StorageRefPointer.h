@@ -97,59 +97,12 @@ inline bool hasDynamicStorageShape(solidity::frontend::Type const* _t)
 	});
 }
 
-/// True when the `T storage` ref must travel as a bytes box-key prefix (the handle):
-/// T is a mapping, contains a mapping, a struct used as a mapping value (e.g. V4
-/// Position.State), OR a struct large enough to be ALWAYS box-backed (handle-model
-/// Stage 1a). The bytes key is the box this aggregate lives in, so passing it to any
-/// callee — library, free, OR contract method — writes through the shared box instead
-/// of a lost value-copy.
-///
-/// The always-boxed gate is `storageSizeUpperBound() >= 4` slots (≥128B): such a struct
-/// is boxed regardless of its name (shouldUseBoxStorage: estimatedBytes ≥ 128 > 128−nameLen
-/// for any name), so the type-only predicate here AGREES with the var-level boxing decision —
-/// no mismatch. Smaller structs are name-length-dependent (app-global) and still travel by
-/// value + write-back; widening to *those* wrongly box-keys app-global storage (the
-/// using-for/library/struct regression — hence the size gate, not "any struct").
-/// Use this instead of bare containsMappingType at every storage-ref param/return site
-/// (caller ensures referenceLocation==Storage).
-inline bool isBoxKeyedStorageRef(
-	solidity::frontend::Type const* _t,
-	ProgramAnalysis const& _analysis)
-{
-	if (containsMappingType(_t)) return true;
-	if (auto const* s = dynamic_cast<solidity::frontend::StructType const*>(_t))
-	{
-		if (hasDynamicStorageShape(s)) return true;
-		auto id = s->structDefinition().id();
-		if (_analysis.boxKeyedStructs.count(id) > 0)
-			return true;
-		// Passed by ref somewhere → boxed (shouldUseBoxStorage) → travels as a box-key handle.
-		// Targeted (only ref-passed types) so never-ref-passed structs keep app-global (Stage 1b;
-		// boxing EVERY struct regressed delete/asm/modifier/recursive paths).
-		if (_analysis.refPassedStructs.count(id) > 0)
-			return true;
-		// Always-boxed (≥128B) structs: type-only size matches the var-level box decision.
-		try { if (s->storageSizeUpperBound() >= 4) return true; } catch (...) {}
-		return false;
-	}
-	// Every recursively dynamic non-bytes array is unconditionally box-backed
-	// by StorageMapper, so its storage-ref representation is the box key too.
-	// The same shape query handles internal functions and mixed ranks without
-	// assuming ABI encodability or mistaking a dynamic head for its total size.
-	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
-		return !arr->isByteArrayOrString() && hasDynamicStorageShape(arr);
-	return false;
-}
-
 /// Cached provenance; no repeated AST scans at signatures, returns or callers.
 inline solidity::frontend::IndexAccess const* storageRefPointerReturn(
 	solidity::frontend::FunctionDefinition const* _func,
 	ProgramAnalysis const& _analysis)
 {
-	auto found = _func ? _analysis.storageReferenceReturns.find(_func->id())
-		: _analysis.storageReferenceReturns.end();
-	return found == _analysis.storageReferenceReturns.end()
-		? nullptr : found->second.indexedReturn;
+	return _analysis.storageReturnFacts(_func).indexedReturn;
 }
 
 /// True if the storage-ref pointer function's return is box-keyed (bytes prefix)
@@ -161,18 +114,14 @@ inline bool storageRefReturnIsBytesKeyed(
 	solidity::frontend::FunctionDefinition const* _func,
 	ProgramAnalysis const& _analysis)
 {
-	auto found = _func ? _analysis.storageReferenceReturns.find(_func->id())
-		: _analysis.storageReferenceReturns.end();
-	return found != _analysis.storageReferenceReturns.end() && found->second.bytesKeyed;
+	return _analysis.storageReturnFacts(_func).bytesKeyed;
 }
 
 inline bool storageRefReturnUsesSlot(
 	solidity::frontend::FunctionDefinition const* _func,
 	ProgramAnalysis const& _analysis)
 {
-	auto found = _func ? _analysis.storageReferenceReturns.find(_func->id())
-		: _analysis.storageReferenceReturns.end();
-	return found != _analysis.storageReferenceReturns.end() && found->second.slotHandle;
+	return _analysis.storageReturnFacts(_func).slotHandle;
 }
 
 } // namespace puyasol::builder

@@ -76,7 +76,7 @@ def test_block_coinbase(harness):
 
 def test_block_difficulty(harness):
     """state/contracts/block_difficulty.sol — difficulty == prevrandao
-    post-Paris (same EVM opcode): the Algorand block seed, never zero."""
+    post-Paris (same EVM opcode): an opted-in Algorand seed, nonzero for this window."""
     app = harness.compile_and_deploy("state/contracts/block_difficulty.sol", evm_version='london')
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) != 0

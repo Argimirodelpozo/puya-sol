@@ -25,13 +25,12 @@ namespace puyasol::builder
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::isNegative256(
 	std::shared_ptr<awst::Expression> _val,
-	awst::SourceLocation const& _loc,
-	awst::WType const* _origType
+	awst::SourceLocation const& _loc
 )
 {
-	// value ≥ 2^255 (biguint) or ≥ 2^63 (uint64) indicates a negative two's-complement.
-	unsigned bits = (_origType && _origType == awst::WType::uint64Type()) ? 64 : 256;
-	return TypeCoercion::isNegativeSigned(std::move(_val), bits, _loc);
+	// The carrier is not the Yul word's signedness. Signed Solidity locals
+	// are sign-extended at the boundary; unsigned uint64 carriers stay positive.
+	return TypeCoercion::isNegativeSigned(ensureBiguint(std::move(_val), _loc), 256, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::negate256(
@@ -124,10 +123,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
 	if (!checkArity(_args, 2, "slt", _loc))
 		return nullptr;
 
-	// Capture original types before ensureBiguint: sign-bit threshold differs
-	// (bit 63 for uint64, bit 255 for biguint).
-	auto const* origTypeA = _args[0]->wtype;
-	auto const* origTypeB = _args[1]->wtype;
 	auto a = ensureBiguint(_args[0], _loc);
 	auto b = ensureBiguint(_args[1], _loc);
 
@@ -136,19 +131,17 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
 	{
 		if (bConst->value == "0")
 		{
-			return ensureBiguint(isNegative256(a, _loc, origTypeA), _loc);
+			return ensureBiguint(isNegative256(a, _loc), _loc);
 		}
 	}
 
-	// slt(0,x) = x>0 && x<2^(N-1) (positive non-zero).
+	// slt(0,x) = x>0 && x<2^255 (positive non-zero).
 	if (auto* aConst = dynamic_cast<awst::IntegerConstant*>(a.get()))
 	{
 		if (aConst->value == "0")
 		{
 			auto signThreshold = awst::makeIntegerConstant(
-				origTypeB && origTypeB == awst::WType::uint64Type()
-					? "9223372036854775808" // 2^63
-					: "57896044618658097711785492504343953926634992332820282019728792003956564819968", // 2^255
+				"57896044618658097711785492504343953926634992332820282019728792003956564819968", // 2^255
 				_loc, awst::WType::biguintType());
 			auto andExpr = awst::makeBoolBinOp(
 				awst::makeNumericCompare(b, awst::NumericComparison::Gt,
@@ -161,15 +154,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSlt(
 	}
 
 	// General: signsMatch ? (a < b) : aNeg.
-	auto aNeg = isNegative256(a, _loc, origTypeA);
-	auto aNeg2 = isNegative256(a, _loc, origTypeA);
+	auto aNeg = isNegative256(a, _loc);
 	auto signsMatch = awst::makeNumericCompare(
 		ensureBiguint(aNeg, _loc), awst::NumericComparison::Eq,
-		ensureBiguint(isNegative256(b, _loc, origTypeB), _loc), _loc);
+		ensureBiguint(isNegative256(b, _loc), _loc), _loc);
 	auto result = awst::makeConditional(
 		signsMatch,
 		awst::makeNumericCompare(a, awst::NumericComparison::Lt, b, _loc),
-		aNeg2, awst::WType::boolType(), _loc);
+		aNeg, awst::WType::boolType(), _loc);
 	return ensureBiguint(result, _loc);
 }
 

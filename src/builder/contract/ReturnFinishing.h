@@ -41,12 +41,6 @@ struct ImplicitReturnShape
 {
 	/// The callable yields a value at all (each caller's own test).
 	bool hasReturnValue = false;
-	/// Freestanding augmentation: storage-ref / memory-ref params echoed back
-	/// after the declared returns, storage-then-memory (null/empty for contract
-	/// methods); `args` names them.
-	std::vector<size_t> const* storageParamIndices = nullptr;
-	std::vector<size_t> const* memoryRefParamIndices = nullptr;
-	std::vector<awst::SubroutineArgument> const* args = nullptr;
 	/// Method: a named CALLDATA return whose pointer locals are live (an asm
 	/// block wrote x.offset/x.length) reads through the pointer.
 	bool calldataPointerReturns = false;

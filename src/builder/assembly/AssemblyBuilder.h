@@ -18,7 +18,7 @@
 #include <liblangutil/DebugData.h>
 #include <libyul/ASTForward.h>
 // ASTAnnotations.h has to stay: InlineAssemblyAnnotation::ExternalIdentifierInfo
-// is a NESTED type held BY VALUE in m_externalRefs, and nested types cannot be
+// is a NESTED type held BY VALUE in m_context->externalRefs, and nested types cannot be
 // forward-declared.
 #include <libsolidity/ast/ASTAnnotations.h>
 
@@ -63,7 +63,7 @@ class TransientStorage;
 ///   - MemoryHelpers.cpp        — readMemSlot, padTo32Bytes, concatSlotsRT, storeResultToMemory
 ///   - MemoryOps.cpp            — mload, mstore, handleReturn, tryHandleBytesMemoryRead
 ///   - PrecompileDispatch.cpp   — Routes call/staticcall to specific precompile handlers
-///   - PrecompileHandlers.cpp   — ecAdd, ecMul, ecPairing, ecRecover, sha256, modExp, identity
+///   - itxn/Precompile.cpp      — shared Solidity/Yul precompile algorithms
 ///   - StatementOps.cpp         — Yul statement translation: let, :=, expression stmts, functions
 class AssemblyBuilder
 {
@@ -71,7 +71,8 @@ public:
 	AssemblyBuilder(
 		TypeMapper& _typeMapper,
 		std::string const& _sourceFile,
-		std::string const& _contextName
+		std::string const& _contextName,
+		bool _inConstructor = false
 	);
 
 	/// Box-keyed struct pointer surfaced via `.slot` (e.g. Uniswap V4 Pool.updateTick:
@@ -118,40 +119,40 @@ public:
 	void setSlotRoutes(
 		std::map<std::string, SlotRoute> _exact, std::vector<SlotRoute> _regions)
 	{
-		m_slotRoutes = std::move(_exact);
-		m_slotDataRegions = std::move(_regions);
+		prepareContext().slotRoutes = std::move(_exact);
+		prepareContext().slotDataRegions = std::move(_regions);
 	}
 
 	/// Register signed intN (N<=64) locals whose bare Yul read must sign-extend
-	/// to the canonical 256-bit word (see m_signedParamBits).
+	/// to the canonical 256-bit word (see m_context->signedParamBits).
 	void setSignedParamBits(std::map<std::string, unsigned> _m)
 	{
-		m_signedParamBits = std::move(_m);
+		prepareContext().signedParamBits = std::move(_m);
 	}
 
 	void setReturnSolTypes(
 		std::vector<solidity::frontend::Type const*> _types)
 	{
-		m_returnSolTypes = std::move(_types);
+		m_frame.returnSolTypes = std::move(_types);
 	}
 
 	/// ARC-4 router selector → Solidity selector mappings for msg.data-style
 	/// synthetic calldata inside inline assembly.
 	void setSelectorRoutes(std::vector<SelectorRoute> _routes)
 	{
-		m_selectorRoutes = std::move(_routes);
+		prepareContext().selectorRoutes = std::move(_routes);
 	}
 
 	/// When true, EVM `return(o,s)` lowers as a program halt (internal/private frame).
 	/// For public/external functions it lowers as a subroutine return (caller continues).
-	void setFrameIsProgram(bool _v) { m_frameIsProgram = _v; }
+	void setFrameIsProgram(bool _v) { m_frame.frameIsProgram = _v; }
 	/// The enclosing ABI method's return wire plan (null when returns stay
 	/// native, e.g. modifier chains): `return(ptr, len)` values pass through it
 	/// so they match the method's wire return type.
 	void setReturnWirePlan(std::vector<builder::ReturnWireElem> const* _plan, bool _asmWrap)
 	{
-		m_returnWirePlan = _plan;
-		m_returnAsmWrap = _asmWrap;
+		m_frame.returnWirePlan = _plan;
+		m_frame.returnAsmWrap = _asmWrap;
 	}
 
 	std::vector<std::shared_ptr<awst::Statement>> buildBlock(
@@ -195,7 +196,7 @@ public:
 	/// because the number now depends on --evm-memory-slots; the historical
 	/// FLASH_SCRATCH_* constants were consumed by nothing and are gone.
 	int transientSlot() const { return scratchLayout().transientSlot(); }
-	void setTransientStorage(TransientStorage const* _storage) { m_transientStorage = _storage; }
+	void setTransientStorage(TransientStorage const* _storage) { prepareContext().transientStorage = _storage; }
 
 	/// Share the enclosing FUNCTION's seeded-calldata-pointer set across this
 	/// function's per-block AssemblyBuilders (each block constructs a fresh
@@ -205,16 +206,16 @@ public:
 	/// Mirrors setFrameIsProgram. Nullable (freestanding uses seed every block).
 	void setSeededCalldataPointers(std::set<std::string>* _seeded)
 	{
-		m_seededCalldataPointers = _seeded;
+		m_frame.seededCalldataPointers = _seeded;
 	}
 
 
 	/// Base names of dynamic-CALLDATA pointer vars referenced by this block
 	/// (from the refs' declarations — covers calldata return vars / locals whose
-	/// suffixed refs register under the dotted name so m_locals misses the base).
+	/// suffixed refs register under the dotted name so m_frame.locals misses the base).
 	void setCalldataPointerNames(std::set<std::string> _names)
 	{
-		m_calldataPointerNames = std::move(_names);
+		m_frame.calldataPointerNames = std::move(_names);
 	}
 
 	/// STATIC calldata pointers (structs / fixed arrays) referenced by this block:
@@ -222,7 +223,7 @@ public:
 	/// data in __cd_blob) — `s := s2` / `s := 0x24` / `s := t` semantics.
 	void setCalldataStaticPtrNames(std::set<std::string> _names)
 	{
-		m_calldataStaticPtrNames = std::move(_names);
+		m_frame.calldataStaticPtrNames = std::move(_names);
 	}
 
 	/// Advance the FMP (configured first memory slot, offset 0x40) by `_size` bytes.
@@ -256,7 +257,7 @@ public:
 	/// stitching a SLOT_SIZE straddle. Expression-only (emits no statements),
 	/// so it is usable from return-value positions. A stack value is at most
 	/// one AVM element (SLOT_SIZE bytes) and therefore spans at most 2 slots;
-	/// unbounded ranges use readMemRangeDyn's word loop instead.
+	/// larger stack values are rejected explicitly.
 	/// _offsetAlignMod32: the caller's proof of the offset's residue (see
 	/// alignmentMod32). Residue 0 with a <=32-byte length means the access
 	/// cannot cross a slot boundary, so the straddle arm is not emitted.
@@ -270,8 +271,7 @@ public:
 
 	/// Read one word from shared scratch memory. Constants and proven-aligned
 	/// offsets stay inline; other offsets call the shared cross-page reader.
-	/// The caller must check bounds on the inline path; the shared reader
-	/// checks its own bounds. `_offset` is already uint64.
+	/// Both paths check the complete word's bounds. `_offset` is already uint64.
 	static std::shared_ptr<awst::Expression> readMemWordDirect(
 		TypeMapper& _typeMapper,
 		std::shared_ptr<awst::Expression> _offset,
@@ -333,15 +333,21 @@ public:
 	);
 
 private:
-	static std::string memoryWordSubroutine(
-		TypeMapper& _typeMapper, bool _write, awst::SourceLocation const& _loc);
-	static void writeMemWordInline(
+	static std::shared_ptr<awst::Expression> checkedMemoryRangeOffset(
+		ScratchLayout const& _scratch,
+		std::shared_ptr<awst::Expression> _offset,
+		std::shared_ptr<awst::Expression> _length,
+		awst::SourceLocation const& _loc, bool _stackValue = true);
+	static std::string memoryBufferSubroutine(
+		TypeMapper& _typeMapper, bool _write, awst::SourceLocation const& _loc,
+		bool _byteRange = false);
+	static void writeMemRangeInline(
 		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _offset,
 		std::shared_ptr<awst::Expression> _value32,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out,
-		std::optional<unsigned> _offsetAlignMod32);
+		std::optional<unsigned> _offsetAlignMod32, bool _word = false);
 
 	ScratchLayout const& scratchLayout() const
 	{
@@ -364,6 +370,14 @@ private:
 	std::shared_ptr<awst::Expression> buildIdentifier(
 		solidity::yul::Identifier const& _id
 	);
+	/// Evaluate right-to-left, capturing reads before a later operand can
+	/// change their state. Only solc-proven movable expressions stay deferred.
+	std::vector<std::shared_ptr<awst::Expression>> buildOperands(
+		std::vector<solidity::yul::Expression const*> const& _operands,
+		awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out);
+	std::vector<std::shared_ptr<awst::Expression>> buildCallOperands(
+		solidity::yul::FunctionCall const& _call,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
 
 	/// The one way to name the outer Solidity var a Yul identifier references:
 	/// mangled local name for registered externals, else the bare Yul name. Every
@@ -734,8 +748,7 @@ private:
 	/// _origType is the pre-ensureBiguint type; nullptr → biguint (256-bit).
 	std::shared_ptr<awst::Expression> isNegative256(
 		std::shared_ptr<awst::Expression> _val,
-		awst::SourceLocation const& _loc,
-		awst::WType const* _origType = nullptr
+		awst::SourceLocation const& _loc
 	);
 
 	/// Negate a 256-bit two's complement value: ~x + 1 (mod 2^256).
@@ -756,9 +769,9 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// EVM-shaped returndata: itxn LastLog with the ARC4 return prefix
-	/// (0x151f7c75) stripped when present (M8) — what returndatasize /
-	/// returndatacopy / call-output copies index into.
+	/// Complete result bytes captured at the latest modeled external call.
+	/// Application results require the ARC4 return prefix; event logs are not
+	/// data. returndatasize / returndatacopy / output copies use this buffer.
 	std::shared_ptr<awst::Expression> returndataBytes(
 		awst::SourceLocation const& _loc
 	);
@@ -768,7 +781,7 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// EVM returndatacopy: copy `size` bytes of itxn LastLog from `offset` to `destOffset`.
+	/// EVM returndatacopy: copy `size` result-buffer bytes from `offset` to `destOffset`.
 	void emitReturndatacopy(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc,
@@ -802,74 +815,6 @@ private:
 		bool _isCall
 	);
 
-	/// Runtime-address call/staticcall → inner app call (address-encoded app id);
-	/// splits EVM calldata into args[0]=selector(4B) + args[1]=body.
-	/// Solady's SafeTransferLib.safeTransferFrom and similar take this path.
-	void handleAppCall(
-		solidity::yul::FunctionCall const& _call,
-		std::string const& _assignTarget,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out,
-		bool _isCall
-	);
-
-	// ── Individual precompile handlers ─────────────────────────────────
-
-	/// 0x01: ecRecover — ECDSA public key recovery + keccak256 → address
-	void handleEcRecover(
-		uint64_t _inputOffset, uint64_t _inputSize,
-		uint64_t _outputOffset, uint64_t _outputSize,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-
-	// All other precompiles use runtime-offset variants; dispatch wraps constants as IntegerConstant.
-	// handleEcRecover keeps its constant-only path (no dynamic-offset test exists).
-
-	/// 0x02: SHA-256 hash
-	void handleEcAddRT(
-		std::shared_ptr<awst::Expression> _inputOffset,
-		std::shared_ptr<awst::Expression> _outputOffset,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-	void handleEcMulRT(
-		std::shared_ptr<awst::Expression> _inputOffset,
-		std::shared_ptr<awst::Expression> _outputOffset,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-	void handleEcPairingRT(
-		std::shared_ptr<awst::Expression> _inputOffset,
-		std::shared_ptr<awst::Expression> _inputSize,
-		std::shared_ptr<awst::Expression> _outputOffset,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-	void handleSha256PrecompileRT(
-		std::shared_ptr<awst::Expression> _inputOffset,
-		std::shared_ptr<awst::Expression> _inputSize,
-		std::shared_ptr<awst::Expression> _outputOffset,
-		std::shared_ptr<awst::Expression> _outputSize,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-	void handleIdentityPrecompileRT(
-		std::shared_ptr<awst::Expression> _inputOffset,
-		std::shared_ptr<awst::Expression> _inputSize,
-		std::shared_ptr<awst::Expression> _outputOffset,
-		std::shared_ptr<awst::Expression> _outputSize,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-	void handleModExpRT(
-		std::shared_ptr<awst::Expression> _inputOffset,
-		std::shared_ptr<awst::Expression> _inputSize,
-		std::shared_ptr<awst::Expression> _outputOffset,
-		std::shared_ptr<awst::Expression> _outputSize,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
 
 	// ── Memory blob helpers ──────────────────────────────────────────
 
@@ -887,28 +832,19 @@ private:
 		int _slot = 0
 	);
 
-	/// Emit a self-store of memory slot 0 (memory already lives in scratch; the
-	/// store re-writes the current blob). Called at block end and before halts.
-	void flushMemoryToScratch(
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-
 	/// Read 32 bytes from the blob at a constant offset → biguint.
 	std::shared_ptr<awst::Expression> readMemSlot(
 		uint64_t _offset,
 		awst::SourceLocation const& _loc
 	);
 
-	/// Read a 32-byte word at a CONSTANT offset (slot = offset/SLOT_SIZE); slot 0 via
-	/// memoryVar(), others via loads(slot). Straddles stitched via concat. Returns bytes.
+	/// Read a 32-byte word through the shared checked scratch-memory helper.
 	std::shared_ptr<awst::Expression> readMemWordConst(
 		uint64_t _offset,
 		awst::SourceLocation const& _loc
 	);
 
-	/// Write a 32-byte word at a CONSTANT offset; slot 0 via assignMemoryVar(),
-	/// others load-modify-stored in scratch. Straddles split across adjacent slots.
+	/// Write a 32-byte word through the shared checked scratch-memory helper.
 	void writeMemWordConst(
 		uint64_t _offset,
 		std::shared_ptr<awst::Expression> _value32,
@@ -918,14 +854,10 @@ private:
 
 	/// Read a 32-byte word at a DYNAMIC offset; offset < SLOT_SIZE reads slot 0,
 	/// otherwise loads(offset/SLOT_SIZE). Straddles stitch two slots. Returns bytes.
-	/// The bounds assert goes to _sink when given, else to m_pendingStatements —
-	/// a read built INSIDE a loop or branch must sink into that body, or the
-	/// assert (which pins the offset, and with it any loop variable) lands
-	/// outside the scope that defines it.
+	/// Bounds checks live in the read expression, including inside loops/branches.
 	std::shared_ptr<awst::Expression> readMemWordDyn(
 		std::shared_ptr<awst::Expression> _offset,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>* _sink = nullptr
+		awst::SourceLocation const& _loc
 	);
 
 	/// Write a 32-byte word at a DYNAMIC offset via `stores(slot, replace3(loads(slot), sub, value))`.
@@ -963,34 +895,20 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Concat `_slotCount` scratch slots starting at a runtime base offset.
-	std::shared_ptr<awst::Expression> concatSlotsRT(
-		std::shared_ptr<awst::Expression> _baseOffset, int _startSlot, int _count,
-		awst::SourceLocation const& _loc
-	);
-
-	/// Store a bytes/biguint/bool result into the memory blob at a given offset.
-	void storeResultToMemory(
-		std::shared_ptr<awst::Expression> _result,
-		uint64_t _outputOffset, int _outputSlots,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out,
-		bool _isBoolResult = false
-	);
-
-	/// Runtime-offset variant of storeResultToMemory.
-	void storeResultToMemoryRT(
-		std::shared_ptr<awst::Expression> _result,
-		std::shared_ptr<awst::Expression> _outputOffset, int _outputSlots,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out,
-		bool _isBoolResult = false
-	);
 
 	/// Try to extract a constant integer value from a Yul expression.
 	std::optional<uint64_t> resolveConstantYulValue(
 		solidity::yul::Expression const& _expr
 	);
+	std::optional<std::string> resolveConstantYulWord(
+		solidity::yul::Expression const& _expr);
+	/// EVM-style immutable buffer read: clamp before narrowing, then zero-pad
+	/// only the missing suffix (not the entire source buffer).
+	std::shared_ptr<awst::Expression> readPaddedBytes(
+		std::shared_ptr<awst::Expression> _bytes,
+		std::shared_ptr<awst::Expression> _offset,
+		std::shared_ptr<awst::Expression> _length,
+		awst::SourceLocation const& _loc);
 
 	/// Match mload(add(add(bytes_param, 32), offset)) → extract3(param, offset, 32).
 	std::shared_ptr<awst::Expression> tryHandleBytesMemoryRead(
@@ -1013,7 +931,7 @@ private:
 	};
 	std::optional<BytesDataPtrMatch> matchBytesMemoryDataPtr(
 		solidity::yul::Expression const& _addr,
-		awst::SourceLocation const& _loc
+		awst::SourceLocation const& _loc, bool _evaluate = true
 	);
 
 	/// Guarded in-place write of `_value32` at `_m.dataOff`:
@@ -1065,9 +983,6 @@ private:
 
 	// ── Memory blob model ──────────────────────────────────────────────
 
-	/// Vestigial local name (slot 0 now lives directly in scratch).
-	static constexpr char const* MEMORY_VAR = "__evm_memory";
-
 	void initializeMemoryBlob(
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
@@ -1101,30 +1016,17 @@ private:
 		awst::WType const* paramType = nullptr;
 	};
 
-	std::map<uint64_t, CalldataElement> m_calldataMap;
 
 	void initializeCalldataMap(
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params
 	);
 
-	/// True when dynamic calldataload/copy/size detected; materialise __cd_blob.
-	bool m_useSyntheticCalldata = false;
-	std::vector<SelectorRoute> m_selectorRoutes;
-	std::set<std::string>* m_seededCalldataPointers = nullptr;
-	std::set<std::string> m_calldataPointerNames;
-	std::set<std::string> m_calldataStaticPtrNames;
-	std::vector<std::pair<std::string, awst::WType const*>> m_calldataParams;
-	/// Declared solc types of the function's calldata params, by BARE name
-	/// The EVM-ABI head layout (calldataHeadSize) and
-	/// value widening (sign extension, static-aggregate leaf words) derive
-	/// from these; absent entries fall back to the WType-based heuristics.
-	std::map<std::string, solidity::frontend::Type const*> m_calldataSolTypes;
 	static constexpr char const* CD_BLOB_VAR = "__cd_blob";
 
 public:
 	void setCalldataSolTypes(std::map<std::string, solidity::frontend::Type const*> _m)
 	{
-		m_calldataSolTypes = std::move(_m);
+		prepareContext().calldataSolTypes = std::move(_m);
 	}
 
 	/// Struct storage-ref params passed as a box-key handle (bytes) whose body
@@ -1132,17 +1034,15 @@ public:
 	/// to a BoxValueExpression over the param's box key. See asm-slot-storage-ref-param.
 	void setBoxKeyStructParams(std::map<std::string, awst::WType const*> _m)
 	{
-		m_boxKeyStructParams = std::move(_m);
+		prepareContext().boxKeyStructParams = std::move(_m);
 	}
 
 private:
-	TransientStorage const* m_transientStorage = nullptr;
-	std::map<std::string, awst::WType const*> m_boxKeyStructParams;
 
 	solidity::frontend::Type const* calldataSolType(std::string const& _name) const
 	{
-		auto it = m_calldataSolTypes.find(_name);
-		return it == m_calldataSolTypes.end() ? nullptr : it->second;
+		auto it = m_context->calldataSolTypes.find(_name);
+		return it == m_context->calldataSolTypes.end() ? nullptr : it->second;
 	}
 
 	/// EVM-ABI head size of one calldata param: solc's calldataHeadSize when
@@ -1151,16 +1051,9 @@ private:
 	/// legacy flat-count heuristic.
 	uint64_t calldataHeadSizeOf(std::string const& _name, awst::WType const* _type);
 
-	/// EVM-ABI head bytes for a STATIC param: per-leaf 32-byte words with
-	/// proper sign extension / bytesN right-alignment, driven by the declared
-	/// solc type; falls back to the WType-based single-word heuristics.
-	std::shared_ptr<awst::Expression> evmStaticHeadBytes(
-		std::string const& _name, awst::WType const* _type,
-		awst::SourceLocation const& _loc);
-
 	/// One EVM-ABI 32-byte word for a scalar leaf value (sign extension for
 	/// signed ints, left-alignment for bytesN — driven by the solc leaf type).
-	static std::shared_ptr<awst::Expression> evmCalldataWord(
+	std::shared_ptr<awst::Expression> evmCalldataWord(
 		std::shared_ptr<awst::Expression> _value,
 		solidity::frontend::Type const* _solLeaf,
 		awst::SourceLocation const& _loc);
@@ -1168,17 +1061,6 @@ private:
 	/// The solc scalar leaf type at flat index `_i` of calldata param `_name`
 	/// (statics flatten in EVM head order); nullptr when unknown.
 	solidity::frontend::Type const* calldataSolLeaf(std::string const& _name, int _i);
-
-	/// Append one EVM-ABI 32-byte head word per scalar leaf of a STATIC
-	/// aggregate, navigating the SOLC structure (array elements / struct
-	/// fields) so bytesN stays one left-aligned word and signed sub-word
-	/// elements sign-extend — decoupled from the ARC4-flat indexing.
-	void emitEvmHeadWords(
-		std::shared_ptr<awst::Expression> _value,
-		awst::WType const* _wtype,
-		solidity::frontend::Type const* _solType,
-		std::vector<std::shared_ptr<awst::Expression>>& _words,
-		awst::SourceLocation const& _loc);
 
 	/// The raw ARC4 value + solc type of the `_wordIndex`-th EVM head word of
 	/// a static aggregate, navigating the SOLC structure DIRECTLY (no head
@@ -1242,74 +1124,13 @@ private:
 
 	// ── Variable tracking ───────────────────────────────────────────────
 
-	/// True after a halt (return/revert): skip trailing flush + coercions (else puya: unreachable).
-	bool m_haltEmitted = false;
-	bool m_frameIsProgram = false;
-	std::vector<builder::ReturnWireElem> const* m_returnWirePlan = nullptr;
-	bool m_returnAsmWrap = false;
-	/// Encode a frame return value through m_returnWirePlan (spills go to _out).
+	/// Encode a frame return value through m_frame.returnWirePlan (spills go to _out).
 	std::shared_ptr<awst::Expression> encodeFrameReturn(
 		std::shared_ptr<awst::Expression> _value,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out);
 
-	std::map<std::string, awst::WType const*> m_locals;
-	/// Locals upgraded uint64→biguint; maps name to original type for block-end coercion.
-	std::map<std::string, awst::WType const*> m_upgradedLocals;
-
-	/// Solidity param bit-widths (uint16→16); used to truncate values on block exit.
-	std::map<std::string, unsigned> m_paramBitWidths;
-
-	/// SIGNED intN (N<=64) Solidity locals referenced in this asm block, name→bits.
-	/// Their uint64-backed 64-bit-TC value is NOT the Yul word (an EVM identifier
-	/// IS the full 256-bit word: int64 -1 = 0xFF..FF, so `bytes2(v)` takes 0xFFFF
-	/// from the top, and `shr(128, z)` after `z := ...` sees real high bits).
-	/// Wider signed (64<N<256) are biguint-backed canonical already — not registered.
-	std::map<std::string, unsigned> m_signedParamBits;
-
-	/// name → biguint shadow local holding the full 256-bit word for each
-	/// m_signedParamBits entry. Seeded sign-extended at block entry; all reads and
-	/// writes inside the block hit the shadow raw; the epilogue writes the low 8
-	/// bytes back to the typed local (64-bit-TC view, EVM-faithfully "dirty").
-	std::map<std::string, std::string> m_signedShadow;
-
-	/// Compile-time-constant uint64 values for locals; used to fold memory/calldata offsets.
-	/// SOUNDNESS: only single-assignment locals may be recorded (m_reassignedLocals gates the
-	/// `let` recording); "mem_0x<off>" content keys are invalidated on any non-constant or
-	/// unresolvable memory write and at control-flow boundaries (invalidateMemConstants).
-	std::map<std::string, uint64_t> m_localConstants;
-
-	/// Yul locals let-bound to an EIP-1967 slot constant (decimal value).
-	/// Folded at every bare reference so Erc1967Lowering::classify fires on
-	/// `let s := _ADMIN_SLOT; sstore(s, v)` — the OZ ERC1967Utils body shape.
-	/// Same single-assignment gating as m_localConstants; ONLY the three 1967
-	/// slots are recorded, so nothing else changes lowering. The recording
-	/// let emits NO store (all references fold), so a magic constant
-	/// SURVIVING in the AWST marks a genuine runtime escape
-	/// (Erc1967Lowering::warnEscapedSlotConstants).
-	std::map<std::string, std::string> m_localSlotConstants;
-
-	/// solc's SSAValueTracker view of the current block: single-assignment Yul
-	/// locals bound to a NUMBER literal, ORIGINAL name → full-width decimal.
-	/// m_localConstants is uint64 and silently drops anything wider (poseidon's
-	/// BN254 field prime), which kept every mulmod's divide-by-zero guard alive:
-	/// 816 guards chained ~2500 basic blocks, and puya's SSA reader recursed
-	/// past its stack limit walking them.
-	std::map<std::string, std::string> m_yulConstantValues;
-	std::map<std::string, unsigned> m_yulArgumentAlignments;
-
-	/// The same values re-keyed to the MANGLED local name the AWST carries
-	/// (inline-expanded frames rename), so a divisor VarExpression resolves.
-	std::map<std::string, std::string> m_localWideConstants;
-
-	/// Yul locals that are the target of ANY `:=` assignment anywhere in the current
-	/// assembly block (incl. nested blocks/loops and user function bodies, by ORIGINAL
-	/// name). Such locals never enter m_localConstants: the fold is flow-insensitive,
-	/// so a reassigned local's initializer constant would go stale (`let p := 0x80 …
-	/// p := add(p, 0x20)` folded every mstore(p, …) to offset 0x80).
-	std::set<std::string> m_reassignedLocals;
-
-	/// Drop all "mem_0x<off>" content constants + m_lastMstoreValue. Called on memory
+	/// Drop all "mem_0x<off>" content constants + m_frame.lastMstoreValue. Called on memory
 	/// writes that can't be tracked precisely (non-constant mstore offset, mstore8,
 	/// mcopy, calldatacopy, returndatacopy, precompile output) and when entering/
 	/// leaving if/switch/for translation (entries from a conditionally-executed body
@@ -1321,29 +1142,6 @@ private:
 	/// dropped). Shared by the expression and statement translation paths so
 	/// the two can't drift. `mstore` is excluded: it tracks per-offset itself.
 	static bool builtinClobbersMemory(std::string const& _name);
-
-	/// Names of calldata PARAMS whose head byte-offset is stashed in m_localConstants (for the
-	/// `.offset`/`.length` suffix + calldataMap paths). A BARE param name used as a value (e.g. as a
-	/// memory offset `mstore(off, v)`) must resolve to its RUNTIME value, not that calldata-offset
-	/// constant — so the bare-name constant resolvers skip these. (Solidity requires `.offset` for
-	/// reference-type calldata, so no valid bare-aggregate-as-offset case exists.)
-	std::set<std::string> m_calldataParamNames;
-
-	/// Solidity `constant` vars referenced in assembly: name → decimal string.
-	/// "__slot_"-prefixed values are storage-slot refs (see m_storageSlotVars).
-	std::map<std::string, std::string> m_constants;
-
-	/// "__slot_<varName>" → varName; drives sload/sstore storage translation.
-	std::map<std::string, std::string> m_storageSlotVars;
-
-	/// Dotted Yul name ("info.slot") → BoxKeyedSlot for box-struct sstore lowering.
-	std::map<std::string, BoxKeyedSlot> m_boxKeyedStructSlots;
-
-	/// Dotted yul name (`v.slot`) → scalar app-global state var, so sstore routes to
-	/// the var's own app-global storage (not __dyn_storage). Populated by SolInlineAssembly.
-	std::map<std::string, StateVarSlot> m_stateVarSlots;
-	std::map<std::string, SlotRoute> m_slotRoutes;
-	std::vector<SlotRoute> m_slotDataRegions;
 
 	/// Try to lower sload/sstore at a compile-time-CONSTANT slot directly to the
 	/// named variable's storage (see SlotRoute). Returns the read expression /
@@ -1357,32 +1155,7 @@ private:
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out);
 
-	/// Assembly name → uint64 offset-var name for blob-backed aggregates.
-	/// A reference resolves to the memory pointer (offset), not the value.
-	std::map<std::string, std::string> m_blobOffsetVars;
-
-	/// Dotted yul name (`ptr.slot`) → mangled biguint local holding a storage-ref
-	/// slot handle. Lets `.slot` on a struct-storage-ref local resolve to the
-	/// handle value instead of the (non-scalar) struct. Populated by SolInlineAssembly.
-	std::map<std::string, std::string> m_structRefSlotLocals;
-
-	/// solc's external refs for the current block (yul id ptr → {decl, suffix}).
-	/// Pointer-keyed so a Yul-local shadowing an outer var isn't mis-resolved.
-	std::map<solidity::yul::Identifier const*,
-		solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> m_externalRefs;
-	/// Resolves a VariableDeclaration to its AWST name (Context::awstVarName).
-	std::function<std::string(solidity::frontend::VariableDeclaration const&)> m_declName;
-
 	// ── Assembly function support ───────────────────────────────────────
-
-	/// Collected assembly function definitions (populated during first pass).
-	std::map<std::string, solidity::yul::FunctionDefinition const*> m_asmFunctions;
-
-	/// Nesting depth of inlined Yul functions; >0 → `leave` emits LoopExit not Return.
-	int m_inlineDepth = 0;
-	/// Active inlined-function leave flag. Nested loops propagate this flag so
-	/// leave exits the synthetic function wrapper, not merely the nearest loop.
-	std::string m_yulLeaveFlag;
 
 	/// Call a Yul subroutine, or inline a helper requiring the Solidity return frame.
 	std::shared_ptr<awst::Expression> handleUserFunctionCall(
@@ -1390,24 +1163,6 @@ private:
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
-
-	/// solc-disambiguated Yul function name → AWST SubroutineID.
-	std::map<std::string, std::string> m_yulFuncSubroutineIds;
-	std::set<std::string> m_yulCalldataFunctions;
-	std::set<std::string> m_yulMemoryWritingFunctions;
-	/// Non-null only inside an outlined function; `leave` returns these values.
-	solidity::yul::FunctionDefinition const* m_yulSubroutine = nullptr;
-
-	/// Per-call temp names for subroutine return values (one per return value).
-	/// Decoupled from the function's own return-var names so recursive calls
-	/// don't clobber the current frame. Also used by the inline fallback.
-	std::vector<std::string> m_yulSubReturnTemps;
-
-	/// Active per-inline-call renames: a Yul user-fn's bare param/return names
-	/// (x, y) → unique `__yul_<uid>_<name>`, so two functions sharing names (or
-	/// nested/repeated inline calls) don't clobber each other's runtime vars.
-	/// resolveVarRef applies this; the inline path saves/restores it per frame.
-	std::map<std::string, std::string> m_yulInlineRenames;
 
 	/// Emit a reachable Yul function with an isolated local scope, shared scratch
 	/// memory, and an explicit calldata argument when solc's graph requires it.
@@ -1481,8 +1236,6 @@ private:
 		solidity::yul::Expression const& _expr,
 		std::set<std::string> const& _fmpLocals) const;
 
-	/// Set when the invariant above holds for the current block.
-	bool m_fmpStaysAligned = false;
 
 	/// Offset's residue mod 32 when provable, else nullopt ("assume unaligned").
 	/// A scratch slot is a multiple of 32, so a 32-byte access at residue r has
@@ -1492,9 +1245,6 @@ private:
 	/// right-shift rule — halving an aligned value is not aligned.
 	std::optional<unsigned> alignmentMod32(awst::Expression const& _offset) const;
 
-	/// Yul locals whose bound value is provably 32-aligned (single-assignment
-	/// only, same gate as m_localWideConstants).
-	std::set<std::string> m_alignedLocals;
 
 	/// True when a div/mod divisor is a compile-time non-zero constant: the EVM
 	/// zero-divisor guard, and the three basic blocks its ternary costs, are then
@@ -1514,24 +1264,235 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Last mstore value; used by keccak256(begin, add(len,0x20)) pattern to append it.
-	std::shared_ptr<awst::Expression> m_lastMstoreValue;
 
 	TypeMapper& m_typeMapper;
-	std::string m_sourceFile;
-	std::string m_contextName;
-	awst::WType const* m_returnType = nullptr;
-	std::vector<solidity::frontend::Type const*> m_returnSolTypes;
 
-	std::string m_arrayParamName;
-	awst::WType const* m_arrayParamType = nullptr;
-	int64_t m_arrayParamSize = 0;
+	/// Configuration and prepared solc facts are shared read-only after
+	/// registration. Host routing belongs here; Yul stack locals never do.
+	struct Context
+	{
+		std::vector<SelectorRoute> selectorRoutes;
 
-	/// Expression-level side effects waiting to be prepended; drained by statement handlers.
-	std::vector<std::shared_ptr<awst::Statement>> m_pendingStatements;
+		std::vector<std::pair<std::string, awst::WType const*>> calldataParams;
 
-	/// For-loop post body; `continue` emits it before LoopContinue (Yul semantics).
-	std::vector<solidity::yul::Statement> const* m_forLoopPost = nullptr;
+		/// Declared solc types of the function's calldata params, by BARE name
+		/// The EVM-ABI head layout (calldataHeadSize) and
+		/// value widening (sign extension, static-aggregate leaf words) derive
+		/// from these; absent entries fall back to the WType-based heuristics.
+		std::map<std::string, solidity::frontend::Type const*> calldataSolTypes;
+
+		TransientStorage const* transientStorage = nullptr;
+
+		std::map<std::string, awst::WType const*> boxKeyStructParams;
+
+		/// Solidity param bit-widths (uint16→16); used to truncate values on block exit.
+		std::map<std::string, unsigned> paramBitWidths;
+
+		/// SIGNED intN (N<=64) Solidity locals referenced in this asm block, name→bits.
+		/// Their uint64-backed 64-bit-TC value is NOT the Yul word (an EVM identifier
+		/// IS the full 256-bit word: int64 -1 = 0xFF..FF, so `bytes2(v)` takes 0xFFFF
+		/// from the top, and `shr(128, z)` after `z := ...` sees real high bits).
+		/// Wider signed (64<N<256) are biguint-backed canonical already — not registered.
+		std::map<std::string, unsigned> signedParamBits;
+
+		/// solc's SSAValueTracker view of the current block: single-assignment Yul
+		/// locals bound to a NUMBER literal, ORIGINAL name → full-width decimal.
+		/// localConstants is uint64 and silently drops anything wider (poseidon's
+		/// BN254 field prime), which kept every mulmod's divide-by-zero guard alive:
+		/// 816 guards chained ~2500 basic blocks, and puya's SSA reader recursed
+		/// past its stack limit walking them.
+		std::map<std::string, std::string> yulConstantValues;
+
+		std::map<std::string, unsigned> yulArgumentAlignments;
+
+		/// Yul locals that are the target of ANY `:=` assignment anywhere in the current
+		/// assembly block (incl. nested blocks/loops and user function bodies, by ORIGINAL
+		/// name). Such locals never enter localConstants: the fold is flow-insensitive,
+		/// so a reassigned local's initializer constant would go stale (`let p := 0x80 …
+		/// p := add(p, 0x20)` folded every mstore(p, …) to offset 0x80).
+		std::set<std::string> reassignedLocals;
+
+		/// Solidity `constant` vars referenced in assembly: name → decimal string.
+		/// "__slot_"-prefixed values are storage-slot refs (see storageSlotVars).
+		std::map<std::string, std::string> constants;
+
+		/// "__slot_<varName>" → varName; drives sload/sstore storage translation.
+		std::map<std::string, std::string> storageSlotVars;
+
+		/// Dotted Yul name ("info.slot") → BoxKeyedSlot for box-struct sstore lowering.
+		std::map<std::string, BoxKeyedSlot> boxKeyedStructSlots;
+
+		/// Dotted yul name (`v.slot`) → scalar app-global state var, so sstore routes to
+		/// the var's own app-global storage (not __dyn_storage). Populated by SolInlineAssembly.
+		std::map<std::string, StateVarSlot> stateVarSlots;
+
+		std::map<std::string, SlotRoute> slotRoutes;
+
+		std::vector<SlotRoute> slotDataRegions;
+
+		/// Dotted yul name (`ptr.slot`) → mangled biguint local holding a storage-ref
+		/// slot handle. Lets `.slot` on a struct-storage-ref local resolve to the
+		/// handle value instead of the (non-scalar) struct. Populated by SolInlineAssembly.
+		std::map<std::string, std::string> structRefSlotLocals;
+
+		/// solc's external refs for the current block (yul id ptr → {decl, suffix}).
+		/// Pointer-keyed so a Yul-local shadowing an outer var isn't mis-resolved.
+		std::map<solidity::yul::Identifier const*,
+			solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo> externalRefs;
+
+		/// Resolves a VariableDeclaration to its AWST name (Context::awstVarName).
+		std::function<std::string(solidity::frontend::VariableDeclaration const&)> declName;
+
+		/// Collected assembly function definitions (populated during first pass).
+		std::map<std::string, solidity::yul::FunctionDefinition const*> asmFunctions;
+
+		/// solc-disambiguated Yul function name → AWST SubroutineID.
+		std::map<std::string, std::string> yulFuncSubroutineIds;
+
+		std::set<std::string> yulCalldataFunctions;
+
+		std::set<std::string> yulMemoryWritingFunctions;
+
+		/// Set when the invariant above holds for the current block.
+		bool fmpStaysAligned = false;
+
+		solidity::yul::Dialect const* dialect = nullptr;
+
+		std::string sourceFile;
+
+		std::string contextName;
+
+		bool inConstructor = false;
+	};
+
+	/// Every outlined Yul function starts with a value-initialized frame.
+	/// Scratch memory, return data and transient storage are not frame locals.
+	struct Frame
+	{
+		std::map<uint64_t, CalldataElement> calldataMap;
+
+		/// True when dynamic calldataload/copy/size detected; materialise __cd_blob.
+		bool useSyntheticCalldata = false;
+
+		std::set<std::string>* seededCalldataPointers = nullptr;
+
+		std::set<std::string> calldataPointerNames;
+
+		std::set<std::string> calldataStaticPtrNames;
+
+		/// True after a halt (return/revert): skip trailing coercions (else puya: unreachable).
+		bool haltEmitted = false;
+
+		bool frameIsProgram = false;
+
+		std::vector<builder::ReturnWireElem> const* returnWirePlan = nullptr;
+
+		bool returnAsmWrap = false;
+
+		std::map<std::string, awst::WType const*> locals;
+
+		/// Locals upgraded uint64→biguint; maps name to original type for block-end coercion.
+		std::map<std::string, awst::WType const*> upgradedLocals;
+
+		/// name → biguint shadow local holding the full 256-bit word for each
+		/// signedParamBits entry. Seeded sign-extended at block entry; all reads and
+		/// writes inside the block hit the shadow raw; the epilogue writes the low 8
+		/// bytes back to the typed local (64-bit-TC view, EVM-faithfully "dirty").
+		std::map<std::string, std::string> signedShadow;
+
+		/// Compile-time-constant uint64 values for locals; used to fold memory/calldata offsets.
+		/// SOUNDNESS: only single-assignment locals may be recorded (reassignedLocals gates the
+		/// `let` recording); "mem_0x<off>" content keys are invalidated on any non-constant or
+		/// unresolvable memory write and at control-flow boundaries (invalidateMemConstants).
+		std::map<std::string, uint64_t> localConstants;
+
+		/// Yul locals let-bound to an EIP-1967 slot constant (decimal value).
+		/// Folded at every bare reference so Erc1967Lowering::classify fires on
+		/// `let s := _ADMIN_SLOT; sstore(s, v)` — the OZ ERC1967Utils body shape.
+		/// Same single-assignment gating as localConstants; ONLY the three 1967
+		/// slots are recorded, so nothing else changes lowering. The recording
+		/// let emits NO store (all references fold), so a magic constant
+		/// SURVIVING in the AWST marks a genuine runtime escape
+		/// (Erc1967Lowering::warnEscapedSlotConstants).
+		std::map<std::string, std::string> localSlotConstants;
+
+		/// The same values re-keyed to the MANGLED local name the AWST carries
+		/// (inline-expanded frames rename), so a divisor VarExpression resolves.
+		std::map<std::string, std::string> localWideConstants;
+
+		/// Names of calldata PARAMS whose head byte-offset is stashed in localConstants (for the
+		/// `.offset`/`.length` suffix + calldataMap paths). A BARE param name used as a value (e.g. as a
+		/// memory offset `mstore(off, v)`) must resolve to its RUNTIME value, not that calldata-offset
+		/// constant — so the bare-name constant resolvers skip these. (Solidity requires `.offset` for
+		/// reference-type calldata, so no valid bare-aggregate-as-offset case exists.)
+		std::set<std::string> calldataParamNames;
+
+		/// Assembly name → uint64 offset-var name for blob-backed aggregates.
+		/// A reference resolves to the memory pointer (offset), not the value.
+		std::map<std::string, std::string> blobOffsetVars;
+
+		/// Nesting depth of inlined Yul functions; >0 → `leave` emits LoopExit not Return.
+		int inlineDepth = 0;
+
+		/// Active inlined-function leave flag. Nested loops propagate this flag so
+		/// leave exits the synthetic function wrapper, not merely the nearest loop.
+		std::string yulLeaveFlag;
+
+		/// Non-null only inside an outlined function; `leave` returns these values.
+		solidity::yul::FunctionDefinition const* yulSubroutine = nullptr;
+
+		/// Per-call temp names for subroutine return values (one per return value).
+		/// Decoupled from the function's own return-var names so recursive calls
+		/// don't clobber the current frame. Also used by the inline fallback.
+		std::vector<std::string> yulSubReturnTemps;
+
+		/// Active per-inline-call renames: a Yul user-fn's bare param/return names
+		/// (x, y) → unique `__yul_<uid>_<name>`, so two functions sharing names (or
+		/// nested/repeated inline calls) don't clobber each other's runtime vars.
+		/// resolveVarRef applies this; the inline path saves/restores it per frame.
+		std::map<std::string, std::string> yulInlineRenames;
+
+		/// Yul locals whose bound value is provably 32-aligned (single-assignment
+		/// only, same gate as localWideConstants).
+		std::set<std::string> alignedLocals;
+
+		/// Last mstore value; used by keccak256(begin, add(len,0x20)) pattern to append it.
+		std::shared_ptr<awst::Expression> lastMstoreValue;
+
+		awst::WType const* returnType = nullptr;
+
+		std::vector<solidity::frontend::Type const*> returnSolTypes;
+
+		std::string arrayParamName;
+
+		awst::WType const* arrayParamType = nullptr;
+
+		int64_t arrayParamSize = 0;
+
+		/// Expression-level side effects waiting to be prepended; drained by statement handlers.
+		std::vector<std::shared_ptr<awst::Statement>> pendingStatements;
+
+		/// For-loop post body; `continue` emits it before LoopContinue (Yul semantics).
+		std::vector<solidity::yul::Statement> const* forLoopPost = nullptr;
+	};
+
+	Context& prepareContext()
+	{
+		if (!m_preparingContext)
+		{
+			m_preparingContext = std::make_shared<Context>(*m_context);
+			m_context = m_preparingContext;
+		}
+		return *m_preparingContext;
+	}
+	AssemblyBuilder(TypeMapper& _types, std::shared_ptr<Context const> _context)
+		: m_typeMapper(_types), m_context(std::move(_context)) {}
+	AssemblyBuilder(AssemblyBuilder const&) = delete;
+	AssemblyBuilder& operator=(AssemblyBuilder const&) = delete;
+
+	std::shared_ptr<Context> m_preparingContext;
+	std::shared_ptr<Context const> m_context;
+	Frame m_frame;
 
 };
 

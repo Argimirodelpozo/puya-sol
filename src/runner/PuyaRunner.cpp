@@ -2,75 +2,90 @@
 #include "Logger.h"
 
 #include <cerrno>
+#include <csignal>
 #include <cstring>
+#include <spawn.h>
 #include <sys/wait.h>
+#include <thread>
 #include <unistd.h>
+
+extern char** environ;
 
 namespace puyasol::runner
 {
 
-int PuyaRunner::run(
-	std::string const& _awstPath,
-	std::string const& _optionsPath,
-	std::string const& _logLevel
-)
+int PuyaRunner::Result::exitCode() const
 {
-	if (m_puyaPath.empty())
-	{
-		Logger::instance().error("puya path not set");
-		return 1;
-	}
+	if (status == Status::Exited) return detail;
+	if (status == Status::Signalled) return 128 + detail;
+	return 1;
+}
 
-	Logger::instance().debug(
-		"Running puya backend: " + m_puyaPath
-		+ " --awst " + _awstPath
-		+ " --options " + _optionsPath
-		+ " --log-level " + _logLevel);
-
-	// Do not route compiler-controlled paths through `/bin/sh -c`. Apart from
-	// breaking ordinary paths containing spaces, system() made --puya-path and
-	// --output-dir shell-injection surfaces. Pass each argument directly to exec.
-	pid_t child = ::fork();
-	if (child < 0)
+PuyaRunner::Result PuyaRunner::run(
+	std::string const& awstPath, std::string const& optionsPath,
+	std::string const& logLevel, Control const& control) const
+{
+	using Status = Result::Status;
+	auto stopped = [&]() -> std::optional<Status> {
+		if (control.cancellation.stop_requested()) return Status::Cancelled;
+		if (control.deadline && std::chrono::steady_clock::now() >= *control.deadline)
+			return Status::TimedOut;
+		return {};
+	};
+	if (auto reason = stopped()) return {*reason};
+	// posix_spawnp reports exec errors separately from a backend that exits 127.
+	// No shell: paths and log levels remain literal arguments.
+	char* const args[] = {
+		const_cast<char*>(m_puyaPath.c_str()), const_cast<char*>("--awst"),
+		const_cast<char*>(awstPath.c_str()), const_cast<char*>("--options"),
+		const_cast<char*>(optionsPath.c_str()), const_cast<char*>("--log-level"),
+		const_cast<char*>(logLevel.c_str()), nullptr};
+	posix_spawnattr_t attributes;
+	int error = ::posix_spawnattr_init(&attributes);
+	pid_t child = -1;
+	if (!error)
 	{
-		Logger::instance().error(
-			"failed to fork puya backend: " + std::string(std::strerror(errno)));
-		return 1;
+		error = ::posix_spawnattr_setflags(&attributes, POSIX_SPAWN_SETPGROUP);
+		if (!error) error = ::posix_spawnattr_setpgroup(&attributes, 0);
+		if (!error) error = ::posix_spawnp(&child, m_puyaPath.c_str(), nullptr,
+			&attributes, args, environ);
+		::posix_spawnattr_destroy(&attributes);
 	}
-	if (child == 0)
+	if (error)
 	{
-		::execlp(
-			m_puyaPath.c_str(),
-			m_puyaPath.c_str(),
-			"--awst", _awstPath.c_str(),
-			"--options", _optionsPath.c_str(),
-			"--log-level", _logLevel.c_str(),
-			static_cast<char*>(nullptr));
-		// Avoid touching parent-process buffered streams after fork.
-		::_exit(127);
+		Logger::instance().error("cannot launch puya backend: " + std::string(std::strerror(error)));
+		return {Status::LaunchFailed, error};
 	}
 
 	int status = 0;
-	while (::waitpid(child, &status, 0) < 0)
+	for (;;)
 	{
-		if (errno == EINTR)
-			continue;
-		Logger::instance().error(
-			"failed waiting for puya backend: " + std::string(std::strerror(errno)));
-		return 1;
+		bool const controlled = control.deadline || control.cancellation.stop_possible();
+		auto waited = ::waitpid(child, &status, controlled ? WNOHANG : 0);
+		if (waited == child) break;
+		if (waited < 0)
+		{
+			if (errno == EINTR) continue;
+			error = errno;
+			Logger::instance().error("cannot wait for puya backend: " + std::string(std::strerror(error)));
+			return {Status::WaitFailed, error};
+		}
+		if (auto reason = stopped())
+		{
+			// The child is not reaped yet, so its PID cannot be recycled. Its
+			// dedicated process group includes subprocesses it may have started.
+			::kill(-child, SIGKILL);
+			while (::waitpid(child, &status, 0) < 0 && errno == EINTR) {}
+			Logger::instance().error(*reason == Status::TimedOut
+				? "puya backend deadline exceeded" : "puya backend cancelled");
+			return {*reason};
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
-
-	int result = 1;
-	if (WIFEXITED(status))
-		result = WEXITSTATUS(status);
-	else if (WIFSIGNALED(status))
-		result = 128 + WTERMSIG(status);
-
-	if (result != 0)
-		Logger::instance().error("puya exited with code: " + std::to_string(result));
-	else
-		Logger::instance().debug("puya backend process exited with code 0");
-
+	Result result = WIFEXITED(status) ? Result{Status::Exited, WEXITSTATUS(status)}
+		: Result{Status::Signalled, WTERMSIG(status)};
+	if (result.exitCode())
+		Logger::instance().error("puya exited with code: " + std::to_string(result.exitCode()));
 	return result;
 }
 

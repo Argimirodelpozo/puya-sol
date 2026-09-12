@@ -2,12 +2,14 @@
 #include "Logger.h"
 
 #include <libsolidity/interface/ImportRemapper.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <unistd.h>
 
 #include <algorithm>
-#include <cstdlib>
 #include <fstream>
+#include <iostream>
+#include <iterator>
 #include <sstream>
 #include <vector>
 
@@ -15,12 +17,50 @@ namespace fs = boost::filesystem;
 
 namespace puyasol::cli
 {
+namespace
+{
+
+std::map<std::string, std::string> sourceFileAliases(
+	solidity::frontend::FileReader const& reader)
+{
+	using Reader = solidity::frontend::FileReader;
+	std::map<std::string, std::string> result;
+	auto prefixes = reader.includePaths();
+	prefixes.push_back(reader.basePath());
+	for (auto const& [unit, _]: reader.sourceUnits())
+	{
+		// FileReader has no public resolved-path map. Match its normalized
+		// base/include candidates only after a successful read, never basenames.
+		std::string path = unit.starts_with("file://") ? unit.substr(7) : unit;
+		std::set<fs::path> candidates;
+		for (auto const& prefix: prefixes)
+		{
+			auto candidate = Reader::normalizeCLIPathForVFS(
+				prefix / path, Reader::SymlinkResolution::Enabled);
+			if (fs::is_regular_file(candidate)) candidates.insert(std::move(candidate));
+		}
+		if (candidates.size() == 1) result.emplace(candidates.begin()->string(), unit);
+	}
+	return result;
+}
 
 solidity::frontend::FileReader setupFileReader(
 	Options const& _opts,
-	fs::path const& _sourceDir,
-	fs::path const& _projectRoot)
+	fs::path const& _mainPath)
 {
+	auto const _sourceDir = _mainPath.parent_path();
+	// Preserve the explicit-root policy; solc owns all source-unit normalization.
+	std::optional<fs::path> importRoot;
+	for (auto const& path: _opts.importPaths)
+	{
+		auto root = fs::absolute(path).lexically_normal();
+		auto relative = _mainPath.lexically_normal().lexically_relative(root);
+		if (relative.empty() || *relative.begin() == "..") continue;
+		if (!importRoot || std::distance(root.begin(), root.end())
+			< std::distance(importRoot->begin(), importRoot->end()))
+			importRoot = std::move(root);
+	}
+	auto const _projectRoot = importRoot.value_or(_sourceDir.parent_path());
 	fs::path nodeModules = _projectRoot / "node_modules";
 
 	solidity::frontend::FileReader fileReader(
@@ -94,31 +134,14 @@ solidity::frontend::FileReader setupFileReader(
 
 std::optional<std::string> readSourceFile(std::string const& _path)
 {
-	std::ifstream file(_path);
+	boost::system::error_code error;
+	if (!fs::is_regular_file(_path, error)) return std::nullopt;
+	std::ifstream file(_path, std::ios::binary);
 	if (!file.is_open()) return std::nullopt;
 	std::ostringstream ss;
 	ss << file.rdbuf();
+	if (file.bad() || ss.bad()) return std::nullopt;
 	return ss.str();
-}
-
-solidity::langutil::EVMVersion resolveEvmVersion(std::string const& _name)
-{
-	// Default: cancun. Test runner translates `// EVMVersion: ...` directives
-	// to --evm-version. Accepts any solc-supported name (homestead..osaka).
-	auto const defaultVersion = solidity::langutil::EVMVersion::cancun();
-	if (_name.empty())
-		return defaultVersion;
-
-	// Keep accepted version names in lockstep with the vendored compiler instead
-	// of duplicating solc's version table here (and drifting on future forks).
-	if (auto evmVer = solidity::langutil::EVMVersion::fromString(_name))
-		return *evmVer;
-
-	// FATAL: a misspelled target would silently compile as cancun with
-	// different accepted syntax and opcode gating.
-	puyasol::Logger::instance().error(
-		"Unknown EVM version '" + _name + "' (accepted: solc names homestead..osaka)");
-	std::exit(2);
 }
 
 void applyRemappings(
@@ -152,35 +175,146 @@ void applyRemappings(
 	_compiler.setRemappings(parsedRemappings);
 }
 
-bool reportCompilationErrors(solidity::frontend::CompilerStack const& _compiler)
+} // namespace
+
+std::optional<CompilerSettings> resolveCompilerSettings(Options const& opts)
+{
+	using solidity::langutil::EVMVersion;
+	auto version = opts.evmVersion.empty()
+		? std::optional<EVMVersion>{EVMVersion::cancun()}
+		: EVMVersion::fromString(opts.evmVersion);
+	if (!version)
+	{
+		Logger::instance().error("Unknown EVM version '" + opts.evmVersion + "' (expected a solc-supported name)");
+		return std::nullopt;
+	}
+	CompilerSettings settings{*version, {
+		.evmStorageLayout = opts.evmStorageLayout,
+		.evmSelectors = opts.evmSelectors || opts.contractAbi == "evm",
+		.contractAbi = opts.contractAbi == "evm" ? builder::ContractAbi::Evm : builder::ContractAbi::Arc4,
+		.viaIRSequencing = opts.viaYulBehavior,
+		.proxyAdaptation = opts.proxyAdaptation,
+		.evmChainId = opts.evmChainId.empty() ? std::nullopt : std::optional{opts.evmChainId},
+		.evmBlockGasLimit = opts.evmBlockGasLimit.empty() ? std::nullopt : std::optional{opts.evmBlockGasLimit},
+		.evmCoinbase = opts.evmCoinbase.empty() ? std::nullopt : std::optional{opts.evmCoinbase},
+		.allowedEvmDivergences = opts.allowedEvmDivergences,
+		.childProgramsViaBox = opts.childProgramsViaBox,
+		.evmVersionName = version->name(),
+		.scratchLayout = builder::ScratchLayout(opts.evmMemorySlots > 0
+			? opts.evmMemorySlots : builder::ScratchLayout::defaultMemorySlots),
+	}};
+	if (!opts.xchainTemplate.empty())
+	{
+		if (settings.target.contractAbi != builder::ContractAbi::Evm)
+		{
+			Logger::instance().error("--xchain-template requires --contract-abi evm (the xchain account model lives in the 160-bit namespace)");
+			return std::nullopt;
+		}
+		auto const& bytes = opts.xchainTemplate;
+		auto const& placeholder = opts.xchainPlaceholder;
+		auto match = std::search(bytes.begin(), bytes.end(), placeholder.begin(), placeholder.end());
+		if (placeholder.size() != 20 || match == bytes.end()
+			|| std::search(match + 1, bytes.end(), placeholder.begin(), placeholder.end()) != bytes.end())
+		{
+			Logger::instance().error("--xchain-template must contain the owner placeholder exactly once");
+			return std::nullopt;
+		}
+		settings.target.xchainAccounts = builder::TargetProfile::XchainAccounts{
+			{bytes.begin(), match}, {match + 20, bytes.end()}};
+	}
+	return settings;
+}
+
+SourceInput::SourceInput(Options const& options):
+	m_options(options), m_mainPath(fs::absolute(options.sourceFiles.at(0))),
+	m_reader(setupFileReader(options, m_mainPath))
+{}
+
+solidity::frontend::ReadCallback::Callback SourceInput::reader()
+{
+	return [this, base = m_reader.reader()](std::string const& kind, std::string const& path) {
+		auto result = base(kind, path);
+		if (result.success && m_options.legacySourceRewrite)
+		{
+			auto original = std::move(result.responseOrErrorMessage);
+			result.responseOrErrorMessage = transformSource(original);
+			m_rewrites[path] = {std::move(original), result.responseOrErrorMessage};
+		}
+		return result;
+	};
+}
+
+bool SourceInput::load(solidity::frontend::CompilerStack& compiler)
+{
+	auto& logger = Logger::instance();
+	// Remapping include paths must be finalized before naming any explicit file.
+	applyRemappings(compiler, m_reader, m_options.remappings);
+	solidity::frontend::FileReader::FileSystemPathSet paths;
+	for (auto const& path: m_options.sourceFiles) paths.insert(fs::absolute(path));
+	auto collisions = m_reader.detectSourceUnitNameCollisions(paths);
+	for (auto const& [unit, files]: collisions)
+	{
+		std::string message = "Source unit name collision detected: " + unit + " matches";
+		for (auto const& file: files) message += " '" + file.string() + "'";
+		logger.error(message);
+	}
+	if (!collisions.empty()) return false;
+	if (m_options.legacySourceRewrite)
+		std::cerr << "WARNING: UNSAFE LEGACY SOURCE REWRITE ENABLED. Solidity source will be modified before parsing; "
+			"exact before/after text and hashes will be written to source-rewrite-manifest.json.\n";
+	for (size_t i = 0; i < m_options.sourceFiles.size(); ++i)
+	{
+		auto path = fs::absolute(m_options.sourceFiles[i]);
+		auto unit = m_reader.cliPathToSourceUnitName(path);
+		m_explicitAliases[path.string()] = unit;
+		// Repeated spellings of the same normalized file are one source, including
+		// the main-only legacy transformation. Different files were rejected above.
+		if (m_reader.sourceUnits().contains(unit)) continue;
+		auto contents = readSourceFile(path.string());
+		if (!contents)
+		{
+			logger.error("Cannot read source file: " + path.string());
+			return false;
+		}
+		if (m_options.legacySourceRewrite)
+		{
+			auto original = std::move(*contents);
+			*contents = transformSource(original);
+			if (i == 0)
+				*contents = removeInheritedEvents(*contents,
+					collectInterfaceEventsFromImports(original, m_mainPath.parent_path()));
+			m_rewrites[unit] = {std::move(original), *contents};
+		}
+		m_reader.addOrUpdateFile(path, std::move(*contents));
+		logger.info(i == 0 ? "Source: " + path.string() : "Additional source: " + unit);
+	}
+	compiler.setSources(m_reader.sourceUnits());
+	return true;
+}
+
+std::map<std::string, std::string> SourceInput::aliases() const
+{
+	auto result = sourceFileAliases(m_reader);
+	for (auto const& [path, unit]: m_explicitAliases) result[path] = unit;
+	return result;
+}
+
+void reportCompilerDiagnostics(solidity::frontend::CompilerStack const& _compiler)
 {
 	auto& logger = puyasol::Logger::instance();
-
-	bool hasError = false;
 	for (auto const& error: _compiler.errors())
 	{
-		if (error->type() == solidity::langutil::Error::Type::Warning)
-			continue;
-
-		std::string msg = error->what();
-
-		// Include source location in the error message.
-		std::string detail = msg;
-		if (auto const* srcLoc = error->sourceLocation())
+		auto message = solidity::langutil::SourceReferenceFormatter::formatErrorInformation(
+			*error, _compiler, false, true);
+		while (!message.empty() && message.back() == '\n') message.pop_back();
+		using Severity = solidity::langutil::Error::Severity;
+		switch (error->severity())
 		{
-			detail += " at ";
-			if (srcLoc->sourceName)
-				detail += *srcLoc->sourceName + ":";
-			detail += std::to_string(srcLoc->start) + "-" + std::to_string(srcLoc->end);
+		case Severity::Info: logger.info(message); break;
+		case Severity::Warning: logger.warning(message); break;
+		case Severity::Error: logger.error(message); break;
 		}
-		logger.error(
-			std::string("[")
-			+ solidity::langutil::Error::formatErrorType(error->type())
-			+ "] " + detail
-		);
-		hasError = true;
 	}
-	return !hasError;
 }
 
 } // namespace puyasol::cli

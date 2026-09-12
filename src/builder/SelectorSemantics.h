@@ -66,6 +66,8 @@ public:
 	static std::string eventSignature(
 		eb::ContractContext& _ctx,
 		solidity::frontend::EventDefinition const& _event);
+	static awst::ARC4Struct const* eventType(
+		TypeMapper& _types, solidity::frontend::EventDefinition const& _event);
 
 	/// All public function/getter selector mappings for the current contract.
 	static std::vector<SelectorRoute> routes(eb::ContractContext& _ctx);

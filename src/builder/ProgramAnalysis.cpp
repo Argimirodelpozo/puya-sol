@@ -1,7 +1,10 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/SolcFacts.h"
 #include "builder/PreparedAssembly.h"
+#include "builder/itxn/AsaIntrinsics.h"
+#include "builder/itxn/CallResolver.h"
 #include "builder/sol-ast/StorageRefPointer.h"
+#include "builder/sol-ast/AsmScan.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
@@ -126,10 +129,9 @@ void collectContractCallGraphFacts(
 {
 	if (!_graph)
 		return;
-	_out.contractsWithReachabilityGraphs.insert(_contract.id());
 	if (!_contract.isLibrary())
 		_out.hasReachabilityGraphs = true;
-	auto& reachable = _out.reachableFunctionsByContract[_contract.id()];
+	auto& reachable = _out.reachableCallablesByContract[_contract.id()];
 	auto& internallyCalled = _out.internallyCalledFunctions[_contract.id()];
 	for (auto const& [caller, callees]: _graph->edges)
 	{
@@ -138,9 +140,8 @@ void collectContractCallGraphFacts(
 		if (auto const* callable = graphCallable(caller))
 		{
 			reachable.insert(callable->id());
-			if (!_contract.isLibrary())
-				_out.reachableCallableIds.insert(callable->id());
-			else
+			_out.reachableCallableIds.insert(callable->id());
+			if (_contract.isLibrary())
 				// Library calls have no host-dependent virtual resolution. Reuse
 				// solc's exact edges (including overloaded operators) in the shared
 				// graph; keep ordinary contract graphs context-specific.
@@ -228,6 +229,7 @@ void collectContractFacts(CompilerStack& _compiler, ProgramAnalysis& _out)
 		for (auto const* contract:
 			ASTNode::filteredNodes<ContractDefinition>(_compiler.ast(sourceName).nodes()))
 		{
+			_out.contracts.push_back(contract);
 			for (auto const* modifier: contract->functionModifiers())
 				indexCallable(*modifier, _out);
 			for (auto const* stateVar: contract->stateVariables())
@@ -245,6 +247,120 @@ void collectContractFacts(CompilerStack& _compiler, ProgramAnalysis& _out)
 	}
 }
 
+/// Effect aggregation follows solc graph edges. Only the self/public-library
+/// calls that this target internalizes need extra edges into deployed bodies.
+class CreationEffectScanner: public ASTConstVisitor
+{
+public:
+	CreationEffectScanner(ContractDefinition const& contract, ProgramAnalysis const& analysis,
+		CreationEffects& effects): contract(contract), analysis(analysis), effects(effects)
+	{}
+
+	void run(CallGraph const& creation)
+	{
+		for (auto const& [node, _]: creation.edges) pending.emplace_back(node, &creation);
+		// Direct effects in these roots are not callable nodes in solc's graph.
+		for (auto const* base: contract.annotation().linearizedBaseContracts)
+		{
+			for (auto const* variable: base->stateVariables())
+				if (!variable->isConstant() && variable->value()) variable->value()->accept(*this);
+			for (auto const& spec: base->baseContracts())
+				if (auto const* args = spec->arguments())
+					for (auto const& arg: *args) arg->accept(*this);
+		}
+		std::map<CallGraph const*, std::set<CallGraph::Node, CallGraph::CompareByID>> seen;
+		for (size_t i = 0; i < pending.size(); ++i)
+		{
+			auto [node, graph] = pending[i];
+			if (!seen[graph].insert(node).second) continue;
+			if (auto const* callable = graphCallable(node))
+			{
+				if (effects.reachableCallables.insert(callable->id()).second
+					&& !analysis.avmIntrinsics.count(callable->id())) callable->accept(*this);
+			}
+			if (auto found = graph->edges.find(node); found != graph->edges.end())
+				for (auto const& callee: found->second) pending.emplace_back(callee, graph);
+		}
+	}
+
+	bool visit(Identifier const& expression) override
+	{
+		if (auto const* variable = dynamic_cast<VariableDeclaration const*>(expression.annotation().referencedDeclaration))
+		{
+			if (variable->isStateVariable()) effects.stateReferences.insert(variable->id());
+			if (variable->isConstant() && variable->value() && constants.insert(variable->id()).second)
+				variable->value()->accept(*this);
+		}
+		return true;
+	}
+	bool visit(MemberAccess const& expression) override
+	{
+		if (auto const* variable = dynamic_cast<VariableDeclaration const*>(expression.annotation().referencedDeclaration);
+			variable && variable->isStateVariable()) effects.stateReferences.insert(variable->id());
+		if (auto const* id = dynamic_cast<Identifier const*>(&expression.expression()))
+			if (auto const* magic = dynamic_cast<MagicVariableDeclaration const*>(id->annotation().referencedDeclaration);
+				magic && magic->name() == "msg")
+				effects.messageContext |= expression.memberName() == "value"
+					|| expression.memberName() == "sender" || expression.memberName() == "data";
+		return true;
+	}
+	bool visit(NewExpression const& expression) override
+	{
+		effects.createsContract |= dynamic_cast<ContractType const*>(expression.typeName().annotation().type) != nullptr;
+		return true;
+	}
+	bool visit(InlineAssembly const&) override { effects.assembly = true; return false; }
+	bool visit(FunctionCall const& call) override
+	{
+		auto plan = eb::CallResolver::plan(call);
+		if (!plan.functionType) return true;
+		using K = FunctionType::Kind;
+		auto kind = plan.functionType->kind();
+		if (plan.declaration && analysis.avmIntrinsics.count(plan.declaration->id()))
+		{
+			// Pure crypto/bit operations need no post-create context. Native
+			// transaction, application and asset operations conservatively do.
+			effects.nativeContext |= plan.declaration->stateMutability() != StateMutability::Pure;
+			return true;
+		}
+		if (kind == K::External && plan.isSelfCall && plan.declaration)
+			adaptedCall(contract, plan.declaration->resolveVirtual(contract));
+		else if (kind == K::DelegateCall && plan.declaration
+			&& plan.declaration->annotation().contract && plan.declaration->annotation().contract->isLibrary())
+			adaptedCall(*plan.declaration->annotation().contract, *plan.declaration);
+		else if (kind == K::External || kind == K::BareCall || kind == K::BareStaticCall
+			|| kind == K::BareDelegateCall || kind == K::Send || kind == K::Transfer)
+			effects.externalCall = true;
+		return true;
+	}
+
+private:
+	ContractDefinition const& contract;
+	ProgramAnalysis const& analysis;
+	CreationEffects& effects;
+	std::vector<std::pair<CallGraph::Node, CallGraph const*>> pending;
+	std::set<int64_t> constants;
+	void adaptedCall(ContractDefinition const& owner, FunctionDefinition const& function)
+	{
+		auto const& graph = owner.annotation().deployedCallGraph;
+		solAssert(graph.set() && *graph, "missing solc graph for adapted creation call");
+		// Keep graph identity on every edge: creation and deployed internal
+		// dispatch have different possible pointer targets. Never union them.
+		pending.emplace_back(&function, (*graph).get());
+	}
+};
+
+void collectCreationEffects(CompilerStack& compiler, ProgramAnalysis& analysis)
+{
+	for (auto const& source: compiler.sourceNames())
+		for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(compiler.ast(source).nodes()))
+			if (auto const& graph = contract->annotation().creationCallGraph; graph.set() && *graph)
+			{
+				auto& effects = analysis.creationEffects[contract->id()];
+				CreationEffectScanner(*contract, analysis, effects).run(**graph);
+			}
+}
+
 /// Index every function declaration and its reference edges; storage struct
 /// params of non-library functions are ref-passed structs.
 void indexFunctionDeclarations(CompilerStack& _compiler, ProgramAnalysis& _out)
@@ -254,6 +370,8 @@ void indexFunctionDeclarations(CompilerStack& _compiler, ProgramAnalysis& _out)
 		if (function)
 		{
 			_out.functionDeclarations[function->id()] = function;
+			if (auto library = eb::AsaIntrinsics::facadeLibrary(*function); !library.empty())
+				_out.avmIntrinsics.emplace(function->id(), std::move(library));
 			indexCallable(*function, _out);
 		}
 		if (!function || !contract || contract->isLibrary())
@@ -265,26 +383,16 @@ void indexFunctionDeclarations(CompilerStack& _compiler, ProgramAnalysis& _out)
 	});
 }
 
-/// Reverse the reference edges and close the reachable sets over them,
-/// keeping only real function declarations in the per-contract sets.
+/// Reverse the reference edges and close the reachable sets over them.
+/// Per-contract sets retain modifiers too: they can require runtime support.
 void closeReachability(ProgramAnalysis& _out)
 {
 	for (auto const& [caller, callees]: _out.callableReferences)
 		for (auto callee: callees)
 			_out.callableCallers[callee].insert(caller);
 	_out.closeCallableReferences(_out.reachableCallableIds);
-	for (auto id: _out.reachableCallableIds)
-		if (_out.functionDeclarations.count(id))
-			_out.reachableFunctionIds.insert(id);
-	for (auto& [_, reachable]: _out.reachableFunctionsByContract)
-	{
+	for (auto& [_, reachable]: _out.reachableCallablesByContract)
 		_out.closeCallableReferences(reachable);
-		for (auto it = reachable.begin(); it != reachable.end();)
-			if (!_out.functionDeclarations.count(*it))
-				it = reachable.erase(it);
-			else
-				++it;
-	}
 }
 
 /// Body/Yul facts of one callable at a time (`callableId`): memory-local
@@ -348,11 +456,8 @@ struct BodyFactsWalker: ASTConstVisitor
 		}
 		else if (auto const* call = dynamic_cast<FunctionCall const*>(&expression))
 		{
-			Declaration const* source = nullptr;
-			if (auto const* id = dynamic_cast<Identifier const*>(&call->expression()))
-				source = id->annotation().referencedDeclaration;
-			else if (auto const* member = dynamic_cast<MemberAccess const*>(&call->expression()))
-				source = member->annotation().referencedDeclaration;
+			auto const* source = ASTNode::referencedDeclaration(
+				SolcFacts::functionExpression(call->expression()));
 			if (dynamic_cast<FunctionDefinition const*>(source))
 				slotTransfers[source->id()].insert(target);
 		}
@@ -390,6 +495,7 @@ struct BodyFactsWalker: ASTConstVisitor
 			&& statement.initialValue())
 		{
 			analysis.localInitializers.emplace(statement.declarations()[0]->id(), statement.initialValue());
+			transferReference(*statement.declarations()[0], *statement.initialValue());
 			transferOffset(*statement.declarations()[0], *statement.initialValue());
 			if (dynamic_cast<FunctionType const*>(statement.declarations()[0]->type())
 				&& dynamic_cast<FunctionDefinition const*>(
@@ -410,8 +516,28 @@ struct BodyFactsWalker: ASTConstVisitor
 		// including branches/loops that happen to lower after its call site.
 		if (identifier.annotation().willBeWrittenTo)
 			if (auto const* declaration = identifier.annotation().referencedDeclaration)
+			{
 				writtenDeclarations.insert(declaration->id());
+				if (auto const* variable = dynamic_cast<VariableDeclaration const*>(declaration);
+					variable && variable->referenceLocation() == VariableDeclaration::Location::Memory)
+					analysis.reassignedMemoryLocals.insert(variable->id());
+			}
 		return true;
+	}
+
+	void transferReference(VariableDeclaration const& target, Expression const& value)
+	{
+		auto const* type = value.annotation().type;
+		if (!type || type->isValueType() || !target.type()
+			|| target.type()->isValueType()) return;
+		for (auto const* source: SolcFacts::referenceSources(value))
+			if (auto const* identifier = dynamic_cast<Identifier const*>(source))
+				if (auto const* variable = dynamic_cast<VariableDeclaration const*>(
+					identifier->annotation().referencedDeclaration);
+					variable && variable->referenceLocation() == target.referenceLocation()
+					&& (target.referenceLocation() == VariableDeclaration::Location::Memory
+						|| target.referenceLocation() == VariableDeclaration::Location::Storage))
+					analysis.referenceAssignments[target.id()].insert(variable->id());
 	}
 
 	bool visit(Assignment const& _assignment) override
@@ -428,9 +554,7 @@ struct BodyFactsWalker: ASTConstVisitor
 			if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(
 					identifier->annotation().referencedDeclaration))
 			{
-				if (declaration->referenceLocation()
-					== VariableDeclaration::Location::Memory)
-					analysis.reassignedMemoryLocals.insert(declaration->id());
+				transferReference(*declaration, _assignment.rightHandSide());
 				transferOffset(*declaration, _assignment.rightHandSide());
 				if (declaration->referenceLocation() == VariableDeclaration::Location::Storage)
 					transferSlot(declaration->id(), _assignment.rightHandSide());
@@ -461,13 +585,8 @@ struct BodyFactsWalker: ASTConstVisitor
 	{
 		if (!collectOffsets)
 			return true;
-		Declaration const* declaration = nullptr;
-		if (auto const* identifier =
-			dynamic_cast<Identifier const*>(&_call.expression()))
-			declaration = identifier->annotation().referencedDeclaration;
-		else if (auto const* member =
-			dynamic_cast<MemberAccess const*>(&_call.expression()))
-			declaration = member->annotation().referencedDeclaration;
+		auto const& callee = SolcFacts::functionExpression(_call.expression());
+		auto const* declaration = ASTNode::referencedDeclaration(callee);
 		auto const* function =
 			dynamic_cast<FunctionDefinition const*>(declaration);
 		if (!function)
@@ -481,7 +600,7 @@ struct BodyFactsWalker: ASTConstVisitor
 		if (params.size() != arguments.size() + shift)
 			return true;
 		if (shift)
-			if (auto const* member = dynamic_cast<MemberAccess const*>(&_call.expression()))
+			if (auto const* member = dynamic_cast<MemberAccess const*>(&callee))
 				transferOffset(*params.front(), member->expression());
 		for (size_t i = 0; i < arguments.size(); ++i)
 			transferOffset(*params[i + shift], *arguments[i]);
@@ -523,6 +642,7 @@ void deriveStorageReferenceReturns(
 	for (auto const& [id, function]: _out.functionDeclarations)
 	{
 		auto& facts = _out.storageReferenceReturns[id];
+		facts.pointerAlias = storagePointerAliasParam(*function);
 		auto const& returns = function->returnParameters();
 		facts.slotHandle = _slotSources.count(id) != 0;
 		if (facts.slotHandle)
@@ -546,6 +666,14 @@ void deriveStorageReferenceReturns(
 
 } // namespace
 
+StorageReferenceReturnFacts const& ProgramAnalysis::storageReturnFacts(
+	FunctionDefinition const* function) const
+{
+	static StorageReferenceReturnFacts const empty;
+	auto found = function ? storageReferenceReturns.find(function->id()) : storageReferenceReturns.end();
+	return found == storageReferenceReturns.end() ? empty : found->second;
+}
+
 ProgramAnalysis ProgramAnalysis::analyze(
 	CompilerStack& _compiler,
 	bool _evmStorageLayout)
@@ -554,6 +682,7 @@ ProgramAnalysis ProgramAnalysis::analyze(
 
 	collectContractFacts(_compiler, result);
 	indexFunctionDeclarations(_compiler, result);
+	collectCreationEffects(_compiler, result);
 	closeReachability(result);
 
 	BodyFactsWalker bodyFactsWalker(result, !_evmStorageLayout);
@@ -561,6 +690,19 @@ ProgramAnalysis ProgramAnalysis::analyze(
 	// Body/Yul facts are invariant: collect them once, then close the finite,
 	// monotone parameter-transfer graph without an arbitrary depth cutoff.
 	collectBodyFacts(_compiler, bodyFactsWalker);
+	auto aliasComponents = result.referenceAssignments;
+	for (auto const& [target, sources]: result.referenceAssignments)
+		for (auto source: sources) aliasComponents[source].insert(target);
+	// A standalone local's rebind needs no identity carrier. Promote only
+	// connected aliases or input parameters whose caller retains the entry
+	// referent, then close those finite declaration-ID components.
+	for (auto id: result.reassignedMemoryLocals)
+		if (aliasComponents.contains(id)) result.memoryIdentityDeclarations.insert(id);
+	for (auto const& [_, function]: result.functionDeclarations)
+		for (auto const& parameter: function->parameters())
+			if (result.reassignedMemoryLocals.contains(parameter->id()))
+				result.memoryIdentityDeclarations.insert(parameter->id());
+	closeOverEdges(result.memoryIdentityDeclarations, aliasComponents);
 	for (auto id: bodyFactsWalker.writtenDeclarations)
 		result.stableFunctionPointers.erase(id);
 	closeOverEdges(result.structRefOffsetParams, bodyFactsWalker.offsetTransfers);

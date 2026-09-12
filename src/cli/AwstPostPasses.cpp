@@ -1,4 +1,6 @@
 #include "cli/AwstPostPasses.h"
+#include "builder/contract/ChildDeployment.h"
+#include "json/OptionsWriter.h"
 #include "Logger.h"
 
 #include <boost/filesystem.hpp>
@@ -194,35 +196,53 @@ bool prepareChildDeployArtifacts(
 		outputDir / "deploy.tmpl.json", _error))
 		return false;
 	for (auto const& childName: _childContracts)
-		for (auto const* suffix: {".approval.bin", ".clear.bin"})
+		for (auto const* suffix: {".approval.bin", ".clear.bin", ".arc56.json"})
 			if (!artifact::removeFileIfPresent(
 				outputDir / (childName + suffix), _error))
 				return false;
 	return true;
 }
 
-bool prepareBackendTargetArtifacts(
-	std::string const& _outputDir,
+std::optional<BackendTargets> BackendTargets::collect(
 	AwstRoots const& _roots,
 	std::string& _error)
 {
-	std::map<std::string, std::string> stems;
+	BackendTargets result;
 	for (auto const& root: _roots)
 		if (auto target = backendTarget(*root))
 		{
 			if (!validArtifactStem(target->stem))
 			{
 				_error = "invalid backend artifact target name: " + target->stem;
-				return false;
+				return std::nullopt;
 			}
-			if (auto [it, inserted] = stems.emplace(target->stem, target->id); !inserted)
+			if (auto [it, inserted] = result.m_stems.emplace(target->stem, target->id); !inserted)
 			{
 				_error = "backend artifact name collision: " + target->stem
 					+ " (" + it->second + " and " + target->id + ")";
-				return false;
+				return std::nullopt;
 			}
+			result.m_ids.push_back(target->id);
+			auto suffixes = target->logicSig
+				? std::vector<std::string>{".bin", ".teal"}
+				: std::vector<std::string>{".approval.bin", ".clear.bin", ".approval.teal", ".clear.teal"};
+			for (auto const& suffix: suffixes) result.m_requiredFiles.insert(target->stem + suffix);
 		}
+	return result;
+}
 
+bool BackendTargets::owns(std::string const& filename) const
+{
+	return std::any_of(m_stems.begin(), m_stems.end(), [&](auto const& target) {
+		return belongsToTarget(filename, target.first);
+	});
+}
+
+bool prepareBackendTargetArtifacts(
+	std::string const& _outputDir,
+	BackendTargets const& _targets,
+	std::string& _error)
+{
 	auto const outputDir = fs::path(_outputDir);
 	boost::system::error_code ec;
 	std::vector<fs::path> stalePaths;
@@ -230,10 +250,7 @@ bool prepareBackendTargetArtifacts(
 		it.increment(ec))
 	{
 		auto const fileName = it->path().filename().string();
-		if (std::none_of(stems.begin(), stems.end(),
-			[&](auto const& target) {
-				return belongsToTarget(fileName, target.first);
-			}))
+		if (!_targets.owns(fileName))
 			continue;
 		stalePaths.push_back(it->path());
 	}
@@ -291,6 +308,38 @@ bool writeChildDeployTemplates(
 		tmpl["TMPL_APPROVAL_" + childName + "_P0"] = std::move(page0);
 		tmpl["TMPL_APPROVAL_" + childName + "_P1"] = std::move(page1);
 		tmpl["TMPL_CLEAR_" + childName] = std::move(clearHex);
+		auto const schemaPath = outputDir / (childName + ".arc56.json");
+		std::vector<std::uint8_t> schemaBytes;
+		artifact::Digest schemaDigest;
+		if (!artifact::readBinary(schemaPath, schemaBytes, schemaDigest, _error)) return false;
+		auto spec = njson::parse(schemaBytes.begin(), schemaBytes.end(), nullptr, false);
+		if (!spec.is_object() || !spec.contains("state") || !spec["state"].is_object()
+			|| !spec["state"].contains("schema") || !spec["state"]["schema"].is_object())
+		{
+			_error = "child ARC56 artifact has no state schema: " + childName;
+			return false;
+		}
+		auto const& schema = spec["state"]["schema"];
+		for (auto const& field: builder::childSchemaFields)
+		{
+			if (!schema.contains(field.scope) || !schema[field.scope].is_object()
+				|| !schema[field.scope].contains(field.kind)
+				|| !schema[field.scope][field.kind].is_number_unsigned()
+				|| schema[field.scope][field.kind].get<uint64_t>() > 64)
+			{
+				_error = "invalid child ARC56 state schema: " + childName;
+				return false;
+			}
+			tmpl["TMPL_CHILD_" + childName + "_" + field.transactionField] = schema[field.scope][field.kind];
+		}
+		for (auto const* scope: {"global", "local"})
+			if (schema[scope]["ints"].get<uint64_t>() + schema[scope]["bytes"].get<uint64_t>()
+				> (std::string_view(scope) == "global" ? 64 : 16))
+			{
+				_error = "child ARC56 state schema exceeds AVM limits: " + childName;
+				return false;
+			}
+		records.push_back({schemaPath.filename().string(), "child-schema", std::move(schemaDigest)});
 		records.push_back({
 			approvalBin.filename().string(), "child-approval-bytecode",
 			std::move(approvalDigest)});
@@ -298,7 +347,7 @@ bool writeChildDeployTemplates(
 			clearBin.filename().string(), "child-clear-bytecode",
 			std::move(clearDigest)});
 	}
-	if (!tmpl.is_object() || tmpl.size() != _childContracts.size() * 3)
+	if (!tmpl.is_object() || tmpl.size() != _childContracts.size() * 7)
 	{
 		_error = "deployment template failed schema validation";
 		return false;
@@ -318,36 +367,18 @@ bool writeChildDeployTemplates(
 
 bool collectBackendTargetArtifacts(
 	std::string const& _outputDir,
-	AwstRoots const& _roots,
+	BackendTargets const& _targets,
 	std::vector<artifact::Record>& _records,
 	std::string& _error)
 {
 	auto const outputDir = fs::path(_outputDir);
-	std::set<std::string> stems;
-	std::set<std::string> requiredFiles;
-	for (auto const& root: _roots)
-		if (auto target = backendTarget(*root))
-		{
-			stems.insert(target->stem);
-			auto const suffixes = target->logicSig
-				? std::vector<std::string>{".bin", ".teal"}
-				: std::vector<std::string>{
-					".approval.bin", ".clear.bin",
-					".approval.teal", ".clear.teal"};
-			for (auto const& suffix: suffixes)
-				requiredFiles.insert(target->stem + suffix);
-		}
-
 	boost::system::error_code ec;
 	std::set<std::string> foundFiles;
 	for (fs::directory_iterator it(outputDir, ec), end; !ec && it != end;
 		it.increment(ec))
 	{
 		auto const fileName = it->path().filename().string();
-		if (std::none_of(stems.begin(), stems.end(),
-			[&](std::string const& stem) {
-				return belongsToTarget(fileName, stem);
-			}))
+		if (!_targets.owns(fileName))
 			continue;
 		std::vector<std::uint8_t> contents;
 		artifact::Digest digest;
@@ -378,13 +409,75 @@ bool collectBackendTargetArtifacts(
 			+ ": " + ec.message();
 		return false;
 	}
-	for (auto const& fileName: requiredFiles)
+	for (auto const& fileName: _targets.requiredFiles())
 		if (!foundFiles.contains(fileName))
 		{
 			_error = "missing backend artifact "
 				+ (outputDir / fileName).string();
 			return false;
 		}
+	return true;
+}
+
+bool ArtifactPublisher::begin()
+{
+	boost::system::error_code error;
+	fs::create_directories(m_output, error);
+	if (error)
+	{
+		m_error = "Cannot create artifact output directory: " + error.message();
+		return false;
+	}
+	// Failed compilation must never leave a prior run's commit marker valid.
+	if (!artifact::removeFileIfPresent(m_output / "artifact-manifest.json", m_error)
+		|| !prepareChildDeployArtifacts(m_options.outputDir, {}, m_error)
+		|| (!m_options.legacySourceRewrite && !artifact::removeFileIfPresent(
+			m_output / "source-rewrite-manifest.json", m_error))) return false;
+	if (m_options.outputLogs && !Logger::instance().setOutputLogFile((m_output / "puya-sol.log").string()))
+	{
+		m_error = "Cannot open compilation log: " + (m_output / "puya-sol.log").string();
+		return false;
+	}
+	return true;
+}
+
+bool ArtifactPublisher::writeFrontend(std::string const& json, AwstRoots const& roots,
+	std::set<std::string> const& children)
+{
+	m_targets = BackendTargets::collect(roots, m_error);
+	if (!m_targets || !prepareChildDeployArtifacts(m_options.outputDir, children, m_error)
+		|| !prepareBackendTargetArtifacts(m_options.outputDir, *m_targets, m_error)) return false;
+	artifact::Digest digest;
+	if (!artifact::writeJsonAtomically(awstPath(), json, digest, m_error)) return false;
+	m_records.push_back({"awst.json", "frontend-awst", std::move(digest)});
+	if (!puyasol::json::OptionsWriter::write(optionsPath(), m_targets->ids(), m_options.outputDir,
+		m_options.optimizationLevel, m_options.outputIr, children, digest, m_error)) return false;
+	m_records.push_back({"options.json", "backend-options", std::move(digest)});
+	if (m_options.legacySourceRewrite)
+	{
+		std::vector<std::uint8_t> contents;
+		if (!artifact::readBinary(m_output / "source-rewrite-manifest.json", contents, digest, m_error)) return false;
+		m_records.push_back({"source-rewrite-manifest.json", "source-rewrite-manifest", std::move(digest)});
+	}
+	return publish(m_options.noPuya ? "frontend-only" : "frontend-ready");
+}
+
+bool ArtifactPublisher::finishBackend(std::set<std::string> const& children)
+{
+	if (!writeChildDeployTemplates(m_options.outputDir, children, m_records, m_error)) return false;
+	if (collectBackendTargetArtifacts(m_options.outputDir, m_targets.value(), m_records, m_error)
+		&& publish("backend-complete")) return true;
+	std::string cleanupError;
+	if (!artifact::removeFileIfPresent(m_output / "deploy.tmpl.json", cleanupError))
+		Logger::instance().error("Cannot invalidate deployment template: " + cleanupError);
+	return false;
+}
+
+bool ArtifactPublisher::publish(std::string const& phase)
+{
+	auto path = m_output / "artifact-manifest.json";
+	if (!artifact::writeManifest(path, phase, m_records, m_error)) return false;
+	Logger::instance().info("Wrote: " + path.string());
 	return true;
 }
 

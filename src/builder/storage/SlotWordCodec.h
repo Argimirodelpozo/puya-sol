@@ -16,6 +16,10 @@ namespace puyasol::builder
 
 struct SlotWordCodec
 {
+	/// A packed scalar field supported in both directions. The exact width
+	/// distinguishes bytesN's ARC4 byte[N] from a Solidity fixed array slot.
+	static bool supportsField(awst::WType const* type,
+		solidity::frontend::Type const* solType, unsigned size);
 	/// value (of `wtype`) → its `size` big-endian packed bytes (the exact bytes
 	/// the EVM would keep in the slot at the value's position).
 	/// Handled: uint64/bool (incl. >8-byte numeric e.g. contract-as-20-bytes),

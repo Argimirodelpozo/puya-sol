@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <optional>
+#include <stdexcept>
 
 namespace puyasol::builder
 {
@@ -25,10 +26,56 @@ enum class StoragePlaceKind
 
 struct StoragePlace
 {
+	/// Only these wrappers preserve the addressed storage location. Callers
+	/// stop at StateGet when they need an unmaterialized raw projection.
+	static std::shared_ptr<awst::Expression> projectionBase(
+		std::shared_ptr<awst::Expression> const& value)
+	{
+		if (auto index = std::dynamic_pointer_cast<awst::IndexExpression>(value)) return index->base;
+		if (auto field = std::dynamic_pointer_cast<awst::FieldExpression>(value)) return field->base;
+		if (auto cast = std::dynamic_pointer_cast<awst::ReinterpretCast>(value)) return cast->expr;
+		if (auto decode = std::dynamic_pointer_cast<awst::ARC4Decode>(value)) return decode->value;
+		if (auto read = std::dynamic_pointer_cast<awst::StateGet>(value)) return read->field;
+		return nullptr;
+	}
+
+	/// Rebuild a projection with a resolved base, preserving all node metadata.
+	static std::shared_ptr<awst::Expression> withProjectionBase(
+		std::shared_ptr<awst::Expression> const& value,
+		std::shared_ptr<awst::Expression> base)
+	{
+		if (auto const* node = dynamic_cast<awst::IndexExpression const*>(value.get()))
+		{
+			auto copy = std::make_shared<awst::IndexExpression>(*node);
+			copy->base = std::move(base); return copy;
+		}
+		if (auto const* node = dynamic_cast<awst::FieldExpression const*>(value.get()))
+		{
+			auto copy = std::make_shared<awst::FieldExpression>(*node);
+			copy->base = std::move(base); return copy;
+		}
+		if (auto const* node = dynamic_cast<awst::ReinterpretCast const*>(value.get()))
+		{
+			auto copy = std::make_shared<awst::ReinterpretCast>(*node);
+			copy->expr = std::move(base); return copy;
+		}
+		if (auto const* node = dynamic_cast<awst::ARC4Decode const*>(value.get()))
+		{
+			auto copy = std::make_shared<awst::ARC4Decode>(*node);
+			copy->value = std::move(base); return copy;
+		}
+		if (auto const* node = dynamic_cast<awst::StateGet const*>(value.get()))
+		{
+			auto copy = std::make_shared<awst::StateGet>(*node);
+			copy->field = std::move(base); return copy;
+		}
+		throw std::logic_error("Expected an address-preserving projection");
+	}
+
 	StoragePlaceKind kind;
 	std::shared_ptr<awst::Expression> key;
 	awst::WType const* valueType;
-	bool isDeclarationRoot = false;
+	bool preserveEmptyBox = false;
 
 	/// Recover a root place from a storage read or raw state field.  A single
 	/// StateGet and value-only reinterpret casts are transparent, in any order.
@@ -39,17 +86,16 @@ struct StoragePlace
 			return std::nullopt;
 		while (_expression)
 		{
-			if (auto const* read = dynamic_cast<awst::StateGet const*>(_expression.get()))
-				_expression = read->field;
-			else if (auto const* cast = dynamic_cast<awst::ReinterpretCast const*>(_expression.get()))
-				_expression = cast->expr;
+			if (dynamic_cast<awst::StateGet const*>(_expression.get())
+				|| dynamic_cast<awst::ReinterpretCast const*>(_expression.get()))
+				_expression = projectionBase(_expression);
 			else
 				break;
 		}
 
 		if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(
 			_expression.get()); box && box->key)
-			return StoragePlace{StoragePlaceKind::Box, box->key, box->wtype, box->isDeclarationRoot};
+			return StoragePlace{StoragePlaceKind::Box, box->key, box->wtype, box->preserveEmptyBox};
 		if (auto const* state = dynamic_cast<awst::AppStateExpression const*>(
 			_expression.get()); state && state->key)
 			return StoragePlace{
@@ -86,7 +132,7 @@ struct StoragePlace
 				awst::makeReinterpretCast(
 					std::move(_key), awst::WType::boxKeyType(), _loc),
 				valueType, _loc);
-			box->isDeclarationRoot = isDeclarationRoot;
+			box->preserveEmptyBox = preserveEmptyBox;
 			return box;
 		}
 		return awst::makeAppStateExpression(

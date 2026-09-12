@@ -1,178 +1,46 @@
 #pragma once
 
-#include "builder/sol-eb/NodeBuilder.h"
-
+#include "awst/Node.h"
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/Types.h>
-
-#include <memory>
-#include <string>
-#include <vector>
 
 namespace puyasol::builder::eb
 {
+class ContractContext;
 
-/// Thin InstanceBuilder wrapper around a bare AWST expression — used as
-/// the return shape for abi.* handlers that have already produced the
-/// final bytes expression and just need an InstanceBuilder envelope.
-/// Defined in the header so sibling abi.* handler TUs can construct it.
-class GenericAbiResult: public InstanceBuilder
-{
-public:
-	GenericAbiResult(ContractContext& _ctx, std::shared_ptr<awst::Expression> _expr)
-		: InstanceBuilder(_ctx, std::move(_expr)) {}
-	solidity::frontend::Type const* solType() const override { return nullptr; }
-};
-
-/// Handles abi.encode*, abi.decode functions.
-///
-/// Dispatched from visit(FunctionCall) when the callee is a MemberAccess on
-/// MagicType(ABI) — i.e., `abi.encodePacked(...)`, `abi.encode(...)`, etc.
+/// Solidity ABI builtins and explicit ARC4 facade envelopes. EVM layout
+/// lives in EvmAbiEncode/Decode; exact ARC4 widths and private payload widths
+/// remain distinct wire conventions.
 class AbiEncoderBuilder
 {
 public:
-	/// Try to handle an abi.* member call.
-	/// @param _memberName  "encodePacked", "encode", "encodeCall", "encodeWithSelector",
-	///                     "encodeWithSignature", "decode"
-	/// Returns nullptr if not handled.
-	static std::unique_ptr<InstanceBuilder> tryHandle(
-		ContractContext& _ctx,
-		std::string const& _memberName,
-		solidity::frontend::FunctionCall const& _callNode,
-		awst::SourceLocation const& _loc);
+	static std::shared_ptr<awst::Expression> build(
+		ContractContext&, solidity::frontend::FunctionCall const&, awst::SourceLocation const&);
 
-
-	/// Concatenate a list of byte expressions using concat intrinsics.
-	/// Public because the selector+calldata handler TU calls it directly.
-	static std::shared_ptr<awst::Expression> concatByteExprs(
-		std::vector<std::shared_ptr<awst::Expression>> _parts,
-		awst::SourceLocation const& _loc);
-
-	/// Canonical Solidity ABI encoding for already-built values. Layout facts
-	/// come from the corresponding solc types and aggregates recurse without
-	/// rank- or shape-specific branches.
 	static std::shared_ptr<awst::Expression> encodeValuesAsEvmAbi(
-		ContractContext& _ctx,
-		std::vector<solidity::frontend::Type const*> const& _types,
-		std::vector<std::shared_ptr<awst::Expression>> _values,
-		awst::SourceLocation const& _loc);
+		ContractContext&, std::vector<solidity::frontend::Type const*> const&,
+		std::vector<std::shared_ptr<awst::Expression>>, awst::SourceLocation const&);
 
-	/// Build `_args[_first..]` and encode them as canonical EVM ABI — the
-	/// argument loop shared by encode / encodeWithSelector / encodeWithSignature.
-	/// Each arg is typed at its solc mobile type (literals get the concrete ABI
-	/// type Solidity assigns at this call) and coerced there when the built
-	/// value's wtype differs.
+	/// Evaluate args[first..] in solc order, at their resolved mobile types.
 	static std::shared_ptr<awst::Expression> encodeArgsAsEvmAbi(
-		ContractContext& _ctx,
-		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const& _args,
-		size_t _first,
-		awst::SourceLocation const& _loc);
+		ContractContext&,
+		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const&,
+		size_t first, awst::SourceLocation const&, bool packed = false);
 
-	/// ARC4-encode an already-built list of argument values into a single bytes
-	/// expression: 0 values → empty bytes; 1 value → that value's ARC4 bytes (NO
-	/// tuple wrapper); N values → an ARC4 tuple. Each value is encoded at
-	/// mapToARC4Type(value->wtype), so a value that is already ARC4 just
-	/// reinterpret-casts to bytes. Used by abi.encodeCall (which pre-coerces
-	/// each value to its declared parameter type first).
+	/// Private payload convention: encode values at their native backing widths.
 	static std::shared_ptr<awst::Expression> arc4EncodeValues(
-		ContractContext& _ctx,
-		std::vector<std::shared_ptr<awst::Expression>> _vals,
-		awst::SourceLocation const& _loc);
+		ContractContext&, std::vector<std::shared_ptr<awst::Expression>>, awst::SourceLocation const&);
 
-	/// ARC4-encode the argument list inside the stdlib
-	/// `ARC4.encode(abi.encode(...))` envelope. Unlike arc4EncodeValues, wire
-	/// integer widths come from the resolved Solidity types (uint16 stays
-	/// arc4.uint16 even though its native AWST backing is uint64).
+	/// Explicit ARC4 facade convention: exact Solidity widths, not backing widths.
 	static std::shared_ptr<awst::Expression> arc4EncodeSolidityArgs(
-		ContractContext& _ctx,
-		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const& _args,
-		awst::SourceLocation const& _loc);
-
-	/// ARC4-encode a list of call arguments coerced to the callee's DECLARED
-	/// parameter types (NOT the value wtypes): `ConversionPlan` applies the
-	/// Solidity implicit conversion before encoding (single → bare value bytes;
-	/// multiple → ARC4 tuple). Used where the encoding must match
-	/// a known callee signature — abi.encodeCall and custom-error revert payloads —
-	/// so e.g. a literal `7` to a uint256 param rides at arc4.uint256 (32B), not
-	/// the value's arc4.uint64. `_paramTypes` is matched by index; args past its
-	/// end fall back to their value type.
-	static std::shared_ptr<awst::Expression> arc4EncodeArgsAtParamTypes(
-		ContractContext& _ctx,
-		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const& _args,
-		std::vector<solidity::frontend::Type const*> const& _paramTypes,
-		awst::SourceLocation const& _loc);
-
-	/// Decode the payload from `abi.decode(ARC4.decode(payload), (T...))` using
-	/// exact Solidity types as the ARC4 wire types.
+		ContractContext&,
+		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const&,
+		awst::SourceLocation const&);
 	static std::shared_ptr<awst::Expression> decodeArc4(
-		ContractContext& _ctx,
-		solidity::frontend::FunctionCall const& _callNode,
-		solidity::frontend::Expression const& _dataNode,
-		awst::SourceLocation const& _loc);
+		ContractContext&, solidity::frontend::FunctionCall const&,
+		solidity::frontend::Expression const&, awst::SourceLocation const&);
 
 private:
-	// ── Encoding helpers ──
-
-	/// Convert expression to bytes, respecting packed byte width from Solidity type.
-	/// For encodePacked: uint8 → 1 byte, uint256 → 32 bytes, etc.
-	/// For encode: always 32-byte ABI words.
-	static std::shared_ptr<awst::Expression> toPackedBytes(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _expr,
-		solidity::frontend::Type const* _solType,
-		bool _isPacked,
-		awst::SourceLocation const& _loc);
-
-	/// Left-pad bytes to exactly N bytes.
-	static std::shared_ptr<awst::Expression> leftPadBytes(
-		std::shared_ptr<awst::Expression> _expr, int _n,
-		awst::SourceLocation const& _loc);
-
-	/// One ARRAY element → its 32-byte EVM word (both abi.encode and
-	/// abi.encodePacked pad array elements to the full word). Accepts every
-	/// backing the indexers produce: native uint64/biguint/bool, ARC4 values
-	/// at their raw backing width, and raw bytes extracted from an ARC4 body.
-	/// Padding follows the element's SOLIDITY type: bytesN pads RIGHT
-	/// (left-aligned words), signed intN sign-extends, bool normalizes the
-	/// ARC4 high-bit encoding to the 0/1 word, everything else zero-pads LEFT.
-	static std::shared_ptr<awst::Expression> arrayElemTo32(
-		std::shared_ptr<awst::Expression> _elem,
-		solidity::frontend::Type const* _solType,
-		awst::SourceLocation const& _loc);
-
-public:
-	/// Sign-extend a <=32-byte big-endian two's-complement value to a 32-byte
-	/// ABI word: the high bytes are filled with the sign (0xff when byte 0's
-	/// top bit is set, else 0x00) and the low `len` bytes keep the value, via
-	/// `replace3` so it is robust to the value's runtime width AND idempotent
-	/// on an already-32-byte input. Used by abi.encode for signed integers
-	/// whose canonical form is two's-complement but whose plain leftpad would
-	/// zero-fill the high bytes (0x00…00fffd instead of 0xff…fffd). Public:
-	/// the synthetic-calldata blob widens signed sub-word params with it.
-	static std::shared_ptr<awst::Expression> signExtendBytesTo32(
-		std::shared_ptr<awst::Expression> _bytes,
-		awst::SourceLocation const& _loc);
-
-private:
-
-	// ── Individual handlers ──
-
-	static std::unique_ptr<InstanceBuilder> handleEncodePacked(
-		ContractContext& _ctx,
-		solidity::frontend::FunctionCall const& _callNode,
-		bool _isPacked,
-		awst::SourceLocation const& _loc);
-
-	/// abi.encode → canonical Solidity ABI head/tail encoding.
-	static std::unique_ptr<InstanceBuilder> handleEncode(
-		ContractContext& _ctx,
-		solidity::frontend::FunctionCall const& _callNode,
-		awst::SourceLocation const& _loc);
-
-	static std::unique_ptr<InstanceBuilder> handleDecode(
-		ContractContext& _ctx,
-		solidity::frontend::FunctionCall const& _callNode,
-		awst::SourceLocation const& _loc);
+	static std::shared_ptr<awst::Expression> handleDecode(
+		ContractContext&, solidity::frontend::FunctionCall const&, awst::SourceLocation const&);
 };
-
 } // namespace puyasol::builder::eb

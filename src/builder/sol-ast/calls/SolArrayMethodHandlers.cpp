@@ -1,9 +1,5 @@
 /// @file SolArrayMethodHandlers.cpp
-/// Per-array-kind handlers for `array.push() / pop() / length()`:
-/// struct-field arrays, box-backed arrays, memory arrays, and the
-/// mapping-element-array length-only box. Extracted from
-/// SolArrayMethod.cpp; the dispatcher there (`SolArrayMethod::toAwst`)
-/// routes each array shape to the corresponding handler below.
+/// Box-backed storage array mutations, including length-only mapping arrays.
 
 #include "builder/sol-ast/calls/SolArrayMethod.h"
 #include "awst/NameGen.h"
@@ -18,85 +14,6 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
-std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
-	std::string const& _memberName,
-	MemberAccess const& _fieldAccess,
-	VariableDeclaration const& _structVar)
-{
-	std::string fieldName = _fieldAccess.memberName();
-	auto binding = m_ctx.storageMapper.physicalBindingFor(_structVar);
-	std::string varName = binding.key;
-	auto loc = m_loc;
-
-	// Determine the field's array type and element type.
-	auto const* structType = dynamic_cast<StructType const*>(_structVar.type());
-	if (!structType)
-		return nullptr;
-	auto const& structDef = structType->structDefinition();
-
-	ArrayType const* fieldArrayType = nullptr;
-	for (auto const& member : structDef.members())
-	{
-		if (member->name() == fieldName)
-		{
-			fieldArrayType = dynamic_cast<ArrayType const*>(member->type());
-			break;
-		}
-	}
-	if (!fieldArrayType)
-		return nullptr;
-
-	auto* structWType = m_ctx.typeMapper.map(_structVar.type());
-	// Use the field's ACTUAL type from the mapped struct, not a fresh map() of the
-	// array type. For a recursive array field (`S[] x` inside S), the struct holds
-	// ARC4DynamicArray<projection>, while a fresh map(S[]) re-derives the full
-	// recursive S → element-type mismatch at the push. For non-recursive fields the
-	// two are identical (no change).
-	awst::WType const* rawFieldType = awst::structFieldType(structWType, fieldName);
-	if (!rawFieldType)
-		rawFieldType = m_ctx.typeMapper.map(fieldArrayType);
-	awst::WType const* elemType = nullptr;
-	if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(rawFieldType))
-		elemType = da->elementType();
-	else if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(rawFieldType))
-		elemType = sa->elementType();
-	if (!elemType)
-		elemType = m_ctx.typeMapper.mapSolTypeToARC4(fieldArrayType->baseType());
-	auto kind = binding.kind;
-
-	// Read the struct (box_get or app_global_get with default).
-	auto structRead = m_ctx.storageMapper.createStateRead(
-		varName, structWType, kind, loc);
-
-	// tmp = structRead
-	std::string tmpName = "__struct_arr_tmp_" + std::to_string(awst::NameGen::next("SolArrayMethodHandlers.structPushCounter"));
-	auto tmpTarget = awst::makeVarExpression(tmpName, structWType, loc);
-	m_ctx.queuePostEffect(awst::makeAssignmentStatement(tmpTarget, std::move(structRead), loc));
-
-	// tmp.field (FieldExpression)
-	auto tmpRead = awst::makeVarExpression(tmpName, structWType, loc);
-	auto fieldExpr = awst::makeFieldExpression(std::move(tmpRead), fieldName, rawFieldType, loc);
-
-	// Mutate tmp.field via ArrayExtend / ArrayPop
-	if (_memberName == "push")
-	{
-		auto val = buildPushValue(fieldArrayType->baseType(), elemType);
-
-		m_ctx.queuePostExpression(awst::makeArrayPushOne(fieldExpr, std::move(val), rawFieldType, loc), loc);
-	}
-	else // pop
-		m_ctx.queuePostExpression(awst::makeArrayPop(fieldExpr, elemType ? elemType : rawFieldType, loc), loc);
-
-	// Write the struct back (box_put or app_global_put)
-	auto tmpWriteRead = awst::makeVarExpression(tmpName, structWType, loc);
-
-	auto writeExpr = m_ctx.storageMapper.createStateWrite(
-		varName, std::move(tmpWriteRead), structWType, kind, loc);
-	if (writeExpr)
-		m_ctx.queuePostExpression(std::move(writeExpr), loc);
-
-	return awst::makeVoidConstant(loc);
-}
 
 std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	std::string const& _memberName,
@@ -106,7 +23,6 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 {
 	auto const* solArrType = dynamic_cast<ArrayType const*>(_varDecl.type());
 	auto* arrWType = m_ctx.typeMapper.map(solArrType);
-	auto const* elemType = static_cast<awst::ARC4DynamicArray const*>(arrWType)->elementType();
 
 	// Physical binding, not the raw source name — matches every other
 	// box-key derivation for this declaration (colliding names diverge).
@@ -126,123 +42,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		? awst::makeBoxValueExpression(std::move(_runtimeKey), arrWType, m_loc)
 		: builder::StorageMapper::makeTopLevelBoxExpr(arrayVarName, arrWType, m_loc);
 
-	// A resize reads the array box first, and a top-level dynamic array's box
-	// is only eagerly created by __postInit — a deploy that defers the ctor
-	// (proxy-runtime replay) never runs it, and the read asserts "box exists".
-	// Same prologue the mapping-entry and chained-field push paths already use.
-	if (_memberName == "push" || _memberName == "pop")
-		if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
-				m_ctx.typeMapper, boxExpr, /*isResize=*/true, m_loc))
-			m_ctx.queuePreEffect(std::move(stmt));
-
-	// StateGet wrapper for reads (returns empty array if box missing)
-	auto emptyArr = awst::makeNewArray(arrWType, m_loc);
-
-	auto stateGet = awst::makeStateGet(boxExpr, emptyArr, arrWType, m_loc);
-
-	std::shared_ptr<awst::Expression> writeExpr = boxExpr;
-
-	if (_memberName == "push" && !m_call.arguments().empty())
-	{
-		auto encoded = buildPushValue(solArrType->baseType(), elemType);
-		return awst::makeArrayPushOne(writeExpr, std::move(encoded), arrWType, m_loc);
-	}
-	else if (_memberName == "push" && m_call.arguments().empty())
-	{
-		// push() with no args: ArrayExtend with a zero-valued element (puya
-		// handles ARC4 length header; manual box_resize doesn't). When
-		// SolAssignment scoped an explicit push-assignment value; use it and return the
-		// extend directly (VoidConstant as assignment target is rejected by puya).
-		bool const fromAssign = m_ctx.hasArrayAssignmentValue();
-		auto elem = buildPushValue(solArrType->baseType(), elemType);
-
-		auto e = awst::makeArrayPushOne(writeExpr, std::move(elem), arrWType, m_loc);
-
-		if (fromAssign)
-			return e;
-
-		// The extend runs before the enclosing statement and the call yields
-		// the new element's reference, so `arr.push().field = v` works on a
-		// state-variable array as it does on the boxed/alias/chained paths.
-		m_ctx.queuePreExpression(std::move(e), m_loc);
-		auto lastIndex = awst::makeUInt64BinOp(
-			awst::makeArrayLength(writeExpr, awst::WType::uint64Type(), m_loc),
-			awst::UInt64BinaryOperator::Sub,
-			awst::makeIntegerConstant("1", m_loc),
-			m_loc);
-		return awst::makeIndexExpression(writeExpr, std::move(lastIndex), elemType, m_loc);
-	}
-	else if (_memberName == "pop")
-		return awst::makeArrayPopDecode(writeExpr, elemType, m_ctx.typeMapper.map(solArrType->baseType()), m_loc);
-
-	return awst::makeVoidConstant(m_loc);
-}
-
-std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
-	std::string const& _memberName,
-	Expression const& _baseExpr)
-{
-	auto base = buildExpr(_baseExpr);
-
-	if (_memberName == "push" && !m_call.arguments().empty())
-	{
-		auto const* solArray = dynamic_cast<ArrayType const*>(_baseExpr.annotation().type);
-		assert(solArray);
-		auto* baseWtype = base->wtype;
-
-		// For bytes/string types, push is concat(base, byte)
-		if (baseWtype == awst::WType::bytesType()
-			|| baseWtype == awst::WType::stringType()
-			|| (baseWtype && baseWtype->kind() == awst::WTypeKind::Bytes))
-		{
-			auto byteVal = buildPushValue(solArray->baseType(), m_ctx.typeMapper.map(solArray->baseType()));
-			if (byteVal->wtype == awst::WType::uint64Type())
-			{
-				auto itob = awst::makeItob(std::move(byteVal), m_loc);
-
-				auto seven = awst::makeIntegerConstant("7", m_loc);
-				auto one = awst::makeOne(m_loc);
-
-				auto extract = awst::makeExtract3(std::move(itob), std::move(seven), std::move(one), m_loc);
-				byteVal = std::move(extract);
-			}
-			else if (byteVal->wtype != awst::WType::bytesType())
-			{
-				byteVal = builder::TypeCoercion::stringToBytes(std::move(byteVal), m_loc);
-				if (byteVal->wtype != awst::WType::bytesType())
-				{
-					auto cast = awst::makeAsBytes(std::move(byteVal), m_loc);
-					byteVal = std::move(cast);
-				}
-			}
-
-			auto cat = awst::makeIntrinsicCall("concat", baseWtype, m_loc);
-			cat->stackArgs.push_back(std::move(base));
-			cat->stackArgs.push_back(std::move(byteVal));
-			return cat;
-		}
-		else
-		{
-			// array.push(val) — ArrayExtend
-			// Get element type from array and coerce/encode value
-			awst::WType const* elemType = nullptr;
-			if (auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(baseWtype))
-				elemType = refArr->elementType();
-			else if (auto const* arc4Static = dynamic_cast<awst::ARC4StaticArray const*>(baseWtype))
-				elemType = arc4Static->elementType();
-			else if (auto const* arc4Dyn = dynamic_cast<awst::ARC4DynamicArray const*>(baseWtype))
-				elemType = arc4Dyn->elementType();
-
-			auto val = buildPushValue(solArray->baseType(), elemType);
-			return awst::makeArrayPushOne(std::move(base), std::move(val), baseWtype, m_loc);
-		}
-	}
-	else if (_memberName == "pop")
-	{
-		return awst::makeArrayPop(std::move(base), awst::WType::voidType(), m_loc);
-	}
-
-	return awst::makeVoidConstant(m_loc);
+	return emitArrayPushPop(_memberName, std::move(boxExpr), *solArrType);
 }
 
 std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengthOp(

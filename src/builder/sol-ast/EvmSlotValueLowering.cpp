@@ -6,6 +6,7 @@
 #include "builder/AwstShorthand.h"
 #include "builder/BuildArtifacts.h"
 #include "builder/sol-ast/Context.h"
+#include "builder/codec/EvmValueCodec.h"
 #include "builder/storage/SlotHandleAccess.h"
 #include "builder/storage/SlotWordCodec.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -31,7 +32,7 @@ namespace
 /// Shadow slot carrying the HIGH 12 bytes of a PACKED address (a 20-byte
 /// window cannot hold a 32-byte AVM address; the word keeps the EVM-shaped
 /// trailing-20 so asm sees EVM layout, and Solidity reads recombine).
-/// keccak-derived, so it can never collide with declared or mapping slots.
+/// Domain-separated from the ordinary slot derivations.
 std::shared_ptr<awst::Expression> packedAddrAuxSlot(
 	std::shared_ptr<awst::Expression> _slot,
 	std::shared_ptr<awst::Expression> const& _byteOffset,
@@ -174,39 +175,6 @@ bool EvmSlotLowering::lowerStructValue(Addr const& _a, ValueDir& _d)
 				"aggregate as a value", m_loc);
 		return false;
 	}
-	if (!_d.write)
-	{
-		// Aggregate members recurse from their member-offset bases. Mappings have no
-		// materialised value in Solidity and are therefore deliberately skipped.
-		bool anyNested = false;
-		for (auto const& m: st->structDefinition().members())
-		{
-			if (!m || !m->type())
-				continue;
-			if (dynamic_cast<StructType const*>(m->type()))
-				anyNested = true;
-			else if (isBytesLike(m->type()))
-				anyNested = true;   // string/bytes member → recursive path below
-			else if (dynamic_cast<ArrayType const*>(m->type()))
-				anyNested = true;   // array member → readArrayValue below
-			else if (dynamic_cast<solidity::frontend::MappingType const*>(m->type()))
-				anyNested = true;   // mapping member → SKIPPED (Solidity does too)
-			else if (!m->type()->isValueType())
-			{
-				Logger::instance().error(
-					"--evm-storage-layout: cannot materialise struct '"
-					+ st->structDefinition().name() + "' as a value — member '"
-					+ m->name() + "' is not a value type", m_loc);
-				return false;
-			}
-		}
-		if (!anyNested)
-		{
-			_d.value = SlotHandleAccess::readStructElem(
-				_d.out, _a.slot, st, structW, m_loc);
-			return true;
-		}
-	}
 
 	// pin the base once — members read in separate sub-expressions / write
 	// in separate statements
@@ -235,6 +203,7 @@ bool EvmSlotLowering::lowerStructValue(Addr const& _a, ValueDir& _d)
 	auto valVar = [&]() {
 		return awst::makeVarExpression(vs, valW, m_loc);
 	};
+	std::map<solidity::u256, std::shared_ptr<awst::Expression>> words;
 	for (auto const& m: st->structDefinition().members())
 	{
 		if (!m)
@@ -254,18 +223,23 @@ bool EvmSlotLowering::lowerStructValue(Addr const& _a, ValueDir& _d)
 				return false;
 			continue;
 		}
-		auto v = readAny(fa, m->type());
-		if (!v)
-			return false;
-		// convert the native read to the field's ARC4 wtype
-		if (v && fieldW && v->wtype != fieldW)
+		std::shared_ptr<awst::Expression> v;
+		if (m->type()->isValueType())
 		{
-			if (isBytesLike(m->type())
-				|| dynamic_cast<ArrayType const*>(m->type())
-				|| fieldW->kind() == awst::WTypeKind::ARC4UIntN
-				|| fieldW == awst::WType::arc4BoolType())
-				v = awst::makeARC4Encode(std::move(v), fieldW, m_loc);
+			// One main-word read per occupied slot. Decoding still uses the
+			// same declared-type leaf policy as a direct field/element read.
+			auto offset = st->storageOffsetsOfMember(m->name()).first;
+			auto& word = words[offset];
+			if (!word)
+			{
+				word = awst::makeVarExpression(bs + "_word_" + offset.str(), awst::WType::biguintType(), m_loc);
+				_d.out.push_back(awst::makeAssignmentStatement(word, readSlotWord(fa.slot, m_loc), m_loc));
+			}
+			v = readValue(fa, word);
 		}
+		else v = readAny(fa, m->type());
+		if (!v) return false;
+		v = codec::valueToArc4(m_ctx.typeMapper, m->type(), std::move(v), fieldW, m_loc);
 		ns->values[m->name()] = std::move(v);
 	}
 	if (!_d.write)
@@ -547,8 +521,9 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 	}
 	auto const* elemArc4 = m_ctx.typeMapper.mapSolTypeToARC4(elemType);
 	bool const elemDynamic = arc4IsDynamic(elemArc4);
+	bool const bitPacked = elemArc4 == awst::WType::arc4BoolType();
 	int const elemSize = computeEncodedElementSize(elemArc4).fixedBytes<int>().value_or(0);
-	if (!elemArc4 || (!elemDynamic && elemSize <= 0))
+	if (!elemArc4 || (!elemDynamic && !bitPacked && elemSize <= 0))
 	{
 		Logger::instance().error(
 			"--evm-storage-layout: array element has no representable ARC4 encoding",
@@ -619,6 +594,11 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 				uv(offN), awst::makeUInt64BinOp(u64c(2),
 					awst::UInt64BinaryOperator::Mult, uv(nN), m_loc), m_loc));
 		}
+		else if (bitPacked)
+			out.push_back(awst::makeAssignmentStatement(xv(resultN), awst::makeConcat(u16(uv(nN)),
+				awst::makeBzero(awst::makeUInt64BinOp(awst::makeUInt64BinOp(uv(nN),
+					awst::UInt64BinaryOperator::Add, u64c(7), m_loc),
+					awst::UInt64BinaryOperator::FloorDiv, u64c(8), m_loc), m_loc), m_loc), m_loc));
 		else
 			out.push_back(awst::makeAssignmentStatement(
 				xv(resultN), u16(uv(nN)), m_loc));
@@ -632,14 +612,13 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 			loop->body.push_back(std::move(statement));
 		if (!lowered.value)
 			return false;
-		std::shared_ptr<awst::Expression> encoded;
-		if (awst::structurallyEquivalent(lowered.value->wtype, elemArc4))
-			encoded = awst::makeAsBytes(std::move(lowered.value), m_loc);
+		if (bitPacked)
+			loop->body.push_back(awst::makeAssignmentStatement(xv(resultN), awst::makeSetbit(
+				xv(resultN), awst::makeUInt64BinOp(u64c(16), awst::UInt64BinaryOperator::Add, uv(iN), m_loc),
+				std::move(lowered.value), m_loc), m_loc));
 		else
-			encoded = awst::makeAsBytes(awst::makeARC4Encode(
-				std::move(lowered.value), elemArc4, m_loc), m_loc);
-		loop->body.push_back(awst::makeAssignmentStatement(
-			xv(innerN), std::move(encoded), m_loc));
+			loop->body.push_back(awst::makeAssignmentStatement(xv(innerN), awst::makeAsBytes(
+				codec::valueToArc4(m_ctx.typeMapper, elemType, std::move(lowered.value), elemArc4, m_loc), m_loc), m_loc));
 		for (auto& statement: lowered.effects.post)
 			loop->body.push_back(std::move(statement));
 		if (elemDynamic)
@@ -655,7 +634,7 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 					awst::UInt64BinaryOperator::Add,
 					awst::makeLen(xv(innerN), m_loc), m_loc), m_loc));
 		}
-		else
+		else if (!bitPacked)
 			loop->body.push_back(awst::makeAssignmentStatement(
 				xv(resultN), awst::makeConcat(
 					xv(resultN), xv(innerN), m_loc), m_loc));
@@ -697,7 +676,11 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 
 	auto loop = awst::makeBlock(m_loc);
 	std::shared_ptr<awst::Expression> childBytes;
-	if (elemDynamic)
+	std::shared_ptr<awst::Expression> childValue;
+	if (bitPacked)
+		childValue = awst::makeGetbit(xv(valN), awst::makeUInt64BinOp(
+			u64c(16), awst::UInt64BinaryOperator::Add, uv(iN), m_loc), m_loc);
+	else if (elemDynamic)
 	{
 		loop->body.push_back(awst::makeAssignmentStatement(
 			uv(startN), headAbs(uv(iN)), m_loc));
@@ -725,8 +708,7 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 			u64c(static_cast<uint64_t>(elemSize)), m_loc);
 	}
 	Addr child = childAddr();
-	auto childValue = awst::makeReinterpretCast(
-		std::move(childBytes), elemArc4, m_loc);
+	if (!childValue) childValue = awst::makeReinterpretCast(std::move(childBytes), elemArc4, m_loc);
 	if (!writeAny(child, elemType, std::move(childValue), loop->body))
 		return false;
 	emitLoop(std::move(loop), nN);
@@ -742,224 +724,75 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 }
 
 bool EvmSlotLowering::lowerFixedArray(
-	Addr const& _a, ArrayType const* _at, ValueDir& _d)
+	Addr const& address, ArrayType const* type, ValueDir& direction)
 {
-	auto lenU = _at->length();
-	if (lenU == 0 || lenU > 64)
+	auto length = type->length();
+	if (length == 0 || length > 64)
 	{
-		Logger::instance().error(_d.write
-			? "--evm-storage-layout: cannot assign storage array of length "
-				+ lenU.str() + " (unrolled writes capped at 64)"
-			: "--evm-storage-layout: cannot materialise storage array of length "
-				+ lenU.str() + " (unrolled reads capped at 64)", m_loc);
+		Logger::instance().error("--evm-storage-layout: fixed-array value traversal of length "
+			+ length.str() + " exceeds the unrolling limit of 64", m_loc);
 		return false;
 	}
-	unsigned len = static_cast<unsigned>(lenU);
-	auto const* elemType = _at->baseType();
-	// pin the base once: every element addresses off it
-	std::string bs = (_d.write ? "__evmaw_b_" : "__evmarr_")
-		+ std::to_string(awst::NameGen::next(
-			_d.write ? "EvmSlotLowering.arrWB" : "EvmSlotLowering.arr"));
-	_d.out.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc),
-		_a.slot, m_loc));
-	auto baseVar = [&]() {
-		return awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc);
+	auto const* elementType = type->baseType();
+	auto const* arrayType = direction.write ? direction.value->wtype : m_ctx.typeMapper.map(type);
+	auto const* elementWType = awst::arrayElementType(arrayType);
+	if (!elementWType) return false;
+	auto name = "__evm_fixed_" + std::to_string(awst::NameGen::next("EvmSlotLowering.fixed"));
+	auto base = awst::makeVarExpression(name + "_slot", awst::WType::biguintType(), m_loc);
+	direction.out.push_back(awst::makeAssignmentStatement(base, address.slot, m_loc));
+	auto input = awst::makeVarExpression(name + "_value", arrayType, m_loc);
+	auto output = awst::makeNewArray(arrayType, m_loc);
+	unsigned sourceLength = static_cast<unsigned>(length);
+	if (direction.write)
+	{
+		direction.out.push_back(awst::makeAssignmentStatement(input, std::move(direction.value), m_loc));
+		if (auto const* fixed = dynamic_cast<awst::ARC4StaticArray const*>(arrayType))
+			sourceLength = static_cast<unsigned>(fixed->arraySize());
+	}
+	auto const* nested = dynamic_cast<ArrayType const*>(elementType);
+	bool const dynamicArray = nested && nested->isDynamicallySized() && !isBytesLike(elementType);
+	auto raw = awst::makeAsBytes(input, m_loc);
+	auto headAt = [&](unsigned index) {
+		return awst::makeBtoi(awst::makeExtract(raw, static_cast<int>(2 * index), 2, m_loc), m_loc);
 	};
-	auto elemSlot = [&](unsigned j) {
-		return elemAddr(baseVar(),
-			awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType()),
-			elemType);
-	};
-
-	if (!_d.write)
+	for (unsigned i = 0; i < static_cast<unsigned>(length); ++i)
 	{
-		auto const* arrW = m_ctx.typeMapper.map(_at);
-		auto arr = awst::makeNewArray(arrW, m_loc);
-		_d.value = arr;
-		// Struct and array elements share the same recursive value dispatcher; the
-		// scalar loop below remains specialised so packed lanes are read efficiently.
-		if (dynamic_cast<StructType const*>(elemType)
-			|| (dynamic_cast<ArrayType const*>(elemType) && !isBytesLike(elemType)))
+		auto child = elemAddr(base, awst::makeIntegerConstant(i, m_loc, awst::WType::biguintType()), elementType);
+		if (!direction.write)
 		{
-			for (unsigned j = 0; j < len; ++j)
-			{
-				auto ea = elemSlot(j);
-				auto ev = readAny(ea, elemType);
-				if (!ev)
-					return false;
-				arr->values.push_back(std::move(ev));
-			}
-			return true;
+			auto value = readAny(child, elementType);
+			if (!value) return false;
+			output->values.push_back(codec::valueToArc4(
+				m_ctx.typeMapper, elementType, std::move(value), elementWType, m_loc));
+			continue;
 		}
-
-		awst::WType const* elemW = nullptr;
-		if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(arrW))
-			elemW = sa->elementType();
-		if (!elemW)
-			elemW = m_ctx.typeMapper.map(elemType);
-		auto l = SlotHandleAccess::layoutFor(elemType);
-		for (unsigned j = 0; j < len; ++j)
+		// Solc copies only the source extent, then clears the destination tail.
+		if (i >= sourceLength)
 		{
-			auto v = SlotHandleAccess::readScalarElem(
-				baseVar(), awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType()),
-				l, elemType, m_loc);
-			if (elemW == awst::WType::arc4BoolType())
-			{
-				auto b = awst::makeNumericCompare(std::move(v),
-					awst::NumericComparison::Ne,
-					awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()),
-					m_loc);
-				arr->values.push_back(awst::makeARC4Encode(std::move(b), elemW, m_loc));
-			}
-			else if (auto const* fbt =
-				dynamic_cast<solidity::frontend::FixedBytesType const*>(elemType))
-			{
-				// bytesN element: the packed window's bytes ARE the value — the
-				// canonical-biguint detour has no ARC4Encode into byte[N]
-				// ("cannot encode biguint to uint8[2]"). Relabel the raw bytes.
-				auto raw = awst::makeLeftPadToN(
-					awst::makeAsBytes(std::move(v), m_loc),
-					static_cast<int>(fbt->numBytes()), m_loc);
-				arr->values.push_back(
-					awst::makeReinterpretCast(std::move(raw), elemW, m_loc));
-			}
-			else
-				arr->values.push_back(awst::makeARC4Encode(std::move(v), elemW, m_loc));
+			if (!clearAggregate(child, elementType, direction.out)) return false;
+			continue;
 		}
-		return true;
-	}
-
-	auto const* arrW = _d.value->wtype;
-	awst::WType const* elemW = nullptr;
-	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(arrW))
-		elemW = sa->elementType();
-	else if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(arrW))
-		elemW = da->elementType();
-	// pin the value too: both feed one statement per element
-	std::string vs = "__evmaw_v_"
-		+ std::to_string(awst::NameGen::next("EvmSlotLowering.arrWV"));
-	_d.out.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(vs, arrW, m_loc), std::move(_d.value), m_loc));
-	auto valVar = [&]() {
-		return awst::makeVarExpression(vs, arrW, m_loc);
-	};
-	// A SHORTER source zero-fills the tail, as Solidity does: `uint256[10]
-	// storage x; x = [11, 12, 13]` leaves 11,12,13,0,0,0,0,0,0,0. The unroll
-	// runs over the TARGET length, so without this every element past the
-	// source's end indexed off its end -- `extract 3 1` on a 3-byte value --
-	// and the whole assignment reverted with "index access is out of bounds",
-	// silently leaving the array at its previous contents.
-	unsigned srcLen = 0;
-	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(arrW))
-		srcLen = static_cast<unsigned>(sa->arraySize());
-	auto const* defaultW = elemW ? elemW : m_ctx.typeMapper.map(elemType);
-	auto beyondSource = [&](unsigned j) { return srcLen != 0 && j >= srcLen; };
-	auto elemAt = [&](unsigned j) -> std::shared_ptr<awst::Expression> {
-		if (beyondSource(j))
-			return builder::TypeCoercion::makeDefaultValue(defaultW, m_loc);
-		return awst::makeIndexExpression(valVar(),
-			awst::makeIntegerConstant(static_cast<uint64_t>(j), m_loc),
-			elemW, m_loc);
-	};
-
-	auto const* nestedArray = dynamic_cast<ArrayType const*>(elemType);
-	bool const dynamicNestedArray = nestedArray && !isBytesLike(elemType)
-		&& nestedArray->isDynamicallySized();
-	// Structs, bytes/string and fixed sub-arrays can take the ordinary ARC4
-	// element expression. Dynamic sub-arrays use the head-table path below.
-	if (dynamic_cast<StructType const*>(elemType) || isBytesLike(elemType)
-		|| (nestedArray && !dynamicNestedArray))
-	{
-		for (unsigned j = 0; j < len; ++j)
+		std::shared_ptr<awst::Expression> value;
+		if (dynamicArray)
 		{
-			auto ea = elemSlot(j);
-			if (!writeAny(ea, elemType, elemAt(j), _d.out))
-				return false;
+			// ARC4 indexing does not project dynamic sub-arrays of a fixed array.
+			// Head offsets refer to the SOURCE extent, not the destination length.
+			auto start = headAt(i);
+			auto end = i + 1 < sourceLength ? headAt(i + 1)
+				: std::shared_ptr<awst::Expression>(awst::makeLen(raw, m_loc));
+			value = awst::makeReinterpretCast(awst::makeExtract3(raw, start,
+				awst::makeUInt64BinOp(std::move(end), awst::UInt64BinaryOperator::Sub, start, m_loc), m_loc),
+				elementWType, m_loc);
 		}
-		return true;
+		else value = awst::makeIndexExpression(input, awst::makeIntegerConstant(i, m_loc), elementWType, m_loc);
+		if (!writeAny(child, elementType, std::move(value), direction.out)) return false;
 	}
-	// ARRAY elements: recurse per element. Fixed sub-arrays slice via arc4
-	// indexing; DYNAMIC sub-arrays follow the static-array head table
-	// manually (u16 offsets at position 2j, relative to the value start —
-	// arc4 element-indexing does not decode head/tail for this shape).
-	if (dynamicNestedArray)
-	{
-		std::string rb;
-		rb = "__evmaw_r_"
-			+ std::to_string(awst::NameGen::next("EvmSlotLowering.arrWR"));
-		_d.out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(rb, awst::WType::bytesType(), m_loc),
-			awst::makeReinterpretCast(valVar(), awst::WType::bytesType(),
-				m_loc), m_loc));
-		auto rawVar = [&]() {
-			return awst::makeVarExpression(rb, awst::WType::bytesType(), m_loc);
-		};
-		auto headAt = [&](unsigned idx) {
-			return awst::makeBtoi(awst::makeExtract(rawVar(),
-				static_cast<int>(2 * idx), 2, m_loc), m_loc);
-		};
-		for (unsigned j = 0; j < len; ++j)
-		{
-			auto ea = elemSlot(j);
-			ea.wtype = elemW ? elemW : ea.wtype;
-			std::shared_ptr<awst::Expression> ev;
-			if (beyondSource(j))
-				// Same zero-fill, but the head table would be read off its end
-				// too, so it cannot go through elemAt.
-				ev = builder::TypeCoercion::makeDefaultValue(ea.wtype, m_loc);
-			else
-			{
-				auto start = headAt(j);
-				auto end = (j + 1 < len)
-					? std::shared_ptr<awst::Expression>(headAt(j + 1))
-					: std::shared_ptr<awst::Expression>(
-						awst::makeLen(rawVar(), m_loc));
-				auto sliceLen = awst::makeUInt64BinOp(std::move(end),
-					awst::UInt64BinaryOperator::Sub, start, m_loc);
-				ev = awst::makeReinterpretCast(
-					awst::makeExtract3(rawVar(), headAt(j),
-						std::move(sliceLen), m_loc),
-					ea.wtype, m_loc);
-			}
-			if (!writeAny(ea, elemType, std::move(ev), _d.out))
-				return false;
-		}
-		return true;
-	}
-	if (!elemType->isValueType())
-	{
-		Logger::instance().error(
-			"--evm-storage-layout: fixed array assignment with aggregate "
-			"elements of this shape not yet supported", m_loc);
-		return false;
-	}
-	auto l = SlotHandleAccess::layoutFor(elemType);
-	auto const* nativeW = m_ctx.typeMapper.map(elemType);
-	// Byte-shaped canonical (bytesN, fn-ptr byte[12] handles) = packed to the
-	// element WINDOW as biguint. Packing into a full 32-byte word LEFT-aligned
-	// parked bytes22 (and the fn-ptr handle) at the word's HIGH end while
-	// every leaf window reads the LOW `size` bytes — elements read back zero
-	// (fn-ptrs: the selector where the app id belongs).
-	unsigned const packSize = SlotWordCodec::isByteShaped(nativeW) ? l.size : 32;
-	for (unsigned j = 0; j < len; ++j)
-	{
-		auto ev = elemAt(j);
-		std::shared_ptr<awst::Expression> nat = std::move(ev);
-		if (nat->wtype != nativeW)
-			nat = awst::makeARC4Decode(std::move(nat), nativeW, m_loc);
-		auto canonical = awst::makeAsBiguint(
-			SlotWordCodec::nativeToPackedBytes(std::move(nat), nativeW, packSize, m_loc),
-			m_loc);
-		SlotHandleAccess::writeScalarElem(_d.out, baseVar(),
-			awst::makeIntegerConstant(static_cast<uint64_t>(j), m_loc,
-				awst::WType::biguintType()),
-			l, std::move(canonical), m_loc);
-	}
+	if (!direction.write) direction.value = std::move(output);
 	return true;
 }
 
-std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(Addr const& _a)
+std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(
+	Addr const& _a, std::shared_ptr<awst::Expression> _word)
 {
 	// A packed address reads both the main slot and its auxiliary high-byte
 	// slot inside one expression tree.  Share a SingleEvaluation node so a
@@ -967,7 +800,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(Addr const& _a)
 	auto readSlot = (_a.wtype == awst::WType::accountType() && _a.size == 20)
 		? std::shared_ptr<awst::Expression>(awst::makeEvalOnce(_a.slot, m_loc))
 		: _a.slot;
-	auto word = readSlotWord(readSlot, m_loc);
+	auto word = _word ? std::move(_word) : readSlotWord(readSlot, m_loc);
 	if (_a.size == 32 && !_a.byteOffset)
 	{
 		// Fast path: a biguint carrier IS the raw word (canonical 256-bit TC);
@@ -1111,6 +944,13 @@ bool EvmSlotLowering::clearAggregateImpl(
 {
 	if (!_t)
 		return false;
+	if (_t->isValueType())
+	{
+		auto address = _a;
+		return writeAny(address, _t,
+			TypeCoercion::makeDefaultValue(m_ctx.typeMapper.map(_t), m_loc), _out);
+	}
+	if (dynamic_cast<MappingType const*>(_t)) return true;
 	if (isBytesLike(_t))
 	{
 		writeBytesValue(_a, awst::makeBytesConstant({}, m_loc), _out);
@@ -1287,14 +1127,11 @@ bool EvmSlotLowering::clearAggregateImpl(
 			if (!m || !m->type())
 				continue;
 			auto const* mt = m->type();
-			bool needsRegion = isBytesLike(mt)
-				|| dynamic_cast<ArrayType const*>(mt)
-				|| dynamic_cast<StructType const*>(mt);
-			if (dynamic_cast<solidity::frontend::MappingType const*>(mt))
-				continue;
-			if (!needsRegion || mt->isValueType())
-				continue;
+			if (dynamic_cast<MappingType const*>(mt)) continue;
 			auto fa = memberAddr(baseVar(), st, m->name(), mt);
+			// The span clear covers ordinary value fields. Packed accounts own
+			// an auxiliary word too, so use their typed leaf clear first.
+			if (mt->isValueType() && !(fa.wtype == awst::WType::accountType() && fa.size == 20)) continue;
 			if (!clearAggregateImpl(fa, mt, _out))
 				return false;
 		}

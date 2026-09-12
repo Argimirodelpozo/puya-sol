@@ -6,7 +6,7 @@
 /// (AWSTBuilder), and the call site (SolInternalCall) previously each
 /// spelled it out — the comments at every copy warned that drift breaks
 /// caller/callee arity and types (arity DID diverge once; see
-/// isBoxKeyedStorageRef's "must match callee predicate" note).
+/// TypeMapper::isBoxKeyedStorageRef).
 
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -37,7 +37,7 @@ inline RefParamPassing classifyRefParamPassing(
 		&& _param.referenceLocation() == Loc::Storage)
 		return RefParamPassing::SlotHandle;
 	if (_param.referenceLocation() == Loc::Storage
-		&& (isBoxKeyedStorageRef(_param.type(), _tm.analysis())
+		&& (_tm.isBoxKeyedStorageRef(_param.type())
 			|| isLargeFixedArrayRef(_tm, _param.type())
 			|| _tm.analysis().structRefOffsetParams.contains(_param.id())
 			|| _isAsmSlotRef)) // widened: plain structs + asm .slot refs

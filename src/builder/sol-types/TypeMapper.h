@@ -52,7 +52,7 @@ public:
 		m_returnPlans.clear();
 		m_callPlans.clear();
 		m_arc4ByteType = nullptr;
-		m_ownedTypes.clear();
+		m_ownedTypes = std::make_shared<awst::WTypeArena>();
 	}
 
 	/// Map a Solidity type to an AWST WType.
@@ -63,6 +63,10 @@ public:
 	/// whole-value representation. Return nullptr on target capacity overflow;
 	/// value consumers must still use map() and retain its explicit diagnostic.
 	awst::WType const* tryMapStorageRepresentation(solidity::frontend::Type const* _solType);
+
+	/// Named-storage references whose type requires a box-key handle. Smaller
+	/// fixed values travel by value + write-back unless source facts require boxes.
+	bool isBoxKeyedStorageRef(solidity::frontend::Type const* _solType);
 
 	/// Native, internal-call, and ABI return forms from one resolved solc declaration.
 	FunctionReturnPlan const& functionReturnPlan(
@@ -98,9 +102,11 @@ public:
 	{
 		auto ptr = std::make_unique<T>(std::forward<Args>(_args)...);
 		auto* raw = ptr.get();
-		m_ownedTypes.push_back(std::move(ptr));
+		m_ownedTypes->push_back(std::move(ptr));
 		return raw;
 	}
+
+	std::shared_ptr<awst::WTypeArena const> typeArena() const { return m_ownedTypes; }
 
 private:
 	awst::WType const* mapArray(solidity::frontend::Type const* _type, bool _projection = false);
@@ -113,7 +119,7 @@ private:
 	std::map<std::pair<int64_t, int64_t>, CallBoundaryPlan> m_callPlans;
 
 	/// Owns all dynamically-created WTypes.
-	std::vector<std::unique_ptr<awst::WType>> m_ownedTypes;
+	std::shared_ptr<awst::WTypeArena> m_ownedTypes = std::make_shared<awst::WTypeArena>();
 
 	/// Solc's canonical identifier after value-representation normalization:
 	/// arrays/structs (including tuple components) share across locations and

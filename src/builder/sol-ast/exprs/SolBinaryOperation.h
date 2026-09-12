@@ -33,23 +33,6 @@ private:
 		std::shared_ptr<awst::Expression> _left,
 		std::shared_ptr<awst::Expression> _right);
 
-	/// Handle checked signed integer arithmetic (add, sub, mul).
-	/// Wraps mod 2^N and adds signed overflow detection.
-	std::shared_ptr<awst::Expression> buildSignedArithmetic(
-		solidity::frontend::Token _op,
-		std::shared_ptr<awst::Expression> _left,
-		std::shared_ptr<awst::Expression> _right,
-		solidity::frontend::IntegerType const* _intType);
-
-	/// Handle signed integer exponentiation.
-	/// Computes abs(base)^exp, negates if base negative and exp odd.
-	std::shared_ptr<awst::Expression> buildSignedExp(
-		std::shared_ptr<awst::Expression> _left,
-		std::shared_ptr<awst::Expression> _right,
-		solidity::frontend::IntegerType const* _intType);
-
-	// Signed div/mod is handled by the shared eb::buildSignedModDiv helper
-	// (BigUIntMathHelpers) — the same path the compound `x/=b` assignment uses.
 };
 
 } // namespace puyasol::builder::sol_ast

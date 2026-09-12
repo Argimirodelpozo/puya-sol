@@ -8,17 +8,17 @@
 ///   FunctionDefinition (or runtime extract from an external fn-ptr)
 ///   plus EVM-ABI head/tail of the typed args.
 /// - `abi.encodeWithSelector(bytes4 sel, ...)` — runtime selector
-///   (any-width integer literal accepted, coerced to 4 bytes) plus canonical
+///   (using solc's implicit bytes4 conversion) plus canonical
 ///   EVM ABI encoding of the remaining args.
 /// - `abi.encodeWithSignature(string sig, ...)` — keccak256 of the signature,
 ///   first 4 bytes, plus canonical EVM ABI encoding of the remaining args.
 ///
 /// All three share the same shape (build a selector, append the recursive EVM
-/// encoder) — they're cohesive but voluminous, so they live in their own TU. The dispatcher in
-/// `AbiEncoderBuilder::tryHandle` calls these free functions directly.
+/// encoder). The dispatcher in
+/// `AbiEncoderBuilder::build` calls these free functions directly.
 
 #include "awst/Node.h"
-#include "builder/sol-eb/NodeBuilder.h"
+#include "builder/sol-types/SolcFwd.h"
 
 #include <libsolidity/ast/ASTForward.h>
 
@@ -26,18 +26,19 @@
 
 namespace puyasol::builder::eb
 {
+class ContractContext;
 
-std::unique_ptr<InstanceBuilder> handleEncodeCall(
+std::shared_ptr<awst::Expression> handleEncodeCall(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc);
 
-std::unique_ptr<InstanceBuilder> handleEncodeWithSelector(
+std::shared_ptr<awst::Expression> handleEncodeWithSelector(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc);
 
-std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
+std::shared_ptr<awst::Expression> handleEncodeWithSignature(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc);

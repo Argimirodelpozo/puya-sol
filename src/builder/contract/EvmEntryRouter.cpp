@@ -3,6 +3,7 @@
 #include "builder/XchainAccounts.h"
 
 #include "builder/contract/RouterConditions.h"
+#include "builder/contract/SelectorRouter.h"
 
 #include "Logger.h"
 #include "builder/ProgramAnalysis.h"
@@ -49,18 +50,6 @@ awst::ContractMethod* findMethod(awst::Contract& contract, std::string const& na
 		if (method.memberName == name)
 			return &method;
 	return nullptr;
-}
-
-void emitReturnLog(
-	std::shared_ptr<awst::Expression> payload,
-	awst::SourceLocation const& loc,
-	std::vector<std::shared_ptr<awst::Statement>>& out)
-{
-	auto log = awst::makeIntrinsicCall("log", awst::WType::voidType(), loc);
-	log->stackArgs.push_back(awst::makeConcat(
-		awst::makeBytesConstant({0x15, 0x1f, 0x7c, 0x75}, loc),
-		std::move(payload), loc));
-	out.push_back(awst::makeExpressionStatement(std::move(log), loc));
 }
 
 void emitNonPayableCheck(
@@ -227,8 +216,8 @@ std::vector<EvmRoute> collectEvmRoutes(
 						+ name + "' was not found", loc);
 			continue;
 		}
-		if (!abi::canDecodeEvmAbi(function->parameterTypes())
-			|| !abi::canEncodeEvmAbi(function->returnParameterTypes()))
+		if (!codec::canRoundTripEvmAbi(function->parameterTypes())
+			|| !codec::canRoundTripEvmAbi(function->returnParameterTypes()))
 		{
 			if (!quiet)
 				Logger::instance().error(
@@ -236,7 +225,7 @@ std::vector<EvmRoute> collectEvmRoutes(
 					"canonical recursive codec: " + function->externalSignature(), loc);
 			continue;
 		}
-		// canEncodeEvmAbi answers the TYPE question, but emitting an external
+		// canRoundTripEvmAbi answers the TYPE question, but emitting an external
 		// function pointer additionally needs --evm-selectors (the default
 		// profile's compact pointer stores the ARC-4 route, not the Solidity
 		// selector, so the codec hard-errors). In quiet/alias mode such a method
@@ -337,7 +326,7 @@ std::map<std::string, std::string> synthesizeEvmReturnTails(
 	int index = 0;
 	for (auto& [key, spec]: groups)
 	{
-		if (spec.uses < 2)
+		if (spec.uses < 2 || spec.returnTypes.empty())
 			continue;
 		if (spec.returnTypes.size() > 1
 			&& !dynamic_cast<awst::WTuple const*>(spec.retW))
@@ -410,10 +399,8 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 			decodedType = typeMapper.createType<awst::WTuple>(
 				std::move(tupleTypes));
 		}
-		auto decoded = abi::decodeEvmAbi(
-			typeMapper, awst::makeAppArg(1, loc), paramTypes,
-			decodedType, loc, body->body, "__evm_decw", "__evm_deco",
-			"__evm_arga");
+		auto decoded = abi::decodeEvmCalldata(
+			typeMapper, paramTypes, decodedType, loc, body->body);
 		if (paramTypes.size() == 1)
 			values.push_back(std::move(decoded));
 		else
@@ -440,6 +427,16 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 		awst::pushCallArg(call->args, std::move(value));
 	}
 
+	if (returnTypes.empty())
+	{
+		// Match ARC4's void route: absence of a return record means empty
+		// data. An assembly return may already have emitted an explicit
+		// payload despite the void signature; never overwrite that record.
+		body->body.push_back(awst::makeExpressionStatement(call, loc));
+		body->body.push_back(awst::makeReturnStatement(awst::makeTrue(loc), loc));
+		return body;
+	}
+
 	// Shared tail: `callsub __evm_ret<i>` replaces the inline encode+log
 	// epilogue for return shapes used by 2+ arms.
 	if (auto tailIt = retTails.find(evmRetTailKey(route));
@@ -448,29 +445,16 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 		auto tailCall = awst::makeSubroutineCall(
 			awst::InstanceMethodTarget{tailIt->second},
 			awst::WType::voidType(), loc);
-		if (returnTypes.empty())
-		{
-			body->body.push_back(awst::makeExpressionStatement(call, loc));
-			body->body.push_back(
-				awst::makeExpressionStatement(std::move(tailCall), loc));
-		}
-		else
-		{
-			awst::pushCallArg(tailCall->args, call);
-			body->body.push_back(
-				awst::makeExpressionStatement(std::move(tailCall), loc));
-		}
+		awst::pushCallArg(tailCall->args, call);
+		body->body.push_back(
+			awst::makeExpressionStatement(std::move(tailCall), loc));
 		body->body.push_back(
 			awst::makeReturnStatement(awst::makeTrue(loc), loc));
 		return body;
 	}
 
 	std::vector<std::shared_ptr<awst::Expression>> returnValues;
-	if (returnTypes.empty())
-	{
-		body->body.push_back(awst::makeExpressionStatement(call, loc));
-	}
-	else if (returnTypes.size() == 1)
+	if (returnTypes.size() == 1)
 		returnValues.push_back(call);
 	else
 	{
@@ -648,18 +632,7 @@ void ContractBuilder::emitEvmEntryDispatch(
 		auto body = awst::makeBlock(loc);
 		if (emptyDefinition && !emptyDefinition->isPayable())
 			emitNonPayableCall(loc, body->body);
-		auto call = awst::makeSubroutineCall(
-			awst::InstanceMethodTarget{emptyTarget->memberName},
-			emptyTarget->returnType, loc);
-		if (emptyDefinition && !emptyDefinition->parameters().empty())
-			awst::pushCallArg(call->args, awst::makeBytesConstant({}, loc));
-		if (emptyTarget->returnType == awst::WType::voidType())
-		{
-			body->body.push_back(awst::makeExpressionStatement(call, loc));
-			emitReturnLog(awst::makeBytesConstant({}, loc), loc, body->body);
-		}
-		else
-			emitReturnLog(call, loc, body->body);
+		emitFallbackCall(*emptyDefinition, emptyTarget->memberName, awst::makeBytesConstant({}, loc), loc, body->body);
 		body->body.push_back(awst::makeReturnStatement(awst::makeTrue(loc), loc));
 		approval.body->body.push_back(awst::makeIfElse(
 			std::move(condition), std::move(body), nullptr, loc));
@@ -671,19 +644,6 @@ void ContractBuilder::emitEvmEntryDispatch(
 	// Solidity byte stream from the AVM carrier split: selector ++ ABI body.
 	if (fallbackMethod)
 	{
-		auto hasSelector = awst::makeNumericCompare(
-			awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
-			awst::NumericComparison::Gt, u64(0, loc), loc);
-		auto hasBody = awst::makeNumericCompare(
-			awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
-			awst::NumericComparison::Gt, u64(1, loc), loc);
-		auto bodyBytes = awst::makeConditional(
-			std::move(hasBody), awst::makeAppArg(1, loc),
-			awst::makeBytesConstant({}, loc), awst::WType::bytesType(), loc);
-		auto calldata = awst::makeConditional(
-			std::move(hasSelector),
-			awst::makeConcat(awst::makeAppArg(0, loc), std::move(bodyBytes), loc),
-			awst::makeBytesConstant({}, loc), awst::WType::bytesType(), loc);
 		auto carrierShape = awst::makeBoolBinOp(
 			awst::makeNumericCompare(
 				awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
@@ -698,20 +658,8 @@ void ContractBuilder::emitEvmEntryDispatch(
 		auto fallbackBody = awst::makeBlock(loc);
 		if (fallbackDefinition && !fallbackDefinition->isPayable())
 			emitNonPayableCall(loc, fallbackBody->body);
-		auto call = awst::makeSubroutineCall(
-			awst::InstanceMethodTarget{fallbackMethod->memberName},
-			fallbackMethod->returnType, loc);
-		if (fallbackDefinition && !fallbackDefinition->parameters().empty())
-			awst::pushCallArg(call->args, std::move(calldata));
-		if (fallbackMethod->returnType == awst::WType::voidType())
-		{
-			fallbackBody->body.push_back(
-				awst::makeExpressionStatement(call, loc));
-			emitReturnLog(awst::makeBytesConstant({}, loc), loc,
-				fallbackBody->body);
-		}
-		else
-			emitReturnLog(call, loc, fallbackBody->body);
+		emitFallbackCall(*fallbackDefinition, fallbackMethod->memberName,
+			reconstructCalldata(CalldataTransport::SplitEvm, loc), loc, fallbackBody->body);
 		fallbackBody->body.push_back(
 			awst::makeReturnStatement(awst::makeTrue(loc), loc));
 		approval.body->body.push_back(awst::makeIfElse(

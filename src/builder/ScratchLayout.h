@@ -40,6 +40,10 @@ public:
 	/// Separate native address high bytes; below slot 100, above every
 	/// supported memory/transient/flash reservation. Reserved only when used.
 	static constexpr int transientAddressShadowSlot = 99;
+	/// Call results must survive callsub without aliasing linear EVM memory.
+	/// Reserved only by contracts that use the return-data transport. Backend
+	/// scratch allocation (including any future splitter) must respect it.
+	static constexpr int returnDataSlot = maxScratchSlot;
 
 	explicit ScratchLayout(int _memorySlots = defaultMemorySlots)
 		: m_memorySlots(_memorySlots)

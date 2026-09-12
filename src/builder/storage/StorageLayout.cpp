@@ -74,8 +74,6 @@ void StorageLayout::computeLayout(
 		}
 		auto slotIndex = m_slotByNumber[sv.slot];
 		m_slots[slotIndex].variableIndices.push_back(idx);
-		m_slots[slotIndex].bytesUsed = std::max<unsigned>(
-			m_slots[slotIndex].bytesUsed, sv.byteOffset + sv.byteSize);
 
 		auto end = sv.slot + (span > 1 ? span : 1) - baseSlot;
 		if (end > solidity::u256(m_totalSlots))

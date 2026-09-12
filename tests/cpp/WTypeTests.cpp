@@ -1,5 +1,6 @@
 #include "awst/WType.h"
 #include "builder/storage/StoragePlace.hpp"
+#include "builder/EvmFeaturePolicy.h"
 
 #include <iostream>
 #include <string>
@@ -32,6 +33,17 @@ int main()
 	ARC4Struct differentField("S", {{"other", &arrayB}}, false);
 
 	bool ok = true;
+	NameGen::resetAll();
+	int first = nextSingleEvalId();
+	{
+		NameGen::Scope nested;
+		ok &= require(nextSingleEvalId() == first, "nested naming context did not start deterministically");
+	}
+	ok &= require(nextSingleEvalId() == first + 1, "nested naming context was not restored");
+	bool invalidCoinbase = false;
+	try { puyasol::builder::decodeEvmCoinbase20("bad"); }
+	catch (std::invalid_argument const&) { invalidCoinbase = true; }
+	ok &= require(invalidCoinbase, "invalid programmatic coinbase silently became zero");
 	ok &= require(&arrayA != &arrayB && structurallyEquivalent(&arrayA, &arrayB),
 		"equivalent non-interned arrays were not recognized");
 	ok &= require(structurallyEquivalent(&structA, &structB),
@@ -45,26 +57,37 @@ int main()
 	ok &= require(!structurallyEquivalent(&arrayA, nullptr),
 		"null type was treated as equivalent");
 
-	// Storage origin must survive alias reconstruction independently of key shape.
+	// Box lifecycle facts survive alias reconstruction independently of key shape.
 	auto box = makeBoxValueExpression(makeUtf8BytesConstant("root", {}, WType::boxKeyType()),
 		&arrayA, {});
-	box->isDeclarationRoot = true;
+	box->preserveEmptyBox = true;
 	auto read = makeStateGet(box, makeBytesConstant({}, {}), &arrayA, {});
 	auto wrapped = makeReinterpretCast(read, &arrayA, {});
 	auto place = puyasol::builder::StoragePlace::fromRead(wrapped);
-	ok &= require(place && place->isDeclarationRoot && place->valueType == &arrayA,
+	ok &= require(place && place->preserveEmptyBox && place->valueType == &arrayA,
 		"storage origin was lost through interleaved read/cast wrappers");
 	if (place)
 	{
 		auto rebuilt = place->makeField(makeVarExpression("key", WType::bytesType(), {}), {});
 		auto const* rebuiltBox = dynamic_cast<BoxValueExpression const*>(rebuilt.get());
-		ok &= require(rebuiltBox && rebuiltBox->isDeclarationRoot,
+		ok &= require(rebuiltBox && rebuiltBox->preserveEmptyBox,
 			"storage alias reconstruction lost declaration origin");
 	}
-	box->isDeclarationRoot = false;
+	box->preserveEmptyBox = false;
 	place = puyasol::builder::StoragePlace::fromRead(box);
-	ok &= require(place && !place->isDeclarationRoot,
+	ok &= require(place && !place->preserveEmptyBox,
 		"a literal runtime key was mistaken for an initialized declaration");
+
+	using puyasol::builder::StoragePlace;
+	auto index = makeIndexExpression(box, makeIntegerConstant(0, {}), &uint128a, {});
+	auto decoded = makeARC4Decode(index, WType::biguintType(), {});
+	ok &= require(StoragePlace::projectionBase(decoded) == index
+		&& StoragePlace::projectionBase(index) == box
+		&& StoragePlace::projectionBase(read) == box,
+		"storage projection traversal lost an address-preserving wrapper");
+	ok &= require(!StoragePlace::fromRead(index)
+		&& !StoragePlace::projectionBase(makeVarExpression("local", &arrayA, {})),
+		"an interior projection or materialized local was mistaken for a root");
 
 	return ok ? 0 : 1;
 }

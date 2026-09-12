@@ -10,39 +10,27 @@
 namespace puyasol::builder::eb
 {
 
-TypeConversionRegistry::TypeConversionRegistry()
+std::unique_ptr<InstanceBuilder> TypeConversions::tryConvert(
+	ContractContext& ctx, solidity::frontend::Type const* targetSol,
+	awst::WType const* target, std::shared_ptr<awst::Expression> arg,
+	awst::SourceLocation const& loc)
 {
-	registerHandler(solidity::frontend::Type::Category::Bool, &convertToBool);
-	registerHandler(solidity::frontend::Type::Category::Address, &convertToAddress);
-	registerHandler(solidity::frontend::Type::Category::Contract, &convertToAddress);
-	registerHandler(solidity::frontend::Type::Category::FixedBytes, &convertToFixedBytes);
-}
-
-void TypeConversionRegistry::registerHandler(
-	solidity::frontend::Type::Category _cat, ConvertHandler _handler)
-{
-	m_handlers[static_cast<int>(_cat)] = std::move(_handler);
-}
-
-std::unique_ptr<InstanceBuilder> TypeConversionRegistry::tryConvert(
-	ContractContext& _ctx,
-	solidity::frontend::Type const* _targetSolType,
-	awst::WType const* _targetWType,
-	std::shared_ptr<awst::Expression> _arg,
-	awst::SourceLocation const& _loc) const
-{
-	if (!_targetSolType) return nullptr;
-	auto it = m_handlers.find(static_cast<int>(_targetSolType->category()));
-	if (it != m_handlers.end())
-		return it->second(_ctx, _targetSolType, _targetWType, std::move(_arg), _loc);
-	return nullptr;
+	using Category = solidity::frontend::Type::Category;
+	switch (targetSol->category())
+	{
+	case Category::Bool: return convertToBool(ctx, targetSol, target, std::move(arg), loc);
+	case Category::Address:
+	case Category::Contract: return convertToAddress(ctx, targetSol, target, std::move(arg), loc);
+	case Category::FixedBytes: return convertToFixedBytes(ctx, targetSol, target, std::move(arg), loc);
+	default: return nullptr;
+	}
 }
 
 // ─────────────────────────────────────────────────────────────────────
 // Bool conversion: bool(x)
 // ─────────────────────────────────────────────────────────────────────
 
-std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToBool(
+std::unique_ptr<InstanceBuilder> TypeConversions::convertToBool(
 	ContractContext& _ctx,
 	solidity::frontend::Type const* /*_targetSolType*/,
 	awst::WType const* /*_targetWType*/,
@@ -68,7 +56,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToBool(
 // Address conversion: address(x)
 // ─────────────────────────────────────────────────────────────────────
 
-std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
+std::unique_ptr<InstanceBuilder> TypeConversions::convertToAddress(
 	ContractContext& _ctx,
 	solidity::frontend::Type const* _targetSolType,
 	awst::WType const* /*_targetWType*/,
@@ -77,7 +65,10 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 {
 	auto* srcWType = _arg->wtype;
 
-	if (srcWType == awst::WType::accountType())
+	if (srcWType == awst::WType::applicationType())
+		_arg = TypeCoercion::coerceForAssignment(std::move(_arg), awst::WType::accountType(), _loc);
+
+	if (_arg->wtype == awst::WType::accountType())
 		return std::make_unique<SolAddressBuilder>(_ctx, _targetSolType, std::move(_arg));
 
 	// Integer → left-pad to 32 bytes → account.
@@ -96,7 +87,8 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 	if (srcWType == awst::WType::bytesType()
 		|| (srcWType && srcWType->kind() == awst::WTypeKind::Bytes))
 	{
-		auto result = awst::makeAsAccount(std::move(_arg), _loc);
+		auto result = awst::makeAsAccount(awst::makeLeftPadToN(
+			awst::makeAsBytes(std::move(_arg), _loc), 32, _loc), _loc);
 		return std::make_unique<SolAddressBuilder>(_ctx, _targetSolType, std::move(result));
 	}
 
@@ -107,7 +99,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToAddress(
 // FixedBytes conversion: bytes32(x), bytes4(x), etc.
 // ─────────────────────────────────────────────────────────────────────
 
-std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
+std::unique_ptr<InstanceBuilder> TypeConversions::convertToFixedBytes(
 	ContractContext& _ctx,
 	solidity::frontend::Type const* _targetSolType,
 	awst::WType const* _targetWType,
@@ -117,91 +109,36 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToFixedBytes(
 	auto const* fbType = dynamic_cast<solidity::frontend::FixedBytesType const*>(_targetSolType);
 	if (!fbType) return nullptr;
 
-	auto* srcWType = _arg->wtype;
-
-	// Same type → no-op
-	if (srcWType == _targetWType)
+	auto const* source = _arg->wtype;
+	int const width = static_cast<int>(fbType->numBytes());
+	if (source == _targetWType)
 		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(_arg));
-
-	if (srcWType == awst::WType::uint64Type())
+	std::shared_ptr<awst::Expression> value;
+	if (source == awst::WType::uint64Type() || source == awst::WType::biguintType()
+		|| source == awst::WType::accountType())
 	{
-		unsigned byteWidth = fbType->numBytes();
-		auto itob = awst::makeItob(std::move(_arg), _loc);
-
-		std::shared_ptr<awst::Expression> result;
-		if (byteWidth < 8)
-		{
-			auto off = awst::makeIntegerConstant(8 - byteWidth, _loc);
-			auto len = awst::makeIntegerConstant(byteWidth, _loc);
-
-			auto extract = awst::makeExtract3(std::move(itob), std::move(off), std::move(len), _loc);
-			result = std::move(extract);
-		}
-		else if (byteWidth > 8)
-		{
-			result = awst::makeLeftPadToN(std::move(itob), byteWidth, _loc);
-		}
-		else
-			result = std::move(itob);
-
-		auto cast = awst::makeReinterpretCast(std::move(result), _targetWType, _loc);
-		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
+		// Integer/address magnitudes are right-aligned; signed carriers already
+		// contain two's-complement bits. Keep exactly solc's declared byte width.
+		if (source == awst::WType::uint64Type()) value = awst::makeItob(std::move(_arg), _loc);
+		else value = awst::makeAsBytes(std::move(_arg), _loc);
+		value = awst::makeLeftPadToN(std::move(value), width, _loc);
 	}
-
-	if (srcWType == awst::WType::biguintType())
+	else if (auto literal = TypeCoercion::stringToBytesN(_arg.get(), _targetWType, width, _loc))
+		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(literal));
+	else if (source && source->kind() == awst::WTypeKind::Bytes)
 	{
-		unsigned byteWidth = fbType->numBytes();
-		auto toBytes = awst::makeAsBytes(std::move(_arg), _loc);
-
-		auto padded = awst::makeLeftPadToN(std::move(toBytes), byteWidth, _loc);
-
-		auto cast = awst::makeReinterpretCast(std::move(padded), _targetWType, _loc);
-		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
+		// Fixed/dynamic byte strings are left-aligned: extend on the right,
+		// then select their prefix. Known lengths avoid unnecessary padding.
+		auto const length = awst::fixedBytesLength(source);
+		value = awst::makeAsBytes(std::move(_arg), _loc);
+		if (!length || *length < width)
+			value = awst::makeRightPad(std::move(value), width - length.value_or(0), _loc);
+		if (!length || *length != width)
+			value = awst::makeExtract(std::move(value), 0, width, _loc);
 	}
-
-	// FixedBytes[M]→FixedBytes[N]: right-pad or left-truncate.
-	if (srcWType && srcWType->kind() == awst::WTypeKind::Bytes)
-	{
-		auto const* srcBytes = dynamic_cast<awst::BytesWType const*>(srcWType);
-		int srcLen = srcBytes && srcBytes->length() ? *srcBytes->length() : 0;
-		int tgtLen = static_cast<int>(fbType->numBytes());
-
-		// UNSIZED `bytes memory` → bytesN. Solidity takes the FIRST N bytes,
-		// right-padding with zeros: the value is LEFT-aligned in the word. This
-		// fell through to a bare reinterpret, so a later `uint256(...)` read the
-		// short byte string as a NUMBER and right-aligned it — `bytes32("abc")`
-		// came out 0x00…616263 instead of 0x616263…00. OZ ShortStrings packs
-		// `bytes32(uint256(bytes32(bstr)) | bstr.length)`, so the length was
-		// OR'd onto the last DATA byte instead of the length byte
-		// ("hello world" round-tripped as "hello worlo") and byteLength()
-		// returned a character code. Blocked usde/kaito/ena/aero/velo.
-		if (srcLen == 0 && tgtLen > 0)
-		{
-			auto toBytes = awst::makeAsBytes(std::move(_arg), _loc);
-			auto padded = awst::makeConcat(
-				std::move(toBytes), awst::makeBzero(tgtLen, _loc), _loc);
-			auto result = awst::makeExtract(std::move(padded), 0, tgtLen, _loc);
-			auto cast = awst::makeReinterpretCast(std::move(result), _targetWType, _loc);
-			return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
-		}
-
-		if (srcLen > 0 && tgtLen > 0 && srcLen != tgtLen)
-		{
-			auto toBytes = awst::makeAsBytes(std::move(_arg), _loc);
-			std::shared_ptr<awst::Expression> result;
-			if (tgtLen > srcLen)
-				result = awst::makeRightPad(std::move(toBytes), tgtLen - srcLen, _loc);
-			else
-				result = awst::makeExtract(std::move(toBytes), 0, tgtLen, _loc);
-			auto cast = awst::makeReinterpretCast(std::move(result), _targetWType, _loc);
-			return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
-		}
-
-		auto cast = awst::makeReinterpretCast(std::move(_arg), _targetWType, _loc);
-		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(cast));
-	}
-
-	return nullptr;
+	else return nullptr;
+	return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType,
+		awst::makeReinterpretCast(std::move(value), _targetWType, _loc));
 }
 
 // ─────────────────────────────────────────────────────────────────────

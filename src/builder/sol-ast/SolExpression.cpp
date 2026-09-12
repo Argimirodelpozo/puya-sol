@@ -1,5 +1,6 @@
 #include "builder/sol-ast/SolExpression.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/sol-types/ConversionPlan.h"
 
 // Uses solc AST/Type definitions directly; the hub headers only
 // forward-declare them now.
@@ -17,10 +18,17 @@ SolExpression::SolExpression(
 	  m_node(_node),
 	  m_solType(_node.annotation().type),
 	  m_wtype(_ctx.typeMapper.map(_node.annotation().type)),
-	  m_loc(_ctx.makeLoc(
-		  _node.location().start,
-		  _node.location().end))
+	  m_loc(_ctx.makeLoc(_node.location()))
 {
+}
+
+std::shared_ptr<awst::Expression> SolExpression::buildConstantValue(
+	solidity::frontend::VariableDeclaration const& declaration)
+{
+	auto const& initializer = *declaration.value();
+	return ConversionPlan{initializer.annotation().type, declaration.type(),
+		m_ctx.typeMapper.map(declaration.type()), ConversionPlan::Context::Initialization}.emit(
+			buildExpr(initializer), m_loc, &m_ctx.preEffects());
 }
 
 } // namespace puyasol::builder::sol_ast

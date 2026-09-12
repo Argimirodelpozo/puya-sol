@@ -2,6 +2,8 @@
 
 #include "builder/sol-ast/SolFunctionCall.h"
 
+namespace puyasol::builder { class ConstructorWirePlan; }
+
 namespace puyasol::builder::sol_ast
 {
 
@@ -16,7 +18,7 @@ public:
 private:
 	// ── toAwst shape rungs (SolNewExpression.cpp), in dispatch order ────
 	std::shared_ptr<awst::Expression> handleNewBytes();
-	std::shared_ptr<awst::Expression> handleNewString();
+	std::shared_ptr<awst::Expression> allocationSize(uint64_t capacity);
 	std::shared_ptr<awst::Expression> handleNewArray();
 	/// `new C(...)`: inner appl-create with TemplateVar programs, MBR
 	/// funding, and the [pay, __postInit] group when the child defers init.
@@ -31,29 +33,19 @@ private:
 	/// runtime slices of the deployer-provisioned "__cp_<C>" box.
 	std::shared_ptr<awst::TupleExpression> buildChildApprovalPages(
 		std::string const& _childName);
-	/// ApplicationArgs for the create-time ctor (no __postInit): the one EVM
-	/// calldata body, or one ARC4-encoded arg per slot — nullptr when the
-	/// ARC4 encoding yields no args (the field is then left unset).
-	std::shared_ptr<awst::TupleExpression> buildChildCreateArgs(
-		solidity::frontend::FunctionDefinition const& _childCtor, bool _childHasPostInit);
-	/// Ctor args, each built + numeric-cast to its param wtype and encoded
-	/// for the create-path reader or __postInit's router (`_childHasPostInit`).
-	std::vector<std::shared_ptr<awst::Expression>> buildEncodedCtorArgs(
-		solidity::frontend::FunctionDefinition const* _childCtor, bool _childHasPostInit);
-	/// One ctor arg's wire encoding: bytesN / biguint / uint64 / bool /
-	/// reference-array shapes; anything else passes through unchanged.
-	std::shared_ptr<awst::Expression> encodeCtorArg(
-		std::shared_ptr<awst::Expression> _argVal,
-		solidity::frontend::Type const* _paramSolType,
-		bool _childHasPostInit);
-	/// Pay txn funding the child's escrow: MBR, plus `{value:}` when the
-	/// ctor runs at create time (with __postInit the value rides its group).
+	/// Encode already-evaluated operands for the selected child entry.
+	std::shared_ptr<awst::TupleExpression> buildChildArgs(
+		ConstructorWirePlan const& wire,
+		std::vector<std::shared_ptr<awst::Expression>> values, bool postInit);
+	/// Fund the child's escrow with MBR plus any create-time call value.
 	void emitChildFunding(
-		std::shared_ptr<awst::Expression> const& _createdAppId, bool _childHasPostInit);
-	/// [pay(value), __postInit(args)] group against the created app id.
+		std::shared_ptr<awst::Expression> const& appId,
+		std::shared_ptr<awst::Expression> callValue);
+	/// Submit the [pay(value), __postInit(args)] group.
 	void emitChildPostInit(
-		solidity::frontend::FunctionDefinition const* _childCtor,
-		std::string const& _newAppIdVarName);
+		std::shared_ptr<awst::Expression> appId,
+		std::shared_ptr<awst::Expression> args,
+		std::shared_ptr<awst::Expression> callValue);
 };
 
 } // namespace puyasol::builder::sol_ast

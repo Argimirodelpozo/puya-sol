@@ -26,7 +26,8 @@ public:
 		TypeMapper& _typeMapper,
 		std::shared_ptr<awst::Expression> _application,
 		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _effects);
+		std::vector<std::shared_ptr<awst::Statement>>& _effects,
+		bool _inConstructor = false);
 };
 
 } // namespace puyasol::builder

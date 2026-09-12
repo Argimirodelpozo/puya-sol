@@ -5,6 +5,7 @@
 #include "awst/Node.h"
 
 #include "builder/sol-types/SolcFwd.h"
+#include "builder/sol-types/SolIntType.h"
 
 #include <memory>
 #include <vector>
@@ -26,6 +27,10 @@ solidity::frontend::Type const* underlyingType(
 /// in the ABI and memory source adapters; this is their common leaf predicate.
 bool isWordType(solidity::frontend::Type const* type);
 
+/// Complete ARC4 element bytes equal an EVM word only for 256-bit integers
+/// and bytes32. Other 32-byte carriers (notably native addresses) need cleanup.
+bool isByteIdenticalEvmWord(solidity::frontend::Type const* type);
+
 /// What a word's bytes OUTSIDE the value's own width mean at this read site.
 ///
 /// The two callers want opposite things and solc agrees with both. Decoding
@@ -45,6 +50,22 @@ enum class PaddingPolicy
 	Validate,   ///< revert unless the surrounding bytes are canonical padding
 	Clean,      ///< discard them (mask / zero-extend / sign-extend)
 };
+
+/// Same Solidity scalar facts, different physical boundaries. Native v1
+/// parameters retain the existing signed-carrier convention; v1 getters
+/// additionally omit enum-key validation. Neither is an EVM-word decoder.
+enum class ScalarBoundarySite { EvmWord, NativeParameter, NativeGetter };
+struct ScalarBoundary
+{
+	solidity::frontend::Type const* type = nullptr;
+	std::optional<SolIntType> integer;
+	unsigned enumMembers = 0;
+	bool boolean = false;
+	bool validatePadding = false;
+	bool validateEnum = false;
+};
+ScalarBoundary scalarBoundary(solidity::frontend::Type const* type, PaddingPolicy padding,
+	ScalarBoundarySite site = ScalarBoundarySite::EvmWord);
 
 /// Decode one 32-byte EVM word to puya-sol's native value representation.
 /// Canonical bool and enum checks are appended to `out`.
@@ -95,5 +116,6 @@ std::shared_ptr<awst::Expression> signExtendToWord(
 bool canRoundTripEvmAbi(
 	solidity::frontend::Type const* type,
 	std::set<int64_t>& visiting);
+bool canRoundTripEvmAbi(std::vector<solidity::frontend::Type const*> const& types);
 
 } // namespace puyasol::builder::codec

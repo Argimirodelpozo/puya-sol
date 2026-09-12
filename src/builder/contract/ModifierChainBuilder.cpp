@@ -46,130 +46,11 @@ bool isMemoryReference(VariableDeclaration const& _declaration)
 		&& _declaration.type() && !_declaration.type()->isValueType();
 }
 
-/// Follow only expressions for which solc preserves memory-reference identity.
-/// Calls and constructors intentionally stop the walk: their result is a fresh
-/// value for this lowering. Explicit reference conversions and conditional
-/// reference selection preserve the selected pointer.
-void collectMemoryRoots(
-	Expression const& _expression,
-	std::map<int64_t, VariableDeclaration const*> const& _parameters,
-	std::set<int64_t>& _out)
-{
-	if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
-	{
-		auto const* declaration = dynamic_cast<VariableDeclaration const*>(
-			identifier->annotation().referencedDeclaration);
-		if (declaration && _parameters.count(declaration->id()))
-			_out.insert(declaration->id());
-		return;
-	}
-	if (auto const* member = dynamic_cast<MemberAccess const*>(&_expression))
-		return collectMemoryRoots(member->expression(), _parameters, _out);
-	if (auto const* index = dynamic_cast<IndexAccess const*>(&_expression))
-		return collectMemoryRoots(index->baseExpression(), _parameters, _out);
-	if (auto const* range = dynamic_cast<IndexRangeAccess const*>(&_expression))
-		return collectMemoryRoots(range->baseExpression(), _parameters, _out);
-	if (auto const* conditional = dynamic_cast<Conditional const*>(&_expression))
-	{
-		collectMemoryRoots(conditional->trueExpression(), _parameters, _out);
-		collectMemoryRoots(conditional->falseExpression(), _parameters, _out);
-		return;
-	}
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_expression))
-	{
-		for (auto const& component: tuple->components())
-			if (component)
-				collectMemoryRoots(*component, _parameters, _out);
-		return;
-	}
-	if (auto const* call = dynamic_cast<FunctionCall const*>(&_expression);
-		call && call->annotation().kind.set()
-		&& *call->annotation().kind == FunctionCallKind::TypeConversion
-		&& call->arguments().size() == 1)
-		collectMemoryRoots(*call->arguments()[0], _parameters, _out);
-}
-
 std::string memoryRootName(
 	FunctionDefinition const& _function, VariableDeclaration const& _parameter)
 {
 	return "__modroot_" + std::to_string(_function.id()) + "_"
 		+ std::to_string(_parameter.id());
-}
-
-bool canResolveMemoryPointer(
-	sol_ast::Context const& _scope, Expression const& _expression)
-{
-	if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
-	{
-		auto const* declaration = dynamic_cast<VariableDeclaration const*>(
-			identifier->annotation().referencedDeclaration);
-		return declaration && !_scope.bindings.blobAggregates.get(declaration->id()).empty();
-	}
-	if (auto const* member = dynamic_cast<MemberAccess const*>(&_expression))
-		return canResolveMemoryPointer(_scope, member->expression());
-	if (auto const* index = dynamic_cast<IndexAccess const*>(&_expression))
-		return canResolveMemoryPointer(_scope, index->baseExpression());
-	if (auto const* conditional = dynamic_cast<Conditional const*>(&_expression))
-		return canResolveMemoryPointer(_scope, conditional->trueExpression())
-			&& canResolveMemoryPointer(_scope, conditional->falseExpression());
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_expression))
-		return tuple->components().size() == 1 && tuple->components()[0]
-			&& canResolveMemoryPointer(_scope, *tuple->components()[0]);
-	if (auto const* call = dynamic_cast<FunctionCall const*>(&_expression);
-		call && call->annotation().kind.set()
-		&& *call->annotation().kind == FunctionCallKind::TypeConversion
-		&& call->arguments().size() == 1)
-		return canResolveMemoryPointer(_scope, *call->arguments()[0]);
-	return false;
-}
-
-std::shared_ptr<awst::Expression> resolveMemoryPointer(
-	eb::ContractContext& _ctx, sol_ast::Context& _scope,
-	Expression const& _expression, awst::SourceLocation const& _loc)
-{
-	if (!canResolveMemoryPointer(_scope, _expression))
-		return nullptr;
-	if (auto const* conditional = dynamic_cast<Conditional const*>(&_expression))
-	{
-		auto condition = _ctx.pinIfWriteBacks(
-			_ctx.lower(conditional->condition(), false), _loc);
-		auto trueValue = _ctx.lowerOperand([&] {
-			return resolveMemoryPointer(
-				_ctx, _scope, conditional->trueExpression(), _loc);
-		});
-		auto falseValue = _ctx.lowerOperand([&] {
-			return resolveMemoryPointer(
-				_ctx, _scope, conditional->falseExpression(), _loc);
-		});
-		std::string const name = "__modptr_select_" + std::to_string(
-			awst::NameGen::next("ModifierChainBuilder.pointerSelect"));
-		auto target = [&] {
-			return awst::makeVarExpression(
-				name, awst::WType::uint64Type(), _loc);
-		};
-		auto trueBlock = eb::ContractContext::makeScopedResultBlock(
-			std::move(trueValue.effects.pre), target(),
-			std::move(trueValue.value), _loc,
-			std::move(trueValue.effects.post));
-		auto falseBlock = eb::ContractContext::makeScopedResultBlock(
-			std::move(falseValue.effects.pre), target(),
-			std::move(falseValue.value), _loc,
-			std::move(falseValue.effects.post));
-		_ctx.preEffects().push_back(awst::makeIfElse(
-			std::move(condition), std::move(trueBlock),
-			std::move(falseBlock), _loc));
-		return target();
-	}
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_expression))
-		return resolveMemoryPointer(
-			_ctx, _scope, *tuple->components()[0], _loc);
-	if (auto const* call = dynamic_cast<FunctionCall const*>(&_expression);
-		call && call->annotation().kind.set()
-		&& *call->annotation().kind == FunctionCallKind::TypeConversion)
-		return resolveMemoryPointer(
-			_ctx, _scope, *call->arguments()[0], _loc);
-	return sol_ast::SolIndexAccess::resolveBlobOffset(
-		_ctx, _scope, _expression, _loc);
 }
 
 struct MemoryBridge
@@ -317,7 +198,7 @@ public:
 			if (r.isWriteBack)
 				continue;
 			auto target = awst::makeVarExpression(r.name, r.type, loc);
-			auto zeroVal = StorageMapper::makeDefaultValue(r.type, loc);
+			auto zeroVal = TypeCoercion::makeDefaultValue(r.type, loc);
 			entryBody->body.push_back(awst::makeAssignmentStatement(
 				std::move(target), std::move(zeroVal), loc));
 		}
@@ -447,7 +328,11 @@ ContractBuilder::modifierMemoryRootParams(FunctionDefinition const& _func) const
 		auto const& parameters = modifier->parameters();
 		for (size_t i = 0; i < arguments->size() && i < parameters.size(); ++i)
 			if (isMemoryReference(*parameters[i]))
-				collectMemoryRoots(*(*arguments)[i], candidates, used);
+				for (auto const* source: SolcFacts::referenceSources(*(*arguments)[i]))
+					if (auto const* id = dynamic_cast<Identifier const*>(source))
+						if (auto const* declaration = id->annotation().referencedDeclaration;
+							declaration && candidates.count(declaration->id()))
+							used.insert(declaration->id());
 	}
 
 	std::vector<VariableDeclaration const*> result;
@@ -475,9 +360,7 @@ void ContractBuilder::registerModifierMemoryRootParams(
 void ContractBuilder::bindModifierArguments(
 	solidity::frontend::ModifierInvocation const& _invocation,
 	solidity::frontend::ModifierDefinition const& _modifier,
-	awst::Block& _modBody,
-	std::vector<int64_t>& _remappedDeclIds,
-	std::vector<int64_t>& _blobDeclIds)
+	awst::Block& _modBody)
 {
 	auto const* args = _invocation.arguments();
 	auto const& params = _modifier.parameters();
@@ -510,7 +393,6 @@ void ContractBuilder::bindModifierArguments(
 					awst::makeVarExpression(param->name(),
 						awst::WType::biguintType(), modLoc),
 					addr->slot, modLoc));
-				_remappedDeclIds.push_back(param->id());
 			}
 			continue;
 		}
@@ -524,11 +406,12 @@ void ContractBuilder::bindModifierArguments(
 		if (isMemoryReference(*param))
 		{
 			std::string const pointerName = uniqueName + "_ptr";
-			auto pointer = resolveMemoryPointer(
+			auto reference = sol_ast::SolIndexAccess::resolveBlobReference(
 				*m_exprBuilder, *m_exprBuilder->currentScope,
 				*(*args)[pi], modLoc);
-			if (pointer)
+			if (reference)
 			{
+				auto pointer = m_exprBuilder->pinIfWriteBacks(std::move(*reference), modLoc);
 				m_exprBuilder->appendEffectsTo(_modBody.body);
 				_modBody.body.push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression(pointerName,
@@ -549,8 +432,7 @@ void ContractBuilder::bindModifierArguments(
 					awst::NameGen::next("ModifierChainBuilder.modPointer"),
 					modLoc, _modBody.body);
 			}
-			m_tr->scope.bindings.blobAggregates.set(param->id(), pointerName);
-			_blobDeclIds.push_back(param->id());
+			m_functionCtx->scope.bindings.blobAggregates.set(param->id(), pointerName);
 			continue;
 		}
 
@@ -571,8 +453,7 @@ void ContractBuilder::bindModifierArguments(
 			m_exprBuilder->appendEffectsTo(_modBody.body);
 			sol_ast::StorageAlias alias =
 				sol_ast::StorageAlias::classify(std::move(argExpr));
-			m_tr->scope.bindings.storageAliases.set(param->id(), std::move(alias));
-			_remappedDeclIds.push_back(param->id());
+			m_functionCtx->scope.bindings.storageAliases.set(param->id(), std::move(alias));
 			continue;
 		}
 
@@ -598,8 +479,7 @@ void ContractBuilder::bindModifierArguments(
 		auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), modLoc);
 		_modBody.body.push_back(std::move(assignment));
 
-		m_tr->scope.bindings.paramRemaps.set(param->id(), sol_ast::ParamRemap{uniqueName, paramType});
-		_remappedDeclIds.push_back(param->id());
+		m_functionCtx->scope.bindings.paramRemaps.set(param->id(), sol_ast::ParamRemap{uniqueName, paramType});
 	}
 }
 
@@ -639,7 +519,7 @@ void ContractBuilder::buildModifierChain(
 			std::distance(_func.parameters().begin(), found));
 		std::string const name = memoryRootName(_func, *parameter);
 		memoryBridges.push_back({
-			index, parameter, name, m_tr->scope.awstVarName(*parameter), nativeType});
+			index, parameter, name, m_functionCtx->scope.awstVarName(*parameter), nativeType});
 		bridgeArgs.emplace_back(
 			name, awst::WType::uint64Type(), makeLoc(parameter->location()));
 	}
@@ -743,6 +623,12 @@ void ContractBuilder::buildModifierChain(
 		if (!modDef)
 			continue; // constructor base call — handled elsewhere
 
+		// Each chain link is a distinct emitted frame. It inherits the enclosing
+		// parameter bindings, but its own aliases/remaps cannot leak to another
+		// invocation of the same modifier (including exceptional exits).
+		solidity::ScopedSaveAndRestore bindingsGuard(
+			m_functionCtx->bindings, sol_ast::ScopeState{m_functionCtx->bindings});
+
 		std::string modSubName = baseName + "__mod" + std::to_string(i) + "_" + std::to_string(chainId);
 
 		awst::ContractMethod modSub;
@@ -758,13 +644,9 @@ void ContractBuilder::buildModifierChain(
 
 		// Decode params first so a modifier arg expr (`mArg(a % 5)`) sees native values.
 		prependDecodes(modBody);
-		auto const modifierThreading = threading.forModifier(*modBody, m_viaIR);
+		auto const modifierThreading = threading.forModifier(*modBody, m_typeMapper.profile().viaIRSequencing);
 
-		std::vector<int64_t> remappedDeclIds;
-		std::vector<int64_t> blobDeclIds;
-		bindModifierArguments(
-			*modInvocation, *modDef, *modBody,
-			remappedDeclIds, blobDeclIds);
+		bindModifierArguments(*modInvocation, *modDef, *modBody);
 
 		// At `_`: pass the source-local inputs and capture the next link's outputs.
 		auto makePlaceholder = [&, nextSubName,
@@ -798,11 +680,6 @@ void ContractBuilder::buildModifierChain(
 			modBody->body.push_back(std::move(statement));
 		modBody->body.push_back(modifierThreading.makeThreadedReturn(modSub.sourceLocation));
 
-		for (auto declId: remappedDeclIds)
-			m_tr->scope.bindings.paramRemaps.erase(declId);
-		for (auto declId: blobDeclIds)
-			m_tr->scope.bindings.blobAggregates.erase(declId);
-
 		modSub.body = modBody;
 		m_modifierSubroutines.push_back(std::move(modSub));
 		nextSubName = modSubName;
@@ -828,7 +705,7 @@ void ContractBuilder::buildModifierChain(
 			std::make_move_iterator(entryPrefix.begin()),
 			std::make_move_iterator(entryPrefix.end()));
 	for (auto const& bridge: memoryBridges)
-		m_tr->scope.bindings.blobAggregates.erase(bridge.declaration->id());
+		m_functionCtx->scope.bindings.blobAggregates.erase(bridge.declaration->id());
 }
 
 void ContractBuilder::buildConstructorModifierChain(
@@ -861,7 +738,7 @@ void ContractBuilder::buildConstructorModifierChain(
 		if (parameter->name().empty())
 			continue;
 		constructor.args.emplace_back(
-			m_tr->scope.awstVarName(*parameter),
+			m_functionCtx->scope.awstVarName(*parameter),
 			m_typeMapper.profile().evmStorageLayout
 				&& parameter->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				? awst::WType::biguintType() : m_typeMapper.map(parameter->type()),

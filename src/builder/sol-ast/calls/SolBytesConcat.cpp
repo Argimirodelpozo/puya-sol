@@ -10,10 +10,7 @@ namespace puyasol::builder::sol_ast
 
 std::shared_ptr<awst::Expression> SolBytesConcat::toAwst()
 {
-	auto const& args = m_call.arguments();
-
-	if (args.empty())
-		return awst::makeBytesConstant({}, m_loc);
+	auto args = CallOperands::build(m_ctx, m_call, m_loc);
 
 	auto toBytes = [this](std::shared_ptr<awst::Expression> expr) -> std::shared_ptr<awst::Expression> {
 		if (expr->wtype == awst::WType::bytesType()
@@ -23,9 +20,9 @@ std::shared_ptr<awst::Expression> SolBytesConcat::toAwst()
 		return cast;
 	};
 
-	auto result = toBytes(buildExpr(*args[0]));
+	auto result = args.empty() ? awst::makeBytesConstant({}, m_loc) : toBytes(std::move(args[0]));
 	for (size_t i = 1; i < args.size(); ++i)
-		result = awst::makeConcat(std::move(result), toBytes(buildExpr(*args[i])), m_loc);
+		result = awst::makeConcat(std::move(result), toBytes(std::move(args[i])), m_loc);
 
 	// `string.concat` returns `string memory`, but the concat intrinsic is
 	// labelled plain `bytes` — identical at runtime, different WType. puya

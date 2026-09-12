@@ -2,10 +2,13 @@
 
 #include <libsolidity/ast/ASTForward.h>
 #include <libyul/ASTForward.h>
+#include <libyul/SideEffects.h>
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -39,6 +42,15 @@ public:
 	/// Strip call options and parenthesized singleton expressions.
 	static solidity::frontend::Expression const& functionExpression(
 		solidity::frontend::Expression const& _expression);
+	/// Formal-parameter order, including a using-for receiver at position zero.
+	static std::vector<solidity::frontend::Expression const*> callArguments(
+		solidity::frontend::FunctionCall const& _call);
+
+	/// Sources of an access/reference selection, excluding index and condition
+	/// operands. Non-conversion calls remain terminals: callers decide whether
+	/// a declared storage alias is known, or whether the result is a fresh value.
+	static std::vector<solidity::frontend::Expression const*> referenceSources(
+		solidity::frontend::Expression const& _expression);
 
 	/// Concrete function denoted by a call/reference expression. Uses solc's
 	/// requiredLookup and resolveVirtual; super's lexical owner comes from its
@@ -63,6 +75,7 @@ public:
 
 	struct YulAnalysis
 	{
+		solidity::yul::SideEffects rootEffects;
 		std::map<std::string, solidity::yul::FunctionDefinition const*> functions;
 		std::set<std::string> reachableFunctions;
 		std::set<std::string> recursiveFunctions;
@@ -96,6 +109,19 @@ public:
 	static YulArgumentFacts yulArgumentFacts(
 		PreparedAssembly const& _assembly,
 		std::map<std::string, std::string> const& _externalConstants);
+
+	/// A movable Yul expression cannot observe mutable memory/storage or
+	/// produce effects. Yul functions cannot capture their caller's locals.
+	static bool yulExpressionIsMovable(
+		solidity::yul::Expression const& _expression,
+		solidity::yul::Dialect const& _dialect);
+
+	/// Full-width constant folding by solc's EVM simplification rules. The
+	/// callback supplies only values proven stable at this lowering point.
+	static std::optional<std::string> yulConstantValue(
+		solidity::yul::Expression const& _expression,
+		solidity::yul::Dialect const& _dialect,
+		std::function<std::optional<std::string>(solidity::yul::Identifier const&)> const& _value);
 
 	/// Solidity's canonical four-byte function/error selector. The FunctionType
 	/// overload delegates to solc's externalIdentifier(); the signature overload

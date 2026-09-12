@@ -56,8 +56,8 @@ struct Options
 	// LogicSig account sha512_256("Program" || template-with-owner-spliced),
 	// and the entry arm accepts a VERIFIED owner claim as msg.sender. The
 	// template must be PINNED — the derived address is the exact program hash.
-	std::string xchainTemplateHex;
-	std::string xchainPlaceholderHex = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+	std::vector<uint8_t> xchainTemplate;
+	std::vector<uint8_t> xchainPlaceholder = std::vector<uint8_t>(20, 0xee);
 	// --child-programs-via-box: `new C()` child approval programs load from a
 	// deployer-provisioned "__cp_<Child>" box instead of being embedded as
 	// template constants — for parents that only fit the 16KB program cap
@@ -70,7 +70,7 @@ struct Options
 	int evmMemorySlots = 0;
 	// --evm-storage-layout: back ALL contract storage with EVM-numbered slots
 	// (hybrid paged/sparse boxes) instead of per-variable named cells. Makes
-	// assembly slot arithmetic faithful; disables ARC-56 state declarations.
+	// assembly slot arithmetic faithful; ARC-56 still describes immutable cells.
 	bool evmStorageLayout = false;
 	// --force-inline-sub <Name>: set inlineOpt=true so puya inlines at every
 	// call site. Repeatable.
@@ -84,7 +84,7 @@ void printUsage(char const* _progName);
 
 Options parseArgs(int _argc, char* _argv[]);
 
-/// Configure the global Logger from --log-level + --output-dir options.
+/// Configure log filtering only. Artifact publication owns output/log files.
 void configureLogger(Options const& _opts);
 
 } // namespace puyasol::cli

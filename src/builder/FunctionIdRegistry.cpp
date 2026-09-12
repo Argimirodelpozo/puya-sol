@@ -1,75 +1,35 @@
 #include "builder/FunctionIdRegistry.h"
+#include "builder/ProgramAnalysis.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
-#include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
 
 namespace puyasol::builder
 {
 
-void registerFunctionIds(
-	solidity::frontend::CompilerStack& _compiler,
-	FunctionSymbolTable& _functionSymbols)
+void registerFunctionIds(ProgramAnalysis const& analysis, FunctionSymbolTable& symbols)
 {
-	_functionSymbols.clear();
-	for (auto const& sourceName: _compiler.sourceNames())
+	symbols.clear();
+	for (auto const& [id, function]: analysis.functionDeclarations)
 	{
-		auto const& sourceUnit = _compiler.ast(sourceName);
-
-		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
-			solidity::frontend::ContractDefinition>(sourceUnit.nodes()))
-		{
-			for (auto const* function: contract->definedFunctions())
-			{
-				if (!function->isImplemented() || function->isConstructor())
-					continue;
-				bool const rootSubroutine = contract->isLibrary();
-				bool const internalMethod =
-					function->visibility() == solidity::frontend::Visibility::Internal
-					|| function->visibility() == solidity::frontend::Visibility::Private;
-				if (!rootSubroutine && !internalMethod)
-					continue;
-				auto const& subroutineId = _functionSymbols.registerDeclaration(
-					function->id(), rootSubroutine);
-				Logger::instance().debug(
-					"[REG] Solidity function declaration=" +
-					std::to_string(function->id()) + " => " + subroutineId);
-			}
-		}
-
-		for (auto const* function: solidity::frontend::ASTNode::filteredNodes<
-			solidity::frontend::FunctionDefinition>(sourceUnit.nodes()))
-		{
-			if (!function->isImplemented() || !function->isFree())
-				continue;
-			auto const& subroutineId = _functionSymbols.registerDeclaration(
-				function->id(), /*_rootSubroutine=*/true);
-			Logger::instance().debug(
-				"[REG] free function declaration=" +
-				std::to_string(function->id()) + " => " + subroutineId);
-		}
+		if (!function->isImplemented() || function->isConstructor()) continue;
+		auto const* owner = function->annotation().contract;
+		bool const root = function->isFree() || (owner && owner->isLibrary());
+		using solidity::frontend::Visibility;
+		if (root || function->visibility() == Visibility::Internal
+			|| function->visibility() == Visibility::Private)
+			symbols.registerDeclaration(id, root);
 	}
 }
 
-void presetDispatchCref(
-	solidity::frontend::CompilerStack& _compiler,
-	eb::FunctionPointerRegistry& _functionPointers)
+void presetDispatchCref(ProgramAnalysis const& analysis, eb::FunctionPointerRegistry& pointers)
 {
-	// Set fn-ptr dispatch cref to the first deployable contract so library
-	// subroutines can build SubroutineIDs (libs translated before contracts).
-	for (auto const& sourceName: _compiler.sourceNames())
-	{
-		auto const& su = _compiler.ast(sourceName);
-		for (auto const* c: solidity::frontend::ASTNode::filteredNodes<
-			solidity::frontend::ContractDefinition>(su.nodes()))
+	for (auto const* contract: analysis.contracts)
+		if (!contract->isLibrary() && !contract->abstract() && !contract->isInterface())
 		{
-			if (!c->isLibrary() && !c->abstract() && !c->isInterface())
-			{
-				_functionPointers.currentCref = c->fullyQualifiedName();
-				return;
-			}
+			pointers.currentCref = contract->fullyQualifiedName();
+			return;
 		}
-	}
 }
 
 } // namespace puyasol::builder

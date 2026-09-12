@@ -2,6 +2,8 @@
 /// Core expression translation: dispatch, literals, identifiers, function calls.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/SolcFacts.h"
+#include "builder/itxn/ApplicationTarget.h"
 #include "builder/builtin/AppCodeSizeLowering.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/sol-types/FunctionPointerKind.h"
@@ -135,20 +137,20 @@ std::string AssemblyBuilder::externalRefAwstName(
 std::string AssemblyBuilder::resolveVarRef(solidity::yul::Identifier const& _id) const
 {
 	// solc lists every outer-var Yul reference in externalReferences (yul id →
-	// {decl, suffix}); name it via the shared decl path (m_declName = awstVarName).
+	// {decl, suffix}); name it via the shared decl path (prepareContext().declName = awstVarName).
 	// Yul-internal ids (let-locals, Yul-fn params — not in the map) keep their name.
-	auto it = m_externalRefs.find(&_id);
-	if (it == m_externalRefs.end())
+	auto it = m_context->externalRefs.find(&_id);
+	if (it == m_context->externalRefs.end())
 	{
 		// Yul-internal id (let-local or user-fn param/return). If this name is being
 		// inline-expanded under a per-call rename, use the unique name so sibling/nested
 		// calls that reuse the same bare name don't clobber each other's runtime vars.
-		auto rit = m_yulInlineRenames.find(_id.name.str());
-		if (rit != m_yulInlineRenames.end())
+		auto rit = m_frame.yulInlineRenames.find(_id.name.str());
+		if (rit != m_frame.yulInlineRenames.end())
 			return rit->second;
 		return _id.name.str();
 	}
-	return externalRefAwstName(it->second, _id.name.str(), m_declName);
+	return externalRefAwstName(it->second, _id.name.str(), m_context->declName);
 }
 
 bool AssemblyBuilder::builtinClobbersMemory(std::string const& _name)
@@ -178,7 +180,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 {
 	auto loc = makeLoc(_id.debugData);
 	// resolveVarRef remaps outer-var refs to the mangled AWST name up front, so every
-	// downstream lookup (m_locals, m_blobOffsetVars, the dotPos split) uses that key.
+	// downstream lookup (m_frame.locals, m_frame.blobOffsetVars, the dotPos split) uses that key.
 	std::string name = resolveVarRef(_id);
 
 	// Handle .offset / .length suffix on calldata parameter references
@@ -193,15 +195,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 		{
 			// Storage slot reference: z.slot → numeric slot constant
 			// First check constants (set by StorageLayout in SolInlineAssembly)
-			auto cIt = m_constants.find(name);
-			if (cIt != m_constants.end())
+			auto cIt = m_context->constants.find(name);
+			if (cIt != m_context->constants.end())
 			{
 				auto node = awst::makeIntegerConstant(cIt->second, loc, awst::WType::biguintType());
 				return node;
 			}
 			// Fallback: check storageSlotVars for __slot_ marker
-			auto it = m_storageSlotVars.find(name);
-			if (it != m_storageSlotVars.end())
+			auto it = m_context->storageSlotVars.find(name);
+			if (it != m_context->storageSlotVars.end())
 			{
 				auto node = awst::makeVarExpression("__slot_" + it->second, awst::WType::biguintType(), loc);
 				return node;
@@ -210,23 +212,23 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			// self.ticks[tick]` aliases an ARC4 struct living in a box):
 			// resolve to that box. handleSstore detects this BoxValueExpression
 			// sentinel (struct wtype) and performs a field-aware write
-			// (EVM slot packing → ARC4 fields). See m_boxKeyedStructSlots.
-			auto bks = m_boxKeyedStructSlots.find(name);
-			if (bks != m_boxKeyedStructSlots.end())
+			// (EVM slot packing → ARC4 fields). See m_context->boxKeyedStructSlots.
+			auto bks = m_context->boxKeyedStructSlots.find(name);
+			if (bks != m_context->boxKeyedStructSlots.end())
 				return awst::makeBoxValueExpression(
 					bks->second.key, bks->second.structType, loc);
 			// Struct-storage-ref local modeled as a biguint slot handle: `ptr.slot`
 			// is the handle itself (see SolInlineAssembly::structRefSlotLocals).
-			auto srit = m_structRefSlotLocals.find(name);
-			if (srit != m_structRefSlotLocals.end())
+			auto srit = m_context->structRefSlotLocals.find(name);
+			if (srit != m_context->structRefSlotLocals.end())
 				return awst::makeVarExpression(
 					srit->second, awst::WType::biguintType(), loc);
 			// Struct storage-ref PARAM passed as a box-key handle (bytes): `s.slot`
 			// is a BoxValueExpression over the param's box key — handleSload/handleSstore
-			// do the field-aware box read/write, exactly like m_boxKeyedStructSlots.
+			// do the field-aware box read/write, exactly like m_context->boxKeyedStructSlots.
 			// (solady storage-lib idiom; see setBoxKeyStructParams.)
-			auto bkp = m_boxKeyStructParams.find(baseName);
-			if (bkp != m_boxKeyStructParams.end())
+			auto bkp = m_context->boxKeyStructParams.find(baseName);
+			if (bkp != m_context->boxKeyStructParams.end())
 				return awst::makeBoxValueExpression(
 					awst::makeReinterpretCast(
 						awst::makeVarExpression(baseName, awst::WType::bytesType(), loc),
@@ -236,20 +238,20 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 		else if (suffix == "offset")
 		{
 			// Check storage offset first (from constants map set by SolInlineAssembly)
-			auto constIt = m_constants.find(name);
-			if (constIt != m_constants.end())
+			auto constIt = m_context->constants.find(name);
+			if (constIt != m_context->constants.end())
 			{
 				auto node = awst::makeIntegerConstant(constIt->second, loc, awst::WType::biguintType());
 				return node;
 			}
-			auto it = m_localConstants.find(baseName);
-			if (it != m_localConstants.end())
+			auto it = m_frame.localConstants.find(baseName);
+			if (it != m_frame.localConstants.end())
 			{
 				// Dynamic calldata param: .offset is the mutable __cd_off_<name> local (seeded from
 				// __cd_blob at block entry, reassignable via `x.offset := V`). Static params keep the
 				// constant head position.
-				auto typeIt = m_locals.find(baseName);
-				if (m_useSyntheticCalldata && typeIt != m_locals.end()
+				auto typeIt = m_frame.locals.find(baseName);
+				if (m_frame.useSyntheticCalldata && typeIt != m_frame.locals.end()
 					&& isDynamicCalldataType(typeIt->second))
 					return awst::makeVarExpression("__cd_off_" + baseName, awst::WType::biguintType(), loc);
 				return awst::makeIntegerConstant(it->second, loc, awst::WType::biguintType());
@@ -257,13 +259,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 		}
 		else if (suffix == "length")
 		{
-			auto paramIt = m_locals.find(baseName);
-			if (paramIt != m_locals.end())
+			auto paramIt = m_frame.locals.find(baseName);
+			if (paramIt != m_frame.locals.end())
 			{
 				// Dynamic calldata param: .length is the mutable __cd_len_<name> local (seeded from the
 				// EVM-ABI length word in __cd_blob, reassignable via `x.length := L`).
-				auto cdIt = m_localConstants.find(baseName);
-				if (m_useSyntheticCalldata && cdIt != m_localConstants.end()
+				auto cdIt = m_frame.localConstants.find(baseName);
+				if (m_frame.useSyntheticCalldata && cdIt != m_frame.localConstants.end()
 					&& isDynamicCalldataType(paramIt->second))
 					return awst::makeVarExpression("__cd_len_" + baseName, awst::WType::biguintType(), loc);
 				// Fallback: len() of the decoded value (correct for bytes/string without the blob).
@@ -277,11 +279,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 			// It remains at bytes 8..12 in both external-pointer layouts.
 			// as uint32; assignment to a uint256 stack var places it right-aligned
 			// (low 32 bits), matching EVM's convention so subsequent shifts work.
-			// SolInlineAssembly registers `fp.selector` (full dotted name) in m_locals
+			// SolInlineAssembly registers `fp.selector` (full dotted name) in m_frame.locals
 			// with the underlying fn-ptr type; use that entry to identify
 			// fn-ptrs, then reference the unsuffixed base local declared in outer scope.
-			auto fullIt = m_locals.find(name);
-			if (fullIt != m_locals.end())
+			auto fullIt = m_frame.locals.find(name);
+			if (fullIt != m_frame.locals.end())
 			{
 				auto const* bwt = dynamic_cast<awst::BytesWType const*>(fullIt->second);
 				if (bwt && bwt->length().has_value()
@@ -303,8 +305,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 		{
 			// fn-ptr.address: leading 8-byte appId portion.
 			// EVM returns 20-byte address; on AVM the application id is uint64.
-			auto fullIt = m_locals.find(name);
-			if (fullIt != m_locals.end())
+			auto fullIt = m_frame.locals.find(name);
+			if (fullIt != m_frame.locals.end())
 			{
 				auto const* bwt = dynamic_cast<awst::BytesWType const*>(fullIt->second);
 				if (bwt && bwt->length().has_value()
@@ -325,38 +327,42 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	}
 
 	// Check if this is an external constant (e.g., Solidity `uint constant M00 = ...`)
-	auto constIt = m_constants.find(name);
-	if (constIt != m_constants.end())
+	auto constIt = m_context->constants.find(name);
+	if (constIt != m_context->constants.end())
 	{
 		auto node = awst::makeIntegerConstant(constIt->second, loc, awst::WType::biguintType());
 		return node;
 	}
 
+	if (auto constant = m_frame.localWideConstants.find(name);
+		constant != m_frame.localWideConstants.end())
+		return awst::makeBiguintConstant(constant->second, loc);
+
 	// Bare STATIC calldata pointer (struct / fixed array): its Yul value is the
 	// byte offset of its data in __cd_blob — the mutable __cd_off_<name> local
 	// (seeded from the constant head position, reassignable via `s := V`).
-	if (m_useSyntheticCalldata && m_calldataStaticPtrNames.count(name))
+	if (m_frame.useSyntheticCalldata && m_frame.calldataStaticPtrNames.count(name))
 		return awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), loc);
 
 	// Blob-backed memory aggregate: a bare reference is its Yul memory pointer
 	// (the uint64 base offset into the multi-slot blob), NOT the aggregate value.
-	auto boIt = m_blobOffsetVars.find(name);
-	if (boIt != m_blobOffsetVars.end())
+	auto boIt = m_frame.blobOffsetVars.find(name);
+	if (boIt != m_frame.blobOffsetVars.end())
 		return awst::makeVarExpression(boIt->second, awst::WType::uint64Type(), loc);
 
 	// Signed intN (N<=64) Solidity local: reads hit its biguint shadow — the full
 	// 256-bit Yul word, seeded sign-extended at block entry (buildBlock prologue).
-	if (auto shIt = m_signedShadow.find(name); shIt != m_signedShadow.end())
+	if (auto shIt = m_frame.signedShadow.find(name); shIt != m_frame.signedShadow.end())
 		return awst::makeVarExpression(shIt->second, awst::WType::biguintType(), loc);
 
 	// let-bound EIP-1967 slot: fold to the constant so sload/sstore classify
 	// (the recording `let` emitted no store — see buildVariableDeclaration).
-	if (auto sc = m_localSlotConstants.find(name); sc != m_localSlotConstants.end())
+	if (auto sc = m_frame.localSlotConstants.find(name); sc != m_frame.localSlotConstants.end())
 		return awst::makeIntegerConstant(sc->second, loc, awst::WType::biguintType());
 
-	auto it = m_locals.find(name);
+	auto it = m_frame.locals.find(name);
 	// Default: all assembly vars are uint256
-	auto const* wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();
+	auto const* wtype = (it != m_frame.locals.end()) ? it->second : awst::WType::biguintType();
 	auto node = awst::makeVarExpression(name, wtype, loc);
 
 	// bytesN variables in assembly need left-alignment (right-padded to 32 bytes).
@@ -379,6 +385,44 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 
 // ─── Function call translation ──────────────────────────────────────────────
 
+std::vector<std::shared_ptr<awst::Expression>> AssemblyBuilder::buildCallOperands(
+	solidity::yul::FunctionCall const& _call,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	std::vector<solidity::yul::Expression const*> operands;
+	for (auto const& arg: _call.arguments) operands.push_back(&arg);
+	return buildOperands(operands, makeLoc(_call.debugData), _out);
+}
+
+std::vector<std::shared_ptr<awst::Expression>> AssemblyBuilder::buildOperands(
+	std::vector<solidity::yul::Expression const*> const& _operands,
+	awst::SourceLocation const& loc, std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	std::vector<std::shared_ptr<awst::Expression>> args(_operands.size());
+	for (size_t i = args.size(); i-- > 0;)
+	{
+		auto start = m_frame.pendingStatements.size();
+		auto value = buildExpression(*_operands[i]);
+		drainPendingStatements(_out, start);
+		if (value && !dynamic_cast<awst::VarExpression const*>(value.get())
+			&& !dynamic_cast<awst::IntegerConstant const*>(value.get())
+			&& (!m_context->dialect || !SolcFacts::yulExpressionIsMovable(*_operands[i], *m_context->dialect)))
+		{
+			auto name = "__yularg_" + std::to_string(awst::NameGen::next("AssemblyBuilder.arg"));
+			m_frame.locals[name] = value->wtype;
+			if (auto constant = resolveConstantOffset(value))
+				m_frame.localConstants[name] = *constant;
+			if (alignmentMod32(*value) == 0)
+				m_frame.alignedLocals.insert(name);
+			auto target = awst::makeVarExpression(name, value->wtype, loc);
+			_out.push_back(awst::makeAssignmentStatement(target, std::move(value), loc));
+			value = std::move(target);
+		}
+		args[i] = std::move(value);
+	}
+	return args;
+}
+
 namespace
 {
 
@@ -392,30 +436,6 @@ std::shared_ptr<awst::Expression> unsupportedBuiltinError(
 	);
 	auto fallbackZero = awst::makeZero(loc, awst::WType::biguintType());
 	return fallbackZero;
-}
-
-// difficulty == prevrandao post-Paris (same EVM opcode); one lowering.
-std::shared_ptr<awst::Expression> buildRandaoSeed(
-	TypeMapper& typeMapper, EvmFeature feature, awst::SourceLocation const& loc)
-{
-	EvmFeaturePolicy::report(feature, typeMapper.profile(), loc);
-	// Round - 2, clamped: uint64 Sub panics on underflow and the first
-	// rounds of a fresh chain (create at round 1) would hard-panic.
-	auto round = awst::makeGlobal(
-		std::string("Round"), awst::WType::uint64Type(), loc);
-	auto isEarly = awst::makeNumericCompare(
-		awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc),
-		awst::NumericComparison::Lt,
-		awst::makeIntegerConstant("2", loc), loc);
-	auto prevRound = awst::makeConditional(
-		std::move(isEarly),
-		awst::makeZero(loc),
-		awst::makeUInt64BinOp(
-			std::move(round), awst::UInt64BinaryOperator::Sub,
-			awst::makeIntegerConstant("2", loc), loc),
-		awst::WType::uint64Type(), loc);
-	return awst::makeAsBiguint(awst::makeBlock(
-		"BlkSeed", std::move(prevRound), awst::WType::bytesType(), loc), loc);
 }
 
 // AVM has a flat per-txn fee; no EIP-1559 or blob pricing.
@@ -434,6 +454,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 {
 	auto loc = makeLoc(_call.debugData);
 	std::string funcName = getFunctionName(_call.functionName);
+	if (auto constant = resolveConstantYulWord(_call))
+		return awst::makeBiguintConstant(*constant, loc);
 
 	// A low-level call is an expression in Yul, so it can occur at any depth:
 	// `mload(staticcall(...))`, `and(ok, call(...))`, as an argument to a Yul
@@ -447,9 +469,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	{
 		std::string resultName = "__lowlevel_call_result_"
 			+ std::to_string(awst::NameGen::next("AssemblyBuilder.lowLevelCallResult"));
-		m_locals[resultName] = awst::WType::biguintType();
+		m_frame.locals[resultName] = awst::WType::biguintType();
 		handlePrecompileCall(
-			_call, resultName, loc, m_pendingStatements, /*_isCall=*/funcName == "call");
+			_call, resultName, loc, m_frame.pendingStatements, /*_isCall=*/funcName == "call");
 		return awst::makeVarExpression(resultName, awst::WType::biguintType(), loc);
 	}
 
@@ -471,13 +493,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	// User-defined assembly functions take precedence over builtins.
 	// This matches Yul's scoping rules: a user `function basefee() -> r { ... }`
 	// shadows the builtin `basefee()` opcode when called.
-	if (m_asmFunctions.count(funcName))
+	if (m_context->asmFunctions.count(funcName))
 	{
-		auto const& funcDef = *m_asmFunctions[funcName];
+		auto const& funcDef = *m_context->asmFunctions.at(funcName);
 		std::vector<std::shared_ptr<awst::Statement>> inlinedStmts;
 		auto ret = handleUserFunctionCall(_call, loc, inlinedStmts);
 		for (auto& s: inlinedStmts)
-			m_pendingStatements.push_back(std::move(s));
+			m_frame.pendingStatements.push_back(std::move(s));
 		// Both outlined and inline single-return calls publish their own fresh
 		// temp, decoupled from other frames' return-variable names.
 		if (ret)
@@ -491,11 +513,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		return awst::makeVoidConstant(loc);
 	}
 
-	// Builtin arguments also translate right-to-left; user-function calls above
-	// own argument materialization so their pending effects cannot overtake reads.
-	std::vector<std::shared_ptr<awst::Expression>> args(_call.arguments.size());
-	for (size_t ai = _call.arguments.size(); ai-- > 0; )
-		args[ai] = buildExpression(_call.arguments[ai]);
+	auto args = buildCallOperands(_call, m_frame.pendingStatements);
 	if (builtinClobbersMemory(funcName))
 		invalidateMemConstants();
 
@@ -586,18 +604,16 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleExtcodesize(
 	// `len` fails for programs larger than AVM's stack byte-value limit.
 	// High-level `address.code.length` calls this same shared lowering.
 	auto addrBytes = awst::makeAsBytes(ensureBiguint(_args[0], _loc), _loc);
-	auto appId = awst::makeAsApplication(
-		awst::makeWord32ToUInt64(std::move(addrBytes), _loc), _loc);
-
+	auto appId = ApplicationTarget::resolve(m_typeMapper.profile(), std::move(addrBytes), _loc);
 	Logger::instance().warning(
-		"`extcodesize(addr)` resolves the app id from the address's last 8 "
-		"bytes (this compiler's contract-value convention). It returns zero "
+		"`extcodesize(addr)` resolves self and zero-padded application-id "
+		"addresses (this compiler's contract-value convention). It returns zero "
 		"for a missing application and the allocated AVM program capacity "
 		"for an existing one; AVM cannot observe an oversized program's exact "
 		"byte length without materialising it.", _loc);
 
 	return AppCodeSizeLowering::lower(
-		m_typeMapper, std::move(appId), _loc, m_pendingStatements);
+		m_typeMapper, std::move(appId), _loc, m_frame.pendingStatements, m_context->inConstructor);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleExtcodehash(
@@ -682,13 +698,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleBlobhash(
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleDifficulty(
 	awst::SourceLocation const& _loc)
 {
-	return buildRandaoSeed(m_typeMapper, EvmFeature::BlockDifficulty, _loc);
+	return buildBlockSeed(EvmFeature::BlockDifficulty, m_typeMapper.profile(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handlePrevrandao(
 	awst::SourceLocation const& _loc)
 {
-	return buildRandaoSeed(m_typeMapper, EvmFeature::BlockPrevrandao, _loc);
+	return buildBlockSeed(EvmFeature::BlockPrevrandao, m_typeMapper.profile(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleNumber(
@@ -852,7 +868,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatacopy(
 	// returndatacopy(destOffset, offset, size): copy the last inner txn's
 	// log (itxn LastLog) into memory. Void op — emit the copy as a pending
 	// statement and yield void.
-	emitReturndatacopy(_args, _loc, m_pendingStatements);
+	emitReturndatacopy(_args, _loc, m_frame.pendingStatements);
 	return awst::makeVoidConstant(_loc);
 }
 
@@ -920,7 +936,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldatasize(
 	// calldatasize() — when the synthetic blob is built, return its
 	// runtime length; otherwise stub to 0 (AVM doesn't have raw calldata
 	// in the EVM sense, so the legacy stub keeps existing tests working).
-	if (m_useSyntheticCalldata)
+	if (m_frame.useSyntheticCalldata)
 	{
 		auto blob = awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc);
 		return awst::makeLen(std::move(blob), _loc);
@@ -934,36 +950,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldatacopy(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc)
 {
-	// calldatacopy(destOffset, offset, size) — when the synthetic blob is
-	// available, copy `size` bytes from `__cd_blob[offset..offset+size]`
-	// into the memory blob at destOffset. Otherwise stub as no-op.
-	if (m_useSyntheticCalldata && _args.size() == 3)
+	if (!checkArity(_args, 3, "calldatacopy", _loc))
+		return nullptr;
+	if (!m_frame.useSyntheticCalldata)
 	{
-		// EVM calldatacopy ZERO-PADS past calldatasize (same convention as
-		// the calldataload fix above): extract3(blob ++ bzero(sz),
-		// min(off,len), sz) — real bytes then appended zeros.
-		auto blob = awst::makeEvalOnce(
-			awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc), _loc);
-		auto srcOff = awst::makeEvalOnce(offsetToUint64(_args[1], _loc), _loc);
-		auto sz = awst::makeEvalOnce(offsetToUint64(_args[2], _loc), _loc);
-		auto len = awst::makeLen(blob, _loc);
-		auto safeOff = awst::makeConditional(
-			awst::makeNumericCompare(srcOff, awst::NumericComparison::Lt, len, _loc),
-			srcOff, awst::makeLen(blob, _loc), awst::WType::uint64Type(), _loc);
-		auto padded = awst::makeConcat(blob, awst::makeBzero(sz, _loc), _loc);
-		auto extractCall = awst::makeExtract3(
-			std::move(padded), std::move(safeOff), sz, _loc);
-		// Write via the slot-routed length-driven primitive (M7): destOff
-		// ≥ SLOT_SIZE lands in the right slot instead of clobbering slot 0.
-		// Expression-context: route through m_pendingStatements (drained
-		// at the outer statement boundary).
-		writeMemWordDyn(_args[0], std::move(extractCall), _loc, m_pendingStatements);
-		auto zero = awst::makeZero(_loc, awst::WType::biguintType());
-		return zero;
+		Logger::instance().error("calldatacopy requires the synthetic calldata view", _loc);
+		return nullptr;
 	}
-	Logger::instance().warning("calldatacopy() has no AVM equivalent (skipped)", _loc);
-	auto zero = awst::makeZero(_loc, awst::WType::biguintType());
-	return zero;
+	auto value = readPaddedBytes(
+		awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc),
+		_args[1], _args[2], _loc);
+	writeMemRangeDyn(_args[0], std::move(value), _loc, m_frame.pendingStatements);
+	return awst::makeVoidConstant(_loc);
 }
 
 

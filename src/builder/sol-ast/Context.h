@@ -1,8 +1,8 @@
 #pragma once
 
 /// @file Context.h
-/// Solidity AST traversal state. Each scope is a flat view of the contract's
-/// declaration bindings and its enclosing function; block nesting carries the
+/// Solidity AST traversal state. Each scope is a flat view of its emitted
+/// function's declaration bindings; block nesting carries the
 /// effective unchecked flag, loop target, and modifier placeholder explicitly.
 
 #include "awst/Node.h"
@@ -126,9 +126,9 @@ private:
 	std::unordered_map<int64_t, T> m_values;
 };
 
-/// Flat translation-time scope state owned by TranslationContext. All
-/// decl-id-keyed bindings live here. Decl IDs are globally unique so maps
-/// grow monotonically and are inert between functions; no per-block reset needed.
+/// Bindings for one emitted function frame (or the non-callable root scope).
+/// Solc declaration IDs can recur when the same source body is lowered again;
+/// only lexical blocks within a frame share these tables.
 struct ScopeState
 {
 	/// Local `T storage p = …` aliases. Tag + expression; see StorageAlias.
@@ -189,15 +189,14 @@ struct Context
 	std::string awstVarName(solidity::frontend::VariableDeclaration const& _vd) const;
 };
 
-/// Per-contract owner of the declaration bindings and the root scope view.
+/// Per-contract services and the non-callable root scope.
 struct TranslationContext
 {
 	eb::ContractContext& contractCtx;
 	TypeMapper& typeMapper;
 	std::string sourceFile;
 
-	/// Flat decl-id-keyed scope state. Owned here so it lives for the
-	/// lifetime of the contract translation.
+	/// Initializers outside an emitted function have their own bindings.
 	ScopeState scopeState_;
 	Context scope{scopeState_};
 
@@ -226,8 +225,12 @@ struct TranslationContext
 /// Function-level context: signature info needed to translate the body.
 struct FunctionContext
 {
+	/// Entry referents of locally pointer-backed value parameters. Rebinding
+	/// changes the live offset, never the value returned to the caller here.
+	std::map<int64_t, std::string> originalMemoryParams;
 	TranslationContext& tr;
-	Context scope{tr.scopeState_, this};
+	ScopeState bindings;
+	Context scope{bindings, this};
 	std::vector<std::pair<std::string, awst::WType const*>> params;
 	awst::WType const* returnType = nullptr;
 	std::map<std::string, unsigned> paramBitWidths;

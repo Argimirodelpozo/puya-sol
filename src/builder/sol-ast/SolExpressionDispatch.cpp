@@ -2,7 +2,11 @@
 /// Central expression dispatcher using solc's ASTConstVisitor. Handlers own
 /// child lowering and evaluation order; returning false disables the child walk.
 
-#include "builder/sol-ast/AsmScan.h"
+#include "builder/SolcFacts.h"
+#include "builder/ProgramAnalysis.h"
+#include "builder/CallBoundaryPlan.h"
+#include "builder/sol-ast/CallOperands.h"
+#include "builder/sol-ast/ResolvedLValue.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-ast/SolExpressionDispatch.h"
 #include "builder/sol-ast/SolExpressionFactory.h"
@@ -21,6 +25,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <algorithm>
 
 namespace puyasol::builder::sol_ast
 {
@@ -117,8 +122,11 @@ public:
 
 	bool visit(FunctionCallOptions const& _n) override
 	{
-		// Call handlers consume options; a non-call wrapper just forwards its base.
-		m_result = buildExpression(m_ctx, _n.expression());
+		// Call handlers consume options directly; a standalone function value
+		// must still evaluate its options even without invoking the function.
+		m_result = SolMemberAccess::projectFunctionValue(m_ctx, _n,
+			m_ctx.typeMapper.map(_n.annotation().type), makeLoc(_n),
+			[&](Expression const& source) { return buildExpression(m_ctx, source); });
 		return false;
 	}
 
@@ -141,58 +149,40 @@ private:
 
 	std::shared_ptr<awst::Expression> buildMemberAccess(MemberAccess const& _n)
 	{
-		// STORAGE-POINTER ALIAS: `StorageSlot.getStringSlot(store).value` denotes
-		// the same storage location as `store`, so resolve to the argument and
-		// skip the call entirely. Solidity forbids assigning to a storage
-		// pointer, which is exactly why OZ routes writes through this wrapper —
-		// so this must produce an LVALUE, not a copy. See
-		// AsmScan.h::storagePointerAliasParam for the exact shape required.
-		// --evm-storage-layout: NOT needed — the call returns a real biguint
-		// slot handle and member access/writes resolve through it (and
-		// contract-method storage params work: slots write straight through).
+		// A proven pointer-cast body can disappear, but its normally bound
+		// operands must execute. Keep the selected location, not its contents.
 		if (!m_ctx.typeMapper.profile().evmStorageLayout)
 		if (auto const* call = dynamic_cast<FunctionCall const*>(&_n.expression()))
+		if (auto const* function = SolcFacts::resolveInternalCall(*call, m_ctx.currentContract))
+		if (auto const& alias = m_ctx.typeMapper.analysis().storageReturnFacts(function).pointerAlias;
+			alias && alias->field == _n.memberName())
 		{
-			Declaration const* refDecl = nullptr;
-			if (auto const* ma = dynamic_cast<MemberAccess const*>(&call->expression()))
-				refDecl = ma->annotation().referencedDeclaration;
-			else if (auto const* id = dynamic_cast<Identifier const*>(&call->expression()))
-				refDecl = id->annotation().referencedDeclaration;
-			if (auto const* fd = dynamic_cast<FunctionDefinition const*>(refDecl))
-				if (auto alias = builder::storagePointerAliasParam(*fd))
-					if (alias->second == _n.memberName()
-						&& alias->first < call->arguments().size())
+			auto const& source = *SolcFacts::callArguments(*call).at(alias->parameter);
+			if (_n.annotation().willBeWrittenTo)
+				for (auto const* root: SolcFacts::referenceSources(source))
+					if (auto const* id = dynamic_cast<Identifier const*>(root))
+					if (auto const* parameter = dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration);
+						parameter && parameter->referenceLocation() == VariableDeclaration::Location::Storage)
+					if (auto const* owner = dynamic_cast<FunctionDefinition const*>(parameter->scope()))
 					{
-						auto const* arg = call->arguments()[alias->first].get();
-						// Writing through a bytes/string storage-ref PARAM only
-						// reaches the caller's state when the enclosing function
-						// is a LIBRARY/free function — those get the storage
-						// write-back augmentation (buildFreestandingSubroutine);
-						// contract methods do not, so the store would vanish.
-						// That combination was previously unreachable (this alias
-						// is the only legal way to write through such a param),
-						// and it must not become a SILENT dropped write.
-						if (auto const* aid = dynamic_cast<Identifier const*>(arg))
-							if (auto const* pv = dynamic_cast<VariableDeclaration const*>(
-									aid->annotation().referencedDeclaration))
-								if (pv->isCallableOrCatchParameter()
-									&& pv->referenceLocation()
-										== VariableDeclaration::Location::Storage)
-								{
-									auto const* owner = dynamic_cast<FunctionDefinition const*>(
-										pv->scope());
-									auto const* c = owner ? owner->annotation().contract : nullptr;
-									if (!c || !c->isLibrary())
-										Logger::instance().error(
-											"write through a storage-ref parameter of a "
-											"contract method is not supported — only "
-											"library/free functions get storage write-back, "
-											"so this store would be dropped. Move the helper "
-											"into a library.",
-											makeLoc(_n));
-								}
-						return buildExpression(m_ctx, *arg);
+						auto const& plan = m_ctx.typeMapper.callBoundaryPlan(*owner, m_ctx.currentContract);
+						for (size_t i = 0; i < plan.parameters.size(); ++i)
+							if (plan.parameters[i].declaration == parameter
+								&& plan.parameters[i].passing == RefParamPassing::Value
+								&& std::find(plan.writeBackParams.begin(), plan.writeBackParams.end(), i)
+									== plan.writeBackParams.end())
+								Logger::instance().error(
+									"write through this value-carried storage parameter has no write-back; "
+									"use --evm-storage-layout for a write-through slot reference", makeLoc(_n));
 					}
+			std::shared_ptr<awst::Expression> target;
+			CallOperands::buildParameters(m_ctx, *call, makeLoc(_n),
+				[&](Expression const& argument, size_t index) -> std::shared_ptr<awst::Expression> {
+					if (index != alias->parameter) return buildExpression(m_ctx, argument);
+					target = ResolvedLValue::freezeTarget(m_ctx, buildExpression(m_ctx, argument), makeLoc(argument));
+					return awst::makeVoidConstant(makeLoc(argument));
+				});
+			return target;
 		}
 
 		// Scalar-leaf read on a >4KB blob aggregate (`p.w1.x`): route through
@@ -243,22 +233,30 @@ private:
 				"resolved to a storage or memory location", loc);
 			return awst::makeBytesConstant({}, loc);
 		}
-		// Warning (not error): TypeType member access like `MyType.wrap;` (no
-		// invocation) emits a typed zero — value never used at runtime.
-		Logger::instance().warning(
-			"unsupported member access '." + _n.memberName() + "'", loc);
-		auto* wtype = m_ctx.typeMapper.map(_n.annotation().type);
-		if (awst::isNumericWType(wtype))
-			return awst::makeZero(loc, wtype);
-		if (wtype == awst::WType::boolType())
-			return awst::makeBoolConstant(false, loc, wtype);
-		return awst::makeBytesConstant({}, loc);
+		// A qualified type name (L.Struct, L.Enum) has no runtime value.
+		if (dynamic_cast<TypeType const*>(_n.annotation().type))
+			return awst::makeVoidConstant(loc);
+		// ABI builtins are callable only by name; a bare `abi.encode;` is inert.
+		if (auto const* magic = dynamic_cast<MagicType const*>(baseSolType);
+			magic && magic->kind() == MagicType::Kind::ABI)
+			return awst::makeVoidConstant(loc);
+		// Declaration (C.f in abi.encodeCall), unbound library methods and
+		// bare UDVT wrap/unwrap names are metadata, not runtime function values.
+		if (auto const* function = dynamic_cast<FunctionType const*>(_n.annotation().type);
+			function && (function->kind() == FunctionType::Kind::Declaration
+				|| (function->kind() == FunctionType::Kind::DelegateCall
+					&& dynamic_cast<TypeType const*>(baseSolType))
+				|| function->kind() == FunctionType::Kind::Wrap
+				|| function->kind() == FunctionType::Kind::Unwrap))
+			return awst::makeVoidConstant(loc);
+		Logger::instance().error(
+			"unsupported runtime member access '." + _n.memberName() + "'", loc);
+		return awst::makeVoidConstant(loc);
 	}
 
 	awst::SourceLocation makeLoc(solidity::frontend::ASTNode const& _node)
 	{
-		auto const& l = _node.location();
-		return m_ctx.makeLoc(l.start, l.end);
+		return m_ctx.makeLoc(_node.location());
 	}
 
 	std::shared_ptr<awst::Expression> makeVoid(solidity::frontend::ASTNode const& _node)

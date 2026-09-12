@@ -53,6 +53,18 @@ contract ModifierMemoryRebind {
         bumpArray(a);
         return a[0];
     }
+
+    uint256 private freshCount;
+    function makeFreshCell() internal returns (Cell memory) { ++freshCount; return Cell(9); }
+    function mixedReference(Cell memory a, bool existing)
+        internal mutate(existing ? a : makeFreshCell()) returns (uint256)
+    { return a.value; }
+    function callMixed(bool existing) external returns (uint256, uint256, uint256) {
+        freshCount = 0;
+        Cell memory a = Cell(1);
+        uint256 result = mixedReference(a, existing);
+        return (result, seen, freshCount);
+    }
     function n(Cell memory a, Cell memory b, uint256 mode)
         internal
         nested(mode < 4 ? a : b, mode % 4)

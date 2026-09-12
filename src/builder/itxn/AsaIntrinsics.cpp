@@ -6,6 +6,8 @@
 #include "awst/NameGen.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-ast/CallOperands.h"
+#include "builder/ProgramAnalysis.h"
 #include "Logger.h"
 // Uses solc AST/Type definitions directly; the hub headers only
 // forward-declare them now.
@@ -21,49 +23,6 @@ using namespace solidity::frontend;
 
 namespace
 {
-
-/// Return library name (AVM/Crypto/Group/Txn/Global/Scratch) if _memberAccess
-/// resolves to an AVM stdlib library, else "". Works for both direct and
-/// module-aliased (`import ... as Mod`) references via referencedDeclaration.
-std::string getAvmStdlibLibraryName(MemberAccess const& _memberAccess)
-{
-	auto const* contractDef = dynamic_cast<ContractDefinition const*>(
-		ASTNode::referencedDeclaration(_memberAccess.expression()));
-	if (!contractDef || !contractDef->isLibrary())
-		return "";
-	std::string const& name = contractDef->name();
-	if (name == "AVM" || name == "Crypto" || name == "Group"
-		|| name == "Txn" || name == "Global" || name == "Scratch")
-		return name;
-	return "";
-}
-
-/// Promote a uint64-typed value to biguint via itob + reinterpret.
-std::shared_ptr<awst::Expression> uint64ToBigUInt(
-	std::shared_ptr<awst::Expression> _expr,
-	awst::SourceLocation const& _loc)
-{
-	auto itob = awst::makeItob(std::move(_expr), _loc);
-	return awst::makeAsBiguint(std::move(itob), _loc);
-}
-
-/// Truncate biguint to uint64; pass through if already uint64.
-/// AVM big-int ops strip leading zeros (minimal encoding), so we left-pad
-/// to 8 bytes before extracting — avoids "extraction start beyond length".
-std::shared_ptr<awst::Expression> bigUIntToUint64(
-	std::shared_ptr<awst::Expression> _expr,
-	awst::SourceLocation const& _loc)
-{
-	if (_expr->wtype == awst::WType::uint64Type())
-		return _expr;
-
-	// Left-pad to 8 bytes (bitwise, not b+), take last 8, btoi.
-	// `b+` strips to minimal encoding so extract3(24,8) overran for short values.
-	auto asBytes = awst::makeAsBytes(std::move(_expr), _loc);
-	auto low8 = awst::makeExtractLastN(
-		awst::makeLeftPad(std::move(asBytes), 8, _loc), 8, _loc);
-	return awst::makeBtoi(std::move(low8), _loc);
-}
 
 /// `global CurrentApplicationAddress` as account-typed expr.
 std::shared_ptr<awst::Expression> currentAppAddress(awst::SourceLocation const& _loc)
@@ -181,23 +140,60 @@ void submitItxn(
 
 } // namespace
 
-bool AsaIntrinsics::isBitsBitlenFacade(FunctionDefinition const& _function)
+std::string AsaIntrinsics::facadeLibrary(FunctionDefinition const& function)
 {
-	auto const* owner = _function.annotation().contract;
-	if (!owner || !owner->isLibrary() || owner->name() != "Bits"
-		|| _function.sourceUnitName() != "libs/AVM.sol"
-		|| _function.name() != "bitlen"
-		|| _function.visibility() != Visibility::Internal
-		|| _function.stateMutability() != StateMutability::Pure
-		|| _function.parameters().size() != 1
-		|| _function.returnParameters().size() != 1)
-		return false;
-	auto isUint256 = [](VariableDeclaration const& _parameter) {
-		auto const* integer = dynamic_cast<IntegerType const*>(_parameter.type());
-		return integer && !integer->isSigned() && integer->numBits() == 256;
+	auto const* owner = function.annotation().contract;
+	if (!owner || !owner->isLibrary() || function.sourceUnitName() != "libs/AVM.sol"
+		|| function.visibility() != Visibility::Internal)
+		return {};
+	// These are target capabilities, not an alternative Solidity type parser.
+	// solc supplies the signature, return types and mutability of the exact
+	// declaration; unrelated libraries and unsupported overloads stay ordinary.
+	static std::map<std::string, std::set<std::string>> const signatures{
+		{"AVM", {
+			"asaCreate(uint64,uint8,string,string):uint64:nonpayable",
+			"asaCreate(uint64,uint8,string,string,bool):uint64:nonpayable",
+			"asaDestroy(uint64)::nonpayable", "asaOptIn(uint64)::nonpayable",
+			"asaFreeze(uint64,address,bool)::nonpayable",
+			"asaTransfer(uint64,address,address,uint256)::nonpayable",
+			"asaBalance(address,uint64):uint256:view", "asaTotalSupply(uint64):uint256:view",
+			"asaDecimals(uint64):uint8:view", "asaUnitName(uint64):string:view", "asaName(uint64):string:view"}},
+		{"Crypto", {"sha512_256(bytes):bytes32:pure", "sha3_256(bytes):bytes32:pure",
+			"ed25519Verify(bytes,bytes,bytes):bool:pure", "falconVerify(bytes,bytes,bytes):bool:pure",
+			"vrfVerify(bytes,bytes,bytes):bytes,bool:pure"}},
+		{"Group", {"size():uint64:view", "index():uint64:view",
+			"txnSender(uint64):address:view", "txnReceiver(uint64):address:view",
+			"txnAmount(uint64):uint64:view", "txnAssetReceiver(uint64):address:view",
+			"txnAssetAmount(uint64):uint64:view", "txnAssetId(uint64):uint64:view",
+			"txnApplicationId(uint64):uint64:view", "txnFee(uint64):uint64:view", "txnType(uint64):uint64:view"}},
+		{"Txn", {"sender():address:view", "fee():uint64:view", "firstValid():uint64:view",
+			"lastValid():uint64:view", "note():bytes:view", "lease():bytes32:view",
+			"typeEnum():uint64:view", "groupIndex():uint64:view", "txnId():bytes32:view",
+			"rekeyTo():address:view", "applicationId():uint64:view", "onCompletion():uint64:view",
+			"numAppArgs():uint64:view", "appArg(uint64):bytes:view"}},
+		{"Global", {"currentApplicationId():uint64:view", "currentApplicationAddress():address:view",
+			"creatorAddress():address:view", "groupId():bytes32:view", "latestTimestamp():uint64:view",
+			"round():uint64:view", "opcodeBudget():uint64:view", "callerApplicationId():uint64:view",
+			"minBalance(address):uint64:view", "balance(address):uint64:view"}},
+		{"Bits", {"bitlen(uint256):uint256:pure"}},
+		{"Scratch", {"store(uint64,uint64)::nonpayable", "loadSelf(uint64):uint64:view",
+			"load(uint64,uint64):uint64:view", "storeBytes(uint64,bytes)::nonpayable",
+			"loadBytesSelf(uint64):bytes:view", "loadBytes(uint64,uint64):bytes:view"}},
 	};
-	return isUint256(*_function.parameters().front())
-		&& isUint256(*_function.returnParameters().front());
+	auto found = signatures.find(owner->name());
+	if (found == signatures.end()) return {};
+	auto const* type = function.functionType(true);
+	if (!type || !type->interfaceFunctionType()) return {};
+	std::string signature = type->externalSignature() + ":";
+	for (auto const* result: type->returnParameterTypes())
+	{
+		auto const* external = result->interfaceType(false).get();
+		if (!external) return {};
+		if (signature.back() != ':') signature += ',';
+		signature += external->signatureInExternalFunction(false);
+	}
+	signature += ":" + stateMutabilityToString(function.stateMutability());
+	return found->second.count(signature) ? owner->name() : std::string{};
 }
 
 std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
@@ -208,22 +204,25 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 {
 	auto const* function = dynamic_cast<FunctionDefinition const*>(
 		_memberAccess.annotation().referencedDeclaration);
-	bool const isBitsBitlen = function && isBitsBitlenFacade(*function);
-	std::string lib = isBitsBitlen
-		? std::string("Bits")
-		: getAvmStdlibLibraryName(_memberAccess);
-	if (lib.empty())
+	auto const& known = _ctx.typeMapper.analysis().avmIntrinsics;
+	auto found = function ? known.find(function->id()) : known.end();
+	if (found == known.end())
 		return std::nullopt;
-
-	std::string method = _memberAccess.memberName();
-
-	std::vector<std::shared_ptr<awst::Expression>> args;
-	for (auto const& arg: _call.arguments())
-		args.push_back(_ctx.buildExpr(*arg));
-	// `using Bits for uint256; value.bitlen()` supplies the attached value as
-	// the member-access base rather than as an explicit FunctionCall argument.
-	if (isBitsBitlen && args.empty())
-		args.push_back(_ctx.buildExpr(_memberAccess.expression()));
+	auto const& lib = found->second;
+	auto const& method = function->name();
+	auto const* type = dynamic_cast<FunctionType const*>(_call.expression().annotation().type);
+	bool bound = type && type->hasBoundFirstArgument();
+	std::shared_ptr<awst::Expression> receiver;
+	auto bindReceiver = [&] {
+		receiver = sol_ast::CallOperands::evaluate(_ctx, _memberAccess.expression(), _loc);
+	};
+	if (bound && _ctx.viaIRSequencing) bindReceiver();
+	auto args = sol_ast::CallOperands::build(_ctx, _call, _loc);
+	if (bound)
+	{
+		if (!_ctx.viaIRSequencing) bindReceiver();
+		args.insert(args.begin(), std::move(receiver));
+	}
 
 	if (lib == "AVM")
 	{
@@ -268,7 +267,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchBits(
 	auto bitlen = awst::makeIntrinsicCall(
 		"bitlen", awst::WType::uint64Type(), _loc);
 	bitlen->stackArgs.push_back(std::move(_args.front()));
-	return uint64ToBigUInt(std::move(bitlen), _loc);
+	return TypeCoercion::implicitNumericCast(std::move(bitlen), awst::WType::biguintType(), _loc);
 }
 
 // AVM scratch (AVM.sol Scratch): store→stores, loadSelf→loads, load→gloadss.
@@ -310,7 +309,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchScratch(
 		{
 			auto arg = std::move(_args[i]);
 			if (!(op.rawValue && i + 1 == op.argc))
-				arg = bigUIntToUint64(std::move(arg), _loc);
+				arg = TypeCoercion::implicitNumericCast(std::move(arg), awst::WType::uint64Type(), _loc);
 			ic->stackArgs.push_back(std::move(arg));
 		}
 		return std::shared_ptr<awst::Expression>(std::move(ic));
@@ -388,7 +387,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaBalance(
 	holdingGet->stackArgs.push_back(std::move(assetId));
 
 	auto balanceU64 = tupleFirst(std::move(holdingGet), awst::WType::uint64Type(), _loc);
-	return uint64ToBigUInt(std::move(balanceU64), _loc);
+	return TypeCoercion::implicitNumericCast(std::move(balanceU64), awst::WType::biguintType(), _loc);
 }
 
 // asset_params_get readers: which field, and how its first tuple item
@@ -426,7 +425,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchAsaParam
 		switch (param.surface)
 		{
 		case Surface::BigUInt:
-			return uint64ToBigUInt(std::move(value), _loc);
+			return TypeCoercion::implicitNumericCast(std::move(value), awst::WType::biguintType(), _loc);
 		case Surface::UInt64:
 			return value;
 		case Surface::String:
@@ -603,7 +602,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchGroup(
 		if (!expectArgs(_args, 1, "Group." + _method + " expects 1 arg (idx)", _loc))
 			return nullptr;
 		return std::shared_ptr<awst::Expression>(awst::makeGtxns(
-			row->field, bigUIntToUint64(std::move(_args[0]), _loc), row->wtype(), _loc));
+			row->field, TypeCoercion::implicitNumericCast(std::move(_args[0]), awst::WType::uint64Type(), _loc), row->wtype(), _loc));
 	}
 
 	Logger::instance().warning("unknown Group." + _method, _loc);
@@ -644,7 +643,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchTxn(
 			return nullptr;
 		auto call = awst::makeIntrinsicCall("txnas", awst::WType::bytesType(), _loc);
 		call->immediates = {std::string("ApplicationArgs")};
-		call->stackArgs.push_back(bigUIntToUint64(std::move(_args[0]), _loc));
+		call->stackArgs.push_back(TypeCoercion::implicitNumericCast(std::move(_args[0]), awst::WType::uint64Type(), _loc));
 		return std::shared_ptr<awst::Expression>(call);
 	}
 

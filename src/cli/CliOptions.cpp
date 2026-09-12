@@ -5,14 +5,10 @@
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/ScratchLayout.h"
 
-#include <boost/filesystem.hpp>
-
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
 #include <string_view>
-
-namespace fs = boost::filesystem;
 
 namespace puyasol::cli
 {
@@ -88,8 +84,8 @@ std::string parseUint256Decimal(
 /// already checked. --xchain-template/--xchain-placeholder used to be taken
 /// verbatim and decoded later by a lambda that partially parsed "0g" and
 /// aborted the process on "gg" (audit H-06). _expectedBytes 0 = any nonzero
-/// even length. Returns the normalised lowercase digits.
-std::string parseHexBlob(
+/// even length. Retain the decoded bytes for profile validation.
+std::vector<uint8_t> parseHexBlob(
 	std::string const& _opt, std::string value, size_t _expectedBytes)
 {
 	auto bytes = puyasol::hexToBytes(value, _expectedBytes);
@@ -102,11 +98,7 @@ std::string parseHexBlob(
 			<< " (optional 0x prefix), got '" << value << "'" << std::endl;
 		std::exit(2);
 	}
-	if (value.starts_with("0x") || value.starts_with("0X"))
-		value.erase(0, 2);
-	for (char& c: value)
-		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-	return value;
+	return std::move(*bytes);
 }
 
 std::string parseAddressHex(std::string const& _opt, std::string value)
@@ -155,7 +147,7 @@ void printUsage(char const* _progName)
 		<< "                         max " << builder::ScratchLayout::maxMemorySlots
 		<< "; UltraHonk needs ~32). Transient/flash reservations follow at N..N+10\n"
 		<< "  --evm-storage-layout   Back all storage with EVM-numbered slots (paged/sparse boxes).\n"
-		<< "                         Faithful assembly slot arithmetic; no ARC-56 state decls.\n"
+		<< "                         Faithful assembly slots; ARC-56 names only immutable cells.\n"
 		<< "  --evm-memory-layout    UNAVAILABLE: rejected until universal EVM memory is implemented.\n"
 		<< "  --evm-layout           UNAVAILABLE: rejected because it includes that memory mode.\n"
 		<< "  --output-ir            Output all intermediate representations (SSA IR, MIR, TEAL)\n"
@@ -338,10 +330,10 @@ FlagSpec const kFlags[] = {
 	{"--allow-divergence", true, applyAllowDivergence},
 	{"--xchain-template", true,
 		[](Options& o, std::string const& v) {
-			o.xchainTemplateHex = parseHexBlob("--xchain-template", v, 0); }},
+			o.xchainTemplate = parseHexBlob("--xchain-template", v, 0); }},
 	{"--xchain-placeholder", true,
 		[](Options& o, std::string const& v) {
-			o.xchainPlaceholderHex = parseHexBlob("--xchain-placeholder", v, 20); }},
+			o.xchainPlaceholder = parseHexBlob("--xchain-placeholder", v, 20); }},
 	{"--child-programs-via-box", false,
 		[](Options& o, std::string const&) { o.childProgramsViaBox = true; }},
 	{"--force-inline-sub", true,
@@ -397,13 +389,6 @@ void configureLogger(Options const& _opts)
 		logger.setMinLevel(puyasol::LogLevel::Error);
 	else
 		logger.setMinLevel(puyasol::LogLevel::Info);
-
-	if (_opts.outputLogs)
-	{
-		fs::create_directories(_opts.outputDir);
-		std::string logPath = (fs::path(_opts.outputDir) / "puya-sol.log").string();
-		logger.setOutputLogFile(logPath);
-	}
 }
 
 } // namespace puyasol::cli

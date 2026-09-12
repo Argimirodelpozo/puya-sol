@@ -1,4 +1,5 @@
 #include "builder/EvmFeaturePolicy.h"
+#include "awst/Node.h"
 
 #include "Logger.h"
 
@@ -53,7 +54,8 @@ EvmFeatureDecision EvmFeaturePolicy::decide(
 	case EvmFeature::BlockDifficulty:
 		return {F::AvmAdaptation, "block.difficulty",
 			"post-Paris EVM defines difficulty as prevrandao (same opcode); "
-			"lowered identically to the Algorand block seed for Round - 2"};
+			"uses the Algorand seed for transaction FirstValid - 1 (zero at FirstValid 0); "
+			"known in advance and caller-selectable, not secure randomness or EVM prevrandao"};
 	case EvmFeature::BlockBaseFee:
 		return {F::AvmAdaptation, "block.basefee",
 			"returns zero because AVM has no EIP-1559 base fee"};
@@ -71,7 +73,8 @@ EvmFeatureDecision EvmFeaturePolicy::decide(
 			"EVM number"};
 	case EvmFeature::BlockPrevrandao:
 		return {F::AvmAdaptation, "block.prevrandao",
-			"uses the Algorand block seed for Round - 2"};
+			"uses the Algorand seed for transaction FirstValid - 1 (zero at FirstValid 0); "
+			"known in advance and caller-selectable, not secure randomness or EVM prevrandao"};
 	case EvmFeature::BlockCoinbase:
 		if (_profile.evmCoinbase)
 			return {F::ConfiguredEnvironment, "block.coinbase",
@@ -214,6 +217,19 @@ void EvmFeaturePolicy::report(
 		Logger::instance().error(message, _loc);
 	else
 		Logger::instance().warning(message, _loc);
+}
+
+std::shared_ptr<awst::Expression> buildBlockSeed(
+	EvmFeature feature, TargetProfile const& profile, awst::SourceLocation const& loc)
+{
+	EvmFeaturePolicy::report(feature, profile, loc);
+	auto first = awst::makeTxn("FirstValid", awst::WType::uint64Type(), loc);
+	auto seed = awst::makeAsBiguint(awst::makeBlock("BlkSeed",
+		awst::makeUInt64BinOp(first, awst::UInt64BinaryOperator::Sub, awst::makeOne(loc), loc),
+		awst::WType::bytesType(), loc), loc);
+	return awst::makeConditional(
+		awst::makeNumericCompare(first, awst::NumericComparison::Gt, awst::makeZero(loc), loc),
+		std::move(seed), awst::makeZero(loc, awst::WType::biguintType()), awst::WType::biguintType(), loc);
 }
 
 } // namespace puyasol::builder

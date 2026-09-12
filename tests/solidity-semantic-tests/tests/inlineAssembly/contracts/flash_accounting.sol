@@ -1,17 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// AVM transaction-group inspection. Bodies are stubs; puya-sol intercepts the
-/// calls by library name (see AsaIntrinsics.cpp dispatchGroup/dispatchTxn).
-library Group {
-    function size() internal view returns (uint64) { revert("puya-sol"); }
-    function index() internal view returns (uint64) { revert("puya-sol"); }
-    function txnApplicationId(uint64 idx) internal view returns (uint64) { idx; revert("puya-sol"); }
-}
-
-library Txn {
-    function applicationId() internal view returns (uint64) { revert("puya-sol"); }
-}
+import {Group, Txn} from "libs/AVM.sol";
 
 /// @title FlashAccounting — Uniswap-V4-style flash accounting WITHOUT the
 /// unlock-callback re-entrancy that the AVM forbids.

@@ -9,6 +9,7 @@
 #include "builder/sol-types/ConversionPlan.h"
 #include "awst/TupleValue.h"
 #include "builder/sol-ast/StorageRefPointer.h"
+#include "builder/storage/SlotWordCodec.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -41,7 +42,30 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 	builder::ProgramAnalysis analysis;
 	builder::SourceMap sources;
 	builder::BuildArtifacts artifacts;
+	bool unscopedRejected = false;
+	try { artifacts.contract(); }
+	catch (std::logic_error const&) { unscopedRejected = true; }
+	require(unscopedRejected, "unscoped contract helper use was accepted");
+	{
+		builder::BuildArtifacts::ContractScope outer(artifacts);
+		artifacts.contract().helpers["host"] = "outer";
+		{
+			builder::BuildArtifacts::ContractScope inner(artifacts);
+			require(artifacts.contract().helpers.empty(), "nested contract inherited host helpers");
+			artifacts.contract().helpers["host"] = "inner";
+		}
+		require(artifacts.contract().helpers.at("host") == "outer", "nested build lost its host emission state");
+	}
+	artifacts.clear();
 	builder::TypeMapper mapper(analysis, _profile, sources, artifacts);
+	auto const* bytes32 = TypeProvider::fixedBytes(32);
+	auto const* array32 = TypeProvider::array(DataLocation::Storage, TypeProvider::uint(8), 32);
+	require(builder::SlotWordCodec::supportsField(mapper.mapSolTypeToARC4(bytes32), bytes32, 32),
+		"scalar codec rejected bytes32");
+	require(!builder::SlotWordCodec::supportsField(mapper.mapSolTypeToARC4(array32), array32, 32),
+		"equal-size uint8[32] aggregate was mistaken for a scalar word");
+	require(!builder::SlotWordCodec::supportsField(awst::WType::uint64Type(), TypeProvider::uint(16), 1),
+		"scalar codec ignored solc's storage width");
 	auto const& a = _compiler.ast("a.sol");
 	auto const& b = _compiler.ast("b.sol");
 	auto const* structA = TypeProvider::structType(
@@ -166,8 +190,23 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 		"a fixed container hid its dynamic element");
 	require(!builder::hasDynamicStorageShape(TypeProvider::array(DataLocation::Storage, fixedCallback, 2)),
 		"a fixed callback array was treated as dynamic");
-	require(builder::isBoxKeyedStorageRef(dynamicCallback, analysis), "dynamic struct handle disagrees with placement");
-	require(!builder::isBoxKeyedStorageRef(fixedCallback, analysis), "small fixed callback struct was forced to a box");
+	require(mapper.isBoxKeyedStorageRef(dynamicCallback), "dynamic struct handle disagrees with placement");
+	require(!mapper.isBoxKeyedStorageRef(fixedCallback), "small fixed callback struct was forced to a box");
+	auto const* packed = TypeProvider::structType(
+		declaration<StructDefinition>(a, "Packed"), DataLocation::Storage);
+	auto const* alwaysBoxed = TypeProvider::structType(
+		declaration<StructDefinition>(a, "AlwaysBoxed"), DataLocation::Storage);
+	require(packed->storageSizeUpperBound() >= 4
+		&& builder::computeEncodedElementSize(mapper.map(packed)).fixedBytes() == 3,
+		"fixture no longer distinguishes EVM upper bounds from actual AVM encoding");
+	require(!mapper.isBoxKeyedStorageRef(packed), "compact global struct was passed as a box key");
+	require(mapper.isBoxKeyedStorageRef(alwaysBoxed), "128-byte struct lost its required box key");
+	for (auto* facts: {&analysis.refPassedStructs, &analysis.boxKeyedStructs})
+	{
+		facts->insert(packed->structDefinition().id());
+		require(mapper.isBoxKeyedStorageRef(packed), "source reference facts lost their required box key");
+		facts->erase(packed->structDefinition().id());
+	}
 	for (int reset = 0; reset < 2; ++reset)
 	{
 		auto const* mapped = dynamic_cast<awst::ARC4Struct const*>(mapper.mapSolTypeToARC4(recursive));
@@ -187,8 +226,16 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 			"recursive alias projection lost solc aggregate facts");
 		require(mapper.map(TypeProvider::withLocationIfReference(DataLocation::Memory, recursive)) == mapped,
 			"recursive root has a location-dependent projection");
+		auto retainedRoot = std::make_shared<awst::Subroutine>();
+		retainedRoot->typeArena = mapper.typeArena();
+		retainedRoot->returnType = mapped;
+		std::weak_ptr<awst::WTypeArena const> arena = mapper.typeArena();
 		mapper.reset();
+		require(!arena.expired() && mapped->fields().size() == 2,
+			"returned root lost its WTypes after mapper reset");
 		require(!mapper.solcAggregateFor(mapped), "reset retained stale solc aggregate facts");
+		retainedRoot.reset();
+		require(arena.expired(), "type arena leaked after its last root was released");
 	}
 	std::vector<std::string> shapes;
 	for (bool reverse: {false, true})
@@ -246,6 +293,11 @@ void testValueAdapters()
 	awst::ARC4StaticArray fixedBools(awst::WType::arc4BoolType(), 9);
 	auto packed = tryConvertArc4Array(awst::makeVarExpression("b", &fixedBools, loc), &bools, nullptr, loc);
 	require(packed && packed->nodeType() == "ConvertArray", "packed bools were treated as byte-strided elements");
+	awst::ARC4StaticArray singleDynamic(&dynamic, 1);
+	auto nested = std::dynamic_pointer_cast<awst::NewArray>(tryConvertArc4Array(
+		awst::makeVarExpression("nested", &singleDynamic, loc), &pair, nullptr, loc));
+	require(nested && nested->values.size() == 2 && nested->values[1]->wtype == &dynamic,
+		"fixed copies of dynamic elements did not rebuild offsets and default tails");
 
 	awst::WTuple sourceW({awst::WType::uint64Type(), awst::WType::uint64Type()});
 	awst::WTuple targetW({awst::WType::biguintType(), awst::WType::biguintType()});
@@ -282,6 +334,8 @@ type Value is uint16;
 contract Target {}
 struct Node { uint16 value; Node[] children; }
 struct Huge { uint256[134217728] values; }
+struct Packed { uint8 a; uint8 b; uint8 c; }
+struct AlwaysBoxed { uint256[4] words; }
 struct FixedCallback { uint16 tag; function() internal returns (uint256) callback; }
 struct DynamicCallback { function() internal returns (uint256)[] callbacks; }
 struct Holder { uint256[] values; mapping(uint256 => uint256) entries; }

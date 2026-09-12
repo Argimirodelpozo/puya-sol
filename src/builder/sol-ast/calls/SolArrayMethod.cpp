@@ -1,11 +1,12 @@
 /// @file SolArrayMethod.cpp
 /// array.push(val), array.push(), and array.pop().
-/// Box-backed arrays read/write from box storage; memory arrays use AWST nodes directly.
+/// The solc storage location selects validity; physical carriers select emission.
 
 #include "builder/sol-ast/calls/SolArrayMethod.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/sol-ast/ResolvedLValue.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/SlotHandleAccess.h"
 #include "builder/storage/StorageMapper.h"
@@ -54,6 +55,15 @@ Expression const* peelBytesCastBase(Expression const& baseExpr)
 }
 } // anonymous namespace
 
+std::shared_ptr<awst::Expression> SolArrayMethod::buildArrayTarget(Expression const& source)
+{
+	auto operand = m_ctx.lowerOperand([&] {
+		return ResolvedLValue::freezeTarget(m_ctx,
+			awst::makeWritableTarget(buildExpr(source)), m_loc);
+	}, false);
+	return m_ctx.emitSequencedOperand(std::move(operand.effects), std::move(operand.value), false, m_loc);
+}
+
 std::shared_ptr<awst::Expression> SolArrayMethod::buildPushValue(
 	Type const* elementType, awst::WType const* representation)
 {
@@ -62,10 +72,14 @@ std::shared_ptr<awst::Expression> SolArrayMethod::buildPushValue(
 	if (!m_call.arguments().empty())
 	{
 		auto const& argument = *m_call.arguments()[0];
-		value = EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
-			buildExpr(argument), argument.annotation().type, native, m_loc);
-		value = ConversionPlan{argument.annotation().type, elementType, native,
-			ConversionPlan::Context::Argument}.emit(std::move(value), m_loc, &m_ctx.preEffects());
+		auto operand = m_ctx.lowerOperand([&] {
+			auto built = EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
+				buildExpr(argument), argument.annotation().type, native, m_loc);
+			return ConversionPlan{argument.annotation().type, elementType, native,
+				ConversionPlan::Context::Argument}.emit(std::move(built), m_loc, &m_ctx.preEffects());
+		}, false);
+		value = m_ctx.emitSequencedOperand(
+			std::move(operand.effects), std::move(operand.value), true, m_loc);
 	}
 	else if (m_ctx.hasArrayAssignmentValue())
 		value = m_ctx.takeArrayAssignmentValue(); // Converted by the assignment's solc types.
@@ -74,85 +88,28 @@ std::shared_ptr<awst::Expression> SolArrayMethod::buildPushValue(
 	return eb::AssignmentHelper::arc4EncodeForType(m_ctx, std::move(value), representation, m_loc);
 }
 
-/// Slot-mode bytes/string push/pop via whole-value read-modify-write: the short↔long form transitions already live in …
-std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeBytesPushPop(
-	std::string const& memberName,
-	Expression const& baseExpr,
-	ArrayType const* arrT)
+std::shared_ptr<awst::Expression> SolArrayMethod::buildBytesPushPop(
+	std::string const& memberName, Expression const& baseExpr, ArrayType const& array)
 {
-	// push/pop via whole-value read-modify-write: the short↔long
-	// form transitions already live in __evm_bytes_read/write, so
-	// appending a byte or shrinking by one needs no new runtime.
-	EvmSlotLowering lowB(m_ctx, m_scope, m_loc);
-	auto baseB = lowB.resolve(baseExpr);
-	if (!baseB)
-		return nullptr;
-	baseB->slot = awst::makeEvalOnce(baseB->slot, m_loc);
-	baseB->solType = arrT;
-	auto cur = lowB.readBytesValue(*baseB);
-	if (cur && cur->wtype != awst::WType::bytesType())
-		cur = awst::makeAsBytes(std::move(cur), m_loc);
-	std::string nm = "__evm_bp_" + std::to_string(
-		awst::NameGen::next("SolArrayMethod.bytesPP"));
-	m_ctx.queuePreEffect(awst::makeAssignmentStatement(
-		awst::makeVarExpression(nm, awst::WType::bytesType(), m_loc),
-		std::move(cur), m_loc));
-	auto curVar = [&]() {
-		return awst::makeVarExpression(
-			nm, awst::WType::bytesType(), m_loc);
-	};
-	std::vector<std::shared_ptr<awst::Statement>> writesB;
+	ResolvedLValue destination(m_ctx, *peelBytesCastBase(baseExpr), m_loc);
+	std::shared_ptr<awst::Expression> value;
 	if (memberName == "push")
-	{
-		std::shared_ptr<awst::Expression> b;
-		if (!m_call.arguments().empty())
-		{
-			b = buildExpr(*m_call.arguments()[0]);
-			if (!b)
-				return nullptr;
-			// bytes1 value → its single content byte. A uint64
-			// (integer literal / conversion) has no direct bytes
-			// cast — itob and take the LOW byte instead.
-			if (b->wtype == awst::WType::uint64Type())
-				b = awst::makeExtract(
-					awst::makeItob(std::move(b), m_loc), 7, 1, m_loc);
-			else
-			{
-				if (b->wtype != awst::WType::bytesType())
-					b = awst::makeAsBytes(std::move(b), m_loc);
-				b = awst::makeExtract(std::move(b), 0, 1, m_loc);
-			}
-		}
-		else
-			b = awst::makeBytesConstant({0}, m_loc);
-		lowB.writeBytesValue(*baseB,
-			awst::makeConcat(curVar(), std::move(b), m_loc),
-			writesB);
-	}
+		value = buildPushValue(array.baseType(), m_ctx.typeMapper.map(array.baseType()));
+	auto current = m_ctx.emitSequencedOperand({}, destination.read(), true, m_loc);
+	if (current->wtype != awst::WType::bytesType())
+		current = awst::makeAsBytes(std::move(current), m_loc);
+	if (memberName == "push")
+		value = awst::makeConcat(current, awst::makeAsBytes(std::move(value), m_loc), m_loc);
 	else
 	{
-		auto lenE = awst::makeLen(curVar(), m_loc);
-		auto nonEmptyB = awst::makeNumericCompare(
-			awst::makeLen(curVar(), m_loc),
-			awst::NumericComparison::Gt,
-			awst::makeIntegerConstant(uint64_t{0}, m_loc), m_loc);
-		m_ctx.queuePreEffect(awst::makeExpressionStatement(
-			awst::makeAssert(std::move(nonEmptyB), m_loc,
-				"pop from empty bytes"), m_loc));
-		auto newLen = awst::makeUInt64BinOp(
-			awst::makeLen(curVar(), m_loc),
-			awst::UInt64BinaryOperator::Sub,
-			awst::makeIntegerConstant(uint64_t{1}, m_loc), m_loc);
-		(void)lenE;
-		lowB.writeBytesValue(*baseB,
-			awst::makeExtract3(curVar(),
-				awst::makeIntegerConstant(uint64_t{0}, m_loc),
-				std::move(newLen), m_loc),
-			writesB);
+		m_ctx.queuePreExpression(awst::makeAssert(awst::makeNumericCompare(
+			awst::makeLen(current, m_loc), awst::NumericComparison::Gt, awst::makeZero(m_loc), m_loc),
+			m_loc, "pop from empty bytes"), m_loc);
+		value = awst::makeExtract3(current, awst::makeZero(m_loc), awst::makeUInt64BinOp(
+			awst::makeLen(current, m_loc), awst::UInt64BinaryOperator::Sub, awst::makeOne(m_loc), m_loc), m_loc);
 	}
-	for (auto& stB: writesB)
-		m_ctx.queuePreEffect(std::move(stB));
-	return awst::makeZero(m_loc, awst::WType::biguintType());
+	destination.write(std::move(value));
+	return awst::makeVoidConstant(m_loc);
 }
 
 /// Slot-mode dynamic-array push/pop: length-word RMW at the root slot + element write at keccak256(slot32)+addressing.
@@ -182,15 +139,15 @@ std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeArrayPushPop(
 		return std::shared_ptr<awst::Expression>(
 			awst::makeVarExpression(nm, wt, m_loc));
 	};
-	auto rootSlot = pin(base->slot, "arr");
+	auto rootSlot = m_ctx.emitSequencedOperand({}, base->slot, true, m_loc);
+	std::shared_ptr<awst::Expression> value;
+	if (memberName == "push" && (!arguments().empty() || m_ctx.hasArrayAssignmentValue()))
+		value = buildPushValue(elemType, m_ctx.typeMapper.map(elemType));
 	auto len = pin(EvmSlotLowering::readSlotWord(rootSlot, m_loc), "len");
 	auto dataBase = EvmSlotLowering::dynDataBase(rootSlot, m_loc);
 
 	if (memberName == "push")
 	{
-		std::shared_ptr<awst::Expression> value;
-		if (!m_call.arguments().empty() || m_ctx.hasArrayAssignmentValue())
-			value = buildPushValue(elemType, m_ctx.typeMapper.map(elemType));
 		if (mappingElem)
 		{
 			// push() on a mapping element: nothing to write — its
@@ -262,21 +219,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeArrayPushPop(
 			rootSlot, lastIdx, m_loc));
 		return awst::makeZero(m_loc, awst::WType::biguintType());
 	}
-	std::shared_ptr<awst::Expression> zero;
-	if (addr.wtype == awst::WType::accountType())
-		zero = awst::makeAddressConstant(
-			"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ", m_loc);
-	else if (addr.wtype == awst::WType::biguintType())
-		zero = awst::makeZero(m_loc, awst::WType::biguintType());
-	else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(addr.wtype);
-		bw && bw->length().has_value())
-		zero = awst::makeBytesConstant(
-			std::vector<uint8_t>(static_cast<size_t>(*bw->length()), 0), m_loc,
-			awst::BytesEncoding::Base16, addr.wtype);
-	else if (addr.wtype == awst::WType::boolType())
-		zero = awst::makeBoolConstant(false, m_loc, awst::WType::boolType());
-	else
-		zero = awst::makeZero(m_loc);
+	auto zero = TypeCoercion::makeDefaultValue(addr.wtype, m_loc);
 	std::vector<std::shared_ptr<awst::Statement>> writes;
 	low.writeValue(addr, std::move(zero), writes);
 	for (auto& st: writes)
@@ -295,28 +238,28 @@ std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeArrayPushPop(
 /// box before any resize (an empty header, so a pop on it panics like
 /// Solidity's pop on an empty array), and a no-argument push returns the
 /// reference to the new element.
-std::shared_ptr<awst::Expression> SolArrayMethod::emitArc4PushPop(
+std::shared_ptr<awst::Expression> SolArrayMethod::emitArrayPushPop(
 	std::string const& memberName,
 	std::shared_ptr<awst::Expression> baseAwst,
 	ArrayType const& solArrType)
 {
-	auto* rawElemType = m_ctx.typeMapper.map(solArrType.baseType());
 	auto* arrWType = baseAwst->wtype
 		? baseAwst->wtype : m_ctx.typeMapper.map(&solArrType);
-	auto const* elemType = static_cast<awst::ARC4DynamicArray const*>(arrWType)->elementType();
+	auto const* elemType = awst::arrayElementType(arrWType);
+	assert(elemType);
+	baseAwst = ResolvedLValue::freezeTarget(m_ctx, std::move(baseAwst), m_loc);
+	bool const fromAssign = m_ctx.hasArrayAssignmentValue();
+	auto elem = memberName == "push" ? buildPushValue(solArrType.baseType(), elemType) : nullptr;
 
 	if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
 			m_ctx.typeMapper, baseAwst, /*isResize=*/true, m_loc))
 		m_ctx.queuePreEffect(std::move(stmt));
 
 	if (memberName == "pop")
-		return awst::makeArrayPopDecode(baseAwst, elemType, rawElemType, m_loc);
+		return awst::makeArrayPop(baseAwst, elemType, m_loc); // Solidity pop has no result.
 
 	if (!m_call.arguments().empty())
-		return awst::makeArrayPushOne(baseAwst,
-			buildPushValue(solArrType.baseType(), elemType), arrWType, m_loc);
-	bool const fromAssign = m_ctx.hasArrayAssignmentValue();
-	auto elem = buildPushValue(solArrType.baseType(), elemType);
+		return awst::makeArrayPushOne(baseAwst, std::move(elem), arrWType, m_loc);
 	auto extend = awst::makeArrayPushOne(baseAwst, std::move(elem), arrWType, m_loc);
 	if (fromAssign)
 		return extend;
@@ -329,7 +272,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::emitArc4PushPop(
 		awst::UInt64BinaryOperator::Sub,
 		awst::makeIntegerConstant("1", m_loc),
 		m_loc);
-	return awst::makeIndexExpression(baseAwst, std::move(lastIndex), elemType, m_loc);
+	return awst::makeIndexExpression(baseAwst,
+		m_ctx.emitSequencedOperand({}, std::move(lastIndex), true, m_loc), elemType, m_loc);
 }
 
 /// `m[k].push()/.pop()`: IndexAccess base lowers to BoxValueExpression (wrapped in StateGet when read).
@@ -346,13 +290,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryBoxedElementPushPop(
 		&& !innerArrType->isByteArrayOrString()
 		&& (memberName == "push" || memberName == "pop"))
 	{
-		auto baseAwst = buildExpr(baseExpr);
-		// Unwrap StateGet through the chain to the writable BoxValueExpression.
-		baseAwst = awst::makeWritableTarget(baseAwst);
+		auto baseAwst = buildArrayTarget(baseExpr);
 		if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
 			|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get())
 			|| dynamic_cast<awst::FieldExpression const*>(baseAwst.get()))
-			return emitArc4PushPop(memberName, std::move(baseAwst), *innerArrType);
+			return emitArrayPushPop(memberName, std::move(baseAwst), *innerArrType);
 	}
 	return nullptr;
 }
@@ -389,67 +331,6 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryStoragePointerPushPop(
 				&& (memberName == "push" || memberName == "pop"))
 			{
 				auto const* solArrType = dynamic_cast<ArrayType const*>(decl->type());
-				// bytes/string storage alias (ternary-init pointer): concat
-				// push / shrink pop against the aliased BOX (runtime key) —
-				// the state-var twin below is name-keyed and never fires for
-				// locals.
-				if (solArrType && solArrType->isByteArrayOrString())
-				{
-					auto unwrapped = awst::unwrapStateGet(alias->expr);
-					auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(unwrapped.get());
-					if (bv && bv->key)
-					{
-						auto loc = m_loc;
-						auto readVal = alias->expr; // StateGetWithDefault read
-						std::string tmpName = "__bytes_alias_tmp_"
-							+ std::to_string(awst::NameGen::next("SolArrayMethod.tmpCounter"));
-						auto tmpTarget = awst::makeVarExpression(
-							tmpName, awst::WType::bytesType(), loc);
-						if (memberName == "push")
-						{
-							std::shared_ptr<awst::Expression> pushVal;
-							if (!m_call.arguments().empty())
-							{
-								pushVal = buildExpr(*m_call.arguments()[0]);
-								if (pushVal && pushVal->wtype == awst::WType::uint64Type())
-								{
-									auto itob = awst::makeIntrinsicCall(
-										"itob", awst::WType::bytesType(), loc);
-									itob->stackArgs.push_back(std::move(pushVal));
-									auto extr = awst::makeIntrinsicCall(
-										"extract3", awst::WType::bytesType(), loc);
-									extr->stackArgs.push_back(std::move(itob));
-									extr->stackArgs.push_back(awst::makeIntegerConstant("7", loc));
-									extr->stackArgs.push_back(awst::makeOne(loc));
-									pushVal = std::move(extr);
-								}
-								else
-									pushVal = builder::TypeCoercion::stringToBytes(
-										std::move(pushVal), loc);
-							}
-							else
-								pushVal = awst::makeBytesConstant({0}, loc);
-							m_ctx.queuePostEffect(awst::makeAssignmentStatement(tmpTarget,
-								awst::makeConcat(std::move(readVal), std::move(pushVal), loc),
-								loc));
-						}
-						else
-						{
-							auto newLen = awst::makeUInt64BinOp(
-								awst::makeLen(readVal, loc),
-								awst::UInt64BinaryOperator::Sub, awst::makeOne(loc), loc);
-							m_ctx.queuePostEffect(awst::makeAssignmentStatement(tmpTarget,
-								awst::makeExtract3(readVal, awst::makeZero(loc),
-									std::move(newLen), loc),
-								loc));
-						}
-						m_ctx.queuePostExpression(awst::makeBoxDel(bv->key, loc), loc);
-						m_ctx.queuePostExpression(awst::makeBoxPut(bv->key,
-							awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc),
-							loc), loc);
-						return awst::makeVoidConstant(loc);
-					}
-				}
 				if (solArrType && !solArrType->isByteArrayOrString())
 				{
 					std::shared_ptr<awst::Expression> aliasExpr = alias->expr;
@@ -460,7 +341,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryStoragePointerPushPop(
 					if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
 						|| dynamic_cast<awst::IndexExpression const*>(aliasExpr.get())
 						|| dynamic_cast<awst::FieldExpression const*>(aliasExpr.get()))
-						return emitArc4PushPop(memberName, std::move(aliasExpr), *solArrType);
+						return emitArrayPushPop(memberName, std::move(aliasExpr), *solArrType);
 				}
 			}
 		}
@@ -468,142 +349,6 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryStoragePointerPushPop(
 	return nullptr;
 }
 
-/// bytes/string STATE VAR push/pop: concat-based push / read+substring+write pop (box_del+box_put for exact-size box rewrite).
-std::shared_ptr<awst::Expression> SolArrayMethod::tryStateBytesPushPop(
-	std::string const& memberName,
-	solidity::frontend::VariableDeclaration const& _varDecl)
-{
-	auto const* varDecl = &_varDecl;
-	// bytes/string state variable: pop = read + substring + write
-	if (varDecl->isStateVariable()
-		&& varDecl->type()->category() == Type::Category::Array)
-	{
-		auto const* arrType2 = dynamic_cast<ArrayType const*>(varDecl->type());
-		if (arrType2 && arrType2->isByteArrayOrString() && memberName == "pop")
-		{
-			auto binding = m_ctx.storageMapper.physicalBindingFor(*varDecl);
-			std::string varName = binding.key;
-			auto loc = m_loc;
-			auto kind = binding.kind;
-
-			// Read current value
-			auto readVal = m_ctx.storageMapper.createStateRead(
-				varName, awst::WType::bytesType(), kind, loc);
-
-			// len - 1
-			auto lenCall = awst::makeLen(readVal, loc);
-
-			auto one = awst::makeOne(loc);
-			auto newLen = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, std::move(one), loc);
-
-			// extract3(readVal, 0, len-1)
-			auto zero = awst::makeZero(loc);
-
-			auto extract = awst::makeExtract3(readVal, std::move(zero), std::move(newLen), loc);
-			if (kind == awst::AppStorageKind::Box)
-			{
-				// Box: shrunk→temp, box_del, box_put.
-				std::string tmpName = "__bytes_pop_tmp_" + std::to_string(awst::NameGen::next("SolArrayMethod.popTmpCounter"));
-
-				auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-				m_ctx.queuePostEffect(awst::makeAssignmentStatement(tmpTarget, std::move(extract), loc));
-
-				m_ctx.queuePostExpression(awst::makeBoxDel(awst::makeUtf8BytesConstant(varName, loc), loc), loc);
-
-				auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-				m_ctx.queuePostExpression(awst::makeBoxPut(
-					awst::makeUtf8BytesConstant(varName, loc),
-					std::move(tmpRead), loc), loc);
-			}
-			else
-			{
-				m_ctx.queuePostExpression(awst::makeAppGlobalPut(
-					awst::makeUtf8BytesConstant(varName, loc),
-					std::move(extract), loc), loc);
-			}
-
-			return awst::makeVoidConstant(loc);
-		}
-	}
-
-	// bytes/string state var push: concat-based, not element-by-element.
-	// Must come BEFORE the generic box array handler.
-	if (varDecl->isStateVariable()
-		&& varDecl->type()->category() == Type::Category::Array)
-	{
-		auto const* arrType = dynamic_cast<ArrayType const*>(varDecl->type());
-		if (arrType && arrType->isByteArrayOrString() && memberName == "push")
-		{
-			auto binding = m_ctx.storageMapper.physicalBindingFor(*varDecl);
-			std::string varName = binding.key;
-			auto loc = m_loc;
-			auto kind = binding.kind;
-
-			// Read current value
-			auto readVal = m_ctx.storageMapper.createStateRead(
-				varName, awst::WType::bytesType(), kind, loc);
-
-			// `bytes.push(b)`: takes bytes1. uint8/int literals arrive
-			// as uint64 — itob+extract last byte. String→stringToBytes.
-			std::shared_ptr<awst::Expression> pushVal;
-			if (!m_call.arguments().empty())
-			{
-				pushVal = buildExpr(*m_call.arguments()[0]);
-				auto* pvT = pushVal ? pushVal->wtype : nullptr;
-				if (pvT == awst::WType::uint64Type())
-				{
-					// uint64 → 1-byte bytes: itob (8 bytes BE) + extract last.
-					auto itob = awst::makeIntrinsicCall(
-						"itob", awst::WType::bytesType(), loc);
-					itob->stackArgs.push_back(std::move(pushVal));
-					auto extr = awst::makeIntrinsicCall(
-						"extract3", awst::WType::bytesType(), loc);
-					extr->stackArgs.push_back(std::move(itob));
-					extr->stackArgs.push_back(awst::makeIntegerConstant("7", loc));
-					extr->stackArgs.push_back(awst::makeOne(loc));
-					pushVal = std::move(extr);
-				}
-				else
-				{
-					pushVal = builder::TypeCoercion::stringToBytes(std::move(pushVal), loc);
-				}
-			}
-			else
-			{
-				pushVal = awst::makeBytesConstant({0}, loc);
-			}
-
-			// concat(current, pushVal)
-			auto cat = awst::makeConcat(std::move(readVal), std::move(pushVal), loc);
-
-			if (kind == awst::AppStorageKind::Box)
-			{
-				// Box: concat→temp, box_del, box_put (exact-size match required).
-				std::string tmpName = "__bytes_push_tmp_" + std::to_string(awst::NameGen::next("SolArrayMethod.tmpCounter"));
-
-				auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-				m_ctx.queuePostEffect(awst::makeAssignmentStatement(tmpTarget, std::move(cat), loc));
-
-				m_ctx.queuePostExpression(awst::makeBoxDel(awst::makeUtf8BytesConstant(varName, loc), loc), loc);
-
-				auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-				m_ctx.queuePostExpression(awst::makeBoxPut(
-					awst::makeUtf8BytesConstant(varName, loc),
-					std::move(tmpRead), loc), loc);
-			}
-			else
-			{
-				m_ctx.queuePostExpression(awst::makeAppGlobalPut(
-					awst::makeUtf8BytesConstant(varName, loc),
-					std::move(cat), loc), loc);
-			}
-
-			return awst::makeVoidConstant(loc);
-		}
-	}
-
-	return nullptr;
-}
 
 /// Chained storage path (`m[k].field.push()`, `arr[i].field.push()`, etc.): unwrap StateGet and emit ArrayExtend/ArrayPop.
 std::shared_ptr<awst::Expression> SolArrayMethod::tryChainedFieldPushPop(
@@ -612,20 +357,18 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryChainedFieldPushPop(
 	MemberAccess const& innerMA)
 {
 	// Chained storage path (`m[k].field.push()`, `arr[i].field.push()`, etc.):
-	// unwrap StateGet and emit ArrayExtend/ArrayPop. Only fires when
-	// handleStructFieldArrayMethod (simple Identifier case) didn't match.
+	// unwrap StateGet and emit ArrayExtend/ArrayPop, including direct fields.
 	auto const* maType = dynamic_cast<ArrayType const*>(
 		innerMA.annotation().type);
 	if (maType && maType->isDynamicallySized()
 		&& !maType->isByteArrayOrString()
 		&& (memberName == "push" || memberName == "pop"))
 	{
-		auto baseAwst = buildExpr(baseExpr);
-		baseAwst = awst::makeWritableTarget(baseAwst);
+		auto baseAwst = buildArrayTarget(baseExpr);
 		if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
 			|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get())
 			|| dynamic_cast<awst::FieldExpression const*>(baseAwst.get()))
-			return emitArc4PushPop(memberName, std::move(baseAwst), *maType);
+			return emitArrayPushPop(memberName, std::move(baseAwst), *maType);
 	}
 	return nullptr;
 }
@@ -639,6 +382,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 
 	std::string memberName = memberAccess->memberName();
 	auto const& baseExpr = memberAccess->expression();
+	auto const* array = dynamic_cast<ArrayType const*>(baseExpr.annotation().type);
+	assert(array && array->dataStoredIn(DataLocation::Storage));
+	if (array->isByteArrayOrString())
+		return buildBytesPushPop(memberName, baseExpr, *array);
 
 	// --evm-storage-layout: push/pop on a storage dynamic array (see the
 	// slot-mode helpers).
@@ -649,8 +396,6 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 			&& arrT->dataStoredIn(DataLocation::Storage)
 			&& EvmSlotLowering::isStorageStateRef(baseExpr))
 		{
-			if (arrT->isByteArrayOrString())
-				return buildSlotModeBytesPushPop(memberName, baseExpr, arrT);
 			return buildSlotModeArrayPushPop(memberName, baseExpr, arrT);
 		}
 	}
@@ -668,9 +413,6 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
 		{
-			if (auto result = tryStateBytesPushPop(memberName, *varDecl))
-				return result;
-
 			// Generic box-stored dynamic array (non-bytes)
 			if (varDecl->isStateVariable()
 				&& m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
@@ -681,32 +423,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		}
 	}
 
-	// Struct-field array push/pop: `s.b.push(val)` where s is a storage
-	// struct and b is a dynamic array field. Emit copy-on-write: read the
-	// struct into a temp, mutate tmp.b in place, write the struct back.
-	if (auto const* innerMA = dynamic_cast<MemberAccess const*>(&baseExpr))
-	{
-		if (auto const* outerIdent = dynamic_cast<Identifier const*>(
-				&innerMA->expression()))
-		{
-			if (auto const* outerVar = dynamic_cast<VariableDeclaration const*>(
-					outerIdent->annotation().referencedDeclaration))
-			{
-				if (outerVar->isStateVariable()
-					&& outerVar->type()->category() == Type::Category::Struct
-					&& (memberName == "push" || memberName == "pop"))
-				{
-					return handleStructFieldArrayMethod(
-						memberName, *innerMA, *outerVar);
-				}
-			}
-		}
-
-		if (auto result = tryChainedFieldPushPop(memberName, baseExpr, *innerMA))
+	if (auto const* member = dynamic_cast<MemberAccess const*>(&baseExpr))
+		if (auto result = tryChainedFieldPushPop(memberName, baseExpr, *member))
 			return result;
-	}
-
-	return handleMemoryArray(memberName, baseExpr);
+	return emitArrayPushPop(memberName, buildArrayTarget(baseExpr), *array);
 }
 
 

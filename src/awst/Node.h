@@ -2,6 +2,7 @@
 
 #include "awst/SourceLocation.h"
 #include "awst/WType.h"
+#include "awst/NameGen.h"
 #include "Logger.h"
 
 #include <initializer_list>
@@ -1426,8 +1427,7 @@ inline std::shared_ptr<SingleEvaluation> makeSingleEvaluation(
 // wrongly merge. Share an evaluation by referencing the same node, not reusing an id.
 inline int nextSingleEvalId()
 {
-	static int s_nextSingleEvalId = 1 << 20;
-	return ++s_nextSingleEvalId;
+	return (1 << 20) + NameGen::next("SingleEvaluation") + 1;
 }
 
 
@@ -1468,15 +1468,13 @@ struct CheckedMaybe: Expression
 struct Emit: Expression
 {
 	std::string nodeType() const override { return "Emit"; }
-	std::string signature;
 	std::shared_ptr<Expression> value;
 };
 
 inline std::shared_ptr<Emit> makeEmit(
-	std::string signature, std::shared_ptr<Expression> value, SourceLocation loc)
+	std::shared_ptr<Expression> value, SourceLocation loc)
 {
 	auto node = makeNode<Emit>(std::move(loc), WType::voidType());
-	node->signature = std::move(signature);
 	node->value = std::move(value);
 	return node;
 }
@@ -1741,9 +1739,9 @@ struct BoxValueExpression: Expression
 	std::string nodeType() const override { return "BoxValueExpression"; }
 	std::shared_ptr<Expression> key;
 	std::optional<std::string> existsAssertionMessage;
-	/// Builder-only origin, not serialized. A literal key is not evidence of
-	/// declaration initialization (runtime mapping keys can also be constant).
-	bool isDeclarationRoot = false;
+	/// Builder-only lifecycle fact: initialized at deployment and reset to a
+	/// valid empty value on delete. A constant key does not establish this.
+	bool preserveEmptyBox = false;
 };
 
 inline std::shared_ptr<BoxValueExpression> makeBoxValueExpression(
@@ -2099,6 +2097,8 @@ struct RootNode
 	virtual ~RootNode() = default;
 	virtual std::string nodeType() const = 0;
 	SourceLocation sourceLocation;
+	/// Keeps raw WType links valid after builder reset/destruction. Not serialized.
+	std::shared_ptr<WTypeArena const> typeArena;
 };
 
 struct Contract: RootNode

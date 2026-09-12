@@ -9,7 +9,7 @@
 /// CharStream after analysis; conversion resolves the node's own source
 /// unit (imports included) and translates offsets to one-based lines.
 
-#include "awst/Node.h"
+#include "awst/SourceLocation.h"
 
 #include <liblangutil/SourceLocation.h>
 
@@ -31,7 +31,8 @@ public:
 	/// must outlive this build session.
 	void registerCharStream(
 		std::string const& _sourceName,
-		solidity::langutil::CharStream const* _charStream);
+		solidity::langutil::CharStream const* _charStream,
+		std::string const& _readableFile = {});
 
 	void clear() { m_streams.clear(); }
 
@@ -45,7 +46,12 @@ public:
 		std::string const& _fallbackFile, int _start, int _end) const;
 
 private:
-	std::map<std::string, solidity::langutil::CharStream const*> m_streams;
+	struct Source
+	{
+		std::string file;
+		solidity::langutil::CharStream const* stream;
+	};
+	std::map<std::string, Source> m_streams;
 };
 
 } // namespace puyasol::builder

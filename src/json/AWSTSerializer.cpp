@@ -546,7 +546,6 @@ void AWSTSerializer::serializeFields(awst::CheckedMaybe const& _node, njson& _js
 
 void AWSTSerializer::serializeFields(awst::Emit const& _node, njson& _json)
 {
-	_json["signature"] = _node.signature;
 	_json["value"] = serializeExpression(*_node.value);
 }
 

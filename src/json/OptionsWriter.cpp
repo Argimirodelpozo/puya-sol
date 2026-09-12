@@ -1,4 +1,5 @@
 #include "json/OptionsWriter.h"
+#include "builder/contract/ChildDeployment.h"
 
 #include <nlohmann/json.hpp>
 
@@ -24,6 +25,8 @@ static void addTemplateVarDefs(
 		defs["APPROVAL_" + child + "_P0"] = "0x068101"; // stub: #pragma version 6; int 1
 		defs["APPROVAL_" + child + "_P1"] = "0x068101";
 		defs["CLEAR_" + child] = "0x068101";
+		for (auto const& field: builder::childSchemaFields)
+			defs["CHILD_" + child + "_" + field.transactionField] = 0;
 	}
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
+#include "builder/proxies/ProxyFacts.h"
 
 #include "builder/sol-types/SolcFwd.h"
 
@@ -28,44 +29,20 @@ namespace puyasol::builder::proxies
 ///                                    calls it (its modifiers included)
 ///                                    and emits ARC-28 Upgraded(address).
 ///
-/// Recognition is the contained idiom kind: member functions of a base
-/// contract NAMED "UUPSUpgradeable" (the OZ artifact), by function name.
-enum class UupsFold
-{
-	None,
-	/// _checkProxy / _checkNotDelegated: body → no-op (check passes).
-	EmptyBody,
-	/// upgradeTo(AndCall) / _upgradeToAndCallUUPS: body → runtime trap.
-	Trap,
-	/// OZ Proxy._delegate (the delegation core every OZ proxy inherits —
-	/// ERC1967Proxy, TransparentUpgradeableProxy): body → runtime trap. The
-	/// proxy/implementation pair collapses to ONE updatable app (proxy.md
-	/// §1/§2); a standalone proxy contract has nothing to delegate to, and
-	/// folding here lets units CONTAINING proxy contracts compile instead of
-	/// hard-erroring on the fallback's asm delegatecall.
-	TrapDelegate,
-};
+/// Only explicitly registered declarations are folded; see ProxyFacts.
 
 class UupsLowering
 {
 public:
 	static constexpr char const* GATE_NAME = "__uups_update";
 
-	/// Fold classification for a function about to be translated.
-	static UupsFold classify(solidity::frontend::FunctionDefinition const& _func);
-
 	/// The replacement body for a folded function.
 	static std::shared_ptr<awst::Block> foldedBody(
 		UupsFold _fold, awst::SourceLocation const& _loc);
 
-	/// True when `_contract` linearizes over a base named "UUPSUpgradeable" —
-	/// the concrete contract of a UUPS implementation.
-	static bool isUupsImplementation(
-		solidity::frontend::ContractDefinition const& _contract);
-
 	/// The UpdateApplication gate: calls the translated `_authorizeUpgrade`
 	/// method (`_authorizeMethod` — its inlined modifiers ARE the permission
-	/// check) with this app's own address as the "new implementation", then
+	/// check) with an unused zero address placeholder, then
 	/// emits Upgraded(address). UpdateApplication-only, never on create.
 	static awst::ContractMethod updateGateMethod(
 		std::string const& _cref,

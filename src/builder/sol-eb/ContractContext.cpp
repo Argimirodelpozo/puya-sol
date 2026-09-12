@@ -50,6 +50,11 @@ awst::SourceLocation ContractContext::makeLoc(int _start, int _end) const
 	return typeMapper.sourceMap().toAwstLoc(sourceFile, _start, _end);
 }
 
+awst::SourceLocation ContractContext::makeLoc(solidity::langutil::SourceLocation const& _location) const
+{
+	return typeMapper.sourceMap().toAwstLoc(sourceFile, _location);
+}
+
 std::shared_ptr<awst::Expression> ContractContext::buildValue(
 	solidity::frontend::Expression const& _expr)
 {
@@ -59,8 +64,7 @@ std::shared_ptr<awst::Expression> ContractContext::buildValue(
 	if (!_expr.annotation().willBeWrittenTo && _expr.annotation().type
 		&& _expr.annotation().type->isValueType() && value)
 		value = StorageMapper::makePartialBoxReadWithDefault(
-			typeMapper, std::move(value), preEffects(), makeLoc(
-				_expr.location().start, _expr.location().end));
+			typeMapper, std::move(value), preEffects(), makeLoc(_expr.location()));
 	return value;
 }
 

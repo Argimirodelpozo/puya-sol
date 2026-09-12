@@ -2830,18 +2830,23 @@ def test_postinit_creator_only(harness):
 def test_ecpairing_length_guard(harness):
     """puyasolRegression/contracts/ecpairing_length_guard.sol — NOT an o.g. test.
 
-    ecPairing reshaping hard-codes the 2-pair (384-byte) layout; a wrong-length
-    input previously checked only pairs 0-1 (accepting invalid proofs) or
-    panicked mid-extract. Now anything but exactly 384 bytes reverts at the
-    length assert (before any pairing op — cheap, no budget needed).
+    The shared precompile accepts any whole number of 192-byte pairs,
+    including the empty product, matching solc/EVM. Partial pairs must still
+    fail before the pairing operation. Nonzero multi-pair products are
+    covered by test_assembly_pairing and test_external_result_facts.
     """
     app = harness.compile_and_deploy(
-        "puyasolRegression/contracts/ecpairing_length_guard.sol"
+        "puyasolRegression/contracts/ecpairing_length_guard.sol",
+        ensure_budget={"pairWrongLen": 14_000},
     )
-    for n in (0, 100, 383, 385, 768):
+    for n in (1, 100, 191, 193, 383, 385, 767, 769):
         r = harness.call(app, "pairWrongLen(byte[])", b"\x00" * n,
                          extra_fee=10_000, expect_revert=True)
-        assert r.reverted, f"pairing with {n}-byte input must revert (not 384)"
+        assert r.reverted, f"pairing with {n}-byte input must reject a partial pair"
+    for n in (0, 192, 384, 576, 768):
+        r = harness.call(app, "pairWrongLen(byte[])", b"\x00" * n, extra_fee=30_000)
+        assert not r.reverted, f"pairing with {n}-byte input must accept complete pairs"
+        assert r.abi_return is True
 
 
 def test_mtail_correctness(harness):
@@ -3031,7 +3036,7 @@ def test_asm_call_value(harness):
     r = harness.call(app, "run(uint256,uint256)", 150_000, 41, extra_fee=30_000).abi_return
     ok, hits1, got1, ret, rds = (as_int(x) for x in r)
     assert ok == 1
-    assert hits1 == 100, "fallback did not run"
+    assert hits1 == 10, "empty calldata did not select receive"
     assert got1 == 150_000, f"msg.value did not see the grouped payment (got={got1})"
     assert ret == 1041, f"returndata prefix not stripped (ret={ret})"
     assert rds == 32, f"returndatasize includes the prefix (rds={rds})"

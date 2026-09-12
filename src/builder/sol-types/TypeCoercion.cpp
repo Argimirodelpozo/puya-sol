@@ -2,6 +2,7 @@
 /// Centralised type coercion / conversion utilities for AWST expressions.
 
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/itxn/ApplicationTarget.h"
 #include "awst/TupleValue.h"
 #include "Logger.h"
 #include "awst/NameGen.h"
@@ -496,6 +497,14 @@ std::shared_ptr<awst::Expression> TypeCoercion::checkedAmountToUint64(
 		"transfer amount exceeds uint64 (AVM amounts are 64-bit)");
 }
 
+std::shared_ptr<awst::Expression> TypeCoercion::checkedAllocationSizeToUint64(
+	std::vector<std::shared_ptr<awst::Statement>>& pre,
+	std::shared_ptr<awst::Expression> size, awst::SourceLocation const& loc)
+{
+	return checkedNarrowToUint64(pre, std::move(size), loc,
+		"__cksize_", "TypeCoercion.checkedAllocationSize", "allocation size exceeds uint64");
+}
+
 void TypeCoercion::assertImplicitlyConvertible(
 	solidity::frontend::Type const* _srcSolType,
 	solidity::frontend::Type const* _tgtSolType,
@@ -935,8 +944,8 @@ std::shared_ptr<awst::Expression> tryAccountBytesReinterpret(
 	return nullptr;
 }
 
-/// account → application: extract last 8 bytes (app_id) via btoi
-/// Only meaningful for addresses built from our convention (\x00*24 + app_id).
+/// Physical account → application coercion accepts only the canonical encoding.
+/// Profile-aware runtime self aliases belong to ApplicationTarget::resolve.
 std::shared_ptr<awst::Expression> tryAccountToApplication(
 	std::shared_ptr<awst::Expression>& _expr,
 	awst::WType const* _targetType,
@@ -945,9 +954,8 @@ std::shared_ptr<awst::Expression> tryAccountToApplication(
 	if (!(_targetType == awst::WType::applicationType()
 		&& _expr->wtype == awst::WType::accountType()))
 		return nullptr;
-	auto toBytes = awst::makeAsBytes(std::move(_expr), _loc);
-	auto btoi = awst::makeWord32ToUInt64(std::move(toBytes), _loc);
-	return awst::makeReinterpretCast(std::move(btoi), _targetType, _loc);
+	return ApplicationTarget::requireApplication(
+		ApplicationTarget::canonicalId(std::move(_expr), _loc), _loc);
 }
 
 /// uint64 → bool (0/non-0)

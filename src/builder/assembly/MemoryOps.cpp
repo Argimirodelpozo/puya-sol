@@ -30,23 +30,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 	if (!checkArity(_args, 1, "mload", _loc))
 		return nullptr;
 
-	// Constant offset: check calldata map first; fall back to scratch slot.
-	auto constOffset = resolveConstantOffset(_args[0]);
-	if (constOffset)
-	{
-		auto cdIt = m_calldataMap.find(*constOffset);
-		if (cdIt != m_calldataMap.end())
-		{
-			auto const& elem = cdIt->second;
-			auto base = awst::makeVarExpression(elem.paramName, m_locals.count(elem.paramName)
-				? m_locals[elem.paramName]
-				: awst::WType::biguintType(), _loc);
-
-			return accessFlatElement(std::move(base), elem.paramType, elem.flatIndex, _loc);
-		}
-		return awst::makeAsBiguint(readMemWordConst(*constOffset, _loc), _loc);
-	}
-
+	// Memory and calldata are separate address spaces, even at equal offsets.
 	return awst::makeAsBiguint(readMemWordDyn(_args[0], _loc), _loc);
 }
 
@@ -64,10 +48,8 @@ std::shared_ptr<awst::Statement> AssemblyBuilder::memBoundsAssert(
 	// assert(off + 32 <= cap): spilling into non-memory scratch slots corrupts silently.
 	uint64_t cap = static_cast<uint64_t>(SLOT_SIZE)
 		* static_cast<uint64_t>(_scratch.memoryCount());
-	auto end = awst::makeUInt64BinOp(std::move(_off), awst::UInt64BinaryOperator::Add,
-		awst::makeIntegerConstant(static_cast<uint64_t>(32), _loc), _loc);
-	auto cond = awst::makeNumericCompare(std::move(end), awst::NumericComparison::Lte,
-		awst::makeIntegerConstant(cap, _loc), _loc);
+	auto cond = awst::makeNumericCompare(std::move(_off), awst::NumericComparison::Lte,
+		awst::makeIntegerConstant(cap - 32, _loc), _loc);
 	return awst::makeExpressionStatement(
 		awst::makeAssert(std::move(cond), _loc,
 			"EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)"), _loc);
@@ -76,72 +58,19 @@ std::shared_ptr<awst::Statement> AssemblyBuilder::memBoundsAssert(
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordConst(
 	uint64_t _offset, awst::SourceLocation const& _loc)
 {
-	int slot = static_cast<int>(_offset / SLOT_SIZE);
-	uint64_t sub = _offset % SLOT_SIZE;
-
-	// No slot-0 special case: slot 0 is plain scratch (no local cache), and
-	// the old fast path also SKIPPED the straddle stitch for offsets in
-	// [SLOT_SIZE-31, SLOT_SIZE) — the general paths below cover both.
-	if (slot >= memorySlotCount())
-		Logger::instance().error("EVM memory read beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
-
-	if (sub + 32 <= static_cast<uint64_t>(SLOT_SIZE))
-		return awst::makeExtract3(awst::makeLoadSlot(memorySlotFirst() + slot, _loc),
-			awst::makeIntegerConstant(sub, _loc), awst::makeIntegerConstant("32", _loc), _loc);
-
-	// Straddles the slot boundary: tail of `slot` ++ head of `slot+1`.
-	uint64_t firstLen = static_cast<uint64_t>(SLOT_SIZE) - sub;
-	auto part1 = awst::makeExtract3(awst::makeLoadSlot(memorySlotFirst() + slot, _loc),
-		awst::makeIntegerConstant(sub, _loc), awst::makeIntegerConstant(firstLen, _loc), _loc);
-	auto part2 = awst::makeExtract3(awst::makeLoadSlot(memorySlotFirst() + slot + 1, _loc),
-		awst::makeIntegerConstant("0", _loc), awst::makeIntegerConstant(32 - firstLen, _loc), _loc);
-	return awst::makeConcat(std::move(part1), std::move(part2), _loc);
+	return readMemWordDyn(awst::makeIntegerConstant(_offset, _loc), _loc);
 }
 
 void AssemblyBuilder::writeMemWordConst(
 	uint64_t _offset, std::shared_ptr<awst::Expression> _value32,
 	awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
-	int slot = static_cast<int>(_offset / SLOT_SIZE);
-	uint64_t sub = _offset % SLOT_SIZE;
-
-	// No slot-0 special case (see readMemWordConst) — the general in-slot and
-	// straddle paths below cover slot 0 as plain scratch.
-	if (slot >= memorySlotCount())
-		Logger::instance().error("EVM memory write beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
-
-	if (sub + 32 <= static_cast<uint64_t>(SLOT_SIZE))
-	{
-		auto rep = awst::makeReplace3(awst::makeLoadSlot(memorySlotFirst() + slot, _loc),
-			awst::makeIntegerConstant(sub, _loc), std::move(_value32), _loc);
-		storeMemoryBlob(std::move(rep), _loc, _out, slot);
-		return;
-	}
-
-	// Straddles the slot boundary: split the 32-byte value across two slots.
-	// Materialise it in a temp local so the value isn't evaluated twice.
-	uint64_t firstLen = static_cast<uint64_t>(SLOT_SIZE) - sub;
-	std::string tmp = "__mem_straddle_" + std::to_string(_offset);
-	auto tmpTarget = awst::makeVarExpression(tmp, awst::WType::bytesType(), _loc);
-	_out.push_back(awst::makeAssignmentStatement(std::move(tmpTarget), std::move(_value32), _loc));
-	auto tmpRead = [&]() { return awst::makeVarExpression(tmp, awst::WType::bytesType(), _loc); };
-
-	auto valPart1 = awst::makeExtract3(tmpRead(), awst::makeIntegerConstant("0", _loc),
-		awst::makeIntegerConstant(firstLen, _loc), _loc);
-	auto rep1 = awst::makeReplace3(awst::makeLoadSlot(memorySlotFirst() + slot, _loc),
-		awst::makeIntegerConstant(sub, _loc), std::move(valPart1), _loc);
-	storeMemoryBlob(std::move(rep1), _loc, _out, slot);
-
-	auto valPart2 = awst::makeExtract3(tmpRead(), awst::makeIntegerConstant(firstLen, _loc),
-		awst::makeIntegerConstant(32 - firstLen, _loc), _loc);
-	auto rep2 = awst::makeReplace3(awst::makeLoadSlot(memorySlotFirst() + slot + 1, _loc),
-		awst::makeIntegerConstant("0", _loc), std::move(valPart2), _loc);
-	storeMemoryBlob(std::move(rep2), _loc, _out, slot + 1);
+	writeMemWordDirect(m_typeMapper, awst::makeIntegerConstant(_offset, _loc),
+		std::move(_value32), _loc, _out, _offset % 32);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
-	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc,
-	std::vector<std::shared_ptr<awst::Statement>>* _sink)
+	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc)
 {
 	auto const align = _offset ? alignmentMod32(*_offset) : std::nullopt;
 	auto off = offsetToUint64(std::move(_offset), _loc);
@@ -149,11 +78,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	// a side-effecting mload(q) would otherwise re-run each time (makeEvalOnce =
 	// OperandPlan primitive; a var/constant offset is duplicated as-is).
 	off = awst::makeEvalOnce(std::move(off), _loc);
-	// Generic reads check inside the shared helper; the short aligned path
-	// still needs its check at the call site.
-	if (align == 0 || dynamic_cast<awst::IntegerConstant const*>(off.get()))
-		(_sink ? *_sink : m_pendingStatements).push_back(
-			memBoundsAssert(scratchLayout(), off, _loc));
 	// ONE path for every slot. Slot 0 is plain scratch since the __evm_memory
 	// cache removal, so the old `off < SLOT_SIZE ? slot-0-fast : slow`
 	// conditional selected between two IDENTICAL computations — paying an SE
@@ -205,8 +129,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemStackRange(
 		offAlign && constLen && *constLen + *offAlign <= 32;
 
 	// Both feed the slot/sub math AND both straddle arms — evaluate once.
-	auto off = awst::makeEvalOnce(std::move(_offset), _loc);
 	auto len = awst::makeEvalOnce(std::move(_length), _loc);
+	auto off = checkedMemoryRangeOffset(_scratch, std::move(_offset), len, _loc);
 
 	auto loads = [&](int _slotDelta) {
 		auto slot = awst::makeUInt64BinOp(off, O::FloorDiv, ss(), _loc);
@@ -230,16 +154,66 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemStackRange(
 	// runs fine. A stack VALUE is at most one AVM element (SLOT_SIZE bytes),
 	// so it can never span more than two slots.
 	auto inSlot = awst::makeExtract3(loads(0), sub(), len, _loc);
-	if (provablyInSlot)
-		return inSlot;
 	auto straddle = awst::makeConcat(
 		awst::makeExtract3(loads(0), sub(), avail(), _loc),
 		awst::makeExtract3(loads(1), awst::makeIntegerConstant("0", _loc),
 			awst::makeUInt64BinOp(len, O::Sub, avail(), _loc), _loc),
 		_loc);
+	std::shared_ptr<awst::Expression> result = inSlot;
+	if (!provablyInSlot)
+		result = awst::makeConditional(
+			awst::makeNumericCompare(len, awst::NumericComparison::Lte, avail(), _loc),
+			std::move(inSlot), std::move(straddle), awst::WType::bytesType(), _loc);
 	return awst::makeConditional(
-		awst::makeNumericCompare(len, awst::NumericComparison::Lte, avail(), _loc),
-		std::move(inSlot), std::move(straddle), awst::WType::bytesType(), _loc);
+		awst::makeNumericCompare(len, awst::NumericComparison::Eq, awst::makeZero(_loc), _loc),
+		awst::makeBytesConstant({}, _loc), std::move(result), awst::WType::bytesType(), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::checkedMemoryRangeOffset(
+	ScratchLayout const& _scratch, std::shared_ptr<awst::Expression> _offset,
+	std::shared_ptr<awst::Expression> _length, awst::SourceLocation const& _loc, bool _stackValue)
+{
+	auto len = awst::makeEvalOnce(std::move(_length), _loc);
+	auto off = awst::makeEvalOnce(std::move(_offset), _loc);
+	auto capacity = uint64_t{SLOT_SIZE} * _scratch.memoryCount();
+	auto cap = awst::makeIntegerConstant(capacity, _loc);
+	std::shared_ptr<awst::Expression> fits;
+	auto const* fixed = dynamic_cast<awst::IntegerConstant const*>(len.get());
+	// A known extent (especially a word) needs one offset comparison, not
+	// a zero-length branch plus two general range comparisons at every load.
+	if (fixed)
+	{
+		auto count = std::stoull(fixed->value);
+		if (count == 0) return awst::makeZero(_loc);
+		fits = count <= capacity && (!_stackValue || count <= SLOT_SIZE)
+			? awst::makeNumericCompare(off, awst::NumericComparison::Lte,
+				awst::makeIntegerConstant(capacity - count, _loc), _loc)
+			: std::shared_ptr<awst::Expression>(awst::makeFalse(_loc));
+	}
+	else
+	{
+		fits = awst::makeConditional(
+			awst::makeNumericCompare(off, awst::NumericComparison::Lte, cap, _loc),
+			awst::makeNumericCompare(len, awst::NumericComparison::Lte,
+				awst::makeUInt64BinOp(cap, awst::UInt64BinaryOperator::Sub, off, _loc), _loc),
+			awst::makeFalse(_loc), awst::WType::boolType(), _loc);
+		if (_stackValue)
+			fits = awst::makeBoolBinOp(fits, awst::BinaryBooleanOperator::And,
+				awst::makeNumericCompare(len, awst::NumericComparison::Lte,
+					awst::makeIntegerConstant(uint64_t{SLOT_SIZE}, _loc), _loc), _loc);
+	}
+	static awst::WTuple type({awst::WType::uint64Type(), awst::WType::boolType()});
+	auto pair = awst::makeTupleExpression(&type, _loc);
+	pair->items = {off, std::move(fits)};
+	auto checked = std::make_shared<awst::CheckedMaybe>();
+	checked->sourceLocation = _loc;
+	checked->wtype = awst::WType::uint64Type();
+	checked->expr = std::move(pair);
+	checked->comment = "EVM memory range exceeds modeled capacity or AVM value size";
+	if (fixed) return awst::makeEvalOnce(std::move(checked), _loc);
+	return awst::makeEvalOnce(awst::makeConditional(
+		awst::makeNumericCompare(len, awst::NumericComparison::Eq, awst::makeZero(_loc), _loc),
+		awst::makeZero(_loc), std::move(checked), awst::WType::uint64Type(), _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDirect(
@@ -250,7 +224,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDirect(
 	if (_offsetAlignMod32 != 0 && !dynamic_cast<awst::IntegerConstant const*>(_offset.get()))
 	{
 		auto call = awst::makeSubroutineCall(
-			awst::SubroutineID{memoryWordSubroutine(_typeMapper, false, _loc)},
+			awst::SubroutineID{memoryBufferSubroutine(_typeMapper, false, _loc)},
 			awst::WType::bytesType(), _loc);
 		awst::pushCallArg(call->args, std::move(_offset));
 		return call;
@@ -336,21 +310,22 @@ void AssemblyBuilder::writeMemWordDirect(
 	std::optional<unsigned> _offsetAlignMod32)
 {
 	if (_offsetAlignMod32 == 0 || dynamic_cast<awst::IntegerConstant const*>(_offset.get()))
-		return writeMemWordInline(_typeMapper.profile().scratchLayout,
-			std::move(_offset), std::move(_value32), _loc, _out, _offsetAlignMod32);
+		return writeMemRangeInline(_typeMapper.profile().scratchLayout,
+			std::move(_offset), std::move(_value32), _loc, _out, _offsetAlignMod32, true);
 	auto call = awst::makeSubroutineCall(
-		awst::SubroutineID{memoryWordSubroutine(_typeMapper, true, _loc)},
+		awst::SubroutineID{memoryBufferSubroutine(_typeMapper, true, _loc)},
 		awst::WType::voidType(), _loc);
 	awst::pushCallArg(call->args, std::move(_offset));
 	awst::pushCallArg(call->args, std::move(_value32));
 	_out.push_back(awst::makeExpressionStatement(std::move(call), _loc));
 }
 
-std::string AssemblyBuilder::memoryWordSubroutine(
-	TypeMapper& _typeMapper, bool _write, awst::SourceLocation const& _loc)
+std::string AssemblyBuilder::memoryBufferSubroutine(
+	TypeMapper& _typeMapper, bool _write, awst::SourceLocation const& _loc, bool _byteRange)
 {
-	std::string const id = _write ? "__puyasol_memory_write_word" : "__puyasol_memory_read_word";
-	auto& subs = _typeMapper.artifacts().memoryWordSubroutines;
+	std::string const id = std::string("__puyasol_memory_") + (_write ? "write_" : "read_")
+		+ (_byteRange ? "range" : "word");
+	auto& subs = _typeMapper.artifacts().bufferSubroutines;
 	if (subs.count(id))
 		return id;
 	auto const& scratch = _typeMapper.profile().scratchLayout;
@@ -362,15 +337,18 @@ std::string AssemblyBuilder::memoryWordSubroutine(
 	if (_write)
 	{
 		args.emplace_back("value", bytes, _loc);
-		writeMemWordInline(scratch, off, awst::makeVarExpression("value", bytes, _loc),
-			_loc, body->body, std::nullopt);
+		writeMemRangeInline(scratch, off, awst::makeVarExpression("value", bytes, _loc),
+			_loc, body->body, std::nullopt, !_byteRange);
 		body->body.push_back(awst::makeReturnStatement(nullptr, _loc));
 	}
 	else
 	{
-		body->body.push_back(memBoundsAssert(scratch, off, _loc));
+		if (_byteRange) args.emplace_back("length", u64, _loc);
+		std::shared_ptr<awst::Expression> length = _byteRange
+			? std::shared_ptr<awst::Expression>(awst::makeVarExpression("length", u64, _loc))
+			: awst::makeIntegerConstant("32", _loc);
 		body->body.push_back(awst::makeReturnStatement(readMemStackRange(scratch, off,
-			awst::makeIntegerConstant("32", _loc), _loc), _loc));
+			std::move(length), _loc), _loc));
 	}
 	// Reads are not pure: a store between two calls must be observed. Both
 	// helpers retain one body regardless of Puya's selective Yul inlining.
@@ -381,18 +359,17 @@ std::string AssemblyBuilder::memoryWordSubroutine(
 	return id;
 }
 
-void AssemblyBuilder::writeMemWordInline(
+void AssemblyBuilder::writeMemRangeInline(
 	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _offset, std::shared_ptr<awst::Expression> _value32,
 	awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out,
-	std::optional<unsigned> _offsetAlignMod32)
+	std::optional<unsigned> _offsetAlignMod32, bool _word)
 {
 	using O = awst::UInt64BinaryOperator;
 	int id = awst::NameGen::next("MemoryOps.dynamicStore");
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
 	bool const writeIsAligned = _offsetAlignMod32 && *_offsetAlignMod32 == 0;
 
-	_out.push_back(memBoundsAssert(_scratch, _offset, _loc));
 
 	std::string slotN = "__blobw_slot_" + std::to_string(id);
 	std::string subN = "__blobw_sub_" + std::to_string(id);
@@ -400,17 +377,24 @@ void AssemblyBuilder::writeMemWordInline(
 	auto u64v = [&](std::string const& n) { return shorthand::u64Var(n, _loc); };
 	auto valR = [&]() { return awst::makeVarExpression(valN, awst::WType::bytesType(), _loc); };
 
+	_out.push_back(awst::makeAssignmentStatement(valR(), std::move(_value32), _loc));
+	std::shared_ptr<awst::Expression> len = _word
+		? std::shared_ptr<awst::Expression>(awst::makeIntegerConstant("32", _loc))
+		: awst::makeLen(valR(), _loc);
+	_offset = checkedMemoryRangeOffset(_scratch, std::move(_offset), len, _loc);
+	auto nonEmpty = awst::makeBlock(_loc);
+	auto& writes = nonEmpty->body;
+
 	auto physicalSlot = awst::makeUInt64BinOp(_offset, O::FloorDiv, ss(), _loc);
 	if (_scratch.memoryFirst() != 0)
 		physicalSlot = awst::makeUInt64BinOp(std::move(physicalSlot), O::Add,
 			awst::makeIntegerConstant(
 				static_cast<uint64_t>(_scratch.memoryFirst()), _loc), _loc);
-	_out.push_back(awst::makeAssignmentStatement(
+	writes.push_back(awst::makeAssignmentStatement(
 		u64v(slotN), std::move(physicalSlot), _loc));
-	_out.push_back(awst::makeAssignmentStatement(
+	writes.push_back(awst::makeAssignmentStatement(
 		u64v(subN),
 		awst::makeUInt64BinOp(std::move(_offset), O::Mod, ss(), _loc), _loc));
-	_out.push_back(awst::makeAssignmentStatement(valR(), std::move(_value32), _loc));
 
 	auto storeSlot = [&](std::shared_ptr<awst::Expression> _slot,
 		std::shared_ptr<awst::Expression> _at,
@@ -435,12 +419,6 @@ void AssemblyBuilder::writeMemWordInline(
 	thenBlk->body.push_back(storeSlot(u64v(slotN), u64v(subN), valR()));
 	// A 32-byte write at a 32-aligned offset has sub <= SLOT_SIZE-32 always,
 	// so the split arm below is unreachable (see readMemStackRange).
-	if (writeIsAligned)
-	{
-		for (auto& st: thenBlk->body)
-			_out.push_back(std::move(st));
-		return;
-	}
 
 	auto elseBlk = awst::makeBlock(_loc);
 	{
@@ -454,14 +432,20 @@ void AssemblyBuilder::writeMemWordInline(
 			awst::makeUInt64BinOp(u64v(slotN), O::Add, awst::makeOne(_loc), _loc),
 			awst::makeIntegerConstant("0", _loc),
 			awst::makeExtract3(valR(), firstLen(),
-				awst::makeUInt64BinOp(awst::makeIntegerConstant("32", _loc),
+				awst::makeUInt64BinOp(len,
 					O::Sub, firstLen(), _loc), _loc)));
 	}
 
+	if (writeIsAligned)
+		writes.insert(writes.end(), thenBlk->body.begin(), thenBlk->body.end());
+	else
+		writes.push_back(awst::makeIfElse(
+			awst::makeNumericCompare(len, awst::NumericComparison::Lte,
+				awst::makeUInt64BinOp(ss(), O::Sub, u64v(subN), _loc), _loc),
+			std::move(thenBlk), std::move(elseBlk), _loc));
 	_out.push_back(awst::makeIfElse(
-		awst::makeNumericCompare(u64v(subN), awst::NumericComparison::Lte,
-			awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE - 32), _loc), _loc),
-		std::move(thenBlk), std::move(elseBlk), _loc));
+		awst::makeNumericCompare(len, awst::NumericComparison::Ne, awst::makeZero(_loc), _loc),
+		std::move(nonEmpty), nullptr, _loc));
 }
 
 void AssemblyBuilder::writeMemByteDirect(
@@ -522,7 +506,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 
 std::optional<AssemblyBuilder::BytesDataPtrMatch> AssemblyBuilder::matchBytesMemoryDataPtr(
 	solidity::yul::Expression const& _addr,
-	awst::SourceLocation const& _loc
+	awst::SourceLocation const& _loc, bool _evaluate
 )
 {
 	auto asBytesLocal = [&](solidity::yul::Expression const& e)
@@ -532,8 +516,8 @@ std::optional<AssemblyBuilder::BytesDataPtrMatch> AssemblyBuilder::matchBytesMem
 		if (!id)
 			return std::nullopt;
 		std::string name = resolveVarRef(*id);
-		auto it = m_locals.find(name);
-		if (it == m_locals.end())
+		auto it = m_frame.locals.find(name);
+		if (it == m_frame.locals.end())
 			return std::nullopt;
 		if (it->second != awst::WType::bytesType() && it->second != awst::WType::stringType())
 			return std::nullopt;
@@ -544,7 +528,7 @@ std::optional<AssemblyBuilder::BytesDataPtrMatch> AssemblyBuilder::matchBytesMem
 		// uint64). Let it fall through to the generic scratch path, which resolves
 		// the offset var so mstore and mload hit the SAME scratch bytes and an asm
 		// write is visible to a later asm read.
-		if (m_blobOffsetVars.count(name))
+		if (m_frame.blobOffsetVars.count(name))
 			return std::nullopt;
 		return std::make_pair(name, it->second);
 	};
@@ -559,6 +543,7 @@ std::optional<AssemblyBuilder::BytesDataPtrMatch> AssemblyBuilder::matchBytesMem
 	for (int i = 0; i < 2; ++i)
 		if (auto bl = asBytesLocal(addCall->arguments[i]))
 		{
+			if (!_evaluate) return BytesDataPtrMatch{bl->first, bl->second, nullptr, nullptr};
 			auto c = resolveConstantYulValue(addCall->arguments[1 - i]);
 			auto oExpr = offsetToUint64(buildExpression(addCall->arguments[1 - i]), _loc);
 			if (c && *c >= 32)
@@ -579,8 +564,11 @@ std::optional<AssemblyBuilder::BytesDataPtrMatch> AssemblyBuilder::matchBytesMem
 			auto bl = asBytesLocal(inner->arguments[j]);
 			auto c = resolveConstantYulValue(inner->arguments[1 - j]);
 			if (bl && c && *c == 32)
+			{
+				if (!_evaluate) return BytesDataPtrMatch{bl->first, bl->second, nullptr, nullptr};
 				return BytesDataPtrMatch{bl->first, bl->second,
 					offsetToUint64(buildExpression(addCall->arguments[1 - i]), _loc), nullptr};
+			}
 		}
 	}
 
@@ -806,12 +794,12 @@ bool AssemblyBuilder::tryHandleBytesMemoryLengthWrite(
 	if (!id)
 		return false;
 	std::string name = resolveVarRef(*id);
-	auto it = m_locals.find(name);
-	if (it == m_locals.end())
+	auto it = m_frame.locals.find(name);
+	if (it == m_frame.locals.end())
 		return false;
 	if (it->second != awst::WType::bytesType() && it->second != awst::WType::stringType())
 		return false;
-	if (m_blobOffsetVars.count(name))
+	if (m_frame.blobOffsetVars.count(name))
 		return false;                 // blob-backed: generic scratch path owns it
 
 	auto* ty = it->second;
@@ -853,10 +841,12 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite(
 		return false;
 	if (tryHandleBytesMemoryLengthWrite(_call, _loc, _out))
 		return true;
-	auto m = matchBytesMemoryDataPtr(_call.arguments[0], _loc);
+	auto m = matchBytesMemoryDataPtr(_call.arguments[0], _loc, false);
 	if (!m)
 		return false;
-	auto padded = padTo32Bytes(ensureBiguint(buildExpression(_call.arguments[1]), _loc), _loc);
+	auto operands = buildOperands({&_call.arguments[1]}, _loc, _out);
+	auto padded = padTo32Bytes(ensureBiguint(operands[0], _loc), _loc);
+	m = matchBytesMemoryDataPtr(_call.arguments[0], _loc);
 	// Side effects in the offset / value (e.g. an mload) land as pending; drain
 	// them before the materialisation + write statements.
 	drainPendingStatements(_out);
@@ -874,10 +864,12 @@ bool AssemblyBuilder::tryHandleBytesMemoryWrite8(
 	// bytes/string memory local at any data offset.
 	if (_call.arguments.size() != 2)
 		return false;
-	auto m = matchBytesMemoryDataPtr(_call.arguments[0], _loc);
+	auto m = matchBytesMemoryDataPtr(_call.arguments[0], _loc, false);
 	if (!m)
 		return false;
-	auto padded = padTo32Bytes(ensureBiguint(buildExpression(_call.arguments[1]), _loc), _loc);
+	auto operands = buildOperands({&_call.arguments[1]}, _loc, _out);
+	auto padded = padTo32Bytes(ensureBiguint(operands[0], _loc), _loc);
+	m = matchBytesMemoryDataPtr(_call.arguments[0], _loc);
 	drainPendingStatements(_out);
 	emitGuardedBytesDataWrite(std::move(*m), std::move(padded), 1, _loc, _out);
 	return true;
@@ -943,9 +935,9 @@ bool AssemblyBuilder::tryHandleBytesMemoryMcopy(
 		return false;
 
 	// Both must be known bytes/string locals
-	auto dstIt = m_locals.find(dstVar);
-	auto srcIt = m_locals.find(srcVar);
-	if (dstIt == m_locals.end() || srcIt == m_locals.end())
+	auto dstIt = m_frame.locals.find(dstVar);
+	auto srcIt = m_frame.locals.find(srcVar);
+	if (dstIt == m_frame.locals.end() || srcIt == m_frame.locals.end())
 		return false;
 	// BLOB-backed vars (asm-touched EVM memory) hold a uint64
 	// offset; the real data lives in the blob. This value-model fast path
@@ -954,7 +946,7 @@ bool AssemblyBuilder::tryHandleBytesMemoryMcopy(
 	// (mcopy_to_right_overlap returned the original bytes). Fall through to
 	// the generic word-copy, which goes through mload/mstore and is
 	// memmove-safe via the M13 source-word snapshot.
-	if (m_blobOffsetVars.count(dstVar) || m_blobOffsetVars.count(srcVar))
+	if (m_frame.blobOffsetVars.count(dstVar) || m_frame.blobOffsetVars.count(srcVar))
 		return false;
 	if (dstIt->second != awst::WType::bytesType() && dstIt->second != awst::WType::stringType())
 		return false;
@@ -966,9 +958,10 @@ bool AssemblyBuilder::tryHandleBytesMemoryMcopy(
 
 	// Translate offsets and length from Yul; pinned — each is referenced
 	// several times in the guards below.
-	auto dstOffExpr = awst::makeEvalOnce(offsetToUint64(buildExpression(*dstOffYul), _loc), _loc);
-	auto srcOffExpr = awst::makeEvalOnce(offsetToUint64(buildExpression(*srcOffYul), _loc), _loc);
-	auto lenExpr    = awst::makeEvalOnce(offsetToUint64(buildExpression(_call.arguments[2]), _loc), _loc);
+	auto operands = buildOperands({dstOffYul, srcOffYul, &_call.arguments[2]}, _loc, _out);
+	auto dstOffExpr = awst::makeEvalOnce(offsetToUint64(operands[0], _loc), _loc);
+	auto srcOffExpr = awst::makeEvalOnce(offsetToUint64(operands[1], _loc), _loc);
+	auto lenExpr = awst::makeEvalOnce(offsetToUint64(operands[2], _loc), _loc);
 
 	auto srcRef = [&]() { return awst::makeVarExpression(srcVar, srcIt->second, _loc); };
 	auto dstRef = [&]() { return awst::makeVarExpression(dstVar, dstIt->second, _loc); };
@@ -1021,14 +1014,14 @@ void AssemblyBuilder::handleMstore(
 		})();
 		auto storedVal = resolveConstantOffset(_args[1]);
 		if (storedVal)
-			m_localConstants[varName] = *storedVal;
+			m_frame.localConstants[varName] = *storedVal;
 		else
-			m_localConstants.erase(varName);
+			m_frame.localConstants.erase(varName);
 	}
 	else
 		invalidateMemConstants();
 
-	m_lastMstoreValue = _args[1];
+	m_frame.lastMstoreValue = _args[1];
 
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 
@@ -1087,7 +1080,7 @@ void AssemblyBuilder::handleReturn(
 
 	// return(offset, size): EVM pattern bypassing ABI encoding.
 	// Void function: emit data as structured log so callers read it from logs.
-	if (!m_returnType || m_returnType == awst::WType::voidType())
+	if (!m_frame.returnType || m_frame.returnType == awst::WType::voidType())
 	{
 		auto returnOffset = resolveConstantOffset(_args[0]);
 		auto returnSize = resolveConstantOffset(_args[1]);
@@ -1096,11 +1089,11 @@ void AssemblyBuilder::handleReturn(
 		{
 			// return(_, 0) → unconditional program-exit via AVM `return 1`.
 			// Needed for Yul helpers using EVM `return` as a hard exit inside a nested call.
-			flushMemoryToScratch(_loc, _out);
+
 			auto returnOp = awst::makeIntrinsicCall("return", awst::WType::voidType(), _loc);
 			returnOp->stackArgs.push_back(awst::makeTrue(_loc));
 			_out.push_back(awst::makeExpressionStatement(std::move(returnOp), _loc));
-			m_haltEmitted = true;
+			m_frame.haltEmitted = true;
 			return;
 		}
 
@@ -1146,8 +1139,7 @@ void AssemblyBuilder::handleReturn(
 		auto logStmt = awst::makeExpressionStatement(std::move(logCall), _loc);
 		_out.push_back(std::move(logStmt));
 
-		flushMemoryToScratch(_loc, _out);
-		if (m_frameIsProgram)
+		if (m_frame.frameIsProgram)
 		{
 			// Program frame (internal/private/fallback/receive): EVM return()
 			// ends the whole call — halt so the answer log above stays the
@@ -1157,14 +1149,14 @@ void AssemblyBuilder::handleReturn(
 				"return", awst::WType::voidType(), _loc);
 			returnOp->stackArgs.push_back(awst::makeTrue(_loc));
 			_out.push_back(awst::makeExpressionStatement(std::move(returnOp), _loc));
-			m_haltEmitted = true;
+			m_frame.haltEmitted = true;
 			return;
 		}
 		auto ret = awst::makeReturnStatement(nullptr, _loc);
 		_out.push_back(std::move(ret));
 		// A subroutine return ends the frame: nothing after it can run, and
 		// puya rejects the unreachable trailing statements.
-		m_haltEmitted = true;
+		m_frame.haltEmitted = true;
 		return;
 	}
 
@@ -1172,47 +1164,47 @@ void AssemblyBuilder::handleReturn(
 	// recursive type-directed codec used by abi.decode: solc supplies every
 	// head stride/dynamic fact, so bytes32[], narrow arrays, nested arrays,
 	// structs, and tuples do not need separate assembly-return branches.
-	if (!m_frameIsProgram && !m_returnSolTypes.empty() && m_returnType
-		&& abi::canDecodeEvmAbi(m_returnSolTypes)
-		&& (m_returnSolTypes.size() == 1
-			? m_returnType->kind() != awst::WTypeKind::WTuple
-			: (dynamic_cast<awst::WTuple const*>(m_returnType)
-				&& static_cast<awst::WTuple const*>(m_returnType)->types().size()
-					== m_returnSolTypes.size())))
+	if (!m_frame.frameIsProgram && !m_frame.returnSolTypes.empty() && m_frame.returnType
+		&& codec::canRoundTripEvmAbi(m_frame.returnSolTypes)
+		&& (m_frame.returnSolTypes.size() == 1
+			? m_frame.returnType->kind() != awst::WTypeKind::WTuple
+			: (dynamic_cast<awst::WTuple const*>(m_frame.returnType)
+				&& static_cast<awst::WTuple const*>(m_frame.returnType)->types().size()
+					== m_frame.returnSolTypes.size())))
 	{
 		auto region = readMemRangeDyn(
 			offsetToUint64(_args[0], _loc),
 			offsetToUint64(_args[1], _loc), _loc, _out);
 		auto returnValue = abi::decodeEvmAbi(
-			m_typeMapper, std::move(region), m_returnSolTypes,
-			m_returnType, _loc, _out);
-		if (m_returnSolTypes.size() == 1
-			&& returnValue && returnValue->wtype != m_returnType)
+			m_typeMapper, std::move(region), m_frame.returnSolTypes,
+			m_frame.returnType, _loc, _out);
+		if (m_frame.returnSolTypes.size() == 1
+			&& returnValue && returnValue->wtype != m_frame.returnType)
 		{
-			auto const* solType = m_returnSolTypes[0];
-			auto kind = m_returnType->kind();
+			auto const* solType = m_frame.returnSolTypes[0];
+			auto kind = m_frame.returnType->kind();
 			if (kind == awst::WTypeKind::ARC4Struct
 				|| kind == awst::WTypeKind::ARC4StaticArray
 				|| kind == awst::WTypeKind::ARC4DynamicArray)
 				returnValue = codec::valueToArc4(m_typeMapper, solType,
-					std::move(returnValue), m_returnType, _loc);
-			else if (m_returnType == awst::WType::biguintType())
+					std::move(returnValue), m_frame.returnType, _loc);
+			else if (m_frame.returnType == awst::WType::biguintType())
 				returnValue = awst::makeAsBiguint(codec::valueToEvmWord(
 					m_typeMapper, solType, std::move(returnValue), _loc), _loc);
 			else
 				returnValue = TypeCoercion::coerceForAssignment(
-					std::move(returnValue), m_returnType, _loc);
+					std::move(returnValue), m_frame.returnType, _loc);
 		}
 
-		if (m_frameIsProgram)
+		if (m_frame.frameIsProgram)
 		{
 			emitArc4ReturnHalt(std::move(returnValue), _loc, _out);
 			return;
 		}
-		flushMemoryToScratch(_loc, _out);
+
 		returnValue = encodeFrameReturn(std::move(returnValue), _loc, _out);
 		_out.push_back(awst::makeReturnStatement(std::move(returnValue), _loc));
-		m_haltEmitted = true; // frame ends here (see the void arm)
+		m_frame.haltEmitted = true; // frame ends here (see the void arm)
 		return;
 	}
 
@@ -1229,7 +1221,7 @@ void AssemblyBuilder::handleReturn(
 	std::shared_ptr<awst::Expression> returnValue = readMemSlot(*offset, _loc);
 
 	// Convert to bool if the function's return type is bool
-	if (m_returnType == awst::WType::boolType()
+	if (m_frame.returnType == awst::WType::boolType()
 		&& returnValue->wtype != awst::WType::boolType())
 	{
 		auto zero = awst::makeBiguintConstant("0", _loc);
@@ -1241,7 +1233,7 @@ void AssemblyBuilder::handleReturn(
 	// When the function returns an array type but assembly produces a scalar,
 	// the assembly was manually building ABI-encoded memory (EVM-specific).
 	// Return an empty array as fallback since the memory ops don't translate.
-	if (m_returnType && dynamic_cast<awst::ReferenceArray const*>(m_returnType)
+	if (m_frame.returnType && dynamic_cast<awst::ReferenceArray const*>(m_frame.returnType)
 		&& !dynamic_cast<awst::ReferenceArray const*>(returnValue->wtype))
 	{
 		// HARD ERROR — returning an empty array would silently hand the caller
@@ -1252,21 +1244,21 @@ void AssemblyBuilder::handleReturn(
 			"memory, which has no AVM translation here; returning an empty array "
 			"would silently hand the caller `[]` instead of the real data.", _loc
 		);
-		auto emptyArr = awst::makeNewArray(m_returnType, _loc);
+		auto emptyArr = awst::makeNewArray(m_frame.returnType, _loc);
 		returnValue = std::move(emptyArr);
 	}
 
-	if (m_frameIsProgram)
+	if (m_frame.frameIsProgram)
 	{
 		emitArc4ReturnHalt(std::move(returnValue), _loc, _out);
 		return;
 	}
 	// Public/external frame: EVM return() ends this frame only — callers
 	// (router or `this.f()` callsub) continue. Plain subroutine return.
-	flushMemoryToScratch(_loc, _out);
+
 	returnValue = encodeFrameReturn(std::move(returnValue), _loc, _out);
 	_out.push_back(awst::makeReturnStatement(std::move(returnValue), _loc));
-	m_haltEmitted = true; // frame ends here (see the void arm)
+	m_frame.haltEmitted = true; // frame ends here (see the void arm)
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::encodeFrameReturn(
@@ -1274,11 +1266,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::encodeFrameReturn(
 	awst::SourceLocation const& _loc,
 	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
-	if (!m_returnWirePlan || !_value)
+	if (!m_frame.returnWirePlan || !_value)
 		return _value;
 	std::vector<std::shared_ptr<awst::Statement>> prepend;
 	_value = TypeCoercion::encodeReturnValue(
-		m_typeMapper, std::move(_value), *m_returnWirePlan, _loc, prepend, m_returnAsmWrap);
+		m_typeMapper, std::move(_value), *m_frame.returnWirePlan, _loc, prepend, m_frame.returnAsmWrap);
 	for (auto& statement: prepend)
 		_out.push_back(std::move(statement));
 	return _value;
@@ -1298,7 +1290,7 @@ void AssemblyBuilder::emitArc4ReturnHalt(
 	// followed by the raw AVM `return 1` program exit. The previous lowering
 	// (subroutine ReturnStatement) was only correct when the enclosing
 	// function happened to be the externally-called one.
-	flushMemoryToScratch(_loc, _out);
+
 
 	// The method's wire plan first (arc4.uint<bits> for sub-word returns), so
 	// the logged payload matches the published ARC-56 return type.
@@ -1307,7 +1299,7 @@ void AssemblyBuilder::emitArc4ReturnHalt(
 	if (!alreadyArc4)
 	{
 		auto* arc4Type = m_typeMapper.mapToARC4Type(
-			arc4Value->wtype ? arc4Value->wtype : m_returnType);
+			arc4Value->wtype ? arc4Value->wtype : m_frame.returnType);
 		if (arc4Type && arc4Value->wtype != arc4Type)
 			arc4Value = awst::makeARC4Encode(std::move(arc4Value), arc4Type, _loc);
 	}
@@ -1323,7 +1315,7 @@ void AssemblyBuilder::emitArc4ReturnHalt(
 	auto returnOp = awst::makeIntrinsicCall("return", awst::WType::voidType(), _loc);
 	returnOp->stackArgs.push_back(awst::makeTrue(_loc));
 	_out.push_back(awst::makeExpressionStatement(std::move(returnOp), _loc));
-	m_haltEmitted = true;
+	m_frame.haltEmitted = true;
 }
 
 // ─── Statement translation ─────────────────────────────────────────────────

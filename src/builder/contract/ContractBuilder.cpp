@@ -20,6 +20,7 @@
 #include "Logger.h"
 #include "builder/proxies/Erc1967Lowering.h"
 #include "builder/proxies/UupsLowering.h"
+#include "builder/sol-ast/members/SolIntrinsicAccess.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -130,7 +131,6 @@ ContractBuilder::ContractBuilder(
 	FunctionSymbolTable const& _functionSymbols,
 	uint64_t _opupBudget,
 	std::map<std::string, uint64_t> const& _ensureBudget,
-	bool _viaIR,
 	std::vector<solidity::frontend::FunctionDefinition const*> const& _hostBoundFunctions
 )
 	: m_typeMapper(_typeMapper),
@@ -140,7 +140,6 @@ ContractBuilder::ContractBuilder(
 	  m_functionSymbols(_functionSymbols),
 	  m_opupBudget(_opupBudget),
 	  m_ensureBudget(_ensureBudget),
-	  m_viaIR(_viaIR),
 	  m_hostBoundFunctions(_hostBoundFunctions)
 {
 }
@@ -167,9 +166,22 @@ class AssemblyAggregateScanner: public solidity::frontend::ASTConstVisitor
 {
 public:
 	std::set<int64_t>& ids;
-	explicit AssemblyAggregateScanner(std::set<int64_t>& _ids)
-		: ids(_ids)
+	std::set<int64_t> const& identityDeclarations;
+	explicit AssemblyAggregateScanner(std::set<int64_t>& _ids, std::set<int64_t> const& identity)
+		: ids(_ids), identityDeclarations(identity)
 	{}
+	bool visit(solidity::frontend::Identifier const& identifier) override
+	{
+		if (auto const* declaration = identifier.annotation().referencedDeclaration;
+			declaration && identityDeclarations.contains(declaration->id()))
+			ids.insert(declaration->id());
+		return true;
+	}
+	bool visit(solidity::frontend::VariableDeclaration const& declaration) override
+	{
+		if (identityDeclarations.contains(declaration.id())) ids.insert(declaration.id());
+		return true;
+	}
 
 	bool visit(solidity::frontend::InlineAssembly const& _asm) override
 	{
@@ -227,7 +239,7 @@ bool isUnreachableInternalFunction(
 	if (_fn.visibility() != Visibility::Internal
 		&& _fn.visibility() != Visibility::Private)
 		return false;
-	return !_analysis.isFunctionReachable(_contract.id(), _fn.id());
+	return !_analysis.isCallableReachable(_contract.id(), _fn.id());
 }
 } // namespace
 
@@ -253,47 +265,36 @@ void emitAsmParamSpills(
 	std::string const& _sourceFile,
 	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
-	// collect the DECLS asm references (the aggregate scanner only keeps ids)
-	struct DeclScan: solidity::frontend::ASTConstVisitor
+	auto found = _typeMapper.analysis().functionDeclarations.find(_fn.callableId);
+	if (found == _typeMapper.analysis().functionDeclarations.end()) return;
+	// Named return parameters are locals too. Their native defaults are
+	// prepended before these spills; Yul and reference aliases need their
+	// offsets registered before the body is lowered.
+	auto parameters = found->second->parameters();
+	parameters.insert(parameters.end(), found->second->returnParameters().begin(),
+		found->second->returnParameters().end());
+	for (auto const& parameter: parameters)
 	{
-		std::map<int64_t, solidity::frontend::VariableDeclaration const*> decls;
-		bool visit(solidity::frontend::InlineAssembly const& _asm) override
-		{
-			for (auto const& ref: _asm.annotation().externalReferences)
-				if (auto const* vd = dynamic_cast<
-						solidity::frontend::VariableDeclaration const*>(
-						ref.second.declaration))
-					decls[vd->id()] = vd;
-			return true;
-		}
-	} scan;
-	_block.accept(scan);
-	for (auto const& [id, vd]: scan.decls)
-	{
-		// In default mode the scanner marks exactly the declarations whose Yul
-		// references require pointer semantics. In universal-memory mode it marks
-		// every referenced aggregate. Do not spill unrelated memory parameters.
-		if (!_fn.scope.bindings.assemblyAggregates.contains(id))
+		auto const* vd = parameter.get();
+		auto id = vd->id();
+		if (!_fn.scope.bindings.assemblyAggregates.contains(id)
+			|| vd->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Memory
+			|| vd->name().empty() || !_fn.scope.bindings.blobAggregates.get(id).empty())
 			continue;
-		if (!vd->isCallableOrCatchParameter()
-			|| vd->referenceLocation()
-				!= solidity::frontend::VariableDeclaration::Location::Memory
-			|| vd->name().empty())
-			continue;
-		auto const* t = vd->type();
-		bool aggregate = dynamic_cast<solidity::frontend::ArrayType const*>(t)
-			|| dynamic_cast<solidity::frontend::StructType const*>(t);
-		if (!aggregate)
-			continue;
-		if (!_fn.scope.bindings.blobAggregates.get(id).empty())
-			continue;   // already pointer-modeled (>4KB path)
-		auto const* wt = _typeMapper.map(t);
-		std::string offN = "__blobagg_off_" + std::to_string(id);
-		awst::SourceLocation loc0 = makeLoc(_typeMapper, _sourceFile, vd->location());
-		if (emitBlobBackValue(_typeMapper, t, wt,
-				awst::makeVarExpression(vd->name(), wt, loc0),
-				offN, static_cast<int>(id), loc0, _out))
-			_fn.scope.bindings.blobAggregates.set(id, offN);
+		auto const* type = vd->type();
+		auto const* native = _typeMapper.map(type);
+		std::string offset = "__blobagg_off_" + std::to_string(id);
+		auto loc = makeLoc(_typeMapper, _sourceFile, vd->location());
+		if (!emitBlobBackValue(_typeMapper, type, native,
+			awst::makeVarExpression(vd->name(), native, loc), offset, static_cast<int>(id), loc, _out))
+			throw SizeError("Cannot preserve memory parameter identity");
+		_fn.scope.bindings.blobAggregates.set(id, offset);
+		if (vd->isReturnParameter()) continue;
+		std::string original = offset + "_entry";
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(original, awst::WType::uint64Type(), loc),
+			awst::makeVarExpression(offset, awst::WType::uint64Type(), loc), loc));
+		_fn.originalMemoryParams.emplace(id, std::move(original));
 	}
 }
 
@@ -316,7 +317,7 @@ void markAssemblyAggregates(
 	solidity::frontend::Block const& _block)
 {
 	std::set<int64_t> asmAggIds;
-	AssemblyAggregateScanner scanner{asmAggIds};
+	AssemblyAggregateScanner scanner{asmAggIds, _fn.tr.typeMapper.analysis().memoryIdentityDeclarations};
 	_block.accept(scanner);
 	for (int64_t id: asmAggIds)
 		_fn.scope.bindings.assemblyAggregates.insert(id);
@@ -382,6 +383,7 @@ void ContractBuilder::setFunctionContext(
 {
 	auto& ctx = m_functionCtx.emplace(*m_tr, _params, _returnType, _bitWidths);
 	ctx.paramSolTypes = _paramSolTypes;
+	m_exprBuilder->currentScope = &ctx.scope;
 }
 
 void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method,
@@ -460,15 +462,6 @@ std::string ContractBuilder::beginContract(
 		contractName = it->second;
 	m_contractId = _contract.fullyQualifiedName();
 
-	// Reset the generated-name counters: a contract's temp/subroutine names
-	// (`__mod_retval_N`, `f__mod0_N`, …) must depend only on its own content,
-	// not on how many contracts compiled before it in the batch (deterministic
-	// multi-contract output; prerequisite for parallel per-contract compiles).
-	awst::NameGen::resetAll();
-
-	// Reset Yul subroutine sink (drained by emitFunctionPointerDispatch).
-	m_typeMapper.artifacts().pendingYulSubroutines.clear();
-
 	// Collect transient state variables
 	m_transientStorage.collectVars(_contract, m_typeMapper);
 	// Note: setTransientStorage called after m_exprBuilder is created (createFunctionContexts)
@@ -527,7 +520,6 @@ void ContractBuilder::createExpressionBuilder(
 		m_functionPointers
 	);
 	m_exprBuilder->currentContract = &_contract;
-	m_exprBuilder->viaIRSequencing = m_viaIR;
 
 	// One session-owned layout feeds state access, inline-assembly slot routing,
 	// and runtime-dispatch generation. It is always solc's exact logical layout;
@@ -550,7 +542,7 @@ ContractBuilder::collectReachableHostBoundFunctions(
 	for (auto const* function: m_hostBoundFunctions)
 		if (function
 			&& (!m_typeMapper.analysis().hasContractReachability(_contract.id())
-				|| m_typeMapper.analysis().isFunctionReachable(
+				|| m_typeMapper.analysis().isCallableReachable(
 					_contract.id(), function->id())))
 			reachableHostBoundFunctions.push_back(function);
 	return reachableHostBoundFunctions;
@@ -575,10 +567,10 @@ void ContractBuilder::registerHostBoundFunctionNames(
 void ContractBuilder::createFunctionContexts()
 {
 	m_tr.emplace(*m_exprBuilder, m_typeMapper, m_sourceFile);
-	m_exprBuilder->currentScope = &m_tr->scope;
 	m_functionCtx.emplace(*m_tr,
 		std::vector<std::pair<std::string, awst::WType const*>>{},
 		nullptr, std::map<std::string, unsigned>{});
+	m_exprBuilder->currentScope = &m_functionCtx->scope;
 
 	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;
@@ -612,10 +604,9 @@ std::shared_ptr<awst::Contract> ContractBuilder::makeContractNode(
 			);
 	}
 
-	// --evm-storage-layout: state lives in opaque numbered slots — no per-var
-	// ARC-56 declarations (the reason the mode is opt-in; see the design doc).
-	if (!m_typeMapper.profile().evmStorageLayout)
-		contract->appState = m_storageMapper.mapStateVariables(_contract, m_sourceFile);
+	// Numbered slots stay opaque; immutables are named cells in BOTH layouts
+	// and must contribute their real keys to ARC-56 and deployment schema.
+	contract->appState = m_storageMapper.mapStateVariables(_contract, m_sourceFile);
 
 	// EVM-memory scratch slots (default 0-4; raisable via
 	// --evm-memory-slots) plus transient + flash-accounting slots.
@@ -758,10 +749,8 @@ void ContractBuilder::buildRouters(
 	// --child-programs-via-box: this contract's bodies emitted box-loading
 	// `new C()` creates — append the deployer's provisioning method BEFORE
 	// dispatch so the residual ARC4 router (or plain ARC4 router) sees it.
-	// Snapshot-and-reset: the set is per-contract, like usesErc1967Admin.
-	if (!m_typeMapper.artifacts().boxProvisionedChildren.empty())
+	if (!m_typeMapper.artifacts().contract().boxProvisionedChildren.empty())
 	{
-		m_typeMapper.artifacts().boxProvisionedChildren.clear();
 		_contractNode.methods.push_back(makeProvisionChildProgMethod(
 			m_typeMapper, _contractNode.id,
 			_contractNode.approvalProgram.sourceLocation));
@@ -789,18 +778,6 @@ void ContractBuilder::buildRouters(
 				_contractNode.approvalProgram.sourceLocation);
 	}
 
-	// Router-memoized struct decoders (EvmAbiDecode): the arms referenced
-	// them by name while dispatch was built; append the bodies now.
-	{
-		auto& arts = m_typeMapper.artifacts();
-		for (auto& method: arts.pendingEvmDecodeMethods)
-		{
-			method.cref = _contractNode.id;
-			_contractNode.methods.push_back(std::move(method));
-		}
-		arts.pendingEvmDecodeMethods.clear();
-		arts.evmDecodeStructMethods.clear();
-	}
 }
 
 void ContractBuilder::buildHostBoundFunctions(
@@ -903,86 +880,48 @@ void ContractBuilder::warnEscapedErc1967Slots(awst::Contract const& _contractNod
 		proxies::Erc1967Lowering::warnEscapedSlotConstants(method, warned);
 }
 
-void ContractBuilder::emitErc1967AdminGate(
+void ContractBuilder::emitProxyUpdateGate(
 	solidity::frontend::ContractDefinition const& _contract,
 	awst::Contract& _contractNode)
 {
-	if (!m_typeMapper.profile().proxyAdaptation)
+	if (!m_typeMapper.profile().proxyAdaptation) return;
+	auto const& analysis = m_typeMapper.analysis();
+	auto const& loc = _contractNode.approvalProgram.sourceLocation;
+	// A single per-contract policy: admin-cell use OR the resolved UUPS hook.
+	// Library facts are scoped by solc reachability, never compilation order.
+	bool admin = m_typeMapper.artifacts().contract().usesErc1967Admin;
+	for (auto functionId: m_typeMapper.artifacts().erc1967AdminFunctions)
+		admin |= analysis.isCallableReachable(_contract.id(), functionId);
+	auto const found = analysis.proxy.authorizationHooks.find(_contract.id());
+	auto const* authorize = found == analysis.proxy.authorizationHooks.end() ? nullptr : found->second;
+	if (admin && authorize)
+	{
+		Logger::instance().error(
+			"proxy adaptation: ambiguous native update policy: both ERC-1967 admin storage "
+			"and UUPS authorization are reachable. Select one explicit native authorization policy.", loc);
 		return;
-	// EIP-1967 (proxy.md §1): if any admin-slot use was lowered while
-	// translating THIS contract's bodies — or inside a freestanding library/
-	// free function THIS contract's call graph reaches (OZ's ERC1967Utils is a
-	// library, translated before any contract) — synthesize the admin global
-	// and the UpdateApplication method gating native updates on it. Snapshot-
-	// and-reset the direct flag so one contract's proxy machinery never leaks
-	// into the next unit member. Placed after ALL method translation (ordinary
-	// externals build in the function loops, not in buildApprovalProgram).
-	bool usesErc1967Admin = m_typeMapper.artifacts().usesErc1967Admin;
-	m_typeMapper.artifacts().usesErc1967Admin = false;
-	if (!usesErc1967Admin)
-		for (int64_t functionId: m_typeMapper.artifacts().erc1967AdminFunctions)
-			if (m_typeMapper.analysis().isFunctionReachable(_contract.id(), functionId))
-			{
-				usesErc1967Admin = true;
-				break;
-			}
-	if (usesErc1967Admin)
-	{
-		auto loc = _contractNode.approvalProgram.sourceLocation;
-		_contractNode.appState.push_back(
-			proxies::Erc1967Lowering::adminStateDefinition(loc));
-		_contractNode.methods.push_back(
-			proxies::Erc1967Lowering::updateGateMethod(_contractNode.id, loc));
 	}
-}
-
-void ContractBuilder::emitUupsUpdateGate(
-	solidity::frontend::ContractDefinition const& _contract,
-	awst::Contract& _contractNode)
-{
-	// UUPS (proxy.md §3): a concrete contract inheriting OZ UUPSUpgradeable
-	// with an implemented _authorizeUpgrade gets the native update gate —
-	// the hook's translated method (modifiers inlined) is the permission
-	// check, run inside the UpdateApplication txn.
-	if (!m_typeMapper.profile().proxyAdaptation
-		|| !proxies::UupsLowering::isUupsImplementation(_contract))
-		return;
-	// The translated hook remains the chain entry: its wrapper invokes the
-	// outermost modifier subroutine and therefore preserves the complete
-	// permission check. Internal methods use their registered opaque symbol,
-	// so resolve the concrete override instead of looking for the Solidity
-	// source name (or coupling the gate to a generated `__mod0` name).
-	solidity::frontend::FunctionDefinition const* authorizeFunction = nullptr;
-	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+	if (admin)
 	{
-		if (!base) continue;
-		for (auto const* function: base->definedFunctions())
-			if (function && function->name() == "_authorizeUpgrade"
-				&& function->isImplemented())
-			{
-				authorizeFunction = function;
-				break;
-			}
-		if (authorizeFunction) break;
+		_contractNode.appState.push_back(proxies::Erc1967Lowering::adminStateDefinition(loc));
+		_contractNode.methods.push_back(proxies::Erc1967Lowering::updateGateMethod(
+			_contractNode.id, sol_ast::SolIntrinsicAccess::sender(*m_exprBuilder, loc), loc));
 	}
-
-	awst::ContractMethod const* hook = nullptr;
-	if (authorizeFunction)
+	else if (authorize)
 	{
-		std::string hookName = authorizeFunction->name();
-		if (auto const* symbol =
-			m_functionSymbols.resolve(authorizeFunction->id()))
-			hookName = *symbol;
-		for (auto const& method: _contractNode.methods)
-			if (method.memberName == hookName)
-			{
-				hook = &method;
-				break;
-			}
+		// The exact solc override's wrapper retains the complete modifier chain.
+		auto const* symbol = m_functionSymbols.resolve(authorize->id());
+		if (symbol)
+			for (auto const& method: _contractNode.methods)
+				if (method.memberName == *symbol)
+				{
+					auto gate = proxies::UupsLowering::updateGateMethod(_contractNode.id, method, loc);
+					_contractNode.methods.push_back(std::move(gate));
+					return;
+				}
+		Logger::instance().error("proxy adaptation: resolved UUPS authorization hook was not emitted.",
+			makeLoc(authorize->location()));
 	}
-	if (hook)
-		_contractNode.methods.push_back(proxies::UupsLowering::updateGateMethod(
-			_contractNode.id, *hook, _contractNode.approvalProgram.sourceLocation));
 }
 
 std::shared_ptr<awst::Contract> ContractBuilder::build(
@@ -991,6 +930,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	bool _emitEvmStorageRuntime
 )
 {
+	BuildArtifacts::ContractScope emissions(m_typeMapper.artifacts());
+	awst::NameGen::Scope namingScope;
 	std::string const contractName = beginContract(_contract, _storagePlan);
 	std::set<int64_t> const overriddenIds = collectOverloadedNames(_contract);
 	createExpressionBuilder(_contract, _storagePlan, contractName);
@@ -1011,7 +952,6 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	buildInheritedFunctions(
 		_contract, contractName, *contract, overriddenIds, translatedFunctions);
 
-	buildRouters(_contract, *contract);
 	buildHostBoundFunctions(contractName, *contract, reachableHostBoundFunctions);
 	// Close the concrete-implementation worklist before generating dispatchers.
 	emitSuperSubroutines(*contract, contractName);
@@ -1028,10 +968,30 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		buildStorageDispatch(_storagePlan, contract.get(), contractName);
 
 	emitFunctionPointerDispatch(*contract);
+	// Complete lifecycle methods before the EVM router decides whether the
+	// contract needs residual ARC4 dispatch. Constructor work must not decide
+	// whether the native update gate is reachable.
+	emitProxyUpdateGate(_contract, *contract);
+	buildRouters(_contract, *contract);
 	scopeStorageDispatchCalls(_storagePlan, *contract);
 	warnEscapedErc1967Slots(*contract);
-	emitErc1967AdminGate(_contract, *contract);
-	emitUupsUpdateGate(_contract, *contract);
+	// Attach after hosted/base implementations too: those bodies can request
+	// helpers after router construction. All references retain one host-local ID.
+	for (auto& method: m_typeMapper.artifacts().contract().pendingHelpers)
+	{
+		method.cref = contract->id;
+		contract->methods.push_back(std::move(method));
+	}
+	// Function bodies and generated dispatchers can discover this after the
+	// approval program was built. Finalize once every lowering path is known.
+	if (m_typeMapper.artifacts().usesReturnData)
+	{
+		contract->reservedScratchSpace.push_back(ScratchLayout::returnDataSlot);
+		auto const& loc = contract->approvalProgram.sourceLocation;
+		auto& body = contract->approvalProgram.body->body;
+		body.insert(body.begin(), awst::makeExpressionStatement(awst::makeStoreSlot(
+			ScratchLayout::returnDataSlot, awst::makeBytesConstant({}, loc), loc), loc));
+	}
 
 	return contract;
 }

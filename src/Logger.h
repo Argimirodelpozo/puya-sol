@@ -16,7 +16,7 @@ public:
 	static Logger& instance();
 
 	void setMinLevel(LogLevel _level);
-	void setOutputLogFile(std::string const& _path);
+	bool setOutputLogFile(std::string const& _path);
 	void debug(std::string const& _msg);
 	void debug(std::string const& _msg, awst::SourceLocation const& _loc);
 	void info(std::string const& _msg);
