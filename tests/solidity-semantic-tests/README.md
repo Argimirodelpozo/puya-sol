@@ -8,28 +8,44 @@ not as an active test runner.
 
 ## Recorded baseline
 
-Full LocalNet semantic and harness/cache run on **2026-09-07**. The tested
-compiler and regression sources are committed as `9521c807ba` (rev-2 after
-default-off proxy adaptation, solc-directed modifier lookup, pointer-backed
-modifier memory parameters, and the AWST construction cleanup):
+Full LocalNet semantic and harness/cache run on **2026-09-14**. The tested
+compiler and regression sources are committed as `ef7caaf0fd` on
+`builder-layered-layout`, based on `rev-2` checkpoint `5f5cda4d0d`. This commit
+only reorganizes builder files and updates include, build, and documentation
+paths; it changes no compiler behavior or Python test bodies:
 
 | Result | Count |
 |---|---:|
-| Passed | 1,860 |
+| Passed | 2,507 |
 | Failed | 1 |
-| Expected failure (xfail) | 101 |
-| Unexpected pass (xpass) | 38 |
-| Total | 2,000 |
+| Expected failure (xfail) | 100 |
+| Unexpected pass (xpass) | 39 |
+| Total | 2,647 |
 
-The run took 449.42 seconds with three workers and a warm compilation cache.
+The run took 1,138.01 seconds with three workers and a partially warm shared
+compilation cache. It used
+`PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 3 --tb=short`
+with JUnit reporting enabled.
 Dependencies were pinned to Solidity
 `a99b6d8c0cbf9eddbac104e8e4e16545db7d3d8d` and Puya
 `27751c364229ae3cd0334fe4071e61690b6879e4` (5.10.1). Native CTest coverage
-passed 19/19. Harness/cache unit tests are included in the full count. The six
-new ordinary passes cover legacy/via-IR modifier lookup and default-off proxy
-behavior in both storage layouts. The local JUnit report is
-`/tmp/puyasol-rev-2-current-semantic.xml`. The compiler stayed fixed during the
-run, and LocalNet was not reset. See the
+passed 24/24 in 3.57 seconds. Harness/cache unit tests are included in the full
+count. Compared with the preceding checkpoint's full-run XML, no existing
+outcome changed and no case was removed; this run additionally covered 13
+pre-existing framework cases absent from that XML, all passing.
+
+Before and after the reorganization, all 1,762 Solidity source files were
+compiled frontend-only in both storage modes: 3,524 cases, with 3,269 successful
+compilations and 255 recorded frontend failures in each capture. All exit codes
+and all 6,538 emitted AWST/options file hashes were identical, without JSON
+normalization. The [verification report](out/builder-layered-layout/REPORT.md)
+includes the full hash manifests, residual dependency edges, and the cache-miss
+investigation; the [JUnit report](out/builder-layered-layout/semantic.xml) and
+[console output](results.txt) retain the complete semantic result.
+
+The compiler stayed fixed during the run at SHA-256
+`739d564f06a612c7a0d98d7648381813822db75480cb4d058431bb25571a996c`,
+and LocalNet was not reset. See the
 [completed sol-types/storage audit record](../../docs/rev-2-results.md) for its
 earlier binary identity, solc oracle settings and fresh-deployment-only format
 changes.
