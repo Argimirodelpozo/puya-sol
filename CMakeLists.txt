@@ -190,164 +190,195 @@ set(SOURCES
 	src/Logger.cpp
 	src/awst/WType.cpp
 	src/awst/Visit.cpp
-	# Builder core
-	src/builder/AWSTBuilder.cpp
-	src/builder/CompilationSession.cpp
-	src/builder/EvmFeaturePolicy.cpp
-	src/builder/ProgramAnalysis.cpp
-	src/builder/ReturnWirePlan.cpp
-	src/builder/CallBoundaryPlan.cpp
-	src/builder/ParameterMutationAnalysis.cpp
-	src/builder/SolcFacts.cpp
-	src/builder/SelectorSemantics.cpp
-	src/builder/SourceLocConvert.cpp
-	src/builder/FunctionIdRegistry.cpp
+	# builder/solc
+	src/builder/solc/ProxyFacts.cpp
+	src/builder/solc/SolcConstFold.cpp
+	src/builder/solc/SolcFacts.cpp
+	src/builder/solc/SourceLocConvert.cpp
+
+	# builder/target
+	src/builder/target/ApplicationTarget.cpp
+	src/builder/target/EvmFeaturePolicy.cpp
+
+	# builder/types
+	src/builder/types/CallBoundaryPlan.cpp
+	src/builder/types/ConstructorWirePlan.cpp
+	src/builder/types/ConversionPlan.cpp
+	src/builder/types/ReturnWirePlan.cpp
+	src/builder/types/SolIntType.cpp
+	src/builder/types/TypeCoercion.cpp
+	src/builder/types/TypeMapper.cpp
+
+	# builder/codec
+	src/builder/codec/Arc4ArrayWidening.cpp
+	src/builder/codec/Arc4Defaults.cpp
+	src/builder/codec/ByteSlice.cpp
+	src/builder/codec/EvmAbiDecode.cpp
+	src/builder/codec/EvmAbiEncode.cpp
+	src/builder/codec/EvmMemoryCodec.cpp
+	src/builder/codec/EvmValueCodec.cpp
+	src/builder/codec/SelectorSemantics.cpp
+	src/builder/codec/SlotWordCodec.cpp
+
+	# builder/storage
+	src/builder/storage/StorageBackend.cpp
+	src/builder/storage/StorageLayout.cpp
+	src/builder/storage/StorageMapper.cpp
+	src/builder/storage/StorageRuntimePlan.cpp
+	src/builder/storage/TransientStorage.cpp
+
+	# builder/storage/named
+	src/builder/storage/named/StorageKey.cpp
+	src/builder/storage/named/StoragePathWalker.cpp
+
+	# builder/storage/slot
+	src/builder/storage/slot/EvmSlotLowering.cpp
+	src/builder/storage/slot/EvmSlotValueLowering.cpp
+	src/builder/storage/slot/SlotHandleAccess.cpp
+
+	# builder/context
+	src/builder/context/CompilationSession.cpp
+	src/builder/context/ContractContext.cpp
+	src/builder/context/FunctionIdRegistry.cpp
+	src/builder/context/ParameterMutationAnalysis.cpp
+	src/builder/context/ProgramAnalysis.cpp
+	src/builder/context/TranslationContext.cpp
+
+	# builder/eb
+	src/builder/eb/AssignmentHelper.cpp
+	src/builder/eb/BigUIntMathHelpers.cpp
+	src/builder/eb/BinaryOpBuilder.cpp
+	src/builder/eb/BuiltinCallables.cpp
+	src/builder/eb/CallOperands.cpp
+	src/builder/eb/EffectScan.cpp
+	src/builder/eb/MappingPrefix.cpp
+	src/builder/eb/NodeBuilder.cpp
+	src/builder/eb/ResolvedLValue.cpp
+	src/builder/eb/SolAddressBuilder.cpp
+	src/builder/eb/SolArrayBuilder.cpp
+	src/builder/eb/SolBoolBuilder.cpp
+	src/builder/eb/SolEnumBuilder.cpp
+	src/builder/eb/SolFixedBytesBuilder.cpp
+	src/builder/eb/SolIntegerBuilder.cpp
+	src/builder/eb/SolStructBuilder.cpp
+	src/builder/eb/TypeConversions.cpp
+
+	# builder/lowering/itxn
+	src/builder/lowering/itxn/ApplicationCall.cpp
+	src/builder/lowering/itxn/InnerCallHandlers.cpp
+	src/builder/lowering/itxn/InnerCallShapes.cpp
+	src/builder/lowering/itxn/NativePayment.cpp
+	src/builder/lowering/itxn/Precompile.cpp
+
+	# builder/lowering/abi
+	src/builder/lowering/abi/AbiEncoderBuilder.cpp
+	src/builder/lowering/abi/AbiSelectorCalldataBuilder.cpp
+	src/builder/lowering/abi/Arc4Stdlib.cpp
+
+	# builder/lowering/calls
+	src/builder/lowering/calls/CallResolver.cpp
+	src/builder/lowering/calls/FunctionPointerBuilder.cpp
+	src/builder/lowering/calls/FunctionPointerDispatchTypes.cpp
+
+	# builder/lowering/intrinsics
+	src/builder/lowering/intrinsics/AppCodeSizeLowering.cpp
+	src/builder/lowering/intrinsics/AsaIntrinsics.cpp
+	src/builder/lowering/intrinsics/Ripemd160Builder.cpp
+
+	# builder/lowering/proxies
+	src/builder/lowering/proxies/Erc1967Lowering.cpp
+	src/builder/lowering/proxies/UupsLowering.cpp
+
+	# builder/ast
+	src/builder/ast/SolExpression.cpp
+	src/builder/ast/SolExpressionDispatch.cpp
+	src/builder/ast/SolExpressionFactory.cpp
+	src/builder/ast/SolFunctionCall.cpp
+	src/builder/ast/SolMemberAccess.cpp
+
+	# builder/ast/calls
+	src/builder/ast/calls/RevertBlob.cpp
+	src/builder/ast/calls/SolAbiDecode.cpp
+	src/builder/ast/calls/SolAbiEncode.cpp
+	src/builder/ast/calls/SolArrayMethod.cpp
+	src/builder/ast/calls/SolArrayMethodHandlers.cpp
+	src/builder/ast/calls/SolBareCall.cpp
+	src/builder/ast/calls/SolBuiltinCall.cpp
+	src/builder/ast/calls/SolBytesConcat.cpp
+	src/builder/ast/calls/SolExternalCall.cpp
+	src/builder/ast/calls/SolInternalCall.cpp
+	src/builder/ast/calls/SolMetaType.cpp
+	src/builder/ast/calls/SolNewExpression.cpp
+	src/builder/ast/calls/SolRequireAssert.cpp
+	src/builder/ast/calls/SolRevert.cpp
+	src/builder/ast/calls/SolStructConstruction.cpp
+	src/builder/ast/calls/SolTypeConversion.cpp
+	src/builder/ast/calls/SolWrapUnwrap.cpp
+
+	# builder/ast/exprs
+	src/builder/ast/exprs/SolAssignment.cpp
+	src/builder/ast/exprs/SolAssignmentEarlyOuts.cpp
+	src/builder/ast/exprs/SolAssignmentTuple.cpp
+	src/builder/ast/exprs/SolBinaryOperation.cpp
+	src/builder/ast/exprs/SolConditional.cpp
+	src/builder/ast/exprs/SolIdentifier.cpp
+	src/builder/ast/exprs/SolIndexAccess.cpp
+	src/builder/ast/exprs/SolIndexAccessHandlers.cpp
+	src/builder/ast/exprs/SolLiteral.cpp
+	src/builder/ast/exprs/SolTupleExpression.cpp
+	src/builder/ast/exprs/SolUnaryOperation.cpp
+
+	# builder/ast/members
+	src/builder/ast/members/SolAddressProperty.cpp
+	src/builder/ast/members/SolConstantAccess.cpp
+	src/builder/ast/members/SolEnumValueAccess.cpp
+	src/builder/ast/members/SolFieldAccess.cpp
+	src/builder/ast/members/SolIntrinsicAccess.cpp
+	src/builder/ast/members/SolLengthAccess.cpp
+	src/builder/ast/members/SolMetaTypeAccess.cpp
+	src/builder/ast/members/SolSelectorAccess.cpp
+
+	# builder/ast/stmts
+	src/builder/ast/stmts/SolBlock.cpp
+	src/builder/ast/stmts/SolControlFlow.cpp
+	src/builder/ast/stmts/SolEmitStatement.cpp
+	src/builder/ast/stmts/SolExpressionStatement.cpp
+	src/builder/ast/stmts/SolInlineAssembly.cpp
+	src/builder/ast/stmts/SolVariableDeclaration.cpp
+
+	# builder/yul
+	src/builder/yul/ArithmeticOps.cpp
+	src/builder/yul/AssemblyBuilder.cpp
+	src/builder/yul/BitwiseShiftOps.cpp
+	src/builder/yul/CalldataMapOps.cpp
+	src/builder/yul/ControlFlowOps.cpp
+	src/builder/yul/CoreTranslation.cpp
+	src/builder/yul/DataOps.cpp
+	src/builder/yul/MemoryHelpers.cpp
+	src/builder/yul/MemoryOps.cpp
+	src/builder/yul/PrecompileDispatch.cpp
+	src/builder/yul/SignedOps.cpp
+	src/builder/yul/StatementOps.cpp
+	src/builder/yul/StorageOps.cpp
+	src/builder/yul/SyntheticCalldataOps.cpp
+	src/builder/yul/UserFunctionOps.cpp
+
+	# builder/contract
+	src/builder/contract/AWSTBuilder.cpp
 	src/builder/contract/ContractBuilder.cpp
-	src/builder/contract/EvmMemoryCodec.cpp
-	src/builder/contract/EvmEntryRouter.cpp
-	src/builder/contract/StorageDispatch.cpp
-	src/builder/contract/EvmSlotStorageDispatch.cpp
-	src/builder/contract/ModifierChainBuilder.cpp
-	src/builder/contract/FunctionBuilder.cpp
-	src/builder/contract/ApprovalProgramBuilder.cpp
+	src/builder/contract/ContractBuilder_ApprovalProgram.cpp
+	src/builder/contract/ContractBuilder_EvmEntryRouter.cpp
+	src/builder/contract/ContractBuilder_EvmSlotStorageDispatch.cpp
+	src/builder/contract/ContractBuilder_Function.cpp
+	src/builder/contract/ContractBuilder_ModifierChain.cpp
+	src/builder/contract/ContractBuilder_PostInit.cpp
+	src/builder/contract/ContractBuilder_PublicGetters.cpp
+	src/builder/contract/ContractBuilder_StorageDispatch.cpp
+	src/builder/contract/ContractBuilder_SuperCalls.cpp
 	src/builder/contract/ParamABIValidator.cpp
 	src/builder/contract/PostInitTriggers.cpp
-	src/builder/contract/PostInitBuilder.cpp
-	src/builder/contract/ConstructorWirePlan.cpp
-	src/builder/contract/PublicGetterBuilder.cpp
 	src/builder/contract/SelectorRouter.cpp
-	src/builder/contract/SuperCallResolution.cpp
 
-	# Builtin support (algorithms with no AVM opcode counterpart)
-	src/builder/builtin/AppCodeSizeLowering.cpp
-	src/builder/builtin/Ripemd160Builder.cpp
-
-	# Assembly builder (split by operation type)
-	src/builder/assembly/AssemblyBuilder.cpp
-	src/builder/assembly/CoreTranslation.cpp
-	src/builder/assembly/ArithmeticOps.cpp
-	src/builder/assembly/BitwiseShiftOps.cpp
-	src/builder/assembly/CalldataMapOps.cpp
-	src/builder/assembly/ControlFlowOps.cpp
-	src/builder/assembly/SignedOps.cpp
-	src/builder/assembly/StorageOps.cpp
-	src/builder/assembly/DataOps.cpp
-	src/builder/assembly/MemoryHelpers.cpp
-	src/builder/assembly/PrecompileDispatch.cpp
-	src/builder/itxn/Precompile.cpp
-	src/builder/codec/ByteSlice.cpp
-	src/builder/assembly/MemoryOps.cpp
-	src/builder/assembly/StatementOps.cpp
-	src/builder/assembly/SyntheticCalldataOps.cpp
-	src/builder/assembly/UserFunctionOps.cpp
-
-	# Type coercion utilities
-	src/builder/sol-types/Arc4ArrayWidening.cpp
-	src/builder/sol-types/Arc4Defaults.cpp
-	src/builder/sol-types/SolIntType.cpp
-	src/builder/sol-types/SolcConstFold.cpp
-	src/builder/sol-types/TypeCoercion.cpp
-	src/builder/sol-types/ConversionPlan.cpp
-
-	# Storage, type, and intrinsic mappers
-	src/builder/proxies/Erc1967Lowering.cpp
-	src/builder/proxies/UupsLowering.cpp
-	src/builder/proxies/ProxyFacts.cpp
-	src/builder/storage/StorageMapper.cpp
-	src/builder/storage/StoragePathWalker.cpp
-	src/builder/storage/StorageKey.cpp
-	src/builder/storage/StorageLayout.cpp
-	src/builder/storage/StorageRuntimePlan.cpp
-	src/builder/storage/SlotHandleAccess.cpp
-	src/builder/storage/SlotWordCodec.cpp
-	src/builder/storage/TransientStorage.cpp
-	src/builder/sol-types/TypeMapper.cpp
-
-	# Expression builder helpers (sol-eb/)
-	src/builder/abi/AbiSelectorCalldataBuilder.cpp
-	src/builder/abi/Arc4Stdlib.cpp
-	src/builder/sol-eb/BigUIntMathHelpers.cpp
-	src/builder/sol-eb/BinaryOpBuilder.cpp
-	src/builder/sol-eb/ContractContext.cpp
-	src/builder/sol-eb/BuiltinCallables.cpp
-	src/builder/itxn/InnerCallHandlers.cpp
-	src/builder/itxn/InnerCallShapes.cpp
-	src/builder/itxn/NativePayment.cpp
-	src/builder/itxn/ApplicationTarget.cpp
-	src/builder/itxn/ApplicationCall.cpp
-	src/builder/sol-eb/NodeBuilder.cpp
-	src/builder/sol-eb/SolArrayBuilder.cpp
-	src/builder/sol-eb/SolBoolBuilder.cpp
-	src/builder/sol-eb/SolIntegerBuilder.cpp
-	src/builder/sol-eb/SolStructBuilder.cpp
-	src/builder/sol-eb/SolAddressBuilder.cpp
-	src/builder/sol-eb/SolEnumBuilder.cpp
-	src/builder/sol-eb/SolFixedBytesBuilder.cpp
-	src/builder/itxn/CallResolver.cpp
-	src/builder/itxn/AsaIntrinsics.cpp
-	src/builder/storage/StorageBackend.cpp
-	src/builder/abi/AbiEncoderBuilder.cpp
-	src/builder/abi/EvmAbiEncode.cpp
-	src/builder/abi/EvmAbiDecode.cpp
-	src/builder/codec/EvmValueCodec.cpp
-	src/builder/itxn/FunctionPointerBuilder.cpp
-	src/builder/itxn/FunctionPointerDispatchTypes.cpp
-	src/builder/sol-eb/AssignmentHelper.cpp
-	src/builder/sol-eb/TypeConversions.cpp
-	src/builder/sol-ast/Context.cpp
-	src/builder/sol-ast/EvmSlotLowering.cpp
-	src/builder/sol-ast/EvmSlotValueLowering.cpp
-	src/builder/sol-ast/SolExpression.cpp
-	src/builder/sol-ast/SolFunctionCall.cpp
-	src/builder/sol-ast/CallOperands.cpp
-	src/builder/sol-ast/SolExpressionFactory.cpp
-	src/builder/sol-ast/SolExpressionDispatch.cpp
-	src/builder/sol-ast/calls/SolRequireAssert.cpp
-	src/builder/sol-ast/calls/SolRevert.cpp
-	src/builder/sol-ast/calls/RevertBlob.cpp
-	src/builder/sol-ast/calls/SolBuiltinCall.cpp
-	src/builder/sol-ast/calls/SolTypeConversion.cpp
-	src/builder/sol-ast/calls/SolWrapUnwrap.cpp
-	src/builder/sol-ast/calls/SolStructConstruction.cpp
-	src/builder/sol-ast/calls/SolBareCall.cpp
-	src/builder/sol-ast/calls/SolAbiEncode.cpp
-	src/builder/sol-ast/calls/SolAbiDecode.cpp
-	src/builder/sol-ast/calls/SolArrayMethod.cpp
-	src/builder/sol-ast/calls/SolArrayMethodHandlers.cpp
-	src/builder/sol-ast/calls/SolInternalCall.cpp
-	src/builder/sol-ast/EffectScan.cpp
-	src/builder/sol-ast/calls/SolExternalCall.cpp
-	src/builder/sol-ast/calls/SolNewExpression.cpp
-	src/builder/sol-ast/calls/SolBytesConcat.cpp
-	src/builder/sol-ast/calls/SolMetaType.cpp
-	src/builder/sol-ast/SolMemberAccess.cpp
-	src/builder/sol-ast/members/SolIntrinsicAccess.cpp
-	src/builder/sol-ast/members/SolEnumValueAccess.cpp
-	src/builder/sol-ast/members/SolSelectorAccess.cpp
-	src/builder/sol-ast/members/SolMetaTypeAccess.cpp
-	src/builder/sol-ast/members/SolLengthAccess.cpp
-	src/builder/sol-ast/members/SolFieldAccess.cpp
-	src/builder/sol-ast/members/SolAddressProperty.cpp
-	src/builder/sol-ast/members/SolConstantAccess.cpp
-	src/builder/sol-ast/exprs/SolLiteral.cpp
-	src/builder/sol-ast/exprs/SolConditional.cpp
-	src/builder/sol-ast/exprs/SolIdentifier.cpp
-	src/builder/sol-ast/exprs/SolTupleExpression.cpp
-	src/builder/sol-ast/exprs/SolBinaryOperation.cpp
-	src/builder/sol-ast/exprs/SolUnaryOperation.cpp
-	src/builder/sol-ast/exprs/SolIndexAccess.cpp
-	src/builder/sol-ast/exprs/SolIndexAccessHandlers.cpp
-	src/builder/sol-ast/MappingPrefix.cpp
-	src/builder/sol-ast/exprs/SolAssignment.cpp
-	src/builder/sol-ast/ResolvedLValue.cpp
-	src/builder/sol-ast/exprs/SolAssignmentEarlyOuts.cpp
-	src/builder/sol-ast/exprs/SolAssignmentTuple.cpp
-	src/builder/sol-ast/stmts/SolExpressionStatement.cpp
-	src/builder/sol-ast/stmts/SolControlFlow.cpp
-	src/builder/sol-ast/stmts/SolEmitStatement.cpp
-	src/builder/sol-ast/stmts/SolVariableDeclaration.cpp
-	src/builder/sol-ast/stmts/SolInlineAssembly.cpp
-	src/builder/sol-ast/stmts/SolBlock.cpp
 	src/json/AWSTSerializer.cpp
 	src/json/OptionsWriter.cpp
 	src/runner/PuyaRunner.cpp
@@ -379,7 +410,7 @@ add_dependencies(puya-sol
 #
 # Deliberately NOT libsolidity/ast/AST.h or Types.h: a PCH is force-included
 # into every source, so listing those would push them back into the ~60 TUs
-# that were just decoupled from them via builder/sol-types/SolcFwd.h. awst/Node.h
+# that were just decoupled from them via builder/solc/SolcFwd.h. awst/Node.h
 # is different — it is already in 134 of 139 builder TUs and pulls no
 # third-party headers, so precompiling it is pure win with no re-coupling.
 target_precompile_headers(puya-sol PRIVATE
@@ -463,7 +494,7 @@ if(BUILD_TESTING)
 	target_link_libraries(puya-sol-runner-tests Threads::Threads)
 
 	add_executable(puya-sol-source-map-tests
-		tests/cpp/SourceMapTests.cpp src/builder/SourceLocConvert.cpp)
+		tests/cpp/SourceMapTests.cpp src/builder/solc/SourceLocConvert.cpp)
 	target_include_directories(puya-sol-source-map-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	add_dependencies(puya-sol-source-map-tests puya-sol-verify-solidity-build)
 	target_link_libraries(puya-sol-source-map-tests
@@ -494,15 +525,15 @@ if(BUILD_TESTING)
 	add_test(NAME puya-sol-wtype-equivalence COMMAND puya-sol-wtype-tests)
 
 	add_executable(puya-sol-type-mapper-tests
-		src/builder/itxn/ApplicationTarget.cpp
+		src/builder/target/ApplicationTarget.cpp
 		tests/cpp/TypeMapperTests.cpp
-		src/builder/storage/SlotWordCodec.cpp
-		src/builder/sol-types/TypeMapper.cpp
-		src/builder/sol-types/Arc4Defaults.cpp
-		src/builder/sol-types/TypeCoercion.cpp
-		src/builder/sol-types/ConversionPlan.cpp
-		src/builder/sol-types/Arc4ArrayWidening.cpp
-		src/builder/sol-types/SolIntType.cpp
+		src/builder/codec/SlotWordCodec.cpp
+		src/builder/types/TypeMapper.cpp
+		src/builder/codec/Arc4Defaults.cpp
+		src/builder/types/TypeCoercion.cpp
+		src/builder/types/ConversionPlan.cpp
+		src/builder/codec/Arc4ArrayWidening.cpp
+		src/builder/types/SolIntType.cpp
 		src/awst/WType.cpp
 		src/Logger.cpp
 	)
@@ -518,7 +549,7 @@ if(BUILD_TESTING)
 
 	add_executable(puya-sol-encoded-size-tests
 		tests/cpp/EncodedSizeTests.cpp
-		src/builder/sol-types/Arc4Defaults.cpp
+		src/builder/codec/Arc4Defaults.cpp
 		src/awst/WType.cpp
 	)
 	target_include_directories(puya-sol-encoded-size-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)

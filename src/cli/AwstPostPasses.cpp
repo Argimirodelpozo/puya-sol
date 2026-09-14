@@ -1,5 +1,5 @@
 #include "cli/AwstPostPasses.h"
-#include "builder/contract/ChildDeployment.h"
+#include "builder/lowering/itxn/ChildDeployment.h"
 #include "json/OptionsWriter.h"
 #include "Logger.h"
 

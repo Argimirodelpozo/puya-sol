@@ -86,7 +86,7 @@ the creation transaction's delegatecall trace and replayed as the first call
 `changeAdmin`, `upgradeTo`) are recognized and skipped — a directly-deployed
 implementation has no proxy surface.
 
-**Compile support: ✅ v1** (`src/builder/proxies/Erc1967Lowering`). The three
+**Compile support: ✅ v1** (`src/builder/lowering/proxies/Erc1967Lowering`). The three
 EIP-1967 slot constants are recognized at asm `sload`/`sstore` sites —
 directly, or through a single-assignment Yul local (`let s := _ADMIN_SLOT;
 sstore(s, v)`, the OZ `ERC1967Utils` body shape; such lets are folded so the
@@ -214,7 +214,7 @@ by `onlyProxy`/`notDelegated` checks via the immutable `__self` address.
   The unused ABI parameter receives zero, not a fictitious proposed identity.
 
 **Replay: ✅** mechanically identical to §1 (the latch patch IS the UUPS
-artifact). **Compile: ✅** (`src/builder/proxies/UupsLowering`). Recognized-
+artifact). **Compile: ✅** (`src/builder/lowering/proxies/UupsLowering`). Recognized-
 idiom folds over explicitly annotated, solc-validated declarations:
 
 - `UUPSUpgradeable._checkProxy/_checkNotDelegated` → no-op (checks pass);

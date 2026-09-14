@@ -1,6 +1,6 @@
 #pragma once
 
-#include "builder/TargetProfile.h"
+#include "builder/target/TargetProfile.h"
 #include "cli/CliOptions.h"
 #include "cli/SourceCompat.h"
 

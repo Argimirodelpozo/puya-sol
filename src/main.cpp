@@ -2,8 +2,8 @@
 /// Fixed compiler pipeline. Scoped owners retain solc, callback and AWST lifetimes.
 
 #include "Logger.h"
-#include "builder/AWSTBuilder.h"
-#include "builder/sol-types/EncodedSize.h"
+#include "builder/contract/AWSTBuilder.h"
+#include "builder/types/EncodedSize.h"
 #include "cli/AwstPostPasses.h"
 #include "cli/CliOptions.h"
 #include "cli/CompilerSetup.h"

@@ -4,8 +4,8 @@
 
 #include "awst/Node.h"
 
-#include "builder/sol-types/SolcFwd.h"
-#include "builder/sol-types/SolIntType.h"
+#include "builder/solc/SolcFwd.h"
+#include "builder/types/SolIntType.h"
 
 #include <memory>
 #include <vector>

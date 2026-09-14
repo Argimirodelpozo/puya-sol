@@ -1,4 +1,4 @@
-#include "builder/SourceLocConvert.h"
+#include "builder/solc/SourceLocConvert.h"
 #include <liblangutil/CharStream.h>
 
 #include <iostream>

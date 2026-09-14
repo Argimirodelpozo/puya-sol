@@ -623,7 +623,7 @@ was performed for this batch.
 
 ### Expression/member refactor verification (2026-09-10)
 
-The `sol-ast/exprs` and `sol-ast/members` audit items 1–7 are implemented:
+The `ast/exprs` and `ast/members` audit items 1–7 are implemented:
 
 1. Paged-array, boxed-aggregate and offset-reference stores share
    `ResolvedLValue`. RHS evaluation precedes address effects; snapshots happen
@@ -774,7 +774,7 @@ bug described above. This is not an all-green suite or an accepted divergence.
 No expectation markers were changed. The compiler hash stayed fixed throughout.
 
 Source code lines, including new files and excluding comments/blanks (cloc):
-`src/` **53,434 → 52,377 (−1,057)**; `src/builder/assembly/`
+`src/` **53,434 → 52,377 (−1,057)**; `src/builder/yul/`
 **8,434 → 7,229 (−1,205)**. These are relative to the dirty pre-assembly
 snapshot, not to branch HEAD, which also predates the expression/calls work.
 

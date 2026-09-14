@@ -1,4 +1,4 @@
-#include "builder/FunctionSymbolTable.h"
+#include "builder/context/FunctionSymbolTable.h"
 
 #include <iostream>
 

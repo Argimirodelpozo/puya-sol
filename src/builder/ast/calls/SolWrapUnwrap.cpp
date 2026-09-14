@@ -1,0 +1,20 @@
+#include "builder/ast/calls/SolWrapUnwrap.h"
+#include "builder/types/TypeMapper.h"
+#include "builder/types/TypeCoercion.h"
+
+namespace puyasol::builder::sol_ast
+{
+
+std::shared_ptr<awst::Expression> SolWrapUnwrap::toAwst()
+{
+	if (m_call.arguments().empty())
+	{
+		auto vc = awst::makeVoidConstant(m_loc);
+		return vc;
+	}
+	auto val = buildExpr(*m_call.arguments()[0]);
+	auto* targetType = m_ctx.typeMapper.map(m_call.annotation().type);
+	return TypeCoercion::implicitNumericCast(std::move(val), targetType, m_loc);
+}
+
+} // namespace puyasol::builder::sol_ast

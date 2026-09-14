@@ -1,4 +1,4 @@
-#include "builder/sol-types/Arc4Defaults.h"
+#include "builder/codec/Arc4Defaults.h"
 
 #include <iostream>
 #include <limits>

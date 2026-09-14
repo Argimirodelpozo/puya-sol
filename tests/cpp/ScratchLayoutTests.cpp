@@ -1,4 +1,4 @@
-#include "builder/ScratchLayout.h"
+#include "builder/target/ScratchLayout.h"
 
 #include <cstddef>
 #include <iostream>

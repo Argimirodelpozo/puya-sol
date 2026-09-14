@@ -1,10 +1,10 @@
 #include "builder/codec/EvmValueCodec.h"
-#include "builder/itxn/ApplicationTarget.h"
+#include "builder/target/ApplicationTarget.h"
 
 #include "Logger.h"
-#include "builder/sol-types/FunctionPointerKind.h"
-#include "builder/sol-types/TypeCoercion.h"
-#include "builder/sol-types/TypeMapper.h"
+#include "builder/types/FunctionPointerKind.h"
+#include "builder/types/TypeCoercion.h"
+#include "builder/types/TypeMapper.h"
 
 // canRoundTripEvmAbi walks StructDefinition members and TupleType components.
 #include <libsolidity/ast/AST.h>
