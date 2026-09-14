@@ -64,27 +64,12 @@ struct MemoryBridge
 
 template <class MakePrefix>
 void insertBeforeReturns(
-	std::vector<std::shared_ptr<awst::Statement>>& _statements,
-	MakePrefix const& _makePrefix)
+	std::vector<std::shared_ptr<awst::Statement>>& statements,
+	MakePrefix const& makePrefix)
 {
-	for (size_t i = 0; i < _statements.size(); ++i)
-	{
-		if (auto const* ret = dynamic_cast<awst::ReturnStatement const*>(
-				_statements[i].get()))
-		{
-			auto prefix = _makePrefix(ret->sourceLocation);
-			auto const count = prefix.size();
-			_statements.insert(
-				_statements.begin() + static_cast<std::ptrdiff_t>(i),
-				std::make_move_iterator(prefix.begin()),
-				std::make_move_iterator(prefix.end()));
-			i += count;
-			continue;
-		}
-		awst::forEachChildBlock(*_statements[i], [&](awst::Block& _block, bool) {
-			insertBeforeReturns(_block.body, _makePrefix);
-		});
-	}
+	awst::transformReturns(statements, [&](awst::ReturnStatement& ret, auto& prefix) {
+		prefix = makePrefix(ret.sourceLocation);
+	});
 }
 
 /// Thread return parameters as leading inputs through the modifier chain.

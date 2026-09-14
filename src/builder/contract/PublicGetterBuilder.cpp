@@ -52,20 +52,6 @@ std::vector<std::shared_ptr<awst::Expression>> projectStructFields(
 	return items;
 }
 
-// biguint <-> ARC4UIntN(N) codec for getter ABI remapping. Shared by the
-// param-decode (isEncode=false: ARC4UIntN -> biguint) and return-encode
-// (isEncode=true: biguint -> ARC4UIntN) blocks.
-std::shared_ptr<awst::Expression> arc4UintCodec(
-	std::shared_ptr<awst::Expression> value,
-	awst::WType const* arc4Type,
-	bool isEncode,
-	awst::SourceLocation loc)
-{
-	if (isEncode)
-		return awst::makeARC4Encode(std::move(value), arc4Type, std::move(loc));
-	return awst::makeARC4Decode(std::move(value), awst::WType::biguintType(), std::move(loc));
-}
-
 // ── buildPublicStateVariableGetters branch builders ─────────────────────
 // Each builds the getter's readExpr for one variable shape; pure extractions
 // from the per-var lambda (same emission order).
@@ -610,46 +596,22 @@ void remapGetterParamsToArc4(
 	solidity::frontend::TypePointers const& solParamTypes,
 	awst::SourceLocation const& loc)
 {
-	// Remap biguint getter params to ARC4UIntN at the key's DECLARED
-	// width (not a blanket 256): explicit functions publish declared
-	// bits for >64-bit params (`probe(uint128)`), and the cross-
-	// contract caller derives the selector + arg encoding from the
-	// getter's solc FunctionType — a blanket uint256 made every
-	// keyed getter call revert on selector mismatch.
+	std::vector<std::shared_ptr<awst::Statement>> decodes;
+	for (size_t i = 0; i < getter.args.size(); ++i)
 	{
-		std::vector<std::shared_ptr<awst::Statement>> decodeStmts;
-		for (size_t gi = 0; gi < getter.args.size(); ++gi)
-		{
-			auto& garg = getter.args[gi];
-			if (garg.wtype != awst::WType::biguintType())
-				continue;
-			unsigned bits = 256;
-			if (gi < solParamTypes.size())
-				if (auto it = builder::SolIntType::fromSol(solParamTypes[gi]))
-					bits = it->bits;
-			auto const* arc4Type = tm.createType<awst::ARC4UIntN>(bits);
-			std::string origName = garg.name;
-			std::string arc4Name = "__arc4_" + origName;
-			garg.wtype = arc4Type;
-			garg.name = arc4Name;
-
-			auto arc4Var = awst::makeVarExpression(arc4Name, arc4Type, loc);
-
-			auto decode = arc4UintCodec(std::move(arc4Var), arc4Type, /*isEncode=*/false, loc);
-
-			auto target = awst::makeVarExpression(origName, awst::WType::biguintType(), loc);
-
-			auto assign = awst::makeAssignmentStatement(std::move(target), std::move(decode), loc);
-			decodeStmts.push_back(std::move(assign));
-		}
-		if (!decodeStmts.empty())
-			getter.body->body.insert(
-				getter.body->body.begin(),
-				std::make_move_iterator(decodeStmts.begin()),
-				std::make_move_iterator(decodeStmts.end())
-			);
+		auto& arg = getter.args[i];
+		CallParameterPlan parameter;
+		parameter.name = arg.name;
+		parameter.type = arg.wtype;
+		parameter.setAbiWireType(tm, solParamTypes.at(i));
+		if (parameter.type == parameter.wireType) continue;
+		arg.name = parameter.wireName();
+		arg.wtype = parameter.wireType;
+		decodes.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(parameter.name, parameter.type, loc),
+			parameter.decodeArgument(awst::makeVarExpression(arg.name, arg.wtype, loc), loc), loc));
 	}
-
+	getter.body->body.insert(getter.body->body.begin(), decodes.begin(), decodes.end());
 }
 
 } // namespace

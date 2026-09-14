@@ -131,6 +131,9 @@ def replay(tag: str, max_txns: int = 300, snapshot_every: int = 25,
             break
         skips.update(new)
         print(f"  ↻ re-running both legs with {len(new)} platform-limit skip(s)")
+    else:
+        raise RuntimeError("platform-limit exclusions did not converge after 7 passes; "
+                           "the states are asymmetric and cannot be compared")
     return diff_case(case_dir)
 
 

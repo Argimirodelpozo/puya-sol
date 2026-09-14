@@ -51,11 +51,13 @@ def read_slot_map(algod, app_id) -> dict[int, bytes]:
 
 def read_slot_storage(slotmap: dict[int, bytes], layout: dict, syms: dict,
                       fold, calls, fns=None, snapshots=None,
-                      getters=None) -> dict:
+                      getters=None, probe_keys=None) -> dict:
     """Walk the reconstructed words through the shared recursive reader."""
     extras = bytes32_mapping_key_candidates(
         calls, fns or {}, _kec, snapshots, getters)
     evidence = KeyEvidence(calls, fns or {}, syms, extras)
+    if probe_keys is not None:
+        evidence.freeze(probe_keys)
 
     def slot_mode_key(candidate: KeyCandidate, type_doc: dict) -> bytes:
         label = str(type_doc.get("label") or "")

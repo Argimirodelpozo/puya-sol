@@ -465,18 +465,19 @@ def _read_avm_maps_legacy(algod, app_id, arc56, syms, fold, calls=None):
 
 
 def read_avm_maps(algod, app_id, arc56, layout, syms, fold, calls=None,
-                  fns=None, app_id_symbols=None, snapshots=None, getters=None):
+                  fns=None, app_id_symbols=None, snapshots=None, getters=None,
+                  probe_keys=None):
     """Read native box state through the recursive solc/ARC-56 type tree."""
     try:
         box_values = AlgodBoxSource(algod, app_id)
     except Exception as exc:
         return {"__error__": str(exc)[:80]}
     return read_native_maps(box_values, arc56, layout, syms, fold, calls, fns,
-                            app_id_symbols, snapshots, getters)
+                            app_id_symbols, snapshots, getters, probe_keys)
 
 
 def read_native_maps(box_values, arc56, layout, syms, fold, calls=None, fns=None,
-                     app_id_symbols=None, snapshots=None, getters=None):
+                     app_id_symbols=None, snapshots=None, getters=None, probe_keys=None):
     """`read_avm_maps` over an already-fetched box mapping (chd_box_source):
     the same walk, coverage census and holder-mismatch check, chain-agnostic."""
     from Crypto.Hash import keccak as _keccak_mod
@@ -488,6 +489,8 @@ def read_native_maps(box_values, arc56, layout, syms, fold, calls=None, fns=None
     extras = bytes32_mapping_key_candidates(
         calls or [], fns or {}, _keccak, snapshots, getters)
     evidence = KeyEvidence(calls or [], fns or {}, syms, extras)
+    if probe_keys is not None:
+        evidence.freeze(probe_keys)
     reader = NativeStorageReader(
         layout, arc56, box_values, evidence,
         lambda data: hashlib.sha256(data).digest(), fold)
@@ -648,19 +651,27 @@ def main_compile_args(case_dir: Path, opts, mode_args, xchain_args) -> list[str]
 def compile_case_contract(h, case_dir: Path, case, main_args):
     """Compile prepared.sol (or the multi-file manifest) the way the replay
     deploys it — shared by roots/dependencies and LocalNet/oracle backends."""
+    from framework.compile import CompileError
     mf = case.get("multifile")
+    source = case_dir / "prepared.sol"
+    options = {"extra_args": main_args}
     if mf:
         # compile_sol REMOVES import_dir when it finishes (normally a temp dir
         # made by the upstream splitter), so hand it a throwaway COPY — passing
         # cases/<tag>/src directly makes the compiler delete the fetched sources.
         tmp_root = Path(tempfile.mkdtemp(prefix="chd_src_"))
         shutil.copytree(case_dir / "src", tmp_root, dirs_exist_ok=True)
-        return h.compile(tmp_root / mf["main"],
-                         extra_sources=[tmp_root / r for r in mf["files"]],
-                         extra_import_dir=tmp_root,
-                         extra_remappings=mf["remappings"],
-                         extra_args=main_args)
-    return h.compile(case_dir / "prepared.sol", extra_args=main_args)
+        source = tmp_root / mf["main"]
+        options.update(extra_sources=[tmp_root / r for r in mf["files"]],
+                       extra_import_dir=tmp_root, extra_remappings=mf["remappings"])
+    try:
+        return h.compile(source, **options)
+    except CompileError as error:
+        # The short exception message only says "puya exited 2" for a backend
+        # failure. Preserve the actual diagnostics in the replay phase log.
+        print(error.stdout or "", file=sys.stdout)
+        print(error.stderr or "", file=sys.stderr)
+        raise
 
 
 def compiled_artifact_root(artifacts) -> Path:
@@ -1045,18 +1056,7 @@ def main():
             app_, evm_selector(sig), extra_args=_xargs, **call_opts)
         if result.reverted:
             return result
-        magic = bytes.fromhex("151f7c75")
-        return_payload = next(
-            (bytes(log)[4:] for log in reversed(result.logs)
-             if bytes(log).startswith(magic)), None)
-        outputs = fn.get("outputs") or []
-        if return_payload is None:
-            raise RuntimeError(f"EVM entry {sig} returned no structured payload")
-        decoded = (list(evm_abi_decode(
-            [_ctype(spec) for spec in outputs], return_payload))
-                   if outputs else [])
-        result.abi_return = (decoded[0] if len(decoded) == 1
-                             else tuple(decoded) if decoded else None)
+        result.abi_return = decode_evm_return(sig, meta["fns"].get(sig), result.logs)
         return result
 
     def invoke(sig, args, call_index=None, **call_opts):
@@ -1427,6 +1427,9 @@ def main():
             probe_results[str(probe_index)] = {
                 "ok": False, "revert": str(exc)[:160]}
 
+    peer_path = case_dir / "evm_results.json"
+    probe_keys = ((load_json(peer_path).get("storage") or {}).get("probe_key_evidence")
+                  if peer_path.exists() else None)
     if evm_layout:
         # --evm-storage-layout: storage IS solc's slot layout in boxes — read
         # it exactly the way the EVM leg reads py-evm state (chd_slot_reader).
@@ -1434,7 +1437,7 @@ def main():
         slot_layout = load_json(case_dir / "storage_layout.json")
         storage = read_slot_storage(
             read_slot_map(algod, app.app_id), slot_layout, syms, fold, calls,
-            meta.get("fns") or {}, snapshots, meta.get("getters") or [])
+            meta.get("fns") or {}, snapshots, meta.get("getters") or [], probe_keys)
     else:
         slot_layout = load_json(case_dir / "storage_layout.json")
         storage = read_avm_storage(algod, app.app_id, arc56, fold)
@@ -1446,10 +1449,12 @@ def main():
         maps = read_avm_maps(
             algod, app.app_id, arc56, slot_layout, syms, fold, calls,
             meta.get("fns") or {}, app_id_symbols, snapshots,
-            meta.get("getters") or [])
+            meta.get("getters") or [], probe_keys)
         storage["raw_slots"] = maps.pop("__raw_slots__", {})
         storage["coverage"] = maps.pop("__coverage__", {})
         storage["maps"] = maps
+    if probe_keys is not None:
+        storage["probe_key_evidence"] = probe_keys
     dump_json(case_dir / "avm_results.json",
               {"results": {str(k): v for k, v in results.items()},
                "snapshots": snapshots,
@@ -1473,6 +1478,25 @@ def _ctype(inp):
         return "(" + ",".join(_ctype(c) for c in inp.get("components", [])) + ")" \
                + t[len("tuple"):]
     return t
+
+
+def decode_evm_return(sig, fn, logs):
+    """Decode an accepted EVM-wire call; only explicit ABI void may omit a log.
+
+    The entry router deliberately emits no return record for normal void
+    functions, so absence of a payload is not itself a rejection. Callers must
+    establish VM acceptance first; missing metadata must never imply void.
+    """
+    if not isinstance(fn, dict) or not isinstance(fn.get("outputs"), list):
+        raise ValueError(f"EVM entry {sig} has no declared ABI outputs")
+    outputs = fn["outputs"]
+    magic = bytes.fromhex("151f7c75")
+    payload = next((bytes(log)[4:] for log in reversed(logs)
+                    if bytes(log).startswith(magic)), None)
+    if payload is None and outputs:
+        raise ValueError(f"EVM entry {sig} returned no structured payload")
+    decoded = evm_abi_decode([_ctype(spec) for spec in outputs], payload) if outputs else ()
+    return decoded[0] if len(decoded) == 1 else tuple(decoded) if decoded else None
 
 
 def _ret(r, meta, sig, fold):

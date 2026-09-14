@@ -9,8 +9,11 @@ Both produced findings that looked like compiler divergences and were not:
   drifted by a uniform fraction of the window.
 """
 import hashlib
+import base64
 import sys
 from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -291,3 +294,85 @@ def test_legacy_prefix_maps_still_read_when_declared():
     reader = NativeStorageReader(layout, arc56, boxes, _evidence({symbol(1): ACCOUNT}),
                                  sha, lambda raw: symbol(1))
     assert reader.read_maps()["bal"] == {symbol(1): 42}
+
+
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("shared_keys", [False, True])
+def test_native_array_values_seed_mapping_keys(nested, shared_keys):
+    """Plain arrays and arrays of structs must seed the native reader too."""
+    from algosdk import abi
+    from chd_storage import EvmStorageReader, NativeStorageReader, holder_mapping_entry, holder_root
+    from Crypto.Hash import keccak
+
+    types = {
+        "num": {"encoding": "inplace", "label": "uint256", "numberOfBytes": "32"},
+        "pair": {"encoding": "inplace", "label": "struct T.Pair", "numberOfBytes": "64",
+                 "members": [{"label": name, "slot": str(slot), "offset": 0, "type": "num"}
+                             for slot, name in enumerate(("a", "b"))]},
+        "arr": {"encoding": "dynamic_array", "label": "T.Pair[]" if nested else "uint256[]",
+                "numberOfBytes": "32", "base": "pair" if nested else "num"},
+        "map": {"encoding": "mapping", "label": "mapping(uint256 => uint256)",
+                "numberOfBytes": "32", "key": "num", "value": "num"},
+    }
+    layout = {"types": types, "storage": [
+        {"label": "positions", "slot": "0", "offset": 0, "type": "map"},
+        {"label": "values", "slot": "1", "offset": 0, "type": "arr"}]}
+    root = holder_root(0)
+    arc56 = {"state": {
+        "keys": {"box": {"values": {"key": base64.b64encode(b"values").decode()}}},
+        "maps": {"box": {"positions": {"prefix": base64.b64encode(root).decode()}}}}}
+    value = [[8, 9]] if nested else [8, 9]
+    boxes = {b"values": abi.ABIType.from_string(
+        "(uint256,uint256)[]" if nested else "uint256[]").encode(value)}
+    for key in (8, 9):
+        boxes[holder_mapping_entry(root, key.to_bytes(32, "big"))] = bytes([key + 10])
+    evidence = _evidence({})
+    if shared_keys:
+        kec = lambda data: keccak.new(digest_bits=256, data=data).digest()
+        array_slot = int.from_bytes(kec((1).to_bytes(32, "big")), "big")
+        words = {1: (1 if nested else 2).to_bytes(32, "big"),
+                 array_slot: (8).to_bytes(32, "big"),
+                 array_slot + 1: (9).to_bytes(32, "big")}
+        for key in (8, 9):
+            slot = int.from_bytes(kec(key.to_bytes(32, "big") + bytes(32)), "big")
+            words[slot] = (key + 10).to_bytes(32, "big")
+        ev = _evidence({})
+        evm_reader = EvmStorageReader(layout, lambda slot: words.get(slot, bytes(32)), ev, kec)
+        assert evm_reader.read(lambda raw: raw)["maps"]["positions"] == {}
+        ev.freeze()
+        assert evm_reader.read(lambda raw: raw)["maps"]["positions"] == {"#8": 18, "#9": 19}
+        evidence.freeze(ev.export_keys())
+    reader = NativeStorageReader(layout, arc56, boxes, evidence,
+                                 lambda data: hashlib.sha256(data).digest(), lambda raw: "?")
+    assert reader.read_maps()["positions"] == {"#8": 18, "#9": 19}
+    assert reader.matched == set(boxes)
+    # Shared keys cannot make a wrong stored value agree with the EVM result.
+    boxes[holder_mapping_entry(root, (9).to_bytes(32, "big"))] = b"\x63"
+    assert reader.read_maps()["positions"]["#9"] == 99
+
+
+def test_runtime_struct_array_evidence_does_not_confuse_members_and_elements():
+    ev = _evidence({})
+    ev.types = {
+        "n": {"label": "uint256"}, "b": {"label": "bytes2"},
+        "s": {"members": [{"type": "n"}, {"type": "b"}]},
+    }
+    ev.add_runtime({"base": "s"}, [[8, "0xabcd"], [9, "0xef01"]])
+    assert [c.value for c in ev.candidates(ev.types["n"])] == [0, 1, 2, 3, 8, 9]
+    assert [c.value for c in ev.candidates(ev.types["b"])] == [b"\0\0", b"\xab\xcd", b"\xef\x01"]
+
+
+def test_frozen_probe_keys_replace_local_discoveries_and_relocate_symbols():
+    evm = _evidence({"«D0»": NARROWED})
+    evm.add_runtime({"label": "uint256"}, 479)
+    evm.add_runtime({"label": "bytes32"}, "0x" + NARROWED.hex())
+    avm_address = bytes(24) + (9002).to_bytes(8, "big")
+    avm = _evidence({"«D0»": avm_address})
+    avm.add_runtime({"label": "uint256"}, 1005)
+    avm.freeze(evm.export_keys())
+    avm.add_runtime({"label": "uint256"}, 1006)
+    assert [c.value for c in avm.candidates({"label": "uint256"})] == [0, 1, 2, 3, 479]
+    assert [c.value for c in avm.candidates({"label": "bytes32"})] == [bytes(32), avm_address]
+    assert avm.export_keys() == evm.export_keys()
+    with pytest.raises(ValueError, match="version"):
+        avm.freeze({"version": 2})

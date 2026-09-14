@@ -75,7 +75,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[0] / "solidity-semantic-tests"))
 sys.path.insert(0, str(HERE.parents[0] / "WIP" / "tiny-fuzzing-oracle"))
 
-from eth_abi import decode as evm_abi_decode, encode as evm_abi_encode
+from eth_abi import encode as evm_abi_encode
 
 from algosdk import account, encoding
 from algosdk.atomic_transaction_composer import (AccountTransactionSigner,
@@ -84,7 +84,7 @@ from algosdk.transaction import SuggestedParams
 
 from avm_leg import (XCHAIN_PLACEHOLDER, XCHAIN_TOY_TEAL, _ctype, _ret,
                      collect_compiler_events, compile_case_contract,
-                     compiled_artifact_root, decode_global_state,
+                     compiled_artifact_root, decode_evm_return, decode_global_state,
                      evm_selector, evm_wire_value, main_compile_args,
                      mode_compile_args, read_native_maps, xchain_compile_args,
                      xchain_template_bytes)
@@ -147,7 +147,6 @@ int 1"""
 INVALID_BOX = re.compile(r"invalid Box reference 0x([0-9a-fA-F]*)")
 UNAVAILABLE_ACCOUNT = re.compile(r"unavailable Account ([A-Z2-7]{58})")
 IO_BUDGET = re.compile(r"(?:read|write) budget exceeded \((\d+) > (\d+)\)")
-RET_MAGIC = bytes.fromhex("151f7c75")
 
 
 def _itob(n: int) -> str:
@@ -389,6 +388,10 @@ class OracleLane:
         self.oracle, self.adapter = oracle, adapter
         self.global_uints, self.global_bytes = schema
         self.approval, self.clear = approval_teal, clear_teal
+        if re.search(r"(?m)^\s*(?:pushint|pushbytes|int|byte)\s+TMPL_(?:CHILD|APPROVAL|CLEAR)_",
+                     approval_teal + "\n" + clear_teal):
+            raise NotImplementedError("oracle replay cannot deploy unresolved child-program templates; "
+                                      "real new C() child deployment is not yet supported")
         self.approval_bin, self.clear_bin = approval_bin, clear_bin
         total = len(approval_bin) + len(clear_bin)
         page = 2048
@@ -442,7 +445,7 @@ class OracleLane:
 
     def create(self, app_args_hex: list[str], ts: int, *,
                deferred_constructor: bool = False) -> None:
-        """framework.deploy's create txn: ctor args as app args, no group."""
+        """Create, retrying budget failures with real executed helper calls."""
         self.state.latest_timestamp = int(ts)
         req = self.state.request(
             self.approval, creating=True, sender=self.creator, fee=8 * MIN_FEE,
@@ -458,6 +461,24 @@ class OracleLane:
         if self.dep_apps and not deferred_constructor:
             req["foreign_apps"] = self.dep_apps[:MAX_TXN_REFS - self.write_budget_refs]
         resp = self.oracle.run(req)
+        self.stats["create_attempts"] = 1
+        self.stats["create_helpers"] = 0
+        self.stats["create_amplified"] = False
+        for amplify in (False, True):
+            if resp.get("result") == "ACCEPT" or not _is_budget_error(str(resp.get("error") or "")):
+                break
+            helpers = self._siblings(self.creator, POOL, amplify)
+            for helper in helpers:
+                helper["box_refs"] = [""] * (MAX_TXN_REFS - len(helper.get("foreign_apps", [])))
+            # No budget override: the canonical evaluator executes these apps
+            # and applies protocol pooling, fee checks and group rollback.
+            req.update(group=helpers, group_index=len(helpers),
+                       fee=MIN_FEE * (POOL + 1 + (POOL * OPUP_DEPTH if amplify else 0))
+                           + EXTRA_FEE + INNER_FEE_HEADROOM)
+            resp = self.oracle.run(req)
+            self.stats["create_attempts"] += 1
+            self.stats["create_helpers"] = len(helpers)
+            self.stats["create_amplified"] = amplify
         if resp.get("result") != "ACCEPT":
             raise RuntimeError(f"create txn failed: {resp.get('error')}")
         self.state.carry(resp)
@@ -626,7 +647,7 @@ class OracleLane:
                     seeds = []
                     continue
                 resp = {"result": "PANIC", "error": (
-                    f"invalid box reference capacity: {len(refs)} named boxes "
+                    f"box reference capacity: {len(refs)} named boxes "
                     f"exceed the 16-txn group's reference slots")}
                 break
             self.stats["attempts"] += 1
@@ -671,6 +692,10 @@ class OracleLane:
                 self.stats["amplified"] += 1
                 continue
             break
+        else:
+            resp = {**resp, "error": (
+                f"resource discovery exhausted after {RETRY_CAP} attempts with {len(found)} "
+                f"named refs; last VM error: {resp.get('error')}")}
         ok = resp.get("result") == "ACCEPT"
         if ok:
             for ref in reversed(found):
@@ -681,7 +706,9 @@ class OracleLane:
             if commit:
                 self.state.carry(resp)
                 self.last_accept = resp
-        return ok, resp, {"attempts": attempt, "refs": len(found), "amplified": amplify}
+        info = {"attempts": attempt, "refs": len(found), "amplified": amplify}
+        resp["replay_resources"] = info
+        return ok, resp, info
 
     def read_many(self, items: list[tuple[str, list[str]]], *, ts: int,
                   extra: list[dict] = ()) -> list[dict]:
@@ -695,6 +722,10 @@ class OracleLane:
                 self.fund(sender)
                 reqs.append(self.build(sender, app_args, list(self.memo), ts=ts,
                                        extra=extra))
+            if any(req is None for req in reqs):
+                out.extend(self.call(sender, args, ts=ts, commit=False, extra=extra)[1]
+                           for sender, args in chunk)
+                continue
             self.stats["attempts"] += len(reqs)
             for (sender, app_args), resp in zip(chunk, self.oracle.run_batch(reqs)):
                 err = str(resp.get("error") or "")
@@ -1229,13 +1260,10 @@ def main(argv=None) -> None:
     def decode_return(resp: dict, sig: str):
         """The 151f7c75 payload → Result-like object, or an error string."""
         logs = [bytes.fromhex(l) for l in resp.get("logs") or []]
-        payload = next((l[4:] for l in reversed(logs) if l.startswith(RET_MAGIC)), None)
-        if payload is None:
-            return None, logs, f"EVM entry {sig} returned no structured payload"
-        outputs = (meta["fns"].get(sig) or {}).get("outputs") or []
-        decoded = (list(evm_abi_decode([_ctype(spec) for spec in outputs], payload))
-                   if outputs else [])
-        value = decoded[0] if len(decoded) == 1 else tuple(decoded) if decoded else None
+        try:
+            value = decode_evm_return(sig, meta["fns"].get(sig), logs)
+        except ValueError as error:
+            return None, logs, str(error)
         return SimpleNamespace(abi_return=value, logs=logs), logs, None
 
     def read_values(sig: str, args: list, outputs: list, ts: int):
@@ -1246,10 +1274,10 @@ def main(argv=None) -> None:
 
     def finish_read(ok: bool, resp: dict, sig: str, outputs: list):
         if not ok:
-            return False, f"REVERT:{str(resp.get('error') or '')[:60]}"
+            return False, f"REVERT:{resp.get('error') or ''}"
         result, _logs, error = decode_return(resp, sig)
         if error:
-            return False, f"ERROR:{error[:60]}"
+            return False, f"ERROR:{error}"
         vs = result.abi_return
         vs = list(vs) if len(outputs) > 1 else [vs]
         return True, [canon_value(v, o["type"], fold, o.get("components"))
@@ -1285,8 +1313,8 @@ def main(argv=None) -> None:
                     sender_hex, evm_app_args(sig, args, claim), ts=current_ts,
                     value=value, commit=not is_view, extra=seeks)
                 if not ok:
-                    reason = str(resp.get("error") or "")[:160 if is_view else 200]
-                    results[i] = {"ok": False, "revert": reason}
+                    reason = str(resp.get("error") or "")
+                    results[i] = {"ok": False, "revert": reason, "replay_resources": info}
                     if is_platform_limit(reason):
                         platform_limits[i] = reason
                 else:
@@ -1355,7 +1383,8 @@ def main(argv=None) -> None:
             ok, value = finish_read(resp.get("result") == "ACCEPT", resp,
                                     probe["sig"], probe["outputs"])
             probe_results[str(k)] = ({"ok": True, "ret": value} if ok
-                                     else {"ok": False, "revert": value[len("REVERT:"):][:160]})
+                                     else {"ok": False, "revert": value,
+                                           "replay_resources": resp.get("replay_resources", {})})
         except Exception as exc:
             probe_results[str(k)] = {"ok": False, "revert": str(exc)[:160]}
 
@@ -1363,11 +1392,12 @@ def main(argv=None) -> None:
     syms = ids.storage_symbols()
     slot_layout = load_json(case_dir / "storage_layout.json")
     box_values = lane.box_source()
+    probe_keys = (evm.get("storage") or {}).get("probe_key_evidence")
     if opts.get("evm_layout"):
         from chd_slot_reader import read_slot_storage
         storage = read_slot_storage(
             slot_map_from_boxes(box_values), slot_layout, syms, fold, calls,
-            meta.get("fns") or {}, snapshots, meta.get("getters") or [])
+            meta.get("fns") or {}, snapshots, meta.get("getters") or [], probe_keys)
     else:
         storage = decode_global_state(lane.global_entries(), arc56, fold)
         app_id_symbols = {ORACLE_APP: symbol("self")}
@@ -1378,11 +1408,13 @@ def main(argv=None) -> None:
         maps = read_native_maps(
             box_values, arc56, slot_layout, syms, fold, calls,
             meta.get("fns") or {}, app_id_symbols, snapshots,
-            meta.get("getters") or [])
+            meta.get("getters") or [], probe_keys)
         storage["raw_slots"] = maps.pop("__raw_slots__", {})
         storage["coverage"] = maps.pop("__coverage__", {})
         storage["maps"] = maps
 
+    if probe_keys is not None:
+        storage["probe_key_evidence"] = probe_keys
     dump_json(case_dir / "avm_results.json",
               {"results": {str(k): v for k, v in results.items()},
                "snapshots": snapshots,

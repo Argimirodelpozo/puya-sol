@@ -3,6 +3,7 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/storage/EvmLayoutMode.h"
+#include "builder/codec/EvmValueCodec.h"
 
 #include <libsolidity/ast/Types.h>
 
@@ -24,9 +25,20 @@ bool typeUsesHashedSlots(solidity::frontend::Type const* _type)
 		return array->isDynamicallySized() || typeUsesHashedSlots(array->baseType());
 	if (auto const* structure = dynamic_cast<solidity::frontend::StructType const*>(_type))
 	{
-		for (auto const& member: structure->structDefinition().members())
-			if (member && typeUsesHashedSlots(member->type()))
+		for (auto const& member: structure->members(nullptr))
+		{
+			if (typeUsesHashedSlots(member.type))
 				return true;
+			// The full AVM account needs a shadow word when solc packs it with
+			// another member. This applies inside structs/fixed arrays too, not
+			// just to top-level state declarations checked below.
+			auto const* underlying = codec::underlyingType(member.type);
+			if (dynamic_cast<solidity::frontend::AddressType const*>(underlying)
+				|| dynamic_cast<solidity::frontend::ContractType const*>(underlying))
+				for (auto const& other: structure->members(nullptr))
+					if (other.name != member.name && structure->storageOffsetsOfMember(other.name).first
+						== structure->storageOffsetsOfMember(member.name).first) return true;
+		}
 	}
 	return false;
 }

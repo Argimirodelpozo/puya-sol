@@ -41,8 +41,9 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 				auto mask = awst::makeIntegerConstant((uint64_t{1} << bits) - 1, loc);
 				if (rules.validatePadding)
 					assertRange(awst::makeNumericCompare(value, awst::NumericComparison::Lte, mask, loc), "ABI validation");
-				out.push_back(awst::makeAssignmentStatement(value,
-					awst::makeUInt64BinOp(value, awst::UInt64BinaryOperator::BitAnd, mask, loc), loc));
+				else
+					out.push_back(awst::makeAssignmentStatement(value,
+						awst::makeUInt64BinOp(value, awst::UInt64BinaryOperator::BitAnd, mask, loc), loc));
 			}
 		}
 		if (rules.boolean && rules.validatePadding)

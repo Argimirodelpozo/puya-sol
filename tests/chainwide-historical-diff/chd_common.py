@@ -7,9 +7,14 @@ either ecosystem at module level; only stdlib.
 from __future__ import annotations
 
 import hashlib
+import copy
 import json
+import math
 import re
+import time
 from collections.abc import Mapping
+from email.utils import parsedate_to_datetime
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -22,14 +27,68 @@ EVM_PY = ORACLE_DIR / ".evmvenv" / "bin" / "python"
 
 UA = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 
+
+def verified_compiler_settings(verification: dict) -> dict:
+    """Preserve verified solc options, including Blockscout's top-level form."""
+    settings = copy.deepcopy(verification.get("compiler_settings") or {})
+    if settings.get("optimizer") is None and isinstance(
+            verification.get("optimization_enabled"), bool):
+        settings["optimizer"] = {"enabled": verification["optimization_enabled"]}
+        if verification.get("optimization_runs") is not None:
+            settings["optimizer"]["runs"] = int(verification["optimization_runs"])
+    if not settings.get("evmVersion") and verification.get("evm_version"):
+        settings["evmVersion"] = verification["evm_version"]
+    return {key: value for key, value in settings.items() if value is not None}
+
+
+def replay_compiler_settings(case: dict, outputs: list[str]) -> dict:
+    """Verified codegen first; absent facts use solc defaults, never guessed IR.
+
+    Library addresses are relocated by the replay using solc link references.
+    Outputs and source remappings belong to the replay's materialized input.
+    """
+    settings = {key: copy.deepcopy(value)
+                for key, value in (case.get("solc_settings") or {}).items()
+                if value is not None and key in (
+                    "optimizer", "viaIR", "evmVersion", "metadata", "debug")}
+    if settings.get("evmVersion") == "default":
+        settings.pop("evmVersion")
+    manifest = case.get("multifile") or {}
+    if manifest.get("remappings"):
+        settings["remappings"] = list(manifest["remappings"])
+    settings["outputSelection"] = {"*": {"*": list(outputs)}}
+    return settings
+
 # Registry symbol space: senders 0.., arg-only addresses ARG_BASE..
 ARG_BASE = 10000
 
 
 def http_json(url: str, timeout: int = 40):
     req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.load(r)
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as exc:
+            if exc.code not in (429, 502, 503, 504) or attempt == 2:
+                raise
+            delay = 2 ** attempt
+            retry_after = (exc.headers or {}).get("Retry-After")
+            if retry_after:
+                try:
+                    delay = max(delay, int(retry_after))
+                except ValueError:
+                    try:
+                        delay = max(delay, parsedate_to_datetime(retry_after).timestamp() - time.time())
+                    except (TypeError, ValueError, OverflowError):
+                        pass
+            if delay > 60:
+                # Do not retry earlier than the server permits or hold a
+                # collector indefinitely. Preserve the HTTP failure instead.
+                exc.add_note(f"Retry-After seconds: {math.ceil(delay)}")
+                raise
+            exc.close()
+            time.sleep(delay)
 
 
 # wei → the unit each leg actually moves. ETH carries 18 decimals and ALGO 6,
@@ -424,7 +483,10 @@ def is_platform_limit(reason: str) -> bool:
     # platform limits — hiding real divergences, the exact inverse of the
     # masquerade this predicate exists to prevent.
     return ("budget" in m or "opcode budget" in m or "dynamic cost" in m
-            or "invalid box reference" in m or "unavailable box" in m
+            # A bare invalid-box error might be a wrong key derivation. Only
+            # proven discovery/packing exhaustion is a resource exclusion.
+            or "resource discovery exhausted" in m or "box reference capacity" in m
+            or "account reference capacity" in m
             or "unavailable resource" in m or "max_group_size" in m
             or ("exceed" in m and "group" in m)
             or "extra_pages" in m or "8kb" in m

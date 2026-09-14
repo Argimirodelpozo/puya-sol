@@ -13,21 +13,13 @@ namespace puyasol::builder::eb
 {
 using namespace solidity::frontend;
 
-std::shared_ptr<awst::Expression> handleEncodeCall(
-	ContractContext& ctx, FunctionCall const& call, awst::SourceLocation const& loc)
+AbiCall::AbiCall(FunctionCall const& call)
 {
 	if (call.arguments().size() != 2) throw std::logic_error("Invalid solc encodeCall arity");
-	auto const& source = *call.arguments()[0];
-	auto const* function = dynamic_cast<FunctionType const*>(source.annotation().type);
-	auto const* external = function ? function->asExternallyCallableFunction(false) : nullptr;
-	if (!external) throw std::logic_error("encodeCall target has no externally callable solc type");
-	// Selector folding and receiver evaluation are independent. Reuse the
-	// selector projection's scoped effects instead of constructing a compact
-	// application pointer merely to discard its address.
-	auto selector = sol_ast::SolSelectorAccess::selectorOf(
-		ctx, source, awst::WType::bytesType(), loc, true);
-	auto const paramTypes = external->parameterTypes();
-	std::vector<ASTPointer<Expression const>> arguments;
+	target = call.arguments()[0].get();
+	auto const* function = dynamic_cast<FunctionType const*>(target->annotation().type);
+	type = function ? function->asExternallyCallableFunction(false) : nullptr;
+	if (!type) throw std::logic_error("encodeCall target has no externally callable solc type");
 	// Inline arrays also use TupleExpression; only solc's TupleType denotes
 	// multiple call arguments. Match TypeChecker::typeCheckABIEncodeCallFunction.
 	if (dynamic_cast<TupleType const*>(call.arguments()[1]->annotation().type))
@@ -37,12 +29,24 @@ std::shared_ptr<awst::Expression> handleEncodeCall(
 		arguments.assign(tuple->components().begin(), tuple->components().end());
 	}
 	else arguments.push_back(call.arguments()[1]);
-	if (arguments.size() != paramTypes.size())
+	if (arguments.size() != type->parameterTypes().size())
 		throw std::logic_error("encodeCall arguments disagree with solc parameter types");
+	for (auto const& argument: arguments)
+		if (!argument) throw std::logic_error("Missing encodeCall argument");
+}
+
+std::shared_ptr<awst::Expression> handleEncodeCall(
+	ContractContext& ctx, FunctionCall const& call, awst::SourceLocation const& loc)
+{
+	AbiCall facts(call);
+	// Fold the selector independently of evaluating the receiver for effects.
+	auto selector = sol_ast::SolSelectorAccess::selectorOf(
+		ctx, *facts.target, awst::WType::bytesType(), loc, true);
+	auto const& paramTypes = facts.type->parameterTypes();
+	auto const& arguments = facts.arguments;
 	std::vector<std::shared_ptr<awst::Expression>> values;
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
-		if (!arguments[i]) throw std::logic_error("Missing encodeCall argument");
 		auto value = sol_ast::CallOperands::evaluate(ctx, *arguments[i], loc);
 		values.push_back(ConversionPlan{arguments[i]->annotation().type, paramTypes[i],
 			ctx.typeMapper.map(paramTypes[i]), ConversionPlan::Context::AbiArgument}.emit(std::move(value), loc));

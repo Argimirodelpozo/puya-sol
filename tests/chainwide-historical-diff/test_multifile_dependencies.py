@@ -51,6 +51,32 @@ def test_duplicate_source_path_is_rejected(tmp_path, verified):
         fetch.materialize_sources(tmp_path, verified)
 
 
+def test_upgrade_source_uses_the_same_guard_and_verified_settings(tmp_path, verified, monkeypatch):
+    monkeypatch.setattr(fetch, "http_json", lambda _url: verified)
+    verified["compiler_settings"].update(viaIR=True, optimizer={"enabled": True, "runs": 999})
+    impl = fetch.materialize_impl_source("example.test", "0x" + "12" * 20, tmp_path / "good", False)
+    assert impl["solc_settings"]["viaIR"] is True
+    assert impl["solc_settings"]["optimizer"]["runs"] == 999
+    assert (tmp_path / "good/src/src/Verifier.sol").read_text() == verified["source_code"]
+    verified["additional_sources"][0]["file_path"] = "../escape.sol"
+    with pytest.raises(ValueError, match="unsafe verified source path"):
+        fetch.materialize_impl_source("example.test", "0x" + "12" * 20, tmp_path / "bad", False)
+    assert not (tmp_path / "bad").exists()
+
+
+def test_backend_diagnostics_survive_the_replay_compile_wrapper(tmp_path, capsys):
+    from framework.compile import CompileError
+
+    def fail(*args, **kwargs):
+        raise CompileError("puya exited 2", stdout="backend detail", stderr="precise failure site")
+
+    with pytest.raises(CompileError, match="puya exited 2"):
+        compile_case_contract(SimpleNamespace(compile=fail), tmp_path, {}, [])
+    output = capsys.readouterr()
+    assert "backend detail" in output.out
+    assert "precise failure site" in output.err
+
+
 def test_dependency_compile_uses_disposable_copy(tmp_path, verified):
     manifest = fetch.materialize_sources(tmp_path, verified)
     flags = ["--contract-abi", "evm"]
@@ -147,6 +173,7 @@ def test_creation_resources_follow_compiled_constructor_mode(deferred):
         approval="int 1", clear="int 1", approval_bin=b"", clear_bin=b"",
         write_budget_refs=0, round=1000, dep_apps=[9002, 9003],
         global_uints=16, global_bytes=16, extra_pages=0,
+        stats={},
         _app_fields=lambda: {},
     )
     OracleLane.create(lane, [], 123, deferred_constructor=deferred)

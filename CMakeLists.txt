@@ -283,7 +283,6 @@ set(SOURCES
 	src/builder/sol-eb/SolAddressBuilder.cpp
 	src/builder/sol-eb/SolEnumBuilder.cpp
 	src/builder/sol-eb/SolFixedBytesBuilder.cpp
-	src/builder/sol-eb/BuilderRegistry.cpp
 	src/builder/itxn/CallResolver.cpp
 	src/builder/itxn/AsaIntrinsics.cpp
 	src/builder/storage/StorageBackend.cpp
@@ -592,6 +591,11 @@ if(BUILD_TESTING)
 	)
 	target_include_directories(puya-sol-hex-bytes-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	add_test(NAME puya-sol-hex-bytes COMMAND puya-sol-hex-bytes-tests)
+
+	add_executable(puya-sol-awst-serializer-tests
+		tests/cpp/AWSTSerializerTests.cpp src/json/AWSTSerializer.cpp src/awst/WType.cpp)
+	target_include_directories(puya-sol-awst-serializer-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_test(NAME puya-sol-awst-serializer COMMAND puya-sol-awst-serializer-tests)
 
 	add_executable(puya-sol-artifact-writer-tests
 		tests/cpp/ArtifactWriterTests.cpp

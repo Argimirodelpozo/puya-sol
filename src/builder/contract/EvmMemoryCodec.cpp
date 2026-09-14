@@ -3,12 +3,12 @@
 
 #include "Logger.h"
 #include "awst/NameGen.h"
+#include "builder/BuildArtifacts.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-types/TypeMapper.h"
-// StructDefinition members are walked by value here; TypeMapper.h now only
-// forward-declares the solc types.
-#include <libsolidity/ast/AST.h>
+#include "builder/sol-types/Arc4Defaults.h"
+#include <libsolidity/ast/Types.h>
 // yul nodes BY VALUE (the AST aliases are std::variant, which needs
 // complete types). Kept out of AssemblyBuilder.h so only the TUs that
 // actually instantiate them pay the ~223k lines.
@@ -64,6 +64,39 @@ public:
 		Type const* type, std::shared_ptr<awst::Expression> offset, Statements& out)
 	{
 		type = codec::underlyingType(type);
+		auto const* array = dynamic_cast<ArrayType const*>(type);
+		if (!dynamic_cast<StructType const*>(type) && (!array || array->isByteArrayOrString()))
+			return readValue(type, std::move(offset), out);
+
+		// Share code, never values: every call rereads memory. In particular
+		// these helpers must not be pure across an intervening Yul mstore.
+		auto& subs = m_mapper.artifacts().bufferSubroutines;
+		auto [entry, fresh] = subs.try_emplace("memory-read:" + type->identifier());
+		if (fresh)
+		{
+			std::string id = "__puyasol_memory_decode_"
+				+ std::to_string(subs.size());
+			auto sub = awst::makeSubroutine(id, id,
+				{{"offset", awst::WType::uint64Type(), m_loc}},
+				awst::WType::bytesType(), awst::makeBlock(m_loc), false, m_loc);
+			sub->inlineOpt = false;
+			entry->second = sub;
+			auto value = readValue(type, u64Var("offset", m_loc), sub->body->body);
+			if (!value) return nullptr;
+			sub->body->body.push_back(awst::makeReturnStatement(
+				awst::makeAsBytes(std::move(value), m_loc), m_loc));
+		}
+		auto call = awst::makeSubroutineCall(awst::SubroutineID{entry->second->id},
+			awst::WType::bytesType(), m_loc);
+		awst::pushCallArg(call->args, std::move(offset));
+		return awst::makeReinterpretCast(std::move(call), m_mapper.map(type), m_loc);
+	}
+
+private:
+	std::shared_ptr<awst::Expression> readValue(
+		Type const* type, std::shared_ptr<awst::Expression> offset, Statements& out)
+	{
+		type = codec::underlyingType(type);
 		if (codec::isWordType(type))
 			return codec::valueFromEvmWord(
 				m_mapper, type, word(std::move(offset), out), m_loc, out,
@@ -84,7 +117,6 @@ public:
 		return nullptr;
 	}
 
-private:
 	std::shared_ptr<awst::Expression> word(
 		std::shared_ptr<awst::Expression> offset, Statements& out)
 	{
@@ -218,16 +250,16 @@ private:
 			return nullptr;
 		auto base = awst::makeEvalOnce(std::move(offset), m_loc);
 		auto result = awst::makeNewStruct(structW, m_loc);
-		for (auto const& member: structure->structDefinition().members())
+		for (auto const& member: structure->members(nullptr))
 		{
-			awst::WType const* fieldW = awst::structFieldType(structW, member->name());
-			auto value = child(member->type(), add(base,
-				u64(structure->memoryOffsetOfMember(member->name()).str(), m_loc),
+			awst::WType const* fieldW = awst::structFieldType(structW, member.name);
+			auto value = child(member.type, add(base,
+				u64(structure->memoryOffsetOfMember(member.name).str(), m_loc),
 				m_loc), out);
 			if (!value)
 				return nullptr;
-			result->values[member->name()] = codec::valueToArc4(
-				m_mapper, member->type(), std::move(value), fieldW, m_loc);
+			result->values[member.name] = codec::valueToArc4(
+				m_mapper, member.type, std::move(value), fieldW, m_loc);
 		}
 		return result;
 	}
@@ -246,6 +278,34 @@ public:
 	}
 
 	std::shared_ptr<awst::Expression> write(
+		Type const* type, std::shared_ptr<awst::Expression> value, Statements& out)
+	{
+		type = codec::underlyingType(type);
+		auto const* array = dynamic_cast<ArrayType const*>(type);
+		auto const* physical = m_mapper.map(type);
+		if ((!dynamic_cast<StructType const*>(type) && (!array || array->isByteArrayOrString()))
+			|| !isArc4EncodedType(physical) || !awst::structurallyEquivalent(physical, value->wtype))
+			return writeValue(type, std::move(value), out);
+		auto& subs = m_mapper.artifacts().bufferSubroutines;
+		auto [entry, fresh] = subs.try_emplace("memory-write:" + type->identifier());
+		if (fresh)
+		{
+			std::string id = "__puyasol_memory_encode_" + std::to_string(subs.size());
+			auto sub = awst::makeSubroutine(id, id, {{"value", awst::WType::bytesType(), m_loc}},
+				awst::WType::uint64Type(), awst::makeBlock(m_loc), false, m_loc);
+			sub->inlineOpt = false;
+			entry->second = sub;
+			auto offset = writeValue(type, awst::makeReinterpretCast(
+				bytesVar("value", m_loc), physical, m_loc), sub->body->body);
+			if (!offset) return nullptr;
+			sub->body->body.push_back(awst::makeReturnStatement(std::move(offset), m_loc));
+		}
+		auto call = awst::makeSubroutineCall(awst::SubroutineID{entry->second->id}, awst::WType::uint64Type(), m_loc);
+		awst::pushCallArg(call->args, awst::makeAsBytes(std::move(value), m_loc));
+		return call;
+	}
+
+	std::shared_ptr<awst::Expression> writeValue(
 		Type const* type, std::shared_ptr<awst::Expression> value, Statements& out)
 	{
 		type = codec::underlyingType(type);
@@ -405,7 +465,7 @@ private:
 		auto body = awst::makeBlock(m_loc);
 		auto element = awst::makeIndexExpression(
 			arrayValue, idxVar(), elemW, m_loc);
-		auto slot = add(add(base, u64(32, m_loc), m_loc),
+		auto slot = add(add(base, u64(array->isDynamicallySized() ? 32 : 0, m_loc), m_loc),
 			awst::makeUInt64BinOp(idxVar(), awst::UInt64BinaryOperator::Mult,
 				u64(array->memoryStride(), m_loc), m_loc), m_loc);
 		writeChild(elemType, std::move(element), std::move(slot), body->body);
@@ -462,6 +522,11 @@ private:
 		auto const* elemType = array->baseType();
 		auto arrayValue = pin(std::move(value), out, "fixedarray");
 		uint64_t count = static_cast<uint64_t>(array->length());
+		if (count > 4)
+		{
+			writeArrayElements(array, arrayValue, base, u64(count, m_loc), out);
+			return true;
+		}
 		for (uint64_t i = 0; i < count; ++i)
 		{
 			auto element = awst::makeIndexExpression(
@@ -483,13 +548,15 @@ private:
 		if (!structW)
 			return false;
 		auto structValue = pin(std::move(value), out, "struct");
-		for (auto const& member: structure->structDefinition().members())
+		// solc relocates reference members (including nested fixed arrays) to
+		// the struct's location. Raw declaration types still refer to storage.
+		for (auto const& member: structure->members(nullptr))
 		{
-			awst::WType const* fieldW = awst::structFieldType(structW, member->name());
+			awst::WType const* fieldW = awst::structFieldType(structW, member.name);
 			auto field = awst::makeFieldExpression(
-				structValue, member->name(), fieldW, m_loc);
-			writeChild(member->type(), std::move(field), add(base,
-				u64(structure->memoryOffsetOfMember(member->name()).str(), m_loc),
+				structValue, member.name, fieldW, m_loc);
+			writeChild(member.type, std::move(field), add(base,
+				u64(structure->memoryOffsetOfMember(member.name).str(), m_loc),
 				m_loc), out);
 		}
 		return true;

@@ -22,7 +22,7 @@ std::shared_ptr<awst::Expression> SolRevert::toAwst()
 			solidity::frontend::ASTNode::referencedDeclaration(m_call.expression())))
 		payload = RevertPayload(m_ctx, m_call, m_loc);
 	else if (!arguments().empty())
-		payload = RevertPayload(CallOperands::evaluate(m_ctx, *arguments()[0], m_loc), m_loc);
+		payload = RevertPayload(m_ctx, CallOperands::evaluate(m_ctx, *arguments()[0], m_loc), m_loc);
 	auto& errorMessage = payload.message;
 	auto& revertBlob = payload.blob;
 	auto failNode = awst::makeAssert(

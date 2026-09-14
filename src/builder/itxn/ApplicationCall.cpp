@@ -14,6 +14,13 @@ namespace puyasol::builder
 ApplicationCall::Expr ApplicationCall::submit(TypeMapper& types, Expr receiver,
 	Expr arguments, Expr payment, awst::SourceLocation const& loc, Statements& out)
 {
+	submitOnly(types, std::move(receiver), std::move(arguments), std::move(payment), loc, out);
+	return capture(types, loc, out);
+}
+
+void ApplicationCall::submitOnly(TypeMapper& types, Expr receiver,
+	Expr arguments, Expr payment, awst::SourceLocation const& loc, Statements& out)
+{
 	static awst::WInnerTransactionFields fields(6);
 	static awst::WInnerTransaction transaction(6);
 	auto create = awst::makeCreateInnerTransaction(&fields, loc);
@@ -27,7 +34,6 @@ ApplicationCall::Expr ApplicationCall::submit(TypeMapper& types, Expr receiver,
 	if (payment) submit->itxns.push_back(std::move(payment));
 	submit->itxns.push_back(std::move(create));
 	out.push_back(awst::makeExpressionStatement(std::move(submit), loc));
-	return capture(types, loc, out);
 }
 
 ApplicationCall::Expr ApplicationCall::submitRaw(TypeMapper& types, Expr receiver,
@@ -45,16 +51,12 @@ ApplicationCall::Expr ApplicationCall::submitRaw(TypeMapper& types, Expr receive
 	receiver = pin(std::move(receiver));
 	if (auto create = std::dynamic_pointer_cast<awst::CreateInnerTransaction>(payment))
 		for (auto& [name, field]: create->fields) field = pin(std::move(field));
-	auto result = awst::makeVarExpression("__raw_result_" + std::to_string(
-		awst::NameGen::next("ApplicationCall.rawResult")), awst::WType::bytesType(), loc);
 	auto empty = awst::makeBlock(loc), nonEmpty = awst::makeBlock(loc);
-	auto emptyResult = submit(types, receiver, nullptr, payment, loc, empty->body);
-	empty->body.push_back(awst::makeAssignmentStatement(result, std::move(emptyResult), loc));
-	auto fullResult = submit(types, receiver, splitPayload(types, input, loc), payment, loc, nonEmpty->body);
-	nonEmpty->body.push_back(awst::makeAssignmentStatement(result, std::move(fullResult), loc));
+	submitOnly(types, receiver, nullptr, payment, loc, empty->body);
+	submitOnly(types, receiver, splitPayload(types, input, loc), payment, loc, nonEmpty->body);
 	out.push_back(awst::makeIfElse(awst::makeNumericCompare(awst::makeLen(input, loc),
 		awst::NumericComparison::Eq, awst::makeZero(loc), loc), std::move(empty), std::move(nonEmpty), loc));
-	return result;
+	return capture(types, loc, out);
 }
 
 ApplicationCall::Expr ApplicationCall::capture(TypeMapper& types,

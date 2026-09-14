@@ -35,9 +35,6 @@ struct BuildArtifacts
 	std::map<std::string, std::string> evmClearSubs;
 	std::vector<std::pair<std::string, solidity::frontend::Type const*>> pendingEvmClearSubs;
 	std::set<std::string> childContracts;
-	/// Derived unit-wide storage runtime facts, not target configuration.
-	bool denseOnlyStorage = false;
-	bool singlePageStorage = false;
 
 	struct ContractEmission
 	{

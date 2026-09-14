@@ -190,9 +190,29 @@ private:
 		Type const* type, std::shared_ptr<awst::Expression> start,
 		Statements& out, Build const& build)
 	{
-		if (!m_routerBody) return build(std::move(start), out);
 		auto const* resultType = m_typeMapper.map(type);
 		auto& arts = m_typeMapper.artifacts();
+		if (!m_routerBody)
+		{
+			auto [entry, fresh] = arts.bufferSubroutines.try_emplace("abi-decode:" + type->identifier());
+			if (fresh)
+			{
+				std::string id = "__puyasol_abi_decode_" + std::to_string(arts.bufferSubroutines.size());
+				auto sub = awst::makeSubroutine(id, id,
+					{{"__blob", awst::WType::bytesType(), m_loc}, {"__start", awst::WType::uint64Type(), m_loc}},
+					resultType, awst::makeBlock(m_loc), false, m_loc);
+				sub->inlineOpt = false;
+				entry->second = sub;
+				auto saved = std::exchange(m_blob, bytesVar("__blob", m_loc));
+				auto value = build(u64Var("__start", m_loc), sub->body->body);
+				m_blob = std::move(saved);
+				sub->body->body.push_back(awst::makeReturnStatement(std::move(value), m_loc));
+			}
+			auto call = awst::makeSubroutineCall(awst::SubroutineID{entry->second->id}, resultType, m_loc);
+			awst::pushCallArg(call->args, "__blob", m_blob);
+			awst::pushCallArg(call->args, "__start", std::move(start));
+			return call;
+		}
 		std::string key = "evm-abi:" + type->identifier();
 		auto [entry, fresh] = arts.contract().helpers.try_emplace(key);
 		if (fresh)

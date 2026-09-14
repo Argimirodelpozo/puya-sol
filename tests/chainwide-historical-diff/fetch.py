@@ -13,10 +13,31 @@ from __future__ import annotations
 import shutil
 import sys
 import time
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 from chd_common import (CASES, EVM_PY, ZERO, dump_json, http_json, load_json,
-                        relax_pragma)
+                        relax_pragma, verified_compiler_settings)
+
+
+def constructor_facts(verification: dict) -> dict:
+    """Use supplied arguments first; recover missing ones only from exact codegen."""
+    raw = (verification.get("constructor_args") or "").removeprefix("0x")
+    inputs = next((e.get("inputs", []) for e in verification.get("abi") or []
+                   if e.get("type") == "constructor"), [])
+    if raw or not inputs or not verification.get("creation_bytecode"):
+        return {"ctor_args_hex": raw}
+    import json
+    import subprocess
+    result = subprocess.run(
+        [str(EVM_PY), str(Path(__file__).with_name("chd_constructor.py"))],
+        input=json.dumps(verification), capture_output=True, text=True, timeout=120)
+    if result.returncode:
+        raise ValueError("verified constructor recovery failed: " + result.stderr[-1800:])
+    recovered = json.loads(result.stdout)
+    print(f"[fetch] {verification.get('name')}: recovered "
+          f"{len(recovered['ctor_args_hex']) // 2} constructor bytes from exact solc codegen",
+          flush=True)
+    return recovered
 
 
 
@@ -876,11 +897,13 @@ def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict |
     if "0.8." not in comp:
         return None
     abi = sc.get("abi") or []
-    ctor_hex = (sc.get("constructor_args") or "").removeprefix("0x")
+    ctor = constructor_facts(sc)
+    ctor_hex = ctor["ctor_args_hex"]
     manifest = materialize_sources(dep_dir, sc)
     dep = {"address": addr, "name": sc.get("name"),
            "compiler_version": comp, "abi": abi,
-           "ctor_args_hex": ctor_hex, "ctor_deps": []}
+           "solc_settings": verified_compiler_settings(sc),
+           **ctor, "ctor_deps": []}
     if manifest:
         dep["multifile"] = manifest
     for sub in _decode_ctor_addresses(abi, ctor_hex):
@@ -920,32 +943,12 @@ def materialize_impl_source(host: str, impl: str, dest, relax_pre08: bool):
         return None
     if not sc.get("source_code"):
         return None
-    dest.mkdir(parents=True, exist_ok=True)
-    (dest / "prepared.sol").write_text(
-        relax_pragma(sc["source_code"], pre08=relax_pre08))
-    mf = None
-    extra = sc.get("additional_sources") or []
-    if extra:
-        main_rel = str(sc.get("file_path") or "Main.sol").lstrip("/") or "Main.sol"
-        tree = {main_rel: relax_pragma(sc["source_code"], pre08=relax_pre08)}
-        for f in extra:
-            tree[str(f["file_path"]).lstrip("/")] = relax_pragma(
-                f.get("source_code", ""), pre08=relax_pre08)
-        src_root = dest / "src"
-        shutil.rmtree(src_root, ignore_errors=True)
-        for rel, content in tree.items():
-            p = src_root / rel
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(content)
-        mf = {"main": main_rel, "files": sorted(tree),
-              "remappings": [r.lstrip(":") for r in
-                             (sc.get("compiler_settings") or {}).get(
-                                 "remappings") or []]}
+    mf = materialize_sources(dest, sc, pre08=relax_pre08)
     return {"name": sc.get("name"),
             "compiler_version": sc.get("compiler_version"),
+            "solc_settings": verified_compiler_settings(sc),
             "abi": sc.get("abi") or [],
-            "ctor_args_hex": (sc.get("constructor_args") or ""
-                              ).removeprefix("0x"),
+            **constructor_facts(sc),
             "multifile": mf}
 
 
@@ -1131,7 +1134,8 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     if "0.8." not in comp and not relax_pre08:
         sys.exit(f"[fetch] {tag}: compiler {comp} — v1 supports ^0.8.x only")
     abi = sc.get("abi") or []
-    ctor_hex = (sc.get("constructor_args") or "").removeprefix("0x")
+    ctor = constructor_facts(sc)
+    ctor_hex = ctor["ctor_args_hex"]
 
     # 2. ascending txn history via the Etherscan-compat API Blockscout hosts
     txns, page = [], 1
@@ -1329,19 +1333,13 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
             print(f"[fetch] {tag}: +{n_ic} internal call(s) merged "
                   f"(router-driven traffic that txlist alone can't see)")
 
-    _cs = sc.get("compiler_settings") or {}
     case = {
         "tag": tag, "host": host, "address": addr,
-        # the contract's OWN verified settings — the oracle leg falls back to
-        # these when a default (unoptimized, no-viaIR) compile fails, which is
-        # what modern stack-heavy contracts (Permit2) require.
-        "solc_settings": {"optimizer": _cs.get("optimizer"),
-                          "viaIR": _cs.get("viaIR"),
-                          "evmVersion": _cs.get("evmVersion")},
+        "solc_settings": verified_compiler_settings(sc),
         "name": sc.get("name"),
         "compiler_version": comp,
         "creation": creation,
-        "ctor_args_hex": ctor_hex,
+        **ctor,
         "abi": abi,
         "txns": txns,
     }

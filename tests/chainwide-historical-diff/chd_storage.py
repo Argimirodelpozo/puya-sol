@@ -108,6 +108,7 @@ class KeyEvidence:
         self.calls = calls or []
         self.fns = fns or {}
         self.syms = syms
+        self.frozen = False
         self._numbers: dict[int, set[int]] = {}
         self._blobs: dict[int, set[bytes]] = {}
         self._strings: dict[str, set[int]] = {}
@@ -255,6 +256,12 @@ class KeyEvidence:
 
     def add_runtime(self, type_doc: dict, value: Any) -> None:
         """Add typed values discovered while recursively decoding storage."""
+        if self.frozen:
+            return
+        if type_doc.get("members") and isinstance(value, (list, tuple)):
+            for member, item in zip(type_doc["members"], value):
+                self.add_runtime(getattr(self, "types", {}).get(member["type"], {}), item)
+            return
         if type_doc.get("base") and isinstance(value, list):
             base_doc = getattr(self, "types", {}).get(type_doc["base"], {})
             # Readers attach the layout type table before feeding discoveries.
@@ -284,6 +291,39 @@ class KeyEvidence:
                 # the set's members and then none of their positions.
                 if int(width or 0) == 32:
                     self._blobs[32].add(bytes(12) + raw[-20:])
+
+    def export_keys(self) -> dict:
+        """Probe domain only, never expected storage values.
+
+        Address-shaped bytes32 keys retain the registry symbol so the receiving
+        leg derives its own address representation, including dependency apps.
+        """
+        return {"version": 1, "integers": sorted(self._numbers),
+                "bytes": sorted({(self.address_label(raw) if any(raw) else None)
+                                 or "0x" + raw.hex()
+                                 for blobs in self._blobs.values() for raw in blobs}),
+                "strings": sorted(self._strings)}
+
+    def freeze(self, keys: dict | None = None) -> None:
+        """Fix the same candidate domain on both legs for the comparison pass.
+
+        Runtime discoveries after this point cannot add one-sided probes. Boxes
+        or written slots outside the domain remain unaccounted-for in coverage.
+        """
+        if keys is not None:
+            if keys.get("version") != 1:
+                raise ValueError("unsupported mapping probe key evidence version")
+            numbers = keys["integers"]
+            if any(type(number) is not int for number in numbers):
+                raise ValueError("mapping probe integers must be integers")
+            self._numbers = {n: self._numbers.get(n, set()) for n in numbers}
+            self._strings = {s: self._strings.get(s, set()) for s in keys["strings"]}
+            self._blobs = {}
+            for value in keys["bytes"]:
+                raw = (bytes(12) + bytes(self.syms[value])[-20:] if value in self.syms
+                       else bytes.fromhex(value.removeprefix("0x")))
+                self._blobs.setdefault(len(raw), set()).add(raw)
+        self.frozen = True
 
 
 def evm_key_bytes(candidate: KeyCandidate, type_doc: dict,
@@ -448,7 +488,7 @@ class EvmStorageReader:
                     f"{path}[{index}]")
             values.append(value)
             present = present or hit
-        self.evidence.add_runtime(element, values)
+        self.evidence.add_runtime(type_doc, values)
         return values, present or (dynamic and length > 0)
 
     def _read_bytes(self, slot: int, type_doc: dict,
@@ -1011,7 +1051,7 @@ class NativeStorageReader:
                 f"{path}[{index}]", decoded=element)
             values.append(value)
             present = present or ehit
-        self.evidence.add_runtime(self.types.get(base_tid, {}), values)
+        self.evidence.add_runtime(doc, values)
         return values, present
 
     def _read_value2(self, prefix: bytes, type_id: str, path: str,
@@ -1033,6 +1073,8 @@ class NativeStorageReader:
         value, hit, canonical = self._decode_holder_box(prefix, type_id)
         if hit and not canonical:
             value = self._canon_layout(value, type_id)
+        if hit:
+            self.evidence.add_runtime(doc, value)
         return value, hit
 
     # ── mapping walk (both schemes) ─────────────────────────────────────
@@ -1092,6 +1134,21 @@ class NativeStorageReader:
                 return base64.b64decode(spec.get("key") or spec.get("prefix") or "")
             except Exception:
                 return b""
+        # Plain native arrays/structs are source-keyed boxes, not holder roots.
+        # Their typed contents are key evidence too (e.g. ERC721's token array
+        # seeds its index map). Read them before enumerating any mapping.
+        for name, spec in box_keys.items():
+            key = _root_key(spec)
+            entry = entries.get(name)
+            if entry and not key.startswith(HOLDER_ROOT_PREFIX):
+                type_id = entry.get("type")
+                doc = self.types.get(type_id, {})
+                if doc.get("base") or doc.get("members"):
+                    value, hit, canonical = self._decode_holder_box(key, type_id)
+                    if hit:
+                        if not canonical:
+                            value = self._canon_layout(value, type_id)
+                        self.evidence.add_runtime(doc, value)
         # Legacy roots: source-named, declared as ARC-56 prefix maps.
         self._format2 = False
         for name, spec in bmaps.items():

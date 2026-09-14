@@ -176,6 +176,63 @@ bool EvmSlotLowering::lowerStructValue(Addr const& _a, ValueDir& _d)
 		return false;
 	}
 
+	// Named-layout assembly slots are rebound to a host-specific dispatcher
+	// after lowering; keep those calls in the contract body for that rewrite.
+	if (!m_ctx.typeMapper.profile().evmStorageLayout
+		|| (_d.write && !awst::structurallyEquivalent(_d.value->wtype, structW)))
+		return lowerStructMembers(_a, _d);
+	// The slot runtime is unit-wide, just like recursive aggregate clearing.
+	// Key by solc's located type, not a struct name or a particular state root.
+	// Bytes are value snapshots; neither reads nor writes share mutable args.
+	auto& subs = m_ctx.typeMapper.artifacts().bufferSubroutines;
+	std::string key = std::string(_d.write ? "storage-write:" : "storage-read:") + st->identifier();
+	auto [entry, fresh] = subs.try_emplace(key);
+	if (fresh)
+	{
+		std::string id = std::string(_d.write ? "__puyasol_storage_encode_" : "__puyasol_storage_decode_")
+			+ std::to_string(subs.size());
+		auto const* bytes = awst::WType::bytesType();
+		std::vector<awst::SubroutineArgument> args{{"slot", awst::WType::biguintType(), m_loc}};
+		if (_d.write) args.emplace_back("value", bytes, m_loc);
+		auto sub = awst::makeSubroutine(id, id, std::move(args),
+			_d.write ? awst::WType::voidType() : bytes, awst::makeBlock(m_loc), false, m_loc);
+		sub->inlineOpt = false;
+		entry->second = sub;
+		// Nested reads queue their temporaries into the active effect frame.
+		// Capture them inside the helper, never into its first caller's body.
+		auto lowered = m_ctx.lowerOperand([&]() {
+			Addr address;
+			address.slot = awst::makeVarExpression("slot", awst::WType::biguintType(), m_loc);
+			address.solType = st;
+			address.wtype = structW;
+			ValueDir direction{_d.write, _d.write ? awst::makeReinterpretCast(
+				awst::makeVarExpression("value", bytes, m_loc), structW, m_loc) : nullptr, m_ctx.preEffects()};
+			if (!lowerStructMembers(address, direction)) return false;
+			direction.out.push_back(awst::makeReturnStatement(
+				_d.write ? nullptr : awst::makeAsBytes(std::move(direction.value), m_loc), m_loc));
+			return true;
+		}, false);
+		if (!lowered.value) return false;
+		assert(lowered.effects.post.empty());
+		sub->body->body = std::move(lowered.effects.pre);
+	}
+	auto call = awst::makeSubroutineCall(awst::SubroutineID{entry->second->id},
+		entry->second->returnType, m_loc);
+	awst::pushCallArg(call->args, _a.slot);
+	if (_d.write)
+	{
+		awst::pushCallArg(call->args, awst::makeAsBytes(std::move(_d.value), m_loc));
+		_d.out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
+	}
+	else
+		_d.value = awst::makeReinterpretCast(std::move(call), structW, m_loc);
+	return true;
+}
+
+bool EvmSlotLowering::lowerStructMembers(Addr const& _a, ValueDir& _d)
+{
+	auto const* st = dynamic_cast<StructType const*>(_a.solType);
+	auto const* structW = dynamic_cast<awst::ARC4Struct const*>(m_ctx.typeMapper.map(st));
 	// pin the base once — members read in separate sub-expressions / write
 	// in separate statements
 	std::string bs = (_d.write ? "__evm_stw_" : "__evm_stv_")
@@ -484,16 +541,19 @@ bool EvmSlotLowering::lowerArrayValue(
 			std::move(_d.value), awst::WType::bytesType(), m_loc);
 	if (chain.depth == 0 || !chain.leafMetrics.ok)
 		return lowerDynArrayGeneric(_a, _at, arrW, _d);
-	auto call = awst::makeSubroutineCall(
-		awst::SubroutineID{_d.write
+	std::string const helper = chain.depth == 1
+		? (_d.write ? "__puyasol___evm_dynarr_write" : "__puyasol___evm_dynarr_read")
+		: (_d.write
 			? "__puyasol___evm_dynarr_recursive_write"
-			: "__puyasol___evm_dynarr_recursive_read"},
+			: "__puyasol___evm_dynarr_recursive_read");
+	auto call = awst::makeSubroutineCall(awst::SubroutineID{helper},
 		_d.write ? awst::WType::voidType() : awst::WType::bytesType(), m_loc);
 	awst::pushCallArg(call->args, "__slot", _a.slot);
 	if (_d.write)
 		awst::pushCallArg(call->args, "__val", std::move(_d.value));
-	awst::pushCallArg(call->args, "__depth",
-		awst::makeIntegerConstant(uint64_t{chain.depth}, m_loc));
+	if (chain.depth > 1)
+		awst::pushCallArg(call->args, "__depth",
+			awst::makeIntegerConstant(uint64_t{chain.depth}, m_loc));
 	pushDynElemMetricArgs(call->args, chain.leafMetrics, m_loc);
 	if (_d.write)
 		_d.out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
@@ -510,6 +570,15 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 	// dynamic-chain codec remains the compact fast path, while this
 	// fallback recursively delegates each child to readAny/writeAny.
 	auto const* elemType = _at->baseType();
+	bool const dynamic = _at->isDynamicallySized();
+	unsigned const headerBytes = dynamic ? 2 : 0;
+	unsigned sourceCount = dynamic ? 0 : static_cast<unsigned>(_at->length());
+	if (_d.write && !dynamic)
+	{
+		if (auto const* fixed = dynamic_cast<awst::ARC4StaticArray const*>(_d.value->wtype))
+			sourceCount = static_cast<unsigned>(fixed->arraySize());
+		_d.value = awst::makeAsBytes(std::move(_d.value), m_loc);
+	}
 	if (dynamic_cast<MappingType const*>(elemType))
 	{
 		Logger::instance().error(_d.write
@@ -580,10 +649,14 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 			return awst::makeExtract(awst::makeItob(std::move(v), m_loc), 6, 2, m_loc);
 		};
 		out.push_back(awst::makeAssignmentStatement(
-			uv(nN), toU64(readSlotWord(bv(slotN), m_loc)), m_loc));
+			uv(nN), dynamic ? toU64(readSlotWord(bv(slotN), m_loc)) : u64c(sourceCount), m_loc));
 		out.push_back(awst::makeAssignmentStatement(
-			bv(dataN), dynDataBase(bv(slotN), m_loc), m_loc));
+			bv(dataN), dynamic ? dynDataBase(bv(slotN), m_loc) : bv(slotN), m_loc));
 		out.push_back(awst::makeAssignmentStatement(uv(iN), u64c(0), m_loc));
+		auto prefix = [&]() -> std::shared_ptr<awst::Expression> {
+			if (dynamic) return u16(uv(nN));
+			return awst::makeBytesConstant({}, m_loc);
+		};
 		if (elemDynamic)
 		{
 			out.push_back(awst::makeAssignmentStatement(
@@ -595,13 +668,13 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 					awst::UInt64BinaryOperator::Mult, uv(nN), m_loc), m_loc));
 		}
 		else if (bitPacked)
-			out.push_back(awst::makeAssignmentStatement(xv(resultN), awst::makeConcat(u16(uv(nN)),
+			out.push_back(awst::makeAssignmentStatement(xv(resultN), awst::makeConcat(prefix(),
 				awst::makeBzero(awst::makeUInt64BinOp(awst::makeUInt64BinOp(uv(nN),
 					awst::UInt64BinaryOperator::Add, u64c(7), m_loc),
 					awst::UInt64BinaryOperator::FloorDiv, u64c(8), m_loc), m_loc), m_loc), m_loc));
 		else
 			out.push_back(awst::makeAssignmentStatement(
-				xv(resultN), u16(uv(nN)), m_loc));
+				xv(resultN), prefix(), m_loc));
 
 		auto loop = awst::makeBlock(m_loc);
 		Addr child = childAddr();
@@ -614,7 +687,7 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 			return false;
 		if (bitPacked)
 			loop->body.push_back(awst::makeAssignmentStatement(xv(resultN), awst::makeSetbit(
-				xv(resultN), awst::makeUInt64BinOp(u64c(16), awst::UInt64BinaryOperator::Add, uv(iN), m_loc),
+				xv(resultN), awst::makeUInt64BinOp(u64c(headerBytes * 8), awst::UInt64BinaryOperator::Add, uv(iN), m_loc),
 				std::move(lowered.value), m_loc), m_loc));
 		else
 			loop->body.push_back(awst::makeAssignmentStatement(xv(innerN), awst::makeAsBytes(
@@ -641,7 +714,7 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 		emitLoop(std::move(loop), nN);
 		if (elemDynamic)
 			out.push_back(awst::makeAssignmentStatement(
-				xv(resultN), awst::makeConcat(u16(uv(nN)),
+				xv(resultN), awst::makeConcat(prefix(),
 					awst::makeConcat(xv(headsN), xv(tailsN), m_loc), m_loc),
 				m_loc));
 		_d.value = awst::makeReinterpretCast(xv(resultN), _arrW, m_loc);
@@ -651,10 +724,10 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 	std::string valN = name("val"), oldN = name("old"), startN = name("start"),
 		endN = name("end");
 	auto headAbs = [&](std::shared_ptr<awst::Expression> idx) {
-		return awst::makeUInt64BinOp(u64c(2),
+		return awst::makeUInt64BinOp(u64c(headerBytes),
 			awst::UInt64BinaryOperator::Add,
 			awst::makeBtoi(awst::makeExtract3(xv(valN),
-				awst::makeUInt64BinOp(u64c(2),
+				awst::makeUInt64BinOp(u64c(headerBytes),
 					awst::UInt64BinaryOperator::Add,
 					awst::makeUInt64BinOp(u64c(2),
 						awst::UInt64BinaryOperator::Mult,
@@ -664,14 +737,15 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 
 	out.push_back(awst::makeAssignmentStatement(xv(valN), std::move(_d.value), m_loc));
 	out.push_back(awst::makeAssignmentStatement(
-		uv(oldN), toU64(readSlotWord(bv(slotN), m_loc)), m_loc));
+		uv(oldN), dynamic ? toU64(readSlotWord(bv(slotN), m_loc))
+			: u64c(static_cast<unsigned>(_at->length())), m_loc));
 	out.push_back(awst::makeAssignmentStatement(
-		uv(nN), awst::makeBtoi(awst::makeExtract(xv(valN), 0, 2, m_loc), m_loc),
+		uv(nN), dynamic ? awst::makeBtoi(awst::makeExtract(xv(valN), 0, 2, m_loc), m_loc) : u64c(sourceCount),
 		m_loc));
-	out.push_back(SlotHandleAccess::writeSlot(
-		bv(slotN), asBigIndex(uv(nN)), m_loc));
+	if (dynamic)
+		out.push_back(SlotHandleAccess::writeSlot(bv(slotN), asBigIndex(uv(nN)), m_loc));
 	out.push_back(awst::makeAssignmentStatement(
-		bv(dataN), dynDataBase(bv(slotN), m_loc), m_loc));
+		bv(dataN), dynamic ? dynDataBase(bv(slotN), m_loc) : bv(slotN), m_loc));
 	out.push_back(awst::makeAssignmentStatement(uv(iN), u64c(0), m_loc));
 
 	auto loop = awst::makeBlock(m_loc);
@@ -679,7 +753,7 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 	std::shared_ptr<awst::Expression> childValue;
 	if (bitPacked)
 		childValue = awst::makeGetbit(xv(valN), awst::makeUInt64BinOp(
-			u64c(16), awst::UInt64BinaryOperator::Add, uv(iN), m_loc), m_loc);
+			u64c(headerBytes * 8), awst::UInt64BinaryOperator::Add, uv(iN), m_loc), m_loc);
 	else if (elemDynamic)
 	{
 		loop->body.push_back(awst::makeAssignmentStatement(
@@ -699,7 +773,7 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 	}
 	else
 	{
-		auto start = awst::makeUInt64BinOp(u64c(2),
+		auto start = awst::makeUInt64BinOp(u64c(headerBytes),
 			awst::UInt64BinaryOperator::Add,
 			awst::makeUInt64BinOp(uv(iN),
 				awst::UInt64BinaryOperator::Mult,
@@ -730,9 +804,11 @@ bool EvmSlotLowering::lowerFixedArray(
 	if (length == 0 || length > 64)
 	{
 		Logger::instance().error("--evm-storage-layout: fixed-array value traversal of length "
-			+ length.str() + " exceeds the unrolling limit of 64", m_loc);
+			+ length.str() + " exceeds the supported extent of 64", m_loc);
 		return false;
 	}
+	if (length > 4)
+		return lowerDynArrayGeneric(address, type, m_ctx.typeMapper.map(type), direction);
 	auto const* elementType = type->baseType();
 	auto const* arrayType = direction.write ? direction.value->wtype : m_ctx.typeMapper.map(type);
 	auto const* elementWType = awst::arrayElementType(arrayType);
@@ -1033,7 +1109,6 @@ bool EvmSlotLowering::clearAggregateImpl(
 				+ lenU.str() + " not supported (cap 64)", m_loc);
 			return false;
 		}
-		unsigned len = static_cast<unsigned>(lenU);
 		auto const* elemType = at->baseType();
 		// pin the base once
 		std::string bs = "__evmcl_"
@@ -1048,23 +1123,16 @@ bool EvmSlotLowering::clearAggregateImpl(
 		{
 			// the array owns its whole slot span — zero it (packed included)
 			auto span = at->storageSize();
-			for (solidity::u256 j = 0; j < span; ++j)
-				_out.push_back(SlotHandleAccess::writeSlot(
-					awst::makeBigUIntBinOp(baseVar(),
-						awst::BigUIntBinaryOperator::Add,
-						awst::makeIntegerConstant(j.str(), m_loc,
-							awst::WType::biguintType()), m_loc),
+			return SlotHandleAccess::forEachIndex(span, _out, m_loc, [&](auto index, auto& body) {
+				body.push_back(SlotHandleAccess::writeSlot(awst::makeBigUIntBinOp(baseVar(),
+					awst::BigUIntBinaryOperator::Add, std::move(index), m_loc),
 					awst::makeZero(m_loc, awst::WType::biguintType()), m_loc));
-			return true;
+				return true;
+			});
 		}
-		for (unsigned j = 0; j < len; ++j)
-		{
-			auto ea = elemAddr(baseVar(), awst::makeIntegerConstant(
-				j, m_loc, awst::WType::biguintType()), elemType);
-			if (!clearAggregateImpl(ea, elemType, _out))
-				return false;
-		}
-		return true;
+		return SlotHandleAccess::forEachIndex(lenU, _out, m_loc, [&](auto index, auto& body) {
+			return clearAggregateImpl(elemAddr(baseVar(), std::move(index), elemType), elemType, body);
+		});
 	}
 	if (auto const* st = dynamic_cast<StructType const*>(_t))
 	{
@@ -1122,27 +1190,23 @@ bool EvmSlotLowering::clearAggregateImpl(
 		// destroys — clearing the span first would strand the data and a later
 		// re-grow would read it back.
 		// dynamic members: clear their keccak-region data too
-		for (auto const& m: st->structDefinition().members())
+		for (auto const& m: st->members(nullptr))
 		{
-			if (!m || !m->type())
-				continue;
-			auto const* mt = m->type();
+			auto const* mt = m.type;
 			if (dynamic_cast<MappingType const*>(mt)) continue;
-			auto fa = memberAddr(baseVar(), st, m->name(), mt);
+			auto fa = memberAddr(baseVar(), st, m.name, mt);
 			// The span clear covers ordinary value fields. Packed accounts own
 			// an auxiliary word too, so use their typed leaf clear first.
 			if (mt->isValueType() && !(fa.wtype == awst::WType::accountType() && fa.size == 20)) continue;
 			if (!clearAggregateImpl(fa, mt, _out))
 				return false;
 		}
-		for (solidity::u256 j = 0; j < span; ++j)
-			_out.push_back(SlotHandleAccess::writeSlot(
-				awst::makeBigUIntBinOp(baseVar(),
-					awst::BigUIntBinaryOperator::Add,
-					awst::makeIntegerConstant(j.str(), m_loc,
-						awst::WType::biguintType()), m_loc),
+		return SlotHandleAccess::forEachIndex(span, _out, m_loc, [&](auto index, auto& body) {
+			body.push_back(SlotHandleAccess::writeSlot(awst::makeBigUIntBinOp(baseVar(),
+				awst::BigUIntBinaryOperator::Add, std::move(index), m_loc),
 				awst::makeZero(m_loc, awst::WType::biguintType()), m_loc));
-		return true;
+			return true;
+		});
 	}
 	Logger::instance().error(
 		"--evm-storage-layout: delete on this aggregate shape not yet "

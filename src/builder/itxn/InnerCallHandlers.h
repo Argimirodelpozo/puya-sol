@@ -96,10 +96,9 @@ private:
 		awst::SourceLocation const& _loc);
 
 	/// .call{value:V}(rawBytes) → inner app call; splits [selector, rest] as ApplicationArgs.
-	/// The three abi.encode* self-call forms, normalised: fnName + optional full signature string (encodeWithSignature), optional …
+	/// Exact signature/declaration facts and unevaluated operands of a self call.
 	struct SelfEncodeForm
 	{
-		std::string fnName;
 		std::string sigString;
 		solidity::frontend::FunctionDefinition const* refFunc = nullptr;
 		solidity::frontend::Expression const* targetIdentityExpr = nullptr;

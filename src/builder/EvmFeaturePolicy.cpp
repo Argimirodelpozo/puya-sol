@@ -1,5 +1,8 @@
 #include "builder/EvmFeaturePolicy.h"
 #include "awst/Node.h"
+#include "builder/BuildArtifacts.h"
+#include "builder/sol-types/TypeMapper.h"
+#include "builder/XchainAccounts.h"
 
 #include "Logger.h"
 
@@ -8,6 +11,44 @@
 
 namespace puyasol::builder
 {
+
+std::shared_ptr<awst::Expression> buildMessageSender(TypeMapper& types, awst::SourceLocation const& loc)
+{
+	auto const* account = awst::WType::accountType();
+	auto sender = awst::makeTxn("Sender", account, loc);
+	if (types.profile().contractAbi != ContractAbi::Evm) return sender;
+	auto projected = awst::makeAsAccount(awst::makeLeftPadToN(
+		awst::makeExtractLastN(sender, 20, loc), 32, loc), loc);
+	auto const& xc = types.profile().xchainAccounts;
+	if (!xc) return projected;
+	// A root helper works in contract, library and Yul subroutines alike.
+	// Verify at the read site: lifecycle/ARC4 argument lists can have three
+	// entries without the third being an owner claim. Unclaimed callers retain
+	// the existing low-160-bit projection; EVM entry guards reject false claims.
+	auto& subs = types.artifacts().bufferSubroutines;
+	auto [entry, fresh] = subs.try_emplace("environment:msg.sender");
+	if (fresh)
+	{
+		auto shape = awst::makeBoolBinOp(
+			awst::makeNumericCompare(awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
+				awst::NumericComparison::Gte, awst::makeIntegerConstant(3, loc), loc),
+			awst::BinaryBooleanOperator::And,
+			awst::makeNumericCompare(awst::makeLen(awst::makeAppArg(2, loc), loc),
+				awst::NumericComparison::Eq, awst::makeIntegerConstant(20, loc), loc), loc);
+		auto verified = awst::makeBoolBinOp(std::move(shape), awst::BinaryBooleanOperator::And,
+			awst::makeBytesComparison(awst::makeAsBytes(xchain::derivedAccount(*xc, awst::makeAppArg(2, loc), loc), loc),
+				awst::EqualityComparison::Eq, awst::makeAsBytes(sender, loc), loc), loc);
+		auto value = awst::makeConditional(std::move(verified),
+			awst::makeAsAccount(awst::makeLeftPadToN(awst::makeAppArg(2, loc), 32, loc), loc),
+			std::move(projected), account, loc);
+		auto sub = awst::makeSubroutine("__puyasol_evm_sender", "__puyasol_evm_sender", {},
+			account, awst::makeBlock(loc), false, loc);
+		sub->inlineOpt = false;
+		sub->body->body.push_back(awst::makeReturnStatement(std::move(value), loc));
+		entry->second = std::move(sub);
+	}
+	return awst::makeSubroutineCall(awst::SubroutineID{entry->second->id}, account, loc);
+}
 
 namespace
 {

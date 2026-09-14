@@ -12,6 +12,10 @@
 namespace puyasol::builder::storage_dispatch
 {
 
+inline constexpr char genericSlotPrefix[] = "__puyasol_";
+inline constexpr char denseSlotPrefix[] = "__puyasol_dense_";
+inline constexpr char singlePageSlotPrefix[] = "__puyasol_single_page_";
+
 /// Move generated storage runtime methods out of the contract and expose them
 /// as root subroutines. Library/free-function callers cannot target instance
 /// methods, so both physical storage backends share this promotion boundary.

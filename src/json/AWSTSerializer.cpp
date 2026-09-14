@@ -2,6 +2,9 @@
 #include "json/Base85.hpp"
 
 #include <string_view>
+#include <limits>
+#include <stdexcept>
+#include <boost/multiprecision/cpp_int.hpp>
 
 namespace puyasol::json
 {
@@ -21,7 +24,7 @@ std::string bytesEncodingToString(awst::BytesEncoding _enc)
 	case awst::BytesEncoding::Base64: return "base64";
 	case awst::BytesEncoding::Utf8: return "utf8";
 	}
-	return "unknown";
+	throw std::logic_error("Invalid AWST bytesEncodingToString");
 }
 
 std::string uint64BinOpToString(awst::UInt64BinaryOperator _op)
@@ -40,7 +43,7 @@ std::string uint64BinOpToString(awst::UInt64BinaryOperator _op)
 	case awst::UInt64BinaryOperator::BitXor: return "^";
 	case awst::UInt64BinaryOperator::BitAnd: return "&";
 	}
-	return "+";
+	throw std::logic_error("Invalid AWST uint64BinOpToString");
 }
 
 std::string bigUIntBinOpToString(awst::BigUIntBinaryOperator _op)
@@ -56,7 +59,7 @@ std::string bigUIntBinOpToString(awst::BigUIntBinaryOperator _op)
 	case awst::BigUIntBinaryOperator::BitXor: return "^";
 	case awst::BigUIntBinaryOperator::BitAnd: return "&";
 	}
-	return "+";
+	throw std::logic_error("Invalid AWST bigUIntBinOpToString");
 }
 
 std::string numericCompToString(awst::NumericComparison _op)
@@ -70,7 +73,7 @@ std::string numericCompToString(awst::NumericComparison _op)
 	case awst::NumericComparison::Gt: return ">";
 	case awst::NumericComparison::Gte: return ">=";
 	}
-	return "==";
+	throw std::logic_error("Invalid AWST numericCompToString");
 }
 
 std::string equalityCompToString(awst::EqualityComparison _op)
@@ -80,7 +83,7 @@ std::string equalityCompToString(awst::EqualityComparison _op)
 	case awst::EqualityComparison::Eq: return "==";
 	case awst::EqualityComparison::Ne: return "!=";
 	}
-	return "==";
+	throw std::logic_error("Invalid AWST equalityCompToString");
 }
 
 std::string boolBinOpToString(awst::BinaryBooleanOperator _op)
@@ -90,7 +93,7 @@ std::string boolBinOpToString(awst::BinaryBooleanOperator _op)
 	case awst::BinaryBooleanOperator::And: return "and";
 	case awst::BinaryBooleanOperator::Or: return "or";
 	}
-	return "and";
+	throw std::logic_error("Invalid AWST boolBinOpToString");
 }
 
 std::string bytesBinOpToString(awst::BytesBinaryOperator _op)
@@ -102,7 +105,7 @@ std::string bytesBinOpToString(awst::BytesBinaryOperator _op)
 	case awst::BytesBinaryOperator::BitXor: return "^";
 	case awst::BytesBinaryOperator::BitAnd: return "&";
 	}
-	return "+";
+	throw std::logic_error("Invalid AWST bytesBinOpToString");
 }
 
 } // namespace
@@ -123,7 +126,7 @@ njson AWSTSerializer::serializeRootNode(awst::RootNode const& _node)
 		return serializeLogicSignature(*lsig);
 	if (auto const* sub = dynamic_cast<awst::Subroutine const*>(&_node))
 		return serializeSubroutine(*sub);
-	return njson::object();
+	throw std::logic_error("Unknown AWST root: " + _node.nodeType());
 }
 
 njson AWSTSerializer::serializeLogicSignature(awst::LogicSignature const& _lsig)
@@ -196,6 +199,18 @@ njson AWSTSerializer::serializeContract(awst::Contract const& _contract)
 	return j;
 }
 
+template<class Callable>
+void AWSTSerializer::serializeCallableFields(Callable const& callable, njson& j)
+{
+	j["args"] = njson::array();
+	for (auto const& arg: callable.args) j["args"].push_back(serializeSubroutineArgument(arg));
+	j["return_type"] = serializeWType(callable.returnType);
+	j["body"] = callable.body ? serializeBlock(*callable.body) : njson(nullptr);
+	j["documentation"] = serializeMethodDocumentation(callable.documentation);
+	j["inline"] = callable.inlineOpt.has_value() ? njson(*callable.inlineOpt) : njson(nullptr);
+	j["pure"] = callable.pure;
+}
+
 njson AWSTSerializer::serializeSubroutine(awst::Subroutine const& _sub)
 {
 	njson j;
@@ -204,16 +219,7 @@ njson AWSTSerializer::serializeSubroutine(awst::Subroutine const& _sub)
 	j["id"] = _sub.id;
 	j["name"] = _sub.name;
 
-	njson args = njson::array();
-	for (auto const& a: _sub.args)
-		args.push_back(serializeSubroutineArgument(a));
-	j["args"] = args;
-
-	j["return_type"] = serializeWType(_sub.returnType);
-	j["body"] = _sub.body ? serializeBlock(*_sub.body) : njson(nullptr);
-	j["documentation"] = serializeMethodDocumentation(_sub.documentation);
-	j["inline"] = _sub.inlineOpt.has_value() ? njson(_sub.inlineOpt.value()) : njson(nullptr);
-	j["pure"] = _sub.pure;
+	serializeCallableFields(_sub, j);
 
 	return j;
 }
@@ -224,16 +230,7 @@ njson AWSTSerializer::serializeContractMethod(awst::ContractMethod const& _metho
 	j["_type"] = "ContractMethod";
 	j["source_location"] = serializeSourceLocation(_method.sourceLocation);
 
-	njson args = njson::array();
-	for (auto const& a: _method.args)
-		args.push_back(serializeSubroutineArgument(a));
-	j["args"] = args;
-
-	j["return_type"] = serializeWType(_method.returnType);
-	j["body"] = _method.body ? serializeBlock(*_method.body) : njson(nullptr);
-	j["documentation"] = serializeMethodDocumentation(_method.documentation);
-	j["inline"] = _method.inlineOpt.has_value() ? njson(_method.inlineOpt.value()) : njson(nullptr);
-	j["pure"] = _method.pure;
+	serializeCallableFields(_method, j);
 	j["cref"] = _method.cref;
 	j["member_name"] = _method.memberName;
 	j["arc4_method_config"] = _method.arc4MethodConfig.has_value()
@@ -270,68 +267,23 @@ void AWSTSerializer::emitStateField(awst::Expression const& _field, njson& _json
 
 void AWSTSerializer::serializeFields(awst::IntegerConstant const& _node, njson& _json)
 {
-	// Stored as string for biguint; detect hex prefix so stoll handles 0x literals.
-	std::string const& s = _node.value;
-	bool neg = !s.empty() && s[0] == '-';
-	size_t off = neg ? 1 : 0;
-	bool isHex = s.size() > off + 2 && s[off] == '0' && (s[off + 1] == 'x' || s[off + 1] == 'X');
-	try
-	{
-		if (isHex)
-		{
-			// Parse as hex; stoll with base 16 needs the prefix stripped.
-			long long val = std::stoll(s.substr(off + 2), nullptr, 16);
-			_json["value"] = neg ? -val : val;
-		}
-		else
-			_json["value"] = std::stoll(s);
-	}
-	catch (...)
-	{
-		if (isHex)
-		{
-			// Hex too large for int64: convert to decimal string.
-			std::string hex = s.substr(off + 2);
-			// Big-integer decimal from hex via repeated base-10 division.
-			std::vector<unsigned> digits; // big-endian hex digits
-			digits.reserve(hex.size());
-			for (char c : hex)
-			{
-				unsigned d = 0;
-				if (c >= '0' && c <= '9') d = c - '0';
-				else if (c >= 'a' && c <= 'f') d = 10 + (c - 'a');
-				else if (c >= 'A' && c <= 'F') d = 10 + (c - 'A');
-				else { digits.clear(); break; }
-				digits.push_back(d);
-			}
-			std::string dec;
-			if (digits.empty())
-				dec = "0";
-			else
-			{
-				while (!digits.empty())
-				{
-					unsigned rem = 0;
-					std::vector<unsigned> next;
-					next.reserve(digits.size());
-					for (unsigned d : digits)
-					{
-						unsigned cur = rem * 16 + d;
-						unsigned q = cur / 10;
-						rem = cur % 10;
-						if (!next.empty() || q) next.push_back(q);
-					}
-					dec.push_back(char('0' + rem));
-					digits = std::move(next);
-				}
-				std::reverse(dec.begin(), dec.end());
-			}
-			if (neg) dec.insert(dec.begin(), '-');
-			_json["value"] = dec;
-		}
-		else
-			_json["value"] = s;
-	}
+	std::string_view digits = _node.value;
+	bool const negative = !digits.empty() && digits.front() == '-';
+	if (!digits.empty() && (digits.front() == '-' || digits.front() == '+')) digits.remove_prefix(1);
+	bool const hex = digits.starts_with("0x") || digits.starts_with("0X");
+	if (hex) digits.remove_prefix(2);
+	if (digits.empty() || digits.find_first_not_of(hex
+		? "0123456789abcdefABCDEF" : "0123456789") != std::string_view::npos)
+		throw std::invalid_argument("Invalid AWST integer: " + _node.value);
+	// cpp_int autodetects octal on a leading zero. Decimal AWST strings do not.
+	auto const first = digits.find_first_not_of('0');
+	digits = first == std::string_view::npos ? std::string_view("0") : digits.substr(first);
+	boost::multiprecision::cpp_int value((hex ? "0x" : "") + std::string(digits));
+	if (negative) value = -value;
+	if (value >= std::numeric_limits<int64_t>::min() && value <= std::numeric_limits<int64_t>::max())
+		_json["value"] = value.convert_to<int64_t>();
+	else
+		_json["value"] = value.str();
 	_json["teal_alias"] = nullptr;
 }
 

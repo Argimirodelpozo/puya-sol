@@ -57,4 +57,26 @@ inline void forEachReturnStatement(
 			});
 }
 
+/// Rewrite each original return and insert its evaluated prefix. Newly
+/// inserted statements are not revisited by this transformation.
+inline void transformReturns(
+	std::vector<std::shared_ptr<Statement>>& statements,
+	std::function<void(ReturnStatement&, std::vector<std::shared_ptr<Statement>>&)> const& transform)
+{
+	for (size_t i = 0; i < statements.size(); ++i)
+		if (auto* ret = dynamic_cast<ReturnStatement*>(statements[i].get()))
+		{
+			std::vector<std::shared_ptr<Statement>> prefix;
+			transform(*ret, prefix);
+			auto const count = prefix.size();
+			statements.insert(statements.begin() + static_cast<std::ptrdiff_t>(i),
+				std::make_move_iterator(prefix.begin()), std::make_move_iterator(prefix.end()));
+			i += count;
+		}
+		else
+			forEachChildBlock(*statements[i], [&](Block& block, bool) {
+				transformReturns(block.body, transform);
+			});
+}
+
 } // namespace puyasol::awst

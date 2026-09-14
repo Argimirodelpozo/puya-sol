@@ -1370,9 +1370,8 @@ inline std::shared_ptr<IntrinsicCall> makeBiguintToUInt64(
 {
 	auto cast = makeReinterpretCast(std::move(value), WType::bytesType(), loc);
 	auto cat = makeLeftPad(std::move(cast), 8, loc);
-	auto start = makeIntrinsicCall("-", WType::uint64Type(), loc,
-		{makeLen(cat, loc), makeIntegerConstant("8", loc)});
-	return makeExtractUInt64(cat, std::move(start), std::move(loc));
+	auto tail = makeExtractLastN(std::move(cat), 8, loc);
+	return makeBtoi(std::move(tail), std::move(loc));
 }
 
 // Fixed 32-byte ABI word → uint64: btoi(extract(word, 24, 8)).

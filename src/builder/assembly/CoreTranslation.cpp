@@ -667,15 +667,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleOrigin(
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleCaller(
 	awst::SourceLocation const& _loc)
 {
-	// caller() (EVM CALLER = msg.sender).  At an EVM ABI boundary all
-	// addresses occupy one 160-bit namespace, including ambient identities;
-	// match high-level msg.sender and canonical calldata addresses.
-	auto sender = awst::makeTxn("Sender", awst::WType::bytesType(), _loc);
-	if (m_typeMapper.profile().contractAbi == ContractAbi::Evm)
-		sender = awst::makeExtractLastN(std::move(sender), 20, _loc);
-
-	auto cast = awst::makeAsBiguint(std::move(sender), _loc);
-	return cast;
+	return awst::makeAsBiguint(awst::makeAsBytes(buildMessageSender(m_typeMapper, _loc), _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleBlockhash(

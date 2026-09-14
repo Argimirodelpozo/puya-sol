@@ -57,29 +57,12 @@ void transformReturnValues(
 	bool asmWrap,
 	bool wire)
 {
-	for (size_t i = 0; i < statements.size(); ++i)
-	{
-		if (auto* ret = dynamic_cast<awst::ReturnStatement*>(statements[i].get()))
-		{
-			if (!ret->value) continue;
-			auto const loc = ret->value->sourceLocation;
-			std::vector<std::shared_ptr<awst::Statement>> prepend;
-			ret->value = TypeCoercion::encodeReturnValue(
-				typeMapper, std::move(ret->value), plan, loc, prepend,
-				asmWrap, wire);
-			auto const inserted = prepend.size();
-			statements.insert(
-				statements.begin() + static_cast<std::ptrdiff_t>(i),
-				std::make_move_iterator(prepend.begin()),
-				std::make_move_iterator(prepend.end()));
-			i += inserted;
-			continue;
-		}
-		awst::forEachChildBlock(*statements[i], [&](awst::Block& block, bool) {
-			transformReturnValues(
-				block.body, typeMapper, plan, asmWrap, wire);
-		});
-	}
+	awst::transformReturns(statements, [&](awst::ReturnStatement& ret, auto& prepend) {
+		if (!ret.value) return;
+		auto const loc = ret.value->sourceLocation;
+		ret.value = TypeCoercion::encodeReturnValue(
+			typeMapper, std::move(ret.value), plan, loc, prepend, asmWrap, wire);
+	});
 }
 
 void normalizeNativeReturns(
@@ -137,8 +120,10 @@ std::vector<ParamDecode> collectArc4ParamRemaps(
 		auto const& parameter = plan.parameters[pi];
 		if (parameter.type == parameter.wireType) continue;
 		auto& arg = method.args[pi];
-		decodes.push_back({pi, arg.name, arg.wtype, parameter.wireType,
-			arg.sourceLocation, parameter.signedDecodeBits});
+		auto decode = parameter;
+		decode.name = arg.name;
+		decode.type = arg.wtype;
+		decodes.push_back({std::move(decode), pi, arg.sourceLocation});
 		// Yul is built against native parameter names/types; wire renames
 		// are applied after body construction.
 		if (!assembly) arg.wtype = parameter.wireType;
@@ -155,29 +140,11 @@ namespace
 // Caller guards storageRefPointerReturn.
 void rewriteStorageRefReturnIndices(awst::ContractMethod& method)
 {
-	std::function<void(std::vector<std::shared_ptr<awst::Statement>>&)> rewriteRet;
-	rewriteRet = [&](std::vector<std::shared_ptr<awst::Statement>>& stmts)
-	{
-		for (auto& stmt: stmts)
-		{
-			if (auto* ret = dynamic_cast<awst::ReturnStatement*>(stmt.get()))
-			{
-				if (auto* index = dynamic_cast<awst::IndexExpression*>(
-						ret->value.get()))
-					ret->value = TypeCoercion::implicitNumericCast(
-						index->index, awst::WType::uint64Type(),
-						ret->value->sourceLocation);
-			}
-			else
-			{
-				// The old hand-written list missed loops and switches.
-				awst::forEachChildBlock(*stmt, [&](awst::Block& block, bool) {
-					rewriteRet(block.body);
-				});
-			}
-		}
-	};
-	rewriteRet(method.body->body);
+	awst::forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
+		if (auto* index = dynamic_cast<awst::IndexExpression*>(ret.value.get()))
+			ret.value = TypeCoercion::implicitNumericCast(
+				index->index, awst::WType::uint64Type(), ret.value->sourceLocation);
+	});
 }
 
 // Rename remapped wire arguments once. Decode statements themselves are built
@@ -194,7 +161,7 @@ void applyParamDecodeNames(
 			if (arg.name == pd.name)
 			{
 				arg.name = arc4Name;
-				arg.wtype = pd.arc4Type;
+				arg.wtype = pd.wireType;
 				break;
 			}
 		}
@@ -214,25 +181,11 @@ ContractBuilder::makeParamDecodeStatements(
 	for (auto const& decode: _paramDecodes)
 	{
 		auto wireValue = awst::makeVarExpression(
-			"__arc4_" + decode.name, decode.arc4Type, decode.loc);
-		std::shared_ptr<awst::Expression> nativeValue;
-		auto const* array = dynamic_cast<awst::ReferenceArray const*>(
-			decode.nativeType);
-		if (array && !array->arraySize().has_value())
-			nativeValue = awst::makeConvertArray(
-				std::move(wireValue), decode.nativeType, decode.loc);
-		else
-		{
-			nativeValue = awst::makeARC4Decode(
-				std::move(wireValue), decode.nativeType, decode.loc);
-			if (decode.signedBits > 0)
-				nativeValue = TypeCoercion::signExtendToUint256(
-					std::move(nativeValue), decode.signedBits, decode.loc);
-		}
+			decode.wireName(), decode.wireType, decode.loc);
 		statements.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(
-				decode.name, decode.nativeType, decode.loc),
-			std::move(nativeValue), decode.loc));
+				decode.name, decode.type, decode.loc),
+			decode.decodeArgument(std::move(wireValue), decode.loc), decode.loc));
 	}
 	return statements;
 }

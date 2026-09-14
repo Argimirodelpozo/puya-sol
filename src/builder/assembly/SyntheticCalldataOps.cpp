@@ -27,149 +27,56 @@
 // actually instantiate them pay the ~223k lines.
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/optimiser/ASTWalker.h>
 
 namespace puyasol::builder
 {
 
 bool AssemblyBuilder::detectDynamicCalldataAccess(solidity::yul::Block const& _block)
 {
-	bool found = false;
-	std::function<void(solidity::yul::Expression const&)> scanExpr;
-	std::function<void(std::vector<solidity::yul::Statement> const&)> scanStmts;
-
-	auto isCalldataOp = [](std::string const& n) {
-		return n == "calldataload" || n == "calldatacopy" || n == "calldatasize";
-	};
-
-	scanExpr = [&](solidity::yul::Expression const& _expr) {
-		if (found) return;
-		if (auto const* id = std::get_if<solidity::yul::Identifier>(&_expr))
+	using namespace solidity::yul;
+	struct Query: ASTWalker
+	{
+		using ASTWalker::operator();
+		std::function<bool(Identifier const&)> pointer;
+		std::function<bool(FunctionCall const&)> calldata;
+		bool found = false;
+		void operator()(Identifier const& id) override { found = found || pointer(id); }
+		void operator()(FunctionCall const& call) override
 		{
-			// A dynamic calldata param's `.offset`/`.length` is read at runtime from __cd_blob, so it
-			// needs the blob stood up even when there is no calldataload/copy/size in the block.
-			// Resolve to the canonical AWST name FIRST (outer locals are mangled, e.g. t__20 —
-			// the pointer-name sets are keyed by the mangled form).
-			std::string n = resolveVarRef(*id);
-			// Bare STATIC calldata pointer (`s := s2` RHS, `s := t`): reads __cd_off_<n>,
-			// which needs the blob + seeds stood up.
-			if (m_frame.calldataStaticPtrNames.count(n))
-				found = true;
-			auto dot = n.rfind('.');
-			if (dot != std::string::npos)
-			{
-				std::string suffix = n.substr(dot + 1);
-				if (suffix == "offset" || suffix == "length")
-				{
-					std::string base = n.substr(0, dot);
-					auto it = m_frame.locals.find(base);
-					if ((it != m_frame.locals.end() && isDynamicCalldataType(it->second))
-						|| m_frame.calldataPointerNames.count(base))
-						found = true;
-				}
-			}
-			return;
+			found = found || calldata(call);
+			if (!found) ASTWalker::operator()(call);
 		}
-		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_expr))
-		{
-			std::string n = getFunctionName(call->functionName);
-			if (isCalldataOp(n))
-			{
-				// calldataload needs the synthetic blob for every non-constant
-				// offset, every constant outside the statically mapped head, and
-				// the head of a dynamically encoded parameter (that word is an ABI
-				// offset, not the parameter's decoded value).
-				// calldatacopy: non-const src or len → dynamic.
-				// calldatasize: always runtime → dynamic (blob provides len(__cd_blob)).
-				if (n == "calldatasize")
-					found = true;
-				else if (n == "calldataload" && call->arguments.size() == 1)
-				{
-					auto off = resolveConstantYulValue(call->arguments[0]);
-					if (!off)
-						found = true;
-					else if (auto it = m_frame.calldataMap.find(*off);
-						it == m_frame.calldataMap.end())
-						found = true;
-					else if (auto const* solType = calldataSolType(it->second.paramName);
-						solTypeUsable(solType) && solType->isDynamicallyEncoded())
-						found = true;
-				}
-				else if (n == "calldatacopy" && call->arguments.size() == 3)
-				{
-					// ANY calldatacopy needs the blob to source calldata bytes —
-					// even fully CONSTANT offsets (the handler is a silent no-op
-					// without the blob; a constant-offset copy in a function with
-					// no other dynamic-calldata trigger was dropped, fuzz_mem).
-					found = true;
-				}
-			}
-			for (auto const& a: call->arguments)
-				scanExpr(a);
-		}
+		void operator()(Block const& block) override { if (!found) ASTWalker::operator()(block); }
+	} query;
+	// ASTWalker visits assignment targets as well as reads. Pointer-only
+	// writes therefore seed exactly the same calldata blob as pointer reads.
+	query.pointer = [&](Identifier const& id) {
+		std::string name = resolveVarRef(id);
+		if (m_frame.calldataStaticPtrNames.count(name)) return true;
+		auto dot = name.rfind('.');
+		if (dot == std::string::npos) return false;
+		auto suffix = name.substr(dot + 1);
+		if (suffix != "offset" && suffix != "length") return false;
+		auto base = name.substr(0, dot);
+		auto it = m_frame.locals.find(base);
+		return (it != m_frame.locals.end() && isDynamicCalldataType(it->second))
+			|| m_frame.calldataPointerNames.count(base);
 	};
-	scanStmts = [&](std::vector<solidity::yul::Statement> const& stmts) {
-		for (auto const& s: stmts)
-		{
-			if (found) return;
-			if (auto const* fd = std::get_if<solidity::yul::FunctionDefinition>(&s))
-				scanStmts(fd->body.statements);
-			else if (auto const* blk = std::get_if<solidity::yul::Block>(&s))
-				scanStmts(blk->statements);
-			else if (auto const* iff = std::get_if<solidity::yul::If>(&s))
-			{
-				scanExpr(*iff->condition);
-				scanStmts(iff->body.statements);
-			}
-			else if (auto const* sw = std::get_if<solidity::yul::Switch>(&s))
-			{
-				scanExpr(*sw->expression);
-				for (auto const& c: sw->cases)
-					scanStmts(c.body.statements);
-			}
-			else if (auto const* fl = std::get_if<solidity::yul::ForLoop>(&s))
-			{
-				scanStmts(fl->pre.statements);
-				scanExpr(*fl->condition);
-				scanStmts(fl->post.statements);
-				scanStmts(fl->body.statements);
-			}
-			else if (auto const* es = std::get_if<solidity::yul::ExpressionStatement>(&s))
-				scanExpr(es->expression);
-			else if (auto const* assign = std::get_if<solidity::yul::Assignment>(&s))
-			{
-				// A pointer WRITE (`x.offset := V` / `x.length := L`) also needs the
-				// blob + seeded pointer locals stood up: without this, a write-only
-				// block skipped the synthetic-calldata path entirely, so the write
-				// landed in a dead generic local AND the (indent-bug) seeds read a
-				// never-built __cd_blob — the "load 0 type error" of 2026-07-03.
-				for (auto const& tgt: assign->variableNames)
-				{
-					std::string n = resolveVarRef(tgt);
-					if (m_frame.calldataStaticPtrNames.count(n))
-						found = true;
-					auto dot = n.rfind('.');
-					if (dot != std::string::npos)
-					{
-						std::string suffix = n.substr(dot + 1);
-						if (suffix == "offset" || suffix == "length")
-						{
-							std::string base = n.substr(0, dot);
-							auto it = m_frame.locals.find(base);
-							if ((it != m_frame.locals.end() && isDynamicCalldataType(it->second))
-								|| m_frame.calldataPointerNames.count(base))
-								found = true;
-						}
-					}
-				}
-				scanExpr(*assign->value);
-			}
-			else if (auto const* var = std::get_if<solidity::yul::VariableDeclaration>(&s))
-				if (var->value)
-					scanExpr(*var->value);
-		}
+	query.calldata = [&](FunctionCall const& call) {
+		auto name = getFunctionName(call.functionName);
+		if (name == "calldatasize" || (name == "calldatacopy" && call.arguments.size() == 3))
+			return true;
+		if (name != "calldataload" || call.arguments.size() != 1) return false;
+		auto offset = resolveConstantYulValue(call.arguments[0]);
+		if (!offset) return true;
+		auto it = m_frame.calldataMap.find(*offset);
+		if (it == m_frame.calldataMap.end()) return true;
+		auto const* type = calldataSolType(it->second.paramName);
+		return solTypeUsable(type) && type->isDynamicallyEncoded();
 	};
-	scanStmts(_block.statements);
-	return found;
+	query(_block);
+	return query.found;
 }
 
 namespace

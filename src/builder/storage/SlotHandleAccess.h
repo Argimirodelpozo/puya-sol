@@ -12,6 +12,7 @@
 
 #include "builder/sol-types/SolcFwd.h"
 #include <libsolutil/Numeric.h>
+#include <functional>
 
 namespace puyasol::builder
 {
@@ -56,6 +57,14 @@ struct SlotHandleAccess
 		std::shared_ptr<awst::Expression> _slot,
 		std::shared_ptr<awst::Expression> _valueBiguint,
 		awst::SourceLocation const& _loc);
+
+	/// Emit a typed storage operation for each index in an exact solc extent.
+	/// Tiny extents are unrolled; larger ones share a counted loop body.
+	static bool forEachIndex(solidity::u256 const& _count,
+		std::vector<std::shared_ptr<awst::Statement>>& _out,
+		awst::SourceLocation const& _loc,
+		std::function<bool(std::shared_ptr<awst::Expression>,
+			std::vector<std::shared_ptr<awst::Statement>>&)> const& _emit);
 
 	/// Packed/full scalar element read → CANONICAL biguint (signed elems
 	/// sign-extended to 256-bit TC).

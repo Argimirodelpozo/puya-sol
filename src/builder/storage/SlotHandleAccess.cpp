@@ -28,13 +28,6 @@ std::shared_ptr<awst::Expression> u64Const(uint64_t v, awst::SourceLocation cons
 {
 	return awst::makeIntegerConstant(v, loc);
 }
-/// small biguint (guaranteed < 2^64 by construction) → uint64
-std::shared_ptr<awst::Expression> smallBiguintToU64(
-	std::shared_ptr<awst::Expression> e, awst::SourceLocation const& loc)
-{
-	return awst::makeBtoi(awst::makeExtractLastN(
-		awst::makeZeroExtendToN(awst::makeAsBytes(std::move(e), loc), 8, loc), 8, loc), loc);
-}
 /// bind an expression to a fresh local; returns a reader lambda
 template <typename Out>
 std::function<std::shared_ptr<awst::Expression>()> bindTemp(
@@ -151,6 +144,34 @@ std::shared_ptr<awst::Statement> SlotHandleAccess::writeSlot(
 	return awst::makeExpressionStatement(std::move(call), _loc);
 }
 
+bool SlotHandleAccess::forEachIndex(solidity::u256 const& _count,
+	std::vector<std::shared_ptr<awst::Statement>>& _out,
+	awst::SourceLocation const& _loc,
+	std::function<bool(std::shared_ptr<awst::Expression>,
+		std::vector<std::shared_ptr<awst::Statement>>&)> const& _emit)
+{
+	if (_count <= 4)
+	{
+		for (unsigned i = 0; i < static_cast<unsigned>(_count); ++i)
+			if (!_emit(biguintConst(i, _loc), _out)) return false;
+		return true;
+	}
+	auto index = awst::makeVarExpression("__slot_index_"
+		+ std::to_string(awst::NameGen::next("SlotHandleAccess.index")), awst::WType::biguintType(), _loc);
+	auto body = awst::makeBlock(_loc);
+	if (!_emit(index, body->body)) return false;
+	body->body.push_back(awst::makeAssignmentStatement(index,
+		awst::makeBigUIntBinOp(index, awst::BigUIntBinaryOperator::Add, biguintConst(1, _loc), _loc), _loc));
+	auto operation = awst::makeBlock(_loc);
+	operation->body.push_back(awst::makeAssignmentStatement(index, biguintConst(0, _loc), _loc));
+	operation->body.push_back(awst::makeWhileLoop(awst::makeNumericCompare(index, awst::NumericComparison::Lt,
+		awst::makeBiguintConstant(_count.str(), _loc), _loc), std::move(body), _loc));
+	// Tuple assignment reverses component post-effects. Keep initialization
+	// and traversal together so that reversal cannot move the loop before it.
+	_out.push_back(std::move(operation));
+	return true;
+}
+
 namespace
 {
 /// Big-endian byte position of packed element (idx % perSlot) within its word:
@@ -162,7 +183,7 @@ std::shared_ptr<awst::Expression> packedBEPos(
 {
 	auto within = awst::makeBigUIntBinOp(std::move(_idx),
 		awst::BigUIntBinaryOperator::Mod, biguintConst(_l.perSlot, _loc), _loc);
-	auto withinU64 = smallBiguintToU64(std::move(within), _loc);
+	auto withinU64 = awst::makeBiguintToUInt64(std::move(within), _loc);
 	auto scaled = awst::makeUInt64BinOp(std::move(withinU64),
 		awst::UInt64BinaryOperator::Mult, u64Const(_l.size, _loc), _loc);
 	return awst::makeUInt64BinOp(u64Const(32 - _l.size, _loc),
@@ -235,19 +256,17 @@ std::vector<SlotHandleAccess::FieldPos> SlotHandleAccess::fieldPositions(
 	awst::ARC4Struct const* _structWType)
 {
 	std::vector<FieldPos> out;
-	for (auto const& member: _structType->structDefinition().members())
+	for (auto const& [name, type]: _structWType->fields())
 	{
-		if (!member)
-			continue;
 		FieldPos f;
-		f.name = member->name();
+		f.name = name;
 		auto const& off = _structType->storageOffsetsOfMember(f.name);
 		f.slot = checkedSize<unsigned>(off.first, "struct member slot offset");
 		f.byteOffset = off.second;
-		f.solType = member->type();
-		f.size = f.solType ? f.solType->storageBytes() : 32;
-		for (auto const& [fname, ftype]: _structWType->fields())
-			if (fname == f.name) { f.wtype = ftype; break; }
+		f.solType = _structType->memberType(name);
+		if (!f.solType) throw std::logic_error("Physical struct field has no solc member");
+		f.size = f.solType->storageBytes();
+		f.wtype = type;
 		out.push_back(std::move(f));
 	}
 	return out;

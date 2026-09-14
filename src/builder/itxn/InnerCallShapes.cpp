@@ -5,6 +5,7 @@
 ///   - handleStaticCallPrecompile (0x01..0x0a precompile routing)
 
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/abi/AbiSelectorCalldataBuilder.h"
 #include "builder/itxn/NativePayment.h"
 #include "builder/itxn/ApplicationCall.h"
 #include "builder/sol-ast/CallOperands.h"
@@ -38,7 +39,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	if (_encodeCallExpr.arguments().size() < 2)
 		return nullptr;
 
-	auto const& targetFnExpr = *_encodeCallExpr.arguments()[0];
+	AbiCall facts(_encodeCallExpr);
+	auto const& targetFnExpr = *facts.target;
 	FunctionDefinition const* targetFuncDef = nullptr;
 
 	auto const* targetFnType = dynamic_cast<FunctionType const*>(
@@ -54,23 +56,12 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		assert(!_callValue); // rejected by the dispatcher before self lowering
 		auto form = parseSelfEncodeForm(_encodeCallExpr,
 			dynamic_cast<MemberAccess const*>(&_encodeCallExpr.expression()));
-		return emitDirectSelfCall(_ctx, *targetFuncDef, form, "encodeCall", _loc);
+		if (auto const* target = resolveSelfCallOverload(_ctx, form))
+			return emitDirectSelfCall(_ctx, *target, form, "encodeCall", _loc);
+		return nullptr;
 	}
 	_ctx.evaluateForEffects(targetFnExpr, _loc);
 
-	auto const& argsExpr = *_encodeCallExpr.arguments()[1];
-	std::vector<ASTPointer<Expression const>> callArgs;
-	if (auto const* tupleExpr = dynamic_cast<TupleExpression const*>(&argsExpr))
-	{
-		for (auto const& comp : tupleExpr->components())
-			if (comp) callArgs.push_back(comp);
-	}
-	else
-		callArgs.push_back(_encodeCallExpr.arguments()[1]);
-
-	std::vector<Type const*> paramTypes;
-	for (auto const& parameter: targetFuncDef->parameters())
-		paramTypes.push_back(parameter->type());
 	// abi.encodeCall carries Solidity ABI bytes in every transport profile.
 	// ARC4 contracts expose the EVM compatibility route as well, including
 	// its canonical return encoding (a uint64 still occupies a 32-byte word).
@@ -78,7 +69,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		builder::SolcFacts::externalSelector(*targetFnType), _loc,
 		awst::BytesEncoding::Base16, awst::WType::bytesType());
 	return submitTypedAppCall(_ctx, std::move(_receiver),
-		buildEvmApplicationArgs(_ctx, std::move(selector), callArgs, paramTypes, _loc),
+		buildEvmApplicationArgs(_ctx, std::move(selector), facts.arguments, facts.type->parameterTypes(), _loc),
 		std::move(_callValue), _loc);
 }
 

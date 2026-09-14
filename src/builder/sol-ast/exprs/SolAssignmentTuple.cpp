@@ -298,21 +298,17 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 							lname, awst::WType::biguintType(), m_loc);
 						auto rslot = awst::makeVarExpression(
 							rname, awst::WType::biguintType(), m_loc);
-						for (unsigned j = 0; j < slots; ++j)
-						{
-							auto jc = [&]() {
-								return awst::makeIntegerConstant(
-									j, m_loc, awst::WType::biguintType());
-							};
+						SlotHandleAccess::forEachIndex(slots, m_ctx.postEffects(), m_loc, [&](auto index, auto& body) {
 							auto dst = awst::makeBigUIntBinOp(lslot,
-								awst::BigUIntBinaryOperator::Add, jc(), m_loc);
+								awst::BigUIntBinaryOperator::Add, index, m_loc);
 							auto src = awst::makeBigUIntBinOp(rslot,
-								awst::BigUIntBinaryOperator::Add, jc(), m_loc);
-							m_ctx.postEffects().push_back(
+								awst::BigUIntBinaryOperator::Add, index, m_loc);
+							body.push_back(
 								builder::SlotHandleAccess::writeSlot(std::move(dst),
 									builder::SlotHandleAccess::readSlot(
 										std::move(src), m_loc), m_loc));
-						}
+							return true;
+						});
 						return TupleComponentAction::Handled;
 					}
 				}

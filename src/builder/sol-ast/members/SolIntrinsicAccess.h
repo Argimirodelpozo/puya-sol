@@ -13,10 +13,6 @@ class SolIntrinsicAccess: public SolMemberAccess
 public:
 	using SolMemberAccess::SolMemberAccess;
 	std::shared_ptr<awst::Expression> toAwst() override;
-	/// The selected Solidity address namespace, including verified xchain claims.
-	/// Native lifecycle gates must use this same identity as source msg.sender.
-	static std::shared_ptr<awst::Expression> sender(
-		eb::ContractContext& _ctx, awst::SourceLocation const& _loc);
 };
 
 } // namespace puyasol::builder::sol_ast

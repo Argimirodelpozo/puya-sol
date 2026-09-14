@@ -6,7 +6,13 @@
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolExpressionDispatch.h"
 #include "builder/sol-eb/BinaryOpBuilder.h"
-#include "builder/sol-eb/BuilderRegistry.h"
+#include "builder/sol-eb/SolIntegerBuilder.h"
+#include "builder/sol-eb/SolBoolBuilder.h"
+#include "builder/sol-eb/SolAddressBuilder.h"
+#include "builder/sol-eb/SolArrayBuilder.h"
+#include "builder/sol-eb/SolStructBuilder.h"
+#include "builder/sol-eb/SolEnumBuilder.h"
+#include "builder/sol-eb/SolFixedBytesBuilder.h"
 #include "builder/storage/StorageMapper.h"
 // Uses solc AST/Type definitions directly; the hub headers only
 // forward-declare them now.
@@ -31,8 +37,7 @@ ContractContext::ContractContext(
 	  contractName(_contractName),
 	  overloadedNames(_overloadedNames),
 	  functionSymbols(_functionSymbols),
-	  functionPointers(_functionPointers),
-	  registry(std::make_unique<BuilderRegistry>())
+	  functionPointers(_functionPointers)
 {
 	viaIRSequencing = typeMapper.profile().viaIRSequencing;
 }
@@ -115,7 +120,26 @@ std::unique_ptr<InstanceBuilder> ContractContext::builderForInstance(
 	solidity::frontend::Type const* _solType,
 	std::shared_ptr<awst::Expression> _expr)
 {
-	return registry->tryBuildInstance(*this, _solType, std::move(_expr));
+	using namespace solidity::frontend;
+	if (!_solType) return nullptr;
+	switch (_solType->category())
+	{
+	case Type::Category::Integer:
+		return std::make_unique<SolIntegerBuilder>(*this, static_cast<IntegerType const*>(_solType), std::move(_expr));
+	case Type::Category::Bool:
+		return std::make_unique<SolBoolBuilder>(*this, std::move(_expr));
+	case Type::Category::Address:
+		return std::make_unique<SolAddressBuilder>(*this, _solType, std::move(_expr));
+	case Type::Category::Enum:
+		return std::make_unique<SolEnumBuilder>(*this, static_cast<EnumType const*>(_solType), std::move(_expr));
+	case Type::Category::FixedBytes:
+		return std::make_unique<SolFixedBytesBuilder>(*this, static_cast<FixedBytesType const*>(_solType), std::move(_expr));
+	case Type::Category::Array:
+		return std::make_unique<SolArrayBuilder>(*this, static_cast<ArrayType const*>(_solType), std::move(_expr));
+	case Type::Category::Struct:
+		return std::make_unique<SolStructBuilder>(*this, static_cast<StructType const*>(_solType), std::move(_expr));
+	default: return nullptr;
+	}
 }
 
 std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePostEffects()

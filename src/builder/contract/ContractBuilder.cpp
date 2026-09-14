@@ -1,5 +1,6 @@
 #include "builder/SourceLocConvert.h"
 #include "builder/contract/RouterConditions.h"
+#include "builder/contract/StorageDispatchSupport.h"
 #include "builder/ProgramAnalysis.h"
 #include <variant>
 #include "builder/contract/ContractBuilder.h"
@@ -20,7 +21,7 @@
 #include "Logger.h"
 #include "builder/proxies/Erc1967Lowering.h"
 #include "builder/proxies/UupsLowering.h"
-#include "builder/sol-ast/members/SolIntrinsicAccess.h"
+#include "builder/EvmFeaturePolicy.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -389,6 +390,13 @@ void ContractBuilder::setFunctionContext(
 void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method,
 	std::string const& _arc4Selector)
 {
+	// EVM dispatch owns this check for every non-payable solc interface
+	// function (including getters and fallback). Its targets are ordinary
+	// internal subroutines: checking again here wastes bytes and can reject a
+	// legitimate internal call from a payable entry. Native ARC4 dispatch
+	// still relies on the selector-gated body check below.
+	if (m_typeMapper.profile().contractAbi == ContractAbi::Evm)
+		return;
 	// Only ARC4-dispatched methods are externally callable.
 	if (!_method.arc4MethodConfig.has_value())
 		return;
@@ -835,13 +843,15 @@ void ContractBuilder::scopeStorageDispatchCalls(
 	StorageRuntimePlan const& _storagePlan,
 	awst::Contract& _contractNode)
 {
-	// Default-layout dispatch bodies are contract-specific because they route
-	// logical slots to this contract's named AVM cells. Scope every generated
-	// call to the same contract-specific root ID. EVM-layout runtime helpers are
-	// compilation-unit singletons and retain their stable global IDs.
-	if (m_typeMapper.profile().evmStorageLayout || !_storagePlan.needsDispatch())
+	if (!_storagePlan.needsDispatch())
 		return;
-	auto const& contractId = m_contractId;
+	bool const evm = m_typeMapper.profile().evmStorageLayout;
+	if (evm && _storagePlan.requiresSparseSlots) return;
+	// Named-layout dispatch is host-bound. Slot-layout variants have distinct
+	// identities, chosen from this host's solc layout and reachable-call facts.
+	std::string const prefix = !evm ? m_contractId + "."
+		: _storagePlan.solidityLayout.totalSlots() <= kEvmSlotsPerPage
+			? storage_dispatch::singlePageSlotPrefix : storage_dispatch::denseSlotPrefix;
 	auto const scopeStorageCall = [&](awst::Expression& expression) {
 		auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&expression);
 		if (!call)
@@ -850,17 +860,26 @@ void ContractBuilder::scopeStorageDispatchCalls(
 		if (!id)
 			return;
 		if (id->target == "__puyasol___storage_read")
-			id->target = contractId + ".__storage_read";
+			id->target = prefix + "__storage_read";
 		else if (id->target == "__puyasol___storage_write")
-			id->target = contractId + ".__storage_write";
+			id->target = prefix + "__storage_write";
 	};
 	awst::visitExpressions(_contractNode.approvalProgram, scopeStorageCall);
 	awst::visitExpressions(_contractNode.clearProgram, scopeStorageCall);
 	for (auto& method: _contractNode.methods)
 		awst::visitExpressions(method, scopeStorageCall);
+	for (auto& method: m_typeMapper.artifacts().contract().pendingHelpers)
+		awst::visitExpressions(method, scopeStorageCall);
 	for (auto& subroutine: m_dispatchSubroutines)
-		if (subroutine && subroutine->body)
-			awst::visitExpressions(*subroutine->body, scopeStorageCall);
+	{
+		if (!subroutine || !subroutine->body) continue;
+		// Shared runtime roots (including the dynamic-array codecs) must stay
+		// generic, even if the first emitted concrete host happens to be dense.
+		if (evm && (subroutine->id == std::string(storage_dispatch::genericSlotPrefix) + subroutine->name
+			|| subroutine->id.starts_with(storage_dispatch::denseSlotPrefix)
+			|| subroutine->id.starts_with(storage_dispatch::singlePageSlotPrefix))) continue;
+		awst::visitExpressions(*subroutine->body, scopeStorageCall);
+	}
 }
 
 void ContractBuilder::warnEscapedErc1967Slots(awst::Contract const& _contractNode)
@@ -905,7 +924,7 @@ void ContractBuilder::emitProxyUpdateGate(
 	{
 		_contractNode.appState.push_back(proxies::Erc1967Lowering::adminStateDefinition(loc));
 		_contractNode.methods.push_back(proxies::Erc1967Lowering::updateGateMethod(
-			_contractNode.id, sol_ast::SolIntrinsicAccess::sender(*m_exprBuilder, loc), loc));
+			_contractNode.id, buildMessageSender(m_typeMapper, loc), loc));
 	}
 	else if (authorize)
 	{
@@ -958,10 +977,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	// Generate __storage_read/__storage_write dispatch subroutines
 	// for assembly sload/sstore support
-	// EVM-layout runtime helpers have unit-global SubroutineIDs and bodies that
-	// are specialized from unit-global profile flags. Emit them once for the
-	// whole unit; generating a copy per concrete contract inflated multi-contract
-	// AWST by hundreds of kilobytes and made duplicate-ID resolution ambiguous.
+	// EVM-layout runtime variants have shape-keyed root IDs. Emit each once;
+	// concrete hosts select their variant below without changing shared roots.
 	// Default-layout dispatch remains contract-specific and is always emitted.
 	if (_emitEvmStorageRuntime
 		|| (!m_typeMapper.profile().evmStorageLayout && _storagePlan.needsDispatch()))

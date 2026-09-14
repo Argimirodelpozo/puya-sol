@@ -8,6 +8,7 @@
 #include "Logger.h"
 #include "builder/proxies/Erc1967Lowering.h"
 #include "builder/BuildArtifacts.h"
+#include "builder/sol-eb/BigUIntMathHelpers.h"
 
 #include <optional>
 #include <sstream>
@@ -69,26 +70,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildSignedDivMod(
 	auto a = ensureBiguint(_args[0], _loc);
 	auto b = ensureBiguint(_args[1], _loc);
 
-	auto absA = awst::makeConditional(
-		isNegative256(a, _loc), negate256(a, _loc), a, awst::WType::biguintType(), _loc);
-	auto absB = awst::makeConditional(
-		isNegative256(b, _loc), negate256(b, _loc), b, awst::WType::biguintType(), _loc);
-	auto magnitude = makeBigUIntBinOp(
-		absA,
-		_isDiv ? awst::BigUIntBinaryOperator::FloorDiv : awst::BigUIntBinaryOperator::Mod,
-		absB, _loc);
-
-	std::shared_ptr<awst::Expression> resultNeg;
-	if (_isDiv)
-		// resultNeg = aNeg XOR bNeg
-		resultNeg = awst::makeNumericCompare(
-			ensureBiguint(isNegative256(a, _loc), _loc), awst::NumericComparison::Ne,
-			ensureBiguint(isNegative256(b, _loc), _loc), _loc);
-	else
-		resultNeg = isNegative256(a, _loc);
-	auto signedResult = awst::makeConditional(
-		std::move(resultNeg), negate256(magnitude, _loc), magnitude,
-		awst::WType::biguintType(), _loc);
+	auto signedResult = eb::buildSignedModDiv(a, b,
+		_isDiv ? eb::BuilderBinaryOp::FloorDiv : eb::BuilderBinaryOp::Mod,
+		256, /*checked=*/false, _loc);
 
 	// b==0 guard: AVM b/ and b% panic; the conditional only evaluates the taken branch.
 	auto bNonZero = awst::makeNumericCompare(

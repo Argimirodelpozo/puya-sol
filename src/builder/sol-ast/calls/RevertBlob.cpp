@@ -1,6 +1,7 @@
 #include "builder/sol-ast/calls/RevertBlob.h"
 #include "builder/sol-ast/CallOperands.h"
 #include "builder/SelectorSemantics.h"
+#include "builder/BuildArtifacts.h"
 #include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -10,15 +11,38 @@ namespace puyasol::builder::sol_ast
 {
 
 RevertPayload::RevertPayload(
-	std::shared_ptr<awst::Expression> reason, awst::SourceLocation const& loc)
+	eb::ContractContext& ctx, std::shared_ptr<awst::Expression> reason,
+	awst::SourceLocation const& loc)
 {
 	if (auto const* literal = dynamic_cast<awst::StringConstant const*>(reason.get()))
-	{
 		message = literal->value;
-		blob = awst::makeBytesConstant(errorStringRevertBlobBytes(message), loc);
-	}
-	else
-		blob = makeErrorStringRevertBlob(std::move(reason), loc);
+
+	// Keep only the message at each call site, not a complete padded ABI blob.
+	// CallOperands already evaluates message expressions on the success path;
+	// the caller places this payload expression exclusively on the failure path.
+	std::string const id = "__puyasol_error_string";
+	auto const* bytes = awst::WType::bytesType();
+	auto call = awst::makeSubroutineCall(awst::SubroutineID{id}, bytes, loc);
+	awst::pushCallArg(call->args, reason->wtype == bytes
+		? std::move(reason) : awst::makeAsBytes(std::move(reason), loc));
+	blob = std::move(call);
+	auto& subs = ctx.typeMapper.artifacts().bufferSubroutines;
+	if (subs.contains(id)) return;
+
+	auto text = awst::makeVarExpression("message", bytes, loc);
+	std::vector<uint8_t> head = {0x08, 0xc3, 0x79, 0xa0};
+	appendRevertWord(head, 0x20);
+	auto length = awst::makeLeftPad(
+		awst::makeItob(awst::makeLen(text, loc), loc), 24, loc);
+	auto payload = awst::makeConcat(
+		awst::makeConcat(awst::makeBytesConstant(std::move(head), loc),
+			std::move(length), loc), awst::makeRightPadTo32Multiple(text, loc), loc);
+	auto body = awst::makeBlock(loc);
+	body->body.push_back(awst::makeReturnStatement(std::move(payload), loc));
+	auto sub = awst::makeSubroutine(id, id, {{"message", bytes, loc}},
+		bytes, std::move(body), true, loc);
+	sub->inlineOpt = false;
+	subs.emplace(id, std::move(sub));
 }
 
 RevertPayload::RevertPayload(eb::ContractContext& ctx,

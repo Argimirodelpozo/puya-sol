@@ -68,7 +68,8 @@ std::shared_ptr<awst::Expression> tryConvertArc4Array(
 	auto const targetInt = SolIntType::fromArc4(targetElem);
 	bool const integerWiden = sourceInt && targetInt && sourceInt->bits < targetInt->bits
 		&& sourceInt->isSigned == targetInt->isSigned;
-	bool const unroll = ss && ss->arraySize() <= 256;
+	bool const unroll = ss && ss->arraySize() <= 256
+		&& (ss->arraySize() <= 4 || !integerWiden || !_pre);
 	if (!sourceStride || !targetStride || (!unroll && (!integerWiden || !_pre)))
 		return nullptr;
 	unsigned const stride = *sourceStride;

@@ -2,6 +2,7 @@
 #include "builder/AwstShorthand.h"
 
 #include "awst/NameGen.h"
+#include "builder/BuildArtifacts.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -178,6 +179,18 @@ private:
 		ArrayType const* array, std::shared_ptr<awst::Expression> value,
 		Statements& out, bool includeLength)
 	{
+		// Byte-identical word arrays are already a slice/length prefix; only
+		// share shapes requiring the element loop and scalar/aggregate codecs.
+		if (codec::isByteIdenticalEvmWord(codec::underlyingType(array->baseType())))
+			return arrayElements(array, std::move(value), out, includeLength);
+		return aggregate(array, std::move(value), out, includeLength ? ":length" : ":body",
+			[&](auto snapshot, auto& body) { return arrayElements(array, std::move(snapshot), body, includeLength); });
+	}
+
+	std::shared_ptr<awst::Expression> arrayElements(
+		ArrayType const* array, std::shared_ptr<awst::Expression> value,
+		Statements& out, bool includeLength)
+	{
 		// A calldata slice of a non-byte array arrives reinterpreted to plain
 		// `bytes`, but those bytes ARE the ARC-4 array encoding the slice
 		// builder just concatenated ([uint16 count][elements]). Relabel it so
@@ -264,21 +277,63 @@ private:
 		return awst::makeConcat(word(uintVar("n"), m_loc), std::move(encoded), m_loc);
 	}
 
+	template<class Build>
+	std::shared_ptr<awst::Expression> aggregate(
+		Type const* type, std::shared_ptr<awst::Expression> value,
+		Statements& out, std::string const& suffix, Build const& build)
+	{
+		auto const* physical = m_typeMapper.map(type);
+		if (!isArc4EncodedType(physical) || !awst::structurallyEquivalent(value->wtype, physical))
+			return build(std::move(value), out);
+
+		// solc's located type identifies the layout. Pass an immutable ARC4
+		// byte snapshot, not a mutable argument requiring a dummy write-back.
+		auto& subs = m_typeMapper.artifacts().bufferSubroutines;
+		auto [entry, fresh] = subs.try_emplace("abi-encode:" + type->identifier() + suffix);
+		if (fresh)
+		{
+			std::string id = "__puyasol_abi_encode_"
+				+ std::to_string(subs.size());
+			auto const* bytes = awst::WType::bytesType();
+			auto sub = awst::makeSubroutine(id, id, {{"value", bytes, m_loc}},
+				bytes, awst::makeBlock(m_loc), true, m_loc);
+			sub->inlineOpt = false;
+			entry->second = sub;
+			auto snapshot = awst::makeVarExpression("snapshot", physical, m_loc);
+			sub->body->body.push_back(awst::makeAssignmentStatement(snapshot, awst::makeReinterpretCast(
+				awst::makeVarExpression("value", bytes, m_loc), physical, m_loc), m_loc));
+			auto encoded = build(snapshot, sub->body->body);
+			sub->body->body.push_back(awst::makeReturnStatement(std::move(encoded), m_loc));
+		}
+		auto call = awst::makeSubroutineCall(awst::SubroutineID{entry->second->id},
+			awst::WType::bytesType(), m_loc);
+		awst::pushCallArg(call->args, awst::makeAsBytes(std::move(value), m_loc));
+		return call;
+	}
+
 	std::shared_ptr<awst::Expression> structValue(
+		StructType const* structure, std::shared_ptr<awst::Expression> value, Statements& out)
+	{
+		return aggregate(structure, std::move(value), out, "", [&](auto snapshot, auto& body) {
+			return structFields(structure, std::move(snapshot), body);
+		});
+	}
+
+	std::shared_ptr<awst::Expression> structFields(
 		StructType const* structure, std::shared_ptr<awst::Expression> value,
 		Statements& out)
 	{
 		auto base = awst::makeEvalOnce(std::move(value), m_loc);
 		std::vector<Type const*> types;
 		std::vector<std::shared_ptr<awst::Expression>> values;
-		for (auto const& member: structure->structDefinition().members())
+		for (auto const& member: structure->members(nullptr))
 		{
-			types.push_back(member->type());
-			auto const* fieldW = awst::structFieldType(base->wtype, member->name());
+			types.push_back(member.type);
+			auto const* fieldW = awst::structFieldType(base->wtype, member.name);
 			if (!fieldW)
-				fieldW = m_typeMapper.map(member->type());
+				fieldW = m_typeMapper.map(member.type);
 			values.push_back(awst::makeFieldExpression(
-				base, member->name(), fieldW, m_loc));
+				base, member.name, fieldW, m_loc));
 		}
 		return sequence(types, std::move(values), out);
 	}

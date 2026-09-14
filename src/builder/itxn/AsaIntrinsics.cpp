@@ -92,20 +92,99 @@ std::string arityMessage(
 	return message;
 }
 
-/// `<method>` → a named txn/global field of the given wtype.
-struct FieldRow
+enum class IntrinsicKind { Create, Destroy, OptIn, Freeze, Balance, Transfer,
+	AssetParam, Crypto, Scratch, Bitlen, Txn, Global, Gtxn, Opcode };
+struct Intrinsic
 {
-	char const* method;
-	char const* field;
-	awst::WType const* (*wtype)();
+	char const* library;
+	char const* signature;
+	IntrinsicKind kind;
+	char const* opcode = nullptr;
+	awst::WType const* (*result)() = nullptr;
+	char const* immediate = nullptr;
 };
 
-template <size_t N>
-FieldRow const* findField(FieldRow const (&_rows)[N], std::string const& _method)
+// The declaration allowlist and backend operation live together. Solidity
+// arity and surface types come from the validated solc declaration, not a
+// second hand-maintained dispatch table.
+Intrinsic const* intrinsicFor(FunctionDefinition const& function)
 {
-	for (auto const& row: _rows)
-		if (_method == row.method)
-			return &row;
+	auto const* owner = function.annotation().contract;
+	if (!owner || !owner->isLibrary() || function.sourceUnitName() != "libs/AVM.sol"
+		|| function.visibility() != Visibility::Internal) return nullptr;
+	static Intrinsic const intrinsics[] = {
+		{"AVM", "asaCreate(uint64,uint8,string,string):uint64:nonpayable", IntrinsicKind::Create},
+		{"AVM", "asaCreate(uint64,uint8,string,string,bool):uint64:nonpayable", IntrinsicKind::Create},
+		{"AVM", "asaDestroy(uint64)::nonpayable", IntrinsicKind::Destroy},
+		{"AVM", "asaOptIn(uint64)::nonpayable", IntrinsicKind::OptIn},
+		{"AVM", "asaFreeze(uint64,address,bool)::nonpayable", IntrinsicKind::Freeze},
+		{"AVM", "asaTransfer(uint64,address,address,uint256)::nonpayable", IntrinsicKind::Transfer},
+		{"AVM", "asaBalance(address,uint64):uint256:view", IntrinsicKind::Balance},
+		{"AVM", "asaTotalSupply(uint64):uint256:view", IntrinsicKind::AssetParam, "AssetTotal", &awst::WType::uint64Type},
+		{"AVM", "asaDecimals(uint64):uint8:view", IntrinsicKind::AssetParam, "AssetDecimals", &awst::WType::uint64Type},
+		{"AVM", "asaUnitName(uint64):string:view", IntrinsicKind::AssetParam, "AssetUnitName", &awst::WType::bytesType},
+		{"AVM", "asaName(uint64):string:view", IntrinsicKind::AssetParam, "AssetName", &awst::WType::bytesType},
+		{"Crypto", "sha512_256(bytes):bytes32:pure", IntrinsicKind::Crypto, "sha512_256", &awst::WType::bytesType},
+		{"Crypto", "sha3_256(bytes):bytes32:pure", IntrinsicKind::Crypto, "sha3_256", &awst::WType::bytesType},
+		{"Crypto", "ed25519Verify(bytes,bytes,bytes):bool:pure", IntrinsicKind::Crypto, "ed25519verify_bare", &awst::WType::boolType},
+		{"Crypto", "falconVerify(bytes,bytes,bytes):bool:pure", IntrinsicKind::Crypto, "falcon_verify", &awst::WType::boolType},
+		{"Crypto", "vrfVerify(bytes,bytes,bytes):bytes,bool:pure", IntrinsicKind::Crypto, "vrf_verify", nullptr, "VrfAlgorand"},
+		{"Group", "size():uint64:view", IntrinsicKind::Global, "GroupSize", &awst::WType::uint64Type},
+		{"Group", "index():uint64:view", IntrinsicKind::Txn, "GroupIndex", &awst::WType::uint64Type},
+		{"Group", "txnSender(uint64):address:view", IntrinsicKind::Gtxn, "Sender", &awst::WType::accountType},
+		{"Group", "txnReceiver(uint64):address:view", IntrinsicKind::Gtxn, "Receiver", &awst::WType::accountType},
+		{"Group", "txnAmount(uint64):uint64:view", IntrinsicKind::Gtxn, "Amount", &awst::WType::uint64Type},
+		{"Group", "txnAssetReceiver(uint64):address:view", IntrinsicKind::Gtxn, "AssetReceiver", &awst::WType::accountType},
+		{"Group", "txnAssetAmount(uint64):uint64:view", IntrinsicKind::Gtxn, "AssetAmount", &awst::WType::uint64Type},
+		{"Group", "txnAssetId(uint64):uint64:view", IntrinsicKind::Gtxn, "XferAsset", &awst::WType::uint64Type},
+		{"Group", "txnApplicationId(uint64):uint64:view", IntrinsicKind::Gtxn, "ApplicationID", &awst::WType::uint64Type},
+		{"Group", "txnFee(uint64):uint64:view", IntrinsicKind::Gtxn, "Fee", &awst::WType::uint64Type},
+		{"Group", "txnType(uint64):uint64:view", IntrinsicKind::Gtxn, "TypeEnum", &awst::WType::uint64Type},
+		{"Txn", "sender():address:view", IntrinsicKind::Txn, "Sender", &awst::WType::accountType},
+		{"Txn", "fee():uint64:view", IntrinsicKind::Txn, "Fee", &awst::WType::uint64Type},
+		{"Txn", "firstValid():uint64:view", IntrinsicKind::Txn, "FirstValid", &awst::WType::uint64Type},
+		{"Txn", "lastValid():uint64:view", IntrinsicKind::Txn, "LastValid", &awst::WType::uint64Type},
+		{"Txn", "note():bytes:view", IntrinsicKind::Txn, "Note", &awst::WType::bytesType},
+		{"Txn", "lease():bytes32:view", IntrinsicKind::Txn, "Lease", &awst::WType::bytesType},
+		{"Txn", "typeEnum():uint64:view", IntrinsicKind::Txn, "TypeEnum", &awst::WType::uint64Type},
+		{"Txn", "groupIndex():uint64:view", IntrinsicKind::Txn, "GroupIndex", &awst::WType::uint64Type},
+		{"Txn", "txnId():bytes32:view", IntrinsicKind::Txn, "TxID", &awst::WType::bytesType},
+		{"Txn", "rekeyTo():address:view", IntrinsicKind::Txn, "RekeyTo", &awst::WType::accountType},
+		{"Txn", "applicationId():uint64:view", IntrinsicKind::Txn, "ApplicationID", &awst::WType::uint64Type},
+		{"Txn", "onCompletion():uint64:view", IntrinsicKind::Txn, "OnCompletion", &awst::WType::uint64Type},
+		{"Txn", "numAppArgs():uint64:view", IntrinsicKind::Txn, "NumAppArgs", &awst::WType::uint64Type},
+		{"Txn", "appArg(uint64):bytes:view", IntrinsicKind::Opcode, "txnas", &awst::WType::bytesType, "ApplicationArgs"},
+		{"Global", "currentApplicationId():uint64:view", IntrinsicKind::Global, "CurrentApplicationID", &awst::WType::uint64Type},
+		{"Global", "currentApplicationAddress():address:view", IntrinsicKind::Global, "CurrentApplicationAddress", &awst::WType::accountType},
+		{"Global", "creatorAddress():address:view", IntrinsicKind::Global, "CreatorAddress", &awst::WType::accountType},
+		{"Global", "groupId():bytes32:view", IntrinsicKind::Global, "GroupID", &awst::WType::bytesType},
+		{"Global", "latestTimestamp():uint64:view", IntrinsicKind::Global, "LatestTimestamp", &awst::WType::uint64Type},
+		{"Global", "round():uint64:view", IntrinsicKind::Global, "Round", &awst::WType::uint64Type},
+		{"Global", "opcodeBudget():uint64:view", IntrinsicKind::Global, "OpcodeBudget", &awst::WType::uint64Type},
+		{"Global", "callerApplicationId():uint64:view", IntrinsicKind::Global, "CallerApplicationID", &awst::WType::uint64Type},
+		{"Global", "minBalance(address):uint64:view", IntrinsicKind::Opcode, "min_balance", &awst::WType::uint64Type},
+		{"Global", "balance(address):uint64:view", IntrinsicKind::Opcode, "balance", &awst::WType::uint64Type},
+		{"Bits", "bitlen(uint256):uint256:pure", IntrinsicKind::Bitlen, "bitlen", &awst::WType::uint64Type},
+		{"Scratch", "store(uint64,uint64)::nonpayable", IntrinsicKind::Scratch, "stores", &awst::WType::voidType},
+		{"Scratch", "loadSelf(uint64):uint64:view", IntrinsicKind::Scratch, "loads", &awst::WType::uint64Type},
+		{"Scratch", "load(uint64,uint64):uint64:view", IntrinsicKind::Scratch, "gloadss", &awst::WType::uint64Type},
+		{"Scratch", "storeBytes(uint64,bytes)::nonpayable", IntrinsicKind::Scratch, "stores", &awst::WType::voidType},
+		{"Scratch", "loadBytesSelf(uint64):bytes:view", IntrinsicKind::Scratch, "loads", &awst::WType::bytesType},
+		{"Scratch", "loadBytes(uint64,uint64):bytes:view", IntrinsicKind::Scratch, "gloadss", &awst::WType::bytesType},
+	};
+	auto const* type = function.functionType(true);
+	if (!type || !type->interfaceFunctionType()) return nullptr;
+	std::string signature = type->externalSignature() + ":";
+	for (auto const* result: type->returnParameterTypes())
+	{
+		auto const* external = result->interfaceType(false).get();
+		if (!external) return nullptr;
+		if (signature.back() != ':') signature += ',';
+		signature += external->signatureInExternalFunction(false);
+	}
+	signature += ":" + stateMutabilityToString(function.stateMutability());
+	for (auto const& intrinsic: intrinsics)
+		if (owner->name() == intrinsic.library && signature == intrinsic.signature) return &intrinsic;
 	return nullptr;
 }
 
@@ -142,58 +221,8 @@ void submitItxn(
 
 std::string AsaIntrinsics::facadeLibrary(FunctionDefinition const& function)
 {
-	auto const* owner = function.annotation().contract;
-	if (!owner || !owner->isLibrary() || function.sourceUnitName() != "libs/AVM.sol"
-		|| function.visibility() != Visibility::Internal)
-		return {};
-	// These are target capabilities, not an alternative Solidity type parser.
-	// solc supplies the signature, return types and mutability of the exact
-	// declaration; unrelated libraries and unsupported overloads stay ordinary.
-	static std::map<std::string, std::set<std::string>> const signatures{
-		{"AVM", {
-			"asaCreate(uint64,uint8,string,string):uint64:nonpayable",
-			"asaCreate(uint64,uint8,string,string,bool):uint64:nonpayable",
-			"asaDestroy(uint64)::nonpayable", "asaOptIn(uint64)::nonpayable",
-			"asaFreeze(uint64,address,bool)::nonpayable",
-			"asaTransfer(uint64,address,address,uint256)::nonpayable",
-			"asaBalance(address,uint64):uint256:view", "asaTotalSupply(uint64):uint256:view",
-			"asaDecimals(uint64):uint8:view", "asaUnitName(uint64):string:view", "asaName(uint64):string:view"}},
-		{"Crypto", {"sha512_256(bytes):bytes32:pure", "sha3_256(bytes):bytes32:pure",
-			"ed25519Verify(bytes,bytes,bytes):bool:pure", "falconVerify(bytes,bytes,bytes):bool:pure",
-			"vrfVerify(bytes,bytes,bytes):bytes,bool:pure"}},
-		{"Group", {"size():uint64:view", "index():uint64:view",
-			"txnSender(uint64):address:view", "txnReceiver(uint64):address:view",
-			"txnAmount(uint64):uint64:view", "txnAssetReceiver(uint64):address:view",
-			"txnAssetAmount(uint64):uint64:view", "txnAssetId(uint64):uint64:view",
-			"txnApplicationId(uint64):uint64:view", "txnFee(uint64):uint64:view", "txnType(uint64):uint64:view"}},
-		{"Txn", {"sender():address:view", "fee():uint64:view", "firstValid():uint64:view",
-			"lastValid():uint64:view", "note():bytes:view", "lease():bytes32:view",
-			"typeEnum():uint64:view", "groupIndex():uint64:view", "txnId():bytes32:view",
-			"rekeyTo():address:view", "applicationId():uint64:view", "onCompletion():uint64:view",
-			"numAppArgs():uint64:view", "appArg(uint64):bytes:view"}},
-		{"Global", {"currentApplicationId():uint64:view", "currentApplicationAddress():address:view",
-			"creatorAddress():address:view", "groupId():bytes32:view", "latestTimestamp():uint64:view",
-			"round():uint64:view", "opcodeBudget():uint64:view", "callerApplicationId():uint64:view",
-			"minBalance(address):uint64:view", "balance(address):uint64:view"}},
-		{"Bits", {"bitlen(uint256):uint256:pure"}},
-		{"Scratch", {"store(uint64,uint64)::nonpayable", "loadSelf(uint64):uint64:view",
-			"load(uint64,uint64):uint64:view", "storeBytes(uint64,bytes)::nonpayable",
-			"loadBytesSelf(uint64):bytes:view", "loadBytes(uint64,uint64):bytes:view"}},
-	};
-	auto found = signatures.find(owner->name());
-	if (found == signatures.end()) return {};
-	auto const* type = function.functionType(true);
-	if (!type || !type->interfaceFunctionType()) return {};
-	std::string signature = type->externalSignature() + ":";
-	for (auto const* result: type->returnParameterTypes())
-	{
-		auto const* external = result->interfaceType(false).get();
-		if (!external) return {};
-		if (signature.back() != ':') signature += ',';
-		signature += external->signatureInExternalFunction(false);
-	}
-	signature += ":" + stateMutabilityToString(function.stateMutability());
-	return found->second.count(signature) ? owner->name() : std::string{};
+	auto const* intrinsic = intrinsicFor(function);
+	return intrinsic ? intrinsic->library : std::string{};
 }
 
 std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
@@ -224,99 +253,52 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 		args.insert(args.begin(), std::move(receiver));
 	}
 
-	if (lib == "AVM")
+	auto const* intrinsic = intrinsicFor(*function);
+	if (!intrinsic) throw std::logic_error("Validated intrinsic has no descriptor");
+	if (!expectArgs(args, function->parameters().size(),
+		arityMessage(lib, method, function->parameters().size(), nullptr), _loc)) return nullptr;
+	using K = IntrinsicKind;
+	switch (intrinsic->kind)
 	{
-		if (method == "asaCreate") return handleAsaCreate(_ctx, args, _loc);
-		if (method == "asaDestroy") return handleAsaDestroy(_ctx, args, _loc);
-		if (method == "asaOptIn") return handleAsaOptIn(_ctx, args, _loc);
-		if (method == "asaFreeze") return handleAsaFreeze(_ctx, args, _loc);
-		if (method == "asaBalance") return handleAsaBalance(_ctx, args, _loc);
-		if (method == "asaTransfer") return handleAsaTransfer(_ctx, args, _loc);
-		if (auto param = dispatchAsaParam(_ctx, method, args, _loc))
-			return param;
+	case K::Create: return handleAsaCreate(_ctx, args, _loc);
+	case K::Destroy: return handleAsaDestroy(_ctx, args, _loc);
+	case K::OptIn: return handleAsaOptIn(_ctx, args, _loc);
+	case K::Freeze: return handleAsaFreeze(_ctx, args, _loc);
+	case K::Balance: return handleAsaBalance(_ctx, args, _loc);
+	case K::Transfer: return handleAsaTransfer(_ctx, args, _loc);
+	case K::Txn: return std::shared_ptr<awst::Expression>(awst::makeTxn(intrinsic->opcode, intrinsic->result(), _loc));
+	case K::Global: return std::shared_ptr<awst::Expression>(awst::makeGlobal(intrinsic->opcode, intrinsic->result(), _loc));
+	case K::Gtxn:
+		return std::shared_ptr<awst::Expression>(awst::makeGtxns(intrinsic->opcode,
+			TypeCoercion::implicitNumericCast(std::move(args[0]), awst::WType::uint64Type(), _loc),
+			intrinsic->result(), _loc));
+	case K::AssetParam:
+	{
+		auto value = assetParamFirst(_ctx, intrinsic->opcode, std::move(args[0]), intrinsic->result(), _loc);
+		auto const* target = _ctx.typeMapper.map(function->returnParameters().front()->type());
+		if (target == awst::WType::stringType())
+			return std::shared_ptr<awst::Expression>(awst::makeReinterpretCast(std::move(value), target, _loc));
+		return TypeCoercion::implicitNumericCast(std::move(value), target, _loc);
 	}
-	else if (lib == "Crypto")
-		return dispatchCrypto(_ctx, method, args, _loc);
-	else if (lib == "Group")
-		return dispatchGroup(_ctx, method, args, _loc);
-	else if (lib == "Txn")
-		return dispatchTxn(_ctx, method, args, _loc);
-	else if (lib == "Global")
-		return dispatchGlobal(_ctx, method, args, _loc);
-	else if (lib == "Bits")
-		return dispatchBits(_ctx, method, args, _loc);
-	else if (lib == "Scratch")
-		return dispatchScratch(_ctx, method, args, _loc);
-
-	Logger::instance().warning(
-		"unknown AVM stdlib intrinsic '" + lib + "." + method + "'", _loc);
-	return std::nullopt;
-}
-
-std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchBits(
-	ContractContext& _ctx,
-	std::string const& _method,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	(void)_ctx;
-	if (_method != "bitlen")
-		return std::nullopt;
-	if (!expectArgs(_args, 1, "Bits.bitlen expects 1 arg", _loc))
-		return nullptr;
-	auto bitlen = awst::makeIntrinsicCall(
-		"bitlen", awst::WType::uint64Type(), _loc);
-	bitlen->stackArgs.push_back(std::move(_args.front()));
-	return TypeCoercion::implicitNumericCast(std::move(bitlen), awst::WType::biguintType(), _loc);
-}
-
-// AVM scratch (AVM.sol Scratch): store→stores, loadSelf→loads, load→gloadss.
-// gloadss requires gidx < GroupIndex (AVM assertion); uint64-valued. The bytes
-// variants reuse the same ops (stores/loads/gloadss accept `any`), coercing
-// only the slot / group index to uint64.
-std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchScratch(
-	ContractContext& _ctx,
-	std::string const& _method,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	(void)_ctx;
-	struct Op
-	{
-		char const* method;
-		char const* op;
-		awst::WType const* (*result)();
-		size_t argc;
-		char const* argNames;
-		bool rawValue;   // last arg is the stored bytes: no uint64 coercion
-	};
-	static Op const s_ops[] = {
-		{"store", "stores", &awst::WType::voidType, 2, "slot, value", false},
-		{"loadSelf", "loads", &awst::WType::uint64Type, 1, "slot", false},
-		{"load", "gloadss", &awst::WType::uint64Type, 2, "groupIndex, slot", false},
-		{"storeBytes", "stores", &awst::WType::voidType, 2, "slot, value", true},
-		{"loadBytesSelf", "loads", &awst::WType::bytesType, 1, "slot", false},
-		{"loadBytes", "gloadss", &awst::WType::bytesType, 2, "groupIndex, slot", false},
-	};
-	for (auto const& op: s_ops)
-	{
-		if (_method != op.method)
-			continue;
-		if (!expectArgs(_args, op.argc, arityMessage("Scratch", _method, op.argc, op.argNames), _loc))
-			return nullptr;
-		auto ic = awst::makeIntrinsicCall(op.op, op.result(), _loc);
-		for (size_t i = 0; i < op.argc; ++i)
-		{
-			auto arg = std::move(_args[i]);
-			if (!(op.rawValue && i + 1 == op.argc))
-				arg = TypeCoercion::implicitNumericCast(std::move(arg), awst::WType::uint64Type(), _loc);
-			ic->stackArgs.push_back(std::move(arg));
-		}
-		return std::shared_ptr<awst::Expression>(std::move(ic));
+	default: break;
 	}
-
-	Logger::instance().warning("unknown Scratch." + _method, _loc);
-	return std::nullopt;
+	auto const* resultType = intrinsic->result ? intrinsic->result()
+		: _ctx.typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::boolType()});
+	auto call = awst::makeIntrinsicCall(intrinsic->opcode, resultType, _loc);
+	if (intrinsic->immediate) call->immediates = {std::string(intrinsic->immediate)};
+	for (size_t i = 0; i < args.size(); ++i)
+	{
+		auto value = std::move(args[i]);
+		if (intrinsic->kind == K::Crypto) value = stringToBytes(std::move(value), _loc);
+		else if (intrinsic->kind == K::Scratch
+			&& function->parameters()[i]->type()->isValueType())
+			value = TypeCoercion::implicitNumericCast(std::move(value), awst::WType::uint64Type(), _loc);
+		call->stackArgs.push_back(std::move(value));
+	}
+	if (intrinsic->kind == K::Bitlen)
+		return TypeCoercion::implicitNumericCast(std::move(call), awst::WType::biguintType(), _loc);
+	return std::shared_ptr<awst::Expression>(std::move(call));
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -388,52 +370,6 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaBalance(
 
 	auto balanceU64 = tupleFirst(std::move(holdingGet), awst::WType::uint64Type(), _loc);
 	return TypeCoercion::implicitNumericCast(std::move(balanceU64), awst::WType::biguintType(), _loc);
-}
-
-// asset_params_get readers: which field, and how its first tuple item
-// (uint64 for numeric fields, bytes for names) surfaces to Solidity —
-// AssetDecimals fits uint8, so its uint64 stays as is.
-std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchAsaParam(
-	ContractContext& _ctx,
-	std::string const& _method,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	enum class Surface { BigUInt, UInt64, String };
-	struct Param
-	{
-		char const* method;
-		char const* field;
-		Surface surface;
-	};
-	static Param const s_params[] = {
-		{"asaTotalSupply", "AssetTotal", Surface::BigUInt},
-		{"asaDecimals", "AssetDecimals", Surface::UInt64},
-		{"asaUnitName", "AssetUnitName", Surface::String},
-		{"asaName", "AssetName", Surface::String},
-	};
-	for (auto const& param: s_params)
-	{
-		if (_method != param.method)
-			continue;
-		if (!expectArgs(_args, 1, arityMessage("AVM", _method, 1, "assetId"), _loc))
-			return nullptr;
-		bool const isString = param.surface == Surface::String;
-		auto value = assetParamFirst(
-			_ctx, param.field, std::move(_args[0]),
-			isString ? awst::WType::bytesType() : awst::WType::uint64Type(), _loc);
-		switch (param.surface)
-		{
-		case Surface::BigUInt:
-			return TypeCoercion::implicitNumericCast(std::move(value), awst::WType::biguintType(), _loc);
-		case Surface::UInt64:
-			return value;
-		case Surface::String:
-			return std::shared_ptr<awst::Expression>(
-				awst::makeReinterpretCast(std::move(value), awst::WType::stringType(), _loc));
-		}
-	}
-	return std::nullopt;
 }
 
 std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
@@ -520,177 +456,6 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaFreeze(
 		create.fields["FreezeAssetFrozen"] = std::move(frozen);
 	});
 	return awst::makeVoidConstant(_loc);
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// Crypto / Group / Txn / Global dispatchers
-// ═══════════════════════════════════════════════════════════════════════
-
-std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchCrypto(
-	ContractContext& _ctx,
-	std::string const& _method,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	enum class Result { Bytes, Bool, BytesBoolTuple };
-	struct Op
-	{
-		char const* method;
-		char const* op;
-		size_t argc;
-		Result result;
-		char const* immediate;
-	};
-	static Op const s_ops[] = {
-		{"sha512_256", "sha512_256", 1, Result::Bytes, nullptr},
-		{"sha3_256", "sha3_256", 1, Result::Bytes, nullptr},
-		{"ed25519Verify", "ed25519verify_bare", 3, Result::Bool, nullptr},
-		{"falconVerify", "falcon_verify", 3, Result::Bool, nullptr},
-		{"vrfVerify", "vrf_verify", 3, Result::BytesBoolTuple, "VrfAlgorand"},
-	};
-	for (auto const& op: s_ops)
-	{
-		if (_method != op.method)
-			continue;
-		if (!expectArgs(_args, op.argc, arityMessage("Crypto", _method, op.argc, nullptr), _loc))
-			return nullptr;
-		awst::WType const* resultType = nullptr;
-		switch (op.result)
-		{
-		case Result::Bytes: resultType = awst::WType::bytesType(); break;
-		case Result::Bool: resultType = awst::WType::boolType(); break;
-		case Result::BytesBoolTuple:
-			resultType = _ctx.typeMapper.createType<awst::WTuple>(
-				std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::boolType()});
-			break;
-		}
-		auto call = awst::makeIntrinsicCall(op.op, resultType, _loc);
-		if (op.immediate)
-			call->immediates = {std::string(op.immediate)};
-		for (size_t i = 0; i < op.argc; ++i)
-			call->stackArgs.push_back(stringToBytes(std::move(_args[i]), _loc));
-		return std::shared_ptr<awst::Expression>(call);
-	}
-	Logger::instance().warning("unknown Crypto." + _method, _loc);
-	return std::nullopt;
-}
-
-std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchGroup(
-	ContractContext& _ctx,
-	std::string const& _method,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	(void)_ctx;
-	if (_method == "size")
-		return std::shared_ptr<awst::Expression>(awst::makeGlobal(std::string("GroupSize"), awst::WType::uint64Type(), _loc));
-	if (_method == "index")
-		return std::shared_ptr<awst::Expression>(awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), _loc));
-	static FieldRow const s_gtxns[] = {
-		{"txnSender", "Sender", &awst::WType::accountType},
-		{"txnReceiver", "Receiver", &awst::WType::accountType},
-		{"txnAmount", "Amount", &awst::WType::uint64Type},
-		{"txnAssetReceiver", "AssetReceiver", &awst::WType::accountType},
-		{"txnAssetAmount", "AssetAmount", &awst::WType::uint64Type},
-		{"txnAssetId", "XferAsset", &awst::WType::uint64Type},
-		{"txnApplicationId", "ApplicationID", &awst::WType::uint64Type},
-		{"txnFee", "Fee", &awst::WType::uint64Type},
-		{"txnType", "TypeEnum", &awst::WType::uint64Type},
-	};
-	if (auto const* row = findField(s_gtxns, _method))
-	{
-		if (!expectArgs(_args, 1, "Group." + _method + " expects 1 arg (idx)", _loc))
-			return nullptr;
-		return std::shared_ptr<awst::Expression>(awst::makeGtxns(
-			row->field, TypeCoercion::implicitNumericCast(std::move(_args[0]), awst::WType::uint64Type(), _loc), row->wtype(), _loc));
-	}
-
-	Logger::instance().warning("unknown Group." + _method, _loc);
-	return std::nullopt;
-}
-
-std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchTxn(
-	ContractContext& _ctx,
-	std::string const& _method,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	(void)_ctx;
-	static FieldRow const s_txn[] = {
-		{"sender", "Sender", &awst::WType::accountType},
-		{"fee", "Fee", &awst::WType::uint64Type},
-		{"firstValid", "FirstValid", &awst::WType::uint64Type},
-		{"lastValid", "LastValid", &awst::WType::uint64Type},
-		{"note", "Note", &awst::WType::bytesType},
-		{"lease", "Lease", &awst::WType::bytesType},
-		{"typeEnum", "TypeEnum", &awst::WType::uint64Type},
-		{"groupIndex", "GroupIndex", &awst::WType::uint64Type},
-		{"txnId", "TxID", &awst::WType::bytesType},
-		{"rekeyTo", "RekeyTo", &awst::WType::accountType},
-		{"applicationId", "ApplicationID", &awst::WType::uint64Type},
-		{"onCompletion", "OnCompletion", &awst::WType::uint64Type},
-		{"numAppArgs", "NumAppArgs", &awst::WType::uint64Type},
-	};
-	if (auto const* row = findField(s_txn, _method))
-	{
-		if (!expectArgs(_args, 0, "Txn." + _method + " expects 0 args", _loc))
-			return nullptr;
-		return std::shared_ptr<awst::Expression>(awst::makeTxn(row->field, row->wtype(), _loc));
-	}
-	if (_method == "appArg")
-	{
-		if (!expectArgs(_args, 1, "Txn.appArg expects 1 arg (idx)", _loc))
-			return nullptr;
-		auto call = awst::makeIntrinsicCall("txnas", awst::WType::bytesType(), _loc);
-		call->immediates = {std::string("ApplicationArgs")};
-		call->stackArgs.push_back(TypeCoercion::implicitNumericCast(std::move(_args[0]), awst::WType::uint64Type(), _loc));
-		return std::shared_ptr<awst::Expression>(call);
-	}
-
-	Logger::instance().warning("unknown Txn." + _method, _loc);
-	return std::nullopt;
-}
-
-std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchGlobal(
-	ContractContext& _ctx,
-	std::string const& _method,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	(void)_ctx;
-	static FieldRow const s_global[] = {
-		{"currentApplicationId", "CurrentApplicationID", &awst::WType::uint64Type},
-		{"currentApplicationAddress", "CurrentApplicationAddress", &awst::WType::accountType},
-		{"creatorAddress", "CreatorAddress", &awst::WType::accountType},
-		{"groupId", "GroupID", &awst::WType::bytesType},
-		{"latestTimestamp", "LatestTimestamp", &awst::WType::uint64Type},
-		{"round", "Round", &awst::WType::uint64Type},
-		{"opcodeBudget", "OpcodeBudget", &awst::WType::uint64Type},
-		{"callerApplicationId", "CallerApplicationID", &awst::WType::uint64Type},
-	};
-	if (auto const* row = findField(s_global, _method))
-	{
-		if (!expectArgs(_args, 0, "Global." + _method + " expects 0 args", _loc))
-			return nullptr;
-		return std::shared_ptr<awst::Expression>(awst::makeGlobal(row->field, row->wtype(), _loc));
-	}
-	// Account-keyed uint64 opcodes.
-	static std::pair<char const*, char const*> const s_accountOps[] = {
-		{"minBalance", "min_balance"}, {"balance", "balance"},
-	};
-	for (auto const& [method, op]: s_accountOps)
-	{
-		if (_method != method)
-			continue;
-		if (!expectArgs(_args, 1, "Global." + _method + " expects 1 arg (account)", _loc))
-			return nullptr;
-		auto call = awst::makeIntrinsicCall(op, awst::WType::uint64Type(), _loc);
-		call->stackArgs.push_back(std::move(_args[0]));
-		return std::shared_ptr<awst::Expression>(call);
-	}
-
-	Logger::instance().warning("unknown Global." + _method, _loc);
-	return std::nullopt;
 }
 
 } // namespace puyasol::builder::eb

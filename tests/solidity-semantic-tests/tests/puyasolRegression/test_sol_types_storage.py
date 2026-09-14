@@ -107,7 +107,7 @@ def test_fixed_array_conversion_loop(harness, slot_layout, abi):
     if slot_layout:
         # Slot-mode whole fixed-array stores already have an explicit 64-element
         # capacity limit. Widening must not bypass it or silently truncate.
-        with pytest.raises(CompileError, match="fixed-array value traversal of length 258 exceeds the unrolling limit of 64"):
+        with pytest.raises(CompileError, match="fixed-array value traversal of length 258 exceeds the supported extent of 64"):
             harness.compile(source, extra_args=extra_args)
         return
     app = harness.compile_and_deploy(

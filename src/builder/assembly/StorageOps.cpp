@@ -10,6 +10,7 @@
 #include "builder/storage/TransientStorage.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/SlotHandleAccess.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/proxies/Erc1967Lowering.h"
@@ -59,12 +60,13 @@ std::optional<std::vector<BoxStructSlotField>> boxStructSlotLayout(
 		return std::nullopt;
 	}
 	std::vector<BoxStructSlotField> fields;
-	for (size_t i = 0; i < _struct.fields().size(); ++i)
+	auto positions = SlotHandleAccess::fieldPositions(source, &_struct);
+	for (size_t i = 0; i < positions.size(); ++i)
 	{
-		auto const& [name, fieldType] = _struct.fields()[i];
-		auto const* member = source->memberType(name);
-		bool isBool = fieldType == awst::WType::arc4BoolType();
-		auto const* integer = dynamic_cast<awst::ARC4UIntN const*>(fieldType);
+		auto const& position = positions[i];
+		auto const* member = position.solType;
+		bool isBool = position.wtype == awst::WType::arc4BoolType();
+		auto const* integer = dynamic_cast<awst::ARC4UIntN const*>(position.wtype);
 		if (!member || !member->isValueType()
 			|| (!isBool && (!integer || integer->n() != member->storageBytes() * 8)))
 		{
@@ -72,9 +74,8 @@ std::optional<std::vector<BoxStructSlotField>> boxStructSlotLayout(
 				+ " of a box struct supports only matching fixed-width integer and bool fields", _loc);
 			return std::nullopt;
 		}
-		auto const& [slot, byte] = source->storageOffsetsOfMember(name);
 		fields.push_back({checkedSize<int>((*offsets)[i], "ARC4 field bit offset"),
-			checkedSize<int>(slot, "struct member slot"), checkedSize<int>(byte * 8, "storage bit offset"),
+			checkedSize<int>(position.slot, "struct member slot"), checkedSize<int>(position.byteOffset * 8, "storage bit offset"),
 			checkedSize<int>(member->storageBytes() * 8, "storage field width"), isBool});
 	}
 	return fields;

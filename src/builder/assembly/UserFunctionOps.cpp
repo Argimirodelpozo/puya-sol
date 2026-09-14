@@ -9,6 +9,7 @@
 #include <string>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/optimiser/ASTWalker.h>
 
 namespace puyasol::builder
 {
@@ -185,72 +186,23 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 			awst::makeBiguintConstant("0", _loc), _loc));
 	}
 
-	// Alpha-rename the body's `let` LOCALS too, not just params/returns: two
-	// helpers sharing a scratch name (`t`, `ptr` — Solady house style) where
-	// one calls the other mid-expression otherwise share ONE runtime var and
-	// the inner call clobbers the outer's live value. The declarations apply
-	// the rename in buildVariableDeclaration; reads via resolveVarRef.
+	// One solc walk collects inline locals and leaves, without entering
+	// nested functions (their frame belongs to their own invocation).
+	struct InlineFacts: solidity::yul::ASTWalker
 	{
-		std::function<void(solidity::yul::Block const&)> renameLocals =
-			[&](solidity::yul::Block const& blk)
+		using ASTWalker::operator();
+		std::function<void(std::string const&)> rename;
+		bool hasLeave = false;
+		void operator()(solidity::yul::FunctionDefinition const&) override {}
+		void operator()(solidity::yul::Leave const&) override { hasLeave = true; }
+		void operator()(solidity::yul::VariableDeclaration const& declaration) override
 		{
-			for (auto const& s: blk.statements)
-			{
-				if (auto const* vd = std::get_if<solidity::yul::VariableDeclaration>(&s))
-					for (auto const& v: vd->variables)
-					{
-						std::string n = v.name.str();
-						pushRename(n, uniqueName(n));
-					}
-				else if (auto const* b = std::get_if<solidity::yul::Block>(&s))
-					renameLocals(*b);
-				else if (auto const* iff = std::get_if<solidity::yul::If>(&s))
-					renameLocals(iff->body);
-				else if (auto const* sw = std::get_if<solidity::yul::Switch>(&s))
-					for (auto const& c: sw->cases)
-						renameLocals(c.body);
-				else if (auto const* fl = std::get_if<solidity::yul::ForLoop>(&s))
-				{
-					renameLocals(fl->pre);
-					renameLocals(fl->post);
-					renameLocals(fl->body);
-				}
-			}
-		};
-		renameLocals(funcDef.body);
-	}
-
-	// Wrap body in `while true { … break; }` when it contains `leave`, so that
-	// leave→LoopExit breaks only the inlined body, not any enclosing loop.
-	bool hasLeave = false;
-	std::function<void(std::vector<solidity::yul::Statement> const&)> scanLeave =
-		[&](std::vector<solidity::yul::Statement> const& stmts)
-	{
-		for (auto const& s: stmts)
-		{
-			if (hasLeave) return;
-			if (std::holds_alternative<solidity::yul::Leave>(s))
-			{
-				hasLeave = true;
-				return;
-			}
-			if (auto const* blk = std::get_if<solidity::yul::Block>(&s))
-				scanLeave(blk->statements);
-			else if (auto const* iff = std::get_if<solidity::yul::If>(&s))
-				scanLeave(iff->body.statements);
-			else if (auto const* sw = std::get_if<solidity::yul::Switch>(&s))
-				for (auto const& c: sw->cases)
-					scanLeave(c.body.statements);
-			else if (auto const* fl = std::get_if<solidity::yul::ForLoop>(&s))
-			{
-				scanLeave(fl->pre.statements);
-				scanLeave(fl->post.statements);
-				scanLeave(fl->body.statements);
-			}
+			for (auto const& variable: declaration.variables) rename(variable.name.str());
 		}
-	};
-	scanLeave(funcDef.body.statements);
-
+	} facts;
+	facts.rename = [&](std::string const& name) { pushRename(name, uniqueName(name)); };
+	facts(funcDef.body);
+	bool const hasLeave = facts.hasLeave;
 	std::vector<std::shared_ptr<awst::Statement>> bodyStmts;
 	auto savedLeaveFlag = m_frame.yulLeaveFlag;
 	if (hasLeave)

@@ -83,3 +83,15 @@ def test_yul_library_and_free_function_roots(harness, slot_layout):
     harness.call(second, "write(uint256)", 47)
     assert as_int(harness.call(first, "first()").abi_return) == 31
     assert as_int(harness.call(second, "second()").abi_return) == 47
+
+
+@pytest.mark.parametrize("slot_layout", [False, True])
+def test_yul_deployable_libraries_have_distinct_helper_emissions(harness, slot_layout):
+    artifacts = harness.compile(
+        "puyasolRegression/contracts/yul_library_emissions.sol",
+        extra_args=["--evm-storage-layout"] if slot_layout else [])
+    first = harness.deploy(artifacts, "FirstYulLibrary")
+    second = harness.deploy(artifacts, "SecondYulLibrary")
+    for n in (0, 7, 2**128):
+        assert as_int(harness.call(first, "f(uint256)", n).abi_return) == n * 2
+        assert as_int(harness.call(second, "f(uint256)", n).abi_return) == n + 1

@@ -10,8 +10,6 @@
 #include "builder/contract/SelectorRouter.h"
 #include <stdexcept>
 #include "builder/sol-types/TypeMapper.h"
-#include "builder/XchainAccounts.h"
-#include "builder/BuildArtifacts.h"
 #include <algorithm>
 #include <cctype>
 #include <vector>
@@ -21,61 +19,6 @@ namespace puyasol::builder::sol_ast
 
 namespace
 {
-
-// An EVM ABI boundary gives Solidity one 160-bit address namespace.  Values
-// decoded from calldata are zero-extended from 20 bytes, so ambient caller
-// identity must use the same representation; otherwise storing an address
-// argument and later indexing by msg.sender can never hit the same slot for
-// an Algorand user account (whose native sender is 32 bytes).
-// Native ARC4 keeps the complete Algorand sender.
-std::shared_ptr<awst::Expression> buildEvmMsgSenderInline(
-	eb::ContractContext& ctx,
-	builder::TargetProfile::XchainAccounts const& xc,
-	awst::SourceLocation const& loc);
-
-
-/// The claim-verifying msg.sender expression (xchain profile), inlined
-/// once into the shared __evm_sender method.
-std::shared_ptr<awst::Expression> buildEvmMsgSenderInline(
-	eb::ContractContext& ctx,
-	builder::TargetProfile::XchainAccounts const& xc,
-	awst::SourceLocation const& loc)
-{
-	auto sender = awst::makeTxn(
-		"Sender", awst::WType::accountType(), loc);
-	auto low160 = awst::makeExtractLastN(std::move(sender), 20, loc);
-	std::shared_ptr<awst::Expression> projected = awst::makeAsAccount(
-		awst::makeLeftPadToN(std::move(low160), 32, loc), loc);
-	{
-		auto argCountOk = awst::makeNumericCompare(
-			awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
-			awst::NumericComparison::Gte,
-			awst::makeIntegerConstant("3", loc), loc);
-		auto lenOk = awst::makeNumericCompare(
-			awst::makeLen(awst::makeAppArg(2, loc), loc),
-			awst::NumericComparison::Eq,
-			awst::makeIntegerConstant("20", loc), loc);
-		auto shapeOk = awst::makeBoolBinOp(
-			std::move(argCountOk), awst::BinaryBooleanOperator::And,
-			std::move(lenOk), loc);
-		auto derivedOk = awst::makeBytesComparison(
-			awst::makeAsBytes(
-				builder::xchain::derivedAccount(
-					xc, awst::makeAppArg(2, loc), loc), loc),
-			awst::EqualityComparison::Eq,
-			awst::makeAsBytes(
-				awst::makeTxn("Sender", awst::WType::accountType(), loc), loc),
-			loc);
-		auto isClaim = awst::makeBoolBinOp(
-			std::move(shapeOk), awst::BinaryBooleanOperator::And,
-			std::move(derivedOk), loc);
-		auto claimed = awst::makeAsAccount(
-			awst::makeLeftPadToN(awst::makeAppArg(2, loc), 32, loc), loc);
-		return awst::makeConditional(
-			std::move(isClaim), std::move(claimed), std::move(projected),
-			awst::WType::accountType(), loc);
-	}
-}
 
 // An explicitly configured EVM chain id is exact for replay. Otherwise use
 // GenesisHash as the AVM-native network identity instead of a plausible
@@ -232,7 +175,7 @@ struct MemberEntry
 using MagicKind = solidity::frontend::MagicType::Kind;
 constexpr MemberEntry kIntrinsicMembers[] = {
 	{MagicKind::Message, "sender", [](eb::ContractContext& ctx, Context&, std::string const&,
-		awst::SourceLocation const& loc) { return SolIntrinsicAccess::sender(ctx, loc); }},
+		awst::SourceLocation const& loc) { return buildMessageSender(ctx.typeMapper, loc); }},
 	{MagicKind::Message, "value", buildMsgValue},
 	{MagicKind::Message, "sig", buildMsgSig},
 	{MagicKind::Message, "data", buildMsgData},
@@ -250,59 +193,6 @@ constexpr MemberEntry kIntrinsicMembers[] = {
 };
 
 } // anonymous namespace
-
-std::shared_ptr<awst::Expression> SolIntrinsicAccess::sender(
-	eb::ContractContext& ctx,
-	awst::SourceLocation const& loc)
-{
-	if (ctx.typeMapper.profile().contractAbi != builder::ContractAbi::Evm)
-		return awst::makeTxn("Sender", awst::WType::accountType(), loc);
-	auto sender = awst::makeTxn(
-		"Sender", awst::WType::accountType(), loc);
-	auto low160 = awst::makeExtractLastN(std::move(sender), 20, loc);
-	std::shared_ptr<awst::Expression> projected = awst::makeAsAccount(
-		awst::makeLeftPadToN(std::move(low160), 32, loc), loc);
-	// xchain account model: a caller that presented a valid owner claim
-	// (ApplicationArgs[2]: 20 bytes whose derived LogicSig address IS the
-	// sender) is that EVM identity. The check is fully SELF-VERIFYING at
-	// the read site — arity alone must not gate it, because __postInit and
-	// ARC-4-routed calls legitimately carry 3+ args that are NOT claims
-	// (a multi-arg ctor once adopted its own second argument as the
-	// minting identity). The hash comparison cannot pass accidentally.
-	// The low-20 projection of the raw sender survives only as the
-	// unclaimed-caller compatibility shim (deploy/creator paths).
-	if (auto const& xc = ctx.typeMapper.profile().xchainAccounts)
-	{
-		// Root subroutines (library / free functions, currentContract unset)
-		// cannot invoke a contract instance method: inline the claim check
-		// there (Permit2's PermitHash library reads msg.sender). Contract
-		// methods share the memoized __evm_sender below.
-		if (!ctx.currentContract)
-			return buildEvmMsgSenderInline(ctx, *xc, loc);
-		// One contract method per contract: the claim check (two app-arg
-		// reads, a sha512_256, a compare) was inlined at EVERY msg.sender use
-		// — 39 copies in CTFExchange.
-		auto& arts = ctx.typeMapper.artifacts();
-		std::string const key = "environment:msg.sender";
-		auto found = arts.contract().helpers.find(key);
-		std::string name = found != arts.contract().helpers.end()
-			? found->second : std::string();
-		if (name.empty())
-		{
-			name = "__evm_sender";
-			arts.contract().helpers[key] = name;
-			// cref is stamped when the pending methods are attached.
-			auto method = awst::ContractMethod(
-				"", name, awst::WType::accountType(), {}, loc);
-			method.body->body.push_back(awst::makeReturnStatement(
-				buildEvmMsgSenderInline(ctx, *xc, loc), loc));
-			arts.contract().pendingHelpers.push_back(std::move(method));
-		}
-		return awst::makeSubroutineCall(
-			awst::InstanceMethodTarget{name}, awst::WType::accountType(), loc);
-	}
-	return projected;
-}
 
 std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 {

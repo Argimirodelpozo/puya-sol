@@ -99,14 +99,10 @@ void markAssemblyAggregates(
 /// Recipe for rebuilding one ABI-to-native parameter assignment. Modifier
 /// chain members each materialize their own statements from this immutable
 /// description; no AWST copying is involved.
-struct ParamDecode
+struct ParamDecode: CallParameterPlan
 {
 	size_t argIndex;
-	std::string name;
-	awst::WType const* nativeType;
-	awst::WType const* arc4Type;
 	awst::SourceLocation loc;
-	unsigned signedBits = 0;
 };
 
 class ContractBuilder
@@ -191,7 +187,7 @@ private:
 	}
 
 
-	/// Prepend assert(incoming_amount==0,"not payable") to externally-callable non-payable methods.
+	/// Native ARC4 non-payable body guard; EVM entries are checked by their router.
 	void prependNonPayableCheck(awst::ContractMethod& _method,
 		std::string const& _arc4Selector = {});
 	OverloadedNamesSet m_overloadedNames;

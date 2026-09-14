@@ -293,25 +293,26 @@ namespace
 /// The granularity is chosen inside puya's ArrayExtend lowering (no frontend
 /// channel). Fixed bool[N] whole-array init/reads are consistent (element
 /// indexing already fails loud at runtime) and stay allowed.
-bool reachesDynamicBoolArray(solidity::frontend::Type const* _t, int _depth = 0)
+bool reachesDynamicBoolArray(solidity::frontend::Type const* _t)
 {
 	using namespace solidity::frontend;
-	if (!_t || _depth > 16)
-		return false;
-	if (auto const* at = dynamic_cast<ArrayType const*>(_t))
+	std::set<Type const*> seen;
+	std::vector<Type const*> pending{_t};
+	while (!pending.empty())
 	{
-		if (at->isDynamicallySized() && at->baseType()
-			&& at->baseType()->category() == Type::Category::Bool)
-			return true;
-		return reachesDynamicBoolArray(at->baseType(), _depth + 1);
-	}
-	if (auto const* mt = dynamic_cast<MappingType const*>(_t))
-		return reachesDynamicBoolArray(mt->valueType(), _depth + 1);
-	if (auto const* st = dynamic_cast<StructType const*>(_t))
-	{
-		for (auto const& member: st->structDefinition().members())
-			if (member && reachesDynamicBoolArray(member->type(), _depth + 1))
+		auto const* type = pending.back();
+		pending.pop_back();
+		if (!type || !seen.insert(type).second) continue;
+		if (auto const* array = dynamic_cast<ArrayType const*>(type))
+		{
+			if (array->isDynamicallySized() && array->baseType()->category() == Type::Category::Bool)
 				return true;
+			pending.push_back(array->baseType());
+		}
+		else if (auto const* mapping = dynamic_cast<MappingType const*>(type))
+			pending.push_back(mapping->valueType());
+		else if (auto const* structure = dynamic_cast<StructType const*>(type))
+			for (auto const& member: structure->members(nullptr)) pending.push_back(member.type);
 	}
 	return false;
 }

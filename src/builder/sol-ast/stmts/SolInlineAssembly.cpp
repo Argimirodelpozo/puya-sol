@@ -1,6 +1,7 @@
 /// @file SolInlineAssembly.cpp
 
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
+#include "awst/NameGen.h"
 #include "builder/SelectorSemantics.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-eb/ContractContext.h"
@@ -500,8 +501,15 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	std::string contextName = m_blk.builderCtx().contractName;
 	if (contextName.empty())
 		contextName = "free";
+	// NameGen is scoped per contract; a public library body is also emitted
+	// as a freestanding root outside that scope. Include the host identity.
+	contextName += m_blk.builderCtx().currentContract
+		? "_host_" + std::to_string(m_blk.builderCtx().currentContract->id()) : "_root";
 	contextName += "_" + std::to_string(m_blk.fn.callableId)
-		+ "_asm_" + std::to_string(m_node.id());
+		+ "_asm_" + std::to_string(m_node.id())
+		// One solc body can be lowered as a library root, deployable library,
+		// or specialized/modified body. Each emission owns its Yul helpers.
+		+ "_emit_" + std::to_string(awst::NameGen::next("SolInlineAssembly.emit"));
 
 	auto bindings = collectExternalBindings(m_blk, m_node);
 

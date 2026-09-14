@@ -81,12 +81,6 @@ bool OptionsWriter::write(
 		opts["output_memory_ir"] = true;
 	}
 
-	if (!opts["compilation_set"].is_object()
-		|| !opts["cli_template_definitions"].is_object())
-	{
-		_error = "options JSON failed schema validation";
-		return false;
-	}
 	return artifact::writeJsonAtomically(
 		_path, opts.dump(2) + '\n', _digest, _error);
 }

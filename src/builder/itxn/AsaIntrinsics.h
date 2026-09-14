@@ -61,51 +61,6 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>>& _args,
 		awst::SourceLocation const& _loc);
 
-	// Table-driven `asset_params_get` readers (asaTotalSupply / asaDecimals /
-	// asaUnitName / asaName); nullopt when `_method` is none of them.
-	static std::optional<std::shared_ptr<awst::Expression>> dispatchAsaParam(
-		ContractContext& _ctx,
-		std::string const& _method,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
-	// Crypto / Group / Txn / Global / Scratch library dispatchers.
-	static std::optional<std::shared_ptr<awst::Expression>> dispatchCrypto(
-		ContractContext& _ctx,
-		std::string const& _method,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
-	static std::optional<std::shared_ptr<awst::Expression>> dispatchGroup(
-		ContractContext& _ctx,
-		std::string const& _method,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
-	static std::optional<std::shared_ptr<awst::Expression>> dispatchTxn(
-		ContractContext& _ctx,
-		std::string const& _method,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
-	static std::optional<std::shared_ptr<awst::Expression>> dispatchGlobal(
-		ContractContext& _ctx,
-		std::string const& _method,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
-	static std::optional<std::shared_ptr<awst::Expression>> dispatchBits(
-		ContractContext& _ctx,
-		std::string const& _method,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
-	// AVM scratch space (AVM.sol Scratch): store/loadSelf/load → stores/loads/gloadss.
-	static std::optional<std::shared_ptr<awst::Expression>> dispatchScratch(
-		ContractContext& _ctx,
-		std::string const& _method,
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
 };
 
 } // namespace puyasol::builder::eb

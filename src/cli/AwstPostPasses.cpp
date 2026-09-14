@@ -4,6 +4,7 @@
 #include "Logger.h"
 
 #include <boost/filesystem.hpp>
+#include <libsolutil/CommonData.h>
 
 #include <algorithm>
 #include <cctype>
@@ -153,19 +154,6 @@ std::string backendRole(std::string const& _fileName)
 	return "backend-output";
 }
 
-std::string toHex(std::vector<std::uint8_t> const& _bytes)
-{
-	static constexpr char digits[] = "0123456789abcdef";
-	std::string result;
-	result.resize(_bytes.size() * 2);
-	for (std::size_t i = 0; i < _bytes.size(); ++i)
-	{
-		result[i * 2] = digits[_bytes[i] >> 4];
-		result[i * 2 + 1] = digits[_bytes[i] & 0x0f];
-	}
-	return result;
-}
-
 bool readChildProgram(
 	fs::path const& _path,
 	std::uintmax_t _maxBytes,
@@ -293,8 +281,8 @@ bool writeChildDeployTemplates(
 				clearBin, c_programPageBytes, clear, clearDigest, _error))
 			return false;
 
-		auto approvalHex = toHex(approval);
-		auto clearHex = toHex(clear);
+		auto approvalHex = solidity::util::toHex(approval);
+		auto clearHex = solidity::util::toHex(clear);
 		auto const pageHex = static_cast<std::size_t>(c_programPageBytes * 2);
 		auto page0 = approvalHex.substr(0, std::min(approvalHex.size(), pageHex));
 		auto page1 = approvalHex.size() > pageHex

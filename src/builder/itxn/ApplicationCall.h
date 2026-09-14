@@ -34,6 +34,10 @@ public:
 	static Expr returnData(TypeMapper& types, awst::SourceLocation const& loc);
 	/// Preserve short and empty payloads; do not read a fabricated selector.
 	static Expr splitPayload(TypeMapper& types, Expr bytes, awst::SourceLocation const& loc);
+
+private:
+	static void submitOnly(TypeMapper& types, Expr receiver, Expr arguments, Expr payment,
+		awst::SourceLocation const& loc, Statements& out);
 };
 
 } // namespace puyasol::builder

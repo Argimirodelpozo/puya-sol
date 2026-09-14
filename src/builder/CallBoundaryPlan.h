@@ -32,6 +32,8 @@ struct CallParameterPlan
 	std::string offsetName() const { return name + "__off"; }
 	std::shared_ptr<awst::Expression> encodeArgument(
 		std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc) const;
+	std::shared_ptr<awst::Expression> decodeArgument(
+		std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc) const;
 };
 
 /// One declaration/host-specific physical signature. All indices address

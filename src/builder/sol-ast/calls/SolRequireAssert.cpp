@@ -23,7 +23,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 		if (magic && magic->kind() == MagicType::Kind::Error)
 			payload = RevertPayload(m_ctx, dynamic_cast<FunctionCall const&>(*arguments()[1]), m_loc);
 		else
-			payload = RevertPayload(CallOperands::evaluate(m_ctx, *arguments()[1], m_loc), m_loc);
+			payload = RevertPayload(m_ctx, CallOperands::evaluate(m_ctx, *arguments()[1], m_loc), m_loc);
 	}
 	auto const* type = dynamic_cast<FunctionType const*>(m_call.expression().annotation().type);
 	if (type && type->kind() == FunctionType::Kind::Assert)

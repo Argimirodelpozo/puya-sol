@@ -3,7 +3,6 @@
 
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/sol-eb/BuilderOps.h"
-#include "builder/sol-eb/BuilderRegistry.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -25,29 +24,7 @@ std::shared_ptr<awst::Expression> AssignmentHelper::tryComputeCompoundValue(
 	std::shared_ptr<awst::Expression> _rhs,
 	awst::SourceLocation const& _loc)
 {
-	using Token = solidity::frontend::Token;
-
-	auto mapOp = [](Token t) -> std::optional<BuilderBinaryOp> {
-		switch (t)
-		{
-		case Token::AssignAdd: return BuilderBinaryOp::Add;
-		case Token::AssignSub: return BuilderBinaryOp::Sub;
-		case Token::AssignMul: return BuilderBinaryOp::Mult;
-		// FloorDiv not Div: signed-division routing gates on FloorDiv (matching
-		// SolBinaryOperation). Div would skip buildSignedModDiv for signed types
-		// (-7/=2 gave 2^255-4 instead of -3). Unsigned: both lower identically.
-		case Token::AssignDiv: return BuilderBinaryOp::FloorDiv;
-		case Token::AssignMod: return BuilderBinaryOp::Mod;
-		case Token::AssignShl: return BuilderBinaryOp::LShift;
-		case Token::AssignShr: case Token::AssignSar: return BuilderBinaryOp::RShift;
-		case Token::AssignBitOr: return BuilderBinaryOp::BitOr;
-		case Token::AssignBitXor: return BuilderBinaryOp::BitXor;
-		case Token::AssignBitAnd: return BuilderBinaryOp::BitAnd;
-		default: return std::nullopt;
-		}
-	};
-
-	auto binOp = mapOp(_assignOp);
+	auto binOp = binaryOpFor(_assignOp);
 	if (!binOp)
 		return nullptr;
 

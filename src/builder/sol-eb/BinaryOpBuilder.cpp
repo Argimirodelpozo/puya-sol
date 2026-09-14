@@ -80,22 +80,6 @@ void promoteUInt64ToBigUInt(
 
 // ── Comparison family ────────────────────────────────────────────────
 
-bool isComparisonToken(Token _op)
-{
-	switch (_op)
-	{
-	case Token::Equal:
-	case Token::NotEqual:
-	case Token::LessThan:
-	case Token::LessThanOrEqual:
-	case Token::GreaterThan:
-	case Token::GreaterThanOrEqual:
-		return true;
-	default:
-		return false;
-	}
-}
-
 awst::NumericComparison numericComparisonFor(Token _op)
 {
 	switch (_op)
@@ -106,7 +90,7 @@ awst::NumericComparison numericComparisonFor(Token _op)
 	case Token::LessThanOrEqual: return awst::NumericComparison::Lte;
 	case Token::GreaterThan: return awst::NumericComparison::Gt;
 	case Token::GreaterThanOrEqual: return awst::NumericComparison::Gte;
-	default: return awst::NumericComparison::Eq;
+	default: throw std::logic_error("Not a comparison token");
 	}
 }
 
@@ -220,11 +204,11 @@ std::optional<awst::UInt64BinaryOperator> uint64BitwiseOperator(Token _op)
 {
 	switch (_op)
 	{
-	case Token::BitOr: case Token::AssignBitOr:
+	case Token::BitOr:
 		return awst::UInt64BinaryOperator::BitOr;
-	case Token::BitXor: case Token::AssignBitXor:
+	case Token::BitXor:
 		return awst::UInt64BinaryOperator::BitXor;
-	case Token::BitAnd: case Token::AssignBitAnd:
+	case Token::BitAnd:
 		return awst::UInt64BinaryOperator::BitAnd;
 	default:
 		return std::nullopt;
@@ -263,11 +247,12 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 	awst::SourceLocation const& _loc
 )
 {
+	_op = binaryToken(_op);
 	coerceMixedBytesNumericOperands(_left, _right, _loc);
 
 	// Operator families in the order they were checked: comparison, then
 	// literal-base biguint `**`, then the uint64 bitwise compound shape.
-	if (isComparisonToken(_op))
+	if (solidity::langutil::TokenTraits::isCompareOp(_op))
 		return buildComparison(_ctx, _op, std::move(_left), std::move(_right), _loc);
 
 	// NB no And/Or here: SolBinaryOperation::trySolShortCircuit handles every

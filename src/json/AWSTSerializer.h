@@ -55,6 +55,9 @@ public:
 	nlohmann::ordered_json serializeMethodDocumentation(awst::MethodDocumentation const& _doc);
 
 private:
+	template<class Callable>
+	void serializeCallableFields(Callable const& callable, nlohmann::ordered_json& json);
+
 	nlohmann::ordered_json serializeCallArg(awst::CallArg const& _arg);
 	nlohmann::ordered_json serializeSubroutineArgument(awst::SubroutineArgument const& _arg);
 	nlohmann::ordered_json serializeBlock(awst::Block const& _block);

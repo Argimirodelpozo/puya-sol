@@ -181,3 +181,34 @@ def test_a_full_run_is_not_flagged(tmp_path, capsys):
     print_report({"tag": "t", "name": "N", "txns_in_window": 557, "replayed": 554,
                   "skips": {}, "platform_limits": 0, "findings": {}, "counts": {}})
     assert "vacuous" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("evm_ok", [False, True])
+@pytest.mark.parametrize("error,limited", [
+    ("resource discovery exhausted after 96 attempts with 94 named refs; "
+     "last VM error: invalid Box reference 0x1234", True),
+    ("box reference capacity exhausted", True),
+    ("invalid Box reference 0x1234", False),
+    ("assert failed pc=123", False),
+])
+def test_probe_resource_exhaustion_is_explicitly_uncovered(tmp_path, evm_ok, error, limited):
+    case = _map_case(tmp_path, evm_map={}, avm_map={})
+    (case / "calls.json").write_text(json.dumps({
+        "meta": {"probes": [{"sig": "getStorageAt(uint256,uint256)",
+                             "args": [20000, 20000]}]}, "calls": []}))
+    evm = {"ok": evm_ok, "ret": ["0x00"]} if evm_ok else {"ok": False, "revert": "out of gas"}
+    avm = {"ok": False, "revert": error,
+           "replay_resources": {"attempts": 96, "refs": 94}}
+    for name, value in (("evm", evm), ("avm", avm)):
+        path = case / f"{name}_results.json"
+        leg = json.loads(path.read_text())
+        leg["probes"] = {"0": value}
+        path.write_text(json.dumps(leg))
+    report = diff_case(case)
+    assert report["counts"].get("probe_platform_limits", 0) == int(limited)
+    assert report["counts"]["probe_div"] == int(evm_ok and not limited)
+    coverage = report["coverage"]["parameterized_probes"]
+    assert coverage["platform_limited"] == int(limited)
+    assert coverage["compared"] == int(not limited)
+    if limited:
+        assert report["findings"]["probe_platform_limits"][0]["avm"] == avm

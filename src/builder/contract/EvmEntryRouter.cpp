@@ -56,9 +56,9 @@ void emitNonPayableCheck(
 	awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out)
 {
-	// The normal method-body guard is keyed by the ARC4 selector. EVM entry
-	// routes have a different selector, so enforce the same payment rule at the
-	// adapter while the selected external function is known.
+	// Own the payment rule at the external boundary, using solc's selected
+	// interface function. EVM-profile method bodies deliberately have no guard;
+	// ARC4 compatibility routes must not rely on a different selector's guard.
 	out.push_back(awst::makeExpressionStatement(
 		awst::makeAssert(
 			awst::makeNumericCompare(makeMsgValueAmount(loc),

@@ -627,48 +627,16 @@ bool emitDeployableContract(
 
 bool AWSTBuilder::prescanEvmStorageLayout()
 {
-	// Slot-mode unit pre-scan: the storage runtime subroutines share one
-	// SubroutineID across the whole unit, so their bodies must be IDENTICAL for
-	// every contract — decide dense-only / single-page globally BEFORE any
-	// contract builds. Libraries and abstract bases count (their functions and
-	// vars compile into hosts/derived contracts).
-	if (!m_session.profile.evmStorageLayout)
-		return false;
-	bool evmStorageRuntimeNeeded = false;
-	bool anySparse = false;
-	unsigned long long maxSlots = 0;
+	if (!m_session.profile.evmStorageLayout) return false;
 	for (auto const* contract: m_session.analysis.contracts)
-		{
-			if (!contract || contract->isInterface())
-				continue;
-			auto const& storagePlan = m_session.storagePlan(*contract);
-			auto const slots = storagePlan.solidityLayout.totalSlots();
-			if (storagePlan.needsDispatch())
-				evmStorageRuntimeNeeded = true;
-			if (storagePlan.requiresSparseSlots)
-				anySparse = true;
-			if (slots > maxSlots)
-				maxSlots = slots;
-		}
-	// Free/library subroutines are outside every contract's defined-function
-	// walk. A reachable assembly sload/sstore still needs the unit runtime even
-	// when every contract has zero declared state.
-	for (auto const callableId:
-		m_session.analysis.callablesWithStorageSlotAccess)
-		if (!m_session.analysis.hasReachabilityGraphs
-			|| m_session.analysis.reachableCallableIds.count(callableId))
-		{
-			evmStorageRuntimeNeeded = true;
-			anySparse = true;
-			break;
-		}
-	m_session.artifacts.denseOnlyStorage = !anySparse;
-	m_session.artifacts.singlePageStorage =
-		maxSlots <= builder::kEvmSlotsPerPage;
-	Logger::instance().debug("PRESCAN dense=" + std::to_string(!anySparse)
-		+ " singlePage=" + std::to_string(maxSlots <= builder::kEvmSlotsPerPage)
-		+ " maxSlots=" + std::to_string(maxSlots));
-	return evmStorageRuntimeNeeded;
+		if (contract && !contract->isInterface() && m_session.storagePlan(*contract).needsDispatch())
+			return true;
+	// Root library/free functions have no concrete host. Their storage calls
+	// use the generic runtime; unrelated roots never change its implementation.
+	for (auto id: m_session.analysis.callablesWithStorageSlotAccess)
+		if (!m_session.analysis.hasReachabilityGraphs || m_session.analysis.reachableCallableIds.count(id))
+			return true;
+	return false;
 }
 
 std::shared_ptr<awst::Contract> AWSTBuilder::translateContract(

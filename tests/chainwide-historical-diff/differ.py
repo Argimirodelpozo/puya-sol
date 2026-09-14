@@ -369,6 +369,12 @@ def diff_case(case_dir: Path) -> dict:
         if ev_ is None or av_ is None:
             findings["probe_noise"].append({
                 **where, "note": "probe absent on one leg"})
+        elif not av_.get("ok") and is_platform_limit(av_.get("revert", "")):
+            # An exhausted probe is uncovered even when the EVM also reverts.
+            # Keep both observations and the full resource diagnostic; a bare
+            # bad box reference is deliberately not a platform-limit diagnosis.
+            findings.setdefault("probe_platform_limits", []).append({
+                **where, "evm": ev_, "avm": av_})
         elif (_HEIGHT_ARG_SIG_RE.search(str(spec.get("sig") or ""))
               and ev_ != av_):
             findings["probe_noise"].append({
@@ -599,7 +605,9 @@ def diff_case(case_dir: Path) -> dict:
         "coverage": {
             "parameterized_probes": {
                 "planned": len(probes),
-                "compared": len(set(ep) & set(ap)),
+                "compared": len(set(ep) & set(ap)) - len(
+                    findings.get("probe_platform_limits", [])),
+                "platform_limited": len(findings.get("probe_platform_limits", [])),
                 "evm_successes": sum(bool(item.get("ok")) for item in ep.values()),
                 "avm_successes": sum(bool(item.get("ok")) for item in ap.values()),
             },
@@ -634,6 +642,8 @@ def print_report(rep: dict):
     if probes.get("planned"):
         print(f"  parameterized probes: {probes.get('compared', 0)}/"
               f"{probes['planned']} compared")
+        if probes.get("platform_limited"):
+            print(f"  ⚠️  {probes['platform_limited']} probe(s) resource-limited — uncovered")
     for k in _REAL_BUCKETS:
         if c.get(k):
             print(f"  ❌ {k}: {c[k]}")

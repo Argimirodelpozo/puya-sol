@@ -253,7 +253,7 @@ private:
 	bool lowerArrayValue(
 		Addr const& _a, solidity::frontend::ArrayType const* _at, ValueDir& _d);
 
-	/// Mixed aggregate tree (T[][2][], string[], struct-with-array[]): the
+	/// General array traversal, including larger fixed extents: the
 	/// type-directed loop delegating each element to readAny/writeAny.
 	bool lowerDynArrayGeneric(
 		Addr const& _a,
@@ -261,12 +261,13 @@ private:
 		awst::WType const* _arrW,
 		ValueDir& _d);
 
-	/// Fixed array (len<=64): unrolled per-element recursion off a pinned base.
+	/// Fixed array: tiny extents unroll, larger ones use the general loop.
 	bool lowerFixedArray(
 		Addr const& _a, solidity::frontend::ArrayType const* _at, ValueDir& _d);
 
 	/// Struct at `_a.slot`: per-member recursion with shared main-word reads.
 	bool lowerStructValue(Addr const& _a, ValueDir& _d);
+	bool lowerStructMembers(Addr const& _a, ValueDir& _d);
 
 	eb::ContractContext& m_ctx;
 	Context& m_scope;

@@ -4,7 +4,7 @@
 #include "builder/sol-eb/BuiltinCallables.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/itxn/NativePayment.h"
-#include "builder/SecpRangeCheck.h"
+#include "builder/itxn/Precompile.h"
 #include "awst/NameGen.h"
 #include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-eb/SolIntegerBuilder.h"

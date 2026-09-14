@@ -17,6 +17,7 @@ Writes: registry.json, calls.json, evm_results.json into the case dir.
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -29,6 +30,7 @@ from chd_common import (ZERO, arg_content20, build_dep_tape_plans,
                         deployment_clock_target, evm_sender_privkey, load_json,
                         marker_for,
                         probe_clock_target, replay_clock_targets, replay_epoch,
+                        replay_compiler_settings,
                         scale_value, sender_marker, symbol)
 from chd_storage import (EvmStorageReader, KeyEvidence,
                          build_parameterized_getter_probes,
@@ -92,6 +94,14 @@ def canonical_type(inp) -> str:
 
 def fn_sig(entry) -> str:
     return entry["name"] + "(" + ",".join(canonical_type(i) for i in entry["inputs"]) + ")"
+
+
+def oracle_solc_version(case):
+    if not case.get("pragma_relaxed_from"):
+        match = re.search(r"(?:v)?(0\.8\.\d+)", str(case.get("compiler_version") or ""))
+        if match:
+            return match.group(1)
+    return "0.8.26"
 
 
 def walk_addresses(value, inp, sink):
@@ -310,12 +320,7 @@ def main():
     # verified EVM target (Polymarket V2 is solc 0.8.34 + Prague). Pre-0.8
     # cases deliberately pragma-relaxed by the fetcher remain on 0.8.26,
     # because exact old-solc arithmetic fidelity was explicitly surrendered.
-    solc_version = "0.8.26"
-    if not case.get("pragma_relaxed_from"):
-        match = re.search(r"(?:v)?(0\.8\.\d+)",
-                          str(case.get("compiler_version") or ""))
-        if match:
-            solc_version = match.group(1)
+    solc_version = oracle_solc_version(case)
     try:
         solcx.set_solc_version(solc_version)
     except Exception:
@@ -324,19 +329,9 @@ def main():
         solcx.set_solc_version(solc_version)
     print(f"[evm] compiler oracle: solc {solc_version}")
     mf = case.get("multifile")
-    # "paris" exists only from solc 0.8.18; older oracles reject it outright
-    # ("Invalid EVM version requested"), so let them use their own era default.
-    _patch = int(solc_version.rsplit(".", 1)[1])
-    settings = {"outputSelection": {"*": {"*": ["abi", "evm.bytecode.object",
-                                               "evm.bytecode.linkReferences",
-                                               "storageLayout"]}}}
-    if _patch >= 18:
-        settings["evmVersion"] = "paris"
-    # Dep/stub compiles share the same gate — a hardcoded "paris" dies on
-    # pre-0.8.18 oracles ("Invalid EVM version requested").
+    settings = replay_compiler_settings(case, ["abi", "evm.bytecode.object",
+        "evm.bytecode.linkReferences", "evm.deployedBytecode.object", "storageLayout"])
     _dep_settings = {"outputSelection": {"*": {"*": ["evm.bytecode.object"]}}}
-    if _patch >= 18:
-        _dep_settings["evmVersion"] = "paris"
     if mf:
         # Real file tree + the verification's own remappings — solc consumes
         # both natively via standard-json.
@@ -346,45 +341,18 @@ def main():
             settings["remappings"] = mf["remappings"]
     else:
         sources = {"prepared.sol": {"content": (case_dir / "prepared.sol").read_text()}}
-    def _compile(extra=None):
-        st = dict(settings)
-        if extra:
-            st.update(extra)
-        return solcx.compile_standard({"language": "Solidity", "sources": sources,
-                                       "settings": st})
-    try:
-        out = _compile()
-    except Exception as _e:
-        # Modern stack-heavy contracts (Permit2) only compile with the settings
-        # they were VERIFIED with — viaIR + optimizer. Retry with those rather
-        # than applying them everywhere: the existing corpus keeps the exact
-        # oracle it was validated against.
-        _ss = case.get("solc_settings") or {}
-        # viaIR as VERIFIED. This used to read `True if viaIR is not False`,
-        # which turned a verified-without-viaIR contract (the field is null,
-        # not false) into a viaIR build — the opposite of "the settings it was
-        # verified with". Polymarket's CTFExchange compiles cleanly at
-        # viaIR=False and dies with a YulException at viaIR=True, so the
-        # oracle rejected a contract the real chain compiles fine.
-        _fallback = {
-            "optimizer": _ss.get("optimizer") or {"enabled": True, "runs": 200},
-            "viaIR": bool(_ss.get("viaIR")),
-        }
-        if _ss.get("evmVersion"):
-            _fallback["evmVersion"] = _ss["evmVersion"]
-        print(f"[evm] default solc compile failed ({str(_e)[:70]}) — retrying "
-              f"with the contract's verified settings "
-              f"(viaIR={_fallback['viaIR']}, optimizer on)")
-        try:
-            out = _compile(_fallback)
-        except Exception as _e2:
-            # Last resort for a contract whose verification records no viaIR
-            # flag but which needs it anyway (older/partial metadata).
-            if _fallback["viaIR"]:
-                raise
-            print(f"[evm] verified settings also failed ({str(_e2)[:70]}) — "
-                  f"retrying with viaIR forced on")
-            out = _compile({**_fallback, "viaIR": True})
+    # Do not silently change optimizer, viaIR or EVM target after a failure.
+    # Those settings affect behavior as well as deployability (Morpho exposed
+    # an unoptimized EIP-170 failure; Cancun sources exposed the Paris guess).
+    dump_json(case_dir / "evm_compile.json", {
+        "version": solc_version, "settings": settings,
+        "settings_source": "verification" if case.get("solc_settings") else "solc-defaults",
+        "source_sha256": {name: hashlib.sha256(
+            spec["content"].encode()).hexdigest() for name, spec in sources.items()},
+        "pragma_relaxed_from": case.get("pragma_relaxed_from"),
+    })
+    out = solcx.compile_standard({"language": "Solidity", "sources": sources,
+                                  "settings": settings})
     target = None
     for by_name in out["contracts"].values():
         for cname, cdata in by_name.items():
@@ -392,6 +360,7 @@ def main():
                 target = cdata
     assert target, f"contract {case['name']} not in solc output"
     target_bytecode = target["evm"]["bytecode"]
+    compiled_runtime_size = len(target["evm"]["deployedBytecode"]["object"]) // 2
     bytecode = target_bytecode["object"]
     target_link_refs = target_bytecode.get("linkReferences") or {}
 
@@ -477,7 +446,10 @@ def main():
     # Dependency bytecodes, using the same verified source tree as the AVM leg.
     for d in deps:
         try:
-            dep_settings = dict(_dep_settings)
+            dep_settings = replay_compiler_settings(d["case"], ["evm.bytecode.object"])
+            dep_version = oracle_solc_version(d["case"])
+            if dep_version not in {str(v) for v in solcx.get_installed_solc_versions()}:
+                solcx.install_solc(dep_version, show_progress=False)
             dep_manifest = d["case"].get("multifile")
             if dep_manifest:
                 dep_sources = {rel: {"content": (d["dir"] / "src" / rel).read_text()}
@@ -489,7 +461,7 @@ def main():
             dout = solcx.compile_standard({
                 "language": "Solidity",
                 "sources": dep_sources,
-                "settings": dep_settings})
+                "settings": dep_settings}, solc_version=dep_version)
             dtarget = None
             for by_name in dout["contracts"].values():
                 for cname, cdata in by_name.items():
@@ -500,6 +472,7 @@ def main():
                 raise RuntimeError("target contract not in solc output")
         except Exception as e:
             d["bytecode"] = None
+            d["compile_error"] = str(e)
             print(f"[evm] dep {d['case'].get('name')}: compile failed "
                   f"({str(e)[:80]})")
         if d["bytecode"] is None:
@@ -519,6 +492,10 @@ def main():
                           f"stand-in (real dep uncompilable on this leg)")
                 except Exception as e2:
                     print(f"[evm] dep stub fallback also failed: {str(e2)[:80]}")
+            if d["bytecode"] is None:
+                raise RuntimeError(
+                    f"dependency {d['case'].get('name')} ({d['addr']}) failed "
+                    f"with its solc {dep_version} settings: {d.get('compile_error')}")
 
     layout = target.get("storageLayout") or {"storage": [], "types": {}}
     # Slot-mode AVM replays read storage through the SAME layout (see
@@ -690,7 +667,11 @@ def main():
                 return _orig_apply(cls, state, message, tc, **kw)
             _compclass.apply_computation = classmethod(_tape_apply)
             _compclass._chd_tape_patched = True
-        a0 = w3.eth.accounts[0]
+        funder = w3.eth.accounts[0]
+        # The constructor's msg.sender participates in signatures and may also
+        # appear literally in verified source. Preserve it just like every
+        # other historical sender; symbol-folding cannot repair different bytes.
+        a0 = Web3.to_checksum_address(reg["creator"]) if impersonate else funder
         _deployer[0] = a0
         # Gas float plus whatever SCALED value this sender actually pays out.
         # At a flat 1000 ETH each the deployer's ~1M ETH ran dry past ~1000
@@ -700,15 +681,19 @@ def main():
         for c2 in calls:
             if c2.get("skip"):
                 continue
-            sv = scale_value(c2.get("value") or 0)
+            sv = int(c2.get("value") or 0)  # calls.json already applied the scale
             m = (c2.get("sender") or {}).get("__addr__")
-            if sv and isinstance(m, int):
+            if sv:
                 owed[m] = owed.get(m, 0) + sv
+        if a0 != funder:
+            w3.eth.send_transaction({"from": funder, "to": a0,
+                                     "value": 100 * 10**18 + owed.get("C", 0),
+                                     "gas": 21000})
         for i, (addr, priv) in sender_acct.items():
             if priv is not None:
                 tester.add_account(priv)
             # Impersonated (historical) senders just need gas + owed value.
-            w3.eth.send_transaction({"from": a0, "to": addr,
+            w3.eth.send_transaction({"from": funder, "to": addr,
                                      "value": 10**18 + owed.get(i, 0),
                                      "gas": 21000})
 
@@ -738,14 +723,16 @@ def main():
                 except AttributeError:
                     return getattr(self._twin, attr)
 
-        def spoof_transact(sender_addr, to_addr, data_bytes, value):
+        def spoof_transact(sender_addr, to_addr, data_bytes, value, gas=8_000_000):
+            from eth._utils.address import generate_contract_address
             chain = tester.backend.chain
             s20 = bytes.fromhex(str(sender_addr)[2:])
             vm_ = chain.get_vm()
+            nonce = vm_.state.get_nonce(s20)
             tx = vm_.create_unsigned_transaction(
-                nonce=vm_.state.get_nonce(s20),
-                gas_price=10 ** 10, gas=8_000_000,
-                to=bytes.fromhex(str(to_addr)[2:]),
+                nonce=nonce,
+                gas_price=10 ** 10, gas=gas,
+                to=bytes.fromhex(str(to_addr)[2:]) if to_addr else b"",
                 value=int(value or 0), data=bytes(data_bytes))
             _, _receipt, comp = chain.apply_transaction(_SenderSpoof(tx, s20))
             mined = chain.mine_block()
@@ -760,8 +747,22 @@ def main():
                     "blockNumber": int(header.block_number),
                     "blockHash": bytes(32), "transactionHash": bytes(32)})
             return {"status": 0 if comp.is_error else 1,
+                    "error": str(comp.error) if comp.is_error else None,
+                    "contractAddress": (Web3.to_checksum_address(
+                        generate_contract_address(s20, nonce))
+                        if not to_addr and not comp.is_error else None),
+                    "gasUsed": _receipt.gas_used,
                     "blockNumber": int(header.block_number),
                     "logs": logs}
+
+        def deploy(contract, args=()):
+            constructor = contract.constructor(*args)
+            if impersonate:
+                return spoof_transact(a0, None,
+                    bytes.fromhex(constructor.data_in_transaction[2:]), 0,
+                    gas=30_000_000)
+            tx = constructor.transact({"from": a0, "gas": 30_000_000})
+            return w3.eth.get_transaction_receipt(tx)
 
         _dep_local.clear()
         for d in deps:
@@ -780,8 +781,7 @@ def main():
             Cd = w3.eth.contract(abi=_dabi, bytecode=d["bytecode"])
             dargs = [resolve(markerize(v, inp, reg)) for v, inp in
                      zip(d["ctor_vals"], d["ctor_inputs"])]
-            dtx = Cd.constructor(*dargs).transact({"from": a0, "gas": 30_000_000})
-            drc = w3.eth.get_transaction_receipt(dtx)
+            drc = deploy(Cd, dargs)
             if not drc.get("contractAddress") and not d.get("is_fallback_stub"):
                 # Real dep's ctor reverted locally (its own deps are absent) —
                 # fall back to the generic stand-in rather than dying.
@@ -795,8 +795,7 @@ def main():
                     d["case"]["abi"] = d["case"].get("stub_abi") or d["case"]["abi"]
                     Cd = w3.eth.contract(abi=d["case"]["abi"],
                                          bytecode=_sc["evm"]["bytecode"]["object"])
-                    dtx = Cd.constructor().transact({"from": a0, "gas": 30_000_000})
-                    drc = w3.eth.get_transaction_receipt(dtx)
+                    drc = deploy(Cd)
                     print(f"[evm] dep {d['case'].get('name')}: ctor reverted — "
                           f"generic stand-in deployed instead")
             if not drc.get("contractAddress"):
@@ -823,8 +822,7 @@ def main():
                 lib_code = link_bytecode(
                     spec["bytecode"], spec["link_refs"], library_addresses)
                 Lib = w3.eth.contract(abi=spec["abi"], bytecode=lib_code)
-                ltx = Lib.constructor().transact({"from": a0, "gas": 30_000_000})
-                lrc = w3.eth.get_transaction_receipt(ltx)
+                lrc = deploy(Lib)
                 if not lrc.get("contractAddress"):
                     raise SystemExit(
                         f"linked library {key[0]}:{key[1]} failed to deploy")
@@ -883,9 +881,7 @@ def main():
                 _trace["suppress_addr"] = generate_contract_address(
                     bytes.fromhex(a0[2:]), nonce)
             try:
-                return contract.constructor(
-                    *[resolve(m) for m in meta["ctor_args"]]).transact(
-                    {"from": a0, "gas": 30_000_000})
+                return deploy(contract, [resolve(m) for m in meta["ctor_args"]])
             finally:
                 _trace["suppress_addr"] = None
 
@@ -898,64 +894,15 @@ def main():
             if pending_ts < deployment_target:
                 tester.time_travel(deployment_target)
 
-        txh = _deploy_target(C)
-        rc = w3.eth.get_transaction_receipt(txh)
+        rc = _deploy_target(C)
         caddr = rc["contractAddress"]
-        if not caddr and int(rc.get("gasUsed") or 0) >= 29_000_000:
-            # Burning the WHOLE gas limit is the EIP-170 signature, not a
-            # revert (a revert refunds): unoptimised runtime code over 24 KB
-            # makes CREATE fail this way. We compile without the optimizer by
-            # default, so a large contract verified WITH it (moonbirds: 37
-            # files, optimizer runs=200) cannot deploy. RETRY with the
-            # contract's OWN verified settings — the ones the chain used, so
-            # more faithful anyway. Only on failure, so working cases are
-            # untouched.
-            _ss2 = case.get("solc_settings") or {}
-            if _ss2.get("optimizer") or _ss2.get("viaIR"):
-                try:
-                    _st2 = dict(settings)
-                    _st2["optimizer"] = _ss2.get("optimizer") or {
-                        "enabled": True, "runs": 200}
-                    if _ss2.get("viaIR"):
-                        _st2["viaIR"] = True
-                    if _ss2.get("evmVersion"):
-                        _st2["evmVersion"] = _ss2["evmVersion"]
-                    _out2 = solcx.compile_standard({
-                        "language": "Solidity", "sources": sources,
-                        "settings": _st2})
-                    _t2 = None
-                    for _byname in _out2["contracts"].values():
-                        for _cn, _cd in _byname.items():
-                            if _cn == case.get("name"):
-                                _t2 = _cd
-                    if _t2 and _t2["evm"]["bytecode"]["object"]:
-                        # NOTE: a distinct name — assigning `bytecode` here
-                        # would make it a local of run_once and turn the
-                        # earlier read into an UnboundLocalError.
-                        _bc2_data = _t2["evm"]["bytecode"]
-                        _bc2 = link_bytecode(
-                            _bc2_data["object"],
-                            _bc2_data.get("linkReferences") or {},
-                            library_addresses)
-                        print(f"[evm] ctor out of gas at 30M (EIP-170 shape) — "
-                              f"recompiled with verified settings "
-                              f"(optimizer={bool(_st2.get('optimizer'))}, "
-                              f"viaIR={bool(_st2.get('viaIR'))}), retrying")
-                        C = w3.eth.contract(abi=abi, bytecode=_bc2)
-                        txh = _deploy_target(C)
-                        rc = w3.eth.get_transaction_receipt(txh)
-                        caddr = rc["contractAddress"]
-                except Exception as _e2:
-                    print(f"[evm] verified-settings retry failed: {str(_e2)[:120]}")
         if not caddr:
-            # No contract address => the constructor reverted or ran out of gas.
-            # Almost always an external dependency the ctor calls (router,
-            # oracle) that doesn't exist on a bare local chain. Report it as a
-            # scope skip rather than crashing on None downstream.
+            # A failed CREATE alone does not establish missing external state.
             raise SystemExit(
                 f"constructor failed to deploy (status={rc.get('status')}, "
-                f"gasUsed={rc.get('gasUsed')}) — ctor likely calls an external "
-                f"contract; not replayable standalone")
+                f"gasUsed={rc.get('gasUsed')}, runtimeBytes={compiled_runtime_size}, "
+                f"error={rc.get('error') or 'not available'}); "
+                "see evm_compile.json for the exact compiler settings")
         # A UUPS/ERC1967 implementation guards its entry points with onlyProxy:
         # address(this) must differ from __self AND the ERC1967 implementation
         # slot must point back at __self. A STANDALONE implementation fails
@@ -999,9 +946,7 @@ contract ChdErc1967Proxy {
             _pd = _pout["contracts"]["ChdErc1967Proxy.sol"]["ChdErc1967Proxy"]
             _P = w3.eth.contract(
                 abi=_pd["abi"], bytecode=_pd["evm"]["bytecode"]["object"])
-            _ptx = _P.constructor(_impl_addr).transact(
-                {"from": a0, "gas": 30_000_000})
-            _prc = w3.eth.get_transaction_receipt(_ptx)
+            _prc = deploy(_P, [_impl_addr])
             if _prc.get("contractAddress"):
                 caddr = _prc["contractAddress"]
                 rc = _prc
@@ -1126,7 +1071,10 @@ contract ChdErc1967Proxy {
                 layout,
                 lambda slot: w3.eth.get_storage_at(caddr, slot),
                 evidence, keccak, written)
+            reader.read(fold)  # Discover typed keys before the comparison pass.
+            evidence.freeze()
             typed = reader.read(fold)
+            typed["probe_key_evidence"] = evidence.export_keys()
             seen_slots.update(reader.seen)
             return typed, reader
 
@@ -1227,7 +1175,7 @@ contract ChdErc1967Proxy {
                     continue
                 _trace["txn"] = i
                 try:
-                    if impersonate and sender != a0:
+                    if impersonate:
                         rcpt = spoof_transact(
                             sender, caddr,
                             bytes.fromhex(
@@ -1383,6 +1331,9 @@ contract ChdErc1967Proxy {
         print(f"[evm] converge pass {iterations}: +{len(mismatches)} skip(s)  {shown}",
               file=sys.stderr)
 
+    if mismatches:
+        raise RuntimeError(f"closed-world exclusions did not converge after {iterations} passes; "
+                           f"{len(mismatches)} mismatches remain, no paired certification")
     for c in calls:                                    # persist final skip set
         if c["i"] in skips and not c["skip"]:
             c["skip"] = skips[c["i"]]

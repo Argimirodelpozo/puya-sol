@@ -86,39 +86,6 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()
 namespace
 {
 
-std::optional<eb::BuilderComparisonOp> comparisonOpFor(Token solOp)
-{
-	switch (solOp)
-	{
-	case Token::Equal:              return eb::BuilderComparisonOp::Eq;
-	case Token::NotEqual:           return eb::BuilderComparisonOp::Ne;
-	case Token::LessThan:           return eb::BuilderComparisonOp::Lt;
-	case Token::LessThanOrEqual:    return eb::BuilderComparisonOp::Lte;
-	case Token::GreaterThan:        return eb::BuilderComparisonOp::Gt;
-	case Token::GreaterThanOrEqual: return eb::BuilderComparisonOp::Gte;
-	default: return std::nullopt;
-	}
-}
-
-std::optional<eb::BuilderBinaryOp> binaryOpFor(Token solOp)
-{
-	switch (solOp)
-	{
-	case Token::Add: case Token::AssignAdd: return eb::BuilderBinaryOp::Add;
-	case Token::Sub: case Token::AssignSub: return eb::BuilderBinaryOp::Sub;
-	case Token::Mul: case Token::AssignMul: return eb::BuilderBinaryOp::Mult;
-	case Token::Div: case Token::AssignDiv: return eb::BuilderBinaryOp::FloorDiv;
-	case Token::Mod: case Token::AssignMod: return eb::BuilderBinaryOp::Mod;
-	case Token::Exp: return eb::BuilderBinaryOp::Pow;
-	case Token::SHL: case Token::AssignShl: return eb::BuilderBinaryOp::LShift;
-	case Token::SHR: case Token::SAR: case Token::AssignShr: case Token::AssignSar:
-		return eb::BuilderBinaryOp::RShift;
-	case Token::BitOr: case Token::AssignBitOr: return eb::BuilderBinaryOp::BitOr;
-	case Token::BitXor: case Token::AssignBitXor: return eb::BuilderBinaryOp::BitXor;
-	case Token::BitAnd: case Token::AssignBitAnd: return eb::BuilderBinaryOp::BitAnd;
-	default: return std::nullopt;
-	}
-}
 
 } // anonymous namespace
 
@@ -127,8 +94,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 	std::shared_ptr<awst::Expression> right)
 {
 	auto const op = m_binOp.getOperator();
-	auto const comparison = comparisonOpFor(op);
-	auto const binary = binaryOpFor(op);
+	auto const comparison = eb::comparisonOpFor(op);
+	auto const binary = eb::binaryOpFor(op);
 	if (!comparison && !binary) return nullptr;
 	auto const* leftType = m_binOp.leftExpression().annotation().type;
 	auto const* rightType = m_binOp.rightExpression().annotation().type;

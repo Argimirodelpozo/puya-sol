@@ -394,10 +394,11 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 		? awst::BigUIntBinaryOperator::Mod
 		: awst::BigUIntBinaryOperator::FloorDiv;
 
-	// absResult is referenced 3x; repeats are wasteful but correct. Cannot
-	// makeEvalOnce: its first ref is `notZero` inside the And's short-circuit RHS
-	// — a SE temp there doesn't dominate the else-arm (puya: "used but never defined").
-	auto absResult = awst::makeBigUIntBinOp(std::move(absLeft), unsignedOp, std::move(absRight), _loc);
+	// Bind before the sign branches: all magnitude reads must be dominated
+	// by this assignment, including the zero-result and nonnegative arms.
+	auto absResult = awst::makeVarExpression("__smd_abs_" + std::to_string(smdId), biguintW, _loc);
+	auto bindMagnitude = awst::makeAssignmentExpression(absResult,
+		awst::makeBigUIntBinOp(std::move(absLeft), unsignedOp, std::move(absRight), _loc), _loc, biguintW);
 
 	// Sign: mod follows dividend; div negates if signs differ.
 	auto negResult = awst::makeBigUIntBinOp(makeConst(kPow2_256), awst::BigUIntBinaryOperator::Sub, absResult, _loc);
@@ -443,6 +444,7 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 	comma->expressions.push_back(std::move(bindR));
 	if (overflowAssert)
 		comma->expressions.push_back(std::move(overflowAssert));
+	comma->expressions.push_back(std::move(bindMagnitude));
 	comma->expressions.push_back(std::move(result));
 	return comma;
 }

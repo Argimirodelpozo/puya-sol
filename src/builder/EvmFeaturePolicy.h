@@ -18,6 +18,10 @@ namespace puyasol::awst { struct Expression; }
 
 namespace puyasol::builder
 {
+class TypeMapper;
+
+/// Solidity and Yul share the selected address namespace and verified claim.
+std::shared_ptr<awst::Expression> buildMessageSender(TypeMapper&, awst::SourceLocation const&);
 
 /// Observable EVM semantics that need an explicit fidelity decision when
 /// targeting AVM.  Keeping this list centralized prevents lowering sites from

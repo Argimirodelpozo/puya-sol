@@ -235,48 +235,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	}
 
 	if (!offset && length)
-	{
-		// Variable offset: check for keccak256(structVar, numFields*32) pattern.
-		auto const* varExpr = dynamic_cast<awst::VarExpression const*>(_args[0].get());
-		if (varExpr)
-		{
-			auto it = m_frame.locals.find(varExpr->name);
-			if (it != m_frame.locals.end() && it->second && it->second->kind() == awst::WTypeKind::WTuple)
-			{
-				auto const* tupleType = dynamic_cast<awst::WTuple const*>(it->second);
-				if (tupleType)
-				{
-					int numFields = static_cast<int>(tupleType->types().size());
-					int expectedLen = numFields * 32;
-					if (static_cast<int>(*length) == expectedLen)
-					{
-						std::shared_ptr<awst::Expression> data;
-						for (int i = 0; i < numFields; ++i)
-						{
-							auto field = awst::makeTupleItem(_args[0], i, tupleType->types()[static_cast<size_t>(i)], _loc);
-							auto padded = padTo32Bytes(std::move(field), _loc);
-							data = !data ? std::move(padded) : awst::makeConcat(std::move(data), std::move(padded), _loc);
-						}
-						auto keccak = awst::makeKeccak256(std::move(data), _loc);
-						return awst::makeAsBiguint(std::move(keccak), _loc);
-					}
-				}
-			}
-		}
-
-		if (length)
-		{
-			// Slot-routed exact-length read (M7); offset pinned — the range
-			// read references it once per word.
-			auto offsetU64 = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
-			auto data = readMemRangeDirect(m_typeMapper,
-				std::move(offsetU64), static_cast<int>(*length), _loc);
-			return awst::makeAsBiguint(awst::makeKeccak256(std::move(data), _loc), _loc);
-		}
-
-		Logger::instance().error("keccak256 with non-constant offset/length not supported", _loc);
-		return nullptr;
-	}
+		return awst::makeAsBiguint(awst::makeKeccak256(
+			readMemRangeDyn(_args[0], _args[1], _loc, m_frame.pendingStatements), _loc), _loc);
 
 	if (offset && !length)
 	{
@@ -312,27 +272,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 	if (!offset || !length)
 	{
-		// Runtime offset or length: read slice then hash. Solady EIP-712
-		// (PermissionedRamp.witnessed*) hits this path. Slot-routed on the
-		// base (M7); a range straddling SLOT_SIZE still fails extract3
-		// (dynamic length — no compile-time word count), same documented
-		// limitation as the dynamic revert payload.
-		auto offsetU64 = awst::makeEvalOnce(offset
-			? std::static_pointer_cast<awst::Expression>(awst::makeIntegerConstant(*offset, _loc))
-			: offsetToUint64(_args[0], _loc), _loc);
-		auto lengthU64 = length
-			? std::static_pointer_cast<awst::Expression>(awst::makeIntegerConstant(*length, _loc))
-			: offsetToUint64(_args[1], _loc);
-
-		auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
-		auto loadsCall = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
-		loadsCall->stackArgs.push_back(awst::makeUInt64BinOp(
-			offsetU64, awst::UInt64BinaryOperator::FloorDiv, ss(), _loc));
-		auto data = awst::makeExtract3(std::move(loadsCall),
-			awst::makeUInt64BinOp(offsetU64, awst::UInt64BinaryOperator::Mod, ss(), _loc),
-			std::move(lengthU64), _loc);
-		auto keccak = awst::makeKeccak256(std::move(data), _loc);
-		return awst::makeAsBiguint(std::move(keccak), _loc);
+		// The shared reader owns page stitching, capacity and zero-length
+		// semantics, including an unused offset wider than uint64.
+		return awst::makeAsBiguint(awst::makeKeccak256(
+			readMemRangeDyn(_args[0], _args[1], _loc, m_frame.pendingStatements), _loc), _loc);
 	}
 
 	int numSlots = static_cast<int>(*length / 0x20);
@@ -341,54 +284,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		auto emptyBytes = awst::makeBytesConstant({}, _loc, awst::BytesEncoding::Unknown);
 		auto keccak = awst::makeKeccak256(std::move(emptyBytes), _loc);
 		return awst::makeAsBiguint(std::move(keccak), _loc);
-	}
-	if (numSlots <= 0)
-	{
-		// Non-zero but <32 bytes — partial slot; read exact length from blob.
-		Logger::instance().warning("keccak256 with sub-32-byte input, using partial slot", _loc);
-		{
-			// Slot-routed exact-length read (M7).
-			auto data = readMemRangeDirect(m_typeMapper,
-				awst::makeIntegerConstant(*offset, _loc),
-				static_cast<int>(*length), _loc);
-			auto keccak = awst::makeKeccak256(std::move(data), _loc);
-			return awst::makeAsBiguint(std::move(keccak), _loc);
-		}
-		// Check if offset = calldataParam + 0x20 (string/bytes data region)
-		// Pattern: keccak256(add(param, 0x20), mload(param)) hashes string data
-		for (auto const& [cdOffset, elem] : m_frame.calldataMap)
-		{
-			if (*offset == cdOffset + 0x20)
-			{
-				// Found: offset points to the string data area of a calldata parameter.
-				// On AVM, the parameter IS the string bytes. Hash them directly.
-				// The parameter might be bytes or biguint — need bytes for keccak
-				auto paramType = m_frame.locals.find(elem.paramName);
-				auto const* paramWtype = (paramType != m_frame.locals.end() && paramType->second)
-					? paramType->second : awst::WType::bytesType();
-				auto paramVar = awst::makeVarExpression(elem.paramName, paramWtype, _loc);
-
-				std::shared_ptr<awst::Expression> hashInput;
-				if (paramVar->wtype != awst::WType::bytesType())
-				{
-					auto cast = awst::makeAsBytes(std::move(paramVar), _loc);
-					hashInput = std::move(cast);
-				}
-				else
-					hashInput = std::move(paramVar);
-
-				auto keccak = awst::makeKeccak256(std::move(hashInput), _loc);
-				return awst::makeAsBiguint(std::move(keccak), _loc);
-			}
-		}
-		// Hashing 32 zero bytes gives a deterministic but wrong digest.
-		Logger::instance().error(
-			"keccak256 over a sub-32-byte length at an unresolvable memory offset "
-			"is not supported on AVM — the actual bytes can't be recovered, so the "
-			"hash would be computed over 32 zero bytes instead, a deterministic but "
-			"wrong digest.", _loc);
-		// Stub so AWST building completes; error aborts before bytecode.
-		return awst::makeAsBiguint(awst::makeKeccak256(awst::makeBzero(32, _loc), _loc), _loc);
 	}
 
 	// If offset falls in m_frame.calldataMap (e.g. Yul optimizer elided abi_encode buffer copy

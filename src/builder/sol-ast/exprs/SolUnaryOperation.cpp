@@ -101,8 +101,25 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 				if (StorageMapper::isMultiBoxArray(type))
 				{
 					auto count = StorageMapper::numBoxesForArray(type);
-					if (count > 4096) throw SizeError("multi-box delete exceeds the 4096-page unroll capacity");
+					if (count > 4096) throw SizeError("multi-box delete exceeds the 4096-page capacity");
 					auto name = m_ctx.storageMapper.physicalBindingFor(*varDecl).key;
+					if (count > 4)
+					{
+						auto index = awst::makeVarExpression("__delete_page_" + std::to_string(
+							awst::NameGen::next("SolUnaryOperation.deletePages")), awst::WType::uint64Type(), m_loc);
+						auto block = awst::makeBlock(m_loc), body = awst::makeBlock(m_loc);
+						block->body.push_back(awst::makeAssignmentStatement(index, awst::makeZero(m_loc), m_loc));
+						auto key = awst::makeConcat(awst::makeUtf8BytesConstant(name, m_loc), awst::makeItob(index, m_loc), m_loc);
+						key->wtype = awst::WType::boxKeyType();
+						body->body.push_back(awst::makeExpressionStatement(awst::makeStateDelete(
+							awst::makeBoxValueExpression(std::move(key), awst::WType::bytesType(), m_loc), m_loc), m_loc));
+						body->body.push_back(awst::makeAssignmentStatement(index,
+							awst::makeUInt64BinOp(index, awst::UInt64BinaryOperator::Add, awst::makeOne(m_loc), m_loc), m_loc));
+						block->body.push_back(awst::makeWhileLoop(awst::makeNumericCompare(index,
+							awst::NumericComparison::Lt, awst::makeIntegerConstant(count, m_loc), m_loc), std::move(body), m_loc));
+						m_ctx.postEffects().push_back(std::move(block));
+						return _operand;
+					}
 					for (unsigned page = 0; page < count; ++page)
 					{
 						auto key = awst::makeConcat(awst::makeUtf8BytesConstant(name, m_loc),

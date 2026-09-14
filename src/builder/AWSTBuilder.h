@@ -81,8 +81,7 @@ private:
 		std::vector<std::shared_ptr<awst::RootNode>>& _roots);
 
 	// ── translateContracts phases ───────────────────────────────────────
-	/// --evm-storage-layout unit pre-scan (dense-only / single-page profile
-	/// flags); returns whether the unit-global storage runtime is needed.
+	/// Whether any reachable root needs the shape-keyed EVM storage runtime.
 	bool prescanEvmStorageLayout();
 
 	/// One ContractBuilder run over `_contract`; its dispatch subroutines go

@@ -48,10 +48,9 @@ struct EvmSlotCodec
 	awst::SourceLocation loc;
 	std::string cref;
 	/// Every runtime slot is provably < 2^16, so the sparse arms and the
-	/// mod-2^256 wrap are dead weight. Unit-global -- see the caller.
+	/// mod-2^256 wrap are dead weight. Each variant has its own root identity.
 	bool denseOnly = false;
-	/// Dense-only AND <= 64 slots: constant page-0 key, no mod, and no 8-byte
-	/// normalisation before btoi.
+	/// Dense-only AND <= 64 slots: constant page-0 key and no page-offset mod.
 	bool singlePage = false;
 	std::string s64Name = "__eslot64";
 
@@ -92,9 +91,8 @@ struct EvmSlotCodec
 
 	// Bind the uint64 slot, then key = "p:" ++ itob(slot / 64), off = (slot % 64) * 32.
 	// Dense-only, single-page layouts (≤64 slots): key is the constant page-0
-	// name, offset drops the mod, and the biguint→u64 cast needs no 8-byte
-	// normalisation (slot fits 2 bytes; btoi accepts ≤8). Unit-global like
-	// denseOnly (same shared-SubroutineID hazard).
+	// name and the offset drops the mod. The btoi input still needs byte-width
+	// normalisation: a small numeric slot may arrive in a 32-byte carrier.
 
 	auto s64Var() const
 	{
@@ -979,42 +977,30 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 )
 {
 	auto const& layout = _storagePlan.solidityLayout;
-
-	// Dense-only: every runtime slot is provably < 2^16 — no mapping / dynamic
-	// array / bytes / string anywhere in the persistent layout (their slots are
-	// keccak-derived) and no inline assembly (arbitrary computed slots). The
-	// sparse "s:" arms and the mod-2^256 slot wrap are then dead weight — a
-	// scalar-only contract pays a few hundred bytes of unreachable code
-	// (pushed external_call_signed_narrow_return's child-embed over the 8KB cap).
-	// UNIT-GLOBAL, not per-contract: the runtime subroutines share one
-	// SubroutineID across the whole unit, so variant bodies clobber each other
-	// (AWSTBuilder pre-scans and sets the flags before any contract builds).
-	bool const denseOnly = m_typeMapper.artifacts().denseOnlyStorage;
-
 	auto const& cref = m_contractId;
 	awst::SourceLocation loc(m_sourceFile);
-
-	// Single-page dense layouts skip the mod and the wide btoi normalisation.
-	bool const singlePage = denseOnly
-		&& m_typeMapper.artifacts().singlePageStorage;
-
-	EvmSlotCodec codec{m_typeMapper, loc, cref, denseOnly, singlePage, "__eslot64"};
-	codec.emitStorageRead(_contractNode);
-	codec.emitStorageWrite(_contractNode);
-	// read before write: SingleEvaluation ids follow emission order
-	codec.emitBytesCodec(_contractNode, /*_write=*/false);
-	codec.emitBytesCodec(_contractNode, /*_write=*/true);
-	codec.emitDynamicArrayCodec(_contractNode, /*_write=*/false);
-	codec.emitDynamicArrayCodec(_contractNode, /*_write=*/true);
-	codec.emitNestedDynamicArrayMethods(_contractNode);
-
-	// Library/free-function callers cannot use InstanceMethodTarget, so runtime
-	// helpers are roots rather than contract methods.
-	storage_dispatch::promoteMethods(*_contractNode, m_dispatchSubroutines, "__puyasol_",
-		{"__storage_read", "__storage_write",
-			"__evm_bytes_read", "__evm_bytes_write",
-			"__evm_dynarr_read", "__evm_dynarr_write",
-			"__evm_dynarr_recursive_read", "__evm_dynarr_recursive_write"});
+	// Generic roots remain usable by library/free functions without a host.
+	// Dense variants have distinct IDs and are selected only for concrete
+	// hosts whose solc layout and reachable-call facts exclude sparse slots.
+	for (unsigned shape = 0; shape < 3; ++shape)
+	{
+		std::string prefix = shape == 0 ? storage_dispatch::genericSlotPrefix
+			: shape == 1 ? storage_dispatch::denseSlotPrefix : storage_dispatch::singlePageSlotPrefix;
+		EvmSlotCodec codec{m_typeMapper, loc, cref, shape != 0, shape == 2, "__eslot64"};
+		codec.emitStorageRead(_contractNode);
+		codec.emitStorageWrite(_contractNode);
+		if (shape == 0)
+		{
+			codec.emitBytesCodec(_contractNode, false);
+			codec.emitBytesCodec(_contractNode, true);
+			codec.emitDynamicArrayCodec(_contractNode, false);
+			codec.emitDynamicArrayCodec(_contractNode, true);
+			codec.emitNestedDynamicArrayMethods(_contractNode);
+		}
+		storage_dispatch::promoteMethods(*_contractNode, m_dispatchSubroutines, prefix,
+			{"__storage_read", "__storage_write", "__evm_bytes_read", "__evm_bytes_write",
+				"__evm_dynarr_read", "__evm_dynarr_write", "__evm_dynarr_recursive_read", "__evm_dynarr_recursive_write"});
+	}
 
 	Logger::instance().debug(
 		"Generated EVM-slot __storage_read/__storage_write (paged<"

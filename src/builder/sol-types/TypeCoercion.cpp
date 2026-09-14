@@ -82,15 +82,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 	// btoi only works on ≤8 bytes, but biguint from ABI-decoded uint256 is 32 bytes.
 	// Approach: prepend 8 zero bytes, then extract last 8 bytes, then btoi.
 	if (_expr->wtype == awst::WType::biguintType() && _targetType == awst::WType::uint64Type())
-	{
-		// reinterpret biguint → bytes
-		auto toBytes = awst::makeAsBytes(std::move(_expr), _loc);
-
-		// concat(bzero(8), bytes) → padded; then extract3 last 8 → btoi.
-		auto padded = awst::makeLeftPad(std::move(toBytes), 8, _loc);
-		auto extract = awst::makeExtractLastN(std::move(padded), 8, _loc);
-		return awst::makeBtoi(std::move(extract), _loc);
-	}
+		return awst::makeBiguintToUInt64(std::move(_expr), _loc);
 
 	// String / bytes constant → fixed-size bytes[N]: right-pad to N bytes.
 	if (auto const* fbType = dynamic_cast<awst::BytesWType const*>(_targetType))

@@ -104,6 +104,19 @@ void CallParameterPlan::setAbiWireType(
 	}
 }
 
+std::shared_ptr<awst::Expression> CallParameterPlan::decodeArgument(
+	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc) const
+{
+	if (type == wireType) return value;
+	if (auto const* array = dynamic_cast<awst::ReferenceArray const*>(type);
+		array && !array->arraySize())
+		return awst::makeConvertArray(std::move(value), type, loc);
+	value = awst::makeARC4Decode(std::move(value), type, loc);
+	if (signedDecodeBits)
+		value = TypeCoercion::signExtendToUint256(std::move(value), signedDecodeBits, loc);
+	return value;
+}
+
 awst::WType const* CallBoundaryPlan::augmentReturn(TypeMapper& mapper, awst::WType const* original) const
 {
 	if (writeBackParams.empty()) return original;
@@ -145,59 +158,44 @@ void CallBoundaryPlan::augmentReturns(awst::Block& body, awst::WType const* augm
 	if (writeBackParams.empty()) return;
 	if (!awst::blockAlwaysTerminates(body))
 		body.body.push_back(awst::makeReturnStatement(nullptr, body.sourceLocation));
-	std::function<void(awst::Block&)> finish = [&](awst::Block& block) {
-		for (size_t i = 0; i < block.body.size(); ++i)
+	awst::transformReturns(body.body, [&](awst::ReturnStatement& statement, auto& before) {
+		auto const loc = statement.sourceLocation;
+		// Evaluate the declared return before reading entry referents: it can
+		// itself call a mutator. Rebinding the live parameter never changes
+		// which memory object is materialized for the caller's write-back.
+		if (statement.value && !originalMemoryParams.empty())
 		{
-			auto* statement = dynamic_cast<awst::ReturnStatement*>(block.body[i].get());
-			if (!statement)
-			{
-				awst::forEachChildBlock(*block.body[i], [&](awst::Block& child, bool) { finish(child); });
-				continue;
-			}
-			auto const loc = statement->sourceLocation;
-			std::vector<std::shared_ptr<awst::Statement>> before;
-			// Evaluate the declared return before reading entry referents: it can
-			// itself call a mutator. Rebinding the live parameter never changes
-			// which memory object is materialized for the caller's write-back.
-			if (statement->value && !originalMemoryParams.empty())
-			{
-				auto saved = awst::makeVarExpression("__reference_return_" + std::to_string(
-					awst::NameGen::next("CallBoundaryPlan.return")), statement->value->wtype, loc);
-				before.push_back(awst::makeAssignmentStatement(saved, std::move(statement->value), loc));
-				statement->value = std::move(saved);
-			}
-			std::vector<std::shared_ptr<awst::Expression>> values;
-			if (statement->value)
-			{
-				if (dynamic_cast<awst::WTuple const*>(statement->value->wtype))
-					values = awst::tupleItems(std::move(statement->value), loc);
-				else values.push_back(std::move(statement->value));
-			}
-			for (auto pi: writeBackParams)
-			{
-				auto const& parameter = parameters[pi];
-				auto original = originalMemoryParams.find(parameter.declaration->id());
-				auto value = original == originalMemoryParams.end()
-					? awst::makeVarExpression(parameter.name, parameter.type, loc)
-					: materializeEvmMemoryValue(types, parameter.declaration->type(), parameter.type,
-						awst::makeVarExpression(original->second, awst::WType::uint64Type(), loc), loc, before);
-				if (!value) throw std::logic_error("Cannot materialize reference write-back");
-				values.push_back(std::move(value));
-			}
-			if (values.size() == 1) statement->value = std::move(values.front());
-			else
-			{
-				auto tuple = awst::makeTupleExpression(augmented, loc);
-				tuple->items = std::move(values);
-				statement->value = std::move(tuple);
-			}
-			auto count = before.size();
-			block.body.insert(block.body.begin() + static_cast<std::ptrdiff_t>(i),
-				std::make_move_iterator(before.begin()), std::make_move_iterator(before.end()));
-			i += count;
+			auto saved = awst::makeVarExpression("__reference_return_" + std::to_string(
+				awst::NameGen::next("CallBoundaryPlan.return")), statement.value->wtype, loc);
+			before.push_back(awst::makeAssignmentStatement(saved, std::move(statement.value), loc));
+			statement.value = std::move(saved);
 		}
-	};
-	finish(body);
+		std::vector<std::shared_ptr<awst::Expression>> values;
+		if (statement.value)
+		{
+			if (dynamic_cast<awst::WTuple const*>(statement.value->wtype))
+				values = awst::tupleItems(std::move(statement.value), loc);
+			else values.push_back(std::move(statement.value));
+		}
+		for (auto pi: writeBackParams)
+		{
+			auto const& parameter = parameters[pi];
+			auto original = originalMemoryParams.find(parameter.declaration->id());
+			auto value = original == originalMemoryParams.end()
+				? awst::makeVarExpression(parameter.name, parameter.type, loc)
+				: materializeEvmMemoryValue(types, parameter.declaration->type(), parameter.type,
+					awst::makeVarExpression(original->second, awst::WType::uint64Type(), loc), loc, before);
+			if (!value) throw std::logic_error("Cannot materialize reference write-back");
+			values.push_back(std::move(value));
+		}
+		if (values.size() == 1) statement.value = std::move(values.front());
+		else
+		{
+			auto tuple = awst::makeTupleExpression(augmented, loc);
+			tuple->items = std::move(values);
+			statement.value = std::move(tuple);
+		}
+	});
 }
 
 std::shared_ptr<awst::Expression> CallParameterPlan::encodeArgument(

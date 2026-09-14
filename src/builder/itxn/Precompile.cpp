@@ -5,13 +5,15 @@
 #include "builder/codec/ByteSlice.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
-#include "builder/SecpRangeCheck.h"
 #include "awst/NameGen.h"
 
 namespace puyasol::builder
 {
 namespace
 {
+
+constexpr char SECP256K1_GROUP_ORDER[] =
+	"115792089237316195423570985008687907852837564279074904382605163141518161494337";
 
 std::shared_ptr<awst::Expression> ecRecover(
 	TypeMapper& types,
@@ -145,6 +147,29 @@ std::shared_ptr<awst::Expression> modExp(
 }
 
 } // namespace
+
+std::shared_ptr<awst::Expression> secp256k1RangeCondition(
+	std::function<std::shared_ptr<awst::Expression>()> const& readR,
+	std::function<std::shared_ptr<awst::Expression>()> const& readS,
+	awst::SourceLocation const& loc)
+{
+	// operand != 0 && operand < N
+	auto inRange = [&](auto const& read) {
+		auto nonZero = awst::makeNumericCompare(
+			awst::makeAsBiguint(read(), loc), awst::NumericComparison::Ne,
+			awst::makeIntegerConstant("0", loc, awst::WType::biguintType()),
+			loc);
+		auto belowN = awst::makeNumericCompare(
+			awst::makeAsBiguint(read(), loc), awst::NumericComparison::Lt,
+			awst::makeIntegerConstant(
+				SECP256K1_GROUP_ORDER, loc, awst::WType::biguintType()),
+			loc);
+		return awst::makeBoolBinOp(std::move(nonZero),
+			awst::BinaryBooleanOperator::And, std::move(belowN), loc);
+	};
+	return awst::makeBoolBinOp(inRange(readR),
+		awst::BinaryBooleanOperator::And, inRange(readS), loc);
+}
 
 std::shared_ptr<awst::Expression> evaluatePrecompile(
 	TypeMapper& types, uint64_t address, std::shared_ptr<awst::Expression> input,

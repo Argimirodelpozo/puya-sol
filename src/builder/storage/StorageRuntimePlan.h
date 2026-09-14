@@ -9,7 +9,7 @@ namespace puyasol::builder
 
 /// Storage facts derived once from a contract AST.  Both storage backends use
 /// the same runtime-emission predicate, while the EVM backend additionally
-/// consumes `requiresSparseSlots` during its unit-wide specialization pass.
+/// consumes `requiresSparseSlots` to select this host's runtime variant.
 struct StorageRuntimePlan
 {
 	static StorageRuntimePlan analyze(

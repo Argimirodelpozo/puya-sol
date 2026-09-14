@@ -28,6 +28,16 @@ namespace puyasol::builder::eb
 {
 class ContractContext;
 
+/// Solc's encodeCall target and arguments, shared by encoding and call adapters.
+/// Inline arrays are one argument even though their AST node is TupleExpression.
+struct AbiCall
+{
+	explicit AbiCall(solidity::frontend::FunctionCall const& call);
+	solidity::frontend::Expression const* target;
+	solidity::frontend::FunctionType const* type;
+	std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> arguments;
+};
+
 std::shared_ptr<awst::Expression> handleEncodeCall(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,

@@ -202,12 +202,6 @@ bool writeJsonAtomically(
 			+ temp.path().string();
 		return false;
 	}
-	if (!validJson(verified))
-	{
-		_error = "temporary artifact is not valid JSON: " + temp.path().string();
-		return false;
-	}
-
 	fs::rename(temp.path(), _path, ec);
 	if (ec)
 	{

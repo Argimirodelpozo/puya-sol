@@ -237,24 +237,20 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
 	TypeMapper& _typeMapper,
 	std::shared_ptr<awst::Expression> _offset, int _byteLen, awst::SourceLocation const& _loc)
 {
-	// Concat ceil(_byteLen/32) successive words; each re-derives its slot
-	// so straddling SLOT_SIZE is handled transparently.
-	int words = (_byteLen + 31) / 32;
-	std::shared_ptr<awst::Expression> acc;
-	for (int i = 0; i < words; ++i)
-	{
-		std::shared_ptr<awst::Expression> wordOff = (i == 0)
-			? _offset
-			: awst::makeUInt64BinOp(_offset, awst::UInt64BinaryOperator::Add,
-				awst::makeIntegerConstant(static_cast<uint64_t>(i * 32), _loc), _loc);
-		auto word = readMemWordDirect(_typeMapper, std::move(wordOff), _loc);
-		acc = acc ? awst::makeConcat(std::move(acc), std::move(word), _loc) : std::move(word);
-	}
-	// Trim to the exact byte length when not word-aligned.
-	if (_byteLen % 32 != 0)
-		acc = awst::makeExtract3(std::move(acc), awst::makeIntegerConstant("0", _loc),
-			awst::makeIntegerConstant(static_cast<uint64_t>(_byteLen), _loc), _loc);
-	return acc;
+	if (_byteLen < 0) throw std::logic_error("Negative memory range length");
+	if (_byteLen == 0) return awst::makeBytesConstant({}, _loc);
+	// Read the actual extent, not rounded-up words: a short range at the
+	// modeled memory end must not over-read. Larger ranges share one helper.
+	auto length = awst::makeIntegerConstant(_byteLen, _loc);
+	if (_byteLen <= 32)
+		return readMemStackRange(_typeMapper.profile().scratchLayout,
+			std::move(_offset), std::move(length), _loc);
+	auto call = awst::makeSubroutineCall(
+		awst::SubroutineID{memoryBufferSubroutine(_typeMapper, false, _loc, true)},
+		awst::WType::bytesType(), _loc);
+	awst::pushCallArg(call->args, std::move(_offset));
+	awst::pushCallArg(call->args, std::move(length));
+	return call;
 }
 
 void AssemblyBuilder::writeMemBytesDirect(
@@ -1047,8 +1043,8 @@ void AssemblyBuilder::handleMstore8(
 	// slot-aware `mstore` uses (offset -> slot=off/SLOT_SIZE, sub=off%SLOT_SIZE)
 	// instead of the old slot-0-only replace3, which panicked / mis-wrote for
 	// any offset >= 4096 in an --evm-memory-slots contract (FMP reaches ~18KB).
-	auto offsetU64 = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
-	_out.push_back(memBoundsAssert(scratchLayout(), offsetU64, _loc));
+	auto offsetU64 = checkedMemoryRangeOffset(scratchLayout(),
+		offsetToUint64(_args[0], _loc), awst::makeOne(_loc), _loc);
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 	auto lowByte = awst::makeExtract3(
 		std::move(padded), awst::makeIntegerConstant("31", _loc), awst::makeOne(_loc), _loc);

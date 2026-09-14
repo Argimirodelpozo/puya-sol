@@ -41,12 +41,11 @@ namespace puyasol::builder::eb
 {
 
 class InstanceBuilder;
-class BuilderRegistry;
 struct FunctionPointerRegistry;
 
 /// Central context for expression/statement builders: owns structurally scoped
-/// effect frames, references compiler services (TypeMapper, StorageMapper), and
-/// holds the builder registry. Expression and type-operation dispatch are
+/// effect frames and references compiler services (TypeMapper, StorageMapper).
+/// Expression and type-operation dispatch are
 /// ordinary methods so their availability and lifetime follow the context itself.
 class ContractContext
 {
@@ -112,7 +111,7 @@ public:
 		awst::WType const* _resultType,
 		awst::SourceLocation const& _loc);
 
-	/// Returns nullptr if no builder is registered for the Solidity type.
+	/// Returns nullptr for unsupported solc type categories.
 	std::unique_ptr<InstanceBuilder> builderForInstance(
 		solidity::frontend::Type const* _solType,
 		std::shared_ptr<awst::Expression> _expr);
@@ -125,9 +124,6 @@ public:
 
 	/// Drain pre- then post-effects into `_out` in execution order.
 	void appendEffectsTo(std::vector<std::shared_ptr<awst::Statement>>& _out);
-
-	/// Owned type-builder registry — populated on construction.
-	std::unique_ptr<BuilderRegistry> registry;
 
 	// ── Compiler services (external, by reference) ──
 	TypeMapper& typeMapper;

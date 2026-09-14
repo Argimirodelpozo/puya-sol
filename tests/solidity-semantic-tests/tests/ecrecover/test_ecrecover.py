@@ -55,7 +55,7 @@ def test_ecrecover_range_gates(harness):
     dirty high bytes and for r/s outside [1, N-1]; AVM's ecdsa_pk_recover panics
     on the latter and the old staticcall shape checked only byte 63 of v — a
     false-accept where EVM rejects. All lowerings now share one range gate
-    (SecpRangeCheck.h) and validate the full v word.
+    in the precompile module and validate the full v word.
     """
     app = harness.compile_and_deploy("ecrecover/contracts/ecrecover_range_gates.sol")
     good = 0xA94F5374FCE5EDBC8E2A8697C15331677E6EBF0B
