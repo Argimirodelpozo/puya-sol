@@ -116,6 +116,10 @@ private:
 	/// local/param/named-return RE-SPILLS the value into a fresh blob region
 	/// and re-points the offset var (EVM allocates fresh memory per result).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleBlobRespill();
+	/// Scratch model: `p.items = x` / `a[i] = x` on a reference-typed leaf of a
+	/// blob-backed aggregate stores a pointer word (solc semantics), aliasing an
+	/// existing reference or a freshly spilled value.
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleScratchReferenceSlotWrite();
 
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleAddressedWrite();
 

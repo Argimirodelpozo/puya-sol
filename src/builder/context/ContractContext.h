@@ -217,6 +217,24 @@ public:
 	/// legacy order; true (--via-yul-behavior) keeps build order untouched.
 	bool viaIRSequencing = false;
 
+	/// Scratch memory model: the next internal call lowered while this is set
+	/// yields a memory-aggregate result as its uint64 offset rather than a
+	/// materialized value. Set only through MemoryReferenceScope.
+	bool memoryReferenceWanted = false;
+
+	class MemoryReferenceScope
+	{
+	public:
+		explicit MemoryReferenceScope(ContractContext& _ctx)
+			: m_ctx(_ctx), m_previous(_ctx.memoryReferenceWanted) { m_ctx.memoryReferenceWanted = true; }
+		~MemoryReferenceScope() { m_ctx.memoryReferenceWanted = m_previous; }
+		MemoryReferenceScope(MemoryReferenceScope const&) = delete;
+		MemoryReferenceScope& operator=(MemoryReferenceScope const&) = delete;
+	private:
+		ContractContext& m_ctx;
+		bool m_previous;
+	};
+
 	/// Put a captured operand's deltas back exactly where they came from
 	/// (pre → pre-effects, post → post-effects) — the no-reorder path.
 	void restoreOperandDeltas(OperandDeltas&& _d)

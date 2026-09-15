@@ -50,6 +50,9 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	Token op = m_assignment.assignmentOperator();
 
 	// (1) Pre-buildExpr early-outs.
+	// A reference-typed leaf of a scratch-model aggregate is a pointer slot;
+	// it must not reach the addressed in-place writer below.
+	if (auto r = tryHandleScratchReferenceSlotWrite()) return std::move(*r);
 	if (auto r = tryHandleAddressedWrite())         return std::move(*r);
 	if (auto r = tryHandleEvmStorageWrite())         return std::move(*r);
 	if (auto r = tryHandleBlobRespill())             return std::move(*r);
@@ -343,6 +346,48 @@ SolAssignment::tryHandleBlobRespill()
 			m_loc, m_ctx.preEffects()))
 		throw std::runtime_error("Cannot rebind blob-backed memory assignment");
 	return value;
+}
+
+std::optional<std::shared_ptr<awst::Expression>>
+SolAssignment::tryHandleScratchReferenceSlotWrite()
+{
+	if (!m_ctx.typeMapper.profile().scratchMemoryModel
+		|| m_assignment.assignmentOperator() != Token::Assign)
+		return std::nullopt;
+	auto const& lhs = m_assignment.leftHandSide();
+	if (!dynamic_cast<IndexAccess const*>(&lhs) && !dynamic_cast<MemberAccess const*>(&lhs))
+		return std::nullopt;
+	auto const* reference = dynamic_cast<ReferenceType const*>(lhs.annotation().type);
+	if (!reference || reference->location() != DataLocation::Memory)
+		return std::nullopt;
+	auto slot = SolIndexAccess::resolveBlobOffset(m_ctx, m_scope, lhs, m_loc, /*_derefLeaf=*/false);
+	if (!slot)
+		return std::nullopt;
+	slot = m_ctx.emitSequencedOperand({}, std::move(slot), true, m_loc);
+	auto const& rhs = m_assignment.rightHandSide();
+	auto const* wtype = m_ctx.typeMapper.map(reference);
+	std::shared_ptr<awst::Expression> pointer;
+	if (auto existing = SolIndexAccess::resolveBlobReference(m_ctx, m_scope, rhs, m_loc))
+		pointer = m_ctx.emitSequencedOperand(
+			std::move(existing->effects), std::move(existing->value), true, m_loc);
+	else
+	{
+		auto lowered = m_ctx.lower(rhs, false);
+		auto value = m_ctx.emitSequencedOperand(
+			std::move(lowered.effects), std::move(lowered.value), true, m_loc);
+		value = ConversionPlan{rhs.annotation().type, reference, wtype,
+			ConversionPlan::Context::Assignment}.emit(std::move(value), m_loc, &m_ctx.preEffects());
+		auto id = awst::NameGen::next("SolAssignment.referenceSlot");
+		std::string name = "__slot_ref_" + std::to_string(id);
+		if (!builder::spillEvmMemoryValue(m_ctx.typeMapper, reference, wtype,
+				std::move(value), name, id, m_loc, m_ctx.preEffects()))
+			throw std::runtime_error("Cannot spill a memory value for a reference-slot write");
+		pointer = awst::makeVarExpression(name, awst::WType::uint64Type(), m_loc);
+	}
+	AssemblyBuilder::writeMemWordDirect(m_ctx.typeMapper, slot,
+		awst::makeLeftPad(awst::makeItob(pointer, m_loc), 24, m_loc),
+		m_loc, m_ctx.preEffects(), std::optional<unsigned>{0});
+	return SolIndexAccess::readBlobValue(m_ctx, std::move(pointer), reference, m_loc);
 }
 
 std::optional<std::shared_ptr<awst::Expression>>

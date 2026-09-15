@@ -38,6 +38,16 @@ ScalarBoundary scalarBoundary(Type const* type, PaddingPolicy padding, ScalarBou
 	return result;
 }
 
+namespace
+{
+/// Internal function pointers are uint64 dispatch IDs; in memory they occupy a
+/// word like any other uint64 scalar.
+bool isInternalFunctionPointer(FunctionType const* function)
+{
+	return function && function->kind() == FunctionType::Kind::Internal;
+}
+} // namespace
+
 bool isWordType(Type const* type)
 {
 	type = underlyingType(type);
@@ -47,7 +57,8 @@ bool isWordType(Type const* type)
 		|| dynamic_cast<ContractType const*>(type)
 		|| dynamic_cast<EnumType const*>(type)
 		|| dynamic_cast<FixedBytesType const*>(type)
-		|| isExternalFunctionPointer(dynamic_cast<FunctionType const*>(type));
+		|| isExternalFunctionPointer(dynamic_cast<FunctionType const*>(type))
+		|| isInternalFunctionPointer(dynamic_cast<FunctionType const*>(type));
 }
 
 bool isByteIdenticalEvmWord(Type const* type)
@@ -268,6 +279,13 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 		out.push_back(awst::makeExpressionStatement(
 			awst::makeEnumRangeAssert(value, boundary.enumMembers, loc), loc));
 		return value;
+	}
+	if (isInternalFunctionPointer(dynamic_cast<FunctionType const*>(type)))
+	{
+		auto fullWord = awst::makeEvalOnce(std::move(word), loc);
+		assertZeroBytes(awst::makeExtract(fullWord, 0, 24, loc),
+			24, loc, out, "internal function pointer word exceeds uint64");
+		return awst::makeWord32ToUInt64(fullWord, loc);
 	}
 	return awst::makeReinterpretCast(std::move(word), native, loc);
 }

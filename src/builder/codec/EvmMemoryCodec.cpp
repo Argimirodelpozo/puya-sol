@@ -37,10 +37,14 @@ std::shared_ptr<awst::Expression> checkedUint64Word(
 	awst::SourceLocation const& loc, Statements& out)
 {
 	auto once = awst::makeEvalOnce(std::move(offset), loc);
-	out.push_back(AssemblyBuilder::memBoundsAssert(
-		mapper.profile().scratchLayout, once, loc));
+	// Scratch model: high-level addresses are word-aligned by construction, so
+	// the inline (page, offset) read applies and already checks capacity.
+	bool const scratch = mapper.profile().scratchMemoryModel;
+	if (!scratch)
+		out.push_back(AssemblyBuilder::memBoundsAssert(
+			mapper.profile().scratchLayout, once, loc));
 	auto value = awst::makeEvalOnce(AssemblyBuilder::readMemWordDirect(
-		mapper, once, loc), loc);
+		mapper, once, loc, scratch ? std::optional<unsigned>{0} : std::nullopt), loc);
 	out.push_back(awst::makeExpressionStatement(
 		awst::makeAssert(
 			awst::makeNumericCompare(
@@ -121,7 +125,9 @@ private:
 		std::shared_ptr<awst::Expression> offset, Statements& out)
 	{
 		auto once = awst::makeEvalOnce(std::move(offset), m_loc);
-		out.push_back(AssemblyBuilder::memBoundsAssert(m_scratch, once, m_loc));
+		bool const scratch = m_mapper.profile().scratchMemoryModel;
+		if (!scratch)
+			out.push_back(AssemblyBuilder::memBoundsAssert(m_scratch, once, m_loc));
 		// valueFromEvmWord may inspect the same word several times (width,
 		// sign, address and enum cleanup). Keep the complete scratch read — not
 		// just its offset — single-evaluation. Without this boundary one typed
@@ -129,7 +135,8 @@ private:
 		// inspection site, causing both repeated runtime work and exponential
 		// program-size growth in struct-heavy event and ABI codecs.
 		return awst::makeEvalOnce(
-			AssemblyBuilder::readMemWordDirect(m_mapper, once, m_loc), m_loc);
+			AssemblyBuilder::readMemWordDirect(m_mapper, once, m_loc,
+				scratch ? std::optional<unsigned>{0} : std::nullopt), m_loc);
 	}
 
 	std::shared_ptr<awst::Expression> pointer(
@@ -370,7 +377,8 @@ private:
 		std::shared_ptr<awst::Expression> value, Statements& out)
 	{
 		AssemblyBuilder::writeMemWordDirect(
-			m_mapper, std::move(offset), std::move(value), m_loc, out);
+			m_mapper, std::move(offset), std::move(value), m_loc, out,
+			m_mapper.profile().scratchMemoryModel ? std::optional<unsigned>{0} : std::nullopt);
 	}
 
 	std::shared_ptr<awst::Expression> pin(

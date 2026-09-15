@@ -190,6 +190,7 @@ std::optional<CompilerSettings> resolveCompilerSettings(Options const& opts)
 	}
 	CompilerSettings settings{*version, {
 		.evmStorageLayout = opts.evmStorageLayout,
+		.scratchMemoryModel = opts.memoryModel == "scratch",
 		.evmSelectors = opts.evmSelectors || opts.contractAbi == "evm",
 		.contractAbi = opts.contractAbi == "evm" ? builder::ContractAbi::Evm : builder::ContractAbi::Arc4,
 		.viaIRSequencing = opts.viaYulBehavior,

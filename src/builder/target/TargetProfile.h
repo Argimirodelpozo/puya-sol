@@ -23,6 +23,9 @@ enum class ContractAbi
 struct TargetProfile
 {
 	bool evmStorageLayout = false;
+	/// Experimental: every memory array/struct is a uint64 byte offset into the
+	/// scratch pages (solc memory layout); word accesses assume 32-byte alignment.
+	bool scratchMemoryModel = false;
 	bool evmSelectors = false;
 	/// Wire protocol at the AVM application entry/return boundary. This does
 	/// not alter Solidity `abi.*` expression semantics. The EVM profile also

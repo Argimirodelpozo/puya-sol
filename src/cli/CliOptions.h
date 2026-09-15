@@ -72,6 +72,9 @@ struct Options
 	// (hybrid paged/sparse boxes) instead of per-variable named cells. Makes
 	// assembly slot arithmetic faithful; ARC-56 still describes immutable cells.
 	bool evmStorageLayout = false;
+	// --memory-model <mixed|scratch>: "scratch" routes every memory aggregate
+	// through the scratch-page pointer model (experimental prototype).
+	std::string memoryModel = "mixed";
 	// --force-inline-sub <Name>: set inlineOpt=true so puya inlines at every
 	// call site. Repeatable.
 	std::vector<std::string> forceInlineSubs;

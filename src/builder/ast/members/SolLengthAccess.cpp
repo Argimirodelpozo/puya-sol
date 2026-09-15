@@ -9,6 +9,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/TypeCoercion.h"
+#include "builder/codec/EvmMemoryCodec.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -170,6 +171,15 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 			if (auto boxLen = tryBoxStateArrayLength(m_ctx, m_memberAccess, *varDecl, m_loc))
 				return boxLen;
 		}
+
+	// Scratch model: a memory array's length is its first word (solc layout).
+	if (m_ctx.typeMapper.profile().scratchMemoryModel)
+		if (auto const* array = dynamic_cast<ArrayType const*>(baseExpr.annotation().type);
+			array && !array->isByteArrayOrString()
+			&& array->dataStoredIn(DataLocation::Memory) && array->isDynamicallySized())
+			if (auto offset = SolIndexAccess::resolveBlobOffset(m_ctx, m_scope, baseExpr, m_loc))
+				return builder::readEvmMemoryUint64Word(
+					m_ctx.typeMapper, std::move(offset), m_loc, m_ctx.preEffects());
 
 	auto base = m_ctx.pinIfWriteBacks(m_ctx.lower(baseExpr, false), m_loc);
 	if (auto const* fixedBytes = dynamic_cast<FixedBytesType const*>(baseExpr.annotation().type))

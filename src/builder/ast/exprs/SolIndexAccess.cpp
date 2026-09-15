@@ -167,7 +167,8 @@ std::optional<eb::ContractContext::LoweredExpression> SolIndexAccess::resolveBlo
 
 std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	eb::ContractContext& _ctx, Context& _scope,
-	solidity::frontend::Expression const& _node, awst::SourceLocation const& _loc)
+	solidity::frontend::Expression const& _node, awst::SourceLocation const& _loc,
+	bool _derefLeaf)
 {
 	using namespace solidity::frontend;
 
@@ -178,6 +179,33 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 		call && call->annotation().kind.set() && *call->annotation().kind == FunctionCallKind::TypeConversion
 		&& call->arguments().size() == 1 && !_node.annotation().type->isValueType())
 		return resolveBlobOffset(_ctx, _scope, *call->arguments()[0], _loc);
+	// Scratch model: a call producing a memory aggregate. Internal callees
+	// hand back their offset; anything else is a fresh object to spill.
+	if (auto const* call = dynamic_cast<FunctionCall const*>(&_node);
+		call && _ctx.typeMapper.profile().scratchMemoryModel
+		&& call->annotation().kind.set() && *call->annotation().kind != FunctionCallKind::TypeConversion)
+	{
+		auto const* reference = dynamic_cast<ReferenceType const*>(_node.annotation().type);
+		auto const* wtype = reference ? _ctx.typeMapper.map(reference) : nullptr;
+		if (reference && reference->location() == DataLocation::Memory
+			&& memoryUsesBlob(_ctx.typeMapper.profile(), wtype))
+		{
+			std::shared_ptr<awst::Expression> value;
+			{
+				eb::ContractContext::MemoryReferenceScope wanted(_ctx);
+				value = _ctx.pinIfWriteBacks(_ctx.lower(_node, false), _loc);
+			}
+			if (!value) return nullptr;
+			if (value->wtype == awst::WType::uint64Type()) return value;
+			value = TypeCoercion::coerceForAssignment(std::move(value), wtype, _loc);
+			auto id = awst::NameGen::next("SolIndexAccess.freshCallReference");
+			auto name = "__ref_call_" + std::to_string(id);
+			if (!spillEvmMemoryValue(_ctx.typeMapper, reference, wtype,
+				std::move(value), name, id, _loc, _ctx.preEffects()))
+				return nullptr;
+			return awst::makeVarExpression(name, awst::WType::uint64Type(), _loc);
+		}
+	}
 	if (auto const* conditional = dynamic_cast<Conditional const*>(&_node))
 	{
 		auto branch = [&](auto const& expression) {
@@ -270,8 +298,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 		if (!baseArr->isByteArrayOrString()
 			&& (dynamic_cast<ArrayType const*>(resultType)
 				|| dynamic_cast<StructType const*>(resultType)))
-			return builder::readEvmMemoryUint64Word(
-				_ctx.typeMapper, std::move(slot), _loc, _ctx.preEffects());
+			return _derefLeaf ? builder::readEvmMemoryUint64Word(
+				_ctx.typeMapper, std::move(slot), _loc, _ctx.preEffects()) : slot;
 		return slot;
 	}
 
@@ -291,8 +319,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 		auto const* resultType = ma->annotation().type;
 		if (dynamic_cast<ArrayType const*>(resultType)
 			|| dynamic_cast<StructType const*>(resultType))
-			return builder::readEvmMemoryUint64Word(
-				_ctx.typeMapper, std::move(slot), _loc, _ctx.preEffects());
+			return _derefLeaf ? builder::readEvmMemoryUint64Word(
+				_ctx.typeMapper, std::move(slot), _loc, _ctx.preEffects()) : slot;
 		return slot;
 	}
 

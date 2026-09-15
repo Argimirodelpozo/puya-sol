@@ -23,7 +23,10 @@
 #include "builder/types/FunctionPointerKind.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/codec/Arc4Defaults.h"
+#include "builder/codec/EvmMemoryCodec.h"
 #include "builder/types/TypeCoercion.h"
+
+#include <utility>
 #include "builder/types/ConversionPlan.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/StoragePlace.hpp"
@@ -370,9 +373,35 @@ void SolInternalCall::buildSequencedArgs(
 		}
 		if (mappingStorageParamIndices.count(paramIdx))
 			return keyArgument(source, paramIdx);
-		if (blobOffsetParamIndices.count(paramIdx))
+		// The ABI entry of an external-interface callee spills the wire value
+		// itself; its private carrier (and every internal callee) takes the offset.
+		auto const* method = target ? std::get_if<awst::InstanceMethodTarget>(target) : nullptr;
+		bool const wireEntry = _funcDef && _funcDef->isPartOfExternalInterface() && method
+			&& method->memberName == eb::CallResolver::resolveMethodName(m_ctx, *_funcDef);
+		if (blobOffsetParamIndices.count(paramIdx) && !wireEntry)
+		{
 			if (auto offset = SolIndexAccess::resolveBlobOffset(m_ctx, m_scope, source, m_loc))
 				return offset;
+			// Scratch model: a value operand (storage/calldata copy, literal)
+			// becomes a fresh memory object, as solc's location conversion does.
+			if (m_ctx.typeMapper.profile().scratchMemoryModel && parameterType
+				&& paramIdx < paramTypes.size())
+			{
+				auto const* wtype = m_ctx.typeMapper.map(parameterType);
+				auto fresh = buildExpr(source);
+				if (!fresh) return nullptr;
+				fresh = StorageMapper::makePartialBoxReadWithDefault(
+					m_ctx.typeMapper, std::move(fresh), m_ctx.preEffects(), m_loc);
+				fresh = ConversionPlan{source.annotation().type, parameterType, wtype,
+					ConversionPlan::Context::Argument}.emit(std::move(fresh), m_loc, &m_ctx.preEffects());
+				auto id = awst::NameGen::next("SolInternalCall.freshArgumentReference");
+				std::string name = "__arg_ref_" + std::to_string(id);
+				if (!spillEvmMemoryValue(m_ctx.typeMapper, parameterType, wtype,
+						std::move(fresh), name, id, m_loc, m_ctx.preEffects()))
+					throw std::runtime_error("Cannot spill call argument into scratch memory");
+				return awst::makeVarExpression(name, awst::WType::uint64Type(), m_loc);
+			}
+		}
 		std::shared_ptr<awst::Expression> value;
 		if (plan && *source.annotation().isLValue
 			&& plan->parameters[paramIdx].passing == RefParamPassing::Value
@@ -514,7 +543,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		? &m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract) : nullptr;
 	// The public ABI remains unchanged; direct Solidity calls use a private
 	// implementation carrier when reference results must travel back.
-	if (plan && !plan->writeBackParams.empty() && _funcDef->isPartOfExternalInterface()
+	// Scratch model: memory pointers travel the same private carrier, so a
+	// direct call shares the caller's objects instead of copying them.
+	bool const sharedMemory = plan && !plan->blobParams.empty()
+		&& m_ctx.typeMapper.profile().scratchMemoryModel;
+	if (plan && (!plan->writeBackParams.empty() || sharedMemory) && _funcDef->isPartOfExternalInterface()
 		&& functionType && functionType->kind() == FunctionType::Kind::Internal
 		&& std::holds_alternative<awst::InstanceMethodTarget>(_target))
 		_target = awst::InstanceMethodTarget{eb::CallResolver::baseImplementationName(m_ctx, *_funcDef)};
@@ -713,18 +746,47 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildFunctionPointerCall(
 		m_ctx, std::move(pointer.value), &type, std::move(values), m_loc);
 }
 
+namespace
+{
+/// Scratch model: an internal call returning a memory aggregate yields its
+/// uint64 offset. Value consumers read the object back; reference consumers
+/// (SolIndexAccess::resolveBlobOffset) asked for the offset itself.
+std::shared_ptr<awst::Expression> finishScratchReference(
+	eb::ContractContext& ctx, FunctionCall const& call, awst::SourceLocation const& loc,
+	std::shared_ptr<awst::Expression> result, bool wantReference)
+{
+	if (!result || wantReference || !ctx.typeMapper.profile().scratchMemoryModel
+		|| result->wtype != awst::WType::uint64Type())
+		return result;
+	auto const* reference = dynamic_cast<ReferenceType const*>(call.annotation().type);
+	if (!reference || reference->location() != DataLocation::Memory)
+		return result;
+	auto const* native = ctx.typeMapper.map(reference);
+	if (!memoryUsesBlob(ctx.typeMapper.profile(), native))
+		return result;
+	return materializeEvmMemoryValue(
+		ctx.typeMapper, reference, native, std::move(result), loc, ctx.preEffects());
+}
+} // namespace
+
 std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 {
+	bool const wantReference = std::exchange(m_ctx.memoryReferenceWanted, false);
 	auto const plan = eb::CallResolver::plan(m_call);
+	std::shared_ptr<awst::Expression> result;
 	if (plan.isFunctionPointer && plan.functionType)
-		return buildFunctionPointerCall(*plan.callee, *plan.functionType);
-	if (auto const* identifier = dynamic_cast<Identifier const*>(plan.callee))
-		return resolveIdentifierCall(*identifier);
-	if (auto const* member = dynamic_cast<MemberAccess const*>(plan.callee))
-		return resolveMemberAccessCall(*member);
-	Logger::instance().error("could not resolve function call target", m_loc);
-	return buildSubroutineCall(awst::InstanceMethodTarget{"unknown"},
-		m_ctx.typeMapper.map(m_call.annotation().type), nullptr);
+		result = buildFunctionPointerCall(*plan.callee, *plan.functionType);
+	else if (auto const* identifier = dynamic_cast<Identifier const*>(plan.callee))
+		result = resolveIdentifierCall(*identifier);
+	else if (auto const* member = dynamic_cast<MemberAccess const*>(plan.callee))
+		result = resolveMemberAccessCall(*member);
+	else
+	{
+		Logger::instance().error("could not resolve function call target", m_loc);
+		result = buildSubroutineCall(awst::InstanceMethodTarget{"unknown"},
+			m_ctx.typeMapper.map(m_call.annotation().type), nullptr);
+	}
+	return finishScratchReference(m_ctx, m_call, m_loc, std::move(result), wantReference);
 }
 
 } // namespace puyasol::builder::sol_ast

@@ -15,6 +15,9 @@
 #include "awst/TupleValue.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/TypeCoercion.h"
+#include "builder/ast/exprs/SolIndexAccess.h"
+#include "builder/codec/Arc4Defaults.h"
+#include "builder/codec/EvmMemoryCodec.h"
 #include "Logger.h"
 
 namespace puyasol::builder::sol_ast
@@ -247,6 +250,44 @@ bool tryBoxKeyedRefReturn(BlockContext& blk, Return const& node,
 }
 
 /// Single declared return: coerce the built value to the declared type.
+/// Scratch model, offset-protocol function (`fn.returnType` is uint64 for a
+/// memory aggregate): `return <reference>` hands back the object's offset,
+/// `return <fresh value>` spills the value first. Solc returns the pointer.
+bool tryScratchReferenceReturn(BlockContext& blk, Return const& node,
+	awst::SourceLocation const& loc,
+	std::vector<ASTPointer<VariableDeclaration>> const& retParams,
+	awst::ReturnStatement& stmt)
+{
+	auto& ctx = blk.builderCtx();
+	if (!ctx.typeMapper.profile().scratchMemoryModel || retParams.size() != 1
+		|| blk.fn.returnType != awst::WType::uint64Type())
+		return false;
+	auto const& target = *retParams[0];
+	if (target.referenceLocation() != VariableDeclaration::Location::Memory)
+		return false;
+	auto const* wtype = blk.typeMapper().map(target.type());
+	if (!builder::memoryUsesBlob(blk.typeMapper().profile(), wtype))
+		return false;
+	if (auto reference = SolIndexAccess::resolveBlobReference(
+			ctx, blk.scope, *node.expression(), loc))
+	{
+		stmt.value = ctx.emitSequencedOperand(
+			std::move(reference->effects), std::move(reference->value), true, loc);
+		return true;
+	}
+	auto value = ctx.pinIfWriteBacks(ctx.lower(*node.expression(), false), loc);
+	if (!value)
+		return true;
+	value = builder::TypeCoercion::coerceForAssignment(std::move(value), wtype, loc);
+	auto id = awst::NameGen::next("SolReturnStatement.freshReference");
+	std::string name = "__ret_ref_" + std::to_string(id);
+	if (!builder::spillEvmMemoryValue(blk.typeMapper(), target.type(), wtype,
+			std::move(value), name, id, loc, ctx.preEffects()))
+		throw std::runtime_error("Cannot spill returned memory value into scratch memory");
+	stmt.value = awst::makeVarExpression(name, awst::WType::uint64Type(), loc);
+	return true;
+}
+
 void convertSingleReturnValue(BlockContext& blk, Return const& node,
 	awst::SourceLocation const& loc,
 	std::vector<ASTPointer<VariableDeclaration>> const& retParams,
@@ -355,6 +396,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			return result;
 		if (tryBoxKeyedRefReturn(m_blk, m_node, m_loc, stmt, result))
 			return result;
+		if (tryScratchReferenceReturn(m_blk, m_node, m_loc, retParams, *stmt))
+		{
+			m_blk.builderCtx().appendEffectsTo(result);
+			result.push_back(stmt);
+			return result;
+		}
 
 		stmt->value = m_blk.builderCtx().buildExpr(*m_node.expression());
 		if (!stmt->value)

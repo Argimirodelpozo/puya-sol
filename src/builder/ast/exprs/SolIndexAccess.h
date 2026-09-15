@@ -20,10 +20,14 @@ public:
 	/// If rooted at a blob-backed memory aggregate, returns the accumulated
 	/// uint64 byte-offset (base + Σ index*stride + field offsets); else nullptr.
 	/// Shared by SolIndexAccess (read), SolAssignment (write), SolMemberAccess.
+	/// A reference-typed leaf (`p.items`, `a[i]` of an array of arrays) is
+	/// dereferenced to the child object unless `_derefLeaf` is false, which
+	/// yields the pointer slot itself (a reference-slot write).
 	static std::shared_ptr<awst::Expression> resolveBlobOffset(
 		eb::ContractContext& _ctx, Context& _scope,
 		solidity::frontend::Expression const& _node,
-		awst::SourceLocation const& _loc);
+		awst::SourceLocation const& _loc,
+		bool _derefLeaf = true);
 
 	/// Optional reference together with its scoped address-evaluation effects.
 	/// Failure publishes no effects, so a fresh-value fallback evaluates the

@@ -183,6 +183,20 @@ ContractBuilder::makeParamDecodeStatements(
 	{
 		auto wireValue = awst::makeVarExpression(
 			decode.wireName(), decode.wireType, decode.loc);
+		if (decode.passing == RefParamPassing::BlobOffset)
+		{
+			// Scratch model: an ABI argument is a fresh memory object. Spill it
+			// and bind the uint64 parameter to its base offset.
+			auto const* solType = decode.declaration->type();
+			auto const* native = m_typeMapper.map(solType);
+			std::shared_ptr<awst::Expression> value = wireValue;
+			if (!awst::structurallyEquivalent(native, decode.wireType))
+				value = awst::makeARC4Decode(std::move(value), native, decode.loc);
+			if (!emitBlobBackValue(m_typeMapper, solType, native, std::move(value), decode.name,
+					static_cast<int>(decode.declaration->id()), decode.loc, statements))
+				throw std::runtime_error("Cannot spill ABI parameter into scratch memory");
+			continue;
+		}
 		statements.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(
 				decode.name, decode.type, decode.loc),
@@ -270,7 +284,7 @@ void emitNamedReturnInits(
 
 		// >4KB memory returns: pre-zeroed in preamble; skip bzero (pointer model).
 		if (rp->referenceLocation() == VariableDeclaration::Location::Memory
-			&& memoryUsesBlob(rpType))
+			&& memoryUsesBlob(_typeMapper.profile(), rpType))
 			continue;
 
 		auto target = awst::makeVarExpression(rp->name(), rpType, _loc);
@@ -282,12 +296,23 @@ void emitNamedReturnInits(
 		if (rp->referenceLocation() != VariableDeclaration::Location::Memory)
 			continue;
 		auto* rpType = _typeMapper.map(rp->type());
+		if (_typeMapper.profile().scratchMemoryModel
+			&& memoryUsesBlob(_typeMapper.profile(), rpType))
+		{
+			// Solc allocates and zero-fills every memory return at entry.
+			std::string offN = "__blobagg_off_" + std::to_string(rp->id());
+			if (!emitBlobBackValue(_typeMapper, rp->type(), rpType,
+					TypeCoercion::makeDefaultValue(rpType, _loc), offN,
+					static_cast<int>(rp->id()), _loc, inits))
+				throw std::runtime_error("Cannot allocate default memory return in scratch memory");
+			continue;
+		}
 		int sz = computeEncodedElementSize(rpType).fixedBytes<int>().value_or(0);
 		if (sz <= _memoryBumpMinBytes)
 			continue;
 		// Blob-backed memory return: bind FMP (before bump) to __blobagg_off_<id>
 		// to match blob-aggregate registration in ContractBuilder::buildBlock.
-		if (memoryUsesBlob(rpType))
+		if (memoryUsesBlob(_typeMapper.profile(), rpType))
 		{
 			std::string offN = "__blobagg_off_" + std::to_string(rp->id());
 			auto blob = awst::makeLoadSlot(
@@ -352,15 +377,18 @@ void emitImplicitReturn(
 		if (_shape.calldataPointerReturns && _fnCtx.seededCalldataPointers.count(rp.name()))
 			retStmt->value = TypeCoercion::calldataPointerValueRead(rp.name(), _loc);
 		else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id())
-			&& !memoryUsesBlob(_typeMapper.map(rp.type())))
+			&& !memoryUsesBlob(_typeMapper.profile(), _typeMapper.map(rp.type())))
 			retStmt->value = materialized(rp, _typeMapper.map(rp.type()));
 		else
 		{
 			auto const* vt = rp.referenceLocation() == VariableDeclaration::Location::Storage
 				? _typeMapper.functionReturnPlan(_func).nativeType
 				: _typeMapper.map(rp.type());
-			if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(vt))
+			bool const blob = inMemory && memoryUsesBlob(_typeMapper.profile(), vt);
+			if (blob && (_shape.blobReturnsAsOffset || _returnType == awst::WType::uint64Type()))
 				retStmt->value = blobOffVar(rp);
+			else if (blob && _typeMapper.profile().scratchMemoryModel)
+				retStmt->value = materialized(rp, vt); // value protocol: ABI boundary copy
 			else
 				retStmt->value = awst::makeVarExpression(rp.name(), vt, _loc);
 		}
@@ -379,10 +407,12 @@ void emitImplicitReturn(
 			if (rp.name().empty())
 				// Solc initializes every return parameter, including unnamed ones.
 				tuple->items.push_back(TypeCoercion::makeDefaultValue(vt, _loc));
-			else if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(vt))
+			else if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(_typeMapper.profile(), vt))
 				tuple->items.push_back(blobOffVar(rp));
-			else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id()) && !memoryUsesBlob(vt))
+			else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id()) && !memoryUsesBlob(_typeMapper.profile(), vt))
 				tuple->items.push_back(materialized(rp, vt));
+			else if (inMemory && _typeMapper.profile().scratchMemoryModel && memoryUsesBlob(_typeMapper.profile(), vt))
+				tuple->items.push_back(materialized(rp, vt)); // tuple returns use the value protocol
 			else
 				tuple->items.push_back(awst::makeVarExpression(rp.name(), vt, _loc));
 		}
@@ -567,7 +597,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	buildMethodSignature(method, _func, _nameOverride);
 
 	auto const& signature = m_typeMapper.functionReturnPlan(_func);
-	method.returnType = signature.nativeType;
+	// Scratch model: internal methods return memory aggregates as offsets.
+	method.returnType = m_typeMapper.profile().scratchMemoryModel
+		? signature.internalType : signature.nativeType;
 
 	// Solidity `pure` must NOT map to puya `pure`. They are different contracts:
 	// Solidity's means "reads/writes no state" — the function can still REVERT

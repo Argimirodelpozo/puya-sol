@@ -298,21 +298,28 @@ EncodedSize computeEncodedElementSize(awst::WType const* _type)
 	}
 }
 
-bool memoryUsesBlob(awst::WType const* _type)
+bool memoryUsesBlob(TargetProfile const& _profile, awst::WType const* _type)
 {
 	if (!_type)
 		return false;
-	// Single control point for the "memory aggregate lives in the scratch blob/region model"
-	// decision (a uint64 (region,offset) pointer) vs a flat ARC4 value. Currently the original
-	// rule: encoded size exceeds one memory slot (AssemblyBuilder::SLOT_SIZE = 4096; literal
-	// here to keep this leaf TU free of the AssemblyBuilder include).
-	//
-	// HANDLE-MODEL STAGE 2 (memory→memory aliasing) will extend this to route 1D scalar arrays
-	// through the region model so `b = a` ALIASES (matches EVM). That extension is gated on
-	// FIRST hardening the blob model for the common small-array ops — verified blocker: routing
-	// `uint[]` here breaks `T memory a = new uint[](N)` inline-init ("assignment target type
-	// differs from expression value type": the new-array value vs the uint64 offset binding).
-	// Flip here once the blob model handles new-init / push / etc. for small arrays.
+	// Scratch model: every array/struct carrier is a pointer. bytes/string keep
+	// their native carriers (their own asm-pointer machinery is unchanged).
+	if (_profile.scratchMemoryModel)
+	{
+		switch (_type->kind())
+		{
+		case awst::WTypeKind::ARC4StaticArray:
+		case awst::WTypeKind::ARC4DynamicArray:
+		case awst::WTypeKind::ARC4Struct:
+		case awst::WTypeKind::ARC4Tuple:
+		case awst::WTypeKind::WTuple:
+			return true;
+		default:
+			break;
+		}
+	}
+	// Mixed model: encoded size exceeds one memory slot (AssemblyBuilder::SLOT_SIZE
+	// = 4096; literal here to keep this leaf TU free of the AssemblyBuilder include).
 	return computeEncodedElementSize(_type).fixedBytes().value_or(0) > 4096;
 }
 

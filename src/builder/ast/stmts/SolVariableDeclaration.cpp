@@ -379,7 +379,7 @@ bool SolVariableDeclaration::tryMemoryAliasBinding(
 	// disqualify either name before translation, including writes in later branches.
 	if (initialValue
 		&& decl.referenceLocation() == VariableDeclaration::Location::Memory
-		&& decl.type() && !builder::memoryUsesBlob(type))
+		&& decl.type() && !builder::memoryUsesBlob(m_blk.typeMapper().profile(), type))
 	{
 		bool aliasable = decl.type()->category() == solidity::frontend::Type::Category::Struct;
 		bool declBytesLike = false;
@@ -447,10 +447,20 @@ bool SolVariableDeclaration::tryBlobOffsetBinding(
 	// >4KB memory values can only originate this way (AVM can't copy them).
 	if (initialValue
 		&& decl.referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-		&& builder::memoryUsesBlob(type))
+		&& builder::memoryUsesBlob(m_blk.typeMapper().profile(), type))
 	{
 		std::string offN = "__blobagg_off_" + std::to_string(decl.id());
 		m_blk.builderCtx().appendEffectsTo(result);
+		if (value && value->wtype != awst::WType::uint64Type())
+		{
+			// A fresh VALUE (new/literal/storage read/ABI decode/call copy):
+			// solc allocates a new object here, so spill it and bind its base.
+			if (!builder::emitBlobBackValue(m_blk.typeMapper(), decl.type(), type,
+					std::move(value), offN, static_cast<int>(decl.id()), m_loc, result))
+				throw std::runtime_error("Cannot spill memory initializer into scratch memory");
+			m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
+			return true;
+		}
 		result.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
 			builder::TypeCoercion::implicitNumericCast(
@@ -530,10 +540,20 @@ void SolVariableDeclaration::emitDefaultDeclaration(
 		// >4096 B: can't hold as a single AVM bytes value. Back with the
 		// multi-slot blob; bind local to FMP base offset so `t.field[i]`
 		// lowers to blob word ops (SolIndexAccess). Blob is pre-zeroed.
-		if (builder::memoryUsesBlob(type)
+		if (builder::memoryUsesBlob(m_blk.typeMapper().profile(), type)
 			|| m_blk.scope.bindings.assemblyAggregates.contains(decl.id()))
 		{
 			std::string offN = "__blobagg_off_" + std::to_string(decl.id());
+			if (m_blk.typeMapper().profile().scratchMemoryModel)
+			{
+				// Solc allocates and zero-fills the declared type's memory layout.
+				if (!builder::emitBlobBackValue(m_blk.typeMapper(), decl.type(), type,
+						builder::TypeCoercion::makeDefaultValue(type, m_loc), offN,
+						static_cast<int>(decl.id()), m_loc, result))
+					throw std::runtime_error("Cannot allocate default memory value in scratch memory");
+				m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
+				return;
+			}
 			// base = current FMP (uint64) = extractUInt64(load(slot0), 88)
 			auto blob = awst::makeLoadSlot(
 				m_blk.typeMapper().profile().scratchLayout.memoryFirst(), m_loc);

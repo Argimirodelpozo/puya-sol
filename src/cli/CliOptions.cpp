@@ -148,6 +148,8 @@ void printUsage(char const* _progName)
 		<< "; UltraHonk needs ~32). Transient/flash reservations follow at N..N+10\n"
 		<< "  --evm-storage-layout   Back all storage with EVM-numbered slots (paged/sparse boxes).\n"
 		<< "                         Faithful assembly slots; ARC-56 names only immutable cells.\n"
+		<< "  --memory-model <m>     mixed (default) or scratch: EXPERIMENTAL uniform scratch-page\n"
+		<< "                         pointers for every memory aggregate (arrays/structs)\n"
 		<< "  --evm-memory-layout    UNAVAILABLE: rejected until universal EVM memory is implemented.\n"
 		<< "  --evm-layout           UNAVAILABLE: rejected because it includes that memory mode.\n"
 		<< "  --output-ir            Output all intermediate representations (SSA IR, MIR, TEAL)\n"
@@ -301,6 +303,15 @@ FlagSpec const kFlags[] = {
 				"--evm-memory-slots", v, 1, builder::ScratchLayout::maxMemorySlots); }},
 	{"--evm-storage-layout", false,
 		[](Options& o, std::string const&) { o.evmStorageLayout = true; }},
+	{"--memory-model", true,
+		[](Options& o, std::string const& v) {
+			if (v != "mixed" && v != "scratch")
+			{
+				std::cerr << "Error: --memory-model expects 'mixed' or 'scratch', got '"
+					<< v << "'" << std::endl;
+				std::exit(2);
+			}
+			o.memoryModel = v; }},
 	{"--evm-memory-layout", false, rejectEvmMemoryLayout},
 	{"--evm-layout", false, rejectEvmLayout},
 	{"--output-ir", false,

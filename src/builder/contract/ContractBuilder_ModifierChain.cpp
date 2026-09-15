@@ -336,7 +336,7 @@ void ContractBuilder::registerModifierMemoryRootParams(
 		auto const* type = m_typeMapper.map(parameter->type());
 		// Large aggregates already use their declared uint64 BlobOffset calling
 		// convention; small values need the chain-local bridge allocated below.
-		if (!memoryUsesBlob(type))
+		if (!memoryUsesBlob(m_typeMapper.profile(), type))
 			m_functionCtx->scope.bindings.blobAggregates.set(
 				parameter->id(), memoryRootName(_func, *parameter));
 	}
@@ -491,7 +491,7 @@ void ContractBuilder::buildModifierChain(
 	for (auto const* parameter: modifierMemoryRootParams(_func))
 	{
 		auto const* nativeType = m_typeMapper.map(parameter->type());
-		if (memoryUsesBlob(nativeType))
+		if (memoryUsesBlob(m_typeMapper.profile(), nativeType))
 			continue; // already a uint64 parameter under the ordinary call plan
 		auto found = std::find_if(
 			_func.parameters().begin(), _func.parameters().end(),

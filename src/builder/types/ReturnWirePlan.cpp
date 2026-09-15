@@ -99,9 +99,13 @@ FunctionReturnPlan const& TypeMapper::functionReturnPlan(
 	plan.internalType = plan.nativeType;
 	// The existing blob-return protocol transports a named memory result as
 	// its uint64 base offset; the caller reconstructs the source-level value.
-	if (returns.size() == 1 && !returns[0]->name().empty()
+	// Scratch model: every internal single memory-aggregate return is an
+	// offset; external-interface functions keep the value protocol.
+	bool const memoryReturn = returns.size() == 1
 		&& returns[0]->referenceLocation() == VariableDeclaration::Location::Memory
-		&& memoryUsesBlob(plan.nativeType))
+		&& memoryUsesBlob(profile(), plan.nativeType);
+	if (memoryReturn && (profile().scratchMemoryModel
+			? !function.isPartOfExternalInterface() : !returns[0]->name().empty()))
 		plan.internalType = awst::WType::uint64Type();
 	return m_returnPlans.emplace(function.id(), std::move(plan)).first->second;
 }

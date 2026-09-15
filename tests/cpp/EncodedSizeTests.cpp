@@ -22,7 +22,7 @@ int main()
 	require(computeEncodedElementSize(&small).fixedBytes() == 4128, "small size changed");
 	require(computeEncodedElementSize(&large).fixedBytes() == (uint64_t{1} << 32),
 		"large fixed size wrapped");
-	require(memoryUsesBlob(&large), "large type lost blob classification");
+	require(memoryUsesBlob(TargetProfile{}, &large), "large type lost blob classification");
 	require(computeEncodedElementSize(&overflow).kind == Kind::Overflow, "overflow not explicit");
 	require(computeEncodedElementSize(&negative).kind == Kind::Unsupported, "negative length accepted");
 	require(computeEncodedElementSize(&dynamic).kind == Kind::Dynamic, "dynamic type misclassified");

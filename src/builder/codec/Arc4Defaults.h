@@ -9,6 +9,7 @@
 /// ApprovalProgramBuilder, FunctionBuilder, AbiDecode) use these directly.
 
 #include "awst/Node.h"
+#include "builder/target/TargetProfile.h"
 #include "builder/types/EncodedSize.h"
 
 #include <cstdint>
@@ -50,10 +51,9 @@ std::optional<std::vector<uint64_t>> arc4FieldBitOffsets(awst::ARC4Struct const&
 
 /// Single control point for "this memory aggregate lives in the scratch
 /// blob/region model (a uint64 (region,offset) pointer) rather than as an ARC4
-/// value". Currently true when the statically encoded size exceeds one 4-KiB
-/// memory slot. Every blob-vs-value threshold site funnels through here so the
-/// rule stays consistent; see the implementation for the planned alias-model
-/// extension and its prerequisites.
-bool memoryUsesBlob(awst::WType const* _type);
+/// value". Mixed model: true when the statically encoded size exceeds one 4-KiB
+/// memory slot. Scratch model: true for every array/struct carrier. Every
+/// blob-vs-value threshold site funnels through here so the rule stays consistent.
+bool memoryUsesBlob(TargetProfile const& _profile, awst::WType const* _type);
 
 } // namespace puyasol::builder

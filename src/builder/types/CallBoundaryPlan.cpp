@@ -85,6 +85,12 @@ void CallParameterPlan::setAbiWireType(
 {
 	wireType = type;
 	signedDecodeBits = 0;
+	if (passing == RefParamPassing::BlobOffset)
+	{
+		// The physical parameter is a memory offset; the ABI carries the aggregate.
+		wireType = types.mapToARC4Type(types.map(solType));
+		return;
+	}
 	if (type == awst::WType::biguintType())
 	{
 		auto integer = SolIntType::fromSol(solType);
