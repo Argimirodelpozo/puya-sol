@@ -41,3 +41,6 @@ def test_memory_reference_identity(harness, model):
     assert _ints(harness.call(app, "nestedAssign()").abi_return) == (1, 6, 0)
     name, v = harness.call(app, "stringMember()").abi_return
     assert (name, as_int(v)) == ("hello", 5)
+    assert _ints(harness.call(app, "uniqueBesideShared()").abi_return) == (2, 7)
+    assert as_int(harness.call(app, "freshBound()").abi_return) == 8
+    assert as_int(harness.call(app, "aliasViaReturn()").abi_return) == 9

@@ -379,7 +379,7 @@ bool SolVariableDeclaration::tryMemoryAliasBinding(
 	// disqualify either name before translation, including writes in later branches.
 	if (initialValue
 		&& decl.referenceLocation() == VariableDeclaration::Location::Memory
-		&& decl.type() && !builder::memoryUsesBlob(m_blk.typeMapper().profile(), type))
+		&& decl.type() && !m_blk.typeMapper().memoryDeclarationUsesBlob(decl))
 	{
 		bool aliasable = decl.type()->category() == solidity::frontend::Type::Category::Struct;
 		bool declBytesLike = false;
@@ -447,7 +447,7 @@ bool SolVariableDeclaration::tryBlobOffsetBinding(
 	// >4KB memory values can only originate this way (AVM can't copy them).
 	if (initialValue
 		&& decl.referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-		&& builder::memoryUsesBlob(m_blk.typeMapper().profile(), type))
+		&& m_blk.typeMapper().memoryDeclarationUsesBlob(decl))
 	{
 		std::string offN = "__blobagg_off_" + std::to_string(decl.id());
 		m_blk.builderCtx().appendEffectsTo(result);
@@ -516,6 +516,51 @@ bool SolVariableDeclaration::tryAsmAggregateInit(
 	return true;
 }
 
+namespace
+{
+/// Scratch model: a unique value still owns its solc arena reservation, so
+/// every address assembly can observe stays where the EVM would put it. When
+/// no assembly exists anywhere nothing can observe addresses, so skip it.
+void reserveUniqueMemory(
+	BlockContext& blk, VariableDeclaration const& decl,
+	awst::SourceLocation const& loc, std::vector<std::shared_ptr<awst::Statement>>& out)
+{
+	auto& types = blk.typeMapper();
+	if (!types.profile().scratchMemoryModel
+		|| decl.referenceLocation() != VariableDeclaration::Location::Memory
+		|| types.analysis().callablesWithInlineAssembly.empty())
+		return;
+	auto const* reference = dynamic_cast<ReferenceType const*>(decl.type());
+	auto const* wtype = types.map(decl.type());
+	if (!reference || !builder::isAggregateCarrier(wtype))
+		return;
+	auto const& scratch = types.profile().scratchLayout;
+	int const id = static_cast<int>(decl.id());
+	if (auto const* array = dynamic_cast<ArrayType const*>(reference);
+		array && array->isDynamicallySized())
+	{
+		auto length = awst::makeArrayLength(
+			awst::makeVarExpression(blk.scope.awstVarName(decl), wtype, loc),
+			awst::WType::uint64Type(), loc);
+		auto size = awst::makeUInt64BinOp(
+			awst::makeIntegerConstant(uint64_t{32}, loc), awst::UInt64BinaryOperator::Add,
+			awst::makeUInt64BinOp(std::move(length), awst::UInt64BinaryOperator::Mult,
+				awst::makeIntegerConstant(static_cast<uint64_t>(array->memoryStride()), loc), loc),
+			loc);
+		for (auto& s: builder::AssemblyBuilder::emitMemoryAlloc(
+				scratch, std::move(size), "__reserve_" + std::to_string(id), id, loc))
+			out.push_back(std::move(s));
+		return;
+	}
+	auto const size = reference->memoryDataSize();
+	if (size == 0 || size > (solidity::u256(1) << 31))
+		return;
+	for (auto& s: builder::AssemblyBuilder::emitFreeMemoryBump(
+			scratch, size.convert_to<int>(), loc, id))
+		out.push_back(std::move(s));
+}
+} // namespace
+
 /// Default binding: `target = value`, with the fresh-memory FMP bump for uninitialised `T memory t;` (blob-backed >4KB locals bind …
 void SolVariableDeclaration::emitDefaultDeclaration(
 	VariableDeclaration const& decl,
@@ -540,7 +585,7 @@ void SolVariableDeclaration::emitDefaultDeclaration(
 		// >4096 B: can't hold as a single AVM bytes value. Back with the
 		// multi-slot blob; bind local to FMP base offset so `t.field[i]`
 		// lowers to blob word ops (SolIndexAccess). Blob is pre-zeroed.
-		if (builder::memoryUsesBlob(m_blk.typeMapper().profile(), type)
+		if (m_blk.typeMapper().memoryDeclarationUsesBlob(decl)
 			|| m_blk.scope.bindings.assemblyAggregates.contains(decl.id()))
 		{
 			std::string offN = "__blobagg_off_" + std::to_string(decl.id());
@@ -570,7 +615,7 @@ void SolVariableDeclaration::emitDefaultDeclaration(
 			return; // skip the normal (oversized) target = bzero(sz) assignment
 		}
 
-		if (sz > 0)
+		if (sz > 0 && !m_blk.typeMapper().profile().scratchMemoryModel)
 			for (auto& s: builder::AssemblyBuilder::emitFreeMemoryBump(
 					m_blk.typeMapper().profile().scratchLayout, sz, m_loc,
 					static_cast<int>(decl.id())))
@@ -578,6 +623,7 @@ void SolVariableDeclaration::emitDefaultDeclaration(
 	}
 
 	result.push_back(assign);
+	reserveUniqueMemory(m_blk, decl, m_loc, result);
 }
 
 /// Tuple destructuring `(a, b) = expr;`: RHS must evaluate once — SingleEvaluation is inlined per-consumer in AWST JSON, causing …
@@ -682,7 +728,11 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 
 		if (tryAsmBytesAllocation(decl, initialValue, result))
 			return result;
-		if (initialValue && decl.referenceLocation() == VariableDeclaration::Location::Memory)
+		// Scratch model: a unique object binds by value; only a shared one may
+		// adopt an existing reference.
+		if (initialValue && decl.referenceLocation() == VariableDeclaration::Location::Memory
+			&& (!m_blk.typeMapper().profile().scratchMemoryModel
+				|| m_blk.typeMapper().memoryDeclarationUsesBlob(decl)))
 			if (auto reference = SolIndexAccess::resolveBlobReference(
 				m_blk.builderCtx(), m_blk.scope, *initialValue, m_loc))
 			{

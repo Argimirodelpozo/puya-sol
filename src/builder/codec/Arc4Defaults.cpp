@@ -298,28 +298,31 @@ EncodedSize computeEncodedElementSize(awst::WType const* _type)
 	}
 }
 
-bool memoryUsesBlob(TargetProfile const& _profile, awst::WType const* _type)
+bool isAggregateCarrier(awst::WType const* _type)
 {
 	if (!_type)
 		return false;
-	// Scratch model: every array/struct carrier is a pointer. bytes/string keep
-	// their native carriers (their own asm-pointer machinery is unchanged).
-	if (_profile.scratchMemoryModel)
+	switch (_type->kind())
 	{
-		switch (_type->kind())
-		{
-		case awst::WTypeKind::ARC4StaticArray:
-		case awst::WTypeKind::ARC4DynamicArray:
-		case awst::WTypeKind::ARC4Struct:
-		case awst::WTypeKind::ARC4Tuple:
-		case awst::WTypeKind::WTuple:
-			return true;
-		default:
-			break;
-		}
+	case awst::WTypeKind::ARC4StaticArray:
+	case awst::WTypeKind::ARC4DynamicArray:
+	case awst::WTypeKind::ARC4Struct:
+	case awst::WTypeKind::ARC4Tuple:
+	case awst::WTypeKind::WTuple:
+		return true;
+	default:
+		return false;
 	}
-	// Mixed model: encoded size exceeds one memory slot (AssemblyBuilder::SLOT_SIZE
-	// = 4096; literal here to keep this leaf TU free of the AssemblyBuilder include).
+}
+
+bool memoryUsesBlob(TargetProfile const&, awst::WType const* _type)
+{
+	if (!_type)
+		return false;
+	// Encoded size exceeds one memory slot (AssemblyBuilder::SLOT_SIZE = 4096;
+	// literal here to keep this leaf TU free of the AssemblyBuilder include).
+	// The scratch model adds per-declaration sharing facts on top of this size
+	// rule (TypeMapper::memoryDeclarationUsesBlob).
 	return computeEncodedElementSize(_type).fixedBytes().value_or(0) > 4096;
 }
 

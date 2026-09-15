@@ -188,7 +188,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 		auto const* reference = dynamic_cast<ReferenceType const*>(_node.annotation().type);
 		auto const* wtype = reference ? _ctx.typeMapper.map(reference) : nullptr;
 		if (reference && reference->location() == DataLocation::Memory
-			&& memoryUsesBlob(_ctx.typeMapper.profile(), wtype))
+			&& isAggregateCarrier(wtype))
 		{
 			std::shared_ptr<awst::Expression> value;
 			{

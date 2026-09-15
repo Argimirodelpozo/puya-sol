@@ -36,6 +36,40 @@ and assembly-visible objects) is generalized rather than replaced:
 - Word reads/writes pass the alignment fact, so the inline `(slot, sub)` path
   is used instead of the shared straddle helpers.
 
+## Uniqueness: value where identity is provably unobservable
+
+Second stage, same flag. Pointer stays the default; a whole-program sharing
+fixed point (`context/MemorySharing.cpp`, `ProgramAnalysis::memorySharingFacts`)
+promotes memory aggregates back to the ARC4 value representation when no
+second reference to the object can ever exist. A declaration is shared, and
+therefore a pointer, when it is
+
+- bound to or assigned from another memory variable or a member/element path
+  (`T memory b = a`, `b = a`, `c = s.items`), including through conditionals
+  and tuples;
+- stored into another object's reference-typed slot, or is the root of such a
+  slot receiving an existing reference;
+- returned when it is a parameter, or returned alongside anything shared;
+- passed to a callee parameter that the callee mutates (existing parameter
+  mutation facts) or shares, or to an unresolved internal function pointer;
+- bound to the result of a callee whose return may alias a parameter or a
+  shared object;
+- captured by a modifier argument, or referenced from inline assembly.
+
+The fixed point runs per contract context over solc's resolved internal call
+graph and unions the declaration IDs, so virtual dispatch differences only
+ever add sharing. Callee parameter conventions follow the callee's facts:
+mutated or shared parameters are pointers, read-only non-escaping ones are
+values. A function whose single memory return may alias returns an offset;
+one that returns fresh objects returns a value the caller takes over. Every
+decision site consults `TypeMapper::memoryDeclarationUsesBlob`, which also
+keeps the size rule for aggregates over 4 KiB.
+
+Arena accounting: a unique value still reserves its solc-sized region at the
+declaration (free-memory-pointer bump only, no data write) whenever the program
+contains inline assembly, so observable addresses match the EVM's; without
+assembly nothing can observe addresses and the bump is skipped.
+
 ## What the category sweep found and what was fixed
 
 The first scratch-mode run of the `array`, `structs` and `memoryManagement`

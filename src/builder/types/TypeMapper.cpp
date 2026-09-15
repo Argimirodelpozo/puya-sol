@@ -1,6 +1,7 @@
 #include "builder/types/TypeMapper.h"
 #include "builder/types/FunctionPointerKind.h"
 #include "builder/codec/Arc4Defaults.h"
+#include "builder/context/ProgramAnalysis.h"
 #include "builder/solc/StorageRefPointer.h"
 #include "Logger.h"
 
@@ -417,6 +418,15 @@ awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* 
 
 	m_solArc4Cache.emplace(cacheKey, result);
 	return result;
+}
+
+bool TypeMapper::memoryDeclarationUsesBlob(solidity::frontend::VariableDeclaration const& _declaration)
+{
+	auto const* wtype = map(_declaration.type());
+	if (memoryUsesBlob(m_profile, wtype))
+		return true;
+	return m_profile.scratchMemoryModel && isAggregateCarrier(wtype)
+		&& m_analysis.memorySharingFacts().sharedDeclarations.contains(_declaration.id());
 }
 
 } // namespace puyasol::builder

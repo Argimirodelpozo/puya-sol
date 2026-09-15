@@ -762,7 +762,7 @@ std::shared_ptr<awst::Expression> finishScratchReference(
 	if (!reference || reference->location() != DataLocation::Memory)
 		return result;
 	auto const* native = ctx.typeMapper.map(reference);
-	if (!memoryUsesBlob(ctx.typeMapper.profile(), native))
+	if (!isAggregateCarrier(native))
 		return result;
 	return materializeEvmMemoryValue(
 		ctx.typeMapper, reference, native, std::move(result), loc, ctx.preEffects());

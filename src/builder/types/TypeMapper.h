@@ -68,6 +68,11 @@ public:
 	/// fixed values travel by value + write-back unless source facts require boxes.
 	bool isBoxKeyedStorageRef(solidity::frontend::Type const* _solType);
 
+	/// Scratch model: pointer representation for a memory aggregate declaration
+	/// (shared per MemorySharingFacts, or too large for one AVM value); mixed
+	/// model: the size rule only.
+	bool memoryDeclarationUsesBlob(solidity::frontend::VariableDeclaration const& _declaration);
+
 	/// Native, internal-call, and ABI return forms from one resolved solc declaration.
 	FunctionReturnPlan const& functionReturnPlan(
 		solidity::frontend::FunctionDefinition const& _function);

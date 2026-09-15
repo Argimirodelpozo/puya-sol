@@ -266,7 +266,7 @@ bool tryScratchReferenceReturn(BlockContext& blk, Return const& node,
 	if (target.referenceLocation() != VariableDeclaration::Location::Memory)
 		return false;
 	auto const* wtype = blk.typeMapper().map(target.type());
-	if (!builder::memoryUsesBlob(blk.typeMapper().profile(), wtype))
+	if (!builder::isAggregateCarrier(wtype))
 		return false;
 	if (auto reference = SolIndexAccess::resolveBlobReference(
 			ctx, blk.scope, *node.expression(), loc))

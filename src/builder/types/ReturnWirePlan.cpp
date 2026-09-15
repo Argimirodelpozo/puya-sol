@@ -101,11 +101,17 @@ FunctionReturnPlan const& TypeMapper::functionReturnPlan(
 	// its uint64 base offset; the caller reconstructs the source-level value.
 	// Scratch model: every internal single memory-aggregate return is an
 	// offset; external-interface functions keep the value protocol.
+	// The size rule only applies to a single memory aggregate: evaluating it on
+	// a return tuple throws for unsupported element sizes.
 	bool const memoryReturn = returns.size() == 1
 		&& returns[0]->referenceLocation() == VariableDeclaration::Location::Memory
-		&& memoryUsesBlob(profile(), plan.nativeType);
-	if (memoryReturn && (profile().scratchMemoryModel
-			? !function.isPartOfExternalInterface() : !returns[0]->name().empty()))
+		&& isAggregateCarrier(plan.nativeType);
+	bool const pointerReturn = memoryReturn && (profile().scratchMemoryModel
+		? !function.isPartOfExternalInterface()
+			&& (analysis().memorySharingFacts().pointerReturnFunctions.contains(function.id())
+				|| memoryUsesBlob(profile(), plan.nativeType))
+		: memoryUsesBlob(profile(), plan.nativeType) && !returns[0]->name().empty());
+	if (pointerReturn)
 		plan.internalType = awst::WType::uint64Type();
 	return m_returnPlans.emplace(function.id(), std::move(plan)).first->second;
 }

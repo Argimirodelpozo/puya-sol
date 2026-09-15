@@ -75,6 +75,17 @@ struct ParameterMutationSummary
 	}
 };
 
+/// Scratch memory model: memory aggregates whose identity may be observed need
+/// the pointer representation; the rest are unique values. Declaration IDs of
+/// parameters, locals and named returns, unioned over every contract context.
+struct MemorySharingFacts
+{
+	std::set<int64_t> sharedDeclarations;
+	/// Functions whose single memory-aggregate return may alias a parameter or
+	/// a shared object; their internal callers receive a pointer.
+	std::set<int64_t> pointerReturnFunctions;
+};
+
 /// Immutable whole-program facts computed once before AWST translation.
 /// Keeping these in a build-owned value avoids reset-order dependencies and
 /// lets multiple compiler sessions coexist safely.
@@ -175,9 +186,17 @@ struct ProgramAnalysis
 		solidity::frontend::ContractDefinition const* _mostDerived,
 		solidity::frontend::FunctionDefinition const& _function) const;
 
+	/// Whole-program sharing fixed point (MemorySharing.cpp), computed by analyze().
+	MemorySharingFacts memorySharing;
+	MemorySharingFacts const& memorySharingFacts() const { return memorySharing; }
+
 	static ProgramAnalysis analyze(
 		solidity::frontend::CompilerStack& _compiler,
 		bool _evmStorageLayout);
 };
+
+/// Sharing fixed point over every contract context; needs the call graphs,
+/// function index and parameter mutation inputs of `_analysis`.
+MemorySharingFacts analyzeMemorySharing(ProgramAnalysis const& _analysis);
 
 } // namespace puyasol::builder

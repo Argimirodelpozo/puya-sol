@@ -60,7 +60,7 @@ FunctionContext::FunctionContext(TranslationContext& _tr,
 				scope.bindings.mappingKeyParams.set(result->id(), result->name());
 		}
 		else if (result->referenceLocation() == VariableDeclaration::Location::Memory
-			&& memoryUsesBlob(types.profile(), types.map(result->type())))
+			&& types.memoryDeclarationUsesBlob(*result))
 			scope.bindings.blobAggregates.set(result->id(), "__blobagg_off_" + std::to_string(result->id()));
 	}
 }

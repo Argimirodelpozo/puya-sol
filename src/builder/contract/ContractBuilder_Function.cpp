@@ -284,7 +284,7 @@ void emitNamedReturnInits(
 
 		// >4KB memory returns: pre-zeroed in preamble; skip bzero (pointer model).
 		if (rp->referenceLocation() == VariableDeclaration::Location::Memory
-			&& memoryUsesBlob(_typeMapper.profile(), rpType))
+			&& _typeMapper.memoryDeclarationUsesBlob(*rp))
 			continue;
 
 		auto target = awst::makeVarExpression(rp->name(), rpType, _loc);
@@ -297,7 +297,7 @@ void emitNamedReturnInits(
 			continue;
 		auto* rpType = _typeMapper.map(rp->type());
 		if (_typeMapper.profile().scratchMemoryModel
-			&& memoryUsesBlob(_typeMapper.profile(), rpType))
+			&& _typeMapper.memoryDeclarationUsesBlob(*rp))
 		{
 			// Solc allocates and zero-fills every memory return at entry.
 			std::string offN = "__blobagg_off_" + std::to_string(rp->id());
@@ -312,7 +312,7 @@ void emitNamedReturnInits(
 			continue;
 		// Blob-backed memory return: bind FMP (before bump) to __blobagg_off_<id>
 		// to match blob-aggregate registration in ContractBuilder::buildBlock.
-		if (memoryUsesBlob(_typeMapper.profile(), rpType))
+		if (_typeMapper.memoryDeclarationUsesBlob(*rp))
 		{
 			std::string offN = "__blobagg_off_" + std::to_string(rp->id());
 			auto blob = awst::makeLoadSlot(
@@ -377,14 +377,14 @@ void emitImplicitReturn(
 		if (_shape.calldataPointerReturns && _fnCtx.seededCalldataPointers.count(rp.name()))
 			retStmt->value = TypeCoercion::calldataPointerValueRead(rp.name(), _loc);
 		else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id())
-			&& !memoryUsesBlob(_typeMapper.profile(), _typeMapper.map(rp.type())))
+			&& !_typeMapper.memoryDeclarationUsesBlob(rp))
 			retStmt->value = materialized(rp, _typeMapper.map(rp.type()));
 		else
 		{
 			auto const* vt = rp.referenceLocation() == VariableDeclaration::Location::Storage
 				? _typeMapper.functionReturnPlan(_func).nativeType
 				: _typeMapper.map(rp.type());
-			bool const blob = inMemory && memoryUsesBlob(_typeMapper.profile(), vt);
+			bool const blob = inMemory && _typeMapper.memoryDeclarationUsesBlob(rp);
 			if (blob && (_shape.blobReturnsAsOffset || _returnType == awst::WType::uint64Type()))
 				retStmt->value = blobOffVar(rp);
 			else if (blob && _typeMapper.profile().scratchMemoryModel)
@@ -407,11 +407,11 @@ void emitImplicitReturn(
 			if (rp.name().empty())
 				// Solc initializes every return parameter, including unnamed ones.
 				tuple->items.push_back(TypeCoercion::makeDefaultValue(vt, _loc));
-			else if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(_typeMapper.profile(), vt))
+			else if (_shape.blobReturnsAsOffset && inMemory && _typeMapper.memoryDeclarationUsesBlob(rp))
 				tuple->items.push_back(blobOffVar(rp));
-			else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id()) && !memoryUsesBlob(_typeMapper.profile(), vt))
+			else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id()) && !_typeMapper.memoryDeclarationUsesBlob(rp))
 				tuple->items.push_back(materialized(rp, vt));
-			else if (inMemory && _typeMapper.profile().scratchMemoryModel && memoryUsesBlob(_typeMapper.profile(), vt))
+			else if (inMemory && _typeMapper.profile().scratchMemoryModel && _typeMapper.memoryDeclarationUsesBlob(rp))
 				tuple->items.push_back(materialized(rp, vt)); // tuple returns use the value protocol
 			else
 				tuple->items.push_back(awst::makeVarExpression(rp.name(), vt, _loc));

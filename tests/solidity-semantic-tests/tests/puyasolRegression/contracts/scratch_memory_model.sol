@@ -129,6 +129,45 @@ contract ScratchMemoryModel {
         return (n.name, n.v);
     }
 
+    // uniqueness analysis: `a` stays a value (read-only callee), `b`/`c` share
+    function sumReadOnly(uint256[] memory x) internal pure returns (uint256 t) {
+        for (uint256 i = 0; i < x.length; i++) t += x[i];
+    }
+
+    function uniqueBesideShared() external pure returns (uint256, uint256) {
+        uint256[] memory a = new uint256[](2);
+        a[0] = 1;
+        uint256 s = sumReadOnly(a);
+        uint256[] memory b = new uint256[](1);
+        uint256[] memory c = b;
+        c[0] = 7;
+        return (s + a[0], b[0]);
+    }
+
+    // a callee returning a fresh object hands over ownership
+    function fresh(uint256 n) internal pure returns (uint256[] memory r) {
+        r = new uint256[](n);
+        r[n - 1] = n;
+    }
+
+    function freshBound() external pure returns (uint256) {
+        uint256[] memory f = fresh(3);
+        f[0] = 5;
+        return f[0] + f[2];
+    }
+
+    // a callee returning its parameter keeps the caller's identity
+    function passThrough(uint256[] memory x) internal pure returns (uint256[] memory) {
+        return x;
+    }
+
+    function aliasViaReturn() external pure returns (uint256) {
+        uint256[] memory a = new uint256[](1);
+        uint256[] memory b = passThrough(a);
+        b[0] = 9;
+        return a[0];
+    }
+
     // named memory return: allocated at entry, mutated in place, returned by pointer
     function makeSeq(uint256 n) internal pure returns (uint256[] memory r) {
         r = new uint256[](n);

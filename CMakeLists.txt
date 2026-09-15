@@ -240,6 +240,7 @@ set(SOURCES
 	src/builder/context/CompilationSession.cpp
 	src/builder/context/ContractContext.cpp
 	src/builder/context/ParameterMutationAnalysis.cpp
+	src/builder/context/MemorySharing.cpp
 	src/builder/context/ProgramAnalysis.cpp
 	src/builder/context/TranslationContext.cpp
 

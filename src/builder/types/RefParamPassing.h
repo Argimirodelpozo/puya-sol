@@ -43,7 +43,7 @@ inline RefParamPassing classifyRefParamPassing(
 			|| _isAsmSlotRef)) // widened: plain structs + asm .slot refs
 		return RefParamPassing::BoxKeyPrefix;
 	if (_param.referenceLocation() == Loc::Memory
-		&& memoryUsesBlob(_tm.profile(), _tm.map(_param.type())))
+		&& _tm.memoryDeclarationUsesBlob(_param))
 		return RefParamPassing::BlobOffset;
 	return RefParamPassing::Value;
 }

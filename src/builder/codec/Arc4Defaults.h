@@ -56,4 +56,8 @@ std::optional<std::vector<uint64_t>> arc4FieldBitOffsets(awst::ARC4Struct const&
 /// blob-vs-value threshold site funnels through here so the rule stays consistent.
 bool memoryUsesBlob(TargetProfile const& _profile, awst::WType const* _type);
 
+/// True for the array/struct/tuple carriers a memory aggregate maps to
+/// (bytes/string are native carriers and never count).
+bool isAggregateCarrier(awst::WType const* _type);
+
 } // namespace puyasol::builder
