@@ -1,0 +1,657 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="16" skipped="0" tests="21" time="14.870" timestamp="2026-09-15T11:56:35.482903-03:00" hostname="DESKTOP-1V3OH25"><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[hosts-arc4-legacy]" time="5.241"><failure message="AssertionError: ('SharingBase', 'check()', [])&#10;assert (0,) == (31,)&#10;  &#10;  At index 0 diff: 0 != 31&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x72567d7f0b00&gt;, via_ir = False
+profile = 'arc4', fixture = 'hosts'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingBase', 'check()', [])
+E               assert (0,) == (31,)
+E
+E                 At index 0 diff: 0 != 31
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[returns-arc4-legacy]" time="5.239"><failure message="AssertionError: ('SharingReturns', 'namedAlias()', [])&#10;assert (0,) == (17,)&#10;  &#10;  At index 0 diff: 0 != 17&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x7ae0b21755e0&gt;, via_ir = False
+profile = 'arc4', fixture = 'returns'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingReturns', 'namedAlias()', [])
+E               assert (0,) == (17,)
+E
+E                 At index 0 diff: 0 != 17
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[returns-evm-legacy]" time="5.629"><failure message="AssertionError: ('SharingReturns', 'namedAlias()', [])&#10;assert (0,) == (17,)&#10;  &#10;  At index 0 diff: 0 != 17&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x79f869f61130&gt;, via_ir = False
+profile = 'evm', fixture = 'returns'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingReturns', 'namedAlias()', [])
+E               assert (0,) == (17,)
+E
+E                 At index 0 diff: 0 != 17
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[hosts-arc4-via-ir]" time="1.516"><failure message="AssertionError: ('SharingBase', 'check()', [])&#10;assert (0,) == (31,)&#10;  &#10;  At index 0 diff: 0 != 31&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x72567d6599d0&gt;, via_ir = True
+profile = 'arc4', fixture = 'hosts'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingBase', 'check()', [])
+E               assert (0,) == (31,)
+E
+E                 At index 0 diff: 0 != 31
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[returns-arc4-via-ir]" time="1.754"><failure message="AssertionError: ('SharingReturns', 'namedAlias()', [])&#10;assert (0,) == (17,)&#10;  &#10;  At index 0 diff: 0 != 17&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x7ae0b22e3bc0&gt;, via_ir = True
+profile = 'arc4', fixture = 'returns'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingReturns', 'namedAlias()', [])
+E               assert (0,) == (17,)
+E
+E                 At index 0 diff: 0 != 17
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[returns-evm-via-ir]" time="1.654"><failure message="AssertionError: ('SharingReturns', 'namedAlias()', [])&#10;assert (0,) == (17,)&#10;  &#10;  At index 0 diff: 0 != 17&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x79f869f61670&gt;, via_ir = True
+profile = 'evm', fixture = 'returns'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingReturns', 'namedAlias()', [])
+E               assert (0,) == (17,)
+E
+E                 At index 0 diff: 0 != 17
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[hosts-evm-legacy]" time="1.421"><failure message="AssertionError: ('SharingBase', 'check()', [])&#10;assert (0,) == (31,)&#10;  &#10;  At index 0 diff: 0 != 31&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x72567d677d70&gt;, via_ir = False
+profile = 'evm', fixture = 'hosts'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingBase', 'check()', [])
+E               assert (0,) == (31,)
+E
+E                 At index 0 diff: 0 != 31
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[hosts-evm-via-ir]" time="1.397"><failure message="AssertionError: ('SharingBase', 'check()', [])&#10;assert (0,) == (31,)&#10;  &#10;  At index 0 diff: 0 != 31&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x7ae0b2193230&gt;, via_ir = True
+profile = 'evm', fixture = 'hosts'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingBase', 'check()', [])
+E               assert (0,) == (31,)
+E
+E                 At index 0 diff: 0 != 31
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[constructors-arc4-legacy]" time="1.001"><failure message="AssertionError: ('SharingConstructors', 'constructorAlias()', [])&#10;assert (0, 1) == (41, 1)&#10;  &#10;  At index 0 diff: 0 != 41&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x79f869f7f530&gt;, via_ir = False
+profile = 'arc4', fixture = 'constructors'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingConstructors', 'constructorAlias()', [])
+E               assert (0, 1) == (41, 1)
+E
+E                 At index 0 diff: 0 != 41
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[constructors-arc4-via-ir]" time="0.947"><failure message="AssertionError: ('SharingConstructors', 'constructorAlias()', [])&#10;assert (0, 1) == (41, 1)&#10;  &#10;  At index 0 diff: 0 != 41&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x72567d367ef0&gt;, via_ir = True
+profile = 'arc4', fixture = 'constructors'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingConstructors', 'constructorAlias()', [])
+E               assert (0, 1) == (41, 1)
+E
+E                 At index 0 diff: 0 != 41
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[constructors-evm-via-ir]" time="0.902"><failure message="AssertionError: ('SharingConstructors', 'constructorAlias()', [])&#10;assert (0, 1) == (41, 1)&#10;  &#10;  At index 0 diff: 0 != 41&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x79f869adf3b0&gt;, via_ir = True
+profile = 'evm', fixture = 'constructors'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingConstructors', 'constructorAlias()', [])
+E               assert (0, 1) == (41, 1)
+E
+E                 At index 0 diff: 0 != 41
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[constructors-evm-legacy]" time="0.942"><failure message="AssertionError: ('SharingConstructors', 'constructorAlias()', [])&#10;assert (0, 1) == (41, 1)&#10;  &#10;  At index 0 diff: 0 != 41&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x7ae0b1cf39b0&gt;, via_ir = False
+profile = 'evm', fixture = 'constructors'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingConstructors', 'constructorAlias()', [])
+E               assert (0, 1) == (41, 1)
+E
+E                 At index 0 diff: 0 != 41
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[raw_yul-arc4-legacy]" time="0.737"><failure message="AssertionError: ('SharingRawYul', 'readUnnamedObject()', [])&#10;assert (0,) == (61,)&#10;  &#10;  At index 0 diff: 0 != 61&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x72567d7f0b00&gt;, via_ir = False
+profile = 'arc4', fixture = 'raw_yul'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingRawYul', 'readUnnamedObject()', [])
+E               assert (0,) == (61,)
+E
+E                 At index 0 diff: 0 != 61
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[raw_yul-arc4-via-ir]" time="0.604"><failure message="AssertionError: ('SharingRawYul', 'readUnnamedObject()', [])&#10;assert (0,) == (61,)&#10;  &#10;  At index 0 diff: 0 != 61&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x79f869f61670&gt;, via_ir = True
+profile = 'arc4', fixture = 'raw_yul'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingRawYul', 'readUnnamedObject()', [])
+E               assert (0,) == (61,)
+E
+E                 At index 0 diff: 0 != 61
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[raw_yul-evm-legacy]" time="0.971"><failure message="AssertionError: ('SharingRawYul', 'readUnnamedObject()', [])&#10;assert (0,) == (61,)&#10;  &#10;  At index 0 diff: 0 != 61&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x7ae0b2f99520&gt;, via_ir = False
+profile = 'evm', fixture = 'raw_yul'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingRawYul', 'readUnnamedObject()', [])
+E               assert (0,) == (61,)
+E
+E                 At index 0 diff: 0 != 61
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[unique-arc4-legacy]" time="0.697" /><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[raw_yul-evm-via-ir]" time="1.032"><failure message="AssertionError: ('SharingRawYul', 'readUnnamedObject()', [])&#10;assert (0,) == (61,)&#10;  &#10;  At index 0 diff: 0 != 61&#10;  Use -v to get more diff">harness = &lt;framework.harness.Harness object at 0x72567d364aa0&gt;, via_ir = True
+profile = 'evm', fixture = 'raw_yul'
+
+    @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+    @pytest.mark.parametrize("profile", ["arc4", "evm"])
+    @pytest.mark.parametrize("fixture", ["returns", "hosts", "constructors", "raw_yul", "unique"])
+    def test_memory_sharing(harness, via_ir, profile, fixture):
+        artifacts = harness.compile(
+            "puyasolRegression/contracts/sharing_" + fixture + ".sol",
+            via_yul_behavior=via_ir,
+            extra_args=["--memory-model", "scratch", "--contract-abi", profile],
+        )
+        probes = {
+            "returns": {"SharingReturns": [
+                ("namedAlias()", [], (17,)), ("branchAlias(bool)", [False], (19,)),
+                ("branchAlias(bool)", [True], (19,)), ("returnedArgument()", [], (23,)),
+                ("returnedMember()", [], (29,)),
+            ]},
+            "hosts": {"SharingBase": [("check()", [], (31,))],
+                      "SharingDerived": [("check()", [], (37,))]},
+            "constructors": {"SharingConstructors": [
+                ("constructorAlias()", [], (41, 1)), ("nestedConstructor()", [], (47, 43)),
+                ("modifierAlias()", [], (59,)),
+            ]},
+            "raw_yul": {"SharingRawYul": [
+                ("readUnnamedObject()", [], (61,)), ("writeUnnamedObject()", [], (67,)),
+                ("constructorOrder()", [], (71, 0 if via_ir else 71, 128)),
+            ]},
+            "unique": {"SharingUnique": [("check(uint256)", [73], (73,))]},
+        }
+        for contract, calls in probes[fixture].items():
+            app = harness.deploy(artifacts, contract, fund_wei=20_000_000)
+            for signature, args, expected in calls:
+&gt;               assert invoke(harness, app, profile, signature, args,
+                              ["uint256"] * len(expected)) == expected, (contract, signature, args)
+E               AssertionError: ('SharingRawYul', 'readUnnamedObject()', [])
+E               assert (0,) == (61,)
+E
+E                 At index 0 diff: 0 != 61
+E                 Use -v to get more diff
+
+tests/puyasolRegression/test_memory_sharing.py:38: AssertionError</failure></testcase><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[unique-arc4-via-ir]" time="0.599" /><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[unique-evm-legacy]" time="0.771" /><testcase classname="tests.puyasolRegression.test_memory_sharing" name="test_memory_sharing[unique-evm-via-ir]" time="0.840" /><testcase classname="framework.test_memory_sharing" name="test_unique_memory_stays_value_backed" time="0.057" /></testsuite></testsuites>

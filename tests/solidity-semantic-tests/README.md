@@ -8,6 +8,57 @@ not as an active test runner.
 
 ## Recorded baseline
 
+Full LocalNet semantic and harness/cache run on **2026-09-15**, testing source
+commit `382c4e0146` on `experiment/scratch-memory-model`, rebased onto completed
+`rev-2` (`18804ec53f`). The experiment stays separate and off by default. This
+batch fixes context-audit item 4: declaration-keyed sharing propagation across
+solc-resolved hosts, returned references, constructor children and raw Yul memory
+visibility. Items 1–3 and 5–9 remain on `rev-2`.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,539 |
+| Failed | 1 |
+| Expected failure (xfail) | 101 |
+| Unexpected pass (xpass) | 39 |
+| Total | 2,680 |
+
+The run took **522.16 seconds** with three workers and the retained compilation
+cache, using `PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 3 --tb=short`
+with JUnit reporting and a validation-only passed-output cleanup plugin.
+The default memory profile was used except where individual tests explicitly
+request scratch. All 2,657 cases shared with `rev-2` retained their outcomes;
+the experiment adds 22 passes and its original mixed-model xfail. The only
+failure is the unchanged pinned-Puya DCE bug described below. No marker was
+changed. This is not a full-suite pass with scratch forced globally.
+
+Native CTest passed 24/24 in 3.80 seconds. The combined focused checks passed
+34 cases with one existing mixed-model xfail; all 21 new sharing checks passed
+(16 failed before the fix). Independent solc/PyEVM execution confirmed 28/28
+expectations across legacy and via-IR. Both memory-category sweeps, mixed and
+scratch, produced 128 passes, five xfails and one xpass.
+
+The frontend corpus covers 1,770 Solidity sources in both storage modes.
+Default output is byte-identical to `rev-2` across all 3,526 common cases.
+The scratch before/after comparison preserves all 3,540 exit codes: 3,285
+successes and 255 failures per binary, with no timeouts. Scratch AWST changes
+in 88 cases and no options hashes change. Raw frontend outputs were discarded
+after hashing, retaining only 7 MiB of manifests and diagnostics. This independent
+comparison overlapped part of the semantic run, so its runtime is not a standalone
+performance benchmark.
+
+The compiler remained fixed at SHA-256
+`e4487f0063b86eecc18b815dadab8b7381a65164ab18fa32c51e328a27a1830e`.
+Dependency pins are unchanged from the `rev-2` record below. LocalNet was not
+reset. Before the final suite, 29 damaged cache entries left by an environment
+interruption were recoverably quarantined; healthy entries were preserved.
+See the [sharing-audit report](out/sharing-audit/REPORT.md),
+[JUnit results](out/sharing-audit/semantic.xml),
+[case comparison](out/sharing-audit/semantic-comparison.json), and
+[console output](results.txt) for the completed evidence and prototype limits.
+
+### `rev-2` context-audit baseline
+
 Full LocalNet semantic and harness/cache run on **2026-09-15**. The tested
 compiler and regression sources are committed as `11803b9778` on `rev-2`,
 following merge checkpoint `8a44a9ddda`. This context-audit batch derives
@@ -44,8 +95,8 @@ preservation; no options hashes changed. The
 [context-audit report](out/context-audit/REPORT.md) retains the full manifests,
 focused runtime checks, 22 solc EVM expectations, and the cache-recovery record.
 The [JUnit report](out/context-audit/semantic.xml),
-[outcome comparison](out/context-audit/semantic-comparison.json), and
-[console output](results.txt) retain the complete semantic result. The earlier
+[outcome comparison](out/context-audit/semantic-comparison.json), and context-audit
+report retain the complete semantic result. The earlier
 [directory-reorganization report](out/builder-layered-layout/REPORT.md) retains
 its separate byte-identical move verification and residual dependency edges.
 
