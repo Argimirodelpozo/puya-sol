@@ -8,44 +8,53 @@ not as an active test runner.
 
 ## Recorded baseline
 
-Full LocalNet semantic and harness/cache run on **2026-09-14**. The tested
-compiler and regression sources are committed as `ef7caaf0fd` on
-`builder-layered-layout`, based on `rev-2` checkpoint `5f5cda4d0d`. This commit
-only reorganizes builder files and updates include, build, and documentation
-paths; it changes no compiler behavior or Python test bodies:
+Full LocalNet semantic and harness/cache run on **2026-09-15**. The tested
+compiler and regression sources are committed as `11803b9778` on `rev-2`,
+following merge checkpoint `8a44a9ddda`. This context-audit batch derives
+function/signature facts from solc, consolidates scoped translation state,
+and fixes inherited storage offsets and tuple memory-reference identity.
+The experimental memory model is not included:
 
 | Result | Count |
 |---|---:|
-| Passed | 2,507 |
+| Passed | 2,517 |
 | Failed | 1 |
 | Expected failure (xfail) | 100 |
 | Unexpected pass (xpass) | 39 |
-| Total | 2,647 |
+| Total | 2,657 |
 
-The run took 1,138.01 seconds with three workers and a partially warm shared
+The run took 391.74 seconds with three workers and a warm shared
 compilation cache. It used
 `PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 3 --tb=short`
 with JUnit reporting enabled.
 Dependencies were pinned to Solidity
 `a99b6d8c0cbf9eddbac104e8e4e16545db7d3d8d` and Puya
 `27751c364229ae3cd0334fe4071e61690b6879e4` (5.10.1). Native CTest coverage
-passed 24/24 in 3.57 seconds. Harness/cache unit tests are included in the full
-count. Compared with the preceding checkpoint's full-run XML, no existing
-outcome changed and no case was removed; this run additionally covered 13
-pre-existing framework cases absent from that XML, all passing.
+passed 24/24 in 4.45 seconds. Harness/cache unit tests are included in the full
+count. Compared with the preceding layout checkpoint's full-run XML, all 2,647
+existing cases retained their outcomes and no case was removed. All ten new
+cases passed (eight LocalNet configurations and two frontend checks).
 
-Before and after the reorganization, all 1,762 Solidity source files were
-compiled frontend-only in both storage modes: 3,524 cases, with 3,269 successful
-compilations and 255 recorded frontend failures in each capture. All exit codes
-and all 6,538 emitted AWST/options file hashes were identical, without JSON
-normalization. The [verification report](out/builder-layered-layout/REPORT.md)
-includes the full hash manifests, residual dependency edges, and the cache-miss
-investigation; the [JUnit report](out/builder-layered-layout/semantic.xml) and
-[console output](results.txt) retain the complete semantic result.
+All 1,763 Solidity source files were compiled frontend-only in both storage
+modes: 3,526 cases, with 3,271 successful compilations and 255 recorded frontend
+failures. All 3,524 preceding cases retained their exit codes; the two added
+cases succeeded. There are 55 changed AWST hashes: 53 from the previously
+committed bytes-offset name fix (`5573dec612`) and two from tuple alias
+preservation; no options hashes changed. The
+[context-audit report](out/context-audit/REPORT.md) retains the full manifests,
+focused runtime checks, 22 solc EVM expectations, and the cache-recovery record.
+The [JUnit report](out/context-audit/semantic.xml),
+[outcome comparison](out/context-audit/semantic-comparison.json), and
+[console output](results.txt) retain the complete semantic result. The earlier
+[directory-reorganization report](out/builder-layered-layout/REPORT.md) retains
+its separate byte-identical move verification and residual dependency edges.
 
 The compiler stayed fixed during the run at SHA-256
-`739d564f06a612c7a0d98d7648381813822db75480cb4d058431bb25571a996c`,
-and LocalNet was not reset. See the
+`f53ceaf6355a0a924f5750d78345c964fb69c5ed155bd16c7e10b20ba4c0e1de`,
+and LocalNet was not reset. Its stopped KMD service was restarted without
+touching the ledger. After an environment interruption, 72 damaged compile-cache
+entries were recoverably quarantined; all 45 corruption-related failures passed
+on retry before this final full run. See the
 [completed sol-types/storage audit record](../../docs/rev-2-results.md) for its
 earlier binary identity, solc oracle settings and fresh-deployment-only format
 changes.
