@@ -1,6 +1,6 @@
 #include "awst/WType.h"
 #include "builder/storage/StoragePlace.hpp"
-#include "builder/EvmFeaturePolicy.h"
+#include "builder/target/EvmFeaturePolicy.h"
 
 #include <iostream>
 #include <string>

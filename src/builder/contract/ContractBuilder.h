@@ -3,19 +3,19 @@
 #include <functional>
 
 #include "awst/Node.h"
-#include "builder/sol-eb/ContractContext.h"
-#include "builder/FunctionSymbolTable.h"
-#include "builder/sol-ast/Context.h"
-#include "builder/sol-ast/SolStatement.h"
+#include "builder/context/ContractContext.h"
+#include "builder/context/FunctionSymbolTable.h"
+#include "builder/context/TranslationContext.h"
+#include "builder/ast/SolStatement.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/StorageRuntimePlan.h"
 #include "builder/storage/StorageBackend.h"
 #include "builder/storage/TransientStorage.h"
-#include "builder/sol-types/TypeMapper.h"
+#include "builder/types/TypeMapper.h"
 
 #include <libsolidity/ast/ASTForward.h>
-#include "builder/sol-types/SolcFwd.h"
+#include "builder/solc/SolcFwd.h"
 
 #include <cstdint>
 #include <map>

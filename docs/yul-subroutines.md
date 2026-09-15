@@ -13,7 +13,7 @@ fits AVM deployment limits or correctly executes a proof.
 
 ## Calling convention and authority
 
-[SolcFacts](../src/builder/SolcFacts.cpp) consumes the vendored solc
+[SolcFacts](../src/builder/solc/SolcFacts.cpp) consumes the vendored solc
 disambiguator, function definitions, call graph, recursion analysis, dialect
 builtin handles and propagated memory effects. Target-specific decisions
 consume those facts; there is no new Solidity/Yul parser or scope resolver.

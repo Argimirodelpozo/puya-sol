@@ -7,7 +7,7 @@
 /// fall-through return. The two callers differ only in the knobs below.
 
 #include "awst/Node.h"
-#include "builder/ReturnWirePlan.h"
+#include "builder/types/ReturnWirePlan.h"
 
 #include <libsolidity/ast/ASTForward.h>
 

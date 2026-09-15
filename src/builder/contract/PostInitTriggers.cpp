@@ -1,6 +1,6 @@
 #include "builder/contract/PostInitTriggers.h"
-#include "builder/ProgramAnalysis.h"
-#include "builder/contract/StateVarWalker.h"
+#include "builder/context/ProgramAnalysis.h"
+#include "builder/storage/StateVarWalker.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
 

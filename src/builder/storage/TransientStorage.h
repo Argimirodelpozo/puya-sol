@@ -1,11 +1,11 @@
 #pragma once
 
 #include "awst/Node.h"
-#include "builder/ScratchLayout.h"
-#include "builder/sol-types/TypeMapper.h"
+#include "builder/target/ScratchLayout.h"
+#include "builder/types/TypeMapper.h"
 
 #include <libsolidity/ast/ASTForward.h>
-#include "builder/sol-types/SolcFwd.h"
+#include "builder/solc/SolcFwd.h"
 
 #include <map>
 #include <string>

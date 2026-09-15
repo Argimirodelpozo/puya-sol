@@ -46,7 +46,7 @@ xdist works: `-n auto` runs tests in parallel under separate output dirs.
    Body should revert as a safety net — the compiler intercept replaces
    the call before the body runs.
 2. Add a dispatch handler in
-   [`src/builder/itxn/AsaIntrinsics.cpp`](../../src/builder/itxn/AsaIntrinsics.cpp)
+   [`src/builder/lowering/intrinsics/AsaIntrinsics.cpp`](../../src/builder/lowering/intrinsics/AsaIntrinsics.cpp)
    under the matching `dispatchX` (or `handleAsaXxx` for ASA), and register
    the exact signature in `facadeLibrary`.
 3. Add a test fixture + test here, importing the canonical `libs/AVM.sol`.

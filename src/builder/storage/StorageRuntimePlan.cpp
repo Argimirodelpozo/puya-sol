@@ -1,8 +1,8 @@
 #include "builder/storage/StorageRuntimePlan.h"
 
-#include "builder/ProgramAnalysis.h"
-#include "builder/contract/StateVarWalker.h"
-#include "builder/storage/EvmLayoutMode.h"
+#include "builder/context/ProgramAnalysis.h"
+#include "builder/storage/StateVarWalker.h"
+#include "builder/target/EvmLayoutMode.h"
 #include "builder/codec/EvmValueCodec.h"
 
 #include <libsolidity/ast/Types.h>

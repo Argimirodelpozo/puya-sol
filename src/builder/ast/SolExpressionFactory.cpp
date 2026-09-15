@@ -1,0 +1,404 @@
+/// @file SolExpressionFactory.cpp
+/// Factory that creates the right SolExpression subclass for a Solidity AST node.
+/// Uses FunctionCallKind + FunctionType::Kind for dispatch.
+
+#include "builder/ast/SolExpressionFactory.h"
+#include "builder/context/ProgramAnalysis.h"
+#include "builder/target/EvmFeaturePolicy.h"
+#include "builder/lowering/abi/Arc4Stdlib.h"
+#include "builder/lowering/intrinsics/AsaIntrinsics.h"
+#include "builder/lowering/calls/FunctionPointerBuilder.h"
+#include "builder/lowering/calls/CallResolver.h"
+#include "builder/types/TypeMapper.h"
+#include "builder/ast/calls/SolRequireAssert.h"
+#include "builder/ast/calls/SolRevert.h"
+#include "builder/ast/calls/SolBuiltinCall.h"
+#include "builder/ast/calls/SolTypeConversion.h"
+#include "builder/ast/calls/SolWrapUnwrap.h"
+#include "builder/ast/calls/SolStructConstruction.h"
+#include "builder/ast/calls/SolTransferSend.h"
+#include "builder/ast/calls/SolBareCall.h"
+#include "builder/ast/calls/SolAbiEncode.h"
+#include "builder/ast/calls/SolAbiDecode.h"
+#include "builder/ast/calls/SolArrayMethod.h"
+#include "builder/ast/calls/SolInternalCall.h"
+#include "builder/ast/calls/SolExternalCall.h"
+#include "builder/ast/calls/SolNewExpression.h"
+#include "builder/ast/calls/SolBytesConcat.h"
+#include "builder/ast/calls/SolMetaType.h"
+#include "builder/ast/members/SolIntrinsicAccess.h"
+#include "builder/ast/members/SolEnumValueAccess.h"
+#include "builder/ast/members/SolSelectorAccess.h"
+#include "builder/ast/members/SolMetaTypeAccess.h"
+#include "builder/ast/members/SolLengthAccess.h"
+#include "builder/ast/members/SolFieldAccess.h"
+#include "builder/ast/members/SolAddressProperty.h"
+#include "builder/ast/members/SolConstantAccess.h"
+#include "Logger.h"
+
+#include <libsolidity/ast/ASTAnnotations.h>
+
+namespace puyasol::builder::sol_ast
+{
+
+/// `.address` on an external function pointer value.
+/// Extracts the 8-byte appId prefix from either profile-selected fn-ptr layout
+/// and left-pads it to 32 bytes.
+class SolFunctionAddressAccess : public SolMemberAccess
+{
+public:
+	SolFunctionAddressAccess(eb::ContractContext& _ctx,
+		solidity::frontend::MemberAccess const& _node)
+		: SolMemberAccess(_ctx, _node) {}
+
+	std::shared_ptr<awst::Expression> toAwst() override
+	{
+		return projectFunctionValue(m_ctx, baseExpression(), m_wtype, m_loc,
+			[&](solidity::frontend::Expression const& source) -> std::shared_ptr<awst::Expression> {
+				using namespace solidity::frontend;
+				if (auto const* member = dynamic_cast<MemberAccess const*>(&source))
+					if (auto const* receiver = dynamic_cast<Identifier const*>(&member->expression());
+						receiver && receiver->name() == "this")
+						return awst::makeGlobal("CurrentApplicationAddress", awst::WType::accountType(), m_loc);
+				auto pointer = m_ctx.pinIfWriteBacks(m_ctx.lower(source, false), m_loc);
+				return awst::makeAsAccount(awst::makeLeftPad(awst::makeExtract(
+					awst::makeAsBytes(std::move(pointer), m_loc), 0, 8, m_loc), 24, m_loc), m_loc);
+			});
+	}
+};
+
+class SolFunctionPointerAccess : public SolMemberAccess
+{
+public:
+	SolFunctionPointerAccess(eb::ContractContext& _ctx,
+		solidity::frontend::MemberAccess const& _node,
+		solidity::frontend::FunctionDefinition const* _funcDef,
+		solidity::frontend::FunctionType const* _callerFuncType = nullptr)
+		: SolMemberAccess(_ctx, _node), m_funcDef(_funcDef), m_callerFuncType(_callerFuncType) {}
+
+	std::shared_ptr<awst::Expression> toAwst() override
+	{
+		if (auto found = m_ctx.typeMapper.analysis().avmIntrinsics.find(m_funcDef->id());
+			found != m_ctx.typeMapper.analysis().avmIntrinsics.end())
+		{
+			Logger::instance().error(
+				found->second + "." + m_funcDef->name()
+					+ " cannot be used as a function value; call it directly",
+				m_loc);
+			return awst::makeZero(m_loc);
+		}
+		if (eb::Arc4Stdlib::isFacadeFunction(*m_funcDef))
+		{
+			Logger::instance().error(
+				"ARC4." + m_funcDef->name()
+					+ " cannot be used as a function value; use the documented "
+					  "ARC4 type-envelope form directly",
+				m_loc);
+			return awst::makeZero(m_loc);
+		}
+
+		auto resolved = eb::CallResolver::resolveFunction(m_ctx, m_memberAccess);
+		solAssert(resolved && resolved->funcDef, "Missing solc function-reference target");
+		std::string awstName;
+		if (auto const* method = std::get_if<awst::InstanceMethodTarget>(&resolved->target))
+			awstName = method->memberName;
+
+		// `C(addr).fn`: receiver address must flow into the fn pointer so
+		// `.address` returns the caller-supplied addr, not the self-sentinel (0).
+		std::shared_ptr<awst::Expression> receiverAddr;
+		if (m_callerFuncType
+			&& m_callerFuncType->kind() == solidity::frontend::FunctionType::Kind::External)
+		{
+			auto const& baseExpr = m_memberAccess.expression();
+			bool isSelf = false;
+			if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpr))
+				if (ident->name() == "this")
+					isSelf = true;
+			if (!isSelf)
+			{
+				// `C(address(0x1234))` — evaluate the inner arg for the address bytes.
+				if (auto const* baseCall = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpr))
+				{
+					if (baseCall->annotation().kind.set()
+						&& *baseCall->annotation().kind
+							== solidity::frontend::FunctionCallKind::TypeConversion
+						&& baseCall->arguments().size() == 1)
+						receiverAddr = m_ctx.buildExpr(*baseCall->arguments()[0]);
+				}
+				if (!receiverAddr)
+					receiverAddr = m_ctx.buildExpr(baseExpr);
+			}
+		}
+
+		return eb::FunctionPointerBuilder::buildFunctionReference(
+			m_ctx, resolved->funcDef, m_loc, m_callerFuncType, receiverAddr, awstName);
+	}
+private:
+	solidity::frontend::FunctionDefinition const* m_funcDef;
+	solidity::frontend::FunctionType const* m_callerFuncType;
+};
+
+SolExpressionFactory::SolExpressionFactory(eb::ContractContext& _ctx)
+	: m_ctx(_ctx)
+{
+}
+
+std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
+	solidity::frontend::FunctionCall const& _node)
+{
+	using FunctionCallKind = solidity::frontend::FunctionCallKind;
+	using Kind = solidity::frontend::FunctionType::Kind;
+
+	auto callKind = *_node.annotation().kind;
+
+	// High-level classification
+	switch (callKind)
+	{
+	case FunctionCallKind::TypeConversion:
+		return std::make_unique<SolTypeConversion>(m_ctx, _node);
+
+	case FunctionCallKind::StructConstructorCall:
+		return std::make_unique<SolStructConstruction>(m_ctx, _node);
+
+	case FunctionCallKind::FunctionCall:
+		break; // fall through to FunctionType::Kind dispatch below
+	}
+
+	// Get the resolved function type for detailed dispatch
+	auto const* funcType = dynamic_cast<solidity::frontend::FunctionType const*>(
+		_node.expression().annotation().type);
+	if (!funcType)
+		return nullptr;
+
+	// Solc's resolved call kind and mutability cover direct calls, getters,
+	// call options, and external function pointers without syntax heuristics.
+	if (funcType->kind() == Kind::BareStaticCall
+		|| (funcType->kind() == Kind::External
+			&& funcType->stateMutability() <= solidity::frontend::StateMutability::View))
+		EvmFeaturePolicy::report(EvmFeature::StaticCall, m_ctx.typeMapper.profile(),
+			m_ctx.makeLoc(_node.location()));
+
+	switch (funcType->kind())
+	{
+	// ── Builtins ──
+	case Kind::Require:
+	case Kind::Assert:
+		return std::make_unique<SolRequireAssert>(m_ctx, _node);
+
+	case Kind::Revert:
+	case Kind::Error:
+		return std::make_unique<SolRevert>(m_ctx, _node);
+
+	case Kind::KECCAK256:
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "keccak256");
+	case Kind::SHA256:
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "sha256");
+	case Kind::AddMod:
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "addmod");
+	case Kind::MulMod:
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "mulmod");
+	case Kind::GasLeft:
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "gasleft");
+	case Kind::Selfdestruct:
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "selfdestruct");
+	case Kind::BlockHash:
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "blockhash");
+	case Kind::ECRecover:
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "ecrecover");
+
+	case Kind::ERC7201:
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "erc7201");
+
+	// ── ABI ──
+	case Kind::ABIEncode:
+	case Kind::ABIEncodePacked:
+	case Kind::ABIEncodeWithSelector:
+	case Kind::ABIEncodeCall:
+	case Kind::ABIEncodeWithSignature:
+		return std::make_unique<SolAbiEncode>(m_ctx, _node);
+
+	case Kind::ABIDecode:
+		return std::make_unique<SolAbiDecode>(m_ctx, _node);
+
+	// ── Address calls ──
+	case Kind::BareCall:
+	case Kind::BareCallCode:
+		return std::make_unique<SolBareCall>(m_ctx, _node);
+
+	case Kind::BareStaticCall:
+		return std::make_unique<SolBareCall>(m_ctx, _node);
+
+	case Kind::BareDelegateCall:
+		return std::make_unique<SolBareCall>(m_ctx, _node);
+
+	case Kind::Transfer:
+		return std::make_unique<SolTransferSend>(m_ctx, _node);
+
+	case Kind::Send:
+		return std::make_unique<SolTransferSend>(m_ctx, _node);
+
+	// ── Array methods ──
+	case Kind::ArrayPush:
+	case Kind::ArrayPop:
+		return std::make_unique<SolArrayMethod>(m_ctx, _node);
+
+	// ── Type operations ──
+	case Kind::Wrap:
+	case Kind::Unwrap:
+		return std::make_unique<SolWrapUnwrap>(m_ctx, _node);
+
+	case Kind::ObjectCreation:
+		return std::make_unique<SolNewExpression>(m_ctx, _node);
+
+	case Kind::Event:
+		// Events are handled as statements in EmitBuilder.cpp.
+		// Kind::Event FunctionCalls are not reached in practice.
+		return nullptr;
+
+	case Kind::MetaType:
+		return std::make_unique<SolMetaType>(m_ctx, _node);
+
+	// ── Regular calls ──
+	case Kind::Internal:
+		return std::make_unique<SolInternalCall>(m_ctx, _node);
+
+	case Kind::External:
+	case Kind::DelegateCall:
+	{
+		auto plan = eb::CallResolver::plan(_node);
+		if (plan.transport == eb::CallTransport::Internal)
+			return std::make_unique<SolInternalCall>(m_ctx, _node);
+		return std::make_unique<SolExternalCall>(m_ctx, _node);
+	}
+
+	case Kind::Creation:
+		// Contract creation via new Contract(args) — deploy stub inner app
+		return std::make_unique<SolNewExpression>(m_ctx, _node);
+
+	case Kind::BlobHash:
+		// blobhash(n) — EIP-4844; AVM has no blobs → stub returns bzero(32).
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "blobhash");
+	case Kind::RIPEMD160:
+		// No AVM RIPEMD-160 opcode; SolBuiltinCall synthesizes via Ripemd160Builder.
+		return std::make_unique<SolBuiltinCall>(m_ctx, _node, "ripemd160");
+
+	// ── Misc ──
+	case Kind::SetGas:
+	case Kind::SetValue:
+	case Kind::Declaration:
+	case Kind::BytesConcat:
+	case Kind::StringConcat:
+		return std::make_unique<SolBytesConcat>(m_ctx, _node);
+	}
+
+	return nullptr;
+}
+
+std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
+	solidity::frontend::MemberAccess const& _node)
+{
+	using namespace solidity::frontend;
+
+	std::string member = _node.memberName();
+	auto const& baseExpr = _node.expression();
+	auto const* baseType = baseExpr.annotation().type;
+
+	// solc owns builtin identity; local variables may legally shadow these names.
+	if (auto const* magic = dynamic_cast<MagicType const*>(baseType);
+		magic && (magic->kind() == MagicType::Kind::Block
+			|| magic->kind() == MagicType::Kind::Message
+			|| magic->kind() == MagicType::Kind::Transaction))
+		return std::make_unique<SolIntrinsicAccess>(m_ctx, _node);
+
+	// 2. Enum value: MyEnum.Value
+	if (dynamic_cast<EnumValue const*>(_node.annotation().referencedDeclaration))
+		return std::make_unique<SolEnumValueAccess>(m_ctx, _node);
+
+	// Struct fields are declarations, even when their names match built-ins.
+	if (dynamic_cast<StructType const*>(baseType))
+		if (dynamic_cast<VariableDeclaration const*>(_node.annotation().referencedDeclaration))
+			return std::make_unique<SolFieldAccess>(m_ctx, _node);
+
+	// 3. Selector: f.selector, E.selector
+	auto const* selectorType = baseType;
+	if (auto const* meta = dynamic_cast<TypeType const*>(selectorType))
+		selectorType = meta->actualType();
+	if (member == "selector" && dynamic_cast<FunctionType const*>(selectorType))
+		return std::make_unique<SolSelectorAccess>(m_ctx, _node);
+
+	// 4. Event member access + constant inlining + state variable via contract name
+	if (auto const* refDecl = _node.annotation().referencedDeclaration)
+	{
+		if (dynamic_cast<EventDefinition const*>(refDecl))
+			return std::make_unique<SolConstantAccess>(m_ctx, _node);
+		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl))
+		{
+			if (varDecl->isConstant() && varDecl->value())
+				return std::make_unique<SolConstantAccess>(m_ctx, _node);
+			// Non-constant state variable via Contract.stateVar
+			if (varDecl->isStateVariable())
+				return std::make_unique<SolConstantAccess>(m_ctx, _node);
+		}
+		// `import "x" as M; M.L` — module-aliased contract ref. As a VALUE
+		// (`address(M.L)`) emit 32-byte zero (AVM has no deployed address). For
+		// `M.L.f(...)` calls, SolInternalCall's resolver dispatches directly.
+		if (dynamic_cast<ContractDefinition const*>(refDecl))
+			return std::make_unique<SolConstantAccess>(m_ctx, _node);
+	}
+
+	// 5. type(X).max / type(X).min / type(C).name / type(I).interfaceId
+	//    type(C).creationCode / type(C).runtimeCode (hard error: EVM bytecode
+	//    has no AVM meaning; routed here so the policy diagnostic fires)
+	if (baseType)
+	{
+		bool isMagicOrTypeType = dynamic_cast<MagicType const*>(baseType)
+			|| dynamic_cast<TypeType const*>(baseType);
+		if (isMagicOrTypeType
+			&& (member == "max" || member == "min" || member == "name"
+				|| member == "interfaceId"
+				|| member == "creationCode" || member == "runtimeCode"))
+			return std::make_unique<SolMetaTypeAccess>(m_ctx, _node);
+	}
+
+	// 6. .length on arrays/bytes
+	if (member == "length" && (dynamic_cast<ArrayType const*>(baseType)
+		|| dynamic_cast<ArraySliceType const*>(baseType) || dynamic_cast<FixedBytesType const*>(baseType)))
+		return std::make_unique<SolLengthAccess>(m_ctx, _node);
+
+	// 6b. .address on external function pointer values
+	if (member == "address")
+	{
+		auto const* baseT = baseExpr.annotation().type;
+		if (auto const* bft = dynamic_cast<FunctionType const*>(baseT))
+			if (bft->kind() == FunctionType::Kind::External)
+				return std::make_unique<SolFunctionAddressAccess>(m_ctx, _node);
+	}
+
+	// 7. Function pointer via contract: C.f used as a value
+	if (auto const* refDecl = _node.annotation().referencedDeclaration)
+	{
+		if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(refDecl))
+		{
+			auto const* exprType = _node.annotation().type;
+			if (auto const* ft = dynamic_cast<FunctionType const*>(exprType))
+			{
+				if (ft->kind() == FunctionType::Kind::Internal
+					|| ft->kind() == FunctionType::Kind::External)
+					return std::make_unique<SolFunctionPointerAccess>(m_ctx, _node, funcDef, ft);
+			}
+		}
+	}
+
+	// 8. Contract member name (token.transfer in abi.encodeCall)
+	if (baseType && baseType->category() == Type::Category::Contract)
+		return std::make_unique<SolConstantAccess>(m_ctx, _node);
+
+	// 9. Address properties (.code, .balance)
+	if (baseType && baseType->category() == Type::Category::Address)
+		return std::make_unique<SolAddressProperty>(m_ctx, _node);
+
+	// 10. Struct/tuple field access (SolFieldAccess builds base first to check ARC4Struct/WTuple).
+	return std::make_unique<SolFieldAccess>(m_ctx, _node);
+}
+
+} // namespace puyasol::builder::sol_ast

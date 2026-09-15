@@ -1,6 +1,6 @@
 #include "builder/storage/TransientStorage.h"
-#include "builder/storage/SlotWordCodec.h"
-#include "builder/sol-types/EncodedSize.h"
+#include "builder/codec/SlotWordCodec.h"
+#include "builder/types/EncodedSize.h"
 #include "awst/NameGen.h"
 
 #include <libsolidity/ast/AST.h>

@@ -1,7 +1,7 @@
 #include "builder/codec/ByteSlice.h"
-#include "builder/BuildArtifacts.h"
-#include "builder/sol-types/TypeMapper.h"
-#include "builder/sol-types/TypeCoercion.h"
+#include "builder/context/BuildArtifacts.h"
+#include "builder/types/TypeMapper.h"
+#include "builder/types/TypeCoercion.h"
 
 namespace puyasol::builder
 {

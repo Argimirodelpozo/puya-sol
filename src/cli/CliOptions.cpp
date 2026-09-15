@@ -2,8 +2,8 @@
 
 #include "HexBytes.h"
 #include "Logger.h"
-#include "builder/EvmFeaturePolicy.h"
-#include "builder/ScratchLayout.h"
+#include "builder/target/EvmFeaturePolicy.h"
+#include "builder/target/ScratchLayout.h"
 
 #include <cctype>
 #include <cstdlib>

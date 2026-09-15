@@ -2,8 +2,8 @@
 
 #include <map>
 #include "awst/Node.h"
-#include "builder/sol-types/TypeMapper.h"
-#include "builder/sol-types/Arc4Defaults.h"
+#include "builder/types/TypeMapper.h"
+#include "builder/codec/Arc4Defaults.h"
 
 #include <libsolidity/ast/AST.h>
 

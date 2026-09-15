@@ -1,5 +1,5 @@
 #include "json/OptionsWriter.h"
-#include "builder/contract/ChildDeployment.h"
+#include "builder/lowering/itxn/ChildDeployment.h"
 
 #include <nlohmann/json.hpp>
 
