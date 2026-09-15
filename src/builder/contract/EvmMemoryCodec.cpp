@@ -392,8 +392,10 @@ private:
 	{
 		value = codec::valueFromArc4(m_mapper, array, std::move(value), m_loc);
 		auto bytes = pin(awst::makeAsBytes(std::move(value), m_loc), out, "bytes");
+		// Distinct prefix: `allocate` names its offsets `__evmmem_off_<n>` from a
+		// different counter, and a shared name clobbered the parent's base.
 		int id = awst::NameGen::next("EvmMemoryCodec.bytes");
-		std::string name = "__evmmem_off_" + std::to_string(id);
+		std::string name = "__evmmem_boff_" + std::to_string(id);
 		for (auto& statement: AssemblyBuilder::emitBytesBlobAlloc(
 			m_mapper, awst::makeLen(bytes, m_loc), name, id, m_loc))
 			out.push_back(std::move(statement));
