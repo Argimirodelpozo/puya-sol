@@ -186,7 +186,7 @@ struct ProgramAnalysis
 		solidity::frontend::ContractDefinition const* _mostDerived,
 		solidity::frontend::FunctionDefinition const& _function) const;
 
-	/// Whole-program sharing fixed point (MemorySharing.cpp), computed by analyze().
+	/// Scratch-only sharing fixed point, computed after target-specific roots.
 	MemorySharingFacts memorySharing;
 	MemorySharingFacts const& memorySharingFacts() const { return memorySharing; }
 

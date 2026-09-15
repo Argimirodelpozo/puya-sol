@@ -39,6 +39,8 @@ void CompilationSession::begin(
 			analysis.internallyCalledFunctions[contractId].insert(hook->id());
 		}
 	}
+	if (profile.scratchMemoryModel)
+		analysis.memorySharing = analyzeMemorySharing(analysis);
 	typeMapper.reset();
 }
 

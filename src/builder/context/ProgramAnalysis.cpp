@@ -744,8 +744,6 @@ ProgramAnalysis ProgramAnalysis::analyze(
 			result.slotHandleDeclarations.insert(id);
 	deriveStorageReferenceReturns(result, slotSources);
 
-	// Last: the sharing fixed point reads the call graphs and mutation inputs above.
-	result.memorySharing = analyzeMemorySharing(result);
 	return result;
 }
 
