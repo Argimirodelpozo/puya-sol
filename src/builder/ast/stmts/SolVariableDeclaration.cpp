@@ -2,6 +2,7 @@
 
 #include "builder/ast/stmts/SolVariableDeclaration.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
+#include "builder/ast/exprs/SolTupleExpression.h"
 #include "Logger.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -565,8 +566,12 @@ void SolVariableDeclaration::buildTupleDestructuring(
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
 	auto const& declarations = m_node.declarations();
-	auto rhsExpr = m_blk.builderCtx().pinIfWriteBacks(
-		m_blk.builderCtx().lower(*initialValue, false), m_loc);
+	std::vector<VariableDeclaration const*> bindings;
+	for (auto const& declaration: declarations) bindings.push_back(declaration.get());
+	auto& ctx = m_blk.builderCtx();
+	auto rhsExpr = ctx.pinIfWriteBacks(ctx.lowerOperand([&] {
+		return SolTupleExpression::buildBindingRhs(ctx, *initialValue, bindings);
+	}, false), m_loc);
 	if (!rhsExpr) return;
 	m_blk.builderCtx().appendEffectsTo(result);
 
@@ -619,6 +624,15 @@ void SolVariableDeclaration::buildTupleDestructuring(
 			std::move(baseRef), static_cast<int>(i), slotType, m_loc);
 
 		auto const* sourceType = rhsSolTuple->components().at(i);
+		if (decl.referenceLocation() == VariableDeclaration::Location::Memory
+			&& !decl.type()->isValueType() && slotType == awst::WType::uint64Type())
+		{
+			std::string name = "__blobagg_off_" + std::to_string(decl.id());
+			result.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(name, slotType, m_loc), std::move(itemExpr), m_loc));
+			m_blk.scope.bindings.blobAggregates.set(decl.id(), name);
+			continue;
+		}
 		itemExpr = convertInitValue(decl, std::move(itemExpr), sourceType, type);
 		// Literal tuple components retain useful alias provenance. Opaque calls
 		// still pass a non-null initializer, without rebuilding the call.

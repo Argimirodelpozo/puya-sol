@@ -1,10 +1,10 @@
 #pragma once
 
 #include "awst/Node.h"
-#include "builder/context/FunctionSymbolTable.h"
 
 #include "builder/solc/SolcFwd.h"
 #include <liblangutil/Token.h>
+#include <libsolutil/Common.h>
 
 #include <cstdint>
 #include <map>
@@ -56,12 +56,13 @@ public:
 		bool empty() const { return pre.empty() && post.empty(); }
 	};
 
-	struct LoweredExpression
+	template <typename Value>
+	struct LoweredValue
 	{
-		std::shared_ptr<awst::Expression> value;
+		Value value;
 		OperandDeltas effects;
-		solidity::frontend::Type const* solType = nullptr;
 	};
+	using LoweredExpression = LoweredValue<std::shared_ptr<awst::Expression>>;
 
 	ContractContext(
 		TypeMapper& _typeMapper,
@@ -69,7 +70,6 @@ public:
 		std::string const& _sourceFile,
 		std::string const& _contractName,
 		std::unordered_set<std::string> const& _overloadedNames,
-		FunctionSymbolTable const& _functionSymbols,
 		FunctionPointerRegistry& _functionPointers
 	);
 
@@ -80,9 +80,8 @@ public:
 	ContractContext(ContractContext&&) = delete;
 	ContractContext& operator=(ContractContext&&) = delete;
 
-	/// Lower one Solidity expression to a value plus structurally owned effects
-	/// and its source solc type. This is the primary expression API.
-	LoweredExpression build(
+	/// Lower one Solidity expression to a value plus structurally owned effects.
+	LoweredExpression lower(
 		solidity::frontend::Expression const& _expr,
 		bool _conditional = true);
 
@@ -147,8 +146,6 @@ public:
 
 	// ── Function resolution tables (external, by reference) ──
 	std::unordered_set<std::string> const& overloadedNames;
-	/// Canonical solc declaration ID → opaque AWST symbol table.
-	FunctionSymbolTable const& functionSymbols;
 	FunctionPointerRegistry& functionPointers;
 	/// funcDef.id() → synthesized method name; CallResolver returns InstanceMethodTarget
 	/// instead of SubroutineID when the funcDef appears here.
@@ -209,29 +206,16 @@ public:
 	int conditionalDepth = 0;
 
 	/// RAII marker for a conditionally-executed translation region.
-	class ConditionalRegion
+	[[nodiscard]] auto conditionalRegion()
 	{
-	public:
-		explicit ConditionalRegion(ContractContext& _ctx): m_ctx(_ctx) { ++m_ctx.conditionalDepth; }
-		~ConditionalRegion() { --m_ctx.conditionalDepth; }
-		ConditionalRegion(ConditionalRegion const&) = delete;
-		ConditionalRegion& operator=(ConditionalRegion const&) = delete;
-	private:
-		ContractContext& m_ctx;
-	};
+		return solidity::ScopedSaveAndRestore(conditionalDepth, conditionalDepth + 1);
+	}
 
 	/// Solidity's two codegen pipelines disagree on intra-expression
 	/// evaluation order (unspecified by the language): legacy evaluates a
 	/// binop's RIGHT operand first, via-IR LEFT-to-right. false (default) =
 	/// legacy order; true (--via-yul-behavior) keeps build order untouched.
 	bool viaIRSequencing = false;
-
-	template <typename Value>
-	struct LoweredValue
-	{
-		Value value;
-		OperandDeltas effects;
-	};
 
 	/// Put a captured operand's deltas back exactly where they came from
 	/// (pre → pre-effects, post → post-effects) — the no-reorder path.
@@ -246,7 +230,7 @@ public:
 	/// Build an operand in its own effect frame, then return its value together
 	/// with the pre/post statements it produced. Pass
 	/// `_conditional = true` when the operand executes conditionally (ternary
-	/// branch, short-circuit RHS) — it marks a ConditionalRegion and the caller
+	/// branch, short-circuit RHS) — it marks a conditional region and the caller
 	/// gates the effects behind the condition. `false` for pure re-ORDERING to
 	/// legacy-solc evaluation order (binop right-before-left, assignment
 	/// RHS-first, call args left-to-right), where effects still run
@@ -258,30 +242,10 @@ public:
 		-> LoweredValue<decltype(_build())>
 	{
 		LoweredValue<decltype(_build())> result;
-		std::optional<ConditionalRegion> region;
-		if (_conditional)
-			region.emplace(*this);
-		OperandDeltas effects;
-		m_effectFrames.push_back(&effects);
-		try
-		{
-			result.value = _build();
-		}
-		catch (...)
-		{
-			m_effectFrames.pop_back();
-			throw;
-		}
-		m_effectFrames.pop_back();
-		result.effects = std::move(effects);
+		solidity::ScopedSaveAndRestore region(conditionalDepth, conditionalDepth + int(_conditional));
+		solidity::ScopedSaveAndRestore frame(m_effectFrame, &result.effects);
+		result.value = _build();
 		return result;
-	}
-
-	LoweredExpression lower(
-		solidity::frontend::Expression const& _expr,
-		bool _conditional = true)
-	{
-		return build(_expr, _conditional);
 	}
 
 	/// Re-emit a captured operand at its evaluation position: its pre-effects,
@@ -348,68 +312,29 @@ public:
 	sol_ast::Context& scope() const;
 
 	/// RAII scope guard. Use: `auto guard = ctx.pushScopeRaii(&block.scope);`.
-	class ScopePush
+	[[nodiscard]] auto pushScopeRaii(sol_ast::Context* _scope)
 	{
-	public:
-		ScopePush(ContractContext& _ctx, sol_ast::Context* _new)
-			: m_ctx(_ctx), m_prev(_ctx.currentScope)
-		{
-			m_ctx.currentScope = _new;
-		}
-		~ScopePush() { m_ctx.currentScope = m_prev; }
-		ScopePush(ScopePush const&) = delete;
-		ScopePush& operator=(ScopePush const&) = delete;
-	private:
-		ContractContext& m_ctx;
-		sol_ast::Context* m_prev;
-	};
-
-	[[nodiscard]] ScopePush pushScopeRaii(sol_ast::Context* _scope)
-	{
-		return ScopePush(*this, _scope);
+		return solidity::ScopedSaveAndRestore(currentScope, std::move(_scope));
 	}
 
 	/// Lexically scoped translation parameter for `arr.push() = value`.
 	/// SolAssignment installs it while lowering the LHS call and SolArrayMethod
 	/// consumes it. The RAII scope prevents a failed/throwing LHS from leaking the
 	/// value into an unrelated later push.
-	class ArrayPushAssignmentScope
-	{
-	public:
-		ArrayPushAssignmentScope(
-			ContractContext& _ctx,
-			std::shared_ptr<awst::Expression> _value)
-			: m_ctx(_ctx)
-		{
-			m_ctx.m_arrayPushAssignmentValues.push_back(std::move(_value));
-		}
-		~ArrayPushAssignmentScope()
-		{
-			m_ctx.m_arrayPushAssignmentValues.pop_back();
-		}
-		ArrayPushAssignmentScope(ArrayPushAssignmentScope const&) = delete;
-		ArrayPushAssignmentScope& operator=(ArrayPushAssignmentScope const&) = delete;
-	private:
-		ContractContext& m_ctx;
-	};
-
-	[[nodiscard]] ArrayPushAssignmentScope pushArrayAssignmentValue(
+	[[nodiscard]] auto pushArrayAssignmentValue(
 		std::shared_ptr<awst::Expression> _value)
 	{
-		return ArrayPushAssignmentScope(*this, std::move(_value));
+		return solidity::ScopedSaveAndRestore(m_arrayPushAssignmentValue, std::move(_value));
 	}
 
 	bool hasArrayAssignmentValue() const
 	{
-		return !m_arrayPushAssignmentValues.empty()
-			&& static_cast<bool>(m_arrayPushAssignmentValues.back());
+		return static_cast<bool>(m_arrayPushAssignmentValue);
 	}
 
 	std::shared_ptr<awst::Expression> takeArrayAssignmentValue()
 	{
-		if (m_arrayPushAssignmentValues.empty())
-			return nullptr;
-		return std::move(m_arrayPushAssignmentValues.back());
+		return std::exchange(m_arrayPushAssignmentValue, {});
 	}
 
 	awst::SourceLocation makeLoc(int _start, int _end) const;
@@ -421,12 +346,12 @@ private:
 
 	OperandDeltas& activeEffects() const
 	{
-		return m_effectFrames.empty() ? m_rootEffects : *m_effectFrames.back();
+		return m_effectFrame ? *m_effectFrame : m_rootEffects;
 	}
 
 	mutable OperandDeltas m_rootEffects;
-	std::vector<OperandDeltas*> m_effectFrames;
-	std::vector<std::shared_ptr<awst::Expression>> m_arrayPushAssignmentValues;
+	OperandDeltas* m_effectFrame = nullptr;
+	std::shared_ptr<awst::Expression> m_arrayPushAssignmentValue;
 
 };
 

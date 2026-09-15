@@ -98,6 +98,7 @@ bool EvmSlotLowering::isStorageStateRef(Expression const& _e)
 	Expression const* cur = &_e;
 	for (;;)
 	{
+		cur = &SolcFacts::functionExpression(*cur);
 		if (auto const* ia = dynamic_cast<IndexAccess const*>(cur))
 		{
 			cur = &ia->baseExpression();
@@ -304,6 +305,8 @@ EvmSlotLowering::Addr EvmSlotLowering::makeLeafAddr(
 
 std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolve(Expression const& _e)
 {
+	auto const& expression = SolcFacts::functionExpression(_e);
+	if (&expression != &_e) return resolve(expression);
 	if (auto const* id = dynamic_cast<Identifier const*>(&_e))
 		return resolveIdentifier(*id);
 	if (auto const* ia = dynamic_cast<IndexAccess const*>(&_e))
@@ -369,8 +372,8 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolve(Expression const& 
 			&& *fc->annotation().kind == FunctionCallKind::TypeConversion
 			&& !fc->arguments().empty() && isStorageTypedRoot(_e))
 			return resolve(*fc->arguments()[0]);
-	// Any other storage-typed root (library call returning `T storage`, a
-	// parenthesized/tuple-wrapped ref, ...): its built value IS the slot.
+	// Any other storage-typed root (library call returning `T storage`, ...):
+	// its built value IS the slot.
 	if (isStorageTypedRoot(_e))
 	{
 		auto built = m_ctx.buildExpr(_e);

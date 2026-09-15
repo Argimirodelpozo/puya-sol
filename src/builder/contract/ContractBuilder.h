@@ -4,7 +4,6 @@
 
 #include "awst/Node.h"
 #include "builder/context/ContractContext.h"
-#include "builder/context/FunctionSymbolTable.h"
 #include "builder/context/TranslationContext.h"
 #include "builder/ast/SolStatement.h"
 #include "builder/storage/StorageLayout.h"
@@ -113,7 +112,6 @@ public:
 		StorageMapper& _storageMapper,
 		eb::FunctionPointerRegistry& _functionPointers,
 		std::string const& _sourceFile,
-		FunctionSymbolTable const& _functionSymbols,
 		uint64_t _opupBudget = 0,
 		std::map<std::string, uint64_t> const& _ensureBudget = {},
 		std::vector<solidity::frontend::FunctionDefinition const*> const& _hostBoundFunctions = {}
@@ -146,7 +144,6 @@ private:
 	std::string m_sourceFile;
 	/// solc source-unit-qualified declaration identity, independent of display paths.
 	std::string m_contractId;
-	FunctionSymbolTable const& m_functionSymbols;
 	uint64_t m_opupBudget = 0;
 	std::map<std::string, uint64_t> m_ensureBudget;
 	std::vector<solidity::frontend::FunctionDefinition const*> m_hostBoundFunctions;
@@ -170,9 +167,7 @@ private:
 	/// Start a fresh function frame, retaining the contract's declaration bindings.
 	void setFunctionContext(
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
-		awst::WType const* _returnType,
-		std::map<std::string, unsigned> const& _bitWidths = {},
-		std::map<std::string, solidity::frontend::Type const*> const& _paramSolTypes = {});
+		awst::WType const* _returnType);
 
 
 	/// Enable build-time ABI return encoding for the current function (D2).

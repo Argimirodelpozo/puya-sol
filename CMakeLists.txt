@@ -239,7 +239,6 @@ set(SOURCES
 	# builder/context
 	src/builder/context/CompilationSession.cpp
 	src/builder/context/ContractContext.cpp
-	src/builder/context/FunctionIdRegistry.cpp
 	src/builder/context/ParameterMutationAnalysis.cpp
 	src/builder/context/ProgramAnalysis.cpp
 	src/builder/context/TranslationContext.cpp
@@ -611,11 +610,15 @@ if(BUILD_TESTING)
 			-P ${CMAKE_SOURCE_DIR}/tests/cmake/EvmLayoutOptionsTest.cmake
 	)
 
-	add_executable(puya-sol-function-symbol-table-tests
-		tests/cpp/FunctionSymbolTableTests.cpp
+	add_executable(puya-sol-function-identity-tests
+		tests/cpp/FunctionIdentityTests.cpp
 	)
-	target_include_directories(puya-sol-function-symbol-table-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
-	add_test(NAME puya-sol-function-symbol-table COMMAND puya-sol-function-symbol-table-tests)
+	target_include_directories(puya-sol-function-identity-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_dependencies(puya-sol-function-identity-tests puya-sol-verify-solidity-build)
+	target_link_libraries(puya-sol-function-identity-tests
+		puya_sol_solidity puya_sol_yul puya_sol_evmasm puya_sol_langutil
+		puya_sol_smtutil puya_sol_solutil Boost::filesystem Threads::Threads)
+	add_test(NAME puya-sol-function-identity COMMAND puya-sol-function-identity-tests)
 
 	add_executable(puya-sol-hex-bytes-tests
 		tests/cpp/HexBytesTests.cpp

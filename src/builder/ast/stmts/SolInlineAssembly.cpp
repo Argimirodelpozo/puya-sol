@@ -486,8 +486,6 @@ std::vector<std::pair<std::string, awst::WType const*>> collectAugmentedParams(
 			it && it->isSigned && it->bits <= 64)
 			signedParamBits[name] = it->bits;
 	}
-	for (auto const& [n, bw]: blk.fn.paramBitWidths)
-		paramBitWidths.emplace(n, bw);
 
 	return augmentedParams;
 }
@@ -545,13 +543,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setTransientStorage(m_blk.builderCtx().transientStorage);
 	asmTranslator.setFrameIsProgram(m_blk.fn.frameIsProgram);
 	asmTranslator.setSeededCalldataPointers(&m_blk.fn.seededCalldataPointers);
-	asmTranslator.setCalldataSolTypes(m_blk.fn.paramSolTypes);
+	asmTranslator.setCalldataSolTypes(m_blk.fn.parameterSolTypes());
 	asmTranslator.setBoxKeyStructParams(m_blk.fn.boxKeyStructParams);
 	asmTranslator.setCalldataPointerNames(std::move(calldataPointerNames));
 	asmTranslator.setCalldataStaticPtrNames(std::move(calldataStaticPtrNames));
 	asmTranslator.setSlotRoutes(std::move(slotRoutes), std::move(slotDataRegions));
 	asmTranslator.setSignedParamBits(std::move(signedParamBits));
-	asmTranslator.setReturnSolTypes(m_blk.fn.returnSolTypes);
+	asmTranslator.setReturnSolTypes(m_blk.fn.returnSolTypes());
 	asmTranslator.setReturnWirePlan(
 		m_blk.fn.encodeReturnsAtBuildTime ? &m_blk.fn.returnWirePlan : nullptr,
 		m_blk.fn.returnAsmWrap);

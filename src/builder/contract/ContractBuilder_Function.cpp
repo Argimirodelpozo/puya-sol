@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/solc/FunctionIdentity.h"
 #include "builder/contract/ReturnFinishing.h"
 #include "builder/context/ProgramAnalysis.h"
 #include "builder/lowering/itxn/InnerCallHandlers.h"
@@ -205,7 +206,7 @@ void ContractBuilder::buildMethodSignature(
 	else
 	{
 		using solidity::frontend::Visibility;
-		auto const* symbol = m_functionSymbols.resolve(_func.id());
+		auto symbol = functionSymbol(_func);
 		if (symbol && (_func.visibility() == Visibility::Internal
 				|| _func.visibility() == Visibility::Private))
 			method.memberName = *symbol;

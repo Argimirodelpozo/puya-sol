@@ -350,15 +350,14 @@ private:
 	}
 };
 
-void collectCreationEffects(CompilerStack& compiler, ProgramAnalysis& analysis)
+void collectCreationEffects(ProgramAnalysis& analysis)
 {
-	for (auto const& source: compiler.sourceNames())
-		for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(compiler.ast(source).nodes()))
-			if (auto const& graph = contract->annotation().creationCallGraph; graph.set() && *graph)
-			{
-				auto& effects = analysis.creationEffects[contract->id()];
-				CreationEffectScanner(*contract, analysis, effects).run(**graph);
-			}
+	for (auto const* contract: analysis.contracts)
+		if (auto const& graph = contract->annotation().creationCallGraph; graph.set() && *graph)
+		{
+			auto& effects = analysis.creationEffects[contract->id()];
+			CreationEffectScanner(*contract, analysis, effects).run(**graph);
+		}
 }
 
 /// Index every function declaration and its reference edges; storage struct
@@ -404,6 +403,7 @@ struct BodyFactsWalker: ASTConstVisitor
 	std::set<int64_t> writtenDeclarations;
 	std::map<int64_t, std::set<int64_t>> offsetTransfers;
 	std::map<int64_t, std::set<int64_t>> slotTransfers;
+	std::vector<std::pair<int64_t, FunctionCall const*>> calls;
 	bool collectOffsets;
 	int64_t callableId = 0;
 	BodyFactsWalker(ProgramAnalysis& _analysis, bool _collectOffsets)
@@ -427,9 +427,15 @@ struct BodyFactsWalker: ASTConstVisitor
 			|| target.referenceLocation() != VariableDeclaration::Location::Storage
 			|| !dynamic_cast<StructType const*>(target.type()))
 			return;
-		if (isArrayElementStructRef(&argument))
+		auto const& value = SolcFacts::functionExpression(argument);
+		if (auto const* conditional = dynamic_cast<Conditional const*>(&value))
+		{
+			transferOffset(target, conditional->trueExpression());
+			transferOffset(target, conditional->falseExpression());
+		}
+		else if (isArrayElementStructRef(&value))
 			analysis.structRefOffsetParams.insert(target.id());
-		else if (auto const* identifier = dynamic_cast<Identifier const*>(&argument))
+		else if (auto const* identifier = dynamic_cast<Identifier const*>(&value))
 			if (auto const* declaration = identifier->annotation().referencedDeclaration)
 				offsetTransfers[declaration->id()].insert(target.id());
 	}
@@ -486,25 +492,20 @@ struct BodyFactsWalker: ASTConstVisitor
 
 	bool visit(VariableDeclarationStatement const& statement) override
 	{
-		if (statement.initialValue() && statement.declarations().size() > 1)
+		if (statement.initialValue())
 			for (size_t i = 0; i < statement.declarations().size(); ++i)
-				if (auto const& declaration = statement.declarations()[i]; declaration
-					&& declaration->referenceLocation() == VariableDeclaration::Location::Storage)
-					transferSlot(declaration->id(), *statement.initialValue(), i);
+				if (auto const& declaration = statement.declarations()[i])
+					transfer(*declaration, *statement.initialValue(),
+						statement.declarations().size() > 1 ? std::optional<size_t>{i} : std::nullopt);
 		if (statement.declarations().size() == 1 && statement.declarations()[0]
 			&& statement.initialValue())
 		{
 			analysis.localInitializers.emplace(statement.declarations()[0]->id(), statement.initialValue());
-			transferReference(*statement.declarations()[0], *statement.initialValue());
-			transferOffset(*statement.declarations()[0], *statement.initialValue());
 			if (dynamic_cast<FunctionType const*>(statement.declarations()[0]->type())
 				&& dynamic_cast<FunctionDefinition const*>(
 					ASTNode::referencedDeclaration(*statement.initialValue())))
 				analysis.stableFunctionPointers.emplace(
 					statement.declarations()[0]->id(), statement.initialValue());
-			if (statement.declarations()[0]->referenceLocation()
-				== VariableDeclaration::Location::Storage)
-				transferSlot(statement.declarations()[0]->id(), *statement.initialValue());
 		}
 		return true;
 	}
@@ -540,25 +541,51 @@ struct BodyFactsWalker: ASTConstVisitor
 					analysis.referenceAssignments[target.id()].insert(variable->id());
 	}
 
-	bool visit(Assignment const& _assignment) override
+	void transfer(VariableDeclaration const& target, Expression const& value,
+		std::optional<size_t> component = {})
 	{
-		if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_assignment.leftHandSide()))
+		if (auto const* tuple = dynamic_cast<TupleExpression const*>(&value); tuple && !tuple->isInlineArray())
+		{
+			if (tuple->components().size() == 1 && tuple->components()[0])
+				transfer(target, *tuple->components()[0], component);
+			else if (component && tuple->components().at(*component))
+				transfer(target, *tuple->components()[*component]);
+			return;
+		}
+		if (auto const* conditional = dynamic_cast<Conditional const*>(&value))
+		{
+			transfer(target, conditional->trueExpression(), component);
+			transfer(target, conditional->falseExpression(), component);
+			return;
+		}
+		if (!component)
+		{
+			transferReference(target, value);
+			transferOffset(target, value);
+		}
+		if (target.referenceLocation() == VariableDeclaration::Location::Storage)
+			transferSlot(target.id(), value, component);
+	}
+
+	void transferAssignment(Expression const& lhs, Expression const& rhs,
+		std::optional<size_t> component = {})
+	{
+		if (auto const* tuple = dynamic_cast<TupleExpression const*>(&lhs))
+		{
+			if (tuple->components().size() == 1 && tuple->components()[0])
+				return transferAssignment(*tuple->components()[0], rhs, component);
 			for (size_t i = 0; i < tuple->components().size(); ++i)
-				if (auto const* identifier = dynamic_cast<Identifier const*>(tuple->components()[i].get()))
-					if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(
-						identifier->annotation().referencedDeclaration);
-						declaration && declaration->referenceLocation() == VariableDeclaration::Location::Storage)
-						transferSlot(declaration->id(), _assignment.rightHandSide(), i);
-		if (auto const* identifier =
-			dynamic_cast<Identifier const*>(&_assignment.leftHandSide()))
+				if (tuple->components()[i]) transferAssignment(*tuple->components()[i], rhs, i);
+		}
+		else if (auto const* identifier = dynamic_cast<Identifier const*>(&lhs))
 			if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(
 					identifier->annotation().referencedDeclaration))
-			{
-				transferReference(*declaration, _assignment.rightHandSide());
-				transferOffset(*declaration, _assignment.rightHandSide());
-				if (declaration->referenceLocation() == VariableDeclaration::Location::Storage)
-					transferSlot(declaration->id(), _assignment.rightHandSide());
-			}
+				transfer(*declaration, rhs, component);
+	}
+
+	bool visit(Assignment const& assignment) override
+	{
+		transferAssignment(assignment.leftHandSide(), assignment.rightHandSide());
 		return true;
 	}
 
@@ -583,55 +610,50 @@ struct BodyFactsWalker: ASTConstVisitor
 
 	bool visit(FunctionCall const& _call) override
 	{
-		if (!collectOffsets)
-			return true;
-		auto const& callee = SolcFacts::functionExpression(_call.expression());
-		auto const* declaration = ASTNode::referencedDeclaration(callee);
-		auto const* function =
-			dynamic_cast<FunctionDefinition const*>(declaration);
-		if (!function)
-			return true;
-
-		auto arguments = _call.sortedArguments();
-		auto const& params = function->parameters();
-		auto const* type = dynamic_cast<FunctionType const*>(
-			_call.expression().annotation().type);
-		size_t const shift = type && type->hasBoundFirstArgument() ? 1 : 0;
-		if (params.size() != arguments.size() + shift)
-			return true;
-		if (shift)
-			if (auto const* member = dynamic_cast<MemberAccess const*>(&callee))
-				transferOffset(*params.front(), member->expression());
-		for (size_t i = 0; i < arguments.size(); ++i)
-			transferOffset(*params[i + shift], *arguments[i]);
+		if (collectOffsets) calls.emplace_back(callableId, &_call);
 		return true;
+	}
+
+	void transferCallOffsets()
+	{
+		// The source declaration's parameter IDs are not the override's IDs.
+		// Resolve each reachable body's calls in its concrete solc host, then
+		// map actual arguments to the exact implementation by formal position.
+		for (auto const& [caller, call]: calls)
+			for (auto const* host: analysis.contracts)
+				if (analysis.isCallableReachable(host->id(), caller))
+					if (auto const* target = SolcFacts::resolveInternalCall(*call, host))
+					{
+						auto arguments = SolcFacts::callArguments(*call);
+						for (size_t i = 0; i < arguments.size(); ++i)
+							transferOffset(*target->parameters().at(i), *arguments[i]);
+					}
 	}
 };
 
 /// Walk every implemented function body, then every implemented modifier
 /// body, once with `_walker`.
-void collectBodyFacts(CompilerStack& _compiler, BodyFactsWalker& _walker)
+void collectBodyFacts(BodyFactsWalker& _walker)
 {
-	forEachFunction(_compiler, [&](FunctionDefinition const* function,
-		ContractDefinition const*) {
-		if (function && function->isImplemented())
+	for (auto const& [_, function]: _walker.analysis.functionDeclarations)
+		if (function->isImplemented())
 		{
 			_walker.callableId = function->id();
 			for (auto const& parameter: function->returnParameters())
 				if (parameter->referenceLocation() == VariableDeclaration::Location::Storage)
 					_walker.slotTransfers[parameter->id()].insert(function->id());
 			function->body().accept(_walker);
+			for (auto const& modifier: function->modifiers())
+				if (auto const* arguments = modifier->arguments())
+					for (auto const& argument: *arguments) argument->accept(_walker);
 		}
-	});
-	for (auto const& sourceName: _compiler.sourceNames())
-		for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(
-			_compiler.ast(sourceName).nodes()))
-			for (auto const* modifier: contract->functionModifiers())
-				if (modifier && modifier->isImplemented())
-				{
-					_walker.callableId = modifier->id();
-					modifier->body().accept(_walker);
-				}
+	for (auto const* contract: _walker.analysis.contracts)
+		for (auto const* modifier: contract->functionModifiers())
+			if (modifier && modifier->isImplemented())
+			{
+				_walker.callableId = modifier->id();
+				modifier->body().accept(_walker);
+			}
 }
 
 /// Per-function storage-reference return facts; `_slotSources` are the
@@ -682,14 +704,15 @@ ProgramAnalysis ProgramAnalysis::analyze(
 
 	collectContractFacts(_compiler, result);
 	indexFunctionDeclarations(_compiler, result);
-	collectCreationEffects(_compiler, result);
+	collectCreationEffects(result);
 	closeReachability(result);
 
 	BodyFactsWalker bodyFactsWalker(result, !_evmStorageLayout);
 
 	// Body/Yul facts are invariant: collect them once, then close the finite,
 	// monotone parameter-transfer graph without an arbitrary depth cutoff.
-	collectBodyFacts(_compiler, bodyFactsWalker);
+	collectBodyFacts(bodyFactsWalker);
+	bodyFactsWalker.transferCallOffsets();
 	auto aliasComponents = result.referenceAssignments;
 	for (auto const& [target, sources]: result.referenceAssignments)
 		for (auto source: sources) aliasComponents[source].insert(target);

@@ -7,7 +7,7 @@
 #include "builder/types/SolIntType.h"
 #include "awst/Termination.hpp"
 #include "awst/StatementWalk.h"
-#include "builder/context/FunctionIdRegistry.h"
+#include "builder/solc/FunctionIdentity.h"
 #include "builder/context/SubroutineRegistry.hpp"
 #include "builder/lowering/abi/Arc4Stdlib.h"
 #include "builder/lowering/intrinsics/Ripemd160Builder.h"
@@ -160,8 +160,8 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 		m_session.artifacts.pendingYulSubroutines.clear();
 	};
 
-	registerFunctionIds(m_session.analysis, m_functionSymbols);
-	presetDispatchCref(m_session.analysis, m_session.functionPointers);
+	if (!m_selectorContracts.empty())
+		m_session.functionPointers.currentCref = m_selectorContracts.front()->fullyQualifiedName();
 	collectHostBoundFunctions();
 	translateFreestandingFunctions(_sourceFile, roots);
 	// Root helpers must survive the per-contract sink reset below. Host-bound
@@ -232,7 +232,7 @@ void AWSTBuilder::translateFreestandingFunctions(
 					m_session.sourceMap.toAwstLoc(sourceFile, function->location()));
 			continue;
 		}
-		auto const* symbol = m_functionSymbols.resolve(id);
+		auto symbol = functionSymbol(*function);
 		if (!symbol) throw std::logic_error("Missing function declaration identity: " + name);
 		Logger::instance().debug("Translating freestanding function: " + name);
 		roots.push_back(buildFreestandingSubroutine(*function, sourceFile, name, *symbol, ownerName));
@@ -301,12 +301,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// EIP-1967 admin-slot uses lowered in this body attach to the contracts
 	// whose call graphs reach this function, not to whichever contract builds
 	// first (BuildArtifacts::noteErc1967AdminUse).
-	struct FreestandingIdGuard
-	{
-		BuildArtifacts& artifacts;
-		~FreestandingIdGuard() { artifacts.currentFreestandingFunctionId = -1; }
-	} freestandingIdGuard{m_session.artifacts};
-	m_session.artifacts.currentFreestandingFunctionId = _func.id();
+	solidity::ScopedSaveAndRestore freestandingIdGuard(
+		m_session.artifacts.currentFreestandingFunctionId, _func.id());
 
 	awst::SourceLocation loc = m_session.sourceMap.toAwstLoc(
 		_sourceFile, _func.location());
@@ -330,7 +326,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	static std::unordered_set<std::string> const EMPTY_OVERLOAD_NAMES;
 	eb::ContractContext exprBuilder(
 		m_session.typeMapper, *m_storageMapper, _sourceFile, _libraryName,
-		EMPTY_OVERLOAD_NAMES, m_functionSymbols, m_session.functionPointers
+		EMPTY_OVERLOAD_NAMES, m_session.functionPointers
 	);
 	exprBuilder.selectorContracts = m_selectorContracts;
 
@@ -650,7 +646,7 @@ std::shared_ptr<awst::Contract> AWSTBuilder::translateContract(
 {
 	ContractBuilder translator(
 		m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
-		_sourceFile, m_functionSymbols,
+		_sourceFile,
 		_opupBudget, _ensureBudget,
 		m_hostBoundFunctions
 	);

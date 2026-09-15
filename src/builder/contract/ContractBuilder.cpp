@@ -4,6 +4,7 @@
 #include "builder/context/ProgramAnalysis.h"
 #include <variant>
 #include "builder/contract/ContractBuilder.h"
+#include "builder/solc/FunctionIdentity.h"
 #include "builder/contract/SelectorRouter.h"
 #include "builder/codec/EvmMemoryCodec.h"
 #include "awst/NameGen.h"
@@ -129,7 +130,6 @@ ContractBuilder::ContractBuilder(
 	StorageMapper& _storageMapper,
 	eb::FunctionPointerRegistry& _functionPointers,
 	std::string const& _sourceFile,
-	FunctionSymbolTable const& _functionSymbols,
 	uint64_t _opupBudget,
 	std::map<std::string, uint64_t> const& _ensureBudget,
 	std::vector<solidity::frontend::FunctionDefinition const*> const& _hostBoundFunctions
@@ -138,7 +138,6 @@ ContractBuilder::ContractBuilder(
 	  m_storageMapper(_storageMapper),
 	  m_functionPointers(_functionPointers),
 	  m_sourceFile(_sourceFile),
-	  m_functionSymbols(_functionSymbols),
 	  m_opupBudget(_opupBudget),
 	  m_ensureBudget(_ensureBudget),
 	  m_hostBoundFunctions(_hostBoundFunctions)
@@ -378,12 +377,9 @@ std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
 
 void ContractBuilder::setFunctionContext(
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
-	awst::WType const* _returnType,
-	std::map<std::string, unsigned> const& _bitWidths,
-	std::map<std::string, solidity::frontend::Type const*> const& _paramSolTypes)
+	awst::WType const* _returnType)
 {
-	auto& ctx = m_functionCtx.emplace(*m_tr, _params, _returnType, _bitWidths);
-	ctx.paramSolTypes = _paramSolTypes;
+	auto& ctx = m_functionCtx.emplace(*m_tr, _params, _returnType);
 	m_exprBuilder->currentScope = &ctx.scope;
 }
 
@@ -524,7 +520,7 @@ void ContractBuilder::createExpressionBuilder(
 {
 	m_exprBuilder = std::make_unique<eb::ContractContext>(
 		m_typeMapper, m_storageMapper, m_sourceFile, _contractName,
-		m_overloadedNames, m_functionSymbols,
+		m_overloadedNames,
 		m_functionPointers
 	);
 	m_exprBuilder->currentContract = &_contract;
@@ -577,7 +573,7 @@ void ContractBuilder::createFunctionContexts()
 	m_tr.emplace(*m_exprBuilder, m_typeMapper, m_sourceFile);
 	m_functionCtx.emplace(*m_tr,
 		std::vector<std::pair<std::string, awst::WType const*>>{},
-		nullptr, std::map<std::string, unsigned>{});
+		nullptr);
 	m_exprBuilder->currentScope = &m_functionCtx->scope;
 
 	m_exprBuilder->transientStorage =
@@ -802,10 +798,10 @@ void ContractBuilder::buildHostBoundFunctions(
 		if (nameIt == m_exprBuilder->internalizedFunctionNames.end()) continue;
 		// Attribute EIP-1967 admin-slot use to the freestanding function and
 		// attach it through this contract's call graph.
-		m_typeMapper.artifacts().currentFreestandingFunctionId = function->id();
+		solidity::ScopedSaveAndRestore freestandingIdGuard(
+			m_typeMapper.artifacts().currentFreestandingFunctionId, function->id());
 		auto method = buildFunction(
 			*function, _contractName, nameIt->second, /*asInternalCopy=*/true);
-		m_typeMapper.artifacts().currentFreestandingFunctionId = -1;
 		appendMethodWithModifierSubs(_contractNode, std::move(method));
 	}
 }
@@ -817,7 +813,7 @@ void ContractBuilder::emitFunctionPointerDispatch(awst::Contract& _contractNode)
 		// Set subroutine IDs for library/free function targets so dispatch
 		// uses SubroutineID (resolvable by puya) instead of InstanceMethodTarget.
 		eb::FunctionPointerBuilder::setSubroutineIds(
-			*m_exprBuilder, m_functionSymbols);
+			*m_exprBuilder);
 
 		auto const& cref = m_contractId;
 		awst::SourceLocation loc(m_sourceFile);
@@ -929,7 +925,7 @@ void ContractBuilder::emitProxyUpdateGate(
 	else if (authorize)
 	{
 		// The exact solc override's wrapper retains the complete modifier chain.
-		auto const* symbol = m_functionSymbols.resolve(authorize->id());
+		auto symbol = functionSymbol(*authorize);
 		if (symbol)
 			for (auto const& method: _contractNode.methods)
 				if (method.memberName == *symbol)

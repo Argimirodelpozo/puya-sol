@@ -1,5 +1,7 @@
 #include "builder/types/TypeMapper.h"
 #include "builder/context/BuildArtifacts.h"
+#include "builder/context/CompilationSession.h"
+#include "builder/contract/AWSTBuilder.h"
 #include "builder/context/ProgramAnalysis.h"
 #include "builder/solc/SourceLocConvert.h"
 #include "builder/types/EncodedSize.h"
@@ -17,6 +19,13 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <type_traits>
+
+static_assert(!std::is_copy_constructible_v<puyasol::builder::CompilationSession>);
+static_assert(!std::is_move_constructible_v<puyasol::builder::CompilationSession>);
+static_assert(!std::is_copy_assignable_v<puyasol::builder::CompilationSession>);
+static_assert(!std::is_move_assignable_v<puyasol::builder::CompilationSession>);
+static_assert(!std::is_move_constructible_v<puyasol::builder::AWSTBuilder>);
 
 namespace
 {
@@ -55,6 +64,13 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 			artifacts.contract().helpers["host"] = "inner";
 		}
 		require(artifacts.contract().helpers.at("host") == "outer", "nested build lost its host emission state");
+		try
+		{
+			builder::BuildArtifacts::ContractScope inner(artifacts);
+			throw std::runtime_error("nested build failed");
+		}
+		catch (std::runtime_error const&) {}
+		require(artifacts.contract().helpers.at("host") == "outer", "failed build leaked its emission scope");
 	}
 	artifacts.clear();
 	builder::TypeMapper mapper(analysis, _profile, sources, artifacts);

@@ -1,4 +1,5 @@
 #pragma once
+#include <libsolutil/Common.h>
 
 #include "awst/Node.h"
 
@@ -48,14 +49,12 @@ struct BuildArtifacts
 	{
 	public:
 		explicit ContractScope(BuildArtifacts& owner)
-			: m_owner(owner), m_previous(std::exchange(owner.m_contract, &m_value)) {}
-		~ContractScope() { m_owner.m_contract = m_previous; }
+			: m_scope(owner.m_contract, &m_value) {}
 		ContractScope(ContractScope const&) = delete;
 		ContractScope& operator=(ContractScope const&) = delete;
 	private:
-		BuildArtifacts& m_owner;
 		ContractEmission m_value;
-		ContractEmission* m_previous;
+		solidity::ScopedSaveAndRestore<ContractEmission*> m_scope;
 	};
 	ContractEmission& contract()
 	{

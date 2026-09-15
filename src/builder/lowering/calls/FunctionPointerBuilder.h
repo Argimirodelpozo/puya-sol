@@ -10,7 +10,6 @@
 /// Calling one dispatches through an inner application call.
 
 #include "builder/eb/NodeBuilder.h"
-#include "builder/context/FunctionSymbolTable.h"
 
 #include <libsolidity/ast/ASTForward.h>
 #include "builder/solc/SolcFwd.h"
@@ -110,9 +109,7 @@ public:
 		solidity::frontend::FunctionType const* _funcType);
 
 	/// Bind registered targets to root-subroutine or contract-method symbols.
-	static void setSubroutineIds(
-		ContractContext& _ctx,
-		FunctionSymbolTable const& _symbols);
+	static void setSubroutineIds(ContractContext& _ctx);
 
 	/// Set current contract cref before translating function bodies
 	/// (library subroutines need it to construct SubroutineIDs).

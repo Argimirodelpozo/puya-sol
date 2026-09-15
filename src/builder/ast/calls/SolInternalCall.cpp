@@ -85,13 +85,13 @@ struct BoxedArrayPath
 std::optional<BoxedArrayPath> boxedArrayPath(Expression const& expression)
 {
 	BoxedArrayPath result;
-	auto const* cursor = &expression;
+	auto const* cursor = &SolcFacts::functionExpression(expression);
 	while (auto const* index = dynamic_cast<IndexAccess const*>(cursor))
 	{
 		if (!index->indexExpression())
 			return std::nullopt;
 		result.indices.push_back(index);
-		cursor = &index->baseExpression();
+		cursor = &SolcFacts::functionExpression(index->baseExpression());
 	}
 	result.root = dynamic_cast<Identifier const*>(cursor);
 	result.declaration = result.root
@@ -356,7 +356,8 @@ void SolInternalCall::buildSequencedArgs(
 		return extractMappingKeyPrefix(expression);
 	};
 
-	auto bindArgument = [&](Expression const& source, size_t paramIdx) -> std::shared_ptr<awst::Expression> {
+	auto bindArgument = [&](Expression const& expression, size_t paramIdx) -> std::shared_ptr<awst::Expression> {
+		auto const& source = SolcFacts::functionExpression(expression);
 		auto const* parameterType = _funcDef && paramIdx < _funcDef->parameters().size()
 			? _funcDef->parameters()[paramIdx]->type()
 			: functionType && paramIdx < functionType->parameterTypes().size()

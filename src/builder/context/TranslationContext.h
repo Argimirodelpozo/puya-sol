@@ -233,17 +233,13 @@ struct FunctionContext
 	Context scope{bindings, this};
 	std::vector<std::pair<std::string, awst::WType const*>> params;
 	awst::WType const* returnType = nullptr;
-	std::map<std::string, unsigned> paramBitWidths;
 	/// solc callable AST identity, used to scope synthesized helpers.
 	int64_t callableId = 0;
-	/// Declared solc param types by BARE name; feeds
-	/// AssemblyBuilder's EVM-ABI calldata layout. Assigned after construction.
-	std::map<std::string, solidity::frontend::Type const*> paramSolTypes;
-
-	/// Declared Solidity return components. Assembly `return(start,size)` uses
-	/// these to recursively decode the EVM ABI region into the method's AWST
-	/// return value instead of recognizing individual aggregate shapes.
-	std::vector<solidity::frontend::Type const*> returnSolTypes;
+	/// Null for synthetic frames. Source signature metadata is derived from
+	/// this declaration at the Yul boundary, never mirrored in mutable maps.
+	solidity::frontend::FunctionDefinition const* sourceFunction = nullptr;
+	std::map<std::string, solidity::frontend::Type const*> parameterSolTypes() const;
+	std::vector<solidity::frontend::Type const*> returnSolTypes() const;
 
 	/// Struct storage-ref params passed as a box-key handle (bytes) because the
 	/// body uses `param.slot` in asm (solady storage-lib idiom). name → the ARC4
@@ -282,13 +278,11 @@ struct FunctionContext
 	FunctionContext(
 		TranslationContext& _tr,
 		std::vector<std::pair<std::string, awst::WType const*>> _params,
-		awst::WType const* _returnType,
-		std::map<std::string, unsigned> _paramBitWidths
+		awst::WType const* _returnType
 	)
 		: tr(_tr),
 		  params(std::move(_params)),
-		  returnType(_returnType),
-		  paramBitWidths(std::move(_paramBitWidths))
+		  returnType(_returnType)
 	{}
 
 	/// Bind a source function using its solc declaration, physical boundary plan,

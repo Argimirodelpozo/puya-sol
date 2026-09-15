@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include "builder/ast/exprs/SolAssignment.h"
+#include "builder/ast/exprs/SolTupleExpression.h"
 #include "builder/eb/ResolvedLValue.h"
 #include "builder/solc/SolcFacts.h"
 #include "awst/NameGen.h"
@@ -69,11 +70,17 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		sourceLhs = dynamic_cast<TupleExpression const*>(sourceLhs->components()[0].get());
 	if (sourceLhs && dynamic_cast<TupleType const*>(sourceLhs->annotation().type))
 	{
+		std::vector<VariableDeclaration const*> bindings;
+		for (auto const& component: sourceLhs->components())
+		{
+			auto const* id = component ? dynamic_cast<Identifier const*>(&SolcFacts::functionExpression(*component)) : nullptr;
+			bindings.push_back(id ? dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration) : nullptr);
+		}
 		// Solc snapshots RHS values, evaluates LHS addresses left-to-right, then
 		// writes components right-to-left. Keep each resolved address for its store.
 		auto rhs = m_ctx.lowerOperand([&] {
 			return pinLiteralTupleRhs(snapshotTupleCallRhs(
-				buildExpr(m_assignment.rightHandSide())), sourceLhs);
+				SolTupleExpression::buildBindingRhs(m_ctx, m_assignment.rightHandSide(), bindings)), sourceLhs);
 		}, false);
 		value = m_ctx.emitSequencedOperand(std::move(rhs.effects), std::move(rhs.value), false, m_loc);
 		std::function<std::shared_ptr<awst::Expression>(Expression const&)> resolve;

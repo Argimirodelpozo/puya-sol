@@ -28,7 +28,6 @@ ContractContext::ContractContext(
 	std::string const& _sourceFile,
 	std::string const& _contractName,
 	std::unordered_set<std::string> const& _overloadedNames,
-	FunctionSymbolTable const& _functionSymbols,
 	FunctionPointerRegistry& _functionPointers
 )
 	: typeMapper(_typeMapper),
@@ -36,7 +35,6 @@ ContractContext::ContractContext(
 	  sourceFile(_sourceFile),
 	  contractName(_contractName),
 	  overloadedNames(_overloadedNames),
-	  functionSymbols(_functionSymbols),
 	  functionPointers(_functionPointers)
 {
 	viaIRSequencing = typeMapper.profile().viaIRSequencing;
@@ -73,19 +71,17 @@ std::shared_ptr<awst::Expression> ContractContext::buildValue(
 	return value;
 }
 
-ContractContext::LoweredExpression ContractContext::build(
+ContractContext::LoweredExpression ContractContext::lower(
 	solidity::frontend::Expression const& _expr,
 	bool _conditional)
 {
-	auto result = lowerOperand([&] { return buildValue(_expr); }, _conditional);
-	return {std::move(result.value), std::move(result.effects),
-		_expr.annotation().type};
+	return lowerOperand([&] { return buildValue(_expr); }, _conditional);
 }
 
 std::shared_ptr<awst::Expression> ContractContext::buildExpr(
 	solidity::frontend::Expression const& _expr)
 {
-	auto lowered = build(_expr, false);
+	auto lowered = lower(_expr, false);
 	restoreOperandDeltas(std::move(lowered.effects));
 	return std::move(lowered.value);
 }
@@ -94,7 +90,7 @@ void ContractContext::evaluateForEffects(
 	solidity::frontend::Expression const& _expr,
 	awst::SourceLocation const& _loc)
 {
-	auto lowered = build(_expr, false);
+	auto lowered = lower(_expr, false);
 	for (auto& statement: lowered.effects.pre)
 		preEffects().push_back(std::move(statement));
 	if (lowered.value)
@@ -144,16 +140,12 @@ std::unique_ptr<InstanceBuilder> ContractContext::builderForInstance(
 
 std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePostEffects()
 {
-	std::vector<std::shared_ptr<awst::Statement>> result;
-	result.swap(activeEffects().post);
-	return result;
+	return std::exchange(activeEffects().post, {});
 }
 
 std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePreEffects()
 {
-	std::vector<std::shared_ptr<awst::Statement>> result;
-	result.swap(activeEffects().pre);
-	return result;
+	return std::exchange(activeEffects().pre, {});
 }
 
 void ContractContext::appendEffectsTo(

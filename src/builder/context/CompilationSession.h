@@ -25,6 +25,10 @@ class CompilationSession
 {
 public:
 	CompilationSession(): typeMapper(analysis, profile, sourceMap, artifacts) {}
+	CompilationSession(CompilationSession const&) = delete;
+	CompilationSession(CompilationSession&&) = delete;
+	CompilationSession& operator=(CompilationSession const&) = delete;
+	CompilationSession& operator=(CompilationSession&&) = delete;
 
 	void begin(
 		solidity::frontend::CompilerStack& _compiler,

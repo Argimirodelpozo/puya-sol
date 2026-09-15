@@ -1,6 +1,8 @@
 /// @file SolTupleExpression.cpp — tuple/inline-array expression translation.
 
 #include "builder/ast/exprs/SolTupleExpression.h"
+#include "builder/ast/exprs/SolIndexAccess.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/eb/AssignmentHelper.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/ConversionPlan.h"
@@ -51,13 +53,39 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 	// Single-element tuple is parenthesization
 	if (m_tuple.components().size() == 1 && m_tuple.components()[0])
 		return buildExpr(*m_tuple.components()[0]);
+	return buildTuple({});
+}
 
+std::shared_ptr<awst::Expression> SolTupleExpression::buildBindingRhs(
+	eb::ContractContext& ctx, solidity::frontend::Expression const& expression,
+	std::vector<solidity::frontend::VariableDeclaration const*> const& bindings)
+{
+	auto const& value = SolcFacts::functionExpression(expression);
+	if (auto const* tuple = dynamic_cast<solidity::frontend::TupleExpression const*>(&value);
+		tuple && !tuple->isInlineArray())
+		return SolTupleExpression(ctx, *tuple).buildTuple(bindings);
+	return ctx.buildExpr(expression);
+}
+
+std::shared_ptr<awst::Expression> SolTupleExpression::buildTuple(
+	std::vector<solidity::frontend::VariableDeclaration const*> const& bindings)
+{
 	// Missing LHS components are represented by empty-name placeholders.
 	auto e = awst::makeTupleExpression(nullptr, m_loc);
 	std::vector<awst::WType const*> types;
-	for (auto const& comp: m_tuple.components())
+	for (size_t i = 0; i < m_tuple.components().size(); ++i)
 	{
-		auto value = comp ? buildExpr(*comp)
+		auto const& comp = m_tuple.components()[i];
+		auto const* target = i < bindings.size() ? bindings[i] : nullptr;
+		std::shared_ptr<awst::Expression> value;
+		if (target && target->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+			&& comp && comp->annotation().type
+			&& comp->annotation().type->dataStoredIn(solidity::frontend::DataLocation::Memory)
+			&& !comp->annotation().type->isValueType())
+			if (auto reference = SolIndexAccess::resolveBlobReference(m_ctx, m_scope, *comp, m_loc))
+				value = m_ctx.emitSequencedOperand(std::move(reference->effects),
+					std::move(reference->value), true, m_loc);
+		if (!value) value = comp ? buildExpr(*comp)
 			: awst::makeVarExpression("", awst::WType::uint64Type(), m_loc);
 		types.push_back(value->wtype);
 		e->items.push_back(std::move(value));

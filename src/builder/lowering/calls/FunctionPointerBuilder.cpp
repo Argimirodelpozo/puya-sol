@@ -3,6 +3,7 @@
 /// inner app calls for external.
 
 #include "builder/lowering/calls/FunctionPointerBuilder.h"
+#include "builder/solc/FunctionIdentity.h"
 #include "builder/target/ApplicationTarget.h"
 #include "builder/lowering/itxn/ApplicationCall.h"
 #include "awst/NameGen.h"
@@ -132,7 +133,7 @@ unsigned FunctionPointerBuilder::registerTarget(
 		return found->second.id;
 	}
 	if (_awstName.empty())
-		if (auto const* symbol = _ctx.functionSymbols.resolve(id))
+		if (auto symbol = functionSymbol(*_funcDef))
 			_awstName = *symbol;
 	if (_awstName.empty())
 		_awstName = CallResolver::resolveMethodName(_ctx, *_funcDef);
@@ -143,9 +144,7 @@ unsigned FunctionPointerBuilder::registerTarget(
 	return pointerId;
 }
 
-void FunctionPointerBuilder::setSubroutineIds(
-	ContractContext& _ctx,
-	FunctionSymbolTable const& _symbols)
+void FunctionPointerBuilder::setSubroutineIds(ContractContext& _ctx)
 {
 	for (auto& [id, entry] : _ctx.functionPointers.targets)
 	{
@@ -161,9 +160,9 @@ void FunctionPointerBuilder::setSubroutineIds(
 			entry.subroutineId.clear();
 			continue;
 		}
-		if (auto const* symbol = _symbols.resolve(id))
+		if (auto symbol = functionSymbol(*entry.funcDef))
 		{
-			if (_symbols.isRootSubroutine(id))
+			if (isRootSubroutine(*entry.funcDef))
 				entry.subroutineId = *symbol;
 			else
 				entry.name = *symbol;

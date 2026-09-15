@@ -2,6 +2,7 @@
 /// Resolves function call targets from Solidity AST nodes.
 
 #include "builder/lowering/calls/CallResolver.h"
+#include "builder/solc/FunctionIdentity.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/solc/OverloadSuffix.h"
 #include "builder/types/ConversionPlan.h"
@@ -135,8 +136,7 @@ std::string CallResolver::resolveMethodName(
 	using solidity::frontend::Visibility;
 	if (_func.visibility() == Visibility::Internal
 		|| _func.visibility() == Visibility::Private)
-		if (auto const* symbol = _ctx.functionSymbols.resolve(
-				_func.id()))
+		if (auto symbol = functionSymbol(_func))
 			return *symbol;
 	std::string name = _func.name();
 	if (_ctx.overloadedNames.count(name))
@@ -178,7 +178,7 @@ bool CallResolver::tryResolveLibraryOrFree(
 	bool const isLibrary = contractDef && contractDef->isLibrary();
 	if (isLibrary || _funcDef->isFree())
 	{
-		if (auto const* symbol = _ctx.functionSymbols.resolve(_funcDef->id()))
+		if (auto symbol = functionSymbol(*_funcDef))
 		{
 			_result.target = awst::SubroutineID{*symbol};
 			_result.funcDef = _funcDef;

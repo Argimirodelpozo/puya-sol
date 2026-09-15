@@ -162,7 +162,7 @@ std::optional<eb::ContractContext::LoweredExpression> SolIndexAccess::resolveBlo
 {
 	auto result = ctx.lowerOperand([&] { return resolveBlobOffset(ctx, scope, node, loc); }, false);
 	if (!result.value) return std::nullopt;
-	return eb::ContractContext::LoweredExpression{std::move(result.value), std::move(result.effects), node.annotation().type};
+	return result;
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(

@@ -48,9 +48,6 @@ private:
 	CompilationSession m_session;
 	std::unique_ptr<StorageMapper> m_storageMapper;
 
-	/// Canonical solc declaration ID → opaque AWST function identity.
-	FunctionSymbolTable m_functionSymbols;
-
 	/// Free/library functions whose lowering needs a concrete host contract:
 	/// modifier chains, function-pointer dispatch, or default-layout inline
 	/// storage assembly. Their reverse caller closure is hosted as well because
@@ -62,9 +59,6 @@ private:
 	std::vector<solidity::frontend::ContractDefinition const*> m_selectorContracts;
 
 	// ── Build phases (executed in order from build()) ──
-	// Phase 1: registerFunctionIds → m_functionSymbols.
-	// Phase 1.5: presetDispatchCref → fn-ptr dispatch cref (first deployable contract).
-	// Both defined in builder/FunctionIdRegistry.h.
 	void collectHostBoundFunctions();
 
 	/// Free/library bodies share eligibility, symbols and host-bound decisions.

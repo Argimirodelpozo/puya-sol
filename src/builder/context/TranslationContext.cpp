@@ -1,7 +1,6 @@
 #include "builder/context/TranslationContext.h"
 #include "builder/context/ContractContext.h"
 #include "builder/types/RefParamPassing.h"
-#include "builder/types/SolIntType.h"
 #include <libsolidity/ast/AST.h>
 
 namespace puyasol::builder::sol_ast
@@ -11,23 +10,18 @@ FunctionContext::FunctionContext(TranslationContext& _tr,
 	solidity::frontend::FunctionDefinition const& function,
 	std::vector<awst::SubroutineArgument> const& args,
 	awst::WType const* _returnType)
-	: FunctionContext(_tr, {}, _returnType, {})
+	: FunctionContext(_tr, {}, _returnType)
 {
 	using solidity::frontend::VariableDeclaration;
 	callableId = function.id();
+	sourceFunction = &function;
 	for (auto const& arg: args)
 		params.emplace_back(arg.name, arg.wtype);
 	auto& types = tr.typeMapper;
 	auto const& plan = types.callBoundaryPlan(function, tr.contractCtx.currentContract);
-	auto recordWidth = [&](VariableDeclaration const& declaration, std::string const& name) {
-		if (auto integer = SolIntType::fromSol(declaration.type()); integer && integer->bits < 64)
-			paramBitWidths[name] = integer->bits;
-	};
 	for (auto const& parameter: plan.parameters)
 	{
 		auto const& declaration = *parameter.declaration;
-		paramSolTypes[parameter.name] = declaration.type();
-		recordWidth(declaration, parameter.name);
 		switch (parameter.passing)
 		{
 		case RefParamPassing::SlotHandle:
@@ -54,8 +48,6 @@ FunctionContext::FunctionContext(TranslationContext& _tr,
 		|| storageRefReturnUsesSlot(&function, types.analysis());
 	for (auto const& result: function.returnParameters())
 	{
-		returnSolTypes.push_back(result->type());
-		recordWidth(*result, result->name());
 		if (result->name().empty()) continue;
 		if (result->referenceLocation() == VariableDeclaration::Location::Storage)
 		{
@@ -71,6 +63,24 @@ FunctionContext::FunctionContext(TranslationContext& _tr,
 			&& memoryUsesBlob(types.map(result->type())))
 			scope.bindings.blobAggregates.set(result->id(), "__blobagg_off_" + std::to_string(result->id()));
 	}
+}
+
+std::map<std::string, solidity::frontend::Type const*> FunctionContext::parameterSolTypes() const
+{
+	std::map<std::string, solidity::frontend::Type const*> result;
+	if (sourceFunction)
+		for (auto const& parameter: tr.typeMapper.callBoundaryPlan(
+			*sourceFunction, tr.contractCtx.currentContract).parameters)
+			result.emplace(parameter.name, parameter.declaration->type());
+	return result;
+}
+
+std::vector<solidity::frontend::Type const*> FunctionContext::returnSolTypes() const
+{
+	std::vector<solidity::frontend::Type const*> result;
+	if (sourceFunction)
+		for (auto const& parameter: sourceFunction->returnParameters()) result.push_back(parameter->type());
+	return result;
 }
 
 bool Context::isInConstructor() const

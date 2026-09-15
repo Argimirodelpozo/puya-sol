@@ -76,7 +76,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 	auto buildBranch = [&](Statement const& body) -> std::shared_ptr<awst::Block> {
 		// Conditionally-executed region: compile-time-only rebinds (storage
 		// pointer aliases) must fail loud inside it.
-		eb::ContractContext::ConditionalRegion region(bc);
+		auto region = bc.conditionalRegion();
 		return buildBlock(m_blk, body);
 	};
 
@@ -102,7 +102,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 	auto& bc = m_blk.builderCtx();
 	// Cond and body re-execute per iteration — a conditionally-executed
 	// region for compile-time rebinds (storage-pointer aliases).
-	eb::ContractContext::ConditionalRegion region(bc);
+	auto region = bc.conditionalRegion();
 
 	if (m_node.isDoWhile())
 	{
@@ -155,7 +155,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 	// Everything from the condition on (cond, post, body) re-executes per
 	// iteration — a conditionally-executed region for compile-time rebinds.
 	// The init above runs once, straight-line, and stays outside it.
-	eb::ContractContext::ConditionalRegion region(bc);
+	auto region = bc.conditionalRegion();
 	std::vector<std::shared_ptr<awst::Statement>> condPre;
 	auto cond = lowerCondition(m_blk, m_node.condition(), condPre, m_loc);
 

@@ -1,6 +1,7 @@
 /// @file SolAssignmentTuple.cpp — ordered tuple assignment lowering.
 #include "builder/ast/exprs/SolAssignment.h"
 #include "builder/eb/ResolvedLValue.h"
+#include "builder/solc/SolcFacts.h"
 
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/contract/ContractBuilder.h"
@@ -362,7 +363,7 @@ bool SolAssignment::emitTupleComponentWrite(
 		&& _sourceLhs->components()[i])
 	{
 		auto const* identifier = dynamic_cast<Identifier const*>(
-			_sourceLhs->components()[i].get());
+			&SolcFacts::functionExpression(*_sourceLhs->components()[i]));
 		auto const* declaration = identifier
 			? dynamic_cast<VariableDeclaration const*>(
 				identifier->annotation().referencedDeclaration)
@@ -381,6 +382,12 @@ bool SolAssignment::emitTupleComponentWrite(
 				: m_ctx.typeMapper.map(declaration->type());
 			std::shared_ptr<awst::Expression> value = awst::makeTupleItem(
 				_value, static_cast<int>(i), componentType, m_loc);
+			if (componentType == awst::WType::uint64Type())
+			{
+				m_ctx.postEffects().push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(offsetName, componentType, m_loc), std::move(value), m_loc));
+				return true;
+			}
 			auto const* targetType = m_ctx.typeMapper.map(declaration->type());
 			value = builder::TypeCoercion::coerceForAssignment(
 				std::move(value), targetType, m_loc);
