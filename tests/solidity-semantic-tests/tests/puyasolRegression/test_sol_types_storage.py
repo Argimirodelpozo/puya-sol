@@ -5,7 +5,6 @@ from Crypto.Hash import keccak
 from eth_abi import decode, encode
 
 from framework import as_bytes, as_int, as_signed_int
-from framework.compile import CompileError
 
 
 def _call(harness, app, profile, signature, returns, args=(), types=(), *, extra_fee=20_000):
@@ -104,12 +103,6 @@ def test_fixed_array_conversion_loop(harness, slot_layout, abi):
     # 257 elements select the runtime conversion loop, not literal unrolling.
     source = "puyasolRegression/contracts/rev_2_array_conversion_loop.sol"
     extra_args = ["--contract-abi", abi] + (["--evm-storage-layout"] if slot_layout else [])
-    if slot_layout:
-        # Slot-mode whole fixed-array stores already have an explicit 64-element
-        # capacity limit. Widening must not bypass it or silently truncate.
-        with pytest.raises(CompileError, match="fixed-array value traversal of length 258 exceeds the supported extent of 64"):
-            harness.compile(source, extra_args=extra_args)
-        return
     app = harness.compile_and_deploy(
         source, extra_args=extra_args,
         ensure_budget={"run": 100_000},

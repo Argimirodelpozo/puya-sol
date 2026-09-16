@@ -9,7 +9,7 @@ std::shared_ptr<awst::Expression> SolEnumValueAccess::toAwst()
 {
 	auto const* type = dynamic_cast<solidity::frontend::EnumType const*>(m_solType);
 	if (!type) return nullptr;
-	return awst::makeIntegerConstant(type->memberValue(memberName()), m_loc);
+	return awst::makeIntegerConstant(type->memberValue(memberName()), m_loc, awst::WType::biguintType());
 }
 
 } // namespace puyasol::builder::sol_ast

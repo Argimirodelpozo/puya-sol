@@ -122,6 +122,18 @@ std::shared_ptr<awst::Statement> SlotHandleAccess::writeSlot(
 	return awst::makeExpressionStatement(std::move(call), _loc);
 }
 
+std::shared_ptr<awst::Expression> SlotHandleAccess::packedAddressAuxSlot(
+	std::shared_ptr<awst::Expression> slot,
+	std::shared_ptr<awst::Expression> byteOffset, awst::SourceLocation const& loc)
+{
+	auto preimage = awst::makeConcat(
+		awst::makeLeftPadToN(awst::makeAsBytes(std::move(slot), loc), 32, loc),
+		byteOffset ? awst::makeItob(std::move(byteOffset), loc)
+			: std::shared_ptr<awst::Expression>(awst::makeBzero(8, loc)), loc);
+	return awst::makeAsBiguint(awst::makeKeccak256(awst::makeConcat(std::move(preimage),
+		awst::makeUtf8BytesConstant("addraux", loc), loc), loc), loc);
+}
+
 bool SlotHandleAccess::forEachIndex(solidity::u256 const& _count,
 	std::vector<std::shared_ptr<awst::Statement>>& _out,
 	awst::SourceLocation const& _loc,

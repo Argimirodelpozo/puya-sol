@@ -72,7 +72,9 @@ ConstructorWirePlan::Expr ConstructorWirePlan::decodeParameter(
 	auto const& parameter = parameters.at(index);
 	auto const* native = parameter.type;
 	if (!awst::structurallyEquivalent(wire->wtype, native))
-		wire = awst::makeARC4Decode(std::move(wire), native, loc);
+		wire = awst::isNumericWType(wire->wtype)
+			? TypeCoercion::coerceScalar(std::move(wire), native, loc)
+			: awst::makeARC4Decode(std::move(wire), native, loc);
 	if (native == awst::WType::uint64Type())
 		return decodeScalar(index, awst::makeItob(std::move(wire), loc), loc, out);
 	if (native == awst::WType::biguintType())

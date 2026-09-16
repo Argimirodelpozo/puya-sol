@@ -167,7 +167,8 @@ std::optional<eb::ContractContext::LoweredExpression> SolIndexAccess::resolveBlo
 
 std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	eb::ContractContext& _ctx, Context& _scope,
-	solidity::frontend::Expression const& _source, awst::SourceLocation const& _loc)
+	solidity::frontend::Expression const& _source, awst::SourceLocation const& _loc,
+	bool _followReference)
 {
 	using namespace solidity::frontend;
 
@@ -265,7 +266,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 			awst::makeUInt64BinOp(std::move(idx), awst::UInt64BinaryOperator::Mult,
 				awst::makeIntegerConstant(stride, _loc), _loc), _loc);
 		auto const* resultType = ia->annotation().type;
-		if (!baseArr->isByteArrayOrString()
+		if (_followReference && !baseArr->isByteArrayOrString()
 			&& (dynamic_cast<ArrayType const*>(resultType)
 				|| dynamic_cast<StructType const*>(resultType)))
 			return builder::readEvmMemoryUint64Word(
@@ -287,8 +288,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 			: awst::makeUInt64BinOp(std::move(parent), awst::UInt64BinaryOperator::Add,
 				awst::makeIntegerConstant(fieldOff, _loc), _loc);
 		auto const* resultType = ma->annotation().type;
-		if (dynamic_cast<ArrayType const*>(resultType)
-			|| dynamic_cast<StructType const*>(resultType))
+		if (_followReference && (dynamic_cast<ArrayType const*>(resultType)
+			|| dynamic_cast<StructType const*>(resultType)))
 			return builder::readEvmMemoryUint64Word(
 				_ctx.typeMapper, std::move(slot), _loc, _ctx.preEffects());
 		return slot;

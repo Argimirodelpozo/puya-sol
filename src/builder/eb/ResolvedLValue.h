@@ -22,6 +22,7 @@ public:
 		Resolution() = default;
 		bool isAddressed() const { return !std::holds_alternative<std::monostate>(m_kind); }
 		bool isBoxedAggregate() const { return std::holds_alternative<AggregatePath>(m_kind); }
+		bool isMemory() const { return std::holds_alternative<Blob>(m_kind); }
 	private:
 		friend class ResolvedLValue;
 		struct Slot {};
@@ -55,12 +56,15 @@ public:
 	/// Store a native value now and return the assigned scalar/value, or the
 	/// destination slot handle for a storage-reference assignment result.
 	Expr write(Expr _value);
+	/// Rebind a memory member/element's pointer, preserving the source identity.
+	Expr writeMemoryReference(Expr _offset);
+	bool isMemoryReference() const;
 	void clear();
 
 private:
 	struct Target { Expr value; };
 	struct Slot { EvmSlotLowering::Addr address; Expr byteIndex; };
-	struct Blob { Expr offset; bool packedByte = false; };
+	struct Blob { Expr offset; bool packedByte = false; bool referenceSlot = false; };
 	struct Transient { solidity::frontend::VariableDeclaration const* declaration; };
 	struct Aggregate
 	{

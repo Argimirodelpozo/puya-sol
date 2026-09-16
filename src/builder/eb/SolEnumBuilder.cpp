@@ -1,5 +1,5 @@
 /// @file SolEnumBuilder.cpp
-/// Solidity enum type builder — enums encoded as uint64 on AVM.
+/// Solidity enum type builder — full numeric words until range validation.
 
 #include "builder/eb/SolEnumBuilder.h"
 #include "builder/eb/SolBoolBuilder.h"
@@ -12,8 +12,7 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 	InstanceBuilder& _other, BuilderComparisonOp _op,
 	awst::SourceLocation const& _loc)
 {
-	// Enums compare as uint64
-	if (_other.wtype() != awst::WType::uint64Type())
+	if (!dynamic_cast<solidity::frontend::EnumType const*>(_other.solType()))
 		return nullptr;
 
 	auto lhs = resolve();
@@ -28,7 +27,7 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 			-> std::shared_ptr<awst::Expression> {
 			std::string tmpName = "__enum_cmp_" + std::to_string(
 				awst::NameGen::next("SolEnumBuilder.compare"));
-			auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
+			auto tmpVar = awst::makeVarExpression(tmpName, val->wtype, _loc);
 			m_ctx.preEffects().push_back(
 				awst::makeAssignmentStatement(tmpVar, std::move(val), _loc));
 			m_ctx.preEffects().push_back(

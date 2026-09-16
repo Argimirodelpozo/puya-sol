@@ -102,7 +102,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	context.stateVarSlots = _stateVarSlots;
 	context.externalRefs = _assembly.externalReferences;
 	context.declName = std::move(_declName);
-	m_frame.signedShadow.clear();
+	m_frame.wordShadow.clear();
 	m_frame.haltEmitted = false;
 
 	for (auto const& [name, type]: _params)
@@ -155,22 +155,27 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	// Load scratch blob, write params into it; blob pre-allocated in preamble.
 	initializeMemoryBlob(_params, result);
 
-	// Signed intN (N<=64) locals: seed a biguint SHADOW with the sign-extended
-	// 256-bit word (see m_frame.signedShadow). Reads/writes in the block hit the shadow.
-	for (auto const& [name, bits]: m_context->signedParamBits)
+	// Solidity's small carriers cannot represent a dirty Yul word. Defer their
+	// conversion until the block ends, including bools and left-aligned bytesN.
+	for (auto const& [name, type]: _params)
 	{
-		auto lit = m_frame.locals.find(name);
-		if (lit == m_frame.locals.end() || lit->second != awst::WType::uint64Type())
+		auto const* bytes = dynamic_cast<awst::BytesWType const*>(type);
+		bool const fixedBytes = bytes && bytes->length() && *bytes->length() < 32;
+		if (type != awst::WType::uint64Type() && type != awst::WType::boolType() && !fixedBytes)
 			continue;
+		if (m_frame.blobOffsetVars.count(name) || m_frame.calldataStaticPtrNames.count(name)) continue;
 		awst::SourceLocation loc(m_context->sourceFile);
-		std::string shadow = "__asmsx_" + name;
+		std::string shadow = "__asmword_" + name;
+		std::shared_ptr<awst::Expression> value = awst::makeVarExpression(name, type, loc);
+		if (auto signedType = m_context->signedParamBits.find(name); signedType != m_context->signedParamBits.end())
+			value = TypeCoercion::signExtendToUint256(std::move(value), signedType->second, loc);
+		else if (fixedBytes) value = awst::makeRightPad(std::move(value), 32 - *bytes->length(), loc);
 		result.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(shadow, awst::WType::biguintType(), loc),
-			TypeCoercion::signExtendToUint256(
-				awst::makeVarExpression(name, awst::WType::uint64Type(), loc), bits, loc),
+			ensureBiguint(std::move(value), loc),
 			loc));
 		m_frame.locals[shadow] = awst::WType::biguintType();
-		m_frame.signedShadow[name] = shadow;
+		m_frame.wordShadow[name] = shadow;
 	}
 
 	for (auto const& stmt: _block.statements)
@@ -186,19 +191,18 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	// memory write silently vanished.
 	drainPendingStatements(result);
 
-	// Write the signed shadows' low 8 bytes back to their typed locals (the
-	// 64-bit-TC view of the possibly-dirty word — EVM keeps asm dirt too).
-	if (m_frame.haltEmitted)
-		m_frame.signedShadow.clear();
-	for (auto const& [name, shadow]: m_frame.signedShadow)
+	auto shadows = std::move(m_frame.wordShadow);
+	m_frame.wordShadow.clear();
+	if (!m_frame.haltEmitted)
+	for (auto const& [name, shadow]: shadows)
 	{
 		awst::SourceLocation loc(m_context->sourceFile);
-		result.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(name, awst::WType::uint64Type(), loc),
-			safeBtoi(awst::makeVarExpression(shadow, awst::WType::biguintType(), loc), loc),
-			loc));
+		auto value = awst::makeVarExpression(shadow, awst::WType::biguintType(), loc);
+		if (m_context->signedParamBits.count(name))
+			result.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(name,
+				awst::WType::uint64Type(), loc), safeBtoi(std::move(value), loc), loc));
+		else emitPlainYulAssignment(name, std::move(value), loc, result);
 	}
-	m_frame.signedShadow.clear();
 
 	return result;
 }

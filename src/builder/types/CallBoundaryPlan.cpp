@@ -85,6 +85,11 @@ void CallParameterPlan::setAbiWireType(
 {
 	wireType = type;
 	signedDecodeBits = 0;
+	if (dynamic_cast<solidity::frontend::EnumType const*>(solType))
+	{
+		wireType = awst::WType::uint64Type();
+		return;
+	}
 	if (type == awst::WType::biguintType())
 	{
 		auto integer = SolIntType::fromSol(solType);
@@ -108,6 +113,8 @@ std::shared_ptr<awst::Expression> CallParameterPlan::decodeArgument(
 	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc) const
 {
 	if (type == wireType) return value;
+	if (wireType == awst::WType::uint64Type())
+		return TypeCoercion::coerceScalar(std::move(value), type, loc);
 	value = awst::makeARC4Decode(std::move(value), type, loc);
 	if (signedDecodeBits)
 		value = TypeCoercion::signExtendToUint256(std::move(value), signedDecodeBits, loc);
@@ -199,6 +206,8 @@ std::shared_ptr<awst::Expression> CallParameterPlan::encodeArgument(
 	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc) const
 {
 	if (!value || wireType == type || awst::structurallyEquivalent(value->wtype, wireType)) return value;
+	if (wireType == awst::WType::uint64Type())
+		return TypeCoercion::coerceScalar(std::move(value), wireType, loc);
 	// Signed wide carriers are canonical 256-bit TC; the input wire carries
 	// only the declared N bits. The callee sign-extends after decoding.
 	if (signedDecodeBits)

@@ -267,7 +267,7 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 			awst::makeWord32ToUInt64(fullWord, loc), loc);
 		out.push_back(awst::makeExpressionStatement(
 			awst::makeEnumRangeAssert(value, boundary.enumMembers, loc), loc));
-		return value;
+		return TypeCoercion::coerceScalar(std::move(value), native, loc);
 	}
 	return awst::makeReinterpretCast(std::move(word), native, loc);
 }
@@ -336,6 +336,8 @@ std::shared_ptr<awst::Expression> valueToArc4(
 {
 	if (!arc4Type || value->wtype == arc4Type)
 		return value;
+	if (awst::isNumericWType(value->wtype) && awst::isNumericWType(arc4Type))
+		return TypeCoercion::coerceScalar(std::move(value), arc4Type, loc);
 	auto const* type = underlyingType(solType);
 	if (auto const* array = dynamic_cast<ArrayType const*>(type);
 		array && array->isByteArrayOrString())
@@ -356,6 +358,7 @@ std::shared_ptr<awst::Expression> valueToEvmWord(
 {
 	auto const* type = underlyingType(solType);
 	value = valueFromArc4(typeMapper, solType, std::move(value), loc);
+	value = TypeCoercion::checkedEnum(std::move(value), type, loc);
 
 	if (dynamic_cast<BoolType const*>(type))
 		return boolWord(std::move(value), loc);

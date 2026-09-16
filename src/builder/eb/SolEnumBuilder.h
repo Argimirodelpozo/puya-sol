@@ -9,7 +9,7 @@ namespace puyasol::builder::eb
 
 /// Instance builder for Solidity enum types.
 ///
-/// Enums are encoded as uint64 on AVM. Handles:
+/// Enums retain the full numeric word until validation. Handles:
 ///   - compare: all 6 operators via NumericComparisonExpression
 class SolEnumBuilder: public InstanceBuilder
 {

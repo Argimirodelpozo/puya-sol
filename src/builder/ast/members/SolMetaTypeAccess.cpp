@@ -41,7 +41,7 @@ std::shared_ptr<awst::Expression> buildTypeBounds(
 	{
 		auto e = awst::makeIntegerConstant((member == "max")
 			? std::to_string(enumType->numberOfMembers() - 1)
-			: std::string("0"), loc);
+			: std::string("0"), loc, awst::WType::biguintType());
 		return e;
 	}
 	return nullptr;

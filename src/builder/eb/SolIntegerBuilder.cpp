@@ -67,6 +67,17 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	auto rhs = _other.resolve();
 	if (_reverse)
 		std::swap(lhs, rhs);
+	if (_op == BuilderBinaryOp::FloorDiv || _op == BuilderBinaryOp::Mod)
+	{
+		// Solidity's zero-divisor panic is observable even when the quotient
+		// is unused. Keep it explicit: the backend may DCE the arithmetic op.
+		auto pin = [&](auto value) { return m_ctx.emitSequencedOperand({}, std::move(value), true, _loc); };
+		if (m_ctx.viaIRSequencing) { lhs = pin(std::move(lhs)); rhs = pin(std::move(rhs)); }
+		else { rhs = pin(std::move(rhs)); lhs = pin(std::move(lhs)); }
+		m_ctx.queuePreExpression(awst::makeAssert(awst::makeNumericCompare(rhs,
+			awst::NumericComparison::Ne, awst::makeIntegerConstant("0", _loc, rhs->wtype), _loc),
+			_loc, "division by zero (Panic 0x12)"), _loc);
+	}
 
 	// These operations reuse operands for sign, range or 0**0 checks.
 	if (m_int.isSigned || _op == BuilderBinaryOp::Pow)

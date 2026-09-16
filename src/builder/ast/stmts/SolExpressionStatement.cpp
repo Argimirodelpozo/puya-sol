@@ -318,11 +318,8 @@ void maybeAppendEnumReturnAssert(BlockContext& blk, Return const& node,
 	// wrap so `return f()` with a side-effecting enum f()
 	// evaluates once (verified: f() ran twice).
 	stmt.value = awst::makeEvalOnce(std::move(stmt.value), loc);
-	auto val = builder::TypeCoercion::coerceScalar(
-		stmt.value, awst::WType::uint64Type(), loc);
-
 	auto assertStmt = awst::makeExpressionStatement(
-		awst::makeEnumRangeAssert(val, numMembers, loc), loc);
+		awst::makeEnumRangeAssert(stmt.value, numMembers, loc), loc);
 	result.push_back(std::move(assertStmt));
 }
 

@@ -95,7 +95,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleEnumConversion()
 			m_loc, "enum out of range"),
 		m_loc));
 
-	return TypeCoercion::coerceScalar(argOnce, awst::WType::uint64Type(), m_loc);
+	return TypeCoercion::coerceScalar(argOnce, m_ctx.typeMapper.map(enumType), m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

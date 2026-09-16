@@ -35,6 +35,7 @@ struct ABIParamDesc
 	solidity::frontend::Type const* solType;
 	std::string name;
 	awst::SourceLocation loc;
+	awst::WType const* carrier = awst::WType::uint64Type();
 };
 
 /// Same guards from explicit descriptors (no FunctionDefinition; for auto-

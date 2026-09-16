@@ -420,7 +420,7 @@ void emitImplicitReturn(
 		if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retParams[0]->type()))
 		{
 			unsigned numMembers = enumType->numberOfMembers();
-			auto var = awst::makeVarExpression(retParams[0]->name(), awst::WType::uint64Type(), _loc);
+			auto var = awst::makeVarExpression(retParams[0]->name(), _typeMapper.map(enumType), _loc);
 
 			auto assertStmt = awst::makeExpressionStatement(
 				awst::makeEnumRangeAssert(std::move(var), numMembers, _loc),

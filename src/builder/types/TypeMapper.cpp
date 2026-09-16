@@ -210,7 +210,9 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 		break;
 
 	case Type::Category::Enum:
-		result = awst::WType::uint64Type();
+		// Assembly can dirty the complete word. Preserve it until solc's enum
+		// validation boundary; ABI and packed storage still use the solc width.
+		result = awst::WType::biguintType();
 		break;
 
 	case Type::Category::UserDefinedValueType:

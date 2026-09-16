@@ -164,9 +164,17 @@ def test_unsupported_lazy_paging_is_diagnosed(harness, fixture):
         harness.compile(f"puyasolRegression/contracts/rev_2_lazy_unsupported_{fixture}.sol")
 
 
-def test_slot_mode_retains_explicit_whole_array_delete_capacity(harness):
-    with pytest.raises(CompileError, match="delete on storage array of length 129 not supported \\(cap 64\\)"):
-        harness.compile("puyasolRegression/contracts/rev_2_lazy_fixed_boxes.sol", extra_args=["--evm-storage-layout"])
+def test_slot_mode_loops_whole_array_delete(harness):
+    # The frontend's old 64-element cap is gone. Clearing all 644 sparse words
+    # in this fixture still exceeds AVM box resources; exercise a bounded,
+    # packed 129-element deletion at runtime instead.
+    harness.compile("puyasolRegression/contracts/rev_2_lazy_fixed_boxes.sol", extra_args=["--evm-storage-layout"])
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/storage_codec_correctness.sol", "StorageTraversalChecks",
+        extra_args=["--evm-storage-layout"], fund_wei=30_000_000)
+    result = harness.call(app, "clearPacked()", extra_fee=30_000)
+    assert not result.reverted, result.fail_message
+    assert result.abi_return is True
 
 
 def test_interior_large_array_reference_is_not_a_whole_box(harness):

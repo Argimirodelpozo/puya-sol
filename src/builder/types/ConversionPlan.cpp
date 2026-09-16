@@ -16,6 +16,7 @@ std::shared_ptr<awst::Expression> ConversionPlan::emit(
 	if (!_value) return nullptr;
 	if (m_context == Context::ExplicitInteger)
 	{
+		_value = TypeCoercion::checkedEnum(std::move(_value), m_source, _loc);
 		auto const target = SolIntType::fromSol(m_target).value();
 		auto const source = SolIntType::fromSolOrEnum(m_source);
 		// Fixed bytes and addresses carry their numeric magnitude in bytes;
@@ -105,20 +106,7 @@ std::shared_ptr<awst::Expression> ConversionPlan::emit(
 			_value = TypeCoercion::coerceToCommonInt(
 				std::move(_value), integer, m_targetRepresentation, _loc);
 	if (m_context == Context::AbiArgument || m_context == Context::AbiReinterpret)
-		if (auto const* enumeration = dynamic_cast<solidity::frontend::EnumType const*>(targetType))
-		{
-			// solc's enum ABI cleanup validates even an unused callee argument.
-			// CheckedMaybe keeps the assert in expression-only conversion sites.
-			static awst::WTuple checkedType({awst::WType::uint64Type(), awst::WType::boolType()});
-			auto value = awst::makeEvalOnce(std::move(_value), _loc);
-			auto pair = awst::makeTupleExpression(&checkedType, _loc);
-			pair->items = {value, awst::makeNumericCompare(value, awst::NumericComparison::Lt,
-				awst::makeIntegerConstant(enumeration->numberOfMembers(), _loc), _loc)};
-			auto checked = awst::makeNode<awst::CheckedMaybe>(_loc, m_targetRepresentation);
-			checked->expr = std::move(pair);
-			checked->comment = "enum ABI argument out of range";
-			_value = std::move(checked);
-		}
+		_value = TypeCoercion::checkedEnum(std::move(_value), targetType, _loc);
 	return TypeCoercion::signExtendSignedWiden(
 		std::move(_value), sourceType, targetType, _loc);
 }

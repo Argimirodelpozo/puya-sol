@@ -15,7 +15,7 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 			useABICoderV2 ? codec::PaddingPolicy::Validate : codec::PaddingPolicy::Clean,
 			enumChecksRequireV2 ? codec::ScalarBoundarySite::NativeGetter : codec::ScalarBoundarySite::NativeParameter);
 		auto const& loc = parameter.loc;
-		auto value = awst::makeVarExpression(parameter.name, awst::WType::uint64Type(), loc);
+		auto value = awst::makeVarExpression(parameter.name, parameter.carrier, loc);
 		auto assertRange = [&](auto condition, char const* message) {
 			out.push_back(awst::makeExpressionStatement(awst::makeAssert(std::move(condition), loc, message), loc));
 		};
@@ -38,19 +38,22 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 			}
 			else
 			{
-				auto mask = awst::makeIntegerConstant((uint64_t{1} << bits) - 1, loc);
+				auto mask = awst::makeIntegerConstant((uint64_t{1} << bits) - 1, loc, parameter.carrier);
 				if (rules.validatePadding)
 					assertRange(awst::makeNumericCompare(value, awst::NumericComparison::Lte, mask, loc), "ABI validation");
 				else
 					out.push_back(awst::makeAssignmentStatement(value,
-						awst::makeUInt64BinOp(value, awst::UInt64BinaryOperator::BitAnd, mask, loc), loc));
+						parameter.carrier == awst::WType::biguintType()
+							? std::shared_ptr<awst::Expression>(awst::makeBigUIntBinOp(value, awst::BigUIntBinaryOperator::BitAnd, mask, loc))
+							: awst::makeUInt64BinOp(value, awst::UInt64BinaryOperator::BitAnd, mask, loc), loc));
 			}
 		}
 		if (rules.boolean && rules.validatePadding)
-			assertRange(awst::makeNumericCompare(value, awst::NumericComparison::Lte, awst::makeOne(loc), loc), "ABI bool validation");
+			assertRange(awst::makeNumericCompare(awst::makeAsUInt64(value, loc),
+				awst::NumericComparison::Lte, awst::makeOne(loc), loc), "ABI bool validation");
 		if (rules.validateEnum)
 			assertRange(awst::makeNumericCompare(value, awst::NumericComparison::Lt,
-				awst::makeIntegerConstant(rules.enumMembers, loc), loc), "ABI enum validation");
+				awst::makeIntegerConstant(rules.enumMembers, loc, parameter.carrier), loc), "ABI enum validation");
 	}
 	return out;
 }
@@ -68,6 +71,7 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 		auto const& param = _func.parameters()[pi];
 		std::string name = param->name().empty()
 			? "_param" + std::to_string(pi) : param->name();
+		if (dynamic_cast<solidity::frontend::EnumType const*>(param->type())) name = "__arc4_" + name;
 		descs.push_back({param->annotation().type, std::move(name),
 			makeLoc(_typeMapper, _sourceFile, param->location())});
 	}

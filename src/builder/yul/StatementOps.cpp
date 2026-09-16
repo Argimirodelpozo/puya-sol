@@ -460,9 +460,8 @@ void AssemblyBuilder::emitPlainYulAssignment(
 		return;
 	}
 
-	// Signed intN (N<=64) local: writes land on its biguint shadow (the raw Yul
-	// word — see the buildBlock prologue); the typed local refreshes at block exit.
-	if (auto shIt = m_frame.signedShadow.find(name); shIt != m_frame.signedShadow.end())
+	// Narrow Solidity locals retain raw words until the block-exit conversion.
+	if (auto shIt = m_frame.wordShadow.find(name); shIt != m_frame.wordShadow.end())
 		name = shIt->second;
 
 	// Blob-backed memory aggregate: `ret := ptr` REPOINTS the aggregate. READS

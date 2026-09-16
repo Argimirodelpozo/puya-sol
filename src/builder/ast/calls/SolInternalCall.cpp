@@ -656,15 +656,10 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 		for (size_t i = 0; i < call->args.size(); ++i)
 		{
 			auto const* type = getter->parameterTypes()[i];
-			if (m_ctx.typeMapper.map(type) == awst::WType::biguintType())
-			{
-				auto integer = SolIntType::fromSol(type);
-				if (integer && integer->isSigned && integer->bits < 256)
-					call->args[i].value = TypeCoercion::maskUnsignedToWidth(
-						std::move(call->args[i].value), integer->bits, m_loc);
-				call->args[i].value = awst::makeARC4Encode(std::move(call->args[i].value),
-					m_ctx.typeMapper.createType<awst::ARC4UIntN>(integer ? integer->bits : 256), m_loc);
-			}
+			CallParameterPlan parameter;
+			parameter.type = m_ctx.typeMapper.map(type);
+			parameter.setAbiWireType(m_ctx.typeMapper, type);
+			call->args[i].value = parameter.encodeArgument(std::move(call->args[i].value), m_loc);
 		}
 		auto result = awst::makeSingleEvaluation(std::move(call), resultType, awst::nextSingleEvalId(), m_loc);
 		ApplicationCall::setTypedReturnData(m_ctx.typeMapper, result, getter->returnParameterTypes(),

@@ -68,6 +68,14 @@ byte width. Dynamic string/bytes keys first become a SHA-256 digest. Values must
 be converted to the declared key type before encoding. This is not EVM's
 `keccak256(key || slot)` storage format.
 
+Enums now retain a full numeric word until a solc validation boundary, including
+words dirtied by inline assembly. Standalone named enum cells therefore use
+byte-valued storage instead of uint64 cells, and enum mapping keys use 32-byte
+payloads instead of eight. This is another fresh-deployment-only representation
+change; existing enum cells and mapping entries are not migrated automatically.
+Enum ABI widths, enum fields inside ARC4 aggregates, and EVM-slot field widths
+remain unchanged.
+
 ## Artifacts and tooling
 
 ARC-56 `state.keys.box` records each struct/array root key and its stored
@@ -134,3 +142,10 @@ path unrolls at most 256 slots, converting/aggregate slot copies at most 64
 outer elements, and materialized byte values must fit AVM's 4 KiB stack limit.
 These are implementation capacities, not Solidity layout limits; this is not
 an unbounded streaming-copy implementation.
+
+The separate slot-to-value reader and value-to-slot writer no longer impose a
+64-element fixed-array limit: they check actual encoded size and loop over
+larger bounded arrays. Fixed-array and struct deletion likewise use counted
+loops over the full solc storage extent, subject to AVM runtime resources.
+Dynamic materialization validates the complete storage length before narrowing
+it and checks the encoded head against the 4 KiB value limit.

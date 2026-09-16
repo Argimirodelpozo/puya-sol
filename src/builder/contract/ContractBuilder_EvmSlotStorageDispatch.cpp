@@ -1,5 +1,6 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/context/BuildArtifacts.h"
+#include "builder/context/ProgramAnalysis.h"
 #include "builder/contract/StorageDispatchSupport.h"
 #include "builder/storage/StateVarWalker.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -202,11 +203,45 @@ struct EvmSlotCodec
 	// ── __storage_write(slot: biguint, value: biguint) -> void ──
 	void emitStorageWrite(awst::Contract* _contractNode) const
 	{
+		bool const shadowed = !denseOnly && !m_typeMapper.analysis().packedAddressOffsets.empty();
+		if (shadowed)
+		{
+			auto checked = awst::ContractMethod(cref, "__storage_write", awst::WType::voidType(),
+				{{"__slot", awst::WType::biguintType(), loc}, {"__value", awst::WType::biguintType(), loc}}, loc);
+			auto& out = checked.body->body;
+			out.push_back(makeSlotWrapStmt());
+			out.push_back(awst::makeAssignmentStatement(bytesVar("__oldword"), wordBytes(readWordCall(slotVar())), loc));
+			out.push_back(awst::makeAssignmentStatement(bytesVar("__newword"), wordBytes(biguintVar("__value")), loc));
+			auto rawWrite = [&](auto slot, auto value) {
+				auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_write_word"}, awst::WType::voidType(), loc);
+				awst::pushCallArg(call->args, "__slot", std::move(slot));
+				awst::pushCallArg(call->args, "__value", std::move(value));
+				return awst::makeExpressionStatement(std::move(call), loc);
+			};
+			for (unsigned offset: m_typeMapper.analysis().packedAddressOffsets)
+			{
+				auto changed = awst::makeBytesComparison(awst::makeExtract(bytesVar("__oldword"), 12 - offset, 20, loc),
+					awst::EqualityComparison::Ne, awst::makeExtract(bytesVar("__newword"), 12 - offset, 20, loc), loc);
+				auto body = awst::makeBlock(loc);
+				auto aux = biguintVar("__address_aux");
+				body->body.push_back(awst::makeAssignmentStatement(aux,
+					SlotHandleAccess::packedAddressAuxSlot(slotVar(), u64c(offset), loc), loc));
+				auto clear = awst::makeBlock(loc);
+				clear->body.push_back(rawWrite(aux, awst::makeBiguintConstant("0", loc)));
+				body->body.push_back(awst::makeIfElse(awst::makeNumericCompare(readWordCall(aux),
+					awst::NumericComparison::Ne, awst::makeBiguintConstant("0", loc), loc), std::move(clear), nullptr, loc));
+				out.push_back(awst::makeIfElse(std::move(changed), std::move(body), nullptr, loc));
+			}
+			out.push_back(rawWrite(slotVar(), biguintVar("__value")));
+			out.push_back(awst::makeReturnStatement(nullptr, loc));
+			_contractNode->methods.push_back(std::move(checked));
+		}
 		auto writeSub = awst::ContractMethod(cref, "__storage_write",
 			awst::WType::voidType(),
 			{{"__slot", awst::WType::biguintType(), loc},
 				{"__value", awst::WType::biguintType(), loc}},
 			loc);
+		if (shadowed) writeSub.memberName = "__storage_write_word";
 		auto body = writeSub.body;
 		if (!denseOnly)
 			body->body.push_back(makeSlotWrapStmt());
@@ -269,7 +304,7 @@ struct EvmSlotCodec
 	// Solidity storage format: short (len<32) = data left-aligned ++ 2*len in
 	// the low byte, all in the slot word; long = word 2*len+1 at the slot,
 	// data in 32-byte chunks at keccak256(slot32)+i.
-	auto readWordCall(std::shared_ptr<awst::Expression> _slot) const
+	std::shared_ptr<awst::Expression> readWordCall(std::shared_ptr<awst::Expression> _slot) const
 	{
 		auto call = awst::makeSubroutineCall(
 			awst::SubroutineID{"__puyasol___storage_read"},
@@ -298,27 +333,22 @@ struct EvmSlotCodec
 	{
 		return awst::makeVarExpression(n, awst::WType::uint64Type(), loc);
 	}
-	auto bytesVar(std::string const& n) const
+	std::shared_ptr<awst::VarExpression> bytesVar(std::string const& n) const
 	{
 		return awst::makeVarExpression(n, awst::WType::bytesType(), loc);
 	}
-	auto biguintVar(std::string const& n) const
+	std::shared_ptr<awst::VarExpression> biguintVar(std::string const& n) const
 	{
 		return awst::makeVarExpression(n, awst::WType::biguintType(), loc);
 	}
-	auto u64c(uint64_t v) const { return awst::makeIntegerConstant(v, loc); }
+	std::shared_ptr<awst::IntegerConstant> u64c(uint64_t v) const { return awst::makeIntegerConstant(v, loc); }
 	auto u64ToBiguint(std::shared_ptr<awst::Expression> e) const
 	{
 		return awst::makeAsBiguint(awst::makeItob(std::move(e), loc), loc);
 	}
-	auto biguintToU64(std::shared_ptr<awst::Expression> e) const
-	{
-		auto cat = awst::makeLeftPad(awst::makeAsBytes(std::move(e), loc), 8, loc);
-		return awst::makeBtoi(awst::makeExtractLastN(std::move(cat), 8, loc), loc);
-	}
 
 	/// A storage word as its 32-byte big-endian form.
-	auto wordBytes(std::shared_ptr<awst::Expression> _word) const
+	std::shared_ptr<awst::Expression> wordBytes(std::shared_ptr<awst::Expression> _word) const
 	{
 		return awst::makeLeftPadToN(awst::makeAsBytes(std::move(_word), loc), 32, loc);
 	}
@@ -585,12 +615,23 @@ struct EvmSlotCodec
 		// write (for the shrink-clear tail)
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var(_write ? "__old" : "__n"),
-			biguintToU64(readWordCall(slotVar())), loc));
+			TypeCoercion::checkedIndexToUint64(body->body, readWordCall(slotVar()), loc), loc));
 		if (_write)
 			// new length from the ARC4 u16 header
 			body->body.push_back(awst::makeAssignmentStatement(
 				u64Var("__n"),
 				awst::makeBtoi(awst::makeExtract(valVar(), 0, 2, loc), loc), loc));
+		else
+		{
+			auto width = awst::makeConditional(awst::makeNumericCompare(u64Var("__bp"),
+				awst::NumericComparison::Ne, u64c(0), loc), u64Var("__aw"),
+				awst::makeUInt64BinOp(u64Var("__aw"), awst::UInt64BinaryOperator::Mult,
+					u64Var("__mul"), loc), awst::WType::uint64Type(), loc);
+			body->body.push_back(awst::makeExpressionStatement(awst::makeAssert(
+				awst::makeNumericCompare(u64Var("__n"), awst::NumericComparison::Lte,
+					awst::makeUInt64BinOp(u64c(4094), awst::UInt64BinaryOperator::FloorDiv,
+						std::move(width), loc), loc), loc, "storage array exceeds AVM value capacity"), loc));
+		}
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__nl"), lanes("__n"), loc));
 		if (_write)
@@ -844,7 +885,10 @@ struct EvmSlotCodec
 					std::move(base), nullptr, loc));
 			}
 			body->body.push_back(awst::makeAssignmentStatement(
-				u64Var("__n"), biguintToU64(readWordCall(slotVar())), loc));
+				u64Var("__n"), TypeCoercion::checkedIndexToUint64(body->body, readWordCall(slotVar()), loc), loc));
+			body->body.push_back(awst::makeExpressionStatement(awst::makeAssert(
+				awst::makeNumericCompare(u64Var("__n"), awst::NumericComparison::Lte,
+					u64c(2047), loc), loc, "storage array exceeds AVM value capacity"), loc));
 			body->body.push_back(awst::makeAssignmentStatement(
 				biguintVar("__chunk"), chunkBase(), loc));
 			body->body.push_back(awst::makeAssignmentStatement(
@@ -918,7 +962,7 @@ struct EvmSlotCodec
 					std::move(base), nullptr, loc));
 			}
 			body->body.push_back(awst::makeAssignmentStatement(
-				u64Var("__old"), biguintToU64(readWordCall(slotVar())), loc));
+				u64Var("__old"), TypeCoercion::checkedIndexToUint64(body->body, readWordCall(slotVar()), loc), loc));
 			body->body.push_back(awst::makeAssignmentStatement(
 				u64Var("__n"),
 				awst::makeBtoi(awst::makeExtract(valVar2(), 0, 2, loc), loc),
@@ -1002,7 +1046,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			codec.emitNestedDynamicArrayMethods(_contractNode);
 		}
 		storage_dispatch::promoteMethods(*_contractNode, m_dispatchSubroutines, prefix,
-			{"__storage_read", "__storage_write", "__evm_bytes_read", "__evm_bytes_write",
+			{"__storage_read", "__storage_write", "__storage_write_word", "__evm_bytes_read", "__evm_bytes_write",
 				"__evm_dynarr_read", "__evm_dynarr_write", "__evm_dynarr_recursive_read", "__evm_dynarr_recursive_write"});
 	}
 

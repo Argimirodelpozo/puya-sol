@@ -15,6 +15,7 @@
 #include "builder/storage/StoragePlace.hpp"
 #include "builder/types/TypeMapper.h"
 #include "builder/codec/Arc4Defaults.h"
+#include "builder/codec/EvmMemoryCodec.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/types/ConversionPlan.h"
 #include "builder/yul/AssemblyBuilder.h"
@@ -499,25 +500,16 @@ void SolVariableDeclaration::emitDefaultDeclaration(
 	{
 		int sz = builder::computeEncodedElementSize(type).fixedBytes<int>().value_or(0);
 
-		// >4096 B: can't hold as a single AVM bytes value. Back with the
-		// multi-slot blob; bind local to FMP base offset so `t.field[i]`
-		// lowers to blob word ops (SolIndexAccess). Blob is pre-zeroed.
+		// Blob-backed references use solc's memory heads and recursive defaults,
+		// not their compact ARC4 value size. Reused memory may contain Yul writes.
 		if (builder::memoryUsesBlob(type)
 			|| m_blk.scope.bindings.assemblyAggregates.contains(decl.id()))
 		{
 			std::string offN = "__blobagg_off_" + std::to_string(decl.id());
-			// base = current FMP (uint64) = extractUInt64(load(slot0), 88)
-			auto blob = awst::makeLoadSlot(
-				m_blk.typeMapper().profile().scratchLayout.memoryFirst(), m_loc);
-			auto base = awst::makeExtractUInt64(
-				std::move(blob), awst::makeIntegerConstant("88", m_loc), m_loc);
+			auto base = builder::defaultEvmMemoryValue(m_blk.typeMapper(), decl.type(), m_loc, result);
 			result.push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
 				std::move(base), m_loc));
-			for (auto& s: builder::AssemblyBuilder::emitFreeMemoryBump(
-					m_blk.typeMapper().profile().scratchLayout, sz, m_loc,
-					static_cast<int>(decl.id())))
-				result.push_back(std::move(s));
 			m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
 			return; // skip the normal (oversized) target = bzero(sz) assignment
 		}

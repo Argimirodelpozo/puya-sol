@@ -118,10 +118,8 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 		auto assignTmp = awst::makeAssignmentStatement(tmpVar, result, _loc);
 		m_ctx.preEffects().push_back(std::move(assignTmp));
 
-		auto cmpLhs = TypeCoercion::coerceScalar(
-			tmpVar, awst::WType::uint64Type(), _loc);
 		auto assertStmt = awst::makeExpressionStatement(
-			awst::makeEnumRangeAssert(std::move(cmpLhs), numMembers, _loc, "Enum out of range"), _loc);
+			awst::makeEnumRangeAssert(tmpVar, numMembers, _loc, "Enum out of range"), _loc);
 		m_ctx.preEffects().push_back(std::move(assertStmt));
 
 		result = tmpVar;

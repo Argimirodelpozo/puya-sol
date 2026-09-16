@@ -1374,11 +1374,9 @@ private:
 
 		std::map<std::string, awst::WType const*> locals;
 
-		/// name → biguint shadow local holding the full 256-bit word for each
-		/// signedParamBits entry. Seeded sign-extended at block entry; all reads and
-		/// writes inside the block hit the shadow raw; the epilogue writes the low 8
-		/// bytes back to the typed local (64-bit-TC view, EVM-faithfully "dirty").
-		std::map<std::string, std::string> signedShadow;
+		/// Narrow Solidity carriers retain the complete Yul word inside a block.
+		/// The epilogue adapts the word back to the high-level representation.
+		std::map<std::string, std::string> wordShadow;
 
 		/// Compile-time-constant uint64 values for locals; used to fold memory/calldata offsets.
 		/// SOUNDNESS: only single-assignment locals may be recorded (reassignedLocals gates the

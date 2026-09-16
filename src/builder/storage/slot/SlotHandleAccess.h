@@ -58,6 +58,11 @@ struct SlotHandleAccess
 		std::shared_ptr<awst::Expression> _valueBiguint,
 		awst::SourceLocation const& _loc);
 
+	/// Domain-separated word holding the high twelve native address bytes.
+	static std::shared_ptr<awst::Expression> packedAddressAuxSlot(
+		std::shared_ptr<awst::Expression> slot,
+		std::shared_ptr<awst::Expression> byteOffset, awst::SourceLocation const& loc);
+
 	/// Emit a typed storage operation for each index in an exact solc extent.
 	/// Tiny extents are unrolled; larger ones share a counted loop body.
 	static bool forEachIndex(solidity::u256 const& _count,

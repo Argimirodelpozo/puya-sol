@@ -10,6 +10,7 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/ast/Types.h>
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <vector>
 
@@ -235,9 +236,41 @@ namespace
 /// the creation/deployed call-graph reachability.
 void collectContractFacts(CompilerStack& _compiler, ProgramAnalysis& _out)
 {
+	struct PackedAddresses: ASTConstVisitor
+	{
+		std::set<unsigned>& offsets;
+		explicit PackedAddresses(std::set<unsigned>& value): offsets(value) {}
+		static bool isAddress(Type const* type)
+		{
+			if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(type))
+				type = &udvt->underlyingType();
+			return dynamic_cast<AddressType const*>(type) || dynamic_cast<ContractType const*>(type);
+		}
+		bool visit(StructDefinition const& definition) override
+		{
+			auto const* type = TypeProvider::structType(definition, DataLocation::Storage);
+			for (auto const& member: type->members(nullptr))
+				if (isAddress(member.type))
+					for (auto const& other: type->members(nullptr))
+						if (member.name != other.name && type->storageOffsetsOfMember(member.name).first
+							== type->storageOffsetsOfMember(other.name).first)
+							offsets.insert(type->storageOffsetsOfMember(member.name).second);
+			return true;
+		}
+		bool visit(ContractDefinition const& definition) override
+		{
+			auto const variables = TypeProvider::contract(definition)->linearizedStateVariables(DataLocation::Storage);
+			for (auto const& [variable, slot, offset]: variables)
+				if (isAddress(variable->type()))
+					for (auto const& [other, otherSlot, _]: variables)
+						if (variable != other && slot == otherSlot) offsets.insert(offset);
+			return true;
+		}
+	} addresses(_out.packedAddressOffsets);
 	std::set<Type const*> seen;
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
+		_compiler.ast(sourceName).accept(addresses);
 		for (auto const* contract:
 			ASTNode::filteredNodes<ContractDefinition>(_compiler.ast(sourceName).nodes()))
 		{
@@ -589,6 +622,16 @@ struct BodyFactsWalker: ASTConstVisitor
 			if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(
 					identifier->annotation().referencedDeclaration))
 				transfer(*declaration, rhs, component);
+		if (!lhs.annotation().type->isValueType() && lhs.annotation().type->dataStoredIn(DataLocation::Memory))
+			for (auto const* root: SolcFacts::referenceSources(lhs))
+				if (auto const* id = SolcFacts::expressionAs<Identifier>(root))
+					if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration))
+					{
+						transfer(*declaration, rhs, component);
+						if (!SolcFacts::expressionAs<Identifier>(&lhs)
+							&& analysis.referenceAssignments.contains(declaration->id()))
+							analysis.memoryIdentityDeclarations.insert(declaration->id());
+					}
 	}
 
 	bool visit(Assignment const& assignment) override

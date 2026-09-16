@@ -29,30 +29,6 @@ using namespace solidity::frontend;
 
 namespace
 {
-/// Shadow slot carrying the HIGH 12 bytes of a PACKED address (a 20-byte
-/// window cannot hold a 32-byte AVM address; the word keeps the EVM-shaped
-/// trailing-20 so asm sees EVM layout, and Solidity reads recombine).
-/// Domain-separated from the ordinary slot derivations.
-std::shared_ptr<awst::Expression> packedAddrAuxSlot(
-	std::shared_ptr<awst::Expression> _slot,
-	std::shared_ptr<awst::Expression> const& _byteOffset,
-	awst::SourceLocation const& _loc)
-{
-	auto pre = awst::makeConcat(
-		awst::makeLeftPadToN(awst::makeAsBytes(std::move(_slot), _loc), 32, _loc),
-		_byteOffset
-			? std::shared_ptr<awst::Expression>(awst::makeItob(_byteOffset, _loc))
-			: std::shared_ptr<awst::Expression>(
-				awst::makeBytesConstant(std::vector<uint8_t>(8, 0), _loc)),
-		_loc);
-	pre = awst::makeConcat(std::move(pre),
-		awst::makeUtf8BytesConstant("addraux", _loc), _loc);
-	return awst::makeAsBiguint(awst::makeKeccak256(std::move(pre), _loc), _loc);
-}
-} // namespace
-
-namespace
-{
 /// ARC4Decode target for a bytes-like leaf: puya type-checks the decode, so a
 /// Solidity `string` (arc4 len+utf8[]) must decode to `string`, not `bytes`.
 awst::WType const* bytesLikeDecodeTarget(solidity::frontend::Type const* _t)
@@ -615,9 +591,7 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 	auto xv = [&](std::string const& n) { return shorthand::bytesVar(n, m_loc); };
 	auto u64c = [&](uint64_t v) { return shorthand::u64(v, m_loc); };
 	auto toU64 = [&](std::shared_ptr<awst::Expression> v) {
-		return awst::makeBtoi(awst::makeExtractLastN(
-			awst::makeZeroExtendToN(awst::makeAsBytes(std::move(v), m_loc),
-				8, m_loc), 8, m_loc), m_loc);
+		return TypeCoercion::checkedIndexToUint64(_d.out, std::move(v), m_loc);
 	};
 	auto asBigIndex = [&](std::shared_ptr<awst::Expression> v) {
 		return awst::makeAsBiguint(awst::makeItob(std::move(v), m_loc), m_loc);
@@ -650,6 +624,13 @@ bool EvmSlotLowering::lowerDynArrayGeneric(
 		};
 		out.push_back(awst::makeAssignmentStatement(
 			uv(nN), dynamic ? toU64(readSlotWord(bv(slotN), m_loc)) : u64c(sourceCount), m_loc));
+		// Check the materialized head before traversal, including bit-packed
+		// bools. Dynamic tails remain bounded by AVM's checked concatenation.
+		unsigned const capacity = bitPacked ? (4096 - headerBytes) * 8
+			: (4096 - headerBytes) / (elemDynamic ? 2 : elemSize);
+		out.push_back(awst::makeExpressionStatement(awst::makeAssert(
+			awst::makeNumericCompare(uv(nN), awst::NumericComparison::Lte,
+				u64c(capacity), m_loc), m_loc, "storage array exceeds AVM value capacity"), m_loc));
 		out.push_back(awst::makeAssignmentStatement(
 			bv(dataN), dynamic ? dynDataBase(bv(slotN), m_loc) : bv(slotN), m_loc));
 		out.push_back(awst::makeAssignmentStatement(uv(iN), u64c(0), m_loc));
@@ -801,10 +782,10 @@ bool EvmSlotLowering::lowerFixedArray(
 	Addr const& address, ArrayType const* type, ValueDir& direction)
 {
 	auto length = type->length();
-	if (length == 0 || length > 64)
+	if (auto size = computeEncodedElementSize(m_ctx.typeMapper.map(type)).fixedBytes();
+		size && *size > 4096)
 	{
-		Logger::instance().error("--evm-storage-layout: fixed-array value traversal of length "
-			+ length.str() + " exceeds the supported extent of 64", m_loc);
+		Logger::instance().error("--evm-storage-layout: fixed-array value exceeds AVM value capacity", m_loc);
 		return false;
 	}
 	if (length > 4)
@@ -903,7 +884,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(
 	if (_a.wtype == awst::WType::accountType() && _a.size == 20)
 	{
 		auto aux = readSlotWord(
-			packedAddrAuxSlot(readSlot, _a.byteOffset, m_loc), m_loc);
+			SlotHandleAccess::packedAddressAuxSlot(readSlot, _a.byteOffset, m_loc), m_loc);
 		auto hi = awst::makeExtract(
 			awst::makeLeftPadToN(awst::makeAsBytes(std::move(aux), m_loc), 32, m_loc),
 			20, 12, m_loc);
@@ -1102,13 +1083,6 @@ bool EvmSlotLowering::clearAggregateImpl(
 			return true;
 		}
 		auto lenU = at->length();
-		if (lenU == 0 || lenU > 64)
-		{
-			Logger::instance().error(
-				"--evm-storage-layout: delete on storage array of length "
-				+ lenU.str() + " not supported (cap 64)", m_loc);
-			return false;
-		}
 		auto const* elemType = at->baseType();
 		// pin the base once
 		std::string bs = "__evmcl_"
@@ -1178,13 +1152,6 @@ bool EvmSlotLowering::clearAggregateImpl(
 		// zeroing them is harmless; EVM delete skips mapping CONTENT, and so
 		// do we — the keccak regions are untouched)
 		auto span = st->storageSize();
-		if (span > 64)
-		{
-			Logger::instance().error(
-				"--evm-storage-layout: delete on struct spanning "
-				+ span.str() + " slots not supported (cap 64)", m_loc);
-			return false;
-		}
 		// ORDER MATTERS: recurse into dynamic members FIRST. Their regions are
 		// found through their length words, which the span zeroing below
 		// destroys — clearing the span first would strand the data and a later
@@ -1247,6 +1214,7 @@ void EvmSlotLowering::writeValue(
 	// the value and slot feed TWO statements, so pin each to a named temp;
 	// SingleEvaluation does not persist across statement boundaries.
 	std::shared_ptr<awst::Expression> slotOnce;
+	std::shared_ptr<awst::Statement> addressMetadata;
 	if (_a.wtype == awst::WType::accountType() && _a.size == 20)
 	{
 		std::string slotName = "__evm_addr_slot_"
@@ -1266,9 +1234,9 @@ void EvmSlotLowering::writeValue(
 		auto hi = awst::makeExtract(
 			awst::makeAsBytes(awst::makeVarExpression(nm, pinW, m_loc), m_loc),
 			0, 12, m_loc);
-		_out.push_back(SlotHandleAccess::writeSlot(
-			packedAddrAuxSlot(slotOnce, _a.byteOffset, m_loc),
-			awst::makeAsBiguint(std::move(hi), m_loc), m_loc));
+		addressMetadata = SlotHandleAccess::writeSlot(
+			SlotHandleAccess::packedAddressAuxSlot(slotOnce, _a.byteOffset, m_loc),
+			awst::makeAsBiguint(std::move(hi), m_loc), m_loc);
 	}
 	else
 	{
@@ -1289,6 +1257,9 @@ void EvmSlotLowering::writeValue(
 		std::move(wordB), std::move(start), std::move(packed), m_loc);
 	_out.push_back(SlotHandleAccess::writeSlot(
 		slotOnce, awst::makeAsBiguint(std::move(newWord), m_loc), m_loc));
+	// The word writer invalidates metadata for changed address lanes. Publish
+	// the typed address's new high bytes only after that invalidation.
+	if (addressMetadata) _out.push_back(std::move(addressMetadata));
 }
 
 } // namespace puyasol::builder::sol_ast

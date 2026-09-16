@@ -40,7 +40,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		{
 			value = ctx.emitSequencedOperand({}, std::move(value), true, m_loc);
 			ctx.queuePreExpression(awst::makeEnumRangeAssert(
-				TypeCoercion::coerceScalar(value, awst::WType::uint64Type(), m_loc),
+				value,
 				enumeration->numberOfMembers(), m_loc), m_loc);
 		}
 		return value;

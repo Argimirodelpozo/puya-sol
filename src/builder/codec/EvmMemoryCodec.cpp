@@ -10,6 +10,7 @@
 #include "builder/types/TypeCoercion.h"
 #include "builder/codec/Arc4Defaults.h"
 #include <libsolidity/ast/Types.h>
+#include <libsolidity/codegen/CompilerUtils.h>
 // yul nodes BY VALUE (the AST aliases are std::variant, which needs
 // complete types). Kept out of AssemblyBuilder.h so only the TUs that
 // actually instantiate them pay the ~223k lines.
@@ -339,6 +340,38 @@ public:
 		return nullptr;
 	}
 
+	std::shared_ptr<awst::Expression> zero(Type const* type, Statements& out)
+	{
+		type = codec::underlyingType(type);
+		if (type->isValueType()) return u64(0, m_loc);
+		if (auto const* array = dynamic_cast<ArrayType const*>(type))
+		{
+			if (array->isDynamicallySized()) return u64(CompilerUtils::zeroPointer, m_loc);
+			auto base = allocate(u64(array->memoryDataSize().str(), m_loc), out);
+			auto index = awst::makeVarExpression("__mem_zero_" + std::to_string(
+				awst::NameGen::next("EvmMemoryCodec.zero")), awst::WType::uint64Type(), m_loc);
+			out.push_back(awst::makeAssignmentStatement(index, u64(0, m_loc), m_loc));
+			auto body = awst::makeBlock(m_loc);
+			auto value = zero(array->baseType(), body->body);
+			writeWord(add(base, awst::makeUInt64BinOp(index, awst::UInt64BinaryOperator::Mult,
+				u64(array->memoryStride(), m_loc), m_loc), m_loc),
+				awst::makeLeftPadToN(awst::makeItob(std::move(value), m_loc), 32, m_loc), body->body);
+			body->body.push_back(awst::makeAssignmentStatement(index, add(index, u64(1, m_loc), m_loc), m_loc));
+			out.push_back(awst::makeWhileLoop(awst::makeNumericCompare(index, awst::NumericComparison::Lt,
+				u64(array->length().str(), m_loc), m_loc), std::move(body), m_loc));
+			return base;
+		}
+		auto const& structure = dynamic_cast<StructType const&>(*type);
+		auto base = allocate(u64(structure.memoryDataSize().str(), m_loc), out);
+		for (auto const& member: structure.members(nullptr))
+		{
+			auto value = zero(member.type, out);
+			writeWord(add(base, u64(structure.memoryOffsetOfMember(member.name).str(), m_loc), m_loc),
+				awst::makeLeftPadToN(awst::makeItob(std::move(value), m_loc), 32, m_loc), out);
+		}
+		return base;
+	}
+
 	bool writeAt(Type const* type, std::shared_ptr<awst::Expression> value,
 		std::shared_ptr<awst::Expression> offset, Statements& out)
 	{
@@ -633,6 +666,13 @@ bool writeEvmMemoryValueAt(
 {
 	return MemoryWriter(typeMapper, loc).writeAt(
 		solType, std::move(value), std::move(offset), out);
+}
+
+std::shared_ptr<awst::Expression> defaultEvmMemoryValue(
+	TypeMapper& typeMapper, Type const* solType,
+	awst::SourceLocation const& loc, Statements& out)
+{
+	return MemoryWriter(typeMapper, loc).zero(solType, out);
 }
 
 } // namespace puyasol::builder

@@ -2120,15 +2120,12 @@ def test_dce_reverting_subexpr(harness):
 
 
 def test_dce_reverting_subexpr_literal_folds(harness):
-    """BACKEND half — OPEN BUG, this test FAILS on purpose until it's fixed.
+    """Unused div/mod retains its zero-divisor panic under literal folding.
 
-    With a LITERAL fold (shift>=256, identical-branch ternary, **0, *0, &0) puya's DCE drops
-    the unused div/mod whose zero-divisor panic carries the EVM revert ('/', '%', 'b/', 'b%'
-    are in SIDE_EFFECT_FREE_AVM_OPS) -> AVM returns the folded value where solc+EVM revert.
-    A one-line fork fix exists and was validated (zero-reg, closes all shapes) but was
-    REVERTED by policy: no puya fork changes. Preserved as fork-remote 716e63e44; see
-    puyabug.md #9. Not xfailed: open bugs stay as honest failures (xfail is reserved for
-    by-design/purposely-unsupported behavior).
+    The frontend emits an explicit guard before division/modulo, so backend
+    DCE may discard the unused value but not its required Solidity panic.
+    This fixes the regression without changing the pinned Puya fork; see
+    puyabug.md #9 for the backend limitation and historical fork-only fix.
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/dce_reverting_subexpr.sol")
     for sig, args in [

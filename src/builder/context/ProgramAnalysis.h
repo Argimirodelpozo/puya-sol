@@ -90,6 +90,9 @@ struct ProgramAnalysis
 	std::set<int64_t> selfCallFunctions;
 	std::map<int64_t, CreationEffects> creationEffects;
 	std::set<int64_t> boxKeyedStructs;
+	/// Solc byte offsets of addresses sharing a persistent word. Unit-wide so
+	/// shared slot writers invalidate the same metadata regardless of host order.
+	std::set<unsigned> packedAddressOffsets;
 	std::set<int64_t> refPassedStructs;
 	std::set<int64_t> reassignedMemoryLocals;
 	/// Conservative reference-assignment edges (destination -> possible sources),

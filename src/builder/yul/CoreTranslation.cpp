@@ -350,9 +350,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	if (boIt != m_frame.blobOffsetVars.end())
 		return awst::makeVarExpression(boIt->second, awst::WType::uint64Type(), loc);
 
-	// Signed intN (N<=64) Solidity local: reads hit its biguint shadow — the full
-	// 256-bit Yul word, seeded sign-extended at block entry (buildBlock prologue).
-	if (auto shIt = m_frame.signedShadow.find(name); shIt != m_frame.signedShadow.end())
+	// Narrow Solidity local: use its full word until leaving this Yul block.
+	if (auto shIt = m_frame.wordShadow.find(name); shIt != m_frame.wordShadow.end())
 		return awst::makeVarExpression(shIt->second, awst::WType::biguintType(), loc);
 
 	// let-bound EIP-1967 slot: fold to the constant so sload/sstore classify

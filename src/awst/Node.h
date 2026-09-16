@@ -1087,7 +1087,7 @@ inline std::shared_ptr<IntrinsicCall> makeKeccak256(
 }
 
 // `assert(value < numMembers)` — the EVM Panic(0x21) enum-range check.
-// `value` must already be uint64-typed; callers wrap/queue the returned
+// `value` retains its full numeric width; callers wrap/queue the returned
 // Assert expression themselves (statement vs queuePreStmt differs per site).
 inline std::shared_ptr<Expression> makeEnumRangeAssert(
 	std::shared_ptr<Expression> value,
@@ -1095,9 +1095,10 @@ inline std::shared_ptr<Expression> makeEnumRangeAssert(
 	SourceLocation const& loc,
 	std::string message = "enum out of range")
 {
+	auto bound = makeIntegerConstant(numMembers, loc, value->wtype);
 	auto cmp = makeNumericCompare(
 		std::move(value), NumericComparison::Lt,
-		makeIntegerConstant(numMembers, loc), loc);
+		std::move(bound), loc);
 	return makeAssert(std::move(cmp), loc, std::move(message));
 }
 

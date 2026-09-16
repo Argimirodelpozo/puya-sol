@@ -97,7 +97,7 @@ std::shared_ptr<awst::Expression> SolTupleExpression::buildTuple(
 				value = m_ctx.emitSequencedOperand({}, address->slot, true, m_loc);
 			}
 		}
-		if (target && target->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
+		if ((storageReferences || (target && target->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory))
 			&& comp && comp->annotation().type
 			&& comp->annotation().type->dataStoredIn(solidity::frontend::DataLocation::Memory)
 			&& !comp->annotation().type->isValueType())

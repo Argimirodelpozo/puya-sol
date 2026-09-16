@@ -174,9 +174,12 @@ ResolvedLValue::ResolvedLValue(eb::ContractContext& ctx, Expression const& sourc
 	}
 	if (std::holds_alternative<Resolution::Blob>(resolution.m_kind))
 	{
-		auto offset = pin(SolIndexAccess::resolveBlobOffset(ctx, ctx.scope(), source, loc));
+		bool const referenceSlot = !m_type->isValueType()
+			&& !SolcFacts::expressionAs<Identifier>(&source);
+		auto offset = SolIndexAccess::resolveBlobOffset(ctx, ctx.scope(), source, loc, !referenceSlot);
+		if (m_type->isValueType() || referenceSlot) offset = pin(std::move(offset));
 		if (!offset) throw std::runtime_error("Cannot resolve memory assignment destination");
-		m_destination = Blob{std::move(offset), bytesElement};
+		m_destination = Blob{std::move(offset), bytesElement, referenceSlot};
 		return;
 	}
 	if (auto const* path = std::get_if<Resolution::AggregatePath>(&resolution.m_kind))
@@ -300,7 +303,9 @@ Expr ResolvedLValue::read()
 		return low.readAny(slot->address, m_type);
 	}
 	if (auto const* blob = std::get_if<Blob>(&m_destination))
-		return SolIndexAccess::readBlobValue(m_ctx, blob->offset, m_type, m_loc);
+		return SolIndexAccess::readBlobValue(m_ctx, blob->referenceSlot
+			? readEvmMemoryUint64Word(m_ctx.typeMapper, blob->offset, m_loc, m_ctx.preEffects())
+			: blob->offset, m_type, m_loc);
 	loadAggregate();
 	auto value = StorageMapper::makePartialBoxReadWithDefault(
 		m_ctx.typeMapper, readable(target(), m_loc), m_ctx.preEffects(), m_loc);
@@ -368,7 +373,15 @@ Expr ResolvedLValue::write(Expr value)
 	}
 	else if (auto const* blob = std::get_if<Blob>(&m_destination))
 	{
-		if (blob->packedByte)
+		if (blob->referenceSlot)
+		{
+			auto id = awst::NameGen::next("ResolvedLValue.memoryReference");
+			auto name = "__memory_reference_" + std::to_string(id);
+			if (!spillEvmMemoryValue(m_ctx.typeMapper, m_type, m_native, value, name, id, m_loc, m_ctx.preEffects()))
+				throw std::runtime_error("Cannot allocate memory assignment destination");
+			writeMemoryReference(awst::makeVarExpression(name, awst::WType::uint64Type(), m_loc));
+		}
+		else if (blob->packedByte)
 			AssemblyBuilder::writeMemByteDirect(m_ctx.typeMapper.profile().scratchLayout, blob->offset,
 				awst::makeExtract(codec::valueToEvmWord(m_ctx.typeMapper, m_type, value, m_loc), 0, 1, m_loc),
 				m_loc, m_ctx.preEffects());
@@ -396,8 +409,31 @@ Expr ResolvedLValue::write(Expr value)
 	return value;
 }
 
+Expr ResolvedLValue::writeMemoryReference(Expr offset)
+{
+	auto const& blob = std::get<Blob>(m_destination);
+	assert(blob.referenceSlot);
+	offset = pin(std::move(offset));
+	AssemblyBuilder::writeMemWordDirect(m_ctx.typeMapper, blob.offset,
+		awst::makeLeftPadToN(awst::makeItob(offset, m_loc), 32, m_loc), m_loc, m_ctx.preEffects());
+	return offset;
+}
+
+bool ResolvedLValue::isMemoryReference() const
+{
+	auto const* blob = std::get_if<Blob>(&m_destination);
+	return blob && blob->referenceSlot;
+}
+
 void ResolvedLValue::clear()
 {
+	if (auto const* blob = std::get_if<Blob>(&m_destination); blob && !m_type->isValueType())
+	{
+		auto offset = defaultEvmMemoryValue(m_ctx.typeMapper, m_type, m_loc, m_ctx.preEffects());
+		if (blob->referenceSlot) writeMemoryReference(std::move(offset));
+		else m_ctx.queuePreEffect(awst::makeAssignmentStatement(blob->offset, std::move(offset), m_loc));
+		return;
+	}
 	if (auto const* aggregate = std::get_if<Aggregate>(&m_destination); aggregate && aggregate->ensure)
 	{
 		// Deleting a missing page must not allocate it. Address/bounds effects

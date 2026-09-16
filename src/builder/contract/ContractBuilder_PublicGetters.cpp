@@ -524,7 +524,7 @@ void prependGetterAbiChecks(
 	for (size_t i = 0; i < solParamTypes.size(); ++i)
 		descs.push_back({solParamTypes[i],
 			i < solParamNames.size() && !solParamNames[i].empty()
-				? solParamNames[i] : "key" + std::to_string(i), loc});
+				? solParamNames[i] : "key" + std::to_string(i), loc, types.map(solParamTypes[i])});
 	// Unlike explicit functions, solc's v1 getters don't validate enum keys.
 	auto checks = buildABIEntryChecks(descs, validate, /*enumChecksRequireV2=*/true);
 	body.body.insert(body.body.begin(), checks.begin(), checks.end());

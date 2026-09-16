@@ -11,6 +11,7 @@
 #include "builder/types/TypeMapper.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/types/ConversionPlan.h"
+#include "builder/codec/EvmMemoryCodec.h"
 
 #include "Logger.h"
 
@@ -370,12 +371,21 @@ bool SolAssignment::emitTupleComponentWrite(
 			assert(_sourceType);
 			auto const* targetType = source.annotation().type;
 			auto const* native = m_ctx.typeMapper.map(targetType);
+			auto resolved = m_tupleTargets.find(source.id());
+			auto const* sourceType = _sourceType->components()[i];
+			if (!sourceType->isValueType() && sourceType->dataStoredIn(DataLocation::Memory)
+				&& assignValue->wtype == awst::WType::uint64Type())
+			{
+				if (resolved != m_tupleTargets.end() && resolved->second->isMemoryReference())
+					return resolved->second->writeMemoryReference(assignValue);
+				assignValue = materializeEvmMemoryValue(m_ctx.typeMapper, sourceType,
+					m_ctx.typeMapper.map(sourceType), std::move(assignValue), m_loc, m_ctx.preEffects());
+			}
 			assignValue = EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
 				std::move(assignValue), _sourceType->components()[i], native, m_loc);
 			assignValue = ConversionPlan{_sourceType->components()[i], targetType,
 				native, ConversionPlan::Context::Assignment}.emit(
 					std::move(assignValue), m_loc, &m_ctx.preEffects());
-			auto resolved = m_tupleTargets.find(source.id());
 			if (resolved != m_tupleTargets.end()) return resolved->second->write(assignValue);
 			ResolvedLValue target(m_ctx, source, m_loc, assignTarget);
 			return target.write(assignValue);

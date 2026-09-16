@@ -1,0 +1,121 @@
+{
+  "baseline_commit": "e94bbc6218e40771a9226fd1de202f1516e394ab",
+  "baseline_cases": 2875,
+  "current_cases": 2887,
+  "common_cases": 2874,
+  "current_junit_outcomes": {
+    "passed": 2788,
+    "skipped": 99
+  },
+  "current_pytest_outcomes": {
+    "passed": 2748,
+    "failed": 0,
+    "xfailed": 99,
+    "xpassed": 40
+  },
+  "runtime_seconds": 1162.94,
+  "changed_outcomes": [
+    {
+      "classname": "tests.puyasolRegression.test_puyasol_regression",
+      "name": "test_dce_reverting_subexpr_literal_folds",
+      "before": "failed",
+      "after": "passed"
+    },
+    {
+      "classname": "tests.viaYul.test_viaYul",
+      "name": "test_dirty_memory_struct",
+      "before": "skipped",
+      "after": "passed"
+    }
+  ],
+  "added": [
+    {
+      "classname": "tests.puyasolRegression.test_lazy_fixed_boxes",
+      "name": "test_slot_mode_loops_whole_array_delete",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_memory_layout_correctness[arc4-legacy]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_memory_layout_correctness[arc4-via-ir]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_memory_layout_correctness[evm-legacy]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_memory_layout_correctness[evm-via-ir]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_narrow_yul_words[arc4-legacy]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_narrow_yul_words[arc4-via-ir]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_narrow_yul_words[evm-legacy]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_narrow_yul_words[evm-via-ir]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_storage_word_correctness[arc4-legacy]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_storage_word_correctness[arc4-via-ir]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_storage_word_correctness[evm-legacy]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.puyasolRegression.test_storage_codec_correctness",
+      "name": "test_storage_word_correctness[evm-via-ir]",
+      "outcome": "passed"
+    }
+  ],
+  "removed": [
+    {
+      "classname": "tests.puyasolRegression.test_lazy_fixed_boxes",
+      "name": "test_slot_mode_retains_explicit_whole_array_delete_capacity",
+      "outcome": "passed"
+    }
+  ],
+  "renamed": [
+    {
+      "classname": "tests.puyasolRegression.test_lazy_fixed_boxes",
+      "before": "test_slot_mode_retains_explicit_whole_array_delete_capacity",
+      "after": "test_slot_mode_loops_whole_array_delete",
+      "before_outcome": "passed",
+      "after_outcome": "passed",
+      "reason": "Replace the obsolete 64-element compile-rejection expectation with compile-success and bounded packed-array deletion runtime coverage."
+    }
+  ],
+  "notes": [
+    "JUnit includes non-strict XPASS cases in passed; pytest console counts are recorded separately.",
+    "Twelve new correctness configurations pass. The thirteenth added name is the explicitly mapped rename, not an extra configuration.",
+    "No xfail or XPASS markers were changed. The dirty-memory-struct case now XPASSes; marker review remains deferred.",
+    "The DCE/divide-by-zero regression is fixed by explicit frontend guards without changing the Puya dependency."
+  ]
+}

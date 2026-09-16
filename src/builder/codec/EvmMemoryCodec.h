@@ -44,6 +44,13 @@ bool spillEvmMemoryValue(
 	awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out);
 
+/// solc's default memory value: dynamic references use the zero pointer;
+/// fixed arrays and structs allocate and recursively initialize their heads.
+std::shared_ptr<awst::Expression> defaultEvmMemoryValue(
+	TypeMapper& typeMapper, solidity::frontend::Type const* solType,
+	awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out);
+
 /// Recursively overwrite an existing EVM-memory value region.  Static
 /// aggregates are traversed using solc's memory layout; reference children
 /// are freshly allocated and their pointer slots updated.  A dynamic root

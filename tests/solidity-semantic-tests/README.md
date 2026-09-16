@@ -8,6 +8,63 @@ not as an active test runner.
 
 ## Recorded baseline
 
+### Storage/codec/memory correctness — 2026-09-16
+
+This commit on `rev-2` follows the reduction checkpoint `e94bbc6218`. Memory
+defaults now use solc's memory sizes, strides, member offsets and zero pointer;
+nested reference writes, tuple swaps and deletion preserve aliases. Storage
+lengths are checked before narrowing, packed-address metadata follows changed
+word lanes, and bounded array materialization/deletion uses the existing loops
+beyond the obsolete 64-element limit. Enums retain complete words until range
+validation; narrow Yul locals retain raw words within an assembly block.
+Explicit division/modulo guards fix the known DCE regression without changing
+the pinned Puya dependency. The separate memory experiment is unchanged.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,748 |
+| Failed | 0 |
+| Expected failure (xfail) | 99 |
+| Unexpected pass (xpass) | 40 |
+| Total | 2,887 |
+
+The full LocalNet semantic and framework repeat took **1,162.94 seconds** with
+`PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 2 --tb=short
+--junitxml=out/storage-codec-correctness/semantic.xml`. The DCE case changes
+from failure to pass; `viaYul/test_viaYul.py::test_dirty_memory_struct` changes
+from xfail to xpass. All other existing outcomes are unchanged. Twelve new
+configurations pass, and one obsolete capacity-rejection test is explicitly
+renamed to cover successful compilation and bounded runtime deletion. The two
+slot-mode fixed-array conversion configurations also exercise runtime results
+instead of expecting the removed cap. No failure markers were changed.
+
+Native CTests passed **24/24** in 5.66 seconds; the expanded focused repeat
+passed **60/60** in 118.25 seconds; pinned-solc legacy/via-IR execution confirmed
+**260/260** oracle expectations. Two forged maximal-length probes differ between
+solc backends: legacy wraps the length, while via-IR rejects it. AVM explicitly
+rejects those lengths before materialization; the oracle records this boundary.
+The old lazy-box fixture's 644-slot deletion exceeds AVM box-reference resources,
+so it has compile-success coverage plus a packed 129-element runtime deletion
+and isolation check. The existing 258-element slot conversions now run as well.
+
+An earlier interrupted run required restarting the existing KMD service; the
+ledger and compile cache were preserved. The first completed repeat found a
+bool-getter carrier mismatch and three obsolete cap expectations, all corrected
+before this final full repeat. Compiler, source and test manifests match the
+validated build, whose SHA-256 is
+`d868e7e38ff4629fa5832db51c31267887a679d07172e23f33a0f0e074f7e7ed`.
+
+Standalone named enum cells and enum mapping-key payloads change representation
+and require fresh deployments; ABI and packed-field widths are unchanged.
+See [the storage-format compatibility notes](../../docs/storage-format.md).
+This correctness pass adds **211 physical / 203 code lines** to `src/`, leaving
+**62,048 physical / 47,991 code lines** in 318 files. Combined with the preceding
+reduction pass, the net change is **495 fewer physical / 360 fewer code lines**.
+The [JUnit report](out/storage-codec-correctness/semantic.xml),
+[outcome comparison](out/storage-codec-correctness/semantic-comparison.json),
+[console output](results.txt), oracle evidence and hash manifests are retained
+as thin reports; raw generated outputs remain ignored.
+
 ### Storage/codec/Yul reductions — 2026-09-16
 
 This commit on `rev-2` follows the validated parenthesis checkpoint

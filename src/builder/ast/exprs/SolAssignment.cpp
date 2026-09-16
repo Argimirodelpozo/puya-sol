@@ -215,6 +215,15 @@ SolAssignment::tryHandleAddressedWrite()
 		&& !SolcFacts::expressionAs<Identifier>(&SolcFacts::functionExpression(lhs));
 	if ((!type->isValueType() && !memoryLeaf && !resolution.isBoxedAggregate())
 		|| !resolution.isAddressed()) return std::nullopt;
+	if (memoryLeaf && !type->isValueType() && resolution.isMemory())
+		if (auto reference = SolIndexAccess::resolveBlobReference(
+			m_ctx, m_scope, m_assignment.rightHandSide(), m_loc))
+		{
+			auto offset = m_ctx.emitSequencedOperand(std::move(reference->effects),
+				std::move(reference->value), true, m_loc);
+			ResolvedLValue target(m_ctx, lhs, m_loc, std::move(resolution));
+			return SolIndexAccess::readBlobValue(m_ctx, target.writeMemoryReference(std::move(offset)), type, m_loc);
+		}
 	auto rhs = m_ctx.lower(m_assignment.rightHandSide(), false);
 	auto value = m_ctx.emitSequencedOperand(std::move(rhs.effects), std::move(rhs.value), true, m_loc);
 	ResolvedLValue target(m_ctx, lhs, m_loc, std::move(resolution));
@@ -238,7 +247,7 @@ SolAssignment::applyEnumRangeCheck(std::shared_ptr<awst::Expression> _value, Tok
 	// assignment value — a call-valued RHS ran twice (its twins in
 	// SolExpressionStatement/SolEmitStatement already carry this fix).
 	_value = awst::makeEvalOnce(std::move(_value), m_loc);
-	auto val = builder::TypeCoercion::coerceScalar(_value, awst::WType::uint64Type(), m_loc);
+	auto val = builder::TypeCoercion::coerceScalar(_value, m_ctx.typeMapper.map(lhsType), m_loc);
 	m_ctx.queuePreExpression(awst::makeEnumRangeAssert(val, numMembers, m_loc), m_loc);
 	return val;
 }
