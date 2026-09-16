@@ -8,6 +8,55 @@ not as an active test runner.
 
 ## Recorded baseline
 
+### Storage/codec/Yul reductions — 2026-09-16
+
+This commit on `rev-2` follows the validated parenthesis checkpoint
+`dd538fd32e`. It removes unused slot helpers and dead Yul bookkeeping, shares
+signed cleanup and byte-carrier facts, loops larger fixed-array memory reads,
+and shares memory-range and multi-return lowering. Yul switches compare complete
+words; hashes read actual memory instead of guessing from calldata coordinates;
+overlapping writes invalidate content facts. Unproven free-memory-pointer
+alignment is no longer assumed. The memory experiment remains separate.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,735 |
+| Failed | 1 |
+| Expected failure (xfail) | 100 |
+| Unexpected pass (xpass) | 39 |
+| Total | 2,875 |
+
+The full LocalNet semantic and framework repeat took **978.83 seconds** with
+`PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 2 --tb=short
+--junitxml=out/storage-codec-yul/semantic.xml`. All **2,859 previous cases retain
+their individual outcomes** and all **16 new configurations pass**; no cases
+were removed or failure markers changed. The single failure remains the known
+Puya DCE/divide-by-zero case, not an accepted divergence. No ledger or compile
+cache reset was performed.
+
+Native CTests passed **24/24** in 2.85 seconds; focused regressions passed
+**16/16** in 58.47 seconds; independent pinned-solc legacy/via-IR execution
+confirmed **84/84** checks. Coverage includes packed signed storage, fixed and
+nested memory arrays, full 4096-byte values, switches, overlapping stores,
+hash/revert ranges, poisoned pointer alignment and multi-return side effects.
+The final compiler SHA-256 was
+`1bc48dbd4247f180dae6f5bd4fcac4330cc7a4e26d76c4a9829a3c0f29b71625`.
+Compiler, production-source and regression manifests matched after the run.
+
+The pass removes **706 physical lines / 563 code lines** from `src/`, leaving
+**61,837 physical / 47,788 code lines** in 318 files. The cumulative source
+reduction since `18804ec53f`, including the preceding audits, is **3,036 physical
+lines**. The [JUnit report](out/storage-codec-yul/semantic.xml),
+[outcome comparison](out/storage-codec-yul/semantic-comparison.json),
+[console output](results.txt), oracle evidence and hash manifests are retained;
+raw generated outputs remain ignored.
+
+The first fixture drafts also exposed existing default nested-memory allocation
+and nested-byte-reference assignment limitations, recorded in the local,
+untracked storage/codec/Yul audit. Explicit initializers isolate reader coverage;
+those limitations and the remaining storage/enum audit bugs are not new xfails
+or claimed fixed by this reduction pass.
+
 ### Parenthesized-expression boundaries — 2026-09-16
 
 This checkpoint on `rev-2` includes the preceding AST, lowering, core and

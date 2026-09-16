@@ -290,8 +290,8 @@ public:
 	);
 
 	/// Write a RUNTIME-LENGTH byte string into the blob starting at `_offU64`
-	/// (a word-loop over writeMemWordDirect; the value is zero-padded to a
-	/// whole word at the tail). `_uniqueId` namespaces the loop temps.
+	/// through the shared range writer, zero-padding only its final partial
+	/// word. `_uniqueId` namespaces the pinned value.
 	static void writeMemBytesDirect(
 		TypeMapper& _typeMapper,
 		std::shared_ptr<awst::Expression> _offU64,
@@ -398,6 +398,9 @@ private:
 		solidity::yul::Assignment const& _assign,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
+	bool emitUserFunctionAssignment(solidity::yul::FunctionCall const& _call,
+		std::vector<std::string> const& _targets, awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
 	/// One plain-name Yul write with every Solidity-representation redirect
 	/// (signed shadow, blob-backed pointer, static calldata pointer) plus
 	/// target-typed coercion. Shared by single- and multi-var assignments.
@@ -1130,7 +1133,7 @@ private:
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out);
 
-	/// Drop all "mem_0x<off>" content constants + m_frame.lastMstoreValue. Called on memory
+	/// Drop all "mem_0x<off>" content constants. Called on memory
 	/// writes that can't be tracked precisely (non-constant mstore offset, mstore8,
 	/// mcopy, calldatacopy, returndatacopy, precompile output) and when entering/
 	/// leaving if/switch/for translation (entries from a conditionally-executed body
@@ -1219,23 +1222,6 @@ private:
 		std::shared_ptr<awst::Expression> _expr,
 		awst::SourceLocation const& _loc
 	);
-
-	/// div/mod returning 0 for divisor=0 (EVM semantics; AVM would panic).
-	/// Solidity's allocator only hands out 32-aligned pointers, and the model
-	/// starts the free-memory pointer at 0x80. This verifies that inductively
-	/// for the block: assume mload(0x40) is aligned, then check every
-	/// mstore(0x40, X) stores a provably aligned X. If all do, the invariant
-	/// holds throughout and an FMP-derived base is aligned — which is what
-	/// makes `add(pMem, k)` offsets provable at all.
-	bool freeMemoryPointerStaysAligned(solidity::yul::Block const& _block);
-
-	/// Residue mod 32 of a YUL expression, with FMP-derived locals assumed
-	/// aligned (the induction hypothesis above). Locals resolve through
-	/// solc's SSAValueTracker constants.
-	std::optional<unsigned> yulAlignmentMod32(
-		solidity::yul::Expression const& _expr,
-		std::set<std::string> const& _fmpLocals) const;
-
 
 	/// Offset's residue mod 32 when provable, else nullopt ("assume unaligned").
 	/// A scratch slot is a multiple of 32, so a 32-byte access at residue r has
@@ -1353,9 +1339,6 @@ private:
 
 		std::set<std::string> yulMemoryWritingFunctions;
 
-		/// Set when the invariant above holds for the current block.
-		bool fmpStaysAligned = false;
-
 		solidity::yul::Dialect const* dialect = nullptr;
 
 		std::string sourceFile;
@@ -1390,9 +1373,6 @@ private:
 		bool returnAsmWrap = false;
 
 		std::map<std::string, awst::WType const*> locals;
-
-		/// Locals upgraded uint64→biguint; maps name to original type for block-end coercion.
-		std::map<std::string, awst::WType const*> upgradedLocals;
 
 		/// name → biguint shadow local holding the full 256-bit word for each
 		/// signedParamBits entry. Seeded sign-extended at block entry; all reads and
@@ -1455,9 +1435,6 @@ private:
 		/// Yul locals whose bound value is provably 32-aligned (single-assignment
 		/// only, same gate as localWideConstants).
 		std::set<std::string> alignedLocals;
-
-		/// Last mstore value; used by keccak256(begin, add(len,0x20)) pattern to append it.
-		std::shared_ptr<awst::Expression> lastMstoreValue;
 
 		awst::WType const* returnType = nullptr;
 

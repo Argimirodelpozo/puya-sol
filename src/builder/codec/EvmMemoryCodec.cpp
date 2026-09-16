@@ -7,6 +7,7 @@
 #include "builder/yul/AssemblyBuilder.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/types/TypeMapper.h"
+#include "builder/types/TypeCoercion.h"
 #include "builder/codec/Arc4Defaults.h"
 #include <libsolidity/ast/Types.h>
 // yul nodes BY VALUE (the AST aliases are std::variant, which needs
@@ -174,7 +175,8 @@ private:
 		auto const* elemW = arrayElementType(arrayW);
 		auto const* elemType = array->baseType();
 		auto base = awst::makeEvalOnce(std::move(offset), m_loc);
-		if (!array->isDynamicallySized())
+		bool const dynamic = array->isDynamicallySized();
+		if (!dynamic && array->length() <= 4)
 		{
 			auto result = awst::makeNewArray(arrayW, m_loc);
 			uint64_t count = static_cast<uint64_t>(array->length());
@@ -190,8 +192,9 @@ private:
 			return result;
 		}
 
-		auto count = awst::makeEvalOnce(
-			checkedUint64Word(m_mapper, base, m_loc, out), m_loc);
+		auto count = awst::makeEvalOnce(dynamic
+			? checkedUint64Word(m_mapper, base, m_loc, out)
+			: u64(static_cast<uint64_t>(array->length()), m_loc), m_loc);
 		out.push_back(awst::makeExpressionStatement(
 			awst::makeAssert(
 				awst::makeNumericCompare(count, awst::NumericComparison::Lte,
@@ -200,6 +203,8 @@ private:
 
 		int id = awst::NameGen::next("EvmMemoryCodec.readArray");
 		std::string suffix = std::to_string(id);
+		// Fixed arrays start with a valid default encoding and fill by index.
+		// This retains the full 4096-byte capacity without an extra count prefix.
 		auto arrVar = [&]() { return awst::makeVarExpression(
 			"__evmmem_arr_" + suffix, arrayW, m_loc); };
 		auto idxVar = [&]() { return awst::makeVarExpression(
@@ -209,10 +214,10 @@ private:
 		auto baseVar = [&]() { return awst::makeVarExpression(
 			"__evmmem_base_" + suffix, awst::WType::uint64Type(), m_loc); };
 		out.push_back(awst::makeAssignmentStatement(
-			arrVar(), awst::makeNewArray(arrayW, m_loc), m_loc));
+			arrVar(), TypeCoercion::makeDefaultValue(arrayW, m_loc), m_loc));
 		out.push_back(awst::makeAssignmentStatement(countVar(), count, m_loc));
 		out.push_back(awst::makeAssignmentStatement(
-			baseVar(), add(base, u64(32, m_loc), m_loc), m_loc));
+			baseVar(), dynamic ? add(base, u64(32, m_loc), m_loc) : base, m_loc));
 		out.push_back(awst::makeAssignmentStatement(idxVar(), u64(0, m_loc), m_loc));
 
 		auto body = awst::makeBlock(m_loc);
@@ -224,8 +229,12 @@ private:
 			return nullptr;
 		value = codec::valueToArc4(
 			m_mapper, elemType, std::move(value), elemW, m_loc);
-		body->body.push_back(awst::makeExpressionStatement(
-			awst::makeArrayPushOne(arrVar(), std::move(value), arrayW, m_loc), m_loc));
+		if (dynamic)
+			body->body.push_back(awst::makeExpressionStatement(
+				awst::makeArrayPushOne(arrVar(), std::move(value), arrayW, m_loc), m_loc));
+		else
+			body->body.push_back(awst::makeAssignmentStatement(
+				awst::makeIndexExpression(arrVar(), idxVar(), elemW, m_loc), std::move(value), m_loc));
 		body->body.push_back(awst::makeAssignmentStatement(
 			idxVar(), add(idxVar(), u64(1, m_loc), m_loc), m_loc));
 		out.push_back(awst::makeWhileLoop(

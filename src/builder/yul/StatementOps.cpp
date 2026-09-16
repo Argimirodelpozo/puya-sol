@@ -60,6 +60,31 @@ void AssemblyBuilder::buildStatement(
 	);
 }
 
+bool AssemblyBuilder::emitUserFunctionAssignment(solidity::yul::FunctionCall const& _call,
+	std::vector<std::string> const& _targets, awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	auto function = m_context->asmFunctions.find(getFunctionName(_call.functionName));
+	if (function == m_context->asmFunctions.end()) return false;
+	handleUserFunctionCall(_call, _loc, _out);
+	auto const& returns = function->second->returnVariables;
+	for (size_t i = 0; i < std::min(_targets.size(), returns.size()); ++i)
+	{
+		auto const& name = _targets[i];
+		if (!m_frame.calldataParamNames.count(name) && !m_frame.calldataStaticPtrNames.count(name))
+			m_frame.localConstants.erase(name);
+		m_frame.localWideConstants.erase(name);
+		m_frame.localSlotConstants.erase(name);
+		m_frame.alignedLocals.erase(name);
+		auto retName = m_frame.yulSubReturnTemps.empty()
+			? returns[i].name.str() : m_frame.yulSubReturnTemps[i];
+		auto it = m_frame.locals.find(retName);
+		emitPlainYulAssignment(name, awst::makeVarExpression(retName,
+			it != m_frame.locals.end() ? it->second : awst::WType::biguintType(), _loc), _loc, _out);
+	}
+	return true;
+}
+
 void AssemblyBuilder::buildVariableDeclaration(
 	solidity::yul::VariableDeclaration const& _decl,
 	std::vector<std::shared_ptr<awst::Statement>>& _out
@@ -67,55 +92,22 @@ void AssemblyBuilder::buildVariableDeclaration(
 {
 	auto loc = makeLoc(_decl.debugData);
 
-	// Check for special function call patterns: staticcall, user-defined functions
 	if (_decl.value)
-	{
-		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(_decl.value.get()))
+		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(_decl.value.get());
+			call && m_context->asmFunctions.count(getFunctionName(call->functionName)))
 		{
-			std::string callName = getFunctionName(call->functionName);
-
-
-			// User-defined Yul function: single (let x := f()) or multi (let a,b := f()) return.
-			if (m_context->asmFunctions.count(callName))
+			std::vector<std::string> targets;
+			for (auto const& var: _decl.variables)
 			{
-				auto const& funcDef = *m_context->asmFunctions.at(callName);
-
-				for (auto const& var: _decl.variables)
-				{
-					std::string n = var.name.str();
-					if (auto rit = m_frame.yulInlineRenames.find(n); rit != m_frame.yulInlineRenames.end())
-						n = rit->second;
-					m_frame.locals[n] = awst::WType::biguintType();
-				}
-
-				handleUserFunctionCall(*call, loc, _out);
-
-				// Both call paths publish per-call return temps.
-				bool fromSub = !m_frame.yulSubReturnTemps.empty();
-				size_t numReturns = std::min(
-					_decl.variables.size(), funcDef.returnVariables.size()
-				);
-				for (size_t i = 0; i < numReturns; ++i)
-				{
-					std::string retName = fromSub
-						? m_frame.yulSubReturnTemps[i]
-						: funcDef.returnVariables[i].name.str();
-					std::string varName = _decl.variables[i].name.str();
-					// Inline frames: declare under the frame's unique name.
-					if (auto rit = m_frame.yulInlineRenames.find(varName); rit != m_frame.yulInlineRenames.end())
-						varName = rit->second;
-
-					auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
-
-					auto target = awst::makeVarExpression(varName, awst::WType::biguintType(), loc);
-
-					auto assign = awst::makeAssignmentStatement(std::move(target), std::move(retVar), loc);
-					_out.push_back(std::move(assign));
-				}
-				return;
+				auto name = var.name.str();
+				if (auto it = m_frame.yulInlineRenames.find(name); it != m_frame.yulInlineRenames.end())
+					name = it->second;
+				m_frame.locals[name] = awst::WType::biguintType();
+				targets.push_back(std::move(name));
 			}
+			emitUserFunctionAssignment(*call, targets, loc, _out);
+			return;
 		}
-	}
 
 	for (auto const& var: _decl.variables)
 	{
@@ -175,13 +167,6 @@ void AssemblyBuilder::buildVariableDeclaration(
 		// proof: `let p := mul(i, 32)` or `add(base, 0x40)` carries forward so
 		// every mload/mstore through p can drop its second-slot arm.
 		bool aligned = value && alignmentMod32(*value).value_or(1u) == 0u;
-		// `let pMem := mload(0x40)`: the AWST read is opaque, but the pointer
-		// itself is 32-aligned whenever the block preserves that invariant.
-		if (!aligned && m_context->fmpStaysAligned && _decl.value)
-			if (auto const* c = std::get_if<solidity::yul::FunctionCall>(_decl.value.get()))
-				aligned = getFunctionName(c->functionName) == "mload"
-					&& c->arguments.size() == 1
-					&& yulAlignmentMod32(*_decl.value, {}).value_or(1u) == 0u;
 		if (!m_context->reassignedLocals.count(origName) && aligned)
 			m_frame.alignedLocals.insert(name);
 		else
@@ -220,43 +205,13 @@ void AssemblyBuilder::buildAssignment(
 	if (_assign.variableNames.size() > 1) // multi-var: a, b, c := f(...)
 	{
 		if (_assign.value)
-		{
 			if (auto const* call = std::get_if<solidity::yul::FunctionCall>(_assign.value.get()))
 			{
-				std::string callName = getFunctionName(call->functionName);
-				if (m_context->asmFunctions.count(callName))
-				{
-					auto const& funcDef = *m_context->asmFunctions.at(callName);
-
-					handleUserFunctionCall(*call, loc, _out);
-
-					bool fromSub = !m_frame.yulSubReturnTemps.empty();
-					size_t numReturns = std::min(
-						_assign.variableNames.size(), funcDef.returnVariables.size()
-					);
-					for (size_t i = 0; i < numReturns; ++i)
-					{
-						std::string retName = fromSub
-							? m_frame.yulSubReturnTemps[i]
-							: funcDef.returnVariables[i].name.str();
-						std::string varName = resolveVarRef(_assign.variableNames[i]);
-						if (!m_frame.calldataParamNames.count(varName)
-							&& !m_frame.calldataStaticPtrNames.count(varName))
-							m_frame.localConstants.erase(varName);
-						m_frame.localSlotConstants.erase(varName);
-
-						auto retIt = m_frame.locals.find(retName);
-						auto const* retType = (retIt != m_frame.locals.end())
-							? retIt->second : awst::WType::biguintType();
-						emitPlainYulAssignment(
-							varName,
-							awst::makeVarExpression(retName, retType, loc),
-							loc, _out);
-					}
-					return;
-				}
+				std::vector<std::string> targets;
+				for (auto const& variable: _assign.variableNames)
+					targets.push_back(resolveVarRef(variable));
+				if (emitUserFunctionAssignment(*call, targets, loc, _out)) return;
 			}
-		}
 
 		Logger::instance().error(
 			"multi-variable assignment not yet supported in assembly translation", loc
@@ -592,18 +547,6 @@ void AssemblyBuilder::emitPlainYulAssignment(
 					value = std::move(andOp);
 				}
 				value = safeBtoi(std::move(value), loc);
-			}
-		}
-		else if (target->wtype == awst::WType::accountType())
-		{
-			if (value->wtype == awst::WType::biguintType())
-			{
-				value = awst::makeAsAccount(awst::makeAsBytes(std::move(value), loc), loc);
-			}
-			else if (value->wtype != awst::WType::accountType())
-			{
-				auto cast = awst::makeAsAccount(std::move(value), loc);
-				value = std::move(cast);
 			}
 		}
 		else

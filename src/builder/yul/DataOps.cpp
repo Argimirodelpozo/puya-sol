@@ -174,42 +174,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 
 	auto length = resolveConstantOffset(_args[1]);
 
-	// Check for WTuple FIRST: initializeCalldataMap stores calldata offsets in
-	// m_frame.localConstants, causing struct params to resolve as false-positive constants.
-	auto const* varExprForTuple = dynamic_cast<awst::VarExpression const*>(_args[0].get());
-	if (varExprForTuple && length)
-	{
-		auto it = m_frame.locals.find(varExprForTuple->name);
-		if (it != m_frame.locals.end() && it->second && it->second->kind() == awst::WTypeKind::WTuple)
-		{
-			auto const* tupleType = dynamic_cast<awst::WTuple const*>(it->second);
-			if (tupleType)
-			{
-				int numFields = static_cast<int>(tupleType->types().size());
-				int expectedLen = numFields * 32;
-				if (static_cast<int>(*length) == expectedLen)
-				{
-					// Concatenate all struct fields, each padded to 32 bytes
-					std::shared_ptr<awst::Expression> data;
-					for (int i = 0; i < numFields; ++i)
-					{
-						auto field = awst::makeTupleItem(_args[0], i, tupleType->types()[static_cast<size_t>(i)], _loc);
-
-						auto padded = padTo32Bytes(std::move(field), _loc);
-
-						if (!data)
-							data = std::move(padded);
-						else
-							data = awst::makeConcat(std::move(data), std::move(padded), _loc);
-					}
-
-					auto keccak = awst::makeKeccak256(std::move(data), _loc);
-					return awst::makeAsBiguint(std::move(keccak), _loc);
-				}
-			}
-		}
-	}
-
 	auto offset = resolveConstantOffset(_args[0]);
 
 	// COMPILE-TIME keccak over known memory content: `mstore(0, <const>);
@@ -234,97 +198,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		}
 	}
 
-	if (!offset && length)
-		return awst::makeAsBiguint(awst::makeKeccak256(
-			readMemRangeDyn(_args[0], _args[1], _loc, m_frame.pendingStatements), _loc), _loc);
-
-	if (offset && !length)
-	{
-		// Constant offset, dynamic length.
-		// Pattern: keccak256(begin, add(paramLen, 0x20)) from deriveMapping(string/bytes).
-		// Hashes param_bytes ++ padTo32(last mstored value).
-		for (auto const& [cdOffset, elem] : m_frame.calldataMap)
-		{
-			if (*offset == cdOffset + 0x20 && m_frame.lastMstoreValue)
-			{
-				auto paramType = m_frame.locals.find(elem.paramName);
-				auto const* paramWtype = (paramType != m_frame.locals.end() && paramType->second)
-					? paramType->second : awst::WType::bytesType();
-				auto paramVar = awst::makeVarExpression(elem.paramName, paramWtype, _loc);
-
-				std::shared_ptr<awst::Expression> paramBytes;
-				if (paramVar->wtype != awst::WType::bytesType())
-				{
-					auto cast = awst::makeAsBytes(std::move(paramVar), _loc);
-					paramBytes = std::move(cast);
-				}
-				else
-					paramBytes = std::move(paramVar);
-
-				auto slotPadded = padTo32Bytes(m_frame.lastMstoreValue, _loc);
-
-				auto concat = awst::makeConcat(std::move(paramBytes), std::move(slotPadded), _loc);
-				auto keccak = awst::makeKeccak256(std::move(concat), _loc);
-				return awst::makeAsBiguint(std::move(keccak), _loc);
-			}
-		}
-	}
-
-	if (!offset || !length)
-	{
-		// The shared reader owns page stitching, capacity and zero-length
-		// semantics, including an unused offset wider than uint64.
-		return awst::makeAsBiguint(awst::makeKeccak256(
-			readMemRangeDyn(_args[0], _args[1], _loc, m_frame.pendingStatements), _loc), _loc);
-	}
-
-	int numSlots = static_cast<int>(*length / 0x20);
-	if (*length == 0)
-	{
-		auto emptyBytes = awst::makeBytesConstant({}, _loc, awst::BytesEncoding::Unknown);
-		auto keccak = awst::makeKeccak256(std::move(emptyBytes), _loc);
-		return awst::makeAsBiguint(std::move(keccak), _loc);
-	}
-
-	// If offset falls in m_frame.calldataMap (e.g. Yul optimizer elided abi_encode buffer copy
-	// for a struct param like PoolKey), extract fields and pad each to 32 bytes.
-	auto firstSlotIt = m_frame.calldataMap.find(*offset);
-	if (firstSlotIt != m_frame.calldataMap.end())
-	{
-		auto const& elem = firstSlotIt->second;
-		auto const* structType = dynamic_cast<awst::ARC4Struct const*>(elem.paramType);
-		// Whole-word lengths only: the per-field 32-byte padding below assumes
-		// a word-aligned buffer shape.
-		if (structType && *length % 0x20 == 0
-			&& numSlots == static_cast<int>(structType->fields().size()))
-		{
-			auto base = awst::makeVarExpression(elem.paramName, m_frame.locals.count(elem.paramName)
-				? m_frame.locals[elem.paramName] : elem.paramType, _loc);
-			auto structBytes = awst::makeAsBytes(base, _loc);
-			std::shared_ptr<awst::Expression> data;
-			int fieldByteOffset = 0;
-			for (auto const& [fieldName, fieldType]: structType->fields())
-			{
-				int fieldSize = computeARC4ByteSize(fieldType);
-				auto extract = awst::makeExtract3(structBytes,
-					awst::makeIntegerConstant(fieldByteOffset, _loc),
-					awst::makeIntegerConstant(fieldSize, _loc), _loc);
-				auto padded = padTo32Bytes(awst::makeAsBiguint(std::move(extract), _loc), _loc);
-				data = !data ? std::move(padded) : awst::makeConcat(std::move(data), std::move(padded), _loc);
-				fieldByteOffset += fieldSize;
-			}
-			return awst::makeAsBiguint(awst::makeKeccak256(std::move(data), _loc), _loc);
-		}
-	}
-
-	// Hash the EXACT length: the old concatSlots(numSlots) form silently
-	// truncated an unaligned length to whole words (keccak256(0x84, 0x30)
-	// hashed 32 bytes — wrong-but-plausible digests for packed-encoding
-	// idioms). Slot-routed (M7): offsets ≥ SLOT_SIZE read the right slot.
-	return awst::makeAsBiguint(
-		awst::makeKeccak256(readMemRangeDirect(m_typeMapper,
-			awst::makeIntegerConstant(*offset, _loc),
-			static_cast<int>(*length), _loc), _loc), _loc);
+	// Memory and calldata offsets have no shared provenance. Hash the actual
+	// bounded range, preserving the full word until checked narrowing.
+	return awst::makeAsBiguint(awst::makeKeccak256(
+		readMemRangeDyn(_args[0], _args[1], _loc, m_frame.pendingStatements), _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::returndataBytes(
@@ -449,72 +326,7 @@ void AssemblyBuilder::handleRevert(
 		if (!constZeroLen && !constOversize)
 		{
 
-			std::shared_ptr<awst::Expression> payload;
-			if (lenC)
-			{
-				// Constant length: exact multi-slot range read.
-				payload = readMemRangeDirect(m_typeMapper,
-					offsetToUint64(_args[0], _loc),
-					static_cast<int>(std::stoull(lenC->value)), _loc);
-			}
-			else
-			{
-				// Dynamic length (`revert(ptr, sub(end, ptr))` — Error(string)
-				// tails). A loggable payload is <= 1024 bytes (AVM total-log
-				// cap), so it straddles AT MOST one slot boundary: read the
-				// in-slot part, and when len overruns the slot, concat the
-				// remainder from slot+1 — one log either way.
-				int revId = awst::NameGen::next("DataOps.revertSlice");
-				std::string offN = "__rev_off_" + std::to_string(revId);
-				std::string lenN = "__rev_len_" + std::to_string(revId);
-				_out.push_back(awst::makeAssignmentStatement(
-					awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
-					offsetToUint64(_args[0], _loc), _loc));
-				_out.push_back(awst::makeAssignmentStatement(
-					awst::makeVarExpression(lenN, awst::WType::uint64Type(), _loc),
-					offsetToUint64(_args[1], _loc), _loc));
-				auto offR = [&]() {
-					return awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc);
-				};
-				auto lenR = [&]() {
-					return awst::makeVarExpression(lenN, awst::WType::uint64Type(), _loc);
-				};
-				auto ss = [&]() {
-					return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc);
-				};
-				auto slotE = [&]() {
-					return awst::makeUInt64BinOp(
-						offR(), awst::UInt64BinaryOperator::FloorDiv, ss(), _loc);
-				};
-				auto subE = [&]() {
-					return awst::makeUInt64BinOp(
-						offR(), awst::UInt64BinaryOperator::Mod, ss(), _loc);
-				};
-				auto loadsAt = [&](std::shared_ptr<awst::Expression> slot) {
-					auto lc = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
-					lc->stackArgs.push_back(std::move(slot));
-					return lc;
-				};
-				// avail = SLOT_SIZE - off%SLOT_SIZE
-				auto availE = [&]() {
-					return awst::makeUInt64BinOp(
-						ss(), awst::UInt64BinaryOperator::Sub, subE(), _loc);
-				};
-				auto fits = awst::makeNot(awst::makeNumericCompare(
-					availE(), awst::NumericComparison::Lt, lenR(), _loc), _loc);
-				auto whole = awst::makeExtract3(loadsAt(slotE()), subE(), lenR(), _loc);
-				auto part1 = awst::makeExtract3(loadsAt(slotE()), subE(), availE(), _loc);
-				auto part2 = awst::makeExtract3(
-					loadsAt(awst::makeUInt64BinOp(slotE(),
-						awst::UInt64BinaryOperator::Add,
-						awst::makeIntegerConstant("1", _loc), _loc)),
-					awst::makeIntegerConstant("0", _loc),
-					awst::makeUInt64BinOp(lenR(),
-						awst::UInt64BinaryOperator::Sub, availE(), _loc), _loc);
-				auto spliced = awst::makeConcat(std::move(part1), std::move(part2), _loc);
-				payload = awst::makeConditional(std::move(fits),
-					std::move(whole), std::move(spliced), awst::WType::bytesType(), _loc);
-			}
+			auto payload = readMemRangeDyn(_args[0], _args[1], _loc, _out);
 			auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
 			logCall->stackArgs.push_back(std::move(payload));
 			_out.push_back(awst::makeExpressionStatement(std::move(logCall), _loc));

@@ -2,18 +2,12 @@
 /// See SlotHandleAccess.h.
 
 #include "builder/storage/slot/SlotHandleAccess.h"
-#include "builder/codec/SlotWordCodec.h"
-#include "builder/types/TypeCoercion.h"
-#include "builder/types/SolIntType.h"
 #include "builder/types/EncodedSize.h"
 #include "awst/NameGen.h"
-#include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
 
-#include <algorithm>
 #include <functional>
-#include <limits>
 
 namespace puyasol::builder
 {
@@ -23,22 +17,6 @@ namespace
 std::shared_ptr<awst::Expression> biguintConst(uint64_t v, awst::SourceLocation const& loc)
 {
 	return awst::makeIntegerConstant(std::to_string(v), loc, awst::WType::biguintType());
-}
-std::shared_ptr<awst::Expression> u64Const(uint64_t v, awst::SourceLocation const& loc)
-{
-	return awst::makeIntegerConstant(v, loc);
-}
-/// bind an expression to a fresh local; returns a reader lambda
-template <typename Out>
-std::function<std::shared_ptr<awst::Expression>()> bindTemp(
-	Out& out, std::shared_ptr<awst::Expression> e, awst::WType const* wt,
-	char const* tag, awst::SourceLocation const& loc)
-{
-	std::string name = std::string("__sha_") + tag + "_"
-		+ std::to_string(awst::NameGen::next("SlotHandleAccess.tmp"));
-	out.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(name, wt, loc), std::move(e), loc));
-	return [name, wt, loc]() { return awst::makeVarExpression(name, wt, loc); };
 }
 } // namespace
 
@@ -170,85 +148,6 @@ bool SlotHandleAccess::forEachIndex(solidity::u256 const& _count,
 	// and traversal together so that reversal cannot move the loop before it.
 	_out.push_back(std::move(operation));
 	return true;
-}
-
-namespace
-{
-/// Big-endian byte position of packed element (idx % perSlot) within its word:
-/// (32 - size) - (idx % perSlot) * size, as uint64.
-std::shared_ptr<awst::Expression> packedBEPos(
-	std::shared_ptr<awst::Expression> _idx,
-	SlotHandleAccess::ElemLayout const& _l,
-	awst::SourceLocation const& _loc)
-{
-	auto within = awst::makeBigUIntBinOp(std::move(_idx),
-		awst::BigUIntBinaryOperator::Mod, biguintConst(_l.perSlot, _loc), _loc);
-	auto withinU64 = awst::makeBiguintToUInt64(std::move(within), _loc);
-	auto scaled = awst::makeUInt64BinOp(std::move(withinU64),
-		awst::UInt64BinaryOperator::Mult, u64Const(_l.size, _loc), _loc);
-	return awst::makeUInt64BinOp(u64Const(32 - _l.size, _loc),
-		awst::UInt64BinaryOperator::Sub, std::move(scaled), _loc);
-}
-/// Sign-extend a canonical biguint element to 256-bit TC when the Solidity
-/// element type is signed sub-256. (Unlike typed CELLS, slot-handle elements
-/// always travel as canonical biguint, so ≤64-bit signed extends here too.)
-std::shared_ptr<awst::Expression> canonSignExtend(
-	std::shared_ptr<awst::Expression> _v,
-	solidity::frontend::Type const* _solElemType,
-	awst::SourceLocation const& _loc)
-{
-	if (auto it = SolIntType::fromSol(_solElemType); it && it->isSigned && it->bits < 256)
-		return TypeCoercion::signExtendToUint256(std::move(_v), it->bits, _loc);
-	return _v;
-}
-} // namespace
-
-std::shared_ptr<awst::Expression> SlotHandleAccess::readScalarElem(
-	std::shared_ptr<awst::Expression> _base,
-	std::shared_ptr<awst::Expression> _idx,
-	ElemLayout const& _l,
-	solidity::frontend::Type const* _solElemType,
-	awst::SourceLocation const& _loc)
-{
-	if (_l.perSlot == 1)
-		return readSlot(elemSlot(std::move(_base), std::move(_idx), _l, _loc), _loc);
-	// packed: extract the element's bytes from its word
-	_idx = awst::makeEvalOnce(std::move(_idx), _loc);
-	auto word = readSlot(elemSlot(std::move(_base), _idx, _l, _loc), _loc);
-	auto wordB = awst::makeLeftPadToN(awst::makeAsBytes(std::move(word), _loc), 32, _loc);
-	auto raw = awst::makeExtract3(std::move(wordB), packedBEPos(_idx, _l, _loc),
-		u64Const(_l.size, _loc), _loc);
-	return canonSignExtend(awst::makeAsBiguint(std::move(raw), _loc), _solElemType, _loc);
-}
-
-void SlotHandleAccess::writeScalarElem(
-	std::vector<std::shared_ptr<awst::Statement>>& _out,
-	std::shared_ptr<awst::Expression> _base,
-	std::shared_ptr<awst::Expression> _idx,
-	ElemLayout const& _l,
-	std::shared_ptr<awst::Expression> _valueBiguint,
-	awst::SourceLocation const& _loc)
-{
-	if (_l.perSlot == 1)
-	{
-		_out.push_back(writeSlot(
-			elemSlot(std::move(_base), std::move(_idx), _l, _loc),
-			std::move(_valueBiguint), _loc));
-		return;
-	}
-	// Bind idx + slot once — used in slot math, position math, read AND write.
-	auto idxVar = bindTemp(_out, std::move(_idx), awst::WType::biguintType(), "idx", _loc);
-	auto slotVar = bindTemp(_out, elemSlot(std::move(_base), idxVar(), _l, _loc),
-		awst::WType::biguintType(), "slot", _loc);
-	// canonical biguint value → its `size` trailing bytes (the packed TC)
-	auto fieldB = awst::makeExtract(
-		awst::makeZeroExtendToN(awst::makeAsBytes(std::move(_valueBiguint), _loc), 32, _loc),
-		static_cast<int>(32 - _l.size), static_cast<int>(_l.size), _loc);
-	auto wordB = awst::makeLeftPadToN(
-		awst::makeAsBytes(readSlot(slotVar(), _loc), _loc), 32, _loc);
-	auto newWord = awst::makeReplace3(std::move(wordB),
-		packedBEPos(idxVar(), _l, _loc), std::move(fieldB), _loc);
-	_out.push_back(writeSlot(slotVar(), awst::makeAsBiguint(std::move(newWord), _loc), _loc));
 }
 
 std::vector<SlotHandleAccess::FieldPos> SlotHandleAccess::fieldPositions(

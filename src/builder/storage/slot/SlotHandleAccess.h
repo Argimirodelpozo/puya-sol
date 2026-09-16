@@ -66,25 +66,6 @@ struct SlotHandleAccess
 		std::function<bool(std::shared_ptr<awst::Expression>,
 			std::vector<std::shared_ptr<awst::Statement>>&)> const& _emit);
 
-	/// Packed/full scalar element read → CANONICAL biguint (signed elems
-	/// sign-extended to 256-bit TC).
-	static std::shared_ptr<awst::Expression> readScalarElem(
-		std::shared_ptr<awst::Expression> _base,
-		std::shared_ptr<awst::Expression> _idx,
-		ElemLayout const& _l,
-		solidity::frontend::Type const* _solElemType,
-		awst::SourceLocation const& _loc);
-
-	/// Packed/full scalar element write (value = canonical biguint).
-	/// Emits statements into _out (packed = word read-modify-write).
-	static void writeScalarElem(
-		std::vector<std::shared_ptr<awst::Statement>>& _out,
-		std::shared_ptr<awst::Expression> _base,
-		std::shared_ptr<awst::Expression> _idx,
-		ElemLayout const& _l,
-		std::shared_ptr<awst::Expression> _valueBiguint,
-		awst::SourceLocation const& _loc);
-
 	/// A struct field's storage position within its element/variable.
 	struct FieldPos
 	{

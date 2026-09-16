@@ -210,103 +210,36 @@ void AssemblyBuilder::buildSwitchStatement(
 {
 	auto loc = makeLoc(_node.debugData);
 	size_t pendingBefore = m_frame.pendingStatements.size();
-	auto switchExpr = buildExpression(*_node.expression);
+	auto value = buildExpression(*_node.expression);
 	drainPendingStatements(_out, pendingBefore);
+	if (!value) return;
 
-	// Widen a uint64-natured scrutinee. Several builtins return uint64 by this
-	// codebase's "returns uint64; consumer coerces" convention (returndatasize,
-	// gas, timestamp) — but the case labels below are built as 256-bit Yul
-	// values, and puya rejects the pair outright with "Switch cases types
-	// mismatch with value to match". The switch IS the consumer, so it coerces
-	// here; biguint then takes the normalised 32-byte match path used by every
-	// other scrutinee. `switch returndatasize()` is Gnosis GPv2SafeERC20's
-	// non-standard-ERC20 probe, vendored by Aave and CoW.
-	if (switchExpr && switchExpr->wtype && switchExpr->wtype->name() != "bool")
-		switchExpr = ensureBiguint(std::move(switchExpr), loc);
-
-	// AVM `match` does exact byte comparison; ARC4 uint256 decodes to 32-byte biguint.
-	// Normalize both scrutinee and case constants to 32-byte big-endian BytesConstants.
-	bool useBytesMatch = switchExpr->wtype
-		&& switchExpr->wtype->name() == "biguint";
-	bool useBoolMatch = switchExpr->wtype
-		&& switchExpr->wtype->name() == "bool";
-
+	// Yul compares words, including when the producer has a bool carrier.
+	// AVM match compares bytes exactly: use the same 32-byte form on both sides.
 	auto switchNode = std::make_shared<awst::Switch>();
 	switchNode->sourceLocation = loc;
-
-	if (useBytesMatch)
-	{
-		auto cast = awst::makeAsBytes(switchExpr, loc);
-		// uint512 mapping → 64-byte biguint; zero-extend to ≥32 then take last 32.
-		auto bor = awst::makeZeroExtendToN(std::move(cast), 32, loc);
-
-		auto lenCall = awst::makeLen(bor, loc);
-
-		auto minus = awst::makeUInt64BinOp(std::move(lenCall),
-			awst::UInt64BinaryOperator::Sub,
-			awst::makeIntegerConstant("32", loc), loc);
-
-		auto width = awst::makeIntegerConstant("32", loc);
-
-		auto extract = awst::makeExtract3(std::move(bor), std::move(minus), std::move(width), loc);
-		switchNode->value = std::move(extract);
-	}
-	else
-	{
-		switchNode->value = switchExpr;
-	}
-
-	bool savedHalt = m_frame.haltEmitted; // switch-case halts are conditional
+	switchNode->value = padTo32Bytes(ensureBiguint(std::move(value), loc), loc);
+	bool savedHalt = m_frame.haltEmitted;
 	for (auto const& yulCase: _node.cases)
 	{
 		m_frame.haltEmitted = savedHalt;
-		// Each case body starts fresh: recordings from a SIBLING case (translated
-		// just before) never execute on this case's path.
+		// Sibling bodies do not share runtime memory facts.
 		invalidateMemConstants();
+		auto body = awst::makeBlock(makeLoc(yulCase.debugData));
+		for (auto const& stmt: yulCase.body.statements)
+			buildStatement(stmt, body->body);
 		if (!yulCase.value)
-		{
-			auto caseBlock = awst::makeBlock(makeLoc(yulCase.debugData));
-			for (auto const& stmt: yulCase.body.statements)
-				buildStatement(stmt, caseBlock->body);
-			switchNode->defaultCase = std::move(caseBlock);
-		}
+			switchNode->defaultCase = std::move(body);
 		else
 		{
-			auto caseBlock = awst::makeBlock(makeLoc(yulCase.debugData));
-			for (auto const& stmt: yulCase.body.statements)
-				buildStatement(stmt, caseBlock->body);
-
-			if (useBytesMatch
-				&& yulCase.value->kind == solidity::yul::LiteralKind::Number)
-			{
-				auto const& val = yulCase.value->value.value();
-				auto be = solidity::toBigEndian(val);
-				switchNode->cases.emplace_back(
-					awst::makeBytesConstant(
-						std::vector<uint8_t>(be.begin(), be.end()),
-						makeLoc(yulCase.value->debugData)),
-					std::move(caseBlock));
-			}
-			else if (useBoolMatch
-				&& yulCase.value->kind == solidity::yul::LiteralKind::Number)
-			{
-				auto const& val = yulCase.value->value.value();
-				switchNode->cases.emplace_back(
-					awst::makeBoolConstant(val != 0, makeLoc(yulCase.value->debugData)),
-					std::move(caseBlock));
-			}
-			else
-			{
-				auto caseVal = buildLiteral(*yulCase.value);
-				switchNode->cases.emplace_back(
-					std::move(caseVal), std::move(caseBlock));
-			}
+			auto word = solidity::toBigEndian(yulCase.value->value.value());
+			switchNode->cases.emplace_back(awst::makeBytesConstant(
+				std::vector<uint8_t>(word.begin(), word.end()),
+				makeLoc(yulCase.value->debugData)), std::move(body));
 		}
 	}
 	m_frame.haltEmitted = savedHalt;
-	// Case-body recordings are conditional — must not fold after the switch.
 	invalidateMemConstants();
-
 	_out.push_back(std::move(switchNode));
 }
 

@@ -261,42 +261,23 @@ void AssemblyBuilder::writeMemBytesDirect(
 	awst::SourceLocation const& _loc,
 	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
-	std::string pfx = "__blobw_" + std::to_string(_uniqueId) + "_";
-	auto u64v = [&](std::string const& n) {
-		return awst::makeVarExpression(pfx + n, awst::WType::uint64Type(), _loc);
-	};
-	auto bytesv = [&]() {
-		return awst::makeVarExpression(pfx + "v", awst::WType::bytesType(), _loc);
-	};
-	// pin value + base offset + length; pad value to a whole word so the last
-	// extract3 never runs off the end
-	_out.push_back(awst::makeAssignmentStatement(
-		bytesv(), awst::makeConcat(std::move(_bytesValue),
-			awst::makeBzero(32, _loc), _loc), _loc));
-	_out.push_back(awst::makeAssignmentStatement(
-		u64v("off"), std::move(_offU64), _loc));
-	auto lenExpr = awst::makeUInt64BinOp(
-		awst::makeLen(bytesv(), _loc), awst::UInt64BinaryOperator::Sub,
-		awst::makeIntegerConstant("32", _loc), _loc);
-	_out.push_back(awst::makeAssignmentStatement(u64v("len"), std::move(lenExpr), _loc));
-	_out.push_back(awst::makeAssignmentStatement(
-		u64v("i"), awst::makeIntegerConstant("0", _loc), _loc));
-	auto cond = awst::makeNumericCompare(u64v("i"),
-		awst::NumericComparison::Lt, u64v("len"), _loc);
-	auto body = awst::makeBlock(_loc);
-	auto word = awst::makeExtract3(bytesv(), u64v("i"),
-		awst::makeIntegerConstant("32", _loc), _loc);
-	std::vector<std::shared_ptr<awst::Statement>> ws;
-	writeMemWordDirect(_typeMapper,
-		awst::makeUInt64BinOp(u64v("off"), awst::UInt64BinaryOperator::Add,
-			u64v("i"), _loc),
-		std::move(word), _loc, ws);
-	for (auto& st: ws)
-		body->body.push_back(std::move(st));
-	body->body.push_back(awst::makeAssignmentStatement(u64v("i"),
-		awst::makeUInt64BinOp(u64v("i"), awst::UInt64BinaryOperator::Add,
-			awst::makeIntegerConstant("32", _loc), _loc), _loc));
-	_out.push_back(awst::makeWhileLoop(std::move(cond), std::move(body), _loc));
+	auto suffix = std::to_string(_uniqueId);
+	auto bytes = awst::makeVarExpression("__blobw_value_" + suffix, awst::WType::bytesType(), _loc);
+	_out.push_back(awst::makeAssignmentStatement(bytes, std::move(_bytesValue), _loc));
+	// Preserve the allocator's zeroed final word without appending an entire
+	// unused word (which made a full 4096-byte value overflow the stack limit).
+	auto width = awst::makeIntegerConstant(32, _loc);
+	auto remainder = awst::makeUInt64BinOp(awst::makeLen(bytes, _loc),
+		awst::UInt64BinaryOperator::Mod, width, _loc);
+	auto padding = awst::makeUInt64BinOp(awst::makeUInt64BinOp(width,
+		awst::UInt64BinaryOperator::Sub, std::move(remainder), _loc),
+		awst::UInt64BinaryOperator::Mod, width, _loc);
+	auto call = awst::makeSubroutineCall(
+		awst::SubroutineID{memoryBufferSubroutine(_typeMapper, true, _loc, true)},
+		awst::WType::voidType(), _loc);
+	awst::pushCallArg(call->args, std::move(_offU64));
+	awst::pushCallArg(call->args, awst::makeConcat(bytes, awst::makeBzero(std::move(padding), _loc), _loc));
+	_out.push_back(awst::makeExpressionStatement(std::move(call), _loc));
 }
 
 void AssemblyBuilder::writeMemWordDirect(
@@ -997,27 +978,17 @@ void AssemblyBuilder::handleMstore(
 	if (!checkArity(_args, 2, "mstore", _loc))
 		return;
 
-	// Track constant store values (e.g. FMP init at 0x40) for resolveConstantOffset.
-	// A non-constant value at a constant offset KILLS that offset's entry; a
-	// non-constant offset kills all content entries (could clobber any of them).
+	// A word store can overlap a differently aligned tracked word. Retain
+	// only the new fact; other writes/control-flow already use this barrier.
 	auto constOffset = resolveConstantOffset(_args[0]);
-	if (constOffset)
+	auto storedVal = resolveConstantOffset(_args[1]);
+	invalidateMemConstants();
+	if (constOffset && storedVal)
 	{
-		std::string varName = "mem_0x" + ([&] {
-			std::ostringstream oss;
-			oss << std::hex << *constOffset;
-			return oss.str();
-		})();
-		auto storedVal = resolveConstantOffset(_args[1]);
-		if (storedVal)
-			m_frame.localConstants[varName] = *storedVal;
-		else
-			m_frame.localConstants.erase(varName);
+		std::ostringstream key;
+		key << "mem_0x" << std::hex << *constOffset;
+		m_frame.localConstants[key.str()] = *storedVal;
 	}
-	else
-		invalidateMemConstants();
-
-	m_frame.lastMstoreValue = _args[1];
 
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 

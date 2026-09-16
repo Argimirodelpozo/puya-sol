@@ -15,29 +15,16 @@ namespace puyasol::builder
 
 namespace
 {
-/// bytesN mapped as arc4 byte[N]: a static array of 1-byte uints whose byte
-/// backing is exactly the raw N bytes.
-bool isByteArray(awst::WType const* _w, unsigned _size)
+/// Byte-shaped values are left-aligned, unlike ARC4's address alias.
+std::optional<int64_t> byteWidth(awst::WType const* _w)
 {
-	auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_w);
-	if (!sa)
-		return false;
-	auto const* elem = dynamic_cast<awst::ARC4UIntN const*>(sa->elementType());
-	return elem && elem->n() == 8 && sa->arraySize() == static_cast<int64_t>(_size);
-}
-
-/// arc4 byte[K] with 0 < K < _size (a byte array in a WIDER window, e.g.
-bool isNarrowByteArray(awst::WType const* _w, unsigned _size, unsigned& _kOut)
-{
-	auto const* nb = dynamic_cast<awst::ARC4StaticArray const*>(_w);
-	if (!nb || nb->arraySize() <= 0
-		|| static_cast<unsigned>(nb->arraySize()) >= _size)
-		return false;
-	auto const* e = dynamic_cast<awst::ARC4UIntN const*>(nb->elementType());
-	if (!e || e->n() != 8)
-		return false;
-	_kOut = static_cast<unsigned>(nb->arraySize());
-	return true;
+	if (_w && _w->name() == "address") return std::nullopt;
+	if (auto width = awst::fixedBytesLength(_w)) return *width;
+	if (auto const* array = dynamic_cast<awst::ARC4StaticArray const*>(_w);
+		array && array->arraySize() > 0)
+		if (auto const* elem = dynamic_cast<awst::ARC4UIntN const*>(array->elementType());
+			elem && elem->n() == 8) return array->arraySize();
+	return std::nullopt;
 }
 
 /// arc4.address (byte[32] alias) packed into a <=32-byte window.
@@ -103,11 +90,8 @@ std::shared_ptr<awst::Expression> tryPackScalarWord(
 	{
 		// ARC4 bool encodes true as 0x80; the packed slot byte is canonical 0x01.
 		auto decoded = awst::makeARC4Decode(std::move(_value), awst::WType::boolType(), _loc);
-		auto u64 = awst::makeConditional(std::move(decoded),
-			awst::makeIntegerConstant("1", _loc), awst::makeIntegerConstant("0", _loc),
-			awst::WType::uint64Type(), _loc);
-		return awst::makeExtract(awst::makeItob(std::move(u64), _loc),
-			static_cast<int>(8 - _size), static_cast<int>(_size), _loc);
+		return SlotWordCodec::nativeToPackedBytes(std::move(decoded),
+			awst::WType::boolType(), _size, _loc);
 	}
 	if (_wtype && _wtype->kind() == awst::WTypeKind::ARC4UIntN)
 	{
@@ -127,31 +111,11 @@ std::shared_ptr<awst::Expression> tryPackByteShaped(
 	unsigned _size,
 	awst::SourceLocation const& _loc)
 {
-	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_wtype);
-		bw && bw->length().has_value()
-		&& static_cast<unsigned>(*bw->length()) < _size)
-	{
-		// byte[K] value in a WIDER window (external fn-ptr byte[12] inside
-		// solc's 24-byte external-function share): LEFT-aligned, trailing
-		// zeros — the convention every read/write arm here shares.
-		return awst::makeConcat(
-			awst::makeAsBytes(std::move(_value), _loc),
-			awst::makeBzero(static_cast<int>(
-				_size - static_cast<unsigned>(*bw->length())), _loc), _loc);
-	}
-	if (_wtype && _wtype->kind() == awst::WTypeKind::Bytes)
-		return awst::makeAsBytes(std::move(_value), _loc);   // bytes[N]: raw N bytes
-	if (isByteArray(_wtype, _size))
-		return awst::makeAsBytes(std::move(_value), _loc);   // arc4 byte[N]: raw N bytes
-	if (unsigned k = 0; isNarrowByteArray(_wtype, _size, k))
-	{
-		// byte[K] value in a WIDER window: LEFT-aligned, trailing zeros
-		// (matches the BytesWType arm — one convention for both labels of
-		// the same fn-ptr handle).
-		return awst::makeConcat(
-			awst::makeAsBytes(std::move(_value), _loc),
-			awst::makeBzero(static_cast<int>(_size - k), _loc), _loc);
-	}
+	if (auto width = byteWidth(_wtype); width && *width < _size)
+		return awst::makeConcat(awst::makeAsBytes(std::move(_value), _loc),
+			awst::makeBzero(static_cast<int>(_size - *width), _loc), _loc);
+	if ((_wtype && _wtype->kind() == awst::WTypeKind::Bytes) || byteWidth(_wtype) == _size)
+		return awst::makeAsBytes(std::move(_value), _loc);
 	if (isArc4Address(_wtype, _size))
 	{
 		// arc4.address (byte[32] alias) in a PACKED slot: the EVM packs an
@@ -170,15 +134,7 @@ std::shared_ptr<awst::Expression> tryPackByteShaped(
 
 bool SlotWordCodec::isByteShaped(awst::WType const* _wtype)
 {
-	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_wtype))
-		return bw->length().has_value();
-	if (_wtype && _wtype->name() == "address")
-		return false;   // arc4.address packs to the word/account convention
-	auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_wtype);
-	if (!sa || sa->arraySize() <= 0)
-		return false;
-	auto const* e = dynamic_cast<awst::ARC4UIntN const*>(sa->elementType());
-	return e && e->n() == 8;
+	return byteWidth(_wtype).has_value();
 }
 
 bool SlotWordCodec::supportsField(awst::WType const* type,
@@ -190,7 +146,7 @@ bool SlotWordCodec::supportsField(awst::WType const* type,
 		|| type == awst::WType::biguintType() || type == awst::WType::accountType()
 		|| type == awst::WType::arc4BoolType()) return true;
 	return type->kind() == awst::WTypeKind::ARC4UIntN
-		|| type->kind() == awst::WTypeKind::Bytes || isByteArray(type, size)
+		|| type->kind() == awst::WTypeKind::Bytes || byteWidth(type) == size
 		|| isArc4Address(type, size);
 }
 
@@ -233,16 +189,7 @@ std::shared_ptr<awst::Expression> tryUnpackScalarWord(
 		// Sub-64 signed: cell convention is 64-bit TC — sign-extend from `size` bytes.
 		if (auto it = SolIntType::fromSol(_solType);
 			it && it->isSigned && it->bits < 64 && _wtype == awst::WType::uint64Type())
-		{
-			uint64_t half = 1ULL << (it->bits - 1);
-			uint64_t addend = ~((1ULL << it->bits) - 1);
-			auto isNeg = awst::makeNumericCompare(u64, awst::NumericComparison::Gte,
-				awst::makeIntegerConstant(half, _loc), _loc);
-			auto extended = awst::makeUInt64BinOp(u64, awst::UInt64BinaryOperator::Add,
-				awst::makeIntegerConstant(addend, _loc), _loc);
-			u64 = awst::makeConditional(std::move(isNeg), std::move(extended), u64,
-				awst::WType::uint64Type(), _loc);
-		}
+			u64 = TypeCoercion::signExtendToUint64(std::move(u64), it->bits, _loc);
 		if (_wtype == awst::WType::boolType())
 			return awst::makeNumericCompare(std::move(u64), awst::NumericComparison::Ne,
 				awst::makeIntegerConstant("0", _loc), _loc);
@@ -293,20 +240,11 @@ std::shared_ptr<awst::Expression> tryUnpackByteShaped(
 	unsigned _size,
 	awst::SourceLocation const& _loc)
 {
-	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_wtype);
-		bw && bw->length().has_value()
-		&& static_cast<unsigned>(*bw->length()) < _size)
-		return awst::makeReinterpretCast(
-			awst::makeExtract(std::move(_raw), 0,
-				static_cast<int>(*bw->length()), _loc), _wtype, _loc);
-	if (_wtype && _wtype->kind() == awst::WTypeKind::Bytes)
+	if (auto width = byteWidth(_wtype); width && *width < _size)
+		return awst::makeReinterpretCast(awst::makeExtract(std::move(_raw),
+			0, static_cast<int>(*width), _loc), _wtype, _loc);
+	if ((_wtype && _wtype->kind() == awst::WTypeKind::Bytes) || byteWidth(_wtype) == _size)
 		return awst::makeReinterpretCast(std::move(_raw), _wtype, _loc);
-	if (isByteArray(_wtype, _size))
-		return awst::makeReinterpretCast(std::move(_raw), _wtype, _loc);
-	if (unsigned k = 0; isNarrowByteArray(_wtype, _size, k))
-		return awst::makeReinterpretCast(
-			awst::makeExtract(std::move(_raw), 0, static_cast<int>(k), _loc),
-			_wtype, _loc);
 	if (isArc4Address(_wtype, _size))
 		return awst::makeReinterpretCast(
 			awst::makeLeftPad(std::move(_raw), 32 - _size, _loc), _wtype, _loc);

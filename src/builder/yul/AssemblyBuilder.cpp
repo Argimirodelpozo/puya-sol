@@ -82,7 +82,6 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_frame.localWideConstants.clear();
 	context.yulConstantValues.clear();
 	m_frame.alignedLocals.clear();
-	context.fmpStaysAligned = false;
 	m_frame.localSlotConstants.clear();
 	context.reassignedLocals.clear();
 	auto const& yulFacts = _assembly.facts;
@@ -91,17 +90,11 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_frame.calldataParamNames.clear();
 	m_frame.calldataMap.clear();
 	context.asmFunctions.clear();
-	m_frame.upgradedLocals.clear();
 	context.paramBitWidths = _paramBitWidths;
 	context.constants = _constants;
 	auto argumentFacts = SolcFacts::yulArgumentFacts(_assembly, _constants);
 	context.yulConstantValues.insert(argumentFacts.constants.begin(), argumentFacts.constants.end());
 	context.yulArgumentAlignments = std::move(argumentFacts.residuesMod32);
-	// AFTER m_context->constants: verifiers bump the free-memory pointer by a SOLIDITY
-	// constant (`uint16 constant pLastMem`), and an unresolvable bump poisons
-	// the invariant for the whole block. Also needs m_context->reassignedLocals and
-	// m_context->yulConstantValues, both set above.
-	context.fmpStaysAligned = freeMemoryPointerStaysAligned(_block);
 	context.storageSlotVars = _storageSlotVars;
 	context.boxKeyedStructSlots = _boxKeyedStructSlots;
 	m_frame.blobOffsetVars = _blobOffsetVars;
@@ -206,37 +199,6 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 			loc));
 	}
 	m_frame.signedShadow.clear();
-
-	// Coerce biguint-upgraded variables back to their original types at block end.
-	if (m_frame.haltEmitted)
-		m_frame.upgradedLocals.clear();
-	for (auto const& [name, origType]: m_frame.upgradedLocals)
-	{
-		awst::SourceLocation loc(m_context->sourceFile);
-
-		auto src = awst::makeVarExpression(name, awst::WType::biguintType(), loc);
-		// For sub-64-bit Solidity types, mask to width before converting to uint64
-		// (e.g. uint16 a := 0x0f0f0f0f0f → mask to 0x0f0f).
-		std::shared_ptr<awst::Expression> valueToCast = src;
-		auto bwIt = m_context->paramBitWidths.find(name);
-		if (bwIt != m_context->paramBitWidths.end() && bwIt->second < 64)
-		{
-			// mask = (1 << bitWidth) - 1
-			solidity::u256 mask = (solidity::u256(1) << bwIt->second) - 1;
-			std::ostringstream maskStr;
-			maskStr << mask;
-
-			auto maskConst = awst::makeIntegerConstant(maskStr.str(), loc, awst::WType::biguintType());
-
-			auto andOp = awst::makeBigUIntBinOp(std::move(valueToCast), awst::BigUIntBinaryOperator::BitAnd, std::move(maskConst), loc);
-			valueToCast = std::move(andOp);
-		}
-
-		auto converted = safeBtoi(std::move(valueToCast), loc);
-		auto target = awst::makeVarExpression(name, origType, loc);
-		result.push_back(awst::makeAssignmentStatement(std::move(target), std::move(converted), loc));
-		m_frame.locals[name] = origType;
-	}
 
 	return result;
 }
@@ -475,7 +437,6 @@ void AssemblyBuilder::invalidateMemConstants()
 		else
 			++it;
 	}
-	m_frame.lastMstoreValue = nullptr;
 }
 
 
@@ -702,136 +663,6 @@ std::optional<unsigned> decimalMod32(std::string const& _v)
 	return r;
 }
 } // namespace
-
-namespace
-{
-/// A Yul number literal equal to _v.
-bool isYulLiteral(solidity::yul::Expression const& _e, uint64_t _v)
-{
-	auto const* lit = std::get_if<solidity::yul::Literal>(&_e);
-	if (!lit || lit->kind != solidity::yul::LiteralKind::Number)
-		return false;
-	return lit->value.value() == _v;
-}
-} // namespace
-
-std::optional<unsigned> AssemblyBuilder::yulAlignmentMod32(
-	solidity::yul::Expression const& _expr,
-	std::set<std::string> const& _fmpLocals
-) const
-{
-	using namespace solidity::yul;
-	if (auto const* lit = std::get_if<Literal>(&_expr))
-	{
-		if (lit->kind != LiteralKind::Number)
-			return std::nullopt;
-		return decimalMod32(lit->value.value().str());
-	}
-	if (auto const* id = std::get_if<Identifier>(&_expr))
-	{
-		std::string const name = id->name.str();
-		if (_fmpLocals.count(name))
-			return 0u;   // induction hypothesis
-		auto it = m_context->yulConstantValues.find(name);
-		if (it != m_context->yulConstantValues.end())
-			return decimalMod32(it->second);
-		// Solidity `constant` referenced from assembly (poseidon and every
-		// snarkjs verifier bump the pointer by one: `uint16 constant pLastMem`).
-		// These are not Yul locals, so SSAValueTracker never sees them.
-		auto cit = m_context->constants.find(name);
-		if (cit != m_context->constants.end())
-			return decimalMod32(cit->second);
-		return std::nullopt;
-	}
-	auto const* call = std::get_if<FunctionCall>(&_expr);
-	if (!call)
-		return std::nullopt;
-	std::string const fn = getFunctionName(call->functionName);
-	// The pointer itself, under the induction hypothesis.
-	if (fn == "mload" && call->arguments.size() == 1
-		&& isYulLiteral(call->arguments[0], 0x40))
-		return 0u;
-	if (call->arguments.size() != 2)
-		return std::nullopt;
-	auto l = yulAlignmentMod32(call->arguments[0], _fmpLocals);
-	auto r = yulAlignmentMod32(call->arguments[1], _fmpLocals);
-	if (fn == "add")
-		return (l && r) ? std::optional<unsigned>((*l + *r) % 32) : std::nullopt;
-	if (fn == "sub")
-		return (l && r) ? std::optional<unsigned>((*l + 32 - *r) % 32) : std::nullopt;
-	if (fn == "mul")
-		return ((l && *l == 0) || (r && *r == 0))
-			? std::optional<unsigned>(0u) : std::nullopt;
-	if (fn == "and")
-		// Masking off the low bits: `and(x, not(31))` and friends clear the
-		// residue only when the mask's low 5 bits are zero.
-		return (r && *r == 0) ? std::optional<unsigned>(0u) : std::nullopt;
-	return std::nullopt;
-}
-
-bool AssemblyBuilder::freeMemoryPointerStaysAligned(
-	solidity::yul::Block const& _block)
-{
-	using namespace solidity::yul;
-	std::set<std::string> fmpLocals;
-	bool ok = true;
-
-	// Pass 1: locals bound to mload(0x40). Single-assignment only — a
-	// reassigned name could hold anything at the use site.
-	// Pass 2: every mstore(0x40, X) must preserve alignment.
-	std::function<void(Block const&, int)> walk =
-		[&](Block const& _b, int _pass)
-	{
-		for (auto const& st: _b.statements)
-		{
-			if (auto const* vd = std::get_if<VariableDeclaration>(&st))
-			{
-				if (_pass == 1 && vd->value && vd->variables.size() == 1)
-				{
-					auto const* c = std::get_if<FunctionCall>(vd->value.get());
-					if (c && getFunctionName(c->functionName) == "mload"
-						&& c->arguments.size() == 1
-						&& isYulLiteral(c->arguments[0], 0x40))
-					{
-						std::string const n = vd->variables.front().name.str();
-						if (!m_context->reassignedLocals.count(n))
-							fmpLocals.insert(n);
-					}
-				}
-			}
-			else if (auto const* es = std::get_if<ExpressionStatement>(&st))
-			{
-				if (_pass != 2)
-					continue;
-				auto const* c = std::get_if<FunctionCall>(&es->expression);
-				if (c && getFunctionName(c->functionName) == "mstore"
-					&& c->arguments.size() == 2
-					&& isYulLiteral(c->arguments[0], 0x40))
-				{
-					auto a = yulAlignmentMod32(c->arguments[1], fmpLocals);
-					if (!a || *a != 0)
-						ok = false;
-				}
-			}
-			else if (auto const* i = std::get_if<If>(&st))
-				walk(i->body, _pass);
-			else if (auto const* sw = std::get_if<Switch>(&st))
-				for (auto const& c: sw->cases)
-					walk(c.body, _pass);
-			else if (auto const* fl = std::get_if<ForLoop>(&st))
-			{
-				walk(fl->pre, _pass); walk(fl->post, _pass); walk(fl->body, _pass);
-			}
-			else if (auto const* fd = std::get_if<FunctionDefinition>(&st))
-				walk(fd->body, _pass);
-			else if (auto const* nested = std::get_if<Block>(&st))
-				walk(*nested, _pass);
-		}
-	};
-	walk(_block, 1);
-	walk(_block, 2);
-	return ok;
-}
 
 std::optional<unsigned> AssemblyBuilder::alignmentMod32(
 	awst::Expression const& _offset) const
