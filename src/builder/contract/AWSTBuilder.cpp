@@ -88,7 +88,8 @@ void AWSTBuilder::collectHostBoundFunctions()
 
 		candidates.emplace(function->id(), function);
 
-		bool const needsConcreteHost = hasFunctionPointerParameter(*function)
+		bool const needsConcreteHost = m_session.analysis.selfCallFunctions.count(function->id())
+			|| hasFunctionPointerParameter(*function)
 			|| hasModifierDefinition(*function)
 			|| (!m_session.profile.evmStorageLayout
 				&& m_session.analysis.callablesWithStorageSlotAccess.count(

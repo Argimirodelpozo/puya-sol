@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="48" time="29.741" timestamp="2026-09-15T20:53:24.814486-03:00" hostname="DESKTOP-1V3OH25"><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_create_scalars[32-arc4-legacy]" time="4.460" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_deferred_scalars[arc4-legacy]" time="4.473"><failure message="framework.deploy.DeployError: create txn failed: TransactionPool.Remember: transaction OWLCCZJNSWVMPXXVP2KZXOQP6OTUJ3BHXEL3ANN73VJX77HSJIJQ: logic eval error: invalid ApplicationArgs index 0. Details: app=3133677, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0">/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:106: in algod_request
+    resp = urlopen(req, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:521: in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:630: in http_response
+    response = self.parent.error(
+/usr/lib/python3.12/urllib/request.py:559: in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:639: in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+E   urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+During handling of the above exception, another exception occurred:
+framework/deploy.py:278: in deploy
+    txid = algod.send_transaction(signed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:344: in send_transaction
+    return self.send_raw_transaction(
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:371: in send_raw_transaction
+    resp = self.algod_request("POST", req, data=txn_bytes, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/localnet.py:33: in _patient_request
+    return _algod_request(method, requrl, params, data, headers,
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:116: in algod_request
+    raise error.AlgodHTTPError(m, code, j.get("data"))
+E   algosdk.error.AlgodHTTPError: TransactionPool.Remember: transaction OWLCCZJNSWVMPXXVP2KZXOQP6OTUJ3BHXEL3ANN73VJX77HSJIJQ: logic eval error: invalid ApplicationArgs index 0. Details: app=3133677, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0
+
+The above exception was the direct cause of the following exception:
+tests/puyasolRegression/test_core_audit.py:52: in test_constructor_deferred_scalars
+    app = harness.deploy(artifacts, "ScalarIngress", skip_postinit=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/harness.py:143: in deploy
+    deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/deploy.py:282: in deploy
+    raise DeployError("create txn failed: "
+E   framework.deploy.DeployError: create txn failed: TransactionPool.Remember: transaction OWLCCZJNSWVMPXXVP2KZXOQP6OTUJ3BHXEL3ANN73VJX77HSJIJQ: logic eval error: invalid ApplicationArgs index 0. Details: app=3133677, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0</failure></testcase><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_create_scalars[8-arc4-legacy]" time="4.457" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_create_scalars[32-arc4-via-ir]" time="1.271" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_create_scalars[8-arc4-via-ir]" time="1.277" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_deferred_scalars[arc4-via-ir]" time="1.340"><failure message="framework.deploy.DeployError: create txn failed: TransactionPool.Remember: transaction QMYOQTBFKJAP6DQWQVS2GTOHKDM73PRZYDVKPOKL4POCCBEWYT3A: logic eval error: invalid ApplicationArgs index 0. Details: app=3133713, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0">/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:106: in algod_request
+    resp = urlopen(req, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:521: in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:630: in http_response
+    response = self.parent.error(
+/usr/lib/python3.12/urllib/request.py:559: in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:639: in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+E   urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+During handling of the above exception, another exception occurred:
+framework/deploy.py:278: in deploy
+    txid = algod.send_transaction(signed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:344: in send_transaction
+    return self.send_raw_transaction(
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:371: in send_raw_transaction
+    resp = self.algod_request("POST", req, data=txn_bytes, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/localnet.py:33: in _patient_request
+    return _algod_request(method, requrl, params, data, headers,
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:116: in algod_request
+    raise error.AlgodHTTPError(m, code, j.get("data"))
+E   algosdk.error.AlgodHTTPError: TransactionPool.Remember: transaction QMYOQTBFKJAP6DQWQVS2GTOHKDM73PRZYDVKPOKL4POCCBEWYT3A: logic eval error: invalid ApplicationArgs index 0. Details: app=3133713, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0
+
+The above exception was the direct cause of the following exception:
+tests/puyasolRegression/test_core_audit.py:52: in test_constructor_deferred_scalars
+    app = harness.deploy(artifacts, "ScalarIngress", skip_postinit=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/harness.py:143: in deploy
+    deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/deploy.py:282: in deploy
+    raise DeployError("create txn failed: "
+E   framework.deploy.DeployError: create txn failed: TransactionPool.Remember: transaction QMYOQTBFKJAP6DQWQVS2GTOHKDM73PRZYDVKPOKL4POCCBEWYT3A: logic eval error: invalid ApplicationArgs index 0. Details: app=3133713, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0</failure></testcase><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_create_scalars[32-evm-legacy]" time="1.602" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_create_scalars[8-evm-legacy]" time="1.676" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_deferred_scalars[evm-legacy]" time="1.767" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_create_scalars[32-evm-via-ir]" time="1.510" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_create_scalars[8-evm-via-ir]" time="1.488" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_constructor_deferred_scalars[evm-via-ir]" time="1.631" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_native_constructor_uses_solc_abi_coder[named-legacy]" time="0.855" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_operands[named-arc4-via-ir]" time="3.753" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_operands[slot-arc4-via-ir]" time="4.571" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_native_constructor_uses_solc_abi_coder[named-via-ir]" time="0.766" /><testcase classname="tests.puyasolRegression.test_core_audit" name="test_native_constructor_uses_solc_abi_coder[slot-legacy]" time="1.162"><failure message="framework.deploy.DeployError: create txn failed: TransactionPool.Remember: transaction ERLGUJ6ETE3DPUMIIIF3U7756WIPI5PFXDGNEO3REU5OBFNNAHNA: logic eval error: invalid ApplicationArgs index 0. Details: app=3134208, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0">/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:106: in algod_request
+    resp = urlopen(req, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:521: in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:630: in http_response
+    response = self.parent.error(
+/usr/lib/python3.12/urllib/request.py:559: in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:639: in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+E   urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+During handling of the above exception, another exception occurred:
+framework/deploy.py:278: in deploy
+    txid = algod.send_transaction(signed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:344: in send_transaction
+    return self.send_raw_transaction(
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:371: in send_raw_transaction
+    resp = self.algod_request("POST", req, data=txn_bytes, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/localnet.py:33: in _patient_request
+    return _algod_request(method, requrl, params, data, headers,
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:116: in algod_request
+    raise error.AlgodHTTPError(m, code, j.get("data"))
+E   algosdk.error.AlgodHTTPError: TransactionPool.Remember: transaction ERLGUJ6ETE3DPUMIIIF3U7756WIPI5PFXDGNEO3REU5OBFNNAHNA: logic eval error: invalid ApplicationArgs index 0. Details: app=3134208, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0
+
+The above exception was the direct cause of the following exception:
+tests/puyasolRegression/test_core_audit.py:93: in test_native_constructor_uses_solc_abi_coder
+    app = harness.deploy(artifacts, "ScalarIngress", skip_postinit=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/harness.py:143: in deploy
+    deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/deploy.py:282: in deploy
+    raise DeployError("create txn failed: "
+E   framework.deploy.DeployError: create txn failed: TransactionPool.Remember: transaction ERLGUJ6ETE3DPUMIIIF3U7756WIPI5PFXDGNEO3REU5OBFNNAHNA: logic eval error: invalid ApplicationArgs index 0. Details: app=3134208, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0</failure></testcase><testcase classname="tests.puyasolRegression.test_core_audit" name="test_native_constructor_uses_solc_abi_coder[slot-via-ir]" time="1.488"><failure message="framework.deploy.DeployError: create txn failed: TransactionPool.Remember: transaction 2OYZ2YQTXQNFAL7DKSJT3CQWGK5TYXCOMA4JSXAVNEAMWFKNLCWA: logic eval error: invalid ApplicationArgs index 0. Details: app=3134265, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0">/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:106: in algod_request
+    resp = urlopen(req, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:521: in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:630: in http_response
+    response = self.parent.error(
+/usr/lib/python3.12/urllib/request.py:559: in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:639: in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+E   urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+During handling of the above exception, another exception occurred:
+framework/deploy.py:278: in deploy
+    txid = algod.send_transaction(signed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:344: in send_transaction
+    return self.send_raw_transaction(
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:371: in send_raw_transaction
+    resp = self.algod_request("POST", req, data=txn_bytes, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/localnet.py:33: in _patient_request
+    return _algod_request(method, requrl, params, data, headers,
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:116: in algod_request
+    raise error.AlgodHTTPError(m, code, j.get("data"))
+E   algosdk.error.AlgodHTTPError: TransactionPool.Remember: transaction 2OYZ2YQTXQNFAL7DKSJT3CQWGK5TYXCOMA4JSXAVNEAMWFKNLCWA: logic eval error: invalid ApplicationArgs index 0. Details: app=3134265, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0
+
+The above exception was the direct cause of the following exception:
+tests/puyasolRegression/test_core_audit.py:93: in test_native_constructor_uses_solc_abi_coder
+    app = harness.deploy(artifacts, "ScalarIngress", skip_postinit=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/harness.py:143: in deploy
+    deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/deploy.py:282: in deploy
+    raise DeployError("create txn failed: "
+E   framework.deploy.DeployError: create txn failed: TransactionPool.Remember: transaction 2OYZ2YQTXQNFAL7DKSJT3CQWGK5TYXCOMA4JSXAVNEAMWFKNLCWA: logic eval error: invalid ApplicationArgs index 0. Details: app=3134265, pc=143, opcodes=txn ApplicationID; bnz label1; txna ApplicationArgs 0</failure></testcase><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_operands[named-evm-legacy]" time="5.069" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_operands[named-arc4-legacy]" time="3.845" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_operands[slot-evm-legacy]" time="5.549" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_conversions[named-arc4-legacy]" time="0.764" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_operands[named-evm-via-ir]" time="5.234" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_conversions[named-arc4-via-ir]" time="0.645" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_conversions[named-evm-legacy]" time="1.251" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_operands[slot-evm-via-ir]" time="5.451" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_conversions[named-evm-via-ir]" time="0.853" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_conversions[slot-arc4-legacy]" time="1.004" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_conversions[slot-evm-via-ir]" time="1.133" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_operands[slot-arc4-legacy]" time="4.144" /><testcase classname="framework.test_core_cli" name="test_cli_cancellation_reaps_backend_group[2]" time="0.060" /><testcase classname="framework.test_core_cli" name="test_cli_rejects_backend_without_arc56" time="0.053" /><testcase classname="framework.test_core_cli" name="test_legacy_import_alias_does_not_erase_local_event[False]" time="0.021" /><testcase classname="framework.test_core_cli" name="test_legacy_import_alias_does_not_erase_local_event[True]" time="0.022" /><testcase classname="framework.test_core_cli" name="test_shared_awst_and_immutability_match_pinned_backend" time="0.760" /><testcase classname="framework.test_puya_serve_artifacts" name="test_finalize_backend_artifacts_enforces_pages_and_hashes" time="0.025" /><testcase classname="framework.test_puya_serve_artifacts" name="test_finalize_backend_artifacts_rejects_missing_or_oversized_input" time="0.017" /><testcase classname="framework.test_puya_serve_artifacts" name="test_finalize_backend_artifacts_rejects_invalid_child_schema[schema0]" time="0.025" /><testcase classname="framework.test_puya_serve_artifacts" name="test_finalize_backend_artifacts_rejects_invalid_child_schema[schema1]" time="0.018" /><testcase classname="framework.test_puya_serve_artifacts" name="test_finalize_backend_artifacts_rejects_invalid_child_schema[schema2]" time="0.024" /><testcase classname="framework.test_puya_serve_artifacts" name="test_finalize_backend_artifacts_rejects_invalid_child_schema[schema3]" time="0.017" /><testcase classname="framework.test_puya_serve_artifacts" name="test_finalize_backend_artifacts_rejects_invalid_child_schema[schema4]" time="0.016" /><testcase classname="framework.test_puya_serve_artifacts" name="test_finalize_backend_requires_requested_arc56" time="0.017" /><testcase classname="framework.test_puya_serve_artifacts" name="test_finalize_backend_artifacts_verifies_frontend_digest" time="0.013" /><testcase classname="framework.test_puya_serve_artifacts" name="test_finalize_backend_artifacts_hashes_all_current_target_outputs" time="0.014" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_conversions[slot-arc4-via-ir]" time="0.580" /><testcase classname="tests.puyasolRegression.test_call_operands" name="test_call_conversions[slot-evm-legacy]" time="0.945" /><testcase classname="framework.test_core_cli" name="test_cli_cancellation_reaps_backend_group[15]" time="0.070" /></testsuite></testsuites>

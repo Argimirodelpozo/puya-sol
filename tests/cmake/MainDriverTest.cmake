@@ -24,6 +24,14 @@ function(run_case name expected text)
     set(case_stderr "${errors}" PARENT_SCOPE)
 endfunction()
 
+run_case(missing-source 2 "--source requires <file>" --source)
+run_case(missing-source-before-option 2 "--source requires <file>" --source --output-dir ignored)
+run_case(missing-budget 2 "--ensure-budget requires <f:N>" --ensure-budget)
+run_case(help 0 "Valid names:" --help)
+if(NOT case_stdout MATCHES "max [0-9]+" OR NOT case_stdout MATCHES "--force-no-inline-sub")
+    message(FATAL_ERROR "generated help lost option metadata")
+endif()
+
 # Distinct paths can collide after solc strips base/include prefixes. Neither
 # source order is allowed to choose which body wins. Real path aliases remain
 # legal and are already covered by SourceIdentityTest.cmake.

@@ -28,6 +28,7 @@ namespace puyasol::builder
 {
 
 struct PreparedAssembly;
+namespace eb { struct Intrinsic; }
 
 /// Reachable creation effects, before selecting an AVM storage backend.
 /// The callable set is creation-only, plus explicit target-adaptation edges;
@@ -83,8 +84,10 @@ struct ProgramAnalysis
 	proxies::ProxyFacts proxy;
 	/// Source-unit order, including abstract contracts, libraries and interfaces.
 	std::vector<solidity::frontend::ContractDefinition const*> contracts;
-	/// Validated libs/AVM.sol function declaration id -> native library.
-	std::map<int64_t, std::string> avmIntrinsics;
+	/// Validated libs/AVM.sol declaration id -> immutable lowering descriptor.
+	std::map<int64_t, eb::Intrinsic const*> avmIntrinsics;
+	/// Self-call routing needs the concrete host's external interface.
+	std::set<int64_t> selfCallFunctions;
 	std::map<int64_t, CreationEffects> creationEffects;
 	std::set<int64_t> boxKeyedStructs;
 	std::set<int64_t> refPassedStructs;

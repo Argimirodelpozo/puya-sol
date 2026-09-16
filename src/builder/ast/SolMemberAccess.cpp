@@ -1,4 +1,5 @@
 #include "builder/ast/SolMemberAccess.h"
+#include "builder/solc/SolcFacts.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -11,16 +12,19 @@ SolMemberAccess::SolMemberAccess(
 {
 }
 
+solidity::frontend::Expression const& SolMemberAccess::baseExpression() const
+{
+	return SolcFacts::unparenthesized(m_memberAccess.expression());
+}
+
 std::shared_ptr<awst::Expression> SolMemberAccess::projectFunctionValue(
-	eb::ContractContext& ctx, solidity::frontend::Expression const& source,
+	eb::ContractContext& ctx, solidity::frontend::Expression const& expression,
 	awst::WType const* resultType, awst::SourceLocation const& loc,
 	std::function<std::shared_ptr<awst::Expression>(solidity::frontend::Expression const&)> const& project)
 {
 	using namespace solidity::frontend;
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&source);
-		tuple && tuple->components().size() == 1 && tuple->components()[0])
-		return projectFunctionValue(ctx, *tuple->components()[0], resultType, loc, project);
-	if (auto const* options = dynamic_cast<FunctionCallOptions const*>(&source))
+	auto const& source = SolcFacts::unparenthesized(expression);
+	if (auto const* options = SolcFacts::expressionAs<FunctionCallOptions>(&source))
 	{
 		auto value = ctx.emitSequencedOperand({}, projectFunctionValue(
 			ctx, options->expression(), resultType, loc, project), true, loc);
@@ -28,7 +32,7 @@ std::shared_ptr<awst::Expression> SolMemberAccess::projectFunctionValue(
 			ctx.evaluateForEffects(*option, ctx.makeLoc(option->location()));
 		return value;
 	}
-	if (auto const* conditional = dynamic_cast<Conditional const*>(&source))
+	if (auto const* conditional = SolcFacts::expressionAs<Conditional>(&source))
 	{
 		auto condition = ctx.lower(conditional->condition(), false);
 		auto value = ctx.emitSequencedOperand(

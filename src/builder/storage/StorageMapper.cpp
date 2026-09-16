@@ -180,7 +180,6 @@ bool StorageMapper::hasDynamicBoxValue(awst::WType const* _type)
 	auto kind = _type->kind();
 	return
 		kind == awst::WTypeKind::ARC4DynamicArray
-		|| kind == awst::WTypeKind::ReferenceArray
 		|| awst::isDynamicBytes(_type);
 }
 
@@ -452,8 +451,7 @@ StorageMapper::PhysicalBinding StorageMapper::makeBinding(
 		binding.initialization = RootInitialization::Slot;
 	else if (binding.kind == awst::AppStorageKind::AppGlobal)
 		binding.initialization = RootInitialization::NamedCell;
-	else if (type && (type->kind() == awst::WTypeKind::ReferenceArray
-		|| type->kind() == awst::WTypeKind::ARC4DynamicArray
+	else if (type && (type->kind() == awst::WTypeKind::ARC4DynamicArray
 		|| type->kind() == awst::WTypeKind::ARC4StaticArray
 		|| awst::isDynamicBytes(type)))
 		// Retain the legacy mapping-root bytes placeholder as well as arrays.

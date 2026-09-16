@@ -1,6 +1,7 @@
 /// @file SolUnaryOperation.cpp — unary operation translation.
 
 #include "builder/solc/SolcConstFold.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/types/SolIntType.h"
 #include "builder/ast/exprs/SolUnaryOperation.h"
 #include "builder/eb/ResolvedLValue.h"
@@ -89,7 +90,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		return awst::makeVoidConstant(m_loc);
 	}
 	// Paged arrays retain their page-lifecycle operation; ordinary targets share clear().
-	if (auto const* ident = dynamic_cast<Identifier const*>(&m_unaryOp.subExpression()))
+	if (auto const* ident = SolcFacts::expressionAs<Identifier>(&m_unaryOp.subExpression()))
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
@@ -143,8 +144,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 	//
 	// The index comes off the ALREADY-BUILT operand, never from rebuilding the
 	// solc node: `delete m[f()]` would otherwise call f() twice.
-	if (auto const* index = dynamic_cast<IndexAccess const*>(&m_unaryOp.subExpression()))
-		if (auto const* ident = dynamic_cast<Identifier const*>(&index->baseExpression()))
+	if (auto const* index = SolcFacts::expressionAs<IndexAccess>(&m_unaryOp.subExpression()))
+		if (auto const* ident = SolcFacts::expressionAs<Identifier>(&index->baseExpression()))
 			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 					ident->annotation().referencedDeclaration);
 				varDecl && varDecl->isStateVariable()

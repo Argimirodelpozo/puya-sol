@@ -24,20 +24,15 @@ class NodeBuilder
 public:
 	virtual ~NodeBuilder() = default;
 
-	/// The Solidity type this builder was created from (nullptr for callables).
+	/// The Solidity type this builder was created from.
 	virtual solidity::frontend::Type const* solType() const = 0;
 
-	/// The AWST type this builder produces (nullptr for callables/type exprs).
+	/// The AWST type this builder produces.
 	virtual awst::WType const* wtype() const = 0;
 
 	/// Handle `.member` access. Returns a new builder for the member.
 	virtual std::unique_ptr<NodeBuilder> member_access(
 		std::string const& _name, awst::SourceLocation const& _loc) = 0;
-
-	/// Evaluate as a boolean condition (for if/while/ternary).
-	/// If _negate is true, return the negated bool.
-	virtual std::unique_ptr<InstanceBuilder> bool_eval(
-		awst::SourceLocation const& _loc, bool _negate = false) = 0;
 
 protected:
 	ContractContext& m_ctx;
@@ -79,30 +74,13 @@ public:
 		InstanceBuilder& _other, BuilderComparisonOp _op,
 		awst::SourceLocation const& _loc);
 
-	/// Handle `this {op}= rhs`. Returns the assignment statement, or nullptr.
-	virtual std::shared_ptr<awst::Statement> augmented_assignment(
-		BuilderBinaryOp _op, InstanceBuilder& _rhs,
-		awst::SourceLocation const& _loc);
-
-	// ── Member / Index / Call ──
+	// ── Member / Index ──
 
 	std::unique_ptr<NodeBuilder> member_access(
 		std::string const& _name, awst::SourceLocation const& _loc) override;
 
 	virtual std::unique_ptr<InstanceBuilder> index(
 		InstanceBuilder& _idx, awst::SourceLocation const& _loc);
-
-	virtual std::unique_ptr<InstanceBuilder> call(
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc);
-
-	// ── Conversion ──
-
-	virtual std::shared_ptr<awst::Expression> to_bytes(
-		awst::SourceLocation const& _loc);
-
-	std::unique_ptr<InstanceBuilder> bool_eval(
-		awst::SourceLocation const& _loc, bool _negate = false) override;
 
 	awst::WType const* wtype() const override { return m_expr ? m_expr->wtype : nullptr; }
 
@@ -116,60 +94,6 @@ protected:
 		: NodeBuilder(_ctx), m_expr(std::move(_expr))
 	{
 	}
-};
-
-// ─────────────────────────────────────────────────────────────────────
-// TypeBuilder — for type expressions: handles construction/conversion
-// ─────────────────────────────────────────────────────────────────────
-
-class TypeBuilder: public NodeBuilder
-{
-public:
-	virtual awst::WType const* produces() const = 0;
-
-	virtual std::unique_ptr<InstanceBuilder> construct(
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc) = 0;
-
-	virtual std::unique_ptr<InstanceBuilder> try_convert(
-		std::shared_ptr<awst::Expression> _expr,
-		awst::SourceLocation const& _loc);
-
-	solidity::frontend::Type const* solType() const override { return nullptr; }
-	awst::WType const* wtype() const override { return nullptr; }
-
-	std::unique_ptr<NodeBuilder> member_access(
-		std::string const& _name, awst::SourceLocation const& _loc) override;
-
-	std::unique_ptr<InstanceBuilder> bool_eval(
-		awst::SourceLocation const& _loc, bool _negate = false) override;
-
-protected:
-	TypeBuilder(ContractContext& _ctx): NodeBuilder(_ctx) {}
-};
-
-// ─────────────────────────────────────────────────────────────────────
-// CallableBuilder — for callable things (free functions, builtins)
-// ─────────────────────────────────────────────────────────────────────
-
-class CallableBuilder: public NodeBuilder
-{
-public:
-	solidity::frontend::Type const* solType() const override { return nullptr; }
-	awst::WType const* wtype() const override { return nullptr; }
-
-	virtual std::unique_ptr<InstanceBuilder> call(
-		std::vector<std::shared_ptr<awst::Expression>>& _args,
-		awst::SourceLocation const& _loc) = 0;
-
-	std::unique_ptr<NodeBuilder> member_access(
-		std::string const& _name, awst::SourceLocation const& _loc) override;
-
-	std::unique_ptr<InstanceBuilder> bool_eval(
-		awst::SourceLocation const& _loc, bool _negate = false) override;
-
-protected:
-	CallableBuilder(ContractContext& _ctx): NodeBuilder(_ctx) {}
 };
 
 } // namespace puyasol::builder::eb

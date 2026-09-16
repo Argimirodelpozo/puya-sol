@@ -1,5 +1,6 @@
 #include "builder/ast/calls/SolRequireAssert.h"
 #include "builder/ast/calls/RevertBlob.h"
+#include "builder/solc/SolcFacts.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -21,7 +22,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 		// error constructor from an ordinary message-producing function.
 		auto const* magic = dynamic_cast<MagicType const*>(arguments()[1]->annotation().type);
 		if (magic && magic->kind() == MagicType::Kind::Error)
-			payload = RevertPayload(m_ctx, dynamic_cast<FunctionCall const&>(*arguments()[1]), m_loc);
+			payload = RevertPayload(m_ctx, dynamic_cast<FunctionCall const&>(SolcFacts::unparenthesized(*arguments()[1])), m_loc);
 		else
 			payload = RevertPayload(m_ctx, CallOperands::evaluate(m_ctx, *arguments()[1], m_loc), m_loc);
 	}

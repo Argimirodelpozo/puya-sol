@@ -111,8 +111,7 @@ public:
 		if (functionType
 			&& (functionType->kind() == FunctionType::Kind::ArrayPush
 				|| functionType->kind() == FunctionType::Kind::ArrayPop))
-			if (auto const* member = dynamic_cast<MemberAccess const*>(
-				&SolcFacts::functionExpression(_call.expression())))
+			if (auto const* member = SolcFacts::expressionAs<MemberAccess>(&SolcFacts::functionExpression(_call.expression())))
 				recordRoots(&member->expression(),
 					m_facts.direct.mutatedParameterIndices);
 
@@ -177,7 +176,7 @@ private:
 		if (!expression) return;
 		for (auto const* source: SolcFacts::referenceSources(*expression))
 		{
-			if (auto const* call = dynamic_cast<FunctionCall const*>(source))
+			if (auto const* call = SolcFacts::expressionAs<FunctionCall>(source))
 				if (auto const* function = SolcFacts::resolveInternalCall(*call, m_mostDerived))
 					if (auto const& alias = m_analysis.storageReturnFacts(function).pointerAlias)
 					{
@@ -185,7 +184,7 @@ private:
 						if (alias->parameter < arguments.size())
 							recordRoots(arguments[alias->parameter], out);
 					}
-			if (auto const* identifier = dynamic_cast<Identifier const*>(source))
+			if (auto const* identifier = SolcFacts::expressionAs<Identifier>(source))
 				if (auto const* declaration = identifier->annotation().referencedDeclaration)
 					recordDeclarationRoots(declaration->id(), out);
 		}

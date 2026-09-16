@@ -54,7 +54,7 @@ std::shared_ptr<awst::Expression> arrayElement(
 	std::shared_ptr<awst::Expression> parent,
 	std::shared_ptr<awst::Expression> index, awst::SourceLocation const& loc)
 {
-	index = TypeCoercion::implicitNumericCast(std::move(index), awst::WType::biguintType(), loc);
+	index = TypeCoercion::coerceScalar(std::move(index), awst::WType::biguintType(), loc);
 	return segment('a', std::move(parent),
 		awst::makeKeyBytes(std::move(index), awst::WType::biguintType(), loc), loc);
 }

@@ -20,7 +20,8 @@ public:
 
 private:
 	std::shared_ptr<awst::Expression> buildTuple(
-		std::vector<solidity::frontend::VariableDeclaration const*> const& _bindings);
+		std::vector<solidity::frontend::VariableDeclaration const*> const& _bindings,
+		bool _storageReferences = false);
 	solidity::frontend::TupleExpression const& m_tuple;
 };
 

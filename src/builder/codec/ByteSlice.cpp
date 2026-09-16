@@ -18,7 +18,7 @@ std::shared_ptr<awst::Expression> readPaddedBytes(
 	std::string const id = "__puyasol_read_padded_bytes";
 	auto call = awst::makeSubroutineCall(awst::SubroutineID{id}, awst::WType::bytesType(), _loc);
 	awst::pushCallArg(call->args, std::move(_bytes));
-	awst::pushCallArg(call->args, TypeCoercion::implicitNumericCast(std::move(_offset), awst::WType::biguintType(), _loc));
+	awst::pushCallArg(call->args, TypeCoercion::coerceScalar(std::move(_offset), awst::WType::biguintType(), _loc));
 	awst::pushCallArg(call->args, std::move(_length));
 	auto& subs = types.artifacts().bufferSubroutines;
 	if (subs.count(id)) return call;

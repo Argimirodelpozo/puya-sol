@@ -68,9 +68,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryRouteConstSlotLoad(
 		auto const& r = it->second;
 		if (r.kind == SlotRoute::Kind::Scalar)
 		{
-			// The var's app-global, padded/truncated to the 32-byte slot word.
-			auto get = awst::makeIntrinsicCall("app_global_get", awst::WType::bytesType(), _loc);
-			get->stackArgs.push_back(awst::makeUtf8BytesConstant(r.varName, _loc));
+			// Full-slot named scalars use byte-backed globals; absent means zero.
+			auto key = awst::makeUtf8BytesConstant(r.varName, _loc, awst::WType::stateKeyType());
+			auto get = StorageMapper::makeStateGetWithDefault(
+				awst::makeAppStateExpression(std::move(key), awst::WType::bytesType(), _loc),
+				awst::WType::bytesType(), _loc);
 			return awst::makeAsBiguint(awst::makeExtractLastN(
 				awst::makeLeftPad(std::move(get), 32, _loc), 32, _loc), _loc);
 		}

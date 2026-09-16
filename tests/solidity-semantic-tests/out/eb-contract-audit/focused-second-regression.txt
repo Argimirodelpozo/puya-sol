@@ -1,0 +1,77 @@
+bringing up nodes...
+bringing up nodes...
+
+.............F.F..F.F................................................... [ 38%]
+........................................................................ [ 77%]
+.....................................F.x...                              [100%]
+=================================== FAILURES ===================================
+____________ test_storage_reads_do_not_allocate[named-arc4-legacy] _____________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_eb_contract_audit.py:90: in test_storage_reads_do_not_allocate
+    assert invoke(harness, app, profile, "named()") == (0,)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/puyasolRegression/test_call_operands.py:28: in invoke
+    return tuple(bytes(value) if kind.startswith("bytes") else as_int(value)
+tests/puyasolRegression/test_call_operands.py:28: in <genexpr>
+    return tuple(bytes(value) if kind.startswith("bytes") else as_int(value)
+                                                               ^^^^^^^^^^^^^
+framework/values.py:137: in as_int
+    raise AssertionError(
+E   AssertionError: call returned no value because it REVERTED: transaction 2Z542L73XCLMRAQIOTXJ3SIUQ7F6A5W7MVDORFHJAR3CDKVHOCTQ: logic eval error: assert failed pc=387. Details: app=3391152, pc=387, opcodes=bytec_2 // "stored"; app_global_get_ex; assert
+----------------------------- Captured stdout call -----------------------------
+[call] named FAILED after retries: TransactionPool.Remember: transaction 2ET2FEHRTZKSK25I6XFFF7OH4AAB63LXKDQN2JTDIAPTXYJHZVBQ: logic eval error: assert failed pc=387. Details: app=3391152, pc=387, opcodes=bytec_2 // "stored"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction 6BFG4TUF7STCL7J67YEYBQF72Q7YHI5ORP75JVHISZUGC32RY4AA: logic eval error: assert failed pc=387. Details: app=3391152, pc=387, opcodes=bytec_2 // "stored"; app_global_get_ex; assert
+____________ test_storage_reads_do_not_allocate[named-arc4-via-ir] _____________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_eb_contract_audit.py:90: in test_storage_reads_do_not_allocate
+    assert invoke(harness, app, profile, "named()") == (0,)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/puyasolRegression/test_call_operands.py:28: in invoke
+    return tuple(bytes(value) if kind.startswith("bytes") else as_int(value)
+tests/puyasolRegression/test_call_operands.py:28: in <genexpr>
+    return tuple(bytes(value) if kind.startswith("bytes") else as_int(value)
+                                                               ^^^^^^^^^^^^^
+framework/values.py:137: in as_int
+    raise AssertionError(
+E   AssertionError: call returned no value because it REVERTED: transaction KSLRLZALWNRFXQG36466XLUBVHXERO4JKQUKV6IMYY4JCM44BKYA: logic eval error: assert failed pc=387. Details: app=3391280, pc=387, opcodes=bytec_2 // "stored"; app_global_get_ex; assert
+----------------------------- Captured stdout call -----------------------------
+[call] named FAILED after retries: TransactionPool.Remember: transaction 7ZBSP5SUUZAFEG4Y6FJZOWHQ2LOLGIXYP5OS35PA6UPPRECHNCGA: logic eval error: assert failed pc=387. Details: app=3391280, pc=387, opcodes=bytec_2 // "stored"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction A3WZYXPHLACKH33NJZPBG47QRDAOSJAEG4A57CHZYFBPBFBKUULQ: logic eval error: assert failed pc=387. Details: app=3391280, pc=387, opcodes=bytec_2 // "stored"; app_global_get_ex; assert
+_____________ test_storage_reads_do_not_allocate[named-evm-legacy] _____________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_eb_contract_audit.py:90: in test_storage_reads_do_not_allocate
+    assert invoke(harness, app, profile, "named()") == (0,)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/puyasolRegression/test_call_operands.py:22: in invoke
+    return decode(returns, result.logs[-1][4:])
+                           ^^^^^^^^^^^^^^^
+E   IndexError: list index out of range
+_____________ test_storage_reads_do_not_allocate[named-evm-via-ir] _____________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_eb_contract_audit.py:90: in test_storage_reads_do_not_allocate
+    assert invoke(harness, app, profile, "named()") == (0,)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/puyasolRegression/test_call_operands.py:22: in invoke
+    return decode(returns, result.logs[-1][4:])
+                           ^^^^^^^^^^^^^^^
+E   IndexError: list index out of range
+_________________ test_erc1967_proxy_adaptation_native_layout __________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_erc1967.py:138: in test_erc1967_proxy_adaptation_native_layout
+    _run_flow(harness, None)
+tests/puyasolRegression/test_erc1967.py:79: in _run_flow
+    assert as_int(harness.call(app, "rawValue()").abi_return) == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/values.py:137: in as_int
+    raise AssertionError(
+E   AssertionError: call returned no value because it REVERTED: transaction YVCJO4O4RBVLP5CIOKCLOEBHGZ2MILAHSETNJQH6CDYNIZNYNUDA: logic eval error: assert failed pc=430. Details: app=3405697, pc=430, opcodes=bytec_3 // "value"; app_global_get_ex; assert
+----------------------------- Captured stdout call -----------------------------
+[call] rawValue FAILED after retries: TransactionPool.Remember: transaction ZDC7YJDT3PFLB7KX4GSNUIRANOLYIKR3CPRSFCLYASQIRGVPJNMQ: logic eval error: assert failed pc=430. Details: app=3405697, pc=430, opcodes=bytec_3 // "value"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction ID27CBQZIRAONRNQS6GARXBTOSSTAKFP5G6HQ63ECAZIXU3J55GA: logic eval error: assert failed pc=430. Details: app=3405697, pc=430, opcodes=bytec_3 // "value"; app_global_get_ex; assert
+=========================== short test summary info ============================
+FAILED tests/puyasolRegression/test_eb_contract_audit.py::test_storage_reads_do_not_allocate[named-arc4-legacy]
+FAILED tests/puyasolRegression/test_eb_contract_audit.py::test_storage_reads_do_not_allocate[named-arc4-via-ir]
+FAILED tests/puyasolRegression/test_eb_contract_audit.py::test_storage_reads_do_not_allocate[named-evm-legacy]
+FAILED tests/puyasolRegression/test_eb_contract_audit.py::test_storage_reads_do_not_allocate[named-evm-via-ir]
+FAILED tests/puyasolRegression/test_erc1967.py::test_erc1967_proxy_adaptation_native_layout
+5 failed, 181 passed, 1 xfailed in 196.52s (0:03:16)

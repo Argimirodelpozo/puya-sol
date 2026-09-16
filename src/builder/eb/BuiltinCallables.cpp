@@ -1,5 +1,5 @@
 /// @file BuiltinCallables.cpp
-/// Solidity builtin function implementations via the builder pattern.
+/// Solidity builtin value lowering, selected by solc function kind.
 
 #include "builder/eb/BuiltinCallables.h"
 #include "builder/target/EvmFeaturePolicy.h"
@@ -7,196 +7,13 @@
 #include "builder/lowering/itxn/Precompile.h"
 #include "awst/NameGen.h"
 #include "builder/eb/BigUIntMathHelpers.h"
-#include "builder/eb/SolIntegerBuilder.h"
 #include "builder/types/TypeMapper.h"
 
 namespace puyasol::builder::eb
 {
-
-/// Minimal InstanceBuilder for builtin return values (no Solidity-type semantics needed).
-class GenericInstanceBuilder: public InstanceBuilder
+namespace
 {
-public:
-	GenericInstanceBuilder(ContractContext& _ctx, std::shared_ptr<awst::Expression> _expr)
-		: InstanceBuilder(_ctx, std::move(_expr))
-	{
-	}
-	solidity::frontend::Type const* solType() const override { return nullptr; }
-};
-
-BuiltinCallableRegistry::BuiltinCallableRegistry()
-{
-	registerHandler("keccak256", &handleKeccak256);
-	registerHandler("sha256", &handleSha256);
-	registerHandler("mulmod", &handleMulmod);
-	registerHandler("addmod", &handleAddmod);
-	registerHandler("gasleft", &handleGasleft);
-	registerHandler("selfdestruct", &handleSelfdestruct);
-	registerHandler("ecrecover", &handleEcrecover);
-}
-
-void BuiltinCallableRegistry::registerHandler(std::string _name, CallHandler _handler)
-{
-	m_handlers[std::move(_name)] = std::move(_handler);
-}
-
-std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::tryCall(
-	ContractContext& _ctx,
-	std::string const& _name,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc) const
-{
-	auto it = m_handlers.find(_name);
-	if (it != m_handlers.end())
-		return it->second(_ctx, _args, _loc);
-	return nullptr;
-}
-
-// ─────────────────────────────────────────────────────────────────────
-
-std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleKeccak256(
-	ContractContext& _ctx,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	auto call = awst::makeIntrinsicCall("keccak256", awst::WType::bytesType(), _loc);
-	for (auto& arg: _args)
-		call->stackArgs.push_back(std::move(arg));
-	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(call));
-}
-
-std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSha256(
-	ContractContext& _ctx,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	auto call = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), _loc);
-	for (auto& arg: _args)
-		call->stackArgs.push_back(std::move(arg));
-	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(call));
-}
-
-// Force `_e` to evaluate NOW as a pre-statement (returns a var read), unless
-// it is a trivially-duplicable leaf. Used to sequence the left operands of
-// mulmod/addmod before the modulus zero-check — Solidity evaluates the three
-// args left-to-right, but the check (a pre-statement referencing the modulus)
-// would otherwise run before x/y, which are embedded inline in the result.
-static std::shared_ptr<awst::Expression> materializeNow(
-	ContractContext& _ctx,
-	std::shared_ptr<awst::Expression> _e,
-	awst::SourceLocation const& _loc)
-{
-	if (!_e
-		|| dynamic_cast<awst::VarExpression const*>(_e.get())
-		|| dynamic_cast<awst::IntegerConstant const*>(_e.get())
-		|| dynamic_cast<awst::SingleEvaluation const*>(_e.get()))
-		return _e;
-	std::string nm = "__modarg_"
-		+ std::to_string(awst::NameGen::next("BuiltinCallables.s_modArgCounter") + 1);
-	auto const* wt = _e->wtype;
-	_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(nm, wt, _loc), std::move(_e), _loc));
-	return awst::makeVarExpression(nm, wt, _loc);
-}
-
-static void emitModByZeroCheck(
-	ContractContext& _ctx,
-	std::shared_ptr<awst::Expression> const& _modulus,
-	awst::SourceLocation const& _loc)
-{
-	// assert(modulus != 0, "modulo by zero") — prevents optimizer from eliminating
-	auto zero = awst::makeBiguintConstant("0", _loc);
-
-	auto cmp = awst::makeNumericCompare(_modulus, awst::NumericComparison::Ne, std::move(zero), _loc);
-
-	auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "modulo by zero"), _loc);
-	_ctx.preEffects().push_back(std::move(stmt));
-}
-
-std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
-	ContractContext& _ctx,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	if (_args.size() != 3) return nullptr;
-
-	// Left-to-right: force x then y to evaluate BEFORE the modulus zero-check
-	// (a pre-statement) — else the check runs first and a side-effecting arg
-	// mis-orders vs Solidity.
-	auto x = materializeNow(_ctx, promoteToBiguint(std::move(_args[0]), _loc), _loc);
-	auto y = materializeNow(_ctx, promoteToBiguint(std::move(_args[1]), _loc), _loc);
-	// Modulus referenced twice (assert + mod); eval-once for side-effecting args.
-	auto z = awst::makeEvalOnce(promoteToBiguint(std::move(_args[2]), _loc), _loc);
-	emitModByZeroCheck(_ctx, z, _loc);
-
-	auto mul = awst::makeBigUIntBinOp(std::move(x), awst::BigUIntBinaryOperator::Mult, std::move(y), _loc);
-
-	auto mod = awst::makeBigUIntBinOp(std::move(mul), awst::BigUIntBinaryOperator::Mod, std::move(z), _loc);
-
-	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(mod));
-}
-
-std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleAddmod(
-	ContractContext& _ctx,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	if (_args.size() != 3) return nullptr;
-
-	auto x = materializeNow(_ctx, promoteToBiguint(std::move(_args[0]), _loc), _loc);
-	auto y = materializeNow(_ctx, promoteToBiguint(std::move(_args[1]), _loc), _loc);
-	auto z = awst::makeEvalOnce(promoteToBiguint(std::move(_args[2]), _loc), _loc);
-	emitModByZeroCheck(_ctx, z, _loc);
-
-	auto add = awst::makeBigUIntBinOp(std::move(x), awst::BigUIntBinaryOperator::Add, std::move(y), _loc);
-
-	auto mod = awst::makeBigUIntBinOp(std::move(add), awst::BigUIntBinaryOperator::Mod, std::move(z), _loc);
-
-	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(mod));
-}
-
-std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
-	ContractContext& _ctx,
-	std::vector<std::shared_ptr<awst::Expression>>& _args,
-	awst::SourceLocation const& _loc)
-{
-	// AVM: send remaining balance via inner pay (CloseRemainderTo).
-	// Post-Cancun EVM selfdestruct only sends funds — no DeleteApplication needed.
-	if (!_args.empty())
-	{
-		auto create = buildNativeClose(_ctx.typeMapper.profile(), _ctx.preEffects(),
-			std::move(_args[0]), _loc);
-
-		static awst::WInnerTransaction s_payTxnType(1);
-		auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
-		submit->itxns.push_back(std::move(create));
-
-		auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
-		_ctx.preEffects().push_back(std::move(submitStmt));
-	}
-
-	// EVM selfdestruct halts — emit return so subsequent statements don't execute.
-	auto retStmt = awst::makeReturnStatement(nullptr, _loc);
-	_ctx.preEffects().push_back(std::move(retStmt));
-
-	auto vc = awst::makeVoidConstant(_loc);
-	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(vc));
-}
-
-std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleGasleft(
-	ContractContext& _ctx,
-	std::vector<std::shared_ptr<awst::Expression>>& /*_args*/,
-	awst::SourceLocation const& _loc)
-{
-	EvmFeaturePolicy::report(
-		EvmFeature::GasLeft, _ctx.typeMapper.profile(), _loc);
-	auto e = awst::makeAsBiguint(
-		awst::makeItob(awst::makeGlobal(
-			std::string("OpcodeBudget"), awst::WType::uint64Type(), _loc), _loc), _loc);
-	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(e));
-}
-
-std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
+std::shared_ptr<awst::Expression> buildEcrecover(
 	ContractContext& _ctx,
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
@@ -331,7 +148,66 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 
 	auto addrCast = awst::makeAsAccount(std::move(maskedAddr), _loc);
 
-	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(addrCast));
+	return addrCast;
+}
+
+} // namespace
+
+std::shared_ptr<awst::Expression> buildBuiltinCall(
+	ContractContext& ctx,
+	solidity::frontend::FunctionType::Kind kind,
+	std::vector<std::shared_ptr<awst::Expression>> args,
+	awst::SourceLocation const& loc)
+{
+	using Kind = solidity::frontend::FunctionType::Kind;
+	switch (kind)
+	{
+	case Kind::KECCAK256:
+	case Kind::SHA256:
+	{
+		auto call = awst::makeIntrinsicCall(
+			kind == Kind::KECCAK256 ? "keccak256" : "sha256", awst::WType::bytesType(), loc);
+		call->stackArgs = std::move(args);
+		return call;
+	}
+	case Kind::AddMod:
+	case Kind::MulMod:
+	{
+		if (args.size() != 3) return nullptr;
+		auto x = promoteToBiguint(std::move(args[0]), loc);
+		auto y = promoteToBiguint(std::move(args[1]), loc);
+		auto z = awst::makeEvalOnce(promoteToBiguint(std::move(args[2]), loc), loc);
+		// Keep the zero check even if the arithmetic result is unused.
+		ctx.queuePreExpression(awst::makeAssert(awst::makeNumericCompare(
+			z, awst::NumericComparison::Ne, awst::makeBiguintConstant("0", loc), loc),
+			loc, "modulo by zero"), loc);
+		auto value = awst::makeBigUIntBinOp(std::move(x),
+			kind == Kind::AddMod ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Mult,
+			std::move(y), loc);
+		return awst::makeBigUIntBinOp(std::move(value), awst::BigUIntBinaryOperator::Mod, std::move(z), loc);
+	}
+	case Kind::GasLeft:
+		EvmFeaturePolicy::report(EvmFeature::GasLeft, ctx.typeMapper.profile(), loc);
+		return promoteToBiguint(awst::makeGlobal("OpcodeBudget", awst::WType::uint64Type(), loc), loc);
+	case Kind::Selfdestruct:
+	{
+		// Post-Cancun selfdestruct sends the balance without deleting the app.
+		if (!args.empty())
+		{
+			auto create = buildNativeClose(ctx.typeMapper.profile(), ctx.preEffects(), std::move(args[0]), loc);
+			static awst::WInnerTransaction payTxnType(1);
+			auto submit = awst::makeSubmitInnerTransaction(&payTxnType, loc);
+			submit->itxns.push_back(std::move(create));
+			ctx.queuePreExpression(std::move(submit), loc);
+		}
+		ctx.queuePreEffect(awst::makeReturnStatement(nullptr, loc));
+		return awst::makeVoidConstant(loc);
+	}
+	case Kind::ECRecover:
+		return buildEcrecover(ctx, args, loc);
+	default:
+		return nullptr;
+	}
 }
 
 } // namespace puyasol::builder::eb

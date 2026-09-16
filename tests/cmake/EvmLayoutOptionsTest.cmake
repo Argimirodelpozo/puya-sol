@@ -74,12 +74,11 @@ if(NOT help_result EQUAL 0)
     message(FATAL_ERROR "--help failed (${help_result}):\n${help_stderr}")
 endif()
 foreach(expected IN ITEMS
-    "--evm-memory-layout    UNAVAILABLE"
-    "--evm-layout           UNAVAILABLE"
-    "--evm-storage-layout   Back all storage"
+    "--evm-memory-layout +UNAVAILABLE"
+    "--evm-layout +UNAVAILABLE"
+    "--evm-storage-layout +Back all storage"
 )
-    string(FIND "${help_output}" "${expected}" match_index)
-    if(match_index EQUAL -1)
+    if(NOT help_output MATCHES "${expected}")
         message(FATAL_ERROR "--help is missing '${expected}'")
     endif()
 endforeach()

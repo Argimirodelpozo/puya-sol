@@ -4,7 +4,9 @@
 
 #include "builder/ast/SolExpressionFactory.h"
 #include "builder/context/ProgramAnalysis.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/target/EvmFeaturePolicy.h"
+#include "builder/target/ApplicationTarget.h"
 #include "builder/lowering/abi/Arc4Stdlib.h"
 #include "builder/lowering/intrinsics/AsaIntrinsics.h"
 #include "builder/lowering/calls/FunctionPointerBuilder.h"
@@ -56,13 +58,12 @@ public:
 		return projectFunctionValue(m_ctx, baseExpression(), m_wtype, m_loc,
 			[&](solidity::frontend::Expression const& source) -> std::shared_ptr<awst::Expression> {
 				using namespace solidity::frontend;
-				if (auto const* member = dynamic_cast<MemberAccess const*>(&source))
-					if (auto const* receiver = dynamic_cast<Identifier const*>(&member->expression());
-						receiver && receiver->name() == "this")
+				if (auto const* member = SolcFacts::expressionAs<MemberAccess>(&source))
+					if (SolcFacts::isThis(member->expression()))
 						return awst::makeGlobal("CurrentApplicationAddress", awst::WType::accountType(), m_loc);
 				auto pointer = m_ctx.pinIfWriteBacks(m_ctx.lower(source, false), m_loc);
-				return awst::makeAsAccount(awst::makeLeftPad(awst::makeExtract(
-					awst::makeAsBytes(std::move(pointer), m_loc), 0, 8, m_loc), 24, m_loc), m_loc);
+				return ApplicationTarget::pointerAddress(awst::makeBtoi(awst::makeExtract(
+					awst::makeAsBytes(std::move(pointer), m_loc), 0, 8, m_loc), m_loc), m_loc);
 			});
 	}
 };
@@ -82,7 +83,7 @@ public:
 			found != m_ctx.typeMapper.analysis().avmIntrinsics.end())
 		{
 			Logger::instance().error(
-				found->second + "." + m_funcDef->name()
+				m_funcDef->annotation().contract->name() + "." + m_funcDef->name()
 					+ " cannot be used as a function value; call it directly",
 				m_loc);
 			return awst::makeZero(m_loc);
@@ -104,20 +105,16 @@ public:
 			awstName = method->memberName;
 
 		// `C(addr).fn`: receiver address must flow into the fn pointer so
-		// `.address` returns the caller-supplied addr, not the self-sentinel (0).
+		// its identity survives assignment and crossing a call boundary.
 		std::shared_ptr<awst::Expression> receiverAddr;
 		if (m_callerFuncType
 			&& m_callerFuncType->kind() == solidity::frontend::FunctionType::Kind::External)
 		{
 			auto const& baseExpr = m_memberAccess.expression();
-			bool isSelf = false;
-			if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpr))
-				if (ident->name() == "this")
-					isSelf = true;
-			if (!isSelf)
+			if (!SolcFacts::isThis(baseExpr))
 			{
 				// `C(address(0x1234))` — evaluate the inner arg for the address bytes.
-				if (auto const* baseCall = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpr))
+				if (auto const* baseCall = SolcFacts::expressionAs<solidity::frontend::FunctionCall>(&baseExpr))
 				{
 					if (baseCall->annotation().kind.set()
 						&& *baseCall->annotation().kind

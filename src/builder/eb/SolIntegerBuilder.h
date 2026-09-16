@@ -35,9 +35,6 @@ public:
 	std::unique_ptr<InstanceBuilder> unary_op(
 		BuilderUnaryOp _op, awst::SourceLocation const& _loc) override;
 
-	std::unique_ptr<InstanceBuilder> bool_eval(
-		awst::SourceLocation const& _loc, bool _negate = false) override;
-
 	unsigned bits() const { return m_int.bits; }
 	bool isSigned() const { return m_int.isSigned; }
 	bool isBigUInt() const { return m_int.biguintBacked(); }
@@ -95,8 +92,8 @@ private:
 	std::unique_ptr<InstanceBuilder> buildBigUIntArithBitwiseOp(
 		BuilderBinaryOp _op, std::shared_ptr<awst::Expression> _lhs,
 		std::shared_ptr<awst::Expression> _rhs, awst::SourceLocation const& _loc);
-	/// uint64 (bits==64) UNCHECKED Add/Mult: the AVM opcodes panic on
-	/// overflow, so wide-compute via biguint mod 2^64 and narrow back.
+	/// Unchecked Add/Mult whose intermediate exceeds uint64: compute wide,
+	/// wrap to the solc result width, and narrow back.
 	std::unique_ptr<InstanceBuilder> buildUInt64WrappingAddMult(
 		BuilderBinaryOp _op, std::shared_ptr<awst::Expression> _lhs,
 		std::shared_ptr<awst::Expression> _rhs, awst::SourceLocation const& _loc);

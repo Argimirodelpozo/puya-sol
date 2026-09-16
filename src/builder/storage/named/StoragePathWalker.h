@@ -42,6 +42,12 @@ public:
 		StorageHolder _holder, std::shared_ptr<awst::Expression> _index,
 		std::vector<std::shared_ptr<awst::Statement>>& _pre);
 
+	/// Check a sequenced index against the solc length, then narrow for AVM.
+	static std::shared_ptr<awst::Expression> checkedArrayIndex(
+		solidity::frontend::ArrayType const& _type,
+		std::shared_ptr<awst::Expression> _index, std::shared_ptr<awst::Expression> _dynamicLength,
+		std::vector<std::shared_ptr<awst::Statement>>& _pre, awst::SourceLocation const& _loc);
+
 	/// Struct member projection; a transparent single-struct wrapper adds no step.
 	static StorageHolder member(
 		StorageHolder _base, solidity::frontend::StructType const& _type,

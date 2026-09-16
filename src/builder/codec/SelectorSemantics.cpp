@@ -84,8 +84,6 @@ awst::ARC4Struct const* SelectorSemantics::eventType(TypeMapper& types, EventDef
 std::vector<SelectorRoute> SelectorSemantics::routes(eb::ContractContext& _ctx)
 {
 	std::vector<SelectorRoute> result;
-	if (!enabled(_ctx.typeMapper))
-		return result;
 
 	std::set<std::string> seen;
 	std::vector<ContractDefinition const*> contracts;

@@ -196,7 +196,7 @@ int main()
 	auto targets = puyasol::cli::BackendTargets::collect(roots, error);
 	if (!require(targets.has_value(), "valid target inventory: " + error)) return 1;
 	ok &= require(targets->ids() == std::vector<std::string>{contract->id}
-		&& targets->requiredFiles().size() == 4 && !targets->owns("Target.sol"),
+		&& targets->requiredFiles().size() == 5 && !targets->owns("Target.sol"),
 		"one inventory must supply identity, required files and ownership");
 	ok &= require(puyasol::cli::prepareBackendTargetArtifacts(
 		tempDir.string(), *targets, error),
@@ -210,9 +210,14 @@ int main()
 	writeBytes(tempDir / "Target.clear.bin", {2});
 	writeText(tempDir / "Target.approval.teal", "#pragma version 12\n");
 	writeText(tempDir / "Target.clear.teal", "#pragma version 12\n");
+	std::vector<puyasol::artifact::Record> backendRecords;
+	error.clear();
+	ok &= require(!puyasol::cli::collectBackendTargetArtifacts(
+		tempDir.string(), *targets, backendRecords, error),
+		"missing requested ARC56 must fail backend completion");
 	writeText(tempDir / "Target.arc56.json", "{}\n");
 	writeText(tempDir / "Target.000.ssa.ir", "block:\n");
-	std::vector<puyasol::artifact::Record> backendRecords;
+	backendRecords.clear();
 	error.clear();
 	ok &= require(puyasol::cli::collectBackendTargetArtifacts(
 		tempDir.string(), *targets, backendRecords, error),
@@ -285,6 +290,7 @@ int main()
 		{
 			for (auto const& name: {"Target.approval.bin", "Target.clear.bin", "Target.approval.teal", "Target.clear.teal"})
 				writeText(directory / name, "fresh");
+			writeText(directory / "Target.arc56.json", "{}");
 			ok &= require(publisher.finishBackend({}) && phase() == "backend-complete",
 				"only validated backend outputs may commit completion: " + publisher.error());
 		}

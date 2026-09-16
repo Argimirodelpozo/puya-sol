@@ -11,6 +11,8 @@
 namespace puyasol::builder::eb
 {
 
+struct Intrinsic;
+
 /// Intercepts calls to the libraries in `libs/AVM.sol` and maps them to
 /// AVM-native AWST. Short-circuits before CallResolver so fail-fast Solidity
 /// bodies are not used as runtime subroutines.
@@ -19,7 +21,7 @@ class AsaIntrinsics
 public:
 	/// Validate the canonical source unit, library and resolved signature once
 	/// during program analysis. Call sites use the resulting declaration IDs.
-	static std::string facadeLibrary(solidity::frontend::FunctionDefinition const& _function);
+	static Intrinsic const* descriptor(solidity::frontend::FunctionDefinition const& _function);
 	/// Try to handle `<base>.<member>(...)`; returns built expression iff
 	/// base is an AVM stdlib library and member is a known intrinsic.
 	/// Returns nullopt to fall through to the generic resolver.

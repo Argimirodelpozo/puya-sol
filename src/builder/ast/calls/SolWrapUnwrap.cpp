@@ -14,7 +14,7 @@ std::shared_ptr<awst::Expression> SolWrapUnwrap::toAwst()
 	}
 	auto val = buildExpr(*m_call.arguments()[0]);
 	auto* targetType = m_ctx.typeMapper.map(m_call.annotation().type);
-	return TypeCoercion::implicitNumericCast(std::move(val), targetType, m_loc);
+	return TypeCoercion::coerceScalar(std::move(val), targetType, m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

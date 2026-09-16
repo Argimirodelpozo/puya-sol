@@ -12,7 +12,6 @@ namespace puyasol::builder::eb
 /// Handles:
 ///   - binary_op: BitOr (|), BitXor (^), BitAnd (&) → BytesBinaryOperation
 ///   - compare: Eq/Ne → BytesComparisonExpression, Lt/Gt/etc. → b</b>/b<=/b>=
-///   - bool_eval: bytes != zero
 class SolFixedBytesBuilder: public InstanceBuilder
 {
 public:
@@ -30,9 +29,6 @@ public:
 	std::unique_ptr<InstanceBuilder> compare(
 		InstanceBuilder& _other, BuilderComparisonOp _op,
 		awst::SourceLocation const& _loc) override;
-
-	std::unique_ptr<InstanceBuilder> bool_eval(
-		awst::SourceLocation const& _loc, bool _negate = false) override;
 
 	unsigned numBytes() const { return m_numBytes; }
 

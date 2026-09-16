@@ -1,0 +1,218 @@
+bringing up nodes...
+bringing up nodes...
+
+..............................x......................................... [  2%]
+.x...........X..XXXX.XX.X..X....X..XX.X.XX.xXX.X.X.X.x.X..XX.X.X..xXX..x [  5%]
+......................x..........................xxx.................... [  7%]
+.......x....................................x..x..x........FF........... [ 10%]
+......................xx...x....x..xx...x................F....F......... [ 12%]
+........................................................................ [ 15%]
+...........X............x.........................................x..... [ 17%]
+....x.......xx.............x.x....X...F.x............x.................. [ 20%]
+....x................x.x......x............................x.x.....x.... [ 22%]
+x..........F...........X.X..........................X...........x....... [ 25%]
+.x....................................................x..............F.. [ 28%]
+.....................................xxx.xxxx.xx........................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 35%]
+........................................................................ [ 38%]
+........FF..........F.
+=================================== FAILURES ===================================
+________________________ test_int128_every_read_surface ________________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/conversions/test_conversions.py:309: in test_int128_every_read_surface
+    assert as_signed_int(harness.call(app, fn).abi_return) == exp, (v, fn)
+E   AssertionError: (-5, 'rState()')
+E   assert 0 == -5
+E    +  where 0 = as_signed_int(0)
+E    +    where 0 = Result(abi_return=0, logs=[b'\x15\x1f|u\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0...raw_response=<algosdk.atomic_transaction_composer.AtomicTransactionResponse object at 0x796036a05bb0>, fail_message='').abi_return
+E    +      where Result(abi_return=0, logs=[b'\x15\x1f|u\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0...raw_response=<algosdk.atomic_transaction_composer.AtomicTransactionResponse object at 0x796036a05bb0>, fail_message='') = call(<framework.harness.App object at 0x796036aac2c0>, 'rState()')
+E    +        where call = <framework.harness.Harness object at 0x796036a0a600>.call
+----------------------------- Captured stdout call -----------------------------
+[call] setAll FAILED after retries: TransactionPool.Remember: transaction 2DHHXC5QPQOPFW53SSUXR44PQVISRB7XP3T3MPSDBKSOWUR4Q4IQ: logic eval error: invalid Box reference 0xb68bfea7df9a192594e158bbdce65e996b35ff684a5671772945ee92c3844a15. Details: app=3248529, pc=2442, opcodes=app_global_put; bytec 9 // addr W2F75J67TIMSLFHBLC55ZZS6TFVTL
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction FNIH7C262H5DURXXTEFEFMJG2HGFAO3QUGMEVR2UJHOCP5ZUE7PA: logic eval error: assert failed pc=2562. Details: app=3248529, pc=2562, opcodes=bytec 10 // "farr"; app_global_get_ex; assert
+________________________ test_struct_field_call_shapes _________________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/conversions/test_conversions.py:329: in test_struct_field_call_shapes
+    assert tuple(as_int(x) for x in harness.call(app, "destructure()").abi_return) == (11, 22, 1)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not iterable
+----------------------------- Captured stdout call -----------------------------
+[call] destructure FAILED after retries: TransactionPool.Remember: transaction 27UKPYQTYJRMCBPRRL2OFOLJTBGB3BKH3G2V54HMEC6RC6RI4FDQ: logic eval error: assert failed pc=3828. Details: app=3248541, pc=3828, opcodes=bytec 6 // "p"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction Z6XYTFKN5VFESB5FPRKVJ5UCN6WDGJSNQKJUK47RCVU7CAPIZULA: logic eval error: assert failed pc=3828. Details: app=3248541, pc=3828, opcodes=bytec 6 // "p"; app_global_get_ex; assert
+______________________ test_struct_with_external_function ______________________
+[gw2] linux -- Python 3.12.12 /usr/bin/python3.12
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:106: in algod_request
+    resp = urlopen(req, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:521: in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:630: in http_response
+    response = self.parent.error(
+/usr/lib/python3.12/urllib/request.py:559: in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:639: in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+E   urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+During handling of the above exception, another exception occurred:
+framework/deploy.py:278: in deploy
+    txid = algod.send_transaction(signed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:344: in send_transaction
+    return self.send_raw_transaction(
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:371: in send_raw_transaction
+    resp = self.algod_request("POST", req, data=txn_bytes, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/localnet.py:33: in _patient_request
+    return _algod_request(method, requrl, params, data, headers,
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:116: in algod_request
+    raise error.AlgodHTTPError(m, code, j.get("data"))
+E   algosdk.error.AlgodHTTPError: TransactionPool.Remember: transaction YQOJQ2644YW5YWXS2GOXJZ5QNJZOZNOGYT7LKBDSUAMX7BRTJWHQ: logic eval error: assert failed pc=159. Details: app=3249152, pc=159, opcodes=concat; swap; assert
+
+The above exception was the direct cause of the following exception:
+tests/functionTypes/test_functionTypes.py:259: in test_struct_with_external_function
+    app = harness.compile_and_deploy("functionTypes/contracts/struct_with_external_function.sol")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/harness.py:177: in compile_and_deploy
+    return self.deploy(
+framework/harness.py:143: in deploy
+    deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/deploy.py:282: in deploy
+    raise DeployError("create txn failed: "
+E   framework.deploy.DeployError: create txn failed: TransactionPool.Remember: transaction YQOJQ2644YW5YWXS2GOXJZ5QNJZOZNOGYT7LKBDSUAMX7BRTJWHQ: logic eval error: assert failed pc=159. Details: app=3249152, pc=159, opcodes=concat; swap; assert
+__________________________ test_struct_with_functions __________________________
+[gw2] linux -- Python 3.12.12 /usr/bin/python3.12
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:106: in algod_request
+    resp = urlopen(req, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:521: in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:630: in http_response
+    response = self.parent.error(
+/usr/lib/python3.12/urllib/request.py:559: in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:639: in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+E   urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+During handling of the above exception, another exception occurred:
+framework/deploy.py:278: in deploy
+    txid = algod.send_transaction(signed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:344: in send_transaction
+    return self.send_raw_transaction(
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:371: in send_raw_transaction
+    resp = self.algod_request("POST", req, data=txn_bytes, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/localnet.py:33: in _patient_request
+    return _algod_request(method, requrl, params, data, headers,
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:116: in algod_request
+    raise error.AlgodHTTPError(m, code, j.get("data"))
+E   algosdk.error.AlgodHTTPError: TransactionPool.Remember: transaction TEJQR3HQV6WW2EM273SYTPE2GA5VIRMFGXS7V7JRK6FUJC33ECNA: logic eval error: assert failed pc=136. Details: app=3249239, pc=136, opcodes=concat; swap; assert
+
+The above exception was the direct cause of the following exception:
+tests/functionTypes/test_functionTypes.py:266: in test_struct_with_functions
+    app = harness.compile_and_deploy("functionTypes/contracts/struct_with_functions.sol")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/harness.py:177: in compile_and_deploy
+    return self.deploy(
+framework/harness.py:143: in deploy
+    deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/deploy.py:282: in deploy
+    raise DeployError("create txn failed: "
+E   framework.deploy.DeployError: create txn failed: TransactionPool.Remember: transaction TEJQR3HQV6WW2EM273SYTPE2GA5VIRMFGXS7V7JRK6FUJC33ECNA: logic eval error: assert failed pc=136. Details: app=3249239, pc=136, opcodes=concat; swap; assert
+_________________ test_conditional_expression_storage_memory_2 _________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/expressions/test_expressions.py:82: in test_conditional_expression_storage_memory_2
+    assert as_int(r.abi_return) == 1
+           ^^^^^^^^^^^^^^^^^^^^
+framework/values.py:137: in as_int
+    raise AssertionError(
+E   AssertionError: call returned no value because it REVERTED: transaction IQV3SBU27MJBSZU62RGH3L7EPTGJWSXD4XPZQSTQGLRCZF2XUVDQ: logic eval error: assert failed pc=486. Details: app=3252618, pc=486, opcodes=bytec_0 // "data1"; app_global_get_ex; assert
+----------------------------- Captured stdout call -----------------------------
+[call] f FAILED after retries: TransactionPool.Remember: transaction 6F4J6WNQCJCH2Q2U5QR7W33IU43ICS7MRSYGDHTLGXGLH325HC3A: logic eval error: assert failed pc=486. Details: app=3252618, pc=486, opcodes=bytec_0 // "data1"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction MEUTSYWKYRTXOMPLQMQ6STNLH2LMG7TTWTTQKVM54BDTJJQGZF3Q: logic eval error: assert failed pc=486. Details: app=3252618, pc=486, opcodes=bytec_0 // "data1"; app_global_get_ex; assert
+_____________________ test_keccak256_packed_complex_types ______________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/builtinFunctions/test_builtinFunctions.py:314: in test_keccak256_packed_complex_types
+    assert tuple(as_int(x) for x in r.abi_return) == (0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xe7490fade3a8e31113ecb6c0d2635e28a6f5ca8359a57afe914827f41ddf0848,)
+                                    ^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not iterable
+----------------------------- Captured stdout call -----------------------------
+[call] f FAILED after retries: TransactionPool.Remember: transaction ZAO6WBNINNXXO3MLFT5BVOGY2FEPX22DVATDCSNKEHCVF3ET444A: logic eval error: assert failed pc=315. Details: app=3253848, pc=315, opcodes=bytec_2 // "x"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction Q76HXX55F5DUE7VFDAY3ILD766PZAVFJY7RKTLV663GGCXOIXETQ: logic eval error: assert failed pc=315. Details: app=3253848, pc=315, opcodes=bytec_2 // "x"; app_global_get_ex; assert
+_______________ test_external_call_with_storage_array_parameter ________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/libraries/test_libraries.py:47: in test_external_call_with_storage_array_parameter
+    assert as_int(r.abi_return) == 16
+           ^^^^^^^^^^^^^^^^^^^^
+framework/values.py:137: in as_int
+    raise AssertionError(
+E   AssertionError: call returned no value because it REVERTED: transaction GTB33VNFEBLDAZYUAJ4ND7J7GGZC7OITQK6XGA5PEQXPMLKR45XA: logic eval error: assert failed pc=293. Details: app=3260098, pc=293, opcodes=bytec_0 // "x"; app_global_get_ex; assert
+----------------------------- Captured stdout call -----------------------------
+[call] g FAILED after retries: TransactionPool.Remember: transaction ZC5P4BEU3S3E77QPNTSNKOQ5Q4P5O5ZYUNZT27J377E5YCCCFWVA: logic eval error: assert failed pc=293. Details: app=3260098, pc=293, opcodes=bytec_0 // "x"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction XCQ3SQDGYR5CBDJ6JAJYPGEXKEKLD3WGRSCNZ4SVIHGCAHR4GFLA: logic eval error: assert failed pc=293. Details: app=3260098, pc=293, opcodes=bytec_0 // "x"; app_global_get_ex; assert
+______________________ test_assignment_order[False-False] ______________________
+[gw2] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_assignment_incdec.py:25: in test_assignment_order
+    assert tuple(map(as_int, result)) == (3, 12 if compound else 5, 1)
+                 ^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not iterable
+----------------------------- Captured stdout call -----------------------------
+[call] storageOrder FAILED after retries: TransactionPool.Remember: transaction O2MWRTHHGOWWFLS2ISOUGRNIG2G4V2SV76INUIVZYQMD6OJLLG6Q: logic eval error: assert failed pc=943. Details: app=3275752, pc=943, opcodes=bytec_0 // "stored"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction YPEFR4THHLJQKNY3OKUH2LSNOR4Z4YCK3TVJDPQ44SFTVGCUDKHA: logic eval error: assert failed pc=943. Details: app=3275752, pc=943, opcodes=bytec_0 // "stored"; app_global_get_ex; assert
+______________________ test_assignment_order[False-True] _______________________
+[gw2] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_assignment_incdec.py:25: in test_assignment_order
+    assert tuple(map(as_int, result)) == (3, 12 if compound else 5, 1)
+                 ^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not iterable
+----------------------------- Captured stdout call -----------------------------
+[call] storageOrder FAILED after retries: TransactionPool.Remember: transaction IO4QS3QVNQ4U3276Q7DKA6HYMMP4HOGGGJEV3APE4P74OSAIQ5YA: logic eval error: assert failed pc=943. Details: app=3275758, pc=943, opcodes=bytec_0 // "stored"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction NBA4HVNANJJYWFQLCML3SRX2BMNGYM6KQJK6KZ3JHNGEGFGNGUOQ: logic eval error: assert failed pc=943. Details: app=3275758, pc=943, opcodes=bytec_0 // "stored"; app_global_get_ex; assert
+__________________ test_expression_effects[legacy-named-arc4] __________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_expression_lowering.py:128: in test_expression_effects
+    check("tupleTargets(bool)", [compound], (5, 9, 2))
+tests/puyasolRegression/test_expression_lowering.py:40: in check
+    assert result.reverted == fail, (signature, arguments, result.fail_message)
+E   AssertionError: ('tupleTargets(bool)', [False], 'transaction O7B74PNFCTYZ66N77CD4GLPKQJ3J5LVSGHHVAJKXYQKYRRI6KP2A: logic eval error: assert failed pc=1763. Details: app=3276602, pc=1763, opcodes=bytec 10 // "slots"; app_global_get_ex; assert')
+E   assert True == False
+E    +  where True = Result(abi_return=None, logs=[], reverted=True, revert_data=b'', revert_reason=RawRevert(data=b''), raw_response='Tran...l error: assert failed pc=1763. Details: app=3276602, pc=1763, opcodes=bytec 10 // "slots"; app_global_get_ex; assert').reverted
+----------------------------- Captured stdout call -----------------------------
+[call] tupleTargets FAILED after retries: TransactionPool.Remember: transaction BOXW4FFBMJNA7TV6G6R75XOGPAV36QDNZ6QCO3LJQSJULY43N5KQ: logic eval error: assert failed pc=1763. Details: app=3276602, pc=1763, opcodes=bytec 10 // "slots"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction BRXQX7RACBNLCEIQY5ZQ2PIPMHIUDWXDYGROQVRJDAWK4SLCYV2A: logic eval error: assert failed pc=1763. Details: app=3276602, pc=1763, opcodes=bytec 10 // "slots"; app_global_get_ex; assert
+=========================== short test summary info ============================
+FAILED tests/conversions/test_conversions.py::test_int128_every_read_surface
+FAILED tests/conversions/test_conversions.py::test_struct_field_call_shapes
+FAILED tests/functionTypes/test_functionTypes.py::test_struct_with_external_function
+FAILED tests/functionTypes/test_functionTypes.py::test_struct_with_functions
+FAILED tests/expressions/test_expressions.py::test_conditional_expression_storage_memory_2
+FAILED tests/builtinFunctions/test_builtinFunctions.py::test_keccak256_packed_complex_types
+FAILED tests/libraries/test_libraries.py::test_external_call_with_storage_array_parameter
+FAILED tests/puyasolRegression/test_assignment_incdec.py::test_assignment_order[False-False]
+FAILED tests/puyasolRegression/test_assignment_incdec.py::test_assignment_order[False-True]
+FAILED tests/puyasolRegression/test_expression_lowering.py::test_expression_effects[legacy-named-arc4]
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/usr/lib/python3.12/threading.py:359: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+10 failed, 1010 passed, 50 xfailed, 32 xpassed in 297.10s (0:04:57)

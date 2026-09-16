@@ -329,6 +329,7 @@ def _collect_backend_records(out_dir: Path) -> list[dict]:
                 ".clear.bin",
                 ".approval.teal",
                 ".clear.teal",
+                ".arc56.json",
             )
         elif root.get("_type") == "LogicSignature":
             targets[root["short_name"]] = (".bin", ".teal")

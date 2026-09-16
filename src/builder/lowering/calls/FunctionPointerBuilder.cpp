@@ -6,6 +6,7 @@
 #include "builder/solc/FunctionIdentity.h"
 #include "builder/target/ApplicationTarget.h"
 #include "builder/lowering/itxn/ApplicationCall.h"
+#include "builder/lowering/itxn/NativePayment.h"
 #include "awst/NameGen.h"
 #include "builder/target/EvmFeaturePolicy.h"
 #include "builder/codec/SelectorSemantics.h"
@@ -66,15 +67,14 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 
 	awst::pushCallArg(call->args, "__funcptr_id", std::move(_ptrIdExpr));
 
-	// EVM write protection: a view/pure-typed pointer runs its target in a
-	// static context — dispatching to a NON-view target (only reachable by
-	// laundering the id through asm) must revert like a failed staticcall.
-	// The dispatch's non-view arms assert on this flag.
-	bool staticCtx = _funcType
+	// Only external view/pure calls create an EVM static context. Internal
+	// pointers jump without changing the caller's execution context.
+	bool staticCtx = isExternalFunctionPointer(_funcType)
 		&& (_funcType->stateMutability() == StateMutability::View
 			|| _funcType->stateMutability() == StateMutability::Pure);
 	awst::pushCallArg(call->args, "__static",
-		awst::makeIntegerConstant(staticCtx ? uint64_t{1} : uint64_t{0}, _loc));
+		staticCtx ? awst::makeIntegerConstant("1", _loc)
+			: ApplicationCall::staticContext(_ctx.typeMapper, _loc));
 
 	for (size_t i = 0; i < _args.size(); ++i)
 	{
@@ -203,8 +203,6 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 
 	if (isExternal)
 	{
-		bool const evmContractAbi =
-			_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm;
 		// Compatibility layout: appId[8] ++ ARC4-selector[4]. Under
 		// --evm-selectors the pointer carries appId[8] ++ Solidity-selector[4]
 		// ++ ARC4-selector[4], keeping language and transport identities distinct.
@@ -279,7 +277,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 	std::shared_ptr<awst::Expression> _ptrExpr,
 	FunctionType const* _funcType,
 	std::vector<std::shared_ptr<awst::Expression>> _args,
-	awst::SourceLocation const& _loc)
+	awst::SourceLocation const& _loc,
+	std::shared_ptr<awst::Expression> _callValue)
 {
 	if (!_funcType)
 		return nullptr;
@@ -317,6 +316,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		std::string selToIdName = "__sel_to_id_" + dispatchName(_funcType);
 		auto& registry = _ctx.functionPointers;
 		std::string const dname = dispatchName(_funcType);
+		registry.neededSelectorDispatches.insert(dname);
 		registry.neededDispatches[dname] = _funcType;
 		bool const rootContext = inRootContext(_ctx);
 		if (rootContext)
@@ -330,7 +330,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		awst::pushCallArg(selToIdCall->args, "__sel",
 			extractSlice(routeSelectorOffset, 4));
 
-		auto selfCall = buildDispatchCall(_ctx, _funcType, std::move(selToIdCall), _args, _loc);
+		std::shared_ptr<awst::Expression> selfCall = buildDispatchCall(_ctx, _funcType, std::move(selToIdCall), _args, _loc);
 		awst::WType const* retType = selfCall->wtype;
 
 		// Cross-contract selector chosen by the contract wire profile.
@@ -376,34 +376,24 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(std::move(argTypes), std::nullopt);
 		}
 
-		static awst::WInnerTransactionFields s_applFieldsType(6); // TxnTypeAppl
-		auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
-		create->fields["TypeEnum"] = awst::makeIntegerConstant("6", _loc);
-		create->fields["Fee"] = awst::makeZero(_loc);
-		// Reference zero must not invoke AVM's current-application alias.
-		create->fields["ApplicationID"] = ApplicationTarget::requireApplication(extractU64(0), _loc);
-		create->fields["OnCompletion"] = awst::makeZero(_loc);
-		create->fields["ApplicationArgs"] = std::move(argsTuple);
-
-		static awst::WInnerTransaction s_applTxnType(6);
-		auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
-		submit->itxns.push_back(std::move(create));
-
-		auto buildInnerTxnResult = [&](std::vector<std::shared_ptr<awst::Statement>>& out) {
-			auto payload = ApplicationCall::capture(_ctx.typeMapper, _loc, out);
-			return decodeExternalCallResult(_ctx.typeMapper, std::move(payload),
-				_funcType->returnParameterTypes(), retType, _loc, out);
-		};
-
 		auto ifStmt = awst::makeIfElse(isSelf, awst::makeBlock(_loc), awst::makeBlock(_loc), _loc);
+
+		// Self calls retain the acknowledged outer-msg.value adaptation;
+		// option effects have already executed even though no payment is emitted.
+		selfCall = ApplicationCall::withStaticContext(_ctx.typeMapper, std::move(selfCall),
+			_funcType->stateMutability() <= StateMutability::View, _loc, ifStmt->ifBranch->body);
+		auto& foreign = ifStmt->elseBranch->body;
+		auto app = awst::makeAsApplication(extractU64(0), _loc);
+		auto payment = _callValue ? buildNativePayment(_ctx.typeMapper.profile(),
+			foreign, app, std::move(_callValue), _loc) : nullptr;
+		auto payload = ApplicationCall::submit(_ctx.typeMapper, std::move(app),
+			std::move(argsTuple), std::move(payment), _loc, foreign);
 
 		if (retType == awst::WType::voidType())
 		{
 			ifStmt->ifBranch->body.push_back(awst::makeExpressionStatement(selfCall, _loc));
 			ApplicationCall::setReturnData(_ctx.typeMapper, awst::makeBytesConstant({}, _loc),
 				_loc, ifStmt->ifBranch->body);
-			ifStmt->elseBranch->body.push_back(awst::makeExpressionStatement(submit, _loc));
-			ApplicationCall::capture(_ctx.typeMapper, _loc, ifStmt->elseBranch->body);
 			_ctx.preEffects().push_back(std::move(ifStmt));
 			auto vc = awst::makeVoidConstant(_loc);
 			return vc;
@@ -419,9 +409,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		ApplicationCall::setTypedReturnData(_ctx.typeMapper,
 			awst::makeVarExpression(tmpName, retType, _loc), _funcType->returnParameterTypes(),
 			evmContractAbi, _loc, ifStmt->ifBranch->body);
-		ifStmt->elseBranch->body.push_back(awst::makeExpressionStatement(submit, _loc));
 		ifStmt->elseBranch->body.push_back(writeTmp(
-			buildInnerTxnResult(ifStmt->elseBranch->body)));
+			decodeExternalCallResult(_ctx.typeMapper, std::move(payload),
+				_funcType->returnParameterTypes(), retType, _loc, foreign)));
 		_ctx.preEffects().push_back(std::move(ifStmt));
 
 		return awst::makeVarExpression(tmpName, retType, _loc);
@@ -593,7 +583,10 @@ std::shared_ptr<awst::Block> buildDispatchEntryArm(
 		auto call = awst::makeSubroutineCall(
 			std::move(target), targetMethod ? targetMethod->returnType : dispatch.returnType, _loc);
 
-		bool const isPublic = targetMethod && targetMethod->arc4MethodConfig.has_value();
+		// ABI wrappers move routing config off this internally callable wire body.
+		bool const isPublic = targetMethod && entry->funcDef
+			&& entry->funcDef->isPartOfExternalInterface()
+			&& entry->name == CallResolver::resolveMethodName(_ctx, *entry->funcDef);
 		auto const* plan = entry->funcDef
 			? &_ctx.typeMapper.callBoundaryPlan(*entry->funcDef, _ctx.currentContract) : nullptr;
 		for (size_t i = 0; i < funcType->parameterTypes().size(); ++i)
@@ -660,7 +653,11 @@ awst::ContractMethod buildSelToIdMethod(
 		// is only reachable by internal identity, never through a self-call ABI.
 		if (_ctx.currentContract && entry->funcDef->annotation().contract
 			&& !entry->funcDef->annotation().contract->isLibrary()
-			&& &entry->funcDef->resolveVirtual(*_ctx.currentContract) != entry->funcDef)
+			&& std::none_of(_ctx.currentContract->interfaceFunctionList(true).begin(),
+				_ctx.currentContract->interfaceFunctionList(true).end(), [&](auto const& item) {
+					return item.second->hasDeclaration()
+						&& &item.second->declaration() == entry->funcDef;
+				}))
 			continue;
 		std::shared_ptr<awst::Expression> methodConst;
 		if (_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
@@ -713,6 +710,19 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 	if (registry.neededDispatches.empty())
 		return methods;
 
+	// A pointer taken through a base/interface still routes to this host's
+	// external override when its receiver is self. Internal virtual lookup
+	// cannot select it: legal external overrides may change data location.
+	if (_ctx.currentContract)
+		for (auto const& [_, entry]: registry.targets)
+		{
+			if (!entry.funcDef || !entry.funcDef->isPartOfExternalInterface()
+				|| !registry.neededSelectorDispatches.count(dispatchName(entry.funcType))) continue;
+			for (auto const& [selector, type]: _ctx.currentContract->interfaceFunctionList(true))
+				if (type->externalSignature() == entry.funcDef->externalSignature() && type->hasDeclaration())
+					if (auto const* target = dynamic_cast<FunctionDefinition const*>(&type->declaration()))
+						registerTarget(_ctx, target, type);
+		}
 	auto groups = collectDispatchGroups(registry, _ctx.currentContract);
 
 	for (auto const& [dname, entries] : groups)
@@ -791,8 +801,9 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 		methods.push_back(std::move(dispatch));
 
-		// __sel_to_id_<sig>: always generated, even for empty groups, so
-		// call-site references resolve.
+		// Only external pointer calls need selector lookup. Empty groups still
+		// get a helper so their call-site references resolve.
+		if (!registry.neededSelectorDispatches.count(dname)) continue;
 		auto selToId = buildSelToIdMethod(_ctx, _cref, dname, entries, _loc);
 		if (_outRootSubs && registry.neededRootDispatches.count(dname))
 		{

@@ -177,8 +177,8 @@ public:
 	/// Extract function name from a Yul FunctionName (Identifier or BuiltinName).
 	std::string getFunctionName(solidity::yul::FunctionName const& _name) const;
 
-	/// AWST name for a Yul external ref: locals + fn-ptr .selector/.address → mangled via
-	/// _declName; state vars/constants/.slot/.offset/.length → bare Yul name.
+	/// AWST name for a Yul external ref: locals, function members and calldata
+	/// coordinates use _declName; state vars/constants/storage coordinates stay bare.
 	/// Shared by resolveVarRef and SolInlineAssembly augmentedParams keying.
 	static std::string externalRefAwstName(
 		solidity::frontend::InlineAssemblyAnnotation::ExternalIdentifierInfo const& _info,
@@ -1462,12 +1462,6 @@ private:
 		awst::WType const* returnType = nullptr;
 
 		std::vector<solidity::frontend::Type const*> returnSolTypes;
-
-		std::string arrayParamName;
-
-		awst::WType const* arrayParamType = nullptr;
-
-		int64_t arrayParamSize = 0;
 
 		/// Expression-level side effects waiting to be prepended; drained by statement handlers.
 		std::vector<std::shared_ptr<awst::Statement>> pendingStatements;

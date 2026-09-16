@@ -24,7 +24,7 @@ AbiCall::AbiCall(FunctionCall const& call)
 	// multiple call arguments. Match TypeChecker::typeCheckABIEncodeCallFunction.
 	if (dynamic_cast<TupleType const*>(call.arguments()[1]->annotation().type))
 	{
-		auto const* tuple = dynamic_cast<TupleExpression const*>(call.arguments()[1].get());
+		auto const* tuple = SolcFacts::expressionAs<TupleExpression>(call.arguments()[1].get());
 		if (!tuple) throw std::logic_error("encodeCall tuple is not inline");
 		arguments.assign(tuple->components().begin(), tuple->components().end());
 	}
@@ -74,7 +74,7 @@ std::shared_ptr<awst::Expression> handleEncodeWithSignature(
 	auto const& args = call.arguments();
 	if (args.empty()) throw std::logic_error("Missing ABI signature");
 	std::shared_ptr<awst::Expression> selector;
-	if (auto const* literal = dynamic_cast<Literal const*>(args[0].get()))
+	if (auto const* literal = SolcFacts::expressionAs<Literal>(args[0].get()))
 		selector = awst::makeBytesConstant(SolcFacts::externalSelector(literal->value()),
 			loc, awst::BytesEncoding::Base16, awst::WType::bytesType());
 	else

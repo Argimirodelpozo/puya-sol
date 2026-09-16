@@ -177,11 +177,9 @@ uint64_t AssemblyBuilder::calldataHeadSizeOf(
 namespace
 {
 
-// Element/field wtype of an array/struct wtype (native ReferenceArray or ARC4).
+// Element wtype of an ARC4 array, or the input type for a scalar.
 awst::WType const* arrayElementWtype(awst::WType const* _w)
 {
-	if (auto const* ra = dynamic_cast<awst::ReferenceArray const*>(_w))
-		return ra->elementType();
 	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_w))
 		return sa->elementType();
 	if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(_w))
@@ -239,13 +237,7 @@ bool AssemblyBuilder::isDynamicCalldataType(awst::WType const* _type) const
 	if (!_type) return false;
 	if (_type == awst::WType::bytesType()) return true;
 	if (_type == awst::WType::stringType()) return true;
-	if (arc4IsDynamic(_type)) return true;
-	if (_type->kind() == awst::WTypeKind::ReferenceArray)
-	{
-		auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(_type);
-		return refArr && !refArr->arraySize().has_value();
-	}
-	return false;
+	return arc4IsDynamic(_type);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::calldataDynOffset(

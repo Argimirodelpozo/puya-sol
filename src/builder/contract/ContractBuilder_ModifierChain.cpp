@@ -6,6 +6,7 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/types/CallBoundaryPlan.h"
+#include "builder/types/ConversionPlan.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -314,7 +315,7 @@ ContractBuilder::modifierMemoryRootParams(FunctionDefinition const& _func) const
 		for (size_t i = 0; i < arguments->size() && i < parameters.size(); ++i)
 			if (isMemoryReference(*parameters[i]))
 				for (auto const* source: SolcFacts::referenceSources(*(*arguments)[i]))
-					if (auto const* id = dynamic_cast<Identifier const*>(source))
+					if (auto const* id = SolcFacts::expressionAs<Identifier>(source))
 						if (auto const* declaration = id->annotation().referencedDeclaration;
 							declaration && candidates.count(declaration->id()))
 							used.insert(declaration->id());
@@ -363,17 +364,16 @@ void ContractBuilder::bindModifierArguments(
 		// runtime SLOT-HANDLE vars under the PLAIN param name (what
 		// isSlotHandleLocal reads resolve). Building the arg would
 		// materialise the aggregate; the alias below is the retired
-		// named-cell model. Identifier args resolve purely.
+		// named-cell model. Resolve the storage place, not its materialized value.
 		if (m_typeMapper.profile().evmStorageLayout
 			&& param->referenceLocation()
-				== solidity::frontend::VariableDeclaration::Location::Storage
-			&& dynamic_cast<solidity::frontend::Identifier const*>(
-				(*args)[pi].get()))
+				== solidity::frontend::VariableDeclaration::Location::Storage)
 		{
 			sol_ast::EvmSlotLowering low(
 				*m_exprBuilder, *m_exprBuilder->currentScope, modLoc);
 			if (auto addr = low.resolve(*(*args)[pi]))
 			{
+				m_exprBuilder->appendEffectsTo(_modBody.body);
 				_modBody.body.push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression(param->name(),
 						awst::WType::biguintType(), modLoc),
@@ -442,12 +442,9 @@ void ContractBuilder::bindModifierArguments(
 			continue;
 		}
 
-		argExpr = TypeCoercion::implicitNumericCast(std::move(argExpr), paramType, modLoc);
-		// `onlyRole(MINTER_ROLE)` binds keccak256(...) — wtype unsized
-		// `bytes` — to a `bytes32` param. Bytes are right, label is not,
-		// and puya rejects the mismatch outright.
-		argExpr = TypeCoercion::relabelUnsizedBytes(
-			std::move(argExpr), paramType, modLoc);
+		argExpr = ConversionPlan((*args)[pi]->annotation().type, param->type(),
+			paramType, ConversionPlan::Context::Argument).emit(
+				std::move(argExpr), modLoc, &m_exprBuilder->preEffects());
 
 		// A modifier ARGUMENT can be a side-effecting expression — a ternary
 		// with a checked/negate branch (`mod(a > 0 ? a : -a)`), a checked op —

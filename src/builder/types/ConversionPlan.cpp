@@ -23,7 +23,7 @@ std::shared_ptr<awst::Expression> ConversionPlan::emit(
 		if (_value->wtype == awst::WType::accountType()
 			|| (_value->wtype && _value->wtype->kind() == awst::WTypeKind::Bytes))
 			_value = awst::makeAsBiguint(std::move(_value), _loc);
-		_value = TypeCoercion::implicitNumericCast(std::move(_value), m_targetRepresentation, _loc);
+		_value = TypeCoercion::coerceScalar(std::move(_value), m_targetRepresentation, _loc);
 		bool const wide = m_targetRepresentation == awst::WType::biguintType();
 		if (source && source->isSigned && source->bits < target.bits)
 			return wide ? TypeCoercion::signExtendToUint256(std::move(_value), source->bits, _loc)
@@ -100,6 +100,25 @@ std::shared_ptr<awst::Expression> ConversionPlan::emit(
 	}
 	_value = TypeCoercion::coerceForAssignment(
 		std::move(_value), m_targetRepresentation, _loc, _pre);
+	if (m_context == Context::AbiArgument)
+		if (auto const* integer = dynamic_cast<solidity::frontend::IntegerType const*>(targetType))
+			_value = TypeCoercion::coerceToCommonInt(
+				std::move(_value), integer, m_targetRepresentation, _loc);
+	if (m_context == Context::AbiArgument || m_context == Context::AbiReinterpret)
+		if (auto const* enumeration = dynamic_cast<solidity::frontend::EnumType const*>(targetType))
+		{
+			// solc's enum ABI cleanup validates even an unused callee argument.
+			// CheckedMaybe keeps the assert in expression-only conversion sites.
+			static awst::WTuple checkedType({awst::WType::uint64Type(), awst::WType::boolType()});
+			auto value = awst::makeEvalOnce(std::move(_value), _loc);
+			auto pair = awst::makeTupleExpression(&checkedType, _loc);
+			pair->items = {value, awst::makeNumericCompare(value, awst::NumericComparison::Lt,
+				awst::makeIntegerConstant(enumeration->numberOfMembers(), _loc), _loc)};
+			auto checked = awst::makeNode<awst::CheckedMaybe>(_loc, m_targetRepresentation);
+			checked->expr = std::move(pair);
+			checked->comment = "enum ABI argument out of range";
+			_value = std::move(checked);
+		}
 	return TypeCoercion::signExtendSignedWiden(
 		std::move(_value), sourceType, targetType, _loc);
 }

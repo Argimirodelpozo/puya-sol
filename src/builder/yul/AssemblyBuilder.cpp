@@ -109,9 +109,6 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	context.stateVarSlots = _stateVarSlots;
 	context.externalRefs = _assembly.externalReferences;
 	context.declName = std::move(_declName);
-	m_frame.arrayParamName.clear();
-	m_frame.arrayParamType = nullptr;
-	m_frame.arrayParamSize = 0;
 	m_frame.signedShadow.clear();
 	m_frame.haltEmitted = false;
 
@@ -131,21 +128,6 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	// / a dynamic param's .offset|.length. Blob is emitted in the prelude below, after array-param init.
 	m_frame.useSyntheticCalldata = detectDynamicCalldataAccess(_block)
 		|| !yulFacts.calldataFunctions.empty();
-
-	// Detect array parameter for blob initialization
-	for (auto const& [name, type]: _params)
-	{
-		if (type && type->kind() == awst::WTypeKind::ReferenceArray)
-		{
-			auto const* refArray = dynamic_cast<awst::ReferenceArray const*>(type);
-			if (!refArray)
-				continue;
-			m_frame.arrayParamName = name;
-			m_frame.arrayParamType = type;
-			m_frame.arrayParamSize = refArray->arraySize().value_or(0);
-			break;
-		}
-	}
 
 	// solc owns Yul function discovery, reachability, and recursion semantics.
 	context.asmFunctions = yulFacts.functions;
@@ -406,23 +388,6 @@ void AssemblyBuilder::initializeMemoryBlob(
 		initCalldataPointerLocals(_out, loc);
 	}
 
-	// Write array param elements into blob at 0x80 + i*0x20
-	if (!m_frame.arrayParamName.empty() && m_frame.arrayParamSize > 0)
-	{
-		for (int64_t i = 0; i < m_frame.arrayParamSize; ++i)
-		{
-			uint64_t offset = 0x80 + static_cast<uint64_t>(i) * 0x20;
-
-			// Access param[i]
-			auto base = awst::makeVarExpression(m_frame.arrayParamName, m_frame.arrayParamType, loc);
-			auto index = awst::makeIntegerConstant(i, loc);
-			auto indexExpr = awst::makeIndexExpression(std::move(base), std::move(index), awst::WType::biguintType(), loc);
-			auto padded = padTo32Bytes(std::move(indexExpr), loc);
-			// Slot-routed: element 125 onwards sits past 4096 (0x80 + i*0x20),
-			// which the old slot-0 replace3 wrote off the end of slot 0.
-			writeMemWordConst(offset, std::move(padded), loc, _out);
-		}
-	}
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::memoryVar(awst::SourceLocation const& _loc)

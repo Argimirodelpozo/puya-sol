@@ -2,6 +2,7 @@
 /// ARC4 codec facade from libs/AVM.sol, implemented without solc extensions.
 
 #include "builder/lowering/abi/Arc4Stdlib.h"
+#include "builder/solc/SolcFacts.h"
 
 #include "builder/lowering/abi/AbiEncoderBuilder.h"
 #include "Logger.h"
@@ -38,8 +39,8 @@ FunctionDefinition const* resolvedArc4Function(
 
 FunctionCall const* asAbiEncodeEnvelope(Expression const& _expression)
 {
-	auto const* expression = resolveOuterUnaryTuples(&_expression);
-	auto const* call = dynamic_cast<FunctionCall const*>(expression);
+	auto const* expression = &SolcFacts::unparenthesized(_expression);
+	auto const* call = SolcFacts::expressionAs<FunctionCall>(expression);
 	if (!call)
 		return nullptr;
 	auto const* functionType = dynamic_cast<FunctionType const*>(
@@ -51,11 +52,11 @@ FunctionCall const* asAbiEncodeEnvelope(Expression const& _expression)
 
 FunctionCall const* asArc4DecodeEnvelope(Expression const& _expression)
 {
-	auto const* expression = resolveOuterUnaryTuples(&_expression);
-	auto const* call = dynamic_cast<FunctionCall const*>(expression);
+	auto const* expression = &SolcFacts::unparenthesized(_expression);
+	auto const* call = SolcFacts::expressionAs<FunctionCall>(expression);
 	if (!call)
 		return nullptr;
-	auto const* memberAccess = dynamic_cast<MemberAccess const*>(&call->expression());
+	auto const* memberAccess = SolcFacts::expressionAs<MemberAccess>(&SolcFacts::functionExpression(call->expression()));
 	if (!memberAccess || !resolvedArc4Function(*memberAccess, "decode"))
 		return nullptr;
 	return call;

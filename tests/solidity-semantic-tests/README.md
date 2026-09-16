@@ -8,6 +8,220 @@ not as an active test runner.
 
 ## Recorded baseline
 
+### Parenthesized-expression boundaries — 2026-09-16
+
+This checkpoint on `rev-2` includes the preceding AST, lowering, core and
+typed-builder/contract audits. Structural expression queries now normalize
+solc's singleton grouping tuples through `SolcFacts::expressionAs`, retaining
+real tuples, holes, inline arrays, declaration identity and call options.
+A source guard catches new raw expression-shape pointer casts.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,719 |
+| Failed | 1 |
+| Expected failure (xfail) | 100 |
+| Unexpected pass (xpass) | 39 |
+| Total | 2,859 |
+
+The full LocalNet run took **743.24 seconds**, with
+`PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 2 --tb=short
+--junitxml=out/parenthesis-regressions/semantic.xml`. All **2,826 previous cases
+retain their individual outcomes**, and all **33 new configurations pass**.
+The only failure remains the known Puya DCE/divide-by-zero regression, not an
+accepted divergence. No ledger or cache reset was performed.
+
+Native CTests passed **24/24** in 2.56 seconds. Focused validation passed
+**41/41** in 14.88 seconds on a serial repeat; the first parallel run had one
+duplicate budget-helper transaction infrastructure failure. The pinned-solc
+runtime oracle passed **60/60** checks across legacy/via-IR and grouping depths.
+The separate grouped-custom-error test covers an upstream solc code-generation
+`std::bad_cast`; its ungrouped form supplies the EVM reference.
+
+The compiler SHA-256 was
+`99c03264c88f7e513e3fda79cbf37064253df352495ce614de6ae4029d332c41`.
+Production-source and regression hash manifests matched after the full run.
+This correction removes **11 physical lines / 13 code lines** from `src/`,
+leaving **62,543 physical / 48,351 code lines** in 318 files. Including the
+preceding audits, the source delta is **2,330 fewer physical lines**.
+The [JUnit report](out/parenthesis-regressions/semantic.xml),
+[outcome comparison](out/parenthesis-regressions/semantic-comparison.json),
+oracle evidence and hash manifests are retained as thin reports; raw generated
+outputs remain ignored. The memory experiment remains separate and unchanged.
+
+### Typed-builder/contract-emission audit — working-tree verification, 2026-09-16
+
+All 16 audit items are implemented as uncommitted changes on `rev-2` atop
+`18804ec53f`, including the preceding AST, lowering and core work. Arithmetic
+cleanup uses solc widths; explicit aggregate initializers follow solc's
+constructor schedule; modifier arguments share typed conversion and storage
+reference resolution. Unknown-slot reads do not allocate boxes, bytes-storage
+headers are validated, and ABI entry checks are separate from internal bodies.
+Unused builder APIs are removed, builtin dispatch uses solc function kinds,
+byte conversions and getter finishing are shared, and EVM routes retain stable
+method indices. The memory experiment remains separate and unchanged.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,686 |
+| Failed | 1 |
+| Expected failure (xfail) | 100 |
+| Unexpected pass (xpass) | 39 |
+| Total | 2,826 |
+
+The completed LocalNet semantic and harness/cache repeat took **783.27 seconds**
+with `PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 2 --tb=short
+--junitxml=out/eb-contract-audit/semantic.xml`. All **2,782 previous cases retain
+their individual JUnit outcomes**, and all **44 new configurations pass**.
+No cases were removed and failure markers are unchanged. The only failure
+remains the existing Puya DCE/divide-by-zero case described below, not an
+accepted divergence. An earlier repeat was interrupted by WSL stopping; the
+completed run used two workers after recovery without a ledger or cache reset.
+
+Native CTests passed **24/24** in 4.68 seconds. The expanded focused matrix had
+**186 passed and one existing xfail** in 77.33 seconds. An independent
+pinned-solc/EVM probe confirmed **100 scenarios** in legacy and via-IR modes.
+The compiler stayed fixed at SHA-256
+`18f1429aa3bd77403d4b004d5271c3c4cacaa810dab33c95b50f0b6441f09627`;
+all production-source and regression hashes matched after the run. Dependency
+pins are unchanged.
+
+This pass removes **1,216 physical lines from `src/`**, including **891 code
+lines** excluding comments and blanks. The source tree now has **48,364 code
+lines**; the cumulative source reduction including AST, lowering and core work
+is **2,319 physical lines**. The [JUnit report](out/eb-contract-audit/semantic.xml),
+[outcome comparison](out/eb-contract-audit/semantic-comparison.json), and
+[console output](results.txt) record the final run. Thin reports, oracle evidence
+and hash manifests stay under `out/eb-contract-audit/`; raw artifacts stay ignored.
+
+### AWST/runner/CLI/type-boundary audit — working-tree verification, 2026-09-15
+
+All nine audit items are implemented as uncommitted changes on `rev-2` atop
+`18804ec53f`, including the preceding AST and lowering work. Constructor scalar
+decoding uses solc ABI-coder facts; shared AWST graphs use pinned-Puya JSON
+references; tuple immutability matches the backend; unreachable ReferenceArray
+paths and duplicate scalar conversions are removed. CLI cancellation, legacy
+import identity, required ARC56 artifacts and option handling are covered by
+regressions. The memory experiment remains separate and unchanged.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,642 |
+| Failed | 1 |
+| Expected failure (xfail) | 100 |
+| Unexpected pass (xpass) | 39 |
+| Total | 2,782 |
+
+The full LocalNet semantic and harness/cache run took **1,294.89 seconds** with
+`PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 3 --tb=short
+--junitxml=out/core-audit/semantic.xml`. All **2,759 previous cases retain their
+individual JUnit outcomes**, and all **23 new configurations pass**. No case was
+removed and failure markers are unchanged. The only failure remains the existing
+Puya DCE/divide-by-zero case described below, not an accepted divergence.
+
+Native CTests passed **24/24** in 2.30 seconds; focused regressions passed
+**48/48** in 18.21 seconds. The independent pinned-solc/EVM probe records
+**56 constructor scenarios** across ABI coders v1/v2 and legacy/via-IR modes.
+The compiler remained fixed at SHA-256
+`141b2d86e9659c7b3a1f9bbe088f7f74f6b48aab31042c1e71fb7239428d9aab`;
+production-source and regression hashes matched before and after the run.
+Dependency pins are unchanged. Neither LocalNet nor the compile cache was reset.
+
+The local, untracked core audit records the nine changes and net
+**179-line reduction in `src/`**, including **132 fewer code lines** excluding
+comments and blanks. The final tree has **49,255 code lines**; the cumulative
+source delta including AST and lowering is **1,103 fewer physical lines**.
+The [JUnit report](out/core-audit/semantic.xml),
+[outcome comparison](out/core-audit/semantic-comparison.json), and
+[console output](out/core-audit/semantic.txt) record this run. Thin reports, oracle evidence and
+hash manifests remain under `out/core-audit/`; raw generated artifacts remain
+local and ignored.
+
+### Lowering/parenthesis audit — working-tree verification, 2026-09-15
+
+The ten-item lowering audit and the parenthesized-expression follow-up are
+implemented as uncommitted changes on `rev-2` atop `18804ec53f`, including the
+preceding AST audit. Call routing, external overrides, constant precompile
+addresses and intrinsic recognition use solc facts. Outgoing encoders and
+transaction submission share their existing implementations; self-call routing,
+returndata and function-pointer option/static-context handling are corrected.
+The mixed memory representation is unchanged, and the experiment stays separate.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,619 |
+| Failed | 1 |
+| Expected failure (xfail) | 100 |
+| Unexpected pass (xpass) | 39 |
+| Total | 2,759 |
+
+The final full LocalNet semantic and harness/cache repeat took **1,045.08
+seconds**, using `PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 3
+--tb=short --junitxml=out/lowering-audit/semantic.xml`. All **2,703 previous
+cases retain their individual outcomes**; all **56 new configurations pass**,
+with no removals or changed failure markers. The only failure remains the
+existing Puya DCE/divide-by-zero case described below.
+
+Native CTests passed **24/24** in 3.61 seconds. Focused runtime validation
+passed **58/58** in 59.97 seconds, including the two existing cases corrected
+after the first full run. The independent pinned-solc/PyEVM oracle passed
+**74 assertions**, covering legacy and via-IR compilation. The compiler stayed
+fixed at SHA-256
+`b69df362bcaea1e768f6c62a1833aecd2051d2b10d3a16313508f8776fbb4809`;
+production-source and regression hashes also matched before and after the run.
+Dependency pins are unchanged. Neither LocalNet nor the compile cache was reset.
+
+The local, untracked lowering audit records the ten changes,
+remaining self-call limitations, and net **433-line reduction in `src/`** for
+this pass (**924 fewer lines** including the AST work; physical lines).
+The [JUnit report](out/lowering-audit/semantic.xml),
+[outcome comparison](out/lowering-audit/semantic-comparison.json), and
+[console output](out/lowering-audit/semantic.txt) record the final run. Thin reports, the first-run
+evidence, the oracle script and hash manifests remain under `out/lowering-audit/`;
+raw generated artifacts remain local and ignored.
+
+### AST audit — working-tree verification, 2026-09-15
+
+The nine-item AST audit is implemented on `rev-2` as uncommitted changes atop
+`18804ec53f`. It uses solc facts for parenthesis/inline-array distinctions,
+call options, self identity and external overrides; fixes storage/calldata
+reference bounds and aggregate tuple copies; and consolidates assignment,
+array-method and inline-assembly binding lowering. The existing mixed memory
+representation is unchanged; the memory experiment remains separate.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,563 |
+| Failed | 1 |
+| Expected failure (xfail) | 100 |
+| Unexpected pass (xpass) | 39 |
+| Total | 2,703 |
+
+The full LocalNet semantic and harness/cache run took **981.75 seconds** with
+three workers, using `PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 3
+--tb=short --junitxml=out/ast-audit/semantic.xml`. All 2,657 cases from the
+preceding context-audit baseline retain their individual JUnit outcomes; all
+46 added cases pass, with no removals. Expected-failure markers are unchanged.
+The sole failure remains the Puya DCE/divide-by-zero bug described below.
+
+Native CTests passed **24/24** in 4.51 seconds. Focused regressions passed
+**48/48** in 25.87 seconds, including the two existing cases that exposed
+regressions during the first full run. Independent solc/PyEVM checks passed
+in legacy and via-IR modes. The final compiler stayed fixed at SHA-256
+`ef1ef238e8dd6e6dbe5819db3a722889f6b2e04765bba3f165b7f9ad4a1f5fd4`.
+Neither LocalNet nor the compile cache was reset, and dependency pins are
+unchanged from the context-audit checkpoint below.
+
+The local, untracked AST audit records all nine changes,
+the net 491-line reduction in `src/`, and the separate pre-existing calldata
+alias-metadata gap. The [JUnit report](out/ast-audit/semantic.xml),
+[outcome comparison](out/ast-audit/semantic-comparison.json), and
+[console output](out/ast-audit/semantic.txt) record the completed repeat. Thin reports and
+hash manifests are retained under `out/ast-audit/`; raw generated outputs
+remain local and ignored.
+
+### Context-audit checkpoint
+
 Full LocalNet semantic and harness/cache run on **2026-09-15**. The tested
 compiler and regression sources are committed as `11803b9778` on `rev-2`,
 following merge checkpoint `8a44a9ddda`. This context-audit batch derives
@@ -45,7 +259,7 @@ preservation; no options hashes changed. The
 focused runtime checks, 22 solc EVM expectations, and the cache-recovery record.
 The [JUnit report](out/context-audit/semantic.xml),
 [outcome comparison](out/context-audit/semantic-comparison.json), and
-[console output](results.txt) retain the complete semantic result. The earlier
+[console output](out/ast-audit/semantic-baseline.txt) retain the complete semantic result. The earlier
 [directory-reorganization report](out/builder-layered-layout/REPORT.md) retains
 its separate byte-identical move verification and residual dependency edges.
 

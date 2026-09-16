@@ -80,6 +80,12 @@ public:
 	static std::optional<solidity::u256> constantVarEvmWord(
 		solidity::frontend::VariableDeclaration const& _varDecl);
 
+	/// Constant address through parentheses, constant declarations and lossless
+	/// address/integer conversions. Unsupported or potentially trapping expressions
+	/// return nullopt; never infer a value from source spelling.
+	static std::optional<solidity::u256> constantAddress(
+		solidity::frontend::Expression const& _expression);
+
 	/// fable-review.md item 2 — solc's TypeChecker-computed effect fact.
 	/// True iff solc marked the expression PURE: no state read/write, no
 	/// environment dependence. Evaluating a pure expression TWICE is

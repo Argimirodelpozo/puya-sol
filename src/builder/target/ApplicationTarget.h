@@ -17,6 +17,8 @@ public:
 	/// Validate before storing an address in the compact function-pointer form.
 	/// The zero pointer is a valid value, but requireApplication rejects its call.
 	static Expr pointerId(TargetProfile const& profile, Expr address, awst::SourceLocation const& loc);
+	/// Project compact identities consistently: native self, padded foreign ID.
+	static Expr pointerAddress(Expr id, awst::SourceLocation const& loc);
 	static Expr requireApplication(Expr id, awst::SourceLocation const& loc);
 };
 } // namespace puyasol::builder

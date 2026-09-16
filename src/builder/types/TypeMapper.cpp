@@ -327,17 +327,6 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 		return remember(createType<awst::ARC4DynamicArray>(arc4Byte()));
 	}
 
-	// ReferenceArray → ARC4StaticArray (if sized) or ARC4DynamicArray
-	if (_type->kind() == awst::WTypeKind::ReferenceArray)
-	{
-		auto const* refArr = static_cast<awst::ReferenceArray const*>(_type);
-		auto const* arc4Elem = mapToARC4Type(refArr->elementType());
-		if (refArr->arraySize().has_value())
-			return remember(createType<awst::ARC4StaticArray>(
-				arc4Elem, refArr->arraySize().value()));
-		return remember(createType<awst::ARC4DynamicArray>(arc4Elem));
-	}
-
 	// WTuple → ARC4Tuple
 	if (_type->kind() == awst::WTypeKind::WTuple)
 	{

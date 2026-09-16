@@ -5,10 +5,11 @@
 #include "builder/target/EvmFeaturePolicy.h"
 #include "builder/target/ScratchLayout.h"
 
-#include <cctype>
+#include <iomanip>
 #include <cstdlib>
 #include <iostream>
 #include <string_view>
+#include <libsolutil/CommonData.h>
 
 namespace puyasol::cli
 {
@@ -101,105 +102,19 @@ std::vector<uint8_t> parseHexBlob(
 	return std::move(*bytes);
 }
 
-std::string parseAddressHex(std::string const& _opt, std::string value)
+std::string parseAddressHex(std::string const& _opt, std::string const& value)
 {
-	if (value.starts_with("0x") || value.starts_with("0X"))
-		value.erase(0, 2);
-	if (value.size() != 40)
-	{
-		std::cerr << "Error: " << _opt
-			<< " expects exactly 20 address bytes (40 hex digits), got '"
-			<< value << "'" << std::endl;
-		std::exit(2);
-	}
-	for (char& c: value)
-	{
-		if (!std::isxdigit(static_cast<unsigned char>(c)))
-		{
-			std::cerr << "Error: " << _opt << " expects a hex address, got '"
-				<< value << "'" << std::endl;
-			std::exit(2);
-		}
-		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-	}
-	return value;
-}
-} // namespace
-
-void printUsage(char const* _progName)
-{
-	std::cout
-		<< "Usage: " << _progName << " [options]\n"
-		<< "\n"
-		<< "Options:\n"
-		<< "  --source <file>        Solidity source file (required, repeatable for multi-file)\n"
-		<< "  --import-path <path>   Import path for resolving imports (repeatable)\n"
-		<< "  --remapping <map>      Import remapping: prefix=target (repeatable)\n"
-		<< "  --output-dir <dir>     Output directory (default: out)\n"
-		<< "  --puya-path <path>     Path to puya executable (required unless --no-puya)\n"
-		<< "  --log-level <level>    Log level: debug, info, warning, error (default: info)\n"
-		<< "  --dump-awst            Dump AWST JSON to stdout\n"
-		<< "  --no-puya              Skip puya invocation (only generate JSON)\n"
-		<< "  --opup-budget <N>      Inject ensure_budget(N) into ALL public methods (OpUp)\n"
-		<< "  --ensure-budget <f:N>  Inject ensure_budget(N) into function f (repeatable)\n"
-		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 2)\n"
-		<< "  --evm-memory-slots <N> Scratch slots for EVM memory, contiguous from slot 0 (default 5 = 20KB,\n"
-		<< "                         max " << builder::ScratchLayout::maxMemorySlots
-		<< "; UltraHonk needs ~32). Transient/flash reservations follow at N..N+10\n"
-		<< "  --evm-storage-layout   Back all storage with EVM-numbered slots (paged/sparse boxes).\n"
-		<< "                         Faithful assembly slots; ARC-56 names only immutable cells.\n"
-		<< "  --evm-memory-layout    UNAVAILABLE: rejected until universal EVM memory is implemented.\n"
-		<< "  --evm-layout           UNAVAILABLE: rejected because it includes that memory mode.\n"
-		<< "  --output-ir            Output all intermediate representations (SSA IR, MIR, TEAL)\n"
-		<< "  --no-output-logs       Disable writing compilation logs to output directory\n"
-		<< "  --via-yul-behavior     Emulate Solidity's viaIR/compileViaYul codegen semantics\n"
-		<< "                         (separate subroutines per modifier, fresh vars per _ invocation)\n"
-		<< "  --legacy-source-rewrite  RESEARCH ONLY: opt into pre-0.8 source rewrites.\n"
-		<< "                         Emits source-rewrite-manifest.json with exact before/after text.\n"
-		<< "  --evm-selectors        Expose keccak-based Solidity function/event selectors,\n"
-		<< "                         interface IDs, msg.sig, and selector-bearing ABI values.\n"
-		<< "                         ARC-4 selectors remain the route in the ARC-4 profile.\n"
-		<< "  --contract-abi <mode>  Contract entry/return wire ABI: arc4 (default) or evm.\n"
-		<< "                         EVM mode takes selector in ApplicationArgs[0] and one\n"
-		<< "                         canonical ABI body blob in ApplicationArgs[1].\n"
-		<< "  --evm-version <name>   EVM version for the Solidity parser. Accepts the same\n"
-		<< "                         names solc supports: homestead..osaka. Default: cancun.\n"
-		<< "  --xchain-template <hex>  xchain LogicSig template bytecode (20-byte owner\n"
-		<< "                         placeholder inside; see --xchain-placeholder). Enables\n"
-		<< "                         the xchain account model in the EVM profile.\n"
-		<< "  --xchain-placeholder <hex>  The 20-byte owner placeholder inside the\n"
-		<< "                         template (default ee x20).\n"
-		<< "  --proxy-adaptation    Opt into recognized proxy-to-native-update adaptations.\n"
-		<< "                         Disabled by default; see proxy.md for semantic boundaries.\n"
-		<< "  --child-programs-via-box  `new C()` child approval programs load from a\n"
-		<< "                         deployer-provisioned __cp_<Child> box instead of\n"
-		<< "                         embedded template constants (16KB-cap relief).\n"
-		<< "  --evm-chain-id <N>     Compile-time uint256 returned by block.chainid. Without\n"
-		<< "                         it, GenesisHash is used as an AVM network identity.\n"
-		<< "  --evm-block-gas-limit <N> Compile-time uint256 returned by block.gaslimit.\n"
-		<< "                         Without it, current OpcodeBudget is used.\n"
-		<< "  --evm-coinbase <addr>  Compile-time 20-byte hex block.coinbase value. Required\n"
-		<< "                         by sources that read coinbase; AVM has no native analog.\n"
-		<< "  --allow-divergence <name>  Explicitly acknowledge one non-EVM lowering. Repeatable.\n"
-		<< "                         Valid names: "
-		<< builder::EvmFeaturePolicy::allowedNames() << "\n"
-		<< "  --force-inline-sub <Name>  Set inlineOpt=true on every Subroutine or\n"
-		<< "                         ContractMethod whose name matches <Name>. Puya inlines\n"
-		<< "                         the body at every call site. Repeatable.\n"
-		<< "  --force-no-inline-sub <Name>  Set inlineOpt=false and retain a real\n"
-		<< "                         subroutine for the matching name. Repeatable.\n"
-		<< "  --help                 Show this help message\n";
+	return solidity::util::toHex(parseHexBlob(_opt, value, 20));
 }
 
-namespace
-{
-/// One CLI flag: its spelling, whether it consumes the next argv entry, and
+/// One CLI flag: its spelling, argument, help, and
 /// the handler that applies it (`_value` is empty for bare flags). Handlers
 /// exit with status 2 on a malformed value, as the inline arms always did.
 struct FlagSpec
 {
 	char const* name;
-	bool takesValue;
+	char const* valueName;
+	std::string help;
 	void (*apply)(Options& _opts, std::string const& _value);
 };
 
@@ -273,73 +188,130 @@ void rejectEvmLayout(Options&, std::string const&)
 }
 
 FlagSpec const kFlags[] = {
-	{"--source", true,
+	{"--source", "<file>",
+		"Solidity source file (required, repeatable for multi-file)",
 		[](Options& o, std::string const& v) { o.sourceFiles.push_back(v); }},
-	{"--import-path", true,
+	{"--import-path", "<path>",
+		"Import path for resolving imports (repeatable)",
 		[](Options& o, std::string const& v) { o.importPaths.push_back(v); }},
-	{"--remapping", true,
+	{"--remapping", "<map>",
+		"Import remapping: prefix=target (repeatable)",
 		[](Options& o, std::string const& v) { o.remappings.push_back(v); }},
-	{"--output-dir", true,
+	{"--output-dir", "<dir>",
+		"Output directory (default: out)",
 		[](Options& o, std::string const& v) { o.outputDir = v; }},
-	{"--puya-path", true,
+	{"--puya-path", "<path>",
+		"Path to puya executable (required unless --no-puya)",
 		[](Options& o, std::string const& v) { o.puyaPath = v; }},
-	{"--log-level", true, applyLogLevel},
-	{"--dump-awst", false,
+	{"--log-level", "<level>",
+		"Log level: debug, info, warning, error (default: info)", applyLogLevel},
+	{"--dump-awst", "",
+		"Dump AWST JSON to stdout",
 		[](Options& o, std::string const&) { o.dumpAwst = true; }},
-	{"--no-puya", false,
+	{"--no-puya", "",
+		"Skip puya invocation (only generate JSON)",
 		[](Options& o, std::string const&) { o.noPuya = true; }},
-	{"--opup-budget", true,
+	{"--opup-budget", "<N>",
+		"Inject ensure_budget(N) into ALL public methods (OpUp)",
 		[](Options& o, std::string const& v) {
 			o.opupBudget = parseNumber("--opup-budget", v); }},
-	{"--ensure-budget", true, applyEnsureBudget},
-	{"--optimization-level", true,
+	{"--ensure-budget", "<f:N>",
+		"Inject ensure_budget(N) into function f (repeatable)", applyEnsureBudget},
+	{"--optimization-level", "<N>",
+		"Puya optimization level: 0, 1, 2 (default: 2)",
 		[](Options& o, std::string const& v) {
 			o.optimizationLevel = parseBoundedInt("--optimization-level", v, 0, 2); }},
-	{"--evm-memory-slots", true,
+	{"--evm-memory-slots", "<N>",
+		"Scratch slots for EVM memory, contiguous from slot 0 (default 5 = 20KB,\n"
+			"                         max " + std::to_string(builder::ScratchLayout::maxMemorySlots)
+			+ "; UltraHonk needs ~32). Transient/flash reservations follow at N..N+10",
 		[](Options& o, std::string const& v) {
 			o.evmMemorySlots = parseBoundedInt(
 				"--evm-memory-slots", v, 1, builder::ScratchLayout::maxMemorySlots); }},
-	{"--evm-storage-layout", false,
+	{"--evm-storage-layout", "",
+		"Back all storage with EVM-numbered slots (paged/sparse boxes).\n"
+			"                         Faithful assembly slots; ARC-56 names only immutable cells.",
 		[](Options& o, std::string const&) { o.evmStorageLayout = true; }},
-	{"--evm-memory-layout", false, rejectEvmMemoryLayout},
-	{"--evm-layout", false, rejectEvmLayout},
-	{"--output-ir", false,
+	{"--evm-memory-layout", "",
+		"UNAVAILABLE: rejected until universal EVM memory is implemented.", rejectEvmMemoryLayout},
+	{"--evm-layout", "",
+		"UNAVAILABLE: rejected because it includes that memory mode.", rejectEvmLayout},
+	{"--output-ir", "",
+		"Output all intermediate representations (SSA IR, MIR, TEAL)",
 		[](Options& o, std::string const&) { o.outputIr = true; }},
-	{"--no-output-logs", false,
+	{"--no-output-logs", "",
+		"Disable writing compilation logs to output directory",
 		[](Options& o, std::string const&) { o.outputLogs = false; }},
-	{"--via-yul-behavior", false,
+	{"--via-yul-behavior", "",
+		"Emulate Solidity's viaIR/compileViaYul codegen semantics\n"
+			"                         (separate subroutines per modifier, fresh vars per _ invocation)",
 		[](Options& o, std::string const&) { o.viaYulBehavior = true; }},
-	{"--legacy-source-rewrite", false,
+	{"--legacy-source-rewrite", "",
+		"RESEARCH ONLY: opt into pre-0.8 source rewrites.\n"
+			"                         Emits source-rewrite-manifest.json with exact before/after text.",
 		[](Options& o, std::string const&) { o.legacySourceRewrite = true; }},
-	{"--evm-selectors", false,
+	{"--evm-selectors", "",
+		"Expose keccak-based Solidity function/event selectors,\n"
+			"                         interface IDs, msg.sig, and selector-bearing ABI values.\n"
+			"                         ARC-4 selectors remain the route in the ARC-4 profile.",
 		[](Options& o, std::string const&) { o.evmSelectors = true; }},
-	{"--proxy-adaptation", false,
+	{"--proxy-adaptation", "",
+		"Opt into recognized proxy-to-native-update adaptations.\n"
+			"                         Disabled by default; see proxy.md for semantic boundaries.",
 		[](Options& o, std::string const&) { o.proxyAdaptation = true; }},
-	{"--contract-abi", true, applyContractAbi},
-	{"--evm-version", true,
+	{"--contract-abi", "<mode>",
+		"Contract entry/return wire ABI: arc4 (default) or evm.\n"
+			"                         EVM mode takes selector in ApplicationArgs[0] and one\n"
+			"                         canonical ABI body blob in ApplicationArgs[1].", applyContractAbi},
+	{"--evm-version", "<name>",
+		"EVM version for the Solidity parser. Accepts the same\n"
+			"                         names solc supports: homestead..osaka. Default: cancun.",
 		[](Options& o, std::string const& v) { o.evmVersion = v; }},
-	{"--evm-chain-id", true,
+	{"--evm-chain-id", "<N>",
+		"Compile-time uint256 returned by block.chainid. Without\n"
+			"                         it, GenesisHash is used as an AVM network identity.",
 		[](Options& o, std::string const& v) {
 			o.evmChainId = parseUint256Decimal("--evm-chain-id", v); }},
-	{"--evm-block-gas-limit", true,
+	{"--evm-block-gas-limit", "<N>",
+		"Compile-time uint256 returned by block.gaslimit.\n"
+			"                         Without it, current OpcodeBudget is used.",
 		[](Options& o, std::string const& v) {
 			o.evmBlockGasLimit = parseUint256Decimal("--evm-block-gas-limit", v); }},
-	{"--evm-coinbase", true,
+	{"--evm-coinbase", "<addr>",
+		"Compile-time 20-byte hex block.coinbase value. Required\n"
+			"                         by sources that read coinbase; AVM has no native analog.",
 		[](Options& o, std::string const& v) {
 			o.evmCoinbase = parseAddressHex("--evm-coinbase", v); }},
-	{"--allow-divergence", true, applyAllowDivergence},
-	{"--xchain-template", true,
+	{"--allow-divergence", "<name>",
+		"Explicitly acknowledge one non-EVM lowering. Repeatable.\n"
+			"                         Valid names: "
+			+ builder::EvmFeaturePolicy::allowedNames(), applyAllowDivergence},
+	{"--xchain-template", "<hex>",
+		"xchain LogicSig template bytecode (20-byte owner\n"
+			"                         placeholder inside; see --xchain-placeholder). Enables\n"
+			"                         the xchain account model in the EVM profile.",
 		[](Options& o, std::string const& v) {
 			o.xchainTemplate = parseHexBlob("--xchain-template", v, 0); }},
-	{"--xchain-placeholder", true,
+	{"--xchain-placeholder", "<hex>",
+		"The 20-byte owner placeholder inside the\n"
+			"                         template (default ee x20).",
 		[](Options& o, std::string const& v) {
 			o.xchainPlaceholder = parseHexBlob("--xchain-placeholder", v, 20); }},
-	{"--child-programs-via-box", false,
+	{"--child-programs-via-box", "",
+		"`new C()` child approval programs load from a\n"
+			"                         deployer-provisioned __cp_<Child> box instead of\n"
+			"                         embedded template constants (16KB-cap relief).",
 		[](Options& o, std::string const&) { o.childProgramsViaBox = true; }},
-	{"--force-inline-sub", true,
+	{"--force-inline-sub", "<Name>",
+		"Set inlineOpt=true on every Subroutine or\n"
+			"                         ContractMethod whose name matches <Name>. Puya inlines\n"
+			"                         the body at every call site. Repeatable.",
 		[](Options& o, std::string const& v) { o.forceInlineSubs.push_back(v); }},
-	{"--force-no-inline-sub", true,
+	{"--force-no-inline-sub", "<Name>",
+		"Set inlineOpt=false and retain a real\n"
+			"                         subroutine for the matching name. Repeatable.",
 		[](Options& o, std::string const& v) { o.forceNoInlineSubs.push_back(v); }},
+	{"--help", "", "Show this help message", nullptr},
 };
 
 FlagSpec const* findFlag(std::string const& _arg)
@@ -350,6 +322,17 @@ FlagSpec const* findFlag(std::string const& _arg)
 	return nullptr;
 }
 } // namespace
+
+void printUsage(char const* _progName)
+{
+	std::cout << "Usage: " << _progName << " [options]\n\nOptions:\n";
+	for (auto const& flag: kFlags)
+	{
+		std::string label = std::string("  ") + flag.name;
+		if (*flag.valueName) label += std::string(" ") + flag.valueName;
+		std::cout << std::left << std::setw(32) << label << " " << flag.help << '\n';
+	}
+}
 
 Options parseArgs(int _argc, char* _argv[])
 {
@@ -364,15 +347,19 @@ Options parseArgs(int _argc, char* _argv[])
 			printUsage(_argv[0]);
 			std::exit(0);
 		}
-		// A value flag with no argument left is not recognised as a flag at all.
 		auto const* flag = findFlag(arg);
-		if (!flag || (flag->takesValue && i + 1 >= _argc))
+		if (!flag)
 		{
 			std::cerr << "Unknown option: " << arg << std::endl;
 			printUsage(_argv[0]);
 			std::exit(1);
 		}
-		flag->apply(opts, flag->takesValue ? std::string(_argv[++i]) : std::string());
+		if (*flag->valueName && (i + 1 >= _argc || findFlag(_argv[i + 1])))
+		{
+			std::cerr << "Error: " << arg << " requires " << flag->valueName << std::endl;
+			std::exit(2);
+		}
+		flag->apply(opts, *flag->valueName ? std::string(_argv[++i]) : std::string());
 	}
 
 	return opts;

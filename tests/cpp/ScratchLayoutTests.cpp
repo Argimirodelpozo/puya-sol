@@ -49,6 +49,9 @@ int main()
 	ok &= require(ScratchLayout::transientAddressShadowSlot > maximum.flashLast()
 		&& ScratchLayout::transientAddressShadowSlot < 100,
 		"transient address shadow overlaps memory/flash or splitter slots");
+	ok &= require(ScratchLayout::staticContextSlot > ScratchLayout::transientAddressShadowSlot
+		&& ScratchLayout::staticContextSlot < ScratchLayout::returnDataSlot,
+		"static-context flag overlaps another reserved slot");
 
 	for (int invalid: {0, 89})
 	{

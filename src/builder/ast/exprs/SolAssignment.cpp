@@ -44,7 +44,7 @@ SolAssignment::SolAssignment(eb::ContractContext& _ctx, Assignment const& _node)
 // toAwst pipeline:
 //   (1) Pre-buildExpr early-outs (transient, storage-ptr, multi-box, push-assign)
 //   (2) Build target + value
-//   (3) Build an LValuePlan and dispatch the single applicable write strategy.
+//   (3) Store through the shared ResolvedLValue implementation.
 std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 {
 	Token op = m_assignment.assignmentOperator();
@@ -65,15 +65,13 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	// re-emit byte-identically with no pin. Tuple assignments keep the plain
 	// build (their element-wise handler owns sequencing).
 	std::shared_ptr<awst::Expression> target, value;
-	auto const* sourceLhs = dynamic_cast<TupleExpression const*>(&m_assignment.leftHandSide());
-	while (sourceLhs && sourceLhs->components().size() == 1 && sourceLhs->components()[0])
-		sourceLhs = dynamic_cast<TupleExpression const*>(sourceLhs->components()[0].get());
+	auto const* sourceLhs = SolcFacts::expressionAs<TupleExpression>(&m_assignment.leftHandSide());
 	if (sourceLhs && dynamic_cast<TupleType const*>(sourceLhs->annotation().type))
 	{
 		std::vector<VariableDeclaration const*> bindings;
 		for (auto const& component: sourceLhs->components())
 		{
-			auto const* id = component ? dynamic_cast<Identifier const*>(&SolcFacts::functionExpression(*component)) : nullptr;
+			auto const* id = component ? SolcFacts::expressionAs<Identifier>(&SolcFacts::functionExpression(*component)) : nullptr;
 			bindings.push_back(id ? dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration) : nullptr);
 		}
 		// Solc snapshots RHS values, evaluates LHS addresses left-to-right, then
@@ -84,11 +82,10 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		}, false);
 		value = m_ctx.emitSequencedOperand(std::move(rhs.effects), std::move(rhs.value), false, m_loc);
 		std::function<std::shared_ptr<awst::Expression>(Expression const&)> resolve;
-		resolve = [&](Expression const& component) -> std::shared_ptr<awst::Expression> {
-			if (auto const* nested = dynamic_cast<TupleExpression const*>(&component))
+		resolve = [&](Expression const& source) -> std::shared_ptr<awst::Expression> {
+			auto const& component = SolcFacts::unparenthesized(source);
+			if (auto const* nested = SolcFacts::expressionAs<TupleExpression>(&component))
 			{
-				if (nested->components().size() == 1 && nested->components()[0])
-					return resolve(*nested->components()[0]);
 				auto tuple = awst::makeTupleExpression(nullptr, m_loc);
 				std::vector<awst::WType const*> types;
 				for (auto const& leaf: nested->components())
@@ -100,7 +97,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 				tuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(std::move(types), std::nullopt);
 				return tuple;
 			}
-			auto const* identifier = dynamic_cast<Identifier const*>(&component);
+			auto const* identifier = SolcFacts::expressionAs<Identifier>(&component);
 			auto const* declaration = identifier
 				? dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration) : nullptr;
 			auto resolution = ResolvedLValue::classify(m_ctx, component);
@@ -134,7 +131,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		// A writing RHS must finish before the target's key/index reads;
 		// a writing LHS index needs the RHS value frozen first.
 		bool lhsPlainLocal = false;
-		if (auto const* lid = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide()))
+		if (auto const* lid = SolcFacts::expressionAs<Identifier>(&m_assignment.leftHandSide()))
 			if (auto const* lvd = dynamic_cast<VariableDeclaration const*>(
 					lid->annotation().referencedDeclaration))
 				lhsPlainLocal = lvd->isLocalVariable()
@@ -166,63 +163,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 
 	// (3) Classify once, then execute the selected write strategy.
 	value = applyEnumRangeCheck(std::move(value), op);
-	auto lvaluePlan = planLValue(target);
-	return emitLValuePlan(
-		lvaluePlan, op, std::move(target), std::move(value));
-}
-
-SolAssignment::LValuePlan SolAssignment::planLValue(
-	std::shared_ptr<awst::Expression> const& _target) const
-{
-	if (dynamic_cast<awst::TupleExpression const*>(_target.get()))
-		return {LValueKind::Tuple};
-
-	if (_target->wtype == awst::WType::biguintType())
-	{
-		auto const* lhsType = m_assignment.leftHandSide().annotation().type;
-		auto const* rhsType = m_assignment.rightHandSide().annotation().type;
-		auto const* lhsArray = lhsType ? dynamic_cast<ArrayType const*>(lhsType) : nullptr;
-		auto const* rhsArray = rhsType ? dynamic_cast<ArrayType const*>(rhsType) : nullptr;
-		// Keep this selection identical to trySlotBasedArrayWrite: an array-typed
-		// LHS owns the strategy decision; only a non-array LHS may borrow the RHS
-		// array type.  In particular, dynamic-LHS/fixed-RHS must continue to the
-		// scalar-slot strategy exactly as the former specialist chain did.
-		auto const* arrayType = lhsArray ? lhsArray : rhsArray;
-		if (arrayType && !arrayType->isDynamicallySized())
-			return {LValueKind::SlotArray};
-		if (dynamic_cast<awst::BigUIntBinaryOperation const*>(_target.get()))
-			return {LValueKind::SlotScalar};
-	}
-
-	return {LValueKind::Generic};
-}
-
-std::shared_ptr<awst::Expression> SolAssignment::emitLValuePlan(
-	LValuePlan _plan,
-	Token _op,
-	std::shared_ptr<awst::Expression> _target,
-	std::shared_ptr<awst::Expression> _value)
-{
-	std::optional<std::shared_ptr<awst::Expression>> result;
-	switch (_plan.kind)
-	{
-	case LValueKind::SlotArray:
-		result = trySlotBasedArrayWrite(_op, _target, _value);
-		break;
-	case LValueKind::SlotScalar:
-		result = trySlotBasedScalarWrite(_op, _target, _value);
-		break;
-	case LValueKind::Tuple:
-		result = tryTupleAssignment(_target, _value);
-		break;
-	case LValueKind::Generic:
-		break;
-	}
-
-
-	if (result)
-		return std::move(*result);
-	return emitGenericAssignment(_op, std::move(_target), std::move(_value));
+	return emitGenericAssignment(op, std::move(target), std::move(value));
 }
 
 std::shared_ptr<awst::Expression> SolAssignment::emitGenericAssignment(
@@ -242,9 +183,9 @@ SolAssignment::tryHandlePushAssignRewrite(Token _op)
 	// `arr.push() = value`: scope the RHS while lowering the LHS call so
 	// SolArrayMethod::push folds it into ArrayExtend (we don't model Solidity refs).
 	if (_op != Token::Assign) return std::nullopt;
-	auto const* lhsCall = dynamic_cast<FunctionCall const*>(&m_assignment.leftHandSide());
+	auto const* lhsCall = SolcFacts::expressionAs<FunctionCall>(&m_assignment.leftHandSide());
 	if (!lhsCall || !lhsCall->arguments().empty()) return std::nullopt;
-	auto const* member = dynamic_cast<MemberAccess const*>(&lhsCall->expression());
+	auto const* member = SolcFacts::expressionAs<MemberAccess>(&SolcFacts::functionExpression(lhsCall->expression()));
 	if (!member || member->memberName() != "push") return std::nullopt;
 
 	auto rhs = m_ctx.lowerOperand([&] {
@@ -271,7 +212,7 @@ SolAssignment::tryHandleAddressedWrite()
 	// Aggregate storage copies and memory-local rebinds retain their dedicated
 	// copy/reference policies. Leaves all share one address/read/write path.
 	bool const memoryLeaf = type && type->dataStoredIn(DataLocation::Memory)
-		&& !dynamic_cast<Identifier const*>(&SolcFacts::functionExpression(lhs));
+		&& !SolcFacts::expressionAs<Identifier>(&SolcFacts::functionExpression(lhs));
 	if ((!type->isValueType() && !memoryLeaf && !resolution.isBoxedAggregate())
 		|| !resolution.isAddressed()) return std::nullopt;
 	auto rhs = m_ctx.lower(m_assignment.rightHandSide(), false);
@@ -297,7 +238,7 @@ SolAssignment::applyEnumRangeCheck(std::shared_ptr<awst::Expression> _value, Tok
 	// assignment value — a call-valued RHS ran twice (its twins in
 	// SolExpressionStatement/SolEmitStatement already carry this fix).
 	_value = awst::makeEvalOnce(std::move(_value), m_loc);
-	auto val = builder::TypeCoercion::implicitNumericCast(_value, awst::WType::uint64Type(), m_loc);
+	auto val = builder::TypeCoercion::coerceScalar(_value, awst::WType::uint64Type(), m_loc);
 	m_ctx.queuePreExpression(awst::makeEnumRangeAssert(val, numMembers, m_loc), m_loc);
 	return val;
 }
@@ -307,7 +248,7 @@ SolAssignment::tryHandleBlobRespill()
 {
 	if (m_assignment.assignmentOperator() != Token::Assign)
 		return std::nullopt;
-	auto const* lid = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide());
+	auto const* lid = SolcFacts::expressionAs<Identifier>(&m_assignment.leftHandSide());
 	if (!lid)
 		return std::nullopt;
 	auto const* lvd = dynamic_cast<VariableDeclaration const*>(
@@ -384,7 +325,7 @@ SolAssignment::tryEvmStoragePointerRebind(Expression const& _lhs)
 	// unlike the compile-time alias rebinding of the named-cell model).
 	if (m_assignment.assignmentOperator() != Token::Assign)
 		return {};
-	auto const* lid = dynamic_cast<Identifier const*>(&_lhs);
+	auto const* lid = SolcFacts::expressionAs<Identifier>(&_lhs);
 	if (!lid)
 		return {};
 	auto const* lvd = dynamic_cast<VariableDeclaration const*>(
@@ -437,9 +378,8 @@ SolAssignment::tryEvmFixedArrayWrite(Expression const& lhs)
 			|| target->baseType()->identifier() != source->baseType()->identifier()
 			|| m_ctx.typeMapper.map(target->baseType()) == awst::WType::accountType())
 			return emitEvmConvertingArrayCopy(low, target, source, to->slot, from->slot);
-		auto result = trySlotBasedArrayWrite(Token::Assign, to->slot, from->slot);
-		if (!result || !*result) throw std::runtime_error("Cannot copy fixed storage array");
-		return *result;
+		emitEvmScalarArrayCopy(*target, *source, to->slot, from->slot);
+		return to->slot;
 	}, false);
 	// solc makes self-copy a no-op, including dirty padding and dynamic tails.
 	auto body = awst::makeBlock(m_loc);
@@ -477,116 +417,36 @@ std::shared_ptr<awst::Expression> SolAssignment::emitEvmConvertingArrayCopy(
 	return to;
 }
 
-std::optional<std::shared_ptr<awst::Expression>>
-SolAssignment::trySlotBasedArrayWrite(
-	Token _op,
-	std::shared_ptr<awst::Expression> const& _target,
-	std::shared_ptr<awst::Expression> const& _value)
+void SolAssignment::emitEvmScalarArrayCopy(
+	ArrayType const& target, ArrayType const& source,
+	std::shared_ptr<awst::Expression> const& to,
+	std::shared_ptr<awst::Expression> const& from)
 {
-	if (_op != Token::Assign || _target->wtype != awst::WType::biguintType())
-		return std::nullopt;
-	auto const* target = dynamic_cast<ArrayType const*>(
-		m_assignment.leftHandSide().annotation().type);
-	auto const* source = dynamic_cast<ArrayType const*>(
-		m_assignment.rightHandSide().annotation().type);
-	if (!target) target = source;
-	if (!target || target->isDynamicallySized()) return std::nullopt;
-
-	EvmSlotLowering low(m_ctx, m_scope, m_loc);
-	std::vector<std::shared_ptr<awst::Statement>> out;
-	if (_value->wtype == awst::WType::biguintType())
+	// solc copyValueArrayToStorageFunction: same-type scalar arrays copy
+	// words, masking every word's unused bytes and the final partial word.
+	auto slots = target.storageSize();
+	if (slots > 256) throw SizeError("fixed storage copy exceeds the 256-slot unroll capacity");
+	auto layout = builder::SlotHandleAccess::layoutFor(target.baseType());
+	for (unsigned j = 0; j < slots; ++j)
 	{
-		if (!source || source->isDynamicallySized())
-			throw SizeError("fixed storage copy requires a fixed source array");
-		if (!target->baseType()->isValueType()
-			|| target->baseType()->identifier() != source->baseType()->identifier()
-			|| m_ctx.typeMapper.map(target->baseType()) == awst::WType::accountType())
-			return emitEvmConvertingArrayCopy(low, target, source, _target, _value);
-
-		// solc copyValueArrayToStorageFunction: same-type scalar arrays copy
-		// words, masking every word's unused bytes and the final partial word.
-		auto slots = target->storageSize();
-		if (slots > 256) throw SizeError("fixed storage copy exceeds the 256-slot unroll capacity");
-		auto layout = builder::SlotHandleAccess::layoutFor(target->baseType());
-		for (unsigned j = 0; j < slots; ++j)
+		auto slot = [&](std::shared_ptr<awst::Expression> base) {
+			return awst::makeBigUIntBinOp(std::move(base), awst::BigUIntBinaryOperator::Add,
+				awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType()), m_loc);
+		};
+		std::shared_ptr<awst::Expression> word = awst::makeZero(m_loc, awst::WType::biguintType());
+		if (j < source.storageSize())
 		{
-			auto slot = [&](std::shared_ptr<awst::Expression> base) {
-				return awst::makeBigUIntBinOp(std::move(base), awst::BigUIntBinaryOperator::Add,
-					awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType()), m_loc);
-			};
-			std::shared_ptr<awst::Expression> word = awst::makeZero(m_loc, awst::WType::biguintType());
-			if (j < source->storageSize())
-			{
-				word = builder::SlotHandleAccess::readSlot(slot(_value), m_loc);
-				auto remaining = source->length() - solidity::u256(j) * layout.perSlot;
-				unsigned count = remaining < layout.perSlot
-					? static_cast<unsigned>(remaining) : layout.perSlot;
-				unsigned width = count * layout.size;
-				if (width < 32)
-					word = awst::makeAsBiguint(awst::makeLeftPadToN(
-						awst::makeAsBytes(std::move(word), m_loc), width, m_loc), m_loc);
-			}
-			out.push_back(builder::SlotHandleAccess::writeSlot(slot(_target), std::move(word), m_loc));
+			word = builder::SlotHandleAccess::readSlot(slot(from), m_loc);
+			auto remaining = source.length() - solidity::u256(j) * layout.perSlot;
+			unsigned count = remaining < layout.perSlot
+				? static_cast<unsigned>(remaining) : layout.perSlot;
+			unsigned width = count * layout.size;
+			if (width < 32)
+				word = awst::makeAsBiguint(awst::makeLeftPadToN(
+					awst::makeAsBytes(std::move(word), m_loc), width, m_loc), m_loc);
 		}
+		m_ctx.queuePostEffect(builder::SlotHandleAccess::writeSlot(slot(to), std::move(word), m_loc));
 	}
-	else
-	{
-		// Value-to-storage uses the same recursive writer as initializers and
-		// ordinary aggregate assignment, including struct padding and tails.
-		EvmSlotLowering::Addr address;
-		address.slot = _target;
-		address.solType = target;
-		auto value = ConversionPlan{m_assignment.rightHandSide().annotation().type,
-			target, m_ctx.typeMapper.map(target), ConversionPlan::Context::Assignment}.emit(_value, m_loc, &out);
-		if (!low.writeArrayValue(address, target, std::move(value), out))
-			throw SizeError("cannot write fixed storage array");
-	}
-	for (auto& statement: out) m_ctx.queuePostEffect(std::move(statement));
-	return awst::makeZero(m_loc, awst::WType::biguintType());
-}
-
-std::optional<std::shared_ptr<awst::Expression>>
-SolAssignment::trySlotBasedScalarWrite(
-	Token _op,
-	std::shared_ptr<awst::Expression> const& _target,
-	std::shared_ptr<awst::Expression>& _value)
-{
-	// Scalar slot-based write: the target is already a full-width slot.
-	if (!dynamic_cast<awst::BigUIntBinaryOperation const*>(_target.get())
-		|| _target->wtype != awst::WType::biguintType())
-		return std::nullopt;
-
-	// Compound: read current first, apply op.
-	if (_op != Token::Assign)
-	{
-		auto readCall = awst::makeSubroutineCall(
-			awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), m_loc);
-		awst::pushCallArg(readCall->args, "__slot", _target);
-
-		auto* targetSolType = m_assignment.leftHandSide().annotation().type;
-		_value = widenSignedCompoundRhs(std::move(_value));
-		_value = eb::AssignmentHelper::computeCompoundOrFallback(
-			m_ctx, _op, _op, targetSolType, std::move(readCall),
-			std::move(_value), _target->wtype, m_loc);
-	}
-
-	auto call = awst::makeSubroutineCall(
-		awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), m_loc);
-	awst::pushCallArg(call->args, "__slot", _target);
-	awst::pushCallArg(call->args, "__value", std::move(_value));
-	m_ctx.queuePostExpression(std::move(call), m_loc);
-	return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
-}
-
-std::optional<std::shared_ptr<awst::Expression>>
-SolAssignment::tryTupleAssignment(
-	std::shared_ptr<awst::Expression>& _target,
-	std::shared_ptr<awst::Expression>& _value)
-{
-	if (!dynamic_cast<awst::TupleExpression const*>(_target.get())) return std::nullopt;
-	auto const* sourceLhs = dynamic_cast<solidity::frontend::TupleExpression const*>(
-		&m_assignment.leftHandSide());
-	return handleTupleAssignment(std::move(_target), std::move(_value), sourceLhs);
 }
 
 std::shared_ptr<awst::Expression>
@@ -611,7 +471,7 @@ SolAssignment::widenSignedCompoundRhs(std::shared_ptr<awst::Expression> _value)
 		return _value;
 	if (tgtInt->bits > 64 && _value->wtype == awst::WType::uint64Type())
 		return builder::TypeCoercion::signExtendToUint256(
-			builder::TypeCoercion::implicitNumericCast(
+			builder::TypeCoercion::coerceScalar(
 				std::move(_value), awst::WType::biguintType(), m_loc),
 			rhsInt->bits, m_loc);
 	return builder::TypeCoercion::signExtendSignedWiden(

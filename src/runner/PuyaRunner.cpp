@@ -26,13 +26,14 @@ PuyaRunner::Result PuyaRunner::run(
 	std::string const& logLevel, Control const& control) const
 {
 	using Status = Result::Status;
-	auto stopped = [&]() -> std::optional<Status> {
-		if (control.cancellation.stop_requested()) return Status::Cancelled;
+	auto stopped = [&]() -> std::optional<Result> {
+		if (control.signal && *control.signal) return Result{Status::Signalled, *control.signal};
+		if (control.cancellation.stop_requested()) return Result{Status::Cancelled};
 		if (control.deadline && std::chrono::steady_clock::now() >= *control.deadline)
-			return Status::TimedOut;
+			return Result{Status::TimedOut};
 		return {};
 	};
-	if (auto reason = stopped()) return {*reason};
+	if (auto reason = stopped()) return *reason;
 	// posix_spawnp reports exec errors separately from a backend that exits 127.
 	// No shell: paths and log levels remain literal arguments.
 	char* const args[] = {
@@ -60,7 +61,7 @@ PuyaRunner::Result PuyaRunner::run(
 	int status = 0;
 	for (;;)
 	{
-		bool const controlled = control.deadline || control.cancellation.stop_possible();
+		bool const controlled = control.deadline || control.cancellation.stop_possible() || control.signal;
 		auto waited = ::waitpid(child, &status, controlled ? WNOHANG : 0);
 		if (waited == child) break;
 		if (waited < 0)
@@ -76,9 +77,9 @@ PuyaRunner::Result PuyaRunner::run(
 			// dedicated process group includes subprocesses it may have started.
 			::kill(-child, SIGKILL);
 			while (::waitpid(child, &status, 0) < 0 && errno == EINTR) {}
-			Logger::instance().error(*reason == Status::TimedOut
+			Logger::instance().error(reason->status == Status::TimedOut
 				? "puya backend deadline exceeded" : "puya backend cancelled");
-			return {*reason};
+			return *reason;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}

@@ -1,5 +1,6 @@
 #include "builder/ast/calls/RevertBlob.h"
 #include "builder/eb/CallOperands.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/codec/SelectorSemantics.h"
 #include "builder/context/BuildArtifacts.h"
 #include "builder/lowering/abi/AbiEncoderBuilder.h"
@@ -50,7 +51,7 @@ RevertPayload::RevertPayload(eb::ContractContext& ctx,
 {
 	using namespace solidity::frontend;
 	auto const* definition = dynamic_cast<ErrorDefinition const*>(
-		ASTNode::referencedDeclaration(error.expression()));
+		ASTNode::referencedDeclaration(SolcFacts::functionExpression(error.expression())));
 	assert(definition);
 	auto const* type = definition->functionType(true);
 	message = definition->name();

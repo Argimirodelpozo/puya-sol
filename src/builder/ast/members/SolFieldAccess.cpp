@@ -32,7 +32,7 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 
 	// Live calldata struct fields use solc offsets and the same validated word
 	// decoder as ABI input. Never fall back to a stale decoded parameter.
-	if (auto const* id = dynamic_cast<Identifier const*>(&baseExpression()))
+	if (auto const* id = SolcFacts::expressionAs<Identifier>(&baseExpression()))
 		if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration);
 			declaration && declaration->referenceLocation() == VariableDeclaration::Location::CallData)
 			if (auto const* live = m_scope.liveCalldataPointers();
@@ -52,9 +52,9 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 				auto length = awst::makeLen(blob, m_loc);
 				// calldataload zero-pads, even for a full-width out-of-range pointer.
 				auto offset = awst::makeConditional(awst::makeNumericCompare(position,
-					awst::NumericComparison::Lt, TypeCoercion::implicitNumericCast(
+					awst::NumericComparison::Lt, TypeCoercion::coerceScalar(
 						length, awst::WType::biguintType(), m_loc), m_loc),
-					TypeCoercion::implicitNumericCast(position, awst::WType::uint64Type(), m_loc),
+					TypeCoercion::coerceScalar(position, awst::WType::uint64Type(), m_loc),
 					length, awst::WType::uint64Type(), m_loc);
 				auto word = awst::makeExtract3(awst::makeConcat(blob, awst::makeBzero(32, m_loc), m_loc),
 					std::move(offset), awst::makeIntegerConstant(32, m_loc), m_loc);
@@ -75,7 +75,7 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 	// as the box value `ps[id]` lowers to, so member reads and writes address
 	// the entry — bare bytes had no members (reads yielded nothing, writes
 	// were rejected as constants).
-	auto const* call = dynamic_cast<FunctionCall const*>(&baseExpression());
+	auto const* call = SolcFacts::expressionAs<FunctionCall>(&baseExpression());
 	auto const* callee = call ? SolcFacts::resolveInternalCall(*call, m_ctx.currentContract) : nullptr;
 	if (callee && !m_ctx.typeMapper.profile().evmStorageLayout
 		&& builder::storageRefReturnIsBytesKeyed(callee, m_ctx.typeMapper.analysis()))

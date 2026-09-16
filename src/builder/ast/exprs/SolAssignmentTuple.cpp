@@ -5,13 +5,9 @@
 
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/contract/ContractBuilder.h"
-#include "builder/target/EvmLayoutMode.h"
 #include "awst/NameGen.h"
-#include "builder/storage/slot/SlotHandleAccess.h"
 #include "builder/eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
-#include "builder/storage/TransientStorage.h"
-#include "builder/codec/Arc4Defaults.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/types/ConversionPlan.h"
@@ -24,8 +20,6 @@ namespace puyasol::builder::sol_ast
 {
 
 using namespace solidity::frontend;
-using Token = solidity::frontend::Token;
-
 /// Tuple-returning call RHS (`(a,b) = f()`): cache in a temp so each TupleItem reads from the cached tuple — without snapshotting, …
 std::shared_ptr<awst::Expression> SolAssignment::snapshotTupleCallRhs(
 	std::shared_ptr<awst::Expression> _value)
@@ -86,7 +80,7 @@ std::shared_ptr<awst::Expression> SolAssignment::pinLiteralTupleRhs(
 				return false;
 			auto const& comp = _sourceLhs->components()[i];
 			if (!comp) return false;
-			auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(comp.get());
+			auto const* id = SolcFacts::expressionAs<solidity::frontend::Identifier>(comp.get());
 			if (!id) return false;
 			auto const* decl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
 				id->annotation().referencedDeclaration);
@@ -121,8 +115,7 @@ std::shared_ptr<awst::Expression> SolAssignment::pinLiteralTupleRhs(
 				newTuple->items.push_back(rhsItem);
 				continue;
 			}
-			std::string tmpName = "__tuple_tmp_" + std::to_string(m_loc.line)
-				+ "_" + std::to_string(i);
+			std::string tmpName = "__tuple_tmp_" + std::to_string(awst::NameGen::next("SolAssignmentTuple.item"));
 			// Must use a pre-effect (not a post-effect): post-effects insert
 			// AFTER the current statement, leaving temps unassigned when the
 			// bare tuple reads them — puya DCEs the assignments and leaks raw
@@ -144,7 +137,7 @@ std::shared_ptr<awst::Expression> SolAssignment::pinLiteralTupleRhs(
 	return _value;
 }
 
-/// Storage-pointer / slot-struct tuple component: compile-time alias rebind (or the slot-handle re-point / slot-level struct copy …
+/// Rebind compile-time storage aliases or runtime slot/holder pointers.
 SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 	size_t i,
 	std::shared_ptr<awst::Expression> const& item,
@@ -159,7 +152,7 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 		auto const& comp = _sourceLhs->components()[i];
 		if (comp)
 		{
-			auto const* lhsIdent = dynamic_cast<solidity::frontend::Identifier const*>(comp.get());
+			auto const* lhsIdent = SolcFacts::expressionAs<solidity::frontend::Identifier>(comp.get());
 			auto const* lhsDecl = lhsIdent ? dynamic_cast<solidity::frontend::VariableDeclaration const*>(
 				lhsIdent->annotation().referencedDeclaration) : nullptr;
 			if (lhsDecl
@@ -248,72 +241,6 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 				m_scope.bindings.storageAliases.set(lhsDecl->id(), std::move(alias));
 				return TupleComponentAction::Handled;
 			}
-
-			// Slot mode, storage STRUCT ← storage STRUCT component: emit a
-			// slot-level copy with POINTER semantics — no snapshot. The tail
-			// reversal below then orders components right-to-left, which is
-			// exactly Solidity's storage-tuple quirk: `(x, y) = (y, x)` is
-			// `y = x; x = y` (swap_in_storage_overwrite pins it).
-			if (m_ctx.typeMapper.profile().evmStorageLayout)
-			{
-				auto const* lst = dynamic_cast<solidity::frontend::StructType const*>(
-					comp->annotation().type);
-				auto const* rhsTupExpr = dynamic_cast<solidity::frontend::TupleExpression const*>(
-					&m_assignment.rightHandSide());
-				solidity::frontend::Expression const* rcomp =
-					(rhsTupExpr && i < rhsTupExpr->components().size()
-						&& rhsTupExpr->components()[i])
-					? rhsTupExpr->components()[i].get() : nullptr;
-				auto const* rst = rcomp ? dynamic_cast<solidity::frontend::StructType const*>(
-					rcomp->annotation().type) : nullptr;
-				if (lst && rst
-					&& &lst->structDefinition() == &rst->structDefinition()
-					&& lst->storageSize() <= 64
-					&& EvmSlotLowering::isStorageStateRef(*comp)
-					&& EvmSlotLowering::isStorageStateRef(*rcomp))
-				{
-					EvmSlotLowering low(m_ctx, m_scope, m_loc);
-					auto la = low.resolve(*comp);
-					auto ra = low.resolve(*rcomp);
-					if (la && ra)
-					{
-						unsigned slots = static_cast<unsigned>(lst->storageSize());
-						// NAMED pins, not EvalOnce: the copy spans several
-						// statements and the tail reversal reorders them —
-						// cross-statement SingleEvaluation reuse is the
-						// known SE-dominance hazard.
-						int swpId = awst::NameGen::next("SolAssignmentTuple.swp");
-						std::string lname = "__swp_l_" + std::to_string(swpId);
-						std::string rname = "__swp_r_" + std::to_string(swpId);
-						m_ctx.preEffects().push_back(
-							awst::makeAssignmentStatement(
-								awst::makeVarExpression(lname,
-									awst::WType::biguintType(), m_loc),
-								la->slot, m_loc));
-						m_ctx.preEffects().push_back(
-							awst::makeAssignmentStatement(
-								awst::makeVarExpression(rname,
-									awst::WType::biguintType(), m_loc),
-								ra->slot, m_loc));
-						auto lslot = awst::makeVarExpression(
-							lname, awst::WType::biguintType(), m_loc);
-						auto rslot = awst::makeVarExpression(
-							rname, awst::WType::biguintType(), m_loc);
-						SlotHandleAccess::forEachIndex(slots, m_ctx.postEffects(), m_loc, [&](auto index, auto& body) {
-							auto dst = awst::makeBigUIntBinOp(lslot,
-								awst::BigUIntBinaryOperator::Add, index, m_loc);
-							auto src = awst::makeBigUIntBinOp(rslot,
-								awst::BigUIntBinaryOperator::Add, index, m_loc);
-							body.push_back(
-								builder::SlotHandleAccess::writeSlot(std::move(dst),
-									builder::SlotHandleAccess::readSlot(
-										std::move(src), m_loc), m_loc));
-							return true;
-						});
-						return TupleComponentAction::Handled;
-					}
-				}
-			}
 		}
 	}
 
@@ -325,7 +252,7 @@ void SolAssignment::coerceTupleComponentValue(
 	std::shared_ptr<awst::Expression> const& assignTarget,
 	std::shared_ptr<awst::Expression>& assignValue)
 {
-	assignValue = builder::TypeCoercion::implicitNumericCast(
+	assignValue = builder::TypeCoercion::coerceScalar(
 		std::move(assignValue), assignTarget->wtype, m_loc);
 	assignValue = eb::AssignmentHelper::arc4EncodeForType(
 		m_ctx, std::move(assignValue), assignTarget->wtype, m_loc);
@@ -362,8 +289,7 @@ bool SolAssignment::emitTupleComponentWrite(
 	if (_sourceLhs && i < _sourceLhs->components().size()
 		&& _sourceLhs->components()[i])
 	{
-		auto const* identifier = dynamic_cast<Identifier const*>(
-			&SolcFacts::functionExpression(*_sourceLhs->components()[i]));
+		auto const* identifier = SolcFacts::expressionAs<Identifier>(&SolcFacts::functionExpression(*_sourceLhs->components()[i]));
 		auto const* declaration = identifier
 			? dynamic_cast<VariableDeclaration const*>(
 				identifier->annotation().referencedDeclaration)
@@ -389,13 +315,20 @@ bool SolAssignment::emitTupleComponentWrite(
 				return true;
 			}
 			auto const* targetType = m_ctx.typeMapper.map(declaration->type());
-			value = builder::TypeCoercion::coerceForAssignment(
-				std::move(value), targetType, m_loc);
-			builder::emitBlobBackValue(
-				m_ctx.typeMapper, declaration->type(), targetType,
-				std::move(value), offsetName,
-				awst::NameGen::next("SolAssignmentTuple.blobRespill"),
-				m_loc, m_ctx.postEffects());
+			auto copy = m_ctx.lowerOperand([&] {
+				assert(_sourceType);
+				value = EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
+					std::move(value), _sourceType->components()[i], targetType, m_loc);
+				value = ConversionPlan{_sourceType->components()[i], declaration->type(), targetType,
+					ConversionPlan::Context::Assignment}.emit(std::move(value), m_loc, &m_ctx.preEffects());
+				return builder::emitBlobBackValue(
+					m_ctx.typeMapper, declaration->type(), targetType,
+					std::move(value), offsetName,
+					awst::NameGen::next("SolAssignmentTuple.blobRespill"),
+					m_loc, m_ctx.postEffects());
+			}, false);
+			for (auto& statement: copy.effects.pre) m_ctx.queuePostEffect(std::move(statement));
+			for (auto& statement: copy.effects.post) m_ctx.queuePostEffect(std::move(statement));
 			return true;
 		}
 	}
@@ -421,20 +354,10 @@ bool SolAssignment::emitTupleComponentWrite(
 	std::shared_ptr<awst::Expression> assignValue = std::move(itemExpr);
 	if (dynamic_cast<awst::TupleExpression const*>(assignTarget.get()))
 	{
-		auto const* nested = _sourceLhs ? dynamic_cast<TupleExpression const*>(_sourceLhs->components()[i].get()) : nullptr;
-		while (nested && nested->components().size() == 1 && nested->components()[0])
-			nested = dynamic_cast<TupleExpression const*>(nested->components()[0].get());
+		auto const* nested = _sourceLhs ? SolcFacts::expressionAs<TupleExpression>(_sourceLhs->components()[i].get()) : nullptr;
 		handleTupleAssignment(assignTarget, std::move(assignValue), nested,
 			_sourceType ? dynamic_cast<TupleType const*>(_sourceType->components()[i]) : nullptr);
 		return true;
-	}
-	if (_sourceLhs && _sourceLhs->components()[i])
-	{
-		auto const* target = _sourceLhs->components()[i]->annotation().type;
-		assert(_sourceType);
-		assignValue = ConversionPlan{_sourceType->components()[i], target,
-			m_ctx.typeMapper.map(target), ConversionPlan::Context::Assignment}.emit(
-				std::move(assignValue), m_loc, &m_ctx.preEffects());
 	}
 	if (!_sourceLhs) coerceTupleComponentValue(assignTarget, assignValue);
 
@@ -442,8 +365,16 @@ bool SolAssignment::emitTupleComponentWrite(
 	// after the RHS snapshot; read/encode/COW/write effects stay with this store.
 	if (_sourceLhs && _sourceLhs->components()[i])
 	{
-		auto const& source = *_sourceLhs->components()[i];
+		auto const& source = SolcFacts::unparenthesized(*_sourceLhs->components()[i]);
 		auto lowered = m_ctx.lowerOperand([&] {
+			assert(_sourceType);
+			auto const* targetType = source.annotation().type;
+			auto const* native = m_ctx.typeMapper.map(targetType);
+			assignValue = EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
+				std::move(assignValue), _sourceType->components()[i], native, m_loc);
+			assignValue = ConversionPlan{_sourceType->components()[i], targetType,
+				native, ConversionPlan::Context::Assignment}.emit(
+					std::move(assignValue), m_loc, &m_ctx.preEffects());
 			auto resolved = m_tupleTargets.find(source.id());
 			if (resolved != m_tupleTargets.end()) return resolved->second->write(assignValue);
 			ResolvedLValue target(m_ctx, source, m_loc, assignTarget);
@@ -467,10 +398,6 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	if (!_sourceType) _sourceType = dynamic_cast<TupleType const*>(m_assignment.rightHandSide().annotation().type);
 	auto const* tupleTarget = dynamic_cast<awst::TupleExpression const*>(_target.get());
 	auto const& items = tupleTarget->items;
-
-	_value = snapshotTupleCallRhs(std::move(_value));
-
-	_value = pinLiteralTupleRhs(std::move(_value), _sourceLhs);
 
 	// Build tuple writes in their own structural effect frame. Only the writes
 	// produced by this destructure are reversed; unrelated parent effects never

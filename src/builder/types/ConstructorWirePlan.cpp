@@ -2,6 +2,7 @@
 #include "builder/types/TypeMapper.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/types/SolIntType.h"
+#include "builder/codec/EvmValueCodec.h"
 #include <libsolidity/ast/AST.h>
 
 namespace puyasol::builder
@@ -12,6 +13,8 @@ ConstructorWirePlan::ConstructorWirePlan(TypeMapper& types,
 	: m_types(types), m_deferred(deferred)
 {
 	if (!constructor) return;
+	auto const& coder = constructor->sourceUnit().annotation().useABICoderV2;
+	m_validate = types.profile().viaIRSequencing || !coder.set() || *coder;
 	for (auto const& declaration: constructor->parameters())
 	{
 		CallParameterPlan parameter;
@@ -64,31 +67,67 @@ ConstructorWirePlan::Expr ConstructorWirePlan::encode(
 }
 
 ConstructorWirePlan::Expr ConstructorWirePlan::decodeParameter(
-	size_t index, Expr wire, awst::SourceLocation const& loc) const
+	size_t index, Expr wire, awst::SourceLocation const& loc, Statements& out) const
 {
-	auto const* native = parameters.at(index).type;
-	if (awst::structurallyEquivalent(wire->wtype, native)) return wire;
-	if (auto const* array = dynamic_cast<awst::ReferenceArray const*>(native);
-		array && !array->arraySize())
-		return awst::makeConvertArray(std::move(wire), native, loc);
-	return awst::makeARC4Decode(std::move(wire), native, loc);
+	auto const& parameter = parameters.at(index);
+	auto const* native = parameter.type;
+	if (!awst::structurallyEquivalent(wire->wtype, native))
+		wire = awst::makeARC4Decode(std::move(wire), native, loc);
+	if (native == awst::WType::uint64Type())
+		return decodeScalar(index, awst::makeItob(std::move(wire), loc), loc, out);
+	if (native == awst::WType::biguintType())
+	{
+		// The deferred signed carrier is uint512. Check before narrowing its
+		// bytes to the canonical 256-bit two's-complement Solidity value.
+		if (parameter.wireType == native)
+			out.push_back(awst::makeExpressionStatement(awst::makeAssert(
+				awst::makeNumericCompare(wire, awst::NumericComparison::Lte,
+					awst::makeBiguintConstant(solidity::u256(-1).str(), loc), loc),
+				loc, "constructor integer exceeds 256 bits"), loc));
+		return decodeScalar(index, awst::makeLeftPadToN(awst::makeAsBytes(std::move(wire), loc), 32, loc), loc, out);
+	}
+	return wire;
+}
+
+ConstructorWirePlan::Expr ConstructorWirePlan::decodeScalar(
+	size_t index, Expr bytes, awst::SourceLocation const& loc, Statements& out) const
+{
+	auto const* type = parameters.at(index).declaration->type();
+	auto integer = SolIntType::fromSol(type);
+	auto word = integer && integer->isSigned
+		? codec::signExtendToWord(std::move(bytes), loc)
+		: awst::makeLeftPadToN(std::move(bytes), 32, loc);
+	return codec::valueFromEvmWord(m_types, type, std::move(word), loc, out,
+		m_validate ? codec::PaddingPolicy::Validate : codec::PaddingPolicy::Clean);
 }
 
 ConstructorWirePlan::Expr ConstructorWirePlan::decodeCreate(
-	size_t index, Expr bytes, awst::SourceLocation const& loc) const
+	size_t index, Expr bytes, awst::SourceLocation const& loc, Statements& out) const
 {
 	auto const& parameter = parameters.at(index);
 	auto const* native = parameter.type;
 	// Retain the create reader's legacy whole-word inputs from deploy tooling;
 	// generated child calls now also send an 8-byte native narrow carrier.
-	if (native == awst::WType::uint64Type() || native == awst::WType::boolType())
-		return awst::makeBtoi(awst::makeExtractLastN(std::move(bytes), 8, loc), loc, native);
-	if (native == awst::WType::biguintType()) return awst::makeAsBiguint(std::move(bytes), loc);
+	if (awst::isNumericWType(native) || native == awst::WType::boolType())
+	{
+		bytes = awst::makeEvalOnce(std::move(bytes), loc);
+		auto const* encoded = dynamic_cast<awst::ARC4UIntN const*>(parameter.wireType);
+		auto width = awst::makeIntegerConstant(encoded ? encoded->n() / 8 : 8, loc);
+		auto length = awst::makeLen(bytes, loc);
+		out.push_back(awst::makeExpressionStatement(awst::makeAssert(
+			awst::makeBoolBinOp(
+				awst::makeNumericCompare(length, awst::NumericComparison::Eq, width, loc),
+				awst::BinaryBooleanOperator::Or,
+				awst::makeNumericCompare(length, awst::NumericComparison::Eq,
+					awst::makeIntegerConstant(32, loc), loc), loc),
+			loc, "invalid constructor scalar width"), loc));
+		return decodeScalar(index, std::move(bytes), loc, out);
+	}
 	if (native == awst::WType::accountType() || native == awst::WType::bytesType()
 		|| native == awst::WType::stringType() || awst::fixedBytesLength(native))
 		return awst::makeReinterpretCast(std::move(bytes), native, loc);
 	return decodeParameter(index,
-		awst::makeReinterpretCast(std::move(bytes), parameter.wireType, loc), loc);
+		awst::makeReinterpretCast(std::move(bytes), parameter.wireType, loc), loc, out);
 }
 
 } // namespace puyasol::builder

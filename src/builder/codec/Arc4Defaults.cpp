@@ -249,15 +249,6 @@ EncodedSize computeEncodedElementSize(awst::WType const* _type)
 			return EncodedSize::fixed(count / 8 + (count % 8 != 0));
 		return computeEncodedElementSize(arr->elementType()).times(count);
 	}
-	case awst::WTypeKind::ReferenceArray:
-	{
-		auto const* arr = static_cast<awst::ReferenceArray const*>(_type);
-		if (!arr->arraySize())
-			return {EncodedSize::Kind::Dynamic};
-		if (*arr->arraySize() < 0)
-			return {EncodedSize::Kind::Unsupported};
-		return computeEncodedElementSize(arr->elementType()).times(*arr->arraySize());
-	}
 	case awst::WTypeKind::ARC4DynamicArray:
 	{
 		auto const element = computeEncodedElementSize(

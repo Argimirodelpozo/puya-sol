@@ -365,16 +365,6 @@ struct EvmSlotCodec
 					awst::UInt64BinaryOperator::Mod, u64c(2), loc),
 				awst::NumericComparison::Eq, u64c(_bit), loc);
 		};
-		// long form: len = (word-1)/2 (word reconstructed from `_w`)
-		auto longLen = [&](char const* _w) {
-			return biguintToU64(awst::makeBigUIntBinOp(
-				awst::makeBigUIntBinOp(
-					awst::makeAsBiguint(bytesVar(_w), loc),
-					awst::BigUIntBinaryOperator::Sub,
-					awst::makeIntegerConstant("1", loc, awst::WType::biguintType()), loc),
-				awst::BigUIntBinaryOperator::FloorDiv,
-				awst::makeIntegerConstant("2", loc, awst::WType::biguintType()), loc));
-		};
 		// ceil(len / 32) chunks
 		auto chunkCount = [&](std::shared_ptr<awst::Expression> _len) {
 			return awst::makeUInt64BinOp(
@@ -398,21 +388,36 @@ struct EvmSlotCodec
 		char const* word = _write ? "__ow" : "__wb";
 		body->body.push_back(awst::makeAssignmentStatement(
 			bytesVar(word), wordBytes(readWordCall(slotVar())), loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__last"), lastByte(word), loc));
+		auto isShort = parityIs(u64Var("__last"), 0);
+		auto shortLen = awst::makeUInt64BinOp(u64Var("__last"),
+			awst::UInt64BinaryOperator::FloorDiv, u64c(2), loc);
+		auto longLen = awst::makeBigUIntBinOp(awst::makeAsBiguint(bytesVar(word), loc),
+			awst::BigUIntBinaryOperator::FloorDiv, awst::makeBiguintConstant("2", loc), loc);
+		body->body.push_back(awst::makeAssignmentStatement(biguintVar("__storedLen"),
+			awst::makeConditional(isShort, awst::makeAsBiguint(awst::makeItob(shortLen, loc), loc),
+				std::move(longLen), awst::WType::biguintType(), loc), loc));
+		// solc extract_byte_array_length: short lengths must be <32 and
+		// long lengths >=32. Validate the full word before any uint64 cast.
+		body->body.push_back(awst::makeExpressionStatement(awst::makeAssert(
+			awst::makeConditional(isShort,
+				awst::makeNumericCompare(biguintVar("__storedLen"), awst::NumericComparison::Lt, awst::makeBiguintConstant("32", loc), loc),
+				awst::makeNumericCompare(biguintVar("__storedLen"), awst::NumericComparison::Gte, awst::makeBiguintConstant("32", loc), loc),
+				awst::WType::boolType(), loc), loc, "invalid bytes storage encoding (Panic 0x22)"), loc));
+		auto storedLen = TypeCoercion::checkedAllocationSizeToUint64(
+			body->body, biguintVar("__storedLen"), loc);
 		if (!_write)
 		{
-			body->body.push_back(awst::makeAssignmentStatement(
-				u64Var("__last"), lastByte(word), loc));
 			// short form: even last byte → len = last/2, data = wb[0:len]
 			auto thenBlk = awst::makeBlock(loc);
-			auto lenS = awst::makeUInt64BinOp(u64Var("__last"),
-				awst::UInt64BinaryOperator::FloorDiv, u64c(2), loc);
 			thenBlk->body.push_back(awst::makeReturnStatement(
-				awst::makeExtract3(bytesVar(word), u64c(0), std::move(lenS), loc),
+				awst::makeExtract3(bytesVar(word), u64c(0), shortLen, loc),
 				loc));
 			body->body.push_back(awst::makeIfElse(
-				parityIs(u64Var("__last"), 0), std::move(thenBlk), nullptr, loc));
+				isShort, std::move(thenBlk), nullptr, loc));
 			body->body.push_back(awst::makeAssignmentStatement(
-				u64Var("__len"), longLen(word), loc));
+				u64Var("__len"), storedLen, loc));
 		}
 		body->body.push_back(awst::makeAssignmentStatement(
 			biguintVar("__chunk"), chunkBase(), loc));
@@ -441,11 +446,10 @@ struct EvmSlotCodec
 			body->body.push_back(awst::makeAssignmentStatement(
 				u64Var("__oldChunks"), u64c(0), loc));
 			{
-				auto wasLong = parityIs(lastByte(word), 1);
+				auto wasLong = awst::makeNot(isShort, loc);
 				auto thenBlk = awst::makeBlock(loc);
-				auto oldLen = longLen(word);
 				thenBlk->body.push_back(awst::makeAssignmentStatement(
-					u64Var("__oldChunks"), chunkCount(std::move(oldLen)), loc));
+					u64Var("__oldChunks"), chunkCount(storedLen), loc));
 				body->body.push_back(awst::makeIfElse(
 					std::move(wasLong), std::move(thenBlk), nullptr, loc));
 			}

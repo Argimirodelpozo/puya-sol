@@ -1,7 +1,7 @@
 #pragma once
 
 /// @file Visit.h
-/// Pre-order traversal of AWST expression trees. The const walker is the
+/// Pre-order traversal of AWST expression graphs. The const walker is the
 /// real one; the mutable overloads are a const_cast shim over it.
 
 #include "awst/Node.h"
@@ -14,10 +14,11 @@ namespace puyasol::awst
 using ExpressionVisitor = std::function<void(Expression const&)>;
 using MutableExpressionVisitor = std::function<void(Expression&)>;
 
-/// Visit every expression contained by `_statement` in pre-order.
+/// Visit each distinct expression identity once, in pre-order. Shared children
+/// are not revisited. Callbacks may edit fields but must not replace graph nodes.
 void visitExpressions(Statement const& _statement, ExpressionVisitor const& _visitor);
 
-/// Visit every expression contained by `_method` in pre-order.
+/// Visit each distinct expression contained by `_method` once, in pre-order.
 void visitExpressions(ContractMethod const& _method, ExpressionVisitor const& _visitor);
 
 void visitExpressions(Statement& _statement, MutableExpressionVisitor const& _visitor);

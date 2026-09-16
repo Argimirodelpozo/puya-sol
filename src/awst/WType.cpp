@@ -80,13 +80,6 @@ bool equivalentImpl(
 				return false;
 		return true;
 	}
-	case WTypeKind::ReferenceArray:
-	{
-		auto const* l = static_cast<ReferenceArray const*>(lhs);
-		auto const* r = static_cast<ReferenceArray const*>(rhs);
-		return l->arraySize() == r->arraySize()
-			&& equivalentImpl(l->elementType(), r->elementType(), seen);
-	}
 	case WTypeKind::WTuple:
 	{
 		auto const* l = static_cast<WTuple const*>(lhs);

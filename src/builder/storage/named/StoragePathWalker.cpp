@@ -43,32 +43,14 @@ StorageHolder StoragePathWalker::step(
 	}
 	if (array)
 	{
-		std::shared_ptr<awst::Expression> bound;
-		auto const* compareType = _index->wtype;
-		if (array->isDynamicallySized())
-		{
-			// Nested array lengths belong to the enclosing serialized box,
-			// not to the separately derived mapping-holder identity.
-			if (!_holder.value) throw SizeError("dynamic storage array has no addressable length");
-			bound = awst::makeArrayLength(_holder.value, awst::WType::uint64Type(), m_loc);
-		}
-		else
-		{
-			if (array->length() > std::numeric_limits<uint64_t>::max())
-				compareType = awst::WType::biguintType();
-			bound = awst::makeIntegerConstant(array->length().str(), m_loc, compareType);
-		}
-		_pre.push_back(awst::makeExpressionStatement(awst::makeAssert(
-			awst::makeNumericCompare(
-				TypeCoercion::implicitNumericCast(_index, compareType, m_loc),
-				awst::NumericComparison::Lt,
-				TypeCoercion::implicitNumericCast(std::move(bound), compareType, m_loc), m_loc),
-			m_loc, "array index out of bounds"), m_loc));
-		// solc owns the logical bound; AVM byte/box addressing owns this capacity.
-		_index = TypeCoercion::checkedIndexToUint64(_pre, std::move(_index), m_loc);
+		// Nested array lengths belong to the enclosing serialized box,
+		// not to the separately derived mapping-holder identity.
+		auto length = array->isDynamicallySized() && _holder.value
+			? awst::makeArrayLength(_holder.value, awst::WType::uint64Type(), m_loc) : nullptr;
+		_index = checkedArrayIndex(*array, std::move(_index), std::move(length), _pre, m_loc);
 	}
 	else
-		_index = TypeCoercion::implicitNumericCast(std::move(_index), keyWType, m_loc);
+		_index = TypeCoercion::coerceScalar(std::move(_index), keyWType, m_loc);
 
 	Type const* next = array ? array->baseType() : mapping->valueType();
 	StorageHolder child;
@@ -85,6 +67,28 @@ StorageHolder StoragePathWalker::step(
 			child.value = boxedValue(m_typeMapper, child.key, nextArray, m_loc);
 	m_type = next;
 	return child;
+}
+
+std::shared_ptr<awst::Expression> StoragePathWalker::checkedArrayIndex(
+	ArrayType const& type, std::shared_ptr<awst::Expression> index,
+	std::shared_ptr<awst::Expression> bound,
+	std::vector<std::shared_ptr<awst::Statement>>& pre, awst::SourceLocation const& loc)
+{
+	auto const* compareType = index->wtype;
+	if (!type.isDynamicallySized())
+	{
+		if (type.length() > std::numeric_limits<uint64_t>::max())
+			compareType = awst::WType::biguintType();
+		bound = awst::makeIntegerConstant(type.length().str(), loc, compareType);
+	}
+	if (!bound) throw SizeError("dynamic storage array has no addressable length");
+	pre.push_back(awst::makeExpressionStatement(awst::makeAssert(
+		awst::makeNumericCompare(TypeCoercion::coerceScalar(index, compareType, loc),
+			awst::NumericComparison::Lt,
+			TypeCoercion::coerceScalar(std::move(bound), compareType, loc), loc),
+		loc, "array index out of bounds"), loc));
+	// solc owns the logical bound; AVM byte/box addressing owns this capacity.
+	return TypeCoercion::checkedIndexToUint64(pre, std::move(index), loc);
 }
 
 StorageHolder StoragePathWalker::member(

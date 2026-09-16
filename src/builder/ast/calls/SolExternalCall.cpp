@@ -24,54 +24,17 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
-static constexpr int TxnTypeAppl = 6;
-
 std::string SolExternalCall::buildMethodSelector(MemberAccess const& _memberAccess)
 {
 	auto const* type = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
 	assert(type);
-	std::vector<std::string> paramNames, retNames;
-	for (auto const* param: type->parameterTypes())
-		paramNames.push_back(eb::solTypeToArc4ParamName(m_ctx, param));
-	for (auto const* result: type->returnParameterTypes())
-		retNames.push_back(eb::solTypeToArc4ReturnName(m_ctx, result));
-	return builder::TypeCoercion::buildArc4Selector(_memberAccess.memberName(), paramNames, retNames);
-}
-
-std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
-	std::shared_ptr<awst::Expression> _create,
-	awst::WType const* _returnType,
-	solidity::frontend::Type const* _solReturnType,
-	std::shared_ptr<awst::Expression> _payTxn)
-{
-	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
-	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, m_loc);
-	if (_payTxn)
-		submit->itxns.push_back(std::move(_payTxn));
-	submit->itxns.push_back(std::move(_create));
-
-	// Submit as pre-pending statement, then CAPTURE this call's log immediately
-	// (a later inner txn built in the same statement — tuple of calls — clobbers
-	// the itxn context; a live LastLog read would see the LAST submit's log).
-	auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
-	m_ctx.preEffects().push_back(std::move(submitStmt));
-
-	auto stripPrefix = ApplicationCall::capture(m_ctx.typeMapper, m_loc, m_ctx.preEffects());
-	if (!_returnType || _returnType == awst::WType::voidType())
-		return awst::makeVoidConstant(m_loc);
-	std::vector<Type const*> components;
-	if (auto const* tuple = dynamic_cast<TupleType const*>(_solReturnType))
-		components = tuple->components();
-	else
-		components.push_back(_solReturnType);
-	return decodeExternalCallResult(m_ctx.typeMapper, std::move(stripPrefix),
-		components, _returnType, m_loc, m_ctx.preEffects());
+	return eb::InnerCallHandlers::buildMethodSelector(m_ctx, _memberAccess.memberName(), *type);
 }
 
 std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 {
 	auto const& funcExpr = funcExpression();
-	auto const* memberAccess = dynamic_cast<MemberAccess const*>(&funcExpr);
+	auto const* memberAccess = SolcFacts::expressionAs<MemberAccess>(&funcExpr);
 	if (!memberAccess)
 	{
 		auto vc = awst::makeVoidConstant(m_loc);
@@ -178,19 +141,13 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 			awst::makeAsApplication(appId, m_loc), std::move(callValue), m_loc);
 	}
 
-	// Build inner app transaction
-	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
-	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, m_loc);
-	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, m_loc);
-	create->fields["Fee"] = awst::makeZero(m_loc);
-	create->fields["ApplicationID"] = std::move(appId);
-	create->fields["OnCompletion"] = awst::makeZero(m_loc);
-	create->fields["ApplicationArgs"] = std::move(argsTuple);
-
-	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
-	return submitAndReturn(
-		std::move(create), retType, m_call.annotation().type,
-		std::move(payTxn));
+	auto payload = ApplicationCall::submit(m_ctx.typeMapper,
+		awst::makeAsApplication(std::move(appId), m_loc), std::move(argsTuple),
+		std::move(payTxn), m_loc, m_ctx.preEffects());
+	auto const* resultType = m_ctx.typeMapper.map(m_call.annotation().type);
+	if (resultType == awst::WType::voidType()) return awst::makeVoidConstant(m_loc);
+	return decodeExternalCallResult(m_ctx.typeMapper, std::move(payload),
+		functionType->returnParameterTypes(), resultType, m_loc, m_ctx.preEffects());
 }
 
 } // namespace puyasol::builder::sol_ast

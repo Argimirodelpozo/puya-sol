@@ -20,6 +20,7 @@
 #include <libsolutil/Common.h>
 
 #include <boost/multiprecision/cpp_int.hpp>
+#include <algorithm>
 #include <map>
 #include <set>
 // yul nodes BY VALUE (the AST aliases are std::variant, which needs
@@ -45,92 +46,26 @@ std::shared_ptr<awst::Expression> ContractBuilder::lowerStateInitializer(
 			std::move(value), _loc, &m_exprBuilder->preEffects());
 }
 
-/// buildApprovalProgram phase: slot-mode state-var init — the slot space zero-initialises for free (absent box = 0); only explicit …
+/// Slot space defaults to zero; explicit initializers use the shared typed writer.
 void ContractBuilder::emitSlotModeStateVarInit(
-	solidity::frontend::VariableDeclaration const& _var,
+	solidity::frontend::VariableDeclaration const& var,
 	std::vector<std::shared_ptr<awst::Statement>>& targetBody,
 	awst::SourceLocation const& loc)
 {
-	auto const* var = &_var;
-	if (!var->value())
-		return;
-	auto const* t = var->type();
-	if (t && !t->isValueType())
-	{
-		// aggregate initializer: build the value and hand it
-		// to the aggregate writers (array / struct / bytes)
-		sol_ast::EvmSlotLowering aggLow(
-			*m_exprBuilder, *m_exprBuilder->currentScope,
-			loc);
-		auto aggAddr = aggLow.addrForStateVar(*var);
-		auto aggVal = aggAddr
-			? lowerStateInitializer(*var, aggAddr->wtype, loc) : nullptr;
-		bool done = false;
-		if (aggAddr && aggVal)
-		{
-			aggAddr->solType = t;
-			std::vector<std::shared_ptr<awst::Statement>> aggOut;
-			if (sol_ast::EvmSlotLowering::isBytesLike(t))
-			{
-				std::shared_ptr<awst::Expression> bv =
-					std::move(aggVal);
-				if (bv->wtype
-					&& bv->wtype->kind() != awst::WTypeKind::Bytes
-					&& bv->wtype != awst::WType::stringType())
-					bv = awst::makeARC4Decode(std::move(bv),
-						awst::WType::bytesType(),
-						loc);
-				aggLow.writeBytesValue(*aggAddr, std::move(bv),
-					aggOut);
-				done = true;
-			}
-			else if (auto const* iat =
-				dynamic_cast<solidity::frontend::ArrayType const*>(t))
-				done = aggLow.writeArrayValue(
-					*aggAddr, iat, std::move(aggVal), aggOut);
-			else if (dynamic_cast<
-				solidity::frontend::StructType const*>(t))
-				done = aggLow.writeStructValue(
-					*aggAddr, std::move(aggVal), aggOut);
-			if (done)
-			{
-				for (auto& preStmt: m_exprBuilder->takePreEffects())
-					targetBody.push_back(std::move(preStmt));
-				for (auto& postStmt: m_exprBuilder->takePostEffects())
-					targetBody.push_back(std::move(postStmt));
-				for (auto& st3: aggOut)
-					targetBody.push_back(std::move(st3));
-			}
-		}
-		if (!done)
-			Logger::instance().error(
-				"--evm-storage-layout: aggregate state initializer "
-				"not yet supported for '" + var->name() + "'",
-				loc);
-		return;
-	}
-	if (!t)
-	{
-		return;
-	}
-	sol_ast::EvmSlotLowering low(
-		*m_exprBuilder, *m_exprBuilder->currentScope,
-		loc);
-	auto addr = low.addrForStateVar(*var);
-	if (!addr)
-		return;
-	auto initVal = lowerStateInitializer(*var, addr->wtype, loc);
-	if (!initVal)
-		return;
-	for (auto& preStmt: m_exprBuilder->takePreEffects())
-		targetBody.push_back(std::move(preStmt));
-	for (auto& postStmt: m_exprBuilder->takePostEffects())
-		targetBody.push_back(std::move(postStmt));
+	if (!var.value()) return;
+	sol_ast::EvmSlotLowering low(*m_exprBuilder, *m_exprBuilder->currentScope, loc);
+	auto addr = low.addrForStateVar(var);
+	if (!addr) return;
+	auto value = lowerStateInitializer(var, addr->wtype, loc);
+	if (!value) return;
 	std::vector<std::shared_ptr<awst::Statement>> writes;
-	low.writeValue(*addr, std::move(initVal), writes);
-	for (auto& st: writes)
-		targetBody.push_back(std::move(st));
-	return;
+	if (!low.writeAny(*addr, var.type(), std::move(value), writes))
+	{
+		Logger::instance().error("--evm-storage-layout: unsupported state initializer for '" + var.name() + "'", loc);
+		return;
+	}
+	m_exprBuilder->appendEffectsTo(targetBody);
+	targetBody.insert(targetBody.end(), writes.begin(), writes.end());
 }
 
 /// buildApprovalProgram phase: state variable initialization for one contract level.
@@ -161,124 +96,16 @@ void ContractBuilder::emitStateVarInitFor(
 			continue;
 		}
 
-		auto kind = binding.kind;
-
-		auto* wtype = binding.wtype;
-
-		// Box ARC4 struct with explicit initializer: encode + box_put.
-		// Dynamic arrays/bytes handled by m_boxArrayVars loop; skip here.
-		if (kind == awst::AppStorageKind::Box)
-		{
-			if (binding.initialization != StorageMapper::RootInitialization::ExplicitBox)
-				continue;
-			auto initVal = lowerStateInitializer(*var, wtype, loc);
-			if (!initVal)
-				continue;
-			for (auto& preStmt: m_exprBuilder->takePreEffects())
-				targetBody.push_back(std::move(preStmt));
-			for (auto& postStmt: m_exprBuilder->takePostEffects())
-				targetBody.push_back(std::move(postStmt));
-			auto boxKey = awst::makeUtf8BytesConstant(
-				binding.key, loc);
-			auto put = awst::makeIntrinsicCall(
-				"box_put", awst::WType::voidType(), loc);
-			put->stackArgs.push_back(std::move(boxKey));
-			put->stackArgs.push_back(std::move(initVal));
-			targetBody.push_back(awst::makeExpressionStatement(
-				std::move(put), loc));
-			continue;
-		}
-
-		if (kind != awst::AppStorageKind::AppGlobal)
-			continue;
-
-		auto key = awst::makeUtf8BytesConstant(binding.key, loc);
-
-		std::shared_ptr<awst::Expression> defaultVal;
-		if (var->value())
-		{
-			// Pre-write zero so self-referencing immutable initializers
-			// (`uint immutable x = x + 1`) read 0 via app_global_get_ex.
-			// Non-immutable vars get zero from the fall-through below.
-			if (var->immutable())
-			{
-				std::shared_ptr<awst::Expression> zeroVal;
-				if (wtype == awst::WType::accountType())
-					zeroVal = awst::makeAddressConstant(
-						"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
-						loc);
-				else if (wtype == awst::WType::biguintType())
-					zeroVal = awst::makeZero(loc, awst::WType::biguintType());
-				else if (wtype == awst::WType::boolType() || wtype == awst::WType::uint64Type())
-					zeroVal = awst::makeZero(loc);
-				else
-					zeroVal = TypeCoercion::makeDefaultValue(wtype, loc);
-				auto preKey = awst::makeUtf8BytesConstant(
-					binding.key, loc);
-				auto prePut = awst::makeAppGlobalPut(
-					preKey, std::move(zeroVal), loc);
-				targetBody.push_back(
-					awst::makeExpressionStatement(std::move(prePut), loc));
-			}
-
-			defaultVal = lowerStateInitializer(*var, wtype, loc);
-			// Flush pre-effects (e.g. new C() inner-txn create+fund)
-			// before the state-var assignment uses __new_app_id_N.
-			for (auto& preStmt: m_exprBuilder->takePreEffects())
-				targetBody.push_back(std::move(preStmt));
-			for (auto& postStmt: m_exprBuilder->takePostEffects())
-				targetBody.push_back(std::move(postStmt));
-		}
-		if (!defaultVal)
-		{
-		if (wtype == awst::WType::accountType())
-			defaultVal = awst::makeAddressConstant(
-				"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
-				loc);
-		else if (wtype == awst::WType::biguintType())
-		{
-			auto val = awst::makeZero(loc, awst::WType::biguintType());
-			defaultVal = val;
-		}
-		else if (wtype == awst::WType::boolType()
-			|| wtype == awst::WType::uint64Type())
-		{
-			auto val = awst::makeZero(loc);
-			defaultVal = val;
-		}
-		else if (wtype->kind() == awst::WTypeKind::ReferenceArray
-			|| wtype->kind() == awst::WTypeKind::ARC4StaticArray
-			|| wtype->kind() == awst::WTypeKind::ARC4DynamicArray)
-		{
-			defaultVal = TypeCoercion::makeDefaultValue(wtype, loc);
-		}
-		else if (wtype->kind() == awst::WTypeKind::ARC4Struct
-			|| wtype->kind() == awst::WTypeKind::WTuple)
-		{
-			defaultVal = TypeCoercion::makeDefaultValue(wtype, loc);
-		}
-		else
-		{
-			// bytes1..bytes32: N zero bytes so the auto-getter ABI emits the
-			// declared width. Dynamic bytes/string keep the empty default.
-			int bytesLen = 0;
-			if (auto const* bw = dynamic_cast<awst::BytesWType const*>(wtype))
-				if (bw->length().has_value() && *bw->length() > 0)
-					bytesLen = static_cast<int>(*bw->length());
-			defaultVal = awst::makeBytesConstant(
-				std::vector<uint8_t>(static_cast<size_t>(bytesLen), 0),
-				loc,
-				awst::BytesEncoding::Base16,
-				wtype && wtype->kind() == awst::WTypeKind::Bytes
-					? wtype : awst::WType::bytesType());
-		}
-		} // end if (!defaultVal)
-
-		// app_global_put(key, defaultVal)
-		auto put = awst::makeAppGlobalPut(key, defaultVal, loc);
-
-		auto stmt = awst::makeExpressionStatement(put, loc);
-		targetBody.push_back(stmt);
+		// Absent named cells already read as the solc default. Writing zero
+		// here would erase writes made by an earlier initializer to this var.
+		// Explicit values alone execute in the constructor schedule; the
+		// shared typed store also resizes preallocated dynamic boxes.
+		if (!var->value()) continue;
+		auto value = lowerStateInitializer(*var, binding.valueType(m_typeMapper), loc);
+		if (!value) continue;
+		m_exprBuilder->appendEffectsTo(targetBody);
+		targetBody.push_back(awst::makeExpressionStatement(
+			m_storageMapper.createStateWrite(binding, std::move(value), loc), loc));
 	}
 }
 
@@ -374,9 +201,10 @@ void ContractBuilder::emitCtorParamDecode(
 	bool needsPostInit,
 	awst::SourceLocation const& loc)
 {
+	// Deferred arguments enter through __postInit, not the bare create call.
+	if (needsPostInit) return;
 	auto const* constructor = &_constructor;
 	if (m_typeMapper.profile().contractAbi == ContractAbi::Evm
-		&& !needsPostInit
 		&& !constructor->parameters().empty())
 	{
 		std::vector<solidity::frontend::Type const*> parameterTypes;
@@ -412,9 +240,10 @@ void ContractBuilder::emitCtorParamDecode(
 		for (size_t i = 0; i < wire.parameters.size(); ++i)
 		{
 			auto const& parameter = wire.parameters[i];
+			auto value = wire.decodeCreate(i, awst::makeAppArg(static_cast<int>(i), loc), loc, createBlock->body);
 			createBlock->body.push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(parameter.name, parameter.type, loc),
-				wire.decodeCreate(i, awst::makeAppArg(static_cast<int>(i), loc), loc), loc));
+				std::move(value), loc));
 		}
 	}
 }
@@ -473,6 +302,19 @@ void ContractBuilder::emitConstructorPlan(
 {
 	using namespace solidity::frontend;
 	auto const& linearized = _contract.annotation().linearizedBaseContracts;
+	// Partial writes to global aggregates need a backing value. Allocate all
+	// of them before any initializer/base argument can read or mutate one;
+	// per-declaration zeroing would erase earlier writes to later variables.
+	forEachStateVar(_contract, [&](auto const* var) {
+		auto binding = m_storageMapper.physicalBindingFor(*var);
+		if (binding.initialization == StorageMapper::RootInitialization::NamedCell
+			&& !var->type()->isValueType())
+		{
+			auto loc = makeLoc(var->location());
+			body->body.push_back(awst::makeExpressionStatement(m_storageMapper.createStateWrite(
+				binding, TypeCoercion::makeDefaultValue(binding.wtype, loc), loc), loc));
+		}
+	});
 	// Argument nodes are not Scopable. Index their lexical owners once; solc's
 	// baseConstructorArguments still decides which node supplies each base.
 	std::map<ASTNode const*, ContractDefinition const*> owners;
@@ -683,187 +525,44 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 }
 
 void ContractBuilder::emitBoxCreateForStateVars(
-	awst::Block& _postInitBody,
-	awst::SourceLocation const& _loc)
+	awst::Block& body,
+	awst::SourceLocation const& loc)
 {
-	// Create boxes for dynamic array state variables
+	// Allocation/defaults precede constructor execution so earlier
+	// initializers can read any state variable. No initializer runs here.
 	for (auto const* var: m_boxArrayVars)
 	{
-		if (!var)
-			continue;
 		auto binding = m_storageMapper.physicalBindingFor(*var);
-		auto const& varName = binding.key;
-		auto boxKey = awst::makeUtf8BytesConstant(varName, _loc);
-
-		// Dynamic bytes without init: box_create(size=0). Raw content has no length
-		// header, so empty box = empty bytes. Required so BoxValueExpression (bare
-		// box_extract path) works; old box_get→select fallback reverts on >4 KB
-		// (AVM stack-value cap). See StorageMapper::makeStateGetWithDefault.
-		auto const* declaredArray =
-			dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
-		bool isDynamicBytesWithoutInit = declaredArray
-			&& declaredArray->isByteArrayOrString() && !var->value();
-		if (isDynamicBytesWithoutInit)
+		auto* type = binding.wtype;
+		auto key = awst::makeUtf8BytesConstant(binding.key, loc);
+		if (StorageMapper::isMultiBoxArray(type))
 		{
-			auto sizeZero = awst::makeIntegerConstant(0, _loc);
-			auto boxCreate = awst::makeBoxCreate(
-				std::move(boxKey), std::move(sizeZero),
-				_loc);
-			auto boxStmt = awst::makeExpressionStatement(
-				std::move(boxCreate), _loc);
-			_postInitBody.body.push_back(std::move(boxStmt));
+			auto const total = StorageMapper::arc4StaticArrayTotalBytes(type);
+			auto const pageBytes = uint64_t(StorageMapper::elementsPerBox(type))
+				* StorageMapper::arc4StaticArrayElementSize(type);
+			for (unsigned page = 0; page < StorageMapper::numBoxesForArray(type); ++page)
+			{
+				auto pageKey = awst::makeConcat(key, awst::makeItob(
+					awst::makeIntegerConstant(page, loc), loc), loc);
+				auto size = std::min(pageBytes, total - page * pageBytes);
+				body.body.push_back(awst::makeExpressionStatement(awst::makeBoxCreate(
+					std::move(pageKey), awst::makeIntegerConstant(size, loc), loc), loc));
+			}
 			continue;
 		}
-
-		// boxSizeVal: 2 (ARC4 dyn-array length header), or literal size,
-		// or elementSize*N for static arrays (e.g. uint[20]).
-		unsigned boxSizeVal = 2; // ARC4 dynamic array length header
-		std::shared_ptr<awst::Expression> boxInitVal;
-		// ARC4StaticArray<dynamic T>: zeroed buffer is invalid ARC4 (head offsets
-		// must exceed head). Synthesise default encoding → box_put instead.
-		std::optional<std::vector<uint8_t>> dynArc4Default;
-		// ARC4StaticArray (uint[N], int[N], etc.): allocate
-		// elementSize * arraySize bytes so the contract can
-		// write to slot indices without "no such box".
-		auto* varWtype = binding.wtype;
-		if (varWtype && varWtype->kind() == awst::WTypeKind::ARC4StaticArray)
+		if (type->kind() == awst::WTypeKind::ARC4StaticArray && arc4IsDynamic(type))
 		{
-			auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(varWtype);
-			if (sa && sa->arraySize() > 0)
-			{
-				if (arc4IsDynamic(sa))
-				{
-					if (auto enc = arc4DefaultEncoding(sa))
-						if (enc->size() > 0 && enc->size() <= 32768)
-							dynArc4Default = std::move(*enc);
-				}
-				uint64_t elemSize = 32; // conservative fallback; dynamic defaults use box_put
-				auto const* elemT = sa->elementType();
-				if (auto fixedSize = builder::computeEncodedElementSize(elemT).fixedBytes())
-					elemSize = *fixedSize;
-				// AVM box cap = 32768 B; oversized → multi-box below.
-				// Record per-box size here.
-				uint64_t count = static_cast<uint64_t>(sa->arraySize());
-				uint64_t size = elemSize && count > 32768 / elemSize
-					? 32768 : elemSize * count;
-				boxSizeVal = static_cast<unsigned>(size);
-			}
+			// Dynamic-element heads need valid offsets, not a zeroed buffer.
+			auto value = TypeCoercion::makeDefaultValue(type, loc);
+			body.body.push_back(awst::makeExpressionStatement(
+				m_storageMapper.createStateWrite(binding, std::move(value), loc), loc));
+			continue;
 		}
-		if (var->value())
-		{
-			auto const* arrType =
-				dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
-			if (arrType && arrType->isByteArrayOrString())
-			{
-				if (auto const* lit = dynamic_cast<solidity::frontend::Literal const*>(
-						var->value().get()))
-					boxSizeVal = static_cast<unsigned>(lit->value().size());
-				if (boxSizeVal > 0)
-				{
-					boxInitVal = m_exprBuilder->buildExpr(*var->value());
-					if (boxInitVal && boxInitVal->wtype == awst::WType::stringType())
-					{
-						auto cast = awst::makeAsBytes(std::move(boxInitVal), _loc);
-						boxInitVal = std::move(cast);
-					}
-				}
-			}
-			// Non-bytes dynamic array with initializer (e.g. `int16[] x = [-1,-2]`):
-			// set boxInitVal so the loop below emits box_put instead of box_create(2).
-			else if (arrType && arrType->isDynamicallySized()
-				&& !arrType->isByteArrayOrString())
-			{
-				auto initVal = lowerStateInitializer(*var, varWtype, _loc);
-				if (initVal)
-				{
-					// Materialise as bytes for box_put.
-					if (initVal->wtype != awst::WType::bytesType())
-						initVal = awst::makeAsBytes(std::move(initVal), _loc);
-					boxInitVal = std::move(initVal);
-				}
-			}
-		}
-
-		m_exprBuilder->appendEffectsTo(_postInitBody.body);
-
-		// Multi-box detection: if the var's ARC4StaticArray total size
-		// exceeds a single box's capacity, emit N box_create calls
-		// keyed `<name>` ++ `itob(page)` instead of one. Element
-		// reads/writes route at runtime via the same key suffix
-		// scheme (see SolIndexAccessHandlers.cpp).
-		unsigned multiBoxN = 0;
-		unsigned multiBoxElemSize = 0;
-		uint64_t multiBoxTotalBytes = 0;
-		uint64_t multiBoxPerPageBytes = 0;
-		if (StorageMapper::isMultiBoxArray(varWtype))
-		{
-			multiBoxN = StorageMapper::numBoxesForArray(varWtype);
-			multiBoxElemSize = StorageMapper::arc4StaticArrayElementSize(varWtype);
-			multiBoxTotalBytes = StorageMapper::arc4StaticArrayTotalBytes(varWtype);
-			multiBoxPerPageBytes = static_cast<uint64_t>(
-				StorageMapper::elementsPerBox(varWtype)) * multiBoxElemSize;
-		}
-
-		if (multiBoxN > 1 && multiBoxElemSize > 0 && !dynArc4Default && !boxInitVal)
-		{
-			// Multi-box: N box_create calls, key = name++itob(page).
-			for (unsigned page = 0; page < multiBoxN; ++page)
-			{
-				auto nameBytes = awst::makeUtf8BytesConstant(varName, _loc);
-				auto pageInt = awst::makeIntegerConstant(page, _loc);
-				auto pageItob = awst::makeItob(std::move(pageInt), _loc);
-				auto pageKey = awst::makeConcat(std::move(nameBytes), std::move(pageItob), _loc);
-
-				uint64_t pageSize = (page == multiBoxN - 1)
-					? (multiBoxTotalBytes - static_cast<uint64_t>(page) * multiBoxPerPageBytes)
-					: multiBoxPerPageBytes;
-				auto pageSizeExpr = awst::makeIntegerConstant(pageSize, _loc);
-
-				auto boxCreate = awst::makeBoxCreate(
-					std::move(pageKey), std::move(pageSizeExpr),
-					_loc);
-
-				auto boxStmt = awst::makeExpressionStatement(std::move(boxCreate), _loc);
-				_postInitBody.body.push_back(std::move(boxStmt));
-			}
-		}
-		else if (dynArc4Default)
-		{
-			// box_put creates + initialises with valid ARC4 head/tail in one op.
-			auto put = awst::makeBoxPut(std::move(boxKey), awst::makeBytesConstant(
-				std::move(*dynArc4Default), _loc), _loc);
-			auto putStmt = awst::makeExpressionStatement(std::move(put), _loc);
-			_postInitBody.body.push_back(std::move(putStmt));
-		}
-		else
-		{
-			// Non-bytes dyn-array init: encoded length ≠ header boxSizeVal=2;
-			// box_put can't grow a pre-created box → skip box_create, let box_put
-			// create at the right size.
-			bool isNonBytesDynArrInit = var->value() && declaredArray
-				&& declaredArray->isDynamicallySized()
-				&& !declaredArray->isByteArrayOrString();
-
-			if (!isNonBytesDynArrInit)
-			{
-				auto boxSize = awst::makeIntegerConstant(boxSizeVal, _loc);
-
-				auto boxCreate = awst::makeBoxCreate(
-					std::move(boxKey), std::move(boxSize),
-					_loc);
-
-				auto boxStmt = awst::makeExpressionStatement(std::move(boxCreate), _loc);
-				_postInitBody.body.push_back(std::move(boxStmt));
-			}
-
-			if (boxInitVal)
-			{
-				auto putKey = awst::makeUtf8BytesConstant(varName, _loc);
-				auto put = awst::makeBoxPut(std::move(putKey), std::move(boxInitVal), _loc);
-				auto putStmt = awst::makeExpressionStatement(std::move(put), _loc);
-				_postInitBody.body.push_back(std::move(putStmt));
-			}
-		}
+		auto const* array = dynamic_cast<solidity::frontend::ArrayType const*>(var->type());
+		auto size = array && array->isByteArrayOrString() ? 0
+			: builder::computeEncodedElementSize(type).fixedBytes().value_or(2);
+		body.body.push_back(awst::makeExpressionStatement(awst::makeBoxCreate(
+			std::move(key), awst::makeIntegerConstant(size, loc), loc), loc));
 	}
 }
 

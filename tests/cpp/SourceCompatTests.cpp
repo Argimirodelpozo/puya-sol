@@ -1,6 +1,7 @@
 #include "cli/SourceCompat.h"
 
 #include <iostream>
+#include <fstream>
 #include <string>
 
 namespace
@@ -96,6 +97,20 @@ contract D is Namespace.I { event Kept(address indexed who); }
 		aliasedBaseSource, interfaces);
 	ok &= require(aliasedBaseKept.find("event Kept") != std::string::npos,
 		"qualified base was rewritten without resolving its import alias");
+	namespace fs = boost::filesystem;
+	auto directory = fs::temp_directory_path() / fs::unique_path("source-compat-%%%%%%%%");
+	fs::create_directory(directory);
+	struct Cleanup { fs::path directory; ~Cleanup() { fs::remove_all(directory); } } cleanup{directory};
+	std::ofstream(directory / "I.sol") << interfaceSource;
+	auto collect = [&](std::string const& source) {
+		return puyasol::cli::collectInterfaceEventsFromImports(source, directory);
+	};
+	ok &= require(collect("import './I.sol';").contains("I"), "plain import lost exact event rewrite");
+	for (auto const* import: {"import {I as J} from './I.sol';", "import {I} from './I.sol';",
+		"import './I.sol' as N;", "import * as N from './I.sol';"})
+		ok &= require(collect(import).empty(), "unresolved import alias exposed an original declaration name");
+	ok &= require(collect("import './I.sol'; contract I {}").empty(), "local declaration did not block textual identity guess");
+	ok &= require(collect("import './I.sol'; import './I.sol';").empty(), "ambiguous declaration was merged");
 
 	return ok ? 0 : 1;
 }

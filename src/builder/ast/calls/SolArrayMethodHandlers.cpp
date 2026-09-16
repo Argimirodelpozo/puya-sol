@@ -17,7 +17,6 @@ using namespace solidity::frontend;
 
 std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	std::string const& _memberName,
-	Expression const& _baseExpr,
 	VariableDeclaration const& _varDecl,
 	std::shared_ptr<awst::Expression> _runtimeKey)
 {

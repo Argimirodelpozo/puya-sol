@@ -2,6 +2,7 @@
 /// array.length, bytes.length, box-backed array length.
 
 #include "builder/ast/members/SolLengthAccess.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/ast/members/SolAddressProperty.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
@@ -148,7 +149,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 {
 	auto const& baseExpr = baseExpression();
 
-	if (auto const* codeAccess = dynamic_cast<MemberAccess const*>(&baseExpr);
+	if (auto const* codeAccess = SolcFacts::expressionAs<MemberAccess>(&baseExpr);
 		codeAccess && codeAccess->memberName() == "code"
 		&& dynamic_cast<AddressType const*>(codeAccess->expression().annotation().type))
 		return SolAddressProperty::buildCodeMetadata(m_ctx, m_scope,
@@ -161,7 +162,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 		return *slotLen;
 
 	// Box-backed dynamic array: length = box_len(key) / elemSize
-	if (auto const* ident = dynamic_cast<Identifier const*>(&baseExpr))
+	if (auto const* ident = SolcFacts::expressionAs<Identifier>(&baseExpr))
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
 		{

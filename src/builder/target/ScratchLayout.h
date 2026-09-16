@@ -44,6 +44,8 @@ public:
 	/// Reserved only by contracts that use the return-data transport. Backend
 	/// scratch allocation (including any future splitter) must respect it.
 	static constexpr int returnDataSlot = maxScratchSlot;
+	/// Numeric call-frame flag; AVM initializes it to zero. Reserved only on use.
+	static constexpr int staticContextSlot = returnDataSlot - 1;
 
 	explicit ScratchLayout(int _memorySlots = defaultMemorySlots)
 		: m_memorySlots(_memorySlots)

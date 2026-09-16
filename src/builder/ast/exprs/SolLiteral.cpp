@@ -48,7 +48,7 @@ std::shared_ptr<awst::Expression> SolLiteral::toAwst()
 		// Solc classifies checksummed address literals as AddressType, not
 		// rationals. Give them the same 32-byte carrier as converted accounts.
 		if (dynamic_cast<AddressType const*>(m_solType))
-			return TypeCoercion::implicitNumericCast(std::move(e), awst::WType::accountType(), m_loc);
+			return TypeCoercion::coerceScalar(std::move(e), awst::WType::accountType(), m_loc);
 		return e;
 	}
 	case Token::StringLiteral:

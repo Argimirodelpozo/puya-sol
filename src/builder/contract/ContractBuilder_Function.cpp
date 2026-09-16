@@ -143,7 +143,7 @@ void rewriteStorageRefReturnIndices(awst::ContractMethod& method)
 {
 	awst::forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
 		if (auto* index = dynamic_cast<awst::IndexExpression*>(ret.value.get()))
-			ret.value = TypeCoercion::implicitNumericCast(
+			ret.value = TypeCoercion::coerceScalar(
 				index->index, awst::WType::uint64Type(), ret.value->sourceLocation);
 	});
 }
@@ -472,27 +472,37 @@ void ContractBuilder::prependAbiEntryChecks(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func)
 {
-	// Sub-64-bit / bool / enum params: AVM uint64 doesn't auto-clean like EVM; guard explicitly.
-	{
-		bool useV2 = true; // default in 0.8+
-		if (m_currentContract)
-		{
-			auto const& ann = m_currentContract->sourceUnit().annotation();
-			if (ann.useABICoderV2.set())
-				useV2 = *ann.useABICoderV2;
-		}
-		auto entryChecks = buildABIEntryChecks(
-			_func, m_typeMapper, useV2, m_sourceFile);
-		if (!entryChecks.empty())
-		{
-			method.body->body.insert(
-				method.body->body.begin(),
-				std::make_move_iterator(entryChecks.begin()),
-				std::make_move_iterator(entryChecks.end())
-			);
-		}
-	}
+	// Canonical EVM decoders already own their input checks. Native ARC4
+	// needs guards for solc widths narrower than its uint64 carrier.
+	if (!method.arc4MethodConfig || m_typeMapper.profile().contractAbi == ContractAbi::Evm)
+		return;
+	auto const& coder = m_currentContract->sourceUnit().annotation().useABICoderV2;
+	bool const validate = m_typeMapper.profile().viaIRSequencing || !coder.set() || *coder;
+	auto checks = buildABIEntryChecks(_func, m_typeMapper, validate, m_sourceFile);
+	if (checks.empty()) return;
 
+	// Keep the existing callable (including modifier chain) free of ABI
+	// validation. Internal calls retain its wire signature and name; only
+	// the external ARC4 wrapper receives untrusted carrier values.
+	auto wrapper = awst::ContractMethod(method.cref,
+		"__puyasol_abi_entry_" + std::to_string(_func.id()),
+		method.returnType, method.args, method.sourceLocation);
+	wrapper.documentation = method.documentation;
+	wrapper.arc4MethodConfig = std::move(method.arc4MethodConfig);
+	method.arc4MethodConfig.reset();
+	wrapper.body->body = std::move(checks);
+	auto call = awst::makeSubroutineCall(
+		awst::InstanceMethodTarget{method.memberName}, method.returnType, method.sourceLocation);
+	for (auto const& arg: method.args)
+		awst::pushCallArg(call->args, awst::makeVarExpression(arg.name, arg.wtype, arg.sourceLocation));
+	if (method.returnType == awst::WType::voidType())
+	{
+		wrapper.body->body.push_back(awst::makeExpressionStatement(std::move(call), method.sourceLocation));
+		wrapper.body->body.push_back(awst::makeReturnStatement(nullptr, method.sourceLocation));
+	}
+	else wrapper.body->body.push_back(awst::makeReturnStatement(std::move(call), method.sourceLocation));
+	m_modifierSubroutines.push_back(std::move(method));
+	method = std::move(wrapper);
 }
 
 /// buildFunction phase: prepend the ensure_budget call when configured.
@@ -668,8 +678,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		applyParamDecodeNames(paramDecodes, method);
 
-		prependAbiEntryChecks(method, _func);
-
 		// Reference write-backs are part of the callable's real return shape.
 		// Establish that shape before modifier-chain construction so every `_`
 		// captures and forwards the updated parameter values.
@@ -717,6 +725,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				std::make_move_iterator(deferredDecodes.end()));
 
 		prependEnsureBudget(method, _func);
+
+		prependAbiEntryChecks(method, _func);
 
 		maybePrependNonPayable(method, _func);
 	}

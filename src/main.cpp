@@ -13,11 +13,40 @@
 #include <boost/filesystem.hpp>
 #include <exception>
 #include <iostream>
+#include <system_error>
 
 namespace
 {
 using namespace puyasol;
 using namespace puyasol::cli;
+
+// Only the CLI owns process signal policy. The handler does no work beyond
+// setting a flag; PuyaRunner kills the backend group and reaps its child.
+struct BackendSignals
+{
+	static inline volatile std::sig_atomic_t pending = 0;
+	struct sigaction interrupt{}, terminate{};
+	BackendSignals()
+	{
+		pending = 0;
+		struct sigaction action{};
+		action.sa_handler = [](int signal) { pending = signal; };
+		::sigemptyset(&action.sa_mask);
+		if (::sigaction(SIGINT, &action, &interrupt))
+			throw std::system_error(errno, std::generic_category(), "install SIGINT handler");
+		if (::sigaction(SIGTERM, &action, &terminate))
+		{
+			auto error = errno;
+			::sigaction(SIGINT, &interrupt, nullptr);
+			throw std::system_error(error, std::generic_category(), "install SIGTERM handler");
+		}
+	}
+	~BackendSignals()
+	{
+		::sigaction(SIGINT, &interrupt, nullptr);
+		::sigaction(SIGTERM, &terminate, nullptr);
+	}
+};
 
 int compile(Options const& opts, char const* program)
 {
@@ -99,8 +128,9 @@ int compile(Options const& opts, char const* program)
 	{
 		logger.info("Invoking puya backend...");
 		runner::PuyaRunner runner(opts.puyaPath);
+		BackendSignals signals;
 		int exitCode = runner.run(artifacts.awstPath().string(),
-			artifacts.optionsPath().string(), opts.logLevel).exitCode();
+			artifacts.optionsPath().string(), opts.logLevel, {{}, {}, &signals.pending}).exitCode();
 		if (exitCode != 0) return exitCode;
 		if (!artifacts.finishBackend(children))
 		{

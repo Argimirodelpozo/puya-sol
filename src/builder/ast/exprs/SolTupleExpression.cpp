@@ -3,6 +3,7 @@
 #include "builder/ast/exprs/SolTupleExpression.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
 #include "builder/solc/SolcFacts.h"
+#include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/eb/AssignmentHelper.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/ConversionPlan.h"
@@ -61,14 +62,15 @@ std::shared_ptr<awst::Expression> SolTupleExpression::buildBindingRhs(
 	std::vector<solidity::frontend::VariableDeclaration const*> const& bindings)
 {
 	auto const& value = SolcFacts::functionExpression(expression);
-	if (auto const* tuple = dynamic_cast<solidity::frontend::TupleExpression const*>(&value);
+	if (auto const* tuple = SolcFacts::expressionAs<solidity::frontend::TupleExpression>(&value);
 		tuple && !tuple->isInlineArray())
-		return SolTupleExpression(ctx, *tuple).buildTuple(bindings);
+		return SolTupleExpression(ctx, *tuple).buildTuple(bindings, true);
 	return ctx.buildExpr(expression);
 }
 
 std::shared_ptr<awst::Expression> SolTupleExpression::buildTuple(
-	std::vector<solidity::frontend::VariableDeclaration const*> const& bindings)
+	std::vector<solidity::frontend::VariableDeclaration const*> const& bindings,
+	bool storageReferences)
 {
 	// Missing LHS components are represented by empty-name placeholders.
 	auto e = awst::makeTupleExpression(nullptr, m_loc);
@@ -78,6 +80,23 @@ std::shared_ptr<awst::Expression> SolTupleExpression::buildTuple(
 		auto const& comp = m_tuple.components()[i];
 		auto const* target = i < bindings.size() ? bindings[i] : nullptr;
 		std::shared_ptr<awst::Expression> value;
+		if (comp && storageReferences)
+		{
+			auto const& source = SolcFacts::unparenthesized(*comp);
+			if (auto const* nested = SolcFacts::expressionAs<solidity::frontend::TupleExpression>(&source);
+				nested && !nested->isInlineArray())
+				value = SolTupleExpression(m_ctx, *nested).buildTuple({}, true);
+			else if (!source.annotation().type->isValueType()
+				&& ((m_ctx.typeMapper.profile().evmStorageLayout && EvmSlotLowering::isStorageStateRef(source))
+					|| EvmSlotLowering::isSlotHandleRef(source, m_ctx, m_scope)))
+			{
+				// Solc tuples carry storage references, not aggregate snapshots.
+				// Capture the address now; copy the value at its eventual store.
+				auto address = EvmSlotLowering(m_ctx, m_scope, m_loc).resolve(source);
+				if (!address) throw std::runtime_error("Cannot resolve tuple storage reference");
+				value = m_ctx.emitSequencedOperand({}, address->slot, true, m_loc);
+			}
+		}
 		if (target && target->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 			&& comp && comp->annotation().type
 			&& comp->annotation().type->dataStoredIn(solidity::frontend::DataLocation::Memory)

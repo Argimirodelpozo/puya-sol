@@ -43,6 +43,7 @@ struct BuildArtifacts
 		std::map<std::string, std::string> helpers;
 		std::vector<awst::ContractMethod> pendingHelpers;
 		bool usesErc1967Admin = false;
+		bool needsSelfCallDispatch = false;
 	};
 	/// Stack-owned emission state; recursive/nested builds restore their host.
 	class ContractScope
@@ -86,6 +87,7 @@ struct BuildArtifacts
 	/// Shared by outlined Yul helpers and their Solidity host frame. Unit-wide
 	/// so uses in freestanding functions also reserve and initialize the slot.
 	bool usesReturnData = false;
+	bool usesStaticContext = false;
 	/// AST id of the freestanding (library/free) function currently being
 	/// translated, or -1 during contract translation. Freestanding bodies
 	/// lower BEFORE any contract builds, so their admin-slot uses must not

@@ -2,6 +2,7 @@
 /// Solidity fixed-size bytes type builder (bytes1..bytes32).
 
 #include "builder/eb/SolFixedBytesBuilder.h"
+#include "builder/eb/SolBoolBuilder.h"
 #include "builder/eb/BigUIntMathHelpers.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/types/TypeMapper.h"
@@ -67,29 +68,11 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::binary_op(
 	if (_reverse)
 		std::swap(lhs, rhs);
 
-	// Mixed widths are legal Solidity: bytesM implicitly widens to bytesN by
-	// RIGHT-padding (`bytes2 & bytes4` operates at bytes4 with the bytes2
-	// left-aligned). AVM b&/b|/b^ zero-fill the shorter operand on the LEFT
-	// instead — pad the short side explicitly and type the result at the
-	// common width.
-	auto declaredLen = [](awst::Expression const& e) -> size_t {
-		if (auto const* bw = dynamic_cast<awst::BytesWType const*>(e.wtype))
-			if (bw->length().has_value())
-				return *bw->length();
-		return 0;
-	};
-	size_t common = std::max<size_t>(m_bytesType->numBytes(),
-		std::max(declaredLen(*lhs), declaredLen(*rhs)));
-	auto padTo = [&](std::shared_ptr<awst::Expression>& expr) {
-		size_t len = declaredLen(*expr);
-		if (len == 0 || len >= common)
-			return;
-		expr = awst::makeConcat(
-			awst::makeAsBytes(std::move(expr), _loc),
-			awst::makeBzero(static_cast<int>(common - len), _loc), _loc);
-	};
-	padTo(lhs);
-	padTo(rhs);
+	// The AST supplies solc's common type (compound assignments use their
+	// destination type). Byte strings widen on the right, unlike AVM b&/b|.
+	auto* sized = m_ctx.typeMapper.map(m_bytesType);
+	lhs = TypeCoercion::coerceScalar(std::move(lhs), sized, _loc);
+	rhs = TypeCoercion::coerceScalar(std::move(rhs), sized, _loc);
 
 	awst::BytesBinaryOperator bytesOp = awst::BytesBinaryOperator::BitOr;
 	switch (_op)
@@ -100,16 +83,8 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::binary_op(
 	default: break;
 	}
 	auto e = awst::makeBytesBinOp(std::move(lhs), bytesOp, std::move(rhs), _loc);
-	// Retag with the sized bytes[common] wtype (same reason as the shift branch
-	// above: `bytes4(a & b)` narrowing no-op'd on the unsized result).
-	auto* sized = m_ctx.typeMapper.createType<awst::BytesWType>(
-		static_cast<int>(common));
-	auto retagged = awst::makeReinterpretCast(std::move(e), sized, _loc);
-	auto const* resultType = common == m_bytesType->numBytes()
-		? m_bytesType
-		: solidity::frontend::TypeProvider::fixedBytes(
-			static_cast<unsigned>(common));
-	return std::make_unique<SolFixedBytesBuilder>(m_ctx, resultType, std::move(retagged));
+	return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType,
+		awst::makeReinterpretCast(std::move(e), sized, _loc));
 }
 
 void padBytesOperandsToCommonWidth(
@@ -117,50 +92,14 @@ void padBytesOperandsToCommonWidth(
 	std::shared_ptr<awst::Expression>& _lhs,
 	std::shared_ptr<awst::Expression>& _rhs)
 {
-	auto declaredLen = [](awst::Expression const& e) -> size_t {
-		if (auto const* bw = dynamic_cast<awst::BytesWType const*>(e.wtype))
-			if (bw->length().has_value())
-				return *bw->length();
-		return 0;
-	};
-	auto padOperand = [&](std::shared_ptr<awst::Expression>& expr, size_t targetLen) {
-		auto* newType = _ctx.typeMapper.createType<awst::BytesWType>(
-			static_cast<int>(targetLen));
-		if (auto* bc = dynamic_cast<awst::BytesConstant*>(expr.get()))
-		{
-			if (bc->value.size() >= targetLen)
-				return;
-			std::vector<uint8_t> val = bc->value;
-			val.resize(targetLen, 0);
-			expr = awst::makeBytesConstant(
-				std::move(val), expr->sourceLocation, bc->encoding, newType);
-			return;
-		}
-		if (auto* sc = dynamic_cast<awst::StringConstant*>(expr.get()))
-		{
-			if (sc->value.size() > targetLen)
-				return;
-			std::vector<uint8_t> val(sc->value.begin(), sc->value.end());
-			val.resize(targetLen, 0);
-			expr = awst::makeBytesConstant(
-				std::move(val), expr->sourceLocation, awst::BytesEncoding::Utf8, newType);
-			return;
-		}
-		size_t len = declaredLen(*expr);
-		if (len == 0 || len >= targetLen)
-			return;
-		auto loc = expr->sourceLocation;
-		expr = awst::makeReinterpretCast(
-			awst::makeConcat(
-				awst::makeAsBytes(std::move(expr), loc),
-				awst::makeBzero(static_cast<int>(targetLen - len), loc), loc),
-			newType, loc);
-	};
-	size_t common = std::max(declaredLen(*_lhs), declaredLen(*_rhs));
-	if (common > 0)
+	auto width = std::max(awst::fixedBytesLength(_lhs->wtype).value_or(0),
+		awst::fixedBytesLength(_rhs->wtype).value_or(0));
+	if (!width) return;
+	auto* type = _ctx.typeMapper.createType<awst::BytesWType>(width);
+	for (auto* operand: {&_lhs, &_rhs})
 	{
-		padOperand(_lhs, common);
-		padOperand(_rhs, common);
+		auto const loc = (*operand)->sourceLocation;
+		*operand = TypeCoercion::coerceScalar(std::move(*operand), type, loc);
 	}
 }
 
@@ -199,7 +138,7 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 		auto e = awst::makeBytesComparison(std::move(lhs),
 			(_op == BuilderComparisonOp::Eq) ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
 			std::move(rhs), _loc);
-		return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(e));
+		return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
 	}
 
 	std::string opCode;
@@ -218,20 +157,7 @@ std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::compare(
 	auto e = awst::makeIntrinsicCall(std::move(opCode), awst::WType::boolType(), _loc);
 	e->stackArgs.push_back(std::move(lhs));
 	e->stackArgs.push_back(std::move(rhs));
-	return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(e));
-}
-
-std::unique_ptr<InstanceBuilder> SolFixedBytesBuilder::bool_eval(
-	awst::SourceLocation const& _loc, bool _negate)
-{
-	auto zero = awst::makeBytesConstant(
-		std::vector<uint8_t>(m_numBytes, 0), _loc, awst::BytesEncoding::Base16,
-		m_expr->wtype); // same bytes[N] type
-
-	auto e = awst::makeBytesComparison(resolve(),
-		_negate ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
-		std::move(zero), _loc);
-	return std::make_unique<SolFixedBytesBuilder>(m_ctx, m_bytesType, std::move(e));
+	return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
 }
 
 } // namespace puyasol::builder::eb

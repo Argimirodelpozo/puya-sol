@@ -2,6 +2,7 @@
 /// new bytes(N), new T[](N), new Contract(...).
 
 #include "builder/ast/calls/SolNewExpression.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/lowering/itxn/ApplicationCall.h"
 #include "builder/context/BuildArtifacts.h"
 #include "awst/NameGen.h"
@@ -120,8 +121,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 	if (resultType == awst::WType::stringType())
 		return handleNewBytes();
 
-	if (resultType && (resultType->kind() == awst::WTypeKind::ReferenceArray
-		|| resultType->kind() == awst::WTypeKind::ARC4StaticArray
+	if (resultType && (resultType->kind() == awst::WTypeKind::ARC4StaticArray
 		|| resultType->kind() == awst::WTypeKind::ARC4DynamicArray))
 		return handleNewArray();
 
@@ -130,7 +130,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 	rejectCreate2Salt();
 
 	auto const& funcExpr = funcExpression();
-	if (auto const* newExpr = dynamic_cast<NewExpression const*>(&funcExpr))
+	if (auto const* newExpr = SolcFacts::expressionAs<NewExpression>(&funcExpr))
 	{
 		auto const* contractType = dynamic_cast<ContractType const*>(
 			newExpr->typeName().annotation().type);
@@ -148,22 +148,16 @@ void SolNewExpression::rejectCreate2Salt()
 {
 	// `new C{salt:s}(...)` is CREATE2. CREATE2's address derivation (salt+initcode
 	// hash) has no AVM equivalent — fail loud rather than silently wrong-lower.
-	if (auto const* opts = dynamic_cast<FunctionCallOptions const*>(&m_call.expression()))
-	{
-		for (auto const& name : opts->names())
-			if (name && *name == "salt")
-			{
-				Logger::instance().error(
-					"`new C{salt: ...}(...)` (CREATE2) is not supported on AVM. "
-					"CREATE2's deterministic address derivation (salt + initcode "
-					"hash) has no AVM equivalent — app IDs are assigned "
-					"sequentially by the chain at inner-app-create time, so a "
-					"salt-derived address can't be pre-computed. Use plain "
-					"`new C(...)` if you don't need address prediction.",
-					m_loc);
-				break;
-			}
-	}
+	auto const* type = dynamic_cast<FunctionType const*>(m_call.expression().annotation().type);
+	if (type && type->saltSet())
+		Logger::instance().error(
+			"`new C{salt: ...}(...)` (CREATE2) is not supported on AVM. "
+			"CREATE2's deterministic address derivation (salt + initcode "
+			"hash) has no AVM equivalent — app IDs are assigned "
+			"sequentially by the chain at inner-app-create time, so a "
+			"salt-derived address can't be pre-computed. Use plain "
+			"`new C(...)` if you don't need address prediction.",
+			m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolNewExpression::handleNewContract(

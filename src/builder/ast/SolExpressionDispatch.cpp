@@ -42,7 +42,7 @@ public:
 
 	std::shared_ptr<awst::Expression> build(Expression const& _n)
 	{
-		_n.accept(*this);
+		SolcFacts::unparenthesized(_n).accept(*this);
 		return std::move(m_result);
 	}
 
@@ -152,7 +152,7 @@ private:
 		// A proven pointer-cast body can disappear, but its normally bound
 		// operands must execute. Keep the selected location, not its contents.
 		if (!m_ctx.typeMapper.profile().evmStorageLayout)
-		if (auto const* call = dynamic_cast<FunctionCall const*>(&_n.expression()))
+		if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&_n.expression()))
 		if (auto const* function = SolcFacts::resolveInternalCall(*call, m_ctx.currentContract))
 		if (auto const& alias = m_ctx.typeMapper.analysis().storageReturnFacts(function).pointerAlias;
 			alias && alias->field == _n.memberName())
@@ -160,7 +160,7 @@ private:
 			auto const& source = *SolcFacts::callArguments(*call).at(alias->parameter);
 			if (_n.annotation().willBeWrittenTo)
 				for (auto const* root: SolcFacts::referenceSources(source))
-					if (auto const* id = dynamic_cast<Identifier const*>(root))
+					if (auto const* id = SolcFacts::expressionAs<Identifier>(root))
 					if (auto const* parameter = dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration);
 						parameter && parameter->referenceLocation() == VariableDeclaration::Location::Storage)
 					if (auto const* owner = dynamic_cast<FunctionDefinition const*>(parameter->scope()))

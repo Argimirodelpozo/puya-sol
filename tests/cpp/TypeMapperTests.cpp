@@ -334,6 +334,30 @@ void testValueAdapters()
 				awst::makeVarExpression("literal_snapshot", awst::WType::stringType(), loc), loc));
 	auto concat = padded ? std::dynamic_pointer_cast<awst::IntrinsicCall>(padded->expr) : nullptr;
 	require(concat && concat->opCode == "concat", "literal width was lost behind a tuple snapshot");
+	for (int width: {1, 4, 8, 16, 32})
+	{
+		awst::BytesWType bytes(width);
+		for (auto text: {"0", "255", "256", "0x1234"})
+		{
+			auto input = awst::makeIntegerConstant(text, loc, awst::WType::biguintType());
+			auto result = std::dynamic_pointer_cast<awst::BytesConstant>(TypeCoercion::coerceScalar(input, &bytes, loc));
+			require(result && result->value == TypeCoercion::intLiteralToBytesN(text, width)
+				&& input->wtype == awst::WType::biguintType(), "scalar integer-to-bytes fast path lost width or mutated its source");
+		}
+	}
+	auto byteLiteral = awst::makeBytesConstant({0xab, 0xcd}, loc);
+	auto fixedLiteral = std::dynamic_pointer_cast<awst::BytesConstant>(TypeCoercion::coerceScalar(byteLiteral, &bytes5, loc));
+	require(fixedLiteral && fixedLiteral->value == std::vector<uint8_t>({0xab, 0xcd, 0, 0, 0})
+		&& byteLiteral->value.size() == 2, "byte literal padding changed direction or mutated the input");
+	for (auto const& input: {std::vector<uint8_t>{}, std::vector<uint8_t>{1, 2, 3, 4, 5, 6}})
+	{
+		auto expected = input;
+		expected.resize(5, 0);
+		auto converted = std::dynamic_pointer_cast<awst::BytesConstant>(TypeCoercion::coerceScalar(
+			awst::makeBytesConstant(input, loc), &bytes5, loc));
+		require(converted && converted->value == expected && converted->wtype == &bytes5,
+			"fixed bytes conversion must preserve the prefix and pad empty values");
+	}
 }
 }
 

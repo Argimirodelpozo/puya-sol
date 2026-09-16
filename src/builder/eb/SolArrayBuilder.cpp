@@ -21,8 +21,6 @@ awst::WType const* SolArrayBuilder::elementType() const
 
 	switch (baseWType->kind())
 	{
-	case awst::WTypeKind::ReferenceArray:
-		return static_cast<awst::ReferenceArray const*>(baseWType)->elementType();
 	case awst::WTypeKind::ARC4DynamicArray:
 		return static_cast<awst::ARC4DynamicArray const*>(baseWType)->elementType();
 	case awst::WTypeKind::ARC4StaticArray:
@@ -120,7 +118,7 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 		auto assignTmp = awst::makeAssignmentStatement(tmpVar, result, _loc);
 		m_ctx.preEffects().push_back(std::move(assignTmp));
 
-		auto cmpLhs = TypeCoercion::implicitNumericCast(
+		auto cmpLhs = TypeCoercion::coerceScalar(
 			tmpVar, awst::WType::uint64Type(), _loc);
 		auto assertStmt = awst::makeExpressionStatement(
 			awst::makeEnumRangeAssert(std::move(cmpLhs), numMembers, _loc, "Enum out of range"), _loc);
@@ -167,8 +165,7 @@ std::unique_ptr<NodeBuilder> SolArrayBuilder::member_access(
 	{
 		auto base = resolve();
 		auto kind = base->wtype ? base->wtype->kind() : awst::WTypeKind::Bytes;
-		if (kind == awst::WTypeKind::ReferenceArray
-			|| kind == awst::WTypeKind::ARC4StaticArray
+		if (kind == awst::WTypeKind::ARC4StaticArray
 			|| kind == awst::WTypeKind::ARC4DynamicArray)
 		{
 			auto e = awst::makeArrayLength(std::move(base), awst::WType::uint64Type(), _loc);

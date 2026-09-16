@@ -1,5 +1,6 @@
 #include "builder/ast/calls/SolRevert.h"
 #include "builder/ast/calls/RevertBlob.h"
+#include "builder/solc/SolcFacts.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTAnnotations.h>
@@ -19,7 +20,7 @@ std::shared_ptr<awst::Expression> SolRevert::toAwst()
 	RevertPayload payload;
 	payload.message = "revert";
 	if (dynamic_cast<solidity::frontend::ErrorDefinition const*>(
-			solidity::frontend::ASTNode::referencedDeclaration(m_call.expression())))
+			solidity::frontend::ASTNode::referencedDeclaration(SolcFacts::functionExpression(m_call.expression()))))
 		payload = RevertPayload(m_ctx, m_call, m_loc);
 	else if (!arguments().empty())
 		payload = RevertPayload(m_ctx, CallOperands::evaluate(m_ctx, *arguments()[0], m_loc), m_loc);

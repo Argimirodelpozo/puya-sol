@@ -56,34 +56,6 @@ private:
 		std::shared_ptr<awst::Expression> _amount,
 		awst::SourceLocation const& _loc);
 
-	/// .call{value:V}(abi.encodeCall(fn, args)) → inner app call.
-	/// Non-null `_callValue` prepends a PaymentTxn in the SAME inner group
-	/// (msg.value = preceding payment's Amount on the callee side).
-	static std::unique_ptr<InstanceBuilder> handleCallWithEncodeCall(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _receiver,
-		solidity::frontend::FunctionCall const& _encodeCallExpr,
-		std::shared_ptr<awst::Expression> _callValue,
-		awst::SourceLocation const& _loc);
-
-	/// .call{value:V}(abi.encodeWithSignature/WithSelector(...)) → typed inner call.
-	static std::unique_ptr<InstanceBuilder> handleCallWithSignatureArgs(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _receiver,
-		solidity::frontend::FunctionCall const& _encodeExpr,
-		bool _isSignature,
-		std::shared_ptr<awst::Expression> _callValue,
-		awst::SourceLocation const& _loc);
-
-	/// Submit typed inner app call; returns (true, LastLog[4:]) tuple.
-	/// Non-null `_callValue` → [PaymentTxn, ApplicationCall] group submit.
-	static std::unique_ptr<InstanceBuilder> submitTypedAppCall(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _receiver,
-		std::shared_ptr<awst::TupleExpression> _argsTuple,
-		std::shared_ptr<awst::Expression> _callValue,
-		awst::SourceLocation const& _loc);
-
 	/// Shared tail of every inner app call: the appl itxn (ApplicationArgs =
 	/// `_argsTuple`, omitted when null so the callee sees empty calldata)
 	/// grouped behind the optional payment, submitted as a pre-effect; result
@@ -95,7 +67,6 @@ private:
 		std::shared_ptr<awst::Expression> _callValue,
 		awst::SourceLocation const& _loc);
 
-	/// .call{value:V}(rawBytes) → inner app call; splits [selector, rest] as ApplicationArgs.
 	/// Exact signature/declaration facts and unevaluated operands of a self call.
 	struct SelfEncodeForm
 	{
@@ -115,6 +86,7 @@ private:
 		solidity::frontend::FunctionDefinition const& targetFunc,
 		SelfEncodeForm const& form,
 		std::string const& encodeName,
+		bool staticCall,
 		awst::SourceLocation const& _loc);
 
 	/// `.call/.staticcall(data)` router (self-call rewrites, visible encoders, precompiles, self fallback, empty-data folds, raw data).
@@ -166,47 +138,14 @@ private:
 		awst::SourceLocation const& _loc);
 
 public:
-	/// Encode one call argument to its ApplicationArgs bytes. THE single ARC4
-	/// arg encoder for BOTH the typed `c.f(...)` path (SolExternalCall) and the
-	/// `.call(abi.encodeCall/encodeWith*)` inner-call shapes. When both are
-	/// known, `_sourceSolType` and `_paramSolType` select the Solidity implicit
-	/// conversion before transport encoding. `_paramSolType` then drives exact
-	/// biguint width, uint64 pad-to-width, and the dynamic-bytes length header;
-	/// it is nullptr for
-	/// type-less shapes (encodeWithSelector/Signature), which fall back to
-	/// backing-width encoding. The two paths used to carry separate copies that
-	/// DRIFTED (inner: biguint always 32B, bare itob, no array/struct encode) —
-	/// a latent revert class on inner calls with sub-256 uintN/array args.
+	/// Encode a typed call argument using the shared boundary plan and ARC4
+	/// value codec. Solidity source/parameter types own implicit conversions.
 	static std::shared_ptr<awst::Expression> encodeArgToBytes(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _arg,
 		solidity::frontend::Type const* _sourceSolType,
 		solidity::frontend::Type const* _paramSolType,
 		awst::SourceLocation const& _loc);
-
-	/// Build the EVM contract-profile transport once for every outgoing call
-	/// shape: ApplicationArgs[0] is the 4-byte Solidity selector and [1] is one
-	/// canonical ABI body. Argument conversions are driven by the declared
-	/// parameter types when available and aggregate layout recurses in the
-	/// shared EVM encoder.
-	static std::shared_ptr<awst::TupleExpression> buildEvmApplicationArgs(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _selector,
-		std::vector<solidity::frontend::ASTPointer<
-			solidity::frontend::Expression const>> const& _args,
-		std::vector<solidity::frontend::Type const*> const& _paramTypes,
-		awst::SourceLocation const& _loc);
-
-	/// Canonical argument body shared by EVM-profile method calls and
-	/// constructor creation (which has no selector).
-	static std::shared_ptr<awst::Expression> encodeEvmArgumentBody(
-		ContractContext& _ctx,
-		std::vector<solidity::frontend::ASTPointer<
-			solidity::frontend::Expression const>> const& _args,
-		std::vector<solidity::frontend::Type const*> const& _paramTypes,
-		awst::SourceLocation const& _loc);
-
-
 
 	/// Canonical ARC4 selector string from a FunctionDefinition
 	/// (routers always dispatch on this; compatibility-mode selector expressions
@@ -220,14 +159,6 @@ public:
 		ContractContext& _ctx,
 		std::string const& _name,
 		solidity::frontend::FunctionType const& _funcType);
-
-	static std::shared_ptr<awst::IntrinsicCall> makeExtract(
-		std::shared_ptr<awst::Expression> _source, int _offset, int _length,
-		awst::SourceLocation const& _loc);
-
-	static std::shared_ptr<awst::IntrinsicCall> makeConcat(
-		std::shared_ptr<awst::Expression> _a, std::shared_ptr<awst::Expression> _b,
-		awst::SourceLocation const& _loc);
 
 };
 

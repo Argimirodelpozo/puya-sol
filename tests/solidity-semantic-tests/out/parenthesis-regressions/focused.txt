@@ -1,0 +1,58 @@
+bringing up nodes...
+bringing up nodes...
+
+F........................................                                [100%]
+=================================== FAILURES ===================================
+___________ test_parenthesized_expressions[named-arc4-via-ir-nested] ___________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:106: in algod_request
+    resp = urlopen(req, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:521: in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:630: in http_response
+    response = self.parent.error(
+/usr/lib/python3.12/urllib/request.py:559: in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+/usr/lib/python3.12/urllib/request.py:639: in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+E   urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+During handling of the above exception, another exception occurred:
+tests/puyasolRegression/test_parenthesized_expressions.py:21: in test_parenthesized_expressions
+    app = harness.deploy(artifacts, "ParenthesizedExpressions", fund_wei=30_000_000,
+framework/harness.py:143: in deploy
+    deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/deploy.py:334: in deploy
+    _call_postinit(
+framework/deploy.py:543: in _call_postinit
+    helper_id = localnet.budget_helper_id
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/localnet.py:95: in budget_helper_id
+    target_id = _deploy("#pragma version 10\nint 1")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/localnet.py:87: in _deploy
+    tid = algod.send_transaction(t.sign(self.account.private_key))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:344: in send_transaction
+    return self.send_raw_transaction(
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:371: in send_raw_transaction
+    resp = self.algod_request("POST", req, data=txn_bytes, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/localnet.py:33: in _patient_request
+    return _algod_request(method, requrl, params, data, headers,
+/home/argi/.local/lib/python3.12/site-packages/algosdk/v2client/algod.py:116: in algod_request
+    raise error.AlgodHTTPError(m, code, j.get("data"))
+E   algosdk.error.AlgodHTTPError: TransactionPool.Remember: transaction already in ledger: FAORNTGB2ZT2OXXXDYDWIQFOUJJUKPBPEGSQP6KOXZKRVQKBIDTQ
+=========================== short test summary info ============================
+FAILED tests/puyasolRegression/test_parenthesized_expressions.py::test_parenthesized_expressions[named-arc4-via-ir-nested]
+1 failed, 40 passed in 60.61s (0:01:00)

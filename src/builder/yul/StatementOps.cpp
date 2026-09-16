@@ -2,6 +2,7 @@
 /// Yul statement translation: variable declarations, assignments, expression statements, function definitions.
 
 #include "builder/yul/AssemblyBuilder.h"
+#include "builder/storage/StorageMapper.h"
 #include "builder/lowering/proxies/Erc1967Lowering.h"
 #include "builder/types/FunctionPointerKind.h"
 #include "awst/NameGen.h"
@@ -607,27 +608,15 @@ void AssemblyBuilder::emitPlainYulAssignment(
 		}
 		else
 		{
-			// Pointer reinterpretation (e.g. address[] ↔ bytes32[] — same EVM layout).
-			auto const* targetArr = dynamic_cast<awst::ReferenceArray const*>(target->wtype);
-			auto const* valueArr = dynamic_cast<awst::ReferenceArray const*>(value->wtype);
-			if (targetArr && valueArr)
-			{
-				value->wtype = target->wtype;
-				if (auto* srcVar = dynamic_cast<awst::VarExpression*>(value.get()))
-					m_frame.locals[srcVar->name] = target->wtype;
-			}
+			Logger::instance().debug(
+				"assembly type coercion: " + value->wtype->name() + " → " + target->wtype->name()
+			);
+			// Don't mutate IntegerConstant wtype to struct/array — puya rejects it.
+			// Wrap with ReinterpretCast instead.
+			if (dynamic_cast<awst::IntegerConstant const*>(value.get()))
+				value = awst::makeReinterpretCast(std::move(value), target->wtype, loc);
 			else
-			{
-				Logger::instance().debug(
-					"assembly type coercion: " + value->wtype->name() + " → " + target->wtype->name()
-				);
-				// Don't mutate IntegerConstant wtype to struct/array — puya rejects it.
-				// Wrap with ReinterpretCast instead.
-				if (dynamic_cast<awst::IntegerConstant const*>(value.get()))
-					value = awst::makeReinterpretCast(std::move(value), target->wtype, loc);
-				else
-					value->wtype = target->wtype;
-			}
+				value->wtype = target->wtype;
 		}
 	}
 
@@ -856,7 +845,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleStateVarSload(
 		return nullptr;
 	auto const& sv = it->second;
 	auto key = awst::makeUtf8BytesConstant(sv.varName, _loc, awst::WType::stateKeyType());
-	return awst::makeAppStateExpression(std::move(key), sv.wtype, _loc);
+	return StorageMapper::makeStateGetWithDefault(
+		awst::makeAppStateExpression(std::move(key), sv.wtype, _loc), sv.wtype, _loc);
 }
 
 

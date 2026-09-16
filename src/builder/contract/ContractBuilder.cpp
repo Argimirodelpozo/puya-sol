@@ -986,6 +986,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// whether the native update gate is reachable.
 	emitProxyUpdateGate(_contract, *contract);
 	buildRouters(_contract, *contract);
+	emitSelfCallDispatch(_contract, *contract);
 	scopeStorageDispatchCalls(_storagePlan, *contract);
 	warnEscapedErc1967Slots(*contract);
 	// Attach after hosted/base implementations too: those bodies can request
@@ -997,6 +998,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	}
 	// Function bodies and generated dispatchers can discover this after the
 	// approval program was built. Finalize once every lowering path is known.
+	if (m_typeMapper.artifacts().usesStaticContext)
+		contract->reservedScratchSpace.push_back(ScratchLayout::staticContextSlot);
 	if (m_typeMapper.artifacts().usesReturnData)
 	{
 		contract->reservedScratchSpace.push_back(ScratchLayout::returnDataSlot);

@@ -112,6 +112,7 @@ std::string bytesBinOpToString(awst::BytesBinaryOperator _op)
 
 njson AWSTSerializer::serialize(std::vector<std::shared_ptr<awst::RootNode>> const& _roots)
 {
+	Document document(*this);
 	njson arr = njson::array();
 	for (auto const& root: _roots)
 		arr.push_back(serializeRootNode(*root));
@@ -120,6 +121,7 @@ njson AWSTSerializer::serialize(std::vector<std::shared_ptr<awst::RootNode>> con
 
 njson AWSTSerializer::serializeRootNode(awst::RootNode const& _node)
 {
+	Document document(*this);
 	if (auto const* contract = dynamic_cast<awst::Contract const*>(&_node))
 		return serializeContract(*contract);
 	if (auto const* lsig = dynamic_cast<awst::LogicSignature const*>(&_node))
@@ -131,6 +133,7 @@ njson AWSTSerializer::serializeRootNode(awst::RootNode const& _node)
 
 njson AWSTSerializer::serializeLogicSignature(awst::LogicSignature const& _lsig)
 {
+	Document document(*this);
 	njson j;
 	j["_type"] = "LogicSignature";
 	j["source_location"] = serializeSourceLocation(_lsig.sourceLocation);
@@ -148,6 +151,7 @@ njson AWSTSerializer::serializeLogicSignature(awst::LogicSignature const& _lsig)
 
 njson AWSTSerializer::serializeContract(awst::Contract const& _contract)
 {
+	Document document(*this);
 	njson j;
 	j["_type"] = "Contract";
 	j["source_location"] = serializeSourceLocation(_contract.sourceLocation);
@@ -213,6 +217,7 @@ void AWSTSerializer::serializeCallableFields(Callable const& callable, njson& j)
 
 njson AWSTSerializer::serializeSubroutine(awst::Subroutine const& _sub)
 {
+	Document document(*this);
 	njson j;
 	j["_type"] = "Subroutine";
 	j["source_location"] = serializeSourceLocation(_sub.sourceLocation);
@@ -226,6 +231,7 @@ njson AWSTSerializer::serializeSubroutine(awst::Subroutine const& _sub)
 
 njson AWSTSerializer::serializeContractMethod(awst::ContractMethod const& _method)
 {
+	Document document(*this);
 	njson j;
 	j["_type"] = "ContractMethod";
 	j["source_location"] = serializeSourceLocation(_method.sourceLocation);
@@ -242,7 +248,12 @@ njson AWSTSerializer::serializeContractMethod(awst::ContractMethod const& _metho
 
 njson AWSTSerializer::serializeExpression(awst::Expression const& _expr)
 {
+	Document document(*this);
+	auto [entry, first] = m_expressions.emplace(&_expr, m_expressions.size());
+	auto id = entry->second;
+	if (!first) return njson{{"_$%!#REF", id}};
 	njson j;
+	j["_$%!#ID"] = id;
 	j["_type"] = _expr.nodeType();
 	j["source_location"] = serializeSourceLocation(_expr.sourceLocation);
 	j["wtype"] = serializeWType(_expr.wtype);
@@ -655,6 +666,7 @@ void AWSTSerializer::serializeFields(awst::PuyaLibCall const& _node, njson& _jso
 
 njson AWSTSerializer::serializeStatement(awst::Statement const& _stmt)
 {
+	Document document(*this);
 	njson j;
 	j["_type"] = _stmt.nodeType();
 	j["source_location"] = serializeSourceLocation(_stmt.sourceLocation);
@@ -851,17 +863,6 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 		j["desc"] = nullptr;
 		break;
 	}
-	case awst::WTypeKind::ReferenceArray:
-	{
-		auto const* at = static_cast<awst::ReferenceArray const*>(_type);
-		j["element_type"] = serializeWType(at->elementType());
-		if (at->arraySize().has_value())
-			j["array_size"] = at->arraySize().value();
-		else
-			j["array_size"] = nullptr;
-		j["source_location"] = nullptr;
-		break;
-	}
 	case awst::WTypeKind::WTuple:
 	{
 		auto const* at = static_cast<awst::WTuple const*>(_type);
@@ -960,6 +961,7 @@ njson AWSTSerializer::serializeSubroutineTarget(awst::SubroutineTarget const& _t
 
 njson AWSTSerializer::serializeAppStorageDefinition(awst::AppStorageDefinition const& _def)
 {
+	Document document(*this);
 	njson j;
 	j["_type"] = "AppStorageDefinition";
 	j["source_location"] = serializeSourceLocation(_def.sourceLocation);

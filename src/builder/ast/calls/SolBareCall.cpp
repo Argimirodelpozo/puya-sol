@@ -1,4 +1,5 @@
 #include "builder/ast/calls/SolBareCall.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/lowering/itxn/InnerCallHandlers.h"
 #include "builder/AwstShorthand.h"
 
@@ -8,7 +9,7 @@ namespace puyasol::builder::sol_ast
 std::shared_ptr<awst::Expression> SolBareCall::toAwst()
 {
 	auto const& funcExpr = funcExpression();
-	auto const* memberAccess = dynamic_cast<solidity::frontend::MemberAccess const*>(&funcExpr);
+	auto const* memberAccess = SolcFacts::expressionAs<solidity::frontend::MemberAccess>(&funcExpr);
 	if (!memberAccess)
 	{
 		auto vc = awst::makeVoidConstant(m_loc);

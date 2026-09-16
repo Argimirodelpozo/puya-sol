@@ -4,6 +4,7 @@
 #include "awst/WType.h"
 
 #include <nlohmann/json.hpp>
+#include <unordered_map>
 
 namespace puyasol::json
 {
@@ -55,6 +56,18 @@ public:
 	nlohmann::ordered_json serializeMethodDocumentation(awst::MethodDocumentation const& _doc);
 
 private:
+	// Puya's JSON references keep shared expression DAGs linear on the wire.
+	// Every public serialization entry starts an independent document, including
+	// when an instance is reused or a previous serialization threw.
+	std::unordered_map<awst::Expression const*, size_t> m_expressions;
+	unsigned m_depth = 0;
+	struct Document
+	{
+		AWSTSerializer& owner;
+		explicit Document(AWSTSerializer& serializer): owner(serializer) { ++owner.m_depth; }
+		~Document() { if (!--owner.m_depth) owner.m_expressions.clear(); }
+	};
+
 	template<class Callable>
 	void serializeCallableFields(Callable const& callable, nlohmann::ordered_json& json);
 

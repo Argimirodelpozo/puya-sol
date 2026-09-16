@@ -2,6 +2,7 @@
 /// Type conversion calls: uint256(x), address(y), bytes32(z), bool(w), etc.
 
 #include "builder/ast/calls/SolTypeConversion.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/types/ConversionPlan.h"
@@ -28,12 +29,8 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 	// (bzero(24) ++ itob(appId), see SolIdentifier), which is an app-id
 	// carrier, not a payable/balance-bearing address.
 	if (dynamic_cast<solidity::frontend::AddressType const*>(m_call.annotation().type)
-		&& !m_call.arguments().empty())
-		if (auto const* ident = dynamic_cast<solidity::frontend::Identifier const*>(
-				m_call.arguments()[0].get());
-			ident && ident->name() == "this")
-			return awst::makeGlobal(
-				std::string("CurrentApplicationAddress"), awst::WType::accountType(), m_loc);
+		&& SolcFacts::isThis(*m_call.arguments()[0]))
+		return awst::makeGlobal("CurrentApplicationAddress", awst::WType::accountType(), m_loc);
 
 	// Enum range check: EnumType(x) must assert x < numMembers
 	if (dynamic_cast<solidity::frontend::EnumType const*>(m_call.annotation().type))
@@ -98,7 +95,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleEnumConversion()
 			m_loc, "enum out of range"),
 		m_loc));
 
-	return TypeCoercion::implicitNumericCast(argOnce, awst::WType::uint64Type(), m_loc);
+	return TypeCoercion::coerceScalar(argOnce, awst::WType::uint64Type(), m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

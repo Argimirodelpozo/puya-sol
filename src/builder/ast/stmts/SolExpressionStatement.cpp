@@ -3,6 +3,7 @@
 
 #include "builder/ast/stmts/SolExpressionStatement.h"
 #include "builder/codec/SelectorSemantics.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/eb/MappingPrefix.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -139,15 +140,10 @@ bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 	{
 		auto& ctx = blk.builderCtx();
 		auto build = [&](auto&& self, Expression const* source) -> std::shared_ptr<awst::Expression> {
-			auto const* srcTup = dynamic_cast<solidity::frontend::TupleExpression const*>(source);
-			while (srcTup && !srcTup->isInlineArray() && srcTup->components().size() == 1)
-			{
-				source = srcTup->components()[0].get();
-				srcTup = dynamic_cast<solidity::frontend::TupleExpression const*>(source);
-			}
+			auto const* srcTup = SolcFacts::expressionAs<solidity::frontend::TupleExpression>(source);
 			// Select references, not copies of their values. Each branch keeps its
 			// own effects and applies the declared return-component conversions.
-			if (auto const* conditional = dynamic_cast<Conditional const*>(source))
+			if (auto const* conditional = SolcFacts::expressionAs<Conditional>(source))
 			{
 				auto condition = ctx.pinIfWriteBacks(ctx.lower(conditional->condition(), false), loc);
 				condition = ctx.emitSequencedOperand({}, std::move(condition), true, loc);
@@ -231,7 +227,7 @@ bool tryBoxKeyedRefReturn(BlockContext& blk, Return const& node,
 		return true;
 	}
 	if (!storageRefMapReturn
-		|| !dynamic_cast<solidity::frontend::IndexAccess const*>(node.expression()))
+		|| !SolcFacts::expressionAs<solidity::frontend::IndexAccess>(node.expression()))
 		return false;
 
 	auto built = blk.builderCtx().buildExpr(*node.expression());
@@ -322,7 +318,7 @@ void maybeAppendEnumReturnAssert(BlockContext& blk, Return const& node,
 	// wrap so `return f()` with a side-effecting enum f()
 	// evaluates once (verified: f() ran twice).
 	stmt.value = awst::makeEvalOnce(std::move(stmt.value), loc);
-	auto val = builder::TypeCoercion::implicitNumericCast(
+	auto val = builder::TypeCoercion::coerceScalar(
 		stmt.value, awst::WType::uint64Type(), loc);
 
 	auto assertStmt = awst::makeExpressionStatement(

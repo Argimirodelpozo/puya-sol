@@ -21,31 +21,30 @@ solidity::frontend::Expression const& SolFunctionCall::funcExpression() const
 
 std::shared_ptr<awst::Expression> SolFunctionCall::extractCallValue()
 {
-	auto const* opts = dynamic_cast<solidity::frontend::FunctionCallOptions const*>(
-		&m_call.expression());
-	if (!opts) return nullptr;
-
-	auto const& optNames = opts->names();
-	auto optValues = opts->options();
 	std::shared_ptr<awst::Expression> value;
-	for (size_t i = 0; i < optNames.size(); ++i)
+	for (auto const* opts: SolcFacts::callOptions(m_call.expression()))
 	{
-		if (*optNames[i] == "value" && i < optValues.size())
+		auto const options = opts->options();
+		for (size_t i = 0; i < opts->names().size(); ++i)
 		{
-			auto val = CallOperands::evaluate(m_ctx, *optValues[i], m_loc);
-			// {value: X}: assert X fits in uint64 before truncating (a >2^64
-			// value would silently send `X mod 2^64` microAlgos).
-			value = TypeCoercion::checkedAmountToUint64(
-				m_ctx.preEffects(), std::move(val), m_loc);
-		}
-		else if (*optNames[i] == "gas" && i < optValues.size())
-		{
-			// The gas AMOUNT has no AVM analogue (opcode budget is pooled),
-			// but solc EVALUATES option expressions — dropping the expression
-			// unevaluated would lose `{gas: f()}` side effects. Evaluate and
-			// discard; effect-free shapes (the common `{gas: 200}` literal,
-			// a bare local) stay unemitted.
-			m_ctx.evaluateForEffects(*optValues[i], m_loc);
+			auto const& option = *options[i];
+			if (*opts->names()[i] == "value")
+			{
+				auto val = CallOperands::evaluate(m_ctx, option, m_loc);
+				// {value: X}: assert X fits in uint64 before truncating (a >2^64
+				// value would silently send `X mod 2^64` microAlgos).
+				value = TypeCoercion::checkedAmountToUint64(
+					m_ctx.preEffects(), std::move(val), m_loc);
+			}
+			else if (*opts->names()[i] == "gas")
+			{
+				// The gas AMOUNT has no AVM analogue (opcode budget is pooled),
+				// but solc EVALUATES option expressions — dropping the expression
+				// unevaluated would lose `{gas: f()}` side effects. Evaluate and
+				// discard; effect-free shapes (the common `{gas: 200}` literal,
+				// a bare local) stay unemitted.
+				m_ctx.evaluateForEffects(option, m_loc);
+			}
 		}
 	}
 	return value;

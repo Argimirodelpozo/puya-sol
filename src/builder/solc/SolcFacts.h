@@ -16,6 +16,7 @@
 namespace solidity::frontend
 {
 class FunctionType;
+class FunctionCallOptions;
 }
 
 namespace solidity::yul
@@ -39,9 +40,25 @@ struct PreparedAssembly;
 class SolcFacts
 {
 public:
+	/// Parentheses are singleton tuples, but singleton inline arrays are values.
+	static solidity::frontend::Expression const& unparenthesized(
+		solidity::frontend::Expression const& _expression);
+	/// Query an expression's shape, never its syntactic grouping wrapper. Use
+	/// this instead of dynamic_cast at lowering/analysis boundaries. Real tuples
+	/// and inline arrays remain intact; call options are not discarded.
+	template<class T>
+	static T const* expressionAs(solidity::frontend::Expression const* _expression)
+	{
+		return _expression ? dynamic_cast<T const*>(&unparenthesized(*_expression)) : nullptr;
+	}
 	/// Strip call options and parenthesized singleton expressions.
 	static solidity::frontend::Expression const& functionExpression(
 		solidity::frontend::Expression const& _expression);
+	/// Nested option groups in receiver-to-call evaluation order.
+	static std::vector<solidity::frontend::FunctionCallOptions const*> callOptions(
+		solidity::frontend::Expression const& _expression);
+	/// The solc magic declaration `this`, through parentheses and identity casts.
+	static bool isThis(solidity::frontend::Expression const& _expression);
 	/// Formal-parameter order, including a using-for receiver at position zero.
 	static std::vector<solidity::frontend::Expression const*> callArguments(
 		solidity::frontend::FunctionCall const& _call);

@@ -36,7 +36,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::selectorOf(
 			{
 				// Only value receivers execute. Contract/module/type names are metadata;
 				// building the complete member would unnecessarily construct a pointer.
-				if (auto const* member = dynamic_cast<MemberAccess const*>(&source))
+				if (auto const* member = SolcFacts::expressionAs<MemberAccess>(&source))
 				{
 					auto const* receiverType = member->expression().annotation().type;
 					if (receiverType->category() != Type::Category::TypeType

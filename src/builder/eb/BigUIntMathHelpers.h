@@ -33,7 +33,7 @@ std::shared_ptr<awst::Expression> promoteToBiguint(
 	awst::SourceLocation const& _loc);
 
 /// Coerce a SHIFT AMOUNT to uint64 without truncating huge biguint amounts.
-/// implicitNumericCast(biguint→uint64) extracts the LOW 64 BITS — safe for
+/// coerceScalar(biguint→uint64) extracts the LOW 64 BITS — safe for
 /// values known < 2^64, but a shift amount is user data: `x >> 2^128` took
 /// amount mod 2^64 = 0 and shifted by nothing, where EVM saturates for ANY
 /// amount >= 256 (shl/shr → 0, sar → 0/-1). Clamp at the biguint level:
@@ -140,17 +140,6 @@ std::shared_ptr<awst::Expression> buildIncDec(
 	unsigned _signedBits,
 	unsigned _unsignedBits,
 	std::shared_ptr<awst::Expression> _base,
-	awst::SourceLocation const& _loc);
-
-/// Signed negation `-x` for intN on the sign-promoted biguint operand: (2^N - x) mod 2^N, with the INT_MIN guard queued as a …
-std::shared_ptr<awst::Expression> buildSignedNegate(
-	ContractContext& _ctx,
-	bool _isUnchecked,
-	unsigned _bits,
-	std::string const& _pow2NStr,
-	std::string const& _halfNStr,
-	int64_t _nodeId,
-	std::shared_ptr<awst::Expression> _operand,
 	awst::SourceLocation const& _loc);
 
 } // namespace puyasol::builder::eb

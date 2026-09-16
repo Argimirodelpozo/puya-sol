@@ -1,0 +1,75 @@
+bringing up nodes...
+bringing up nodes...
+
+...........................x...........................x................ [  2%]
+..XX..X.X.X.XX..X.X.X..X.X..Xx.X.X.X..XX.Xx.X...X..X..X..X..X..x..x..X.. [  5%]
+Xx................................................................xxx... [  7%]
+....................x.............xx..x.....x..xx..x.x...x....x......... [ 10%]
+........................................................................ [ 12%]
+..............................................X.......................x. [ 15%]
+...........x....................x....................................... [ 17%]
+...x..x...............x...............................x................. [ 20%]
+........x........xxXxx.......x....x..................................x.. [ 22%]
+.x........x..........................X.X..................X............. [ 25%]
+x.......x...........................................................x... [ 28%]
+...............................................................xxx..xxxx [ 30%]
+...x.x.................................................................. [ 33%]
+........................................................................ [ 35%]
+........................................................................ [ 38%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 45%]
+........................................................................ [ 48%]
+........................................................................ [ 50%]
+................................................................F....... [ 53%]
+........................................................................ [ 56%]
+........................................................................ [ 58%]
+.................F...................................................... [ 61%]
+........................................................................ [ 63%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 73%]
+........................................................................ [ 76%]
+........................................................................ [ 78%]
+.............................................................X.......... [ 81%]
+.....F..............x..xxx...x.....x.......xxx.......................... [ 84%]
+........................................................................ [ 86%]
+.............x.............xxxx..xxxx...............xx.................. [ 89%]
+.....................xxxxxxx.xxxxx..x.......x............X..x.X......... [ 91%]
+......x...X.....................................x...xxxx......x....x.... [ 94%]
+........x.........x..x...Xxx..Xx.............................X........x. [ 96%]
+........................................................................ [ 99%]
+..................                                                       [100%]
+=================================== FAILURES ===================================
+_________________ test_erc1967_proxy_adaptation_native_layout __________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_erc1967.py:138: in test_erc1967_proxy_adaptation_native_layout
+    _run_flow(harness, None)
+tests/puyasolRegression/test_erc1967.py:79: in _run_flow
+    assert as_int(harness.call(app, "rawValue()").abi_return) == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/values.py:137: in as_int
+    raise AssertionError(
+E   AssertionError: call returned no value because it REVERTED: transaction IIE3UWPHQ3IJBMKT3YH6XHYH5HEXFK5JVDVWSJUU5YHUIRDCFPOA: logic eval error: assert failed pc=430. Details: app=3348900, pc=430, opcodes=bytec_3 // "value"; app_global_get_ex; assert
+----------------------------- Captured stdout call -----------------------------
+[call] rawValue FAILED after retries: TransactionPool.Remember: transaction YJMBW2J4UYGVVHGVEG6IFAVI2SQAZY6JC77RWWYKUIBGNBZAG2FA: logic eval error: assert failed pc=430. Details: app=3348900, pc=430, opcodes=bytec_3 // "value"; app_global_get_ex; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction BJ6QU6QGEV5LZLX2XEOXLW63U773ST5YA25TH3QUIHQUIIKUZDZA: logic eval error: assert failed pc=430. Details: app=3348900, pc=430, opcodes=bytec_3 // "value"; app_global_get_ex; assert
+___________________ test_dce_reverting_subexpr_literal_folds ___________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_puyasol_regression.py:2142: in test_dce_reverting_subexpr_literal_folds
+    assert getattr(r, "reverted", False), f"{sig}{args} must revert (divide/mod by zero)"
+E   AssertionError: divdivShl(uint256)(0,) must revert (divide/mod by zero)
+E   assert False
+E    +  where False = getattr(Result(abi_return=0, logs=[b'\x15\x1f|u\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0...x00\x00\x00\x00\x00\x00\x00'], reverted=False, revert_data=b'', revert_reason=None, raw_response=None, fail_message=''), 'reverted', False)
+______________________ test_invalid_enum_as_external_arg _______________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/reverts/test_reverts.py:44: in test_invalid_enum_as_external_arg
+    assert r.reverted
+E   AssertionError: assert False
+E    +  where False = Result(abi_return=1, logs=[b'\x15\x1f|u\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0...x00\x00\x00\x00\x00\x00\x01'], reverted=False, revert_data=b'', revert_reason=None, raw_response=None, fail_message='').reverted
+=========================== short test summary info ============================
+FAILED tests/puyasolRegression/test_erc1967.py::test_erc1967_proxy_adaptation_native_layout
+FAILED tests/puyasolRegression/test_puyasol_regression.py::test_dce_reverting_subexpr_literal_folds
+FAILED tests/reverts/test_reverts.py::test_invalid_enum_as_external_arg - Ass...
+3 failed, 2684 passed, 100 xfailed, 39 xpassed in 1028.27s (0:17:08)

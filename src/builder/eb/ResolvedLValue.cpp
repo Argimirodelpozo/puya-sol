@@ -35,7 +35,7 @@ bool slotDestination(eb::ContractContext& ctx, Expression const& source)
 
 VariableDeclaration const* transientDeclaration(eb::ContractContext& ctx, Expression const& source)
 {
-	auto const* id = dynamic_cast<Identifier const*>(&source);
+	auto const* id = SolcFacts::expressionAs<Identifier>(&source);
 	auto const* decl = id ? dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration) : nullptr;
 	return decl && ctx.transientStorage && ctx.transientStorage->isTransient(*decl) ? decl : nullptr;
 }
@@ -43,7 +43,7 @@ VariableDeclaration const* transientDeclaration(eb::ContractContext& ctx, Expres
 bool blobRoot(eb::ContractContext& ctx, Expression const& source)
 {
 	for (auto const* root: SolcFacts::referenceSources(source))
-		if (auto const* id = dynamic_cast<Identifier const*>(root))
+		if (auto const* id = SolcFacts::expressionAs<Identifier>(root))
 			if (auto const* declaration = id->annotation().referencedDeclaration;
 				declaration && !ctx.scope().bindings.blobAggregates.get(declaration->id()).empty())
 				return true;
@@ -59,7 +59,7 @@ std::optional<ResolvedLValue::Resolution::AggregatePath> ResolvedLValue::aggrega
 	for (;;)
 	{
 		cursor = &SolcFacts::functionExpression(*cursor);
-		if (auto const* index = dynamic_cast<IndexAccess const*>(cursor))
+		if (auto const* index = SolcFacts::expressionAs<IndexAccess>(cursor))
 		{
 			if (!index->indexExpression()
 				|| dynamic_cast<MappingType const*>(index->baseExpression().annotation().type))
@@ -67,7 +67,7 @@ std::optional<ResolvedLValue::Resolution::AggregatePath> ResolvedLValue::aggrega
 			steps.push_back(cursor);
 			cursor = &index->baseExpression();
 		}
-		else if (auto const* member = dynamic_cast<MemberAccess const*>(cursor);
+		else if (auto const* member = SolcFacts::expressionAs<MemberAccess>(cursor);
 			member && dynamic_cast<StructType const*>(member->expression().annotation().type))
 		{
 			if (!transparentMappingWrapper(member->expression().annotation().type))
@@ -76,7 +76,7 @@ std::optional<ResolvedLValue::Resolution::AggregatePath> ResolvedLValue::aggrega
 		}
 		else break;
 	}
-	auto const* identifier = dynamic_cast<Identifier const*>(cursor);
+	auto const* identifier = SolcFacts::expressionAs<Identifier>(cursor);
 	auto const* declaration = identifier
 		? dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration) : nullptr;
 	if (!declaration || steps.empty() || declaration->isConstant() || declaration->immutable())
@@ -151,7 +151,7 @@ ResolvedLValue::ResolvedLValue(eb::ContractContext& ctx, Expression const& sourc
 		m_destination = Transient{*declaration};
 		return;
 	}
-	auto const* index = dynamic_cast<IndexAccess const*>(&SolcFacts::functionExpression(source));
+	auto const* index = SolcFacts::expressionAs<IndexAccess>(&SolcFacts::functionExpression(source));
 	bool const bytesElement = index && EvmSlotLowering::isBytesLike(index->baseExpression().annotation().type);
 	if (std::holds_alternative<Resolution::Slot>(resolution.m_kind))
 	{
@@ -201,7 +201,7 @@ ResolvedLValue::Aggregate ResolvedLValue::resolveAggregate(Resolution::Aggregate
 	size_t first = 0;
 	if (path.paged)
 	{
-		auto const* index = dynamic_cast<IndexAccess const*>(path.steps.front());
+		auto const* index = SolcFacts::expressionAs<IndexAccess>(path.steps.front());
 		if (!index) throw std::logic_error("Paged aggregate path does not begin with an index");
 		auto value = m_ctx.pinIfWriteBacks(m_ctx.lower(*index->indexExpression(), false), m_loc);
 		auto page = StorageMapper::arrayPageForIndex(path.binding.key, rootType,
@@ -239,7 +239,7 @@ ResolvedLValue::Aggregate ResolvedLValue::resolveAggregate(Resolution::Aggregate
 	aggregate.target = aggregate.root;
 	for (size_t i = first; i < path.steps.size(); ++i)
 	{
-		if (auto const* index = dynamic_cast<IndexAccess const*>(path.steps[i]))
+		if (auto const* index = SolcFacts::expressionAs<IndexAccess>(path.steps[i]))
 		{
 			auto value = m_ctx.pinIfWriteBacks(m_ctx.lower(*index->indexExpression(), false), m_loc);
 			value = pin(TypeCoercion::checkedIndexToUint64(m_ctx.preEffects(), std::move(value), m_loc));

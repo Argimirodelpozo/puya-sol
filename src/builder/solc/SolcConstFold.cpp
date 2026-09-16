@@ -2,6 +2,7 @@
 /// See SolcConstFold.h — the one place builders get compile-time constants.
 
 #include "builder/solc/SolcConstFold.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/types/TypeMapper.h"
 
@@ -57,9 +58,9 @@ bool subtreeFoldable(Expression const& _e)
 	if (value->numerator() < intType->minValue() || value->numerator() > intType->maxValue())
 		return false;
 
-	if (dynamic_cast<Literal const*>(&_e))
+	if (SolcFacts::expressionAs<Literal>(&_e))
 		return true;
-	if (auto const* id = dynamic_cast<Identifier const*>(&_e))
+	if (auto const* id = SolcFacts::expressionAs<Identifier>(&_e))
 	{
 		// A constant variable's VALUE (computed + range-checked above) is what
 		// solc itself inlines at references — its initializer's internals are
@@ -68,21 +69,14 @@ bool subtreeFoldable(Expression const& _e)
 			id->annotation().referencedDeclaration);
 		return varDecl && varDecl->isConstant();
 	}
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_e))
-	{
-		// Parenthesized expression only.
-		if (tuple->components().size() != 1 || !tuple->components()[0])
-			return false;
-		return subtreeFoldable(*tuple->components()[0]);
-	}
-	if (auto const* unary = dynamic_cast<UnaryOperation const*>(&_e))
+	if (auto const* unary = SolcFacts::expressionAs<UnaryOperation>(&_e))
 	{
 		auto op = unary->getOperator();
 		if (op != solidity::langutil::Token::Sub && op != solidity::langutil::Token::BitNot)
 			return false;
 		return subtreeFoldable(unary->subExpression());
 	}
-	if (auto const* binary = dynamic_cast<BinaryOperation const*>(&_e))
+	if (auto const* binary = SolcFacts::expressionAs<BinaryOperation>(&_e))
 	{
 		using solidity::langutil::Token;
 		switch (binary->getOperator())
@@ -177,7 +171,7 @@ std::optional<solidity::u256> SolcConstFold::constantVarEvmWord(
 
 	// The evaluator does not handle bool/address literals. Their annotated solc
 	// types already expose the literal's canonical value; do not parse spelling.
-	if (auto const* literal = dynamic_cast<Literal const*>(initExpr))
+	if (auto const* literal = SolcFacts::expressionAs<Literal>(initExpr))
 	{
 		auto const* exprType = initExpr->annotation().type;
 		if (dynamic_cast<BoolType const*>(exprType)
@@ -188,13 +182,46 @@ std::optional<solidity::u256> SolcConstFold::constantVarEvmWord(
 	// Solc accepted the implicit conversion at this reference. Non-numeric
 	// constant chains preserve the canonical word: fixed-bytes widening pads on
 	// the RIGHT, so the already left-aligned inner word must not be shifted again.
-	if (auto const* identifier = dynamic_cast<Identifier const*>(initExpr))
+	if (auto const* identifier = SolcFacts::expressionAs<Identifier>(initExpr))
 	{
 		if (auto const* refDecl = dynamic_cast<VariableDeclaration const*>(
 				identifier->annotation().referencedDeclaration))
 			return constantVarEvmWord(*refDecl);
 	}
 	return std::nullopt;
+}
+
+std::optional<solidity::u256> SolcConstFold::constantAddress(Expression const& expression)
+{
+	using solidity::bigint;
+	using solidity::u256;
+	if (!dynamic_cast<AddressType const*>(expression.annotation().type)) return std::nullopt;
+	std::function<std::optional<bigint>(Expression const&)> value = [&](Expression const& input) -> std::optional<bigint> {
+		auto const& source = SolcFacts::unparenthesized(input);
+		if (auto const* literal = SolcFacts::expressionAs<Literal>(&source);
+			literal && dynamic_cast<AddressType const*>(source.annotation().type))
+			return bigint(source.annotation().type->literalValue(literal));
+		if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(ASTNode::referencedDeclaration(source));
+			declaration && declaration->isConstant() && declaration->value())
+			return value(*declaration->value());
+		if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&source);
+			call && *call->annotation().kind == FunctionCallKind::TypeConversion && call->arguments().size() == 1)
+		{
+			auto result = value(*call->arguments()[0]);
+			if (!result) return std::nullopt;
+			if (dynamic_cast<AddressType const*>(source.annotation().type))
+				return *result >= 0 && *result < (bigint(1) << 160) ? result : std::nullopt;
+			if (auto const* integer = dynamic_cast<IntegerType const*>(source.annotation().type))
+				return *result >= integer->minValue() && *result <= integer->maxValue() ? result : std::nullopt;
+			return std::nullopt;
+		}
+		if (subtreeFoldable(source))
+			if (auto result = nodeValue(source)) return result->numerator();
+		return std::nullopt;
+	};
+	auto result = value(expression);
+	return result && *result >= 0 && *result < (bigint(1) << 160)
+		? std::optional<u256>(u256(*result)) : std::nullopt;
 }
 
 bool SolcConstFold::isEffectFree(Expression const& _expr)

@@ -65,6 +65,17 @@ ApplicationTarget::Expr ApplicationTarget::pointerId(
 	return checked;
 }
 
+ApplicationTarget::Expr ApplicationTarget::pointerAddress(Expr id, awst::SourceLocation const& loc)
+{
+	id = awst::makeEvalOnce(std::move(id), loc);
+	auto self = awst::makeNumericCompare(id, awst::NumericComparison::Eq,
+		awst::makeGlobal("CurrentApplicationID", awst::WType::uint64Type(), loc), loc);
+	return awst::makeConditional(std::move(self),
+		awst::makeGlobal("CurrentApplicationAddress", awst::WType::accountType(), loc),
+		awst::makeAsAccount(awst::makeLeftPad(awst::makeItob(id, loc), 24, loc), loc),
+		awst::WType::accountType(), loc);
+}
+
 ApplicationTarget::Expr ApplicationTarget::requireApplication(Expr id, awst::SourceLocation const& loc)
 {
 	id = awst::makeEvalOnce(awst::makeAsUInt64(std::move(id), loc), loc);

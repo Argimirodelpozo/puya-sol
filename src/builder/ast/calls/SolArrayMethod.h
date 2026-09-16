@@ -27,25 +27,14 @@ private:
 		std::string const& memberName,
 		solidity::frontend::Expression const& baseExpr,
 		solidity::frontend::ArrayType const* arrT);
-	std::shared_ptr<awst::Expression> tryBoxedElementPushPop(
-		std::string const& memberName,
-		solidity::frontend::Expression const& baseExpr);
-	std::shared_ptr<awst::Expression> tryStoragePointerPushPop(
-		std::string const& memberName,
-		solidity::frontend::Expression const& baseExpr);
 	std::shared_ptr<awst::Expression> emitArrayPushPop(
 		std::string const& memberName,
 		std::shared_ptr<awst::Expression> baseAwst,
 		solidity::frontend::ArrayType const& solArrType);
-	std::shared_ptr<awst::Expression> tryChainedFieldPushPop(
-		std::string const& memberName,
-		solidity::frontend::Expression const& baseExpr,
-		solidity::frontend::MemberAccess const& innerMA);
 
 	/// Handle push/pop on box-backed dynamic arrays.
 	std::shared_ptr<awst::Expression> handleBoxArray(
 		std::string const& _memberName,
-		solidity::frontend::Expression const& _baseExpr,
 		solidity::frontend::VariableDeclaration const& _varDecl,
 		std::shared_ptr<awst::Expression> _runtimeKey = nullptr);
 

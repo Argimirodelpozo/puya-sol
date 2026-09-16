@@ -32,6 +32,12 @@ public:
 		std::vector<solidity::frontend::Type const*> const& returns, bool evmWire,
 		awst::SourceLocation const& loc, Statements& out);
 	static Expr returnData(TypeMapper& types, awst::SourceLocation const& loc);
+	/// Internal pointers inherit this flag; their declared mutability does not set it.
+	static Expr staticContext(TypeMapper& types, awst::SourceLocation const& loc);
+	/// Scope a modeled self STATICCALL after evaluating its operands, restoring
+	/// the caller's flag after capturing the result. Ordinary calls preserve it.
+	static Expr withStaticContext(TypeMapper& types, Expr value, bool staticCall,
+		awst::SourceLocation const& loc, Statements& out);
 	/// Preserve short and empty payloads; do not read a fabricated selector.
 	static Expr splitPayload(TypeMapper& types, Expr bytes, awst::SourceLocation const& loc);
 

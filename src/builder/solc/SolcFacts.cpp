@@ -31,16 +31,51 @@ namespace puyasol::builder
 
 using namespace solidity::yul;
 
-solidity::frontend::Expression const& SolcFacts::functionExpression(
+solidity::frontend::Expression const& SolcFacts::unparenthesized(
 	solidity::frontend::Expression const& expression)
 {
 	using namespace solidity::frontend;
-	if (auto const* options = dynamic_cast<FunctionCallOptions const*>(&expression))
-		return functionExpression(options->expression());
 	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&expression);
-		tuple && tuple->components().size() == 1 && tuple->components()[0])
-		return functionExpression(*tuple->components()[0]);
+		tuple && !tuple->isInlineArray() && tuple->components().size() == 1 && tuple->components()[0])
+		return unparenthesized(*tuple->components()[0]);
 	return expression;
+}
+
+solidity::frontend::Expression const& SolcFacts::functionExpression(
+	solidity::frontend::Expression const& expression)
+{
+	auto const& source = unparenthesized(expression);
+	if (auto const* options = dynamic_cast<solidity::frontend::FunctionCallOptions const*>(&source))
+		return functionExpression(options->expression());
+	return source;
+}
+
+std::vector<solidity::frontend::FunctionCallOptions const*> SolcFacts::callOptions(
+	solidity::frontend::Expression const& expression)
+{
+	std::vector<solidity::frontend::FunctionCallOptions const*> result;
+	auto const* source = &unparenthesized(expression);
+	while (auto const* options = dynamic_cast<solidity::frontend::FunctionCallOptions const*>(source))
+	{
+		result.insert(result.begin(), options);
+		source = &unparenthesized(options->expression());
+	}
+	return result;
+}
+
+bool SolcFacts::isThis(solidity::frontend::Expression const& expression)
+{
+	using namespace solidity::frontend;
+	auto const& source = unparenthesized(expression);
+	if (auto const* cast = dynamic_cast<solidity::frontend::FunctionCall const*>(&source);
+		cast && cast->annotation().kind.set()
+		&& *cast->annotation().kind == FunctionCallKind::TypeConversion
+		&& cast->arguments().size() == 1
+		&& (dynamic_cast<AddressType const*>(source.annotation().type)
+			|| dynamic_cast<ContractType const*>(source.annotation().type)))
+		return isThis(*cast->arguments()[0]);
+	auto const* declaration = dynamic_cast<MagicVariableDeclaration const*>(ASTNode::referencedDeclaration(source));
+	return declaration && declaration->name() == "this";
 }
 
 std::vector<solidity::frontend::Expression const*> SolcFacts::callArguments(

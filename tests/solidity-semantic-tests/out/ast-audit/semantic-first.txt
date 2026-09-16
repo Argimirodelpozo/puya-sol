@@ -1,0 +1,110 @@
+bringing up nodes...
+bringing up nodes...
+
+........................x.................................X.....X.X.X.XX [  2%]
+X.X.XX.X.X.X.XX....x..XX..X.............X...X.x..X.XX.X...X..x.XX....... [  5%]
+.x....x.......x......................................................... [  8%]
+.........................x.............................................. [ 10%]
+..x.x.xxx.x.....x..x.x..x.............x................................. [ 13%]
+.................x....x...x...........................X................. [ 16%]
+........................................................................ [ 18%]
+............xx............x....................x.x...............x...... [ 21%]
+x.....X....x..x..................................X.X.......F..........x. [ 24%]
+.......X.x....x........x..x.....x....................................... [ 26%]
+...........x...x............x...............x........................... [ 29%]
+......................................................................xx [ 32%]
+x...xxxx.xx............................................................. [ 34%]
+........................................................................ [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 45%]
+........................................................................ [ 48%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 56%]
+..........................................................F............. [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+........................................................................ [ 69%]
+........................................................................ [ 72%]
+........................................................................ [ 75%]
+......................................................................X. [ 77%]
+.............x.xxx.x..............................x.......xxx........... [ 80%]
+..............................................x......................... [ 83%]
+........................................................................ [ 85%]
+..x...............x....................................xxxx.xxxxxxxxxxxx [ 88%]
+.xxxx...F.............x............x...X.X.........xX................... [ 91%]
+...........x..............x...xxxx.....x....x..................x.XxxXx.x [ 93%]
+...............X.....x........................................x......... [ 96%]
+........................................................................ [ 99%]
+.......................                                                  [100%]
+=================================== FAILURES ===================================
+___________________ test_inherited_function_calldata_memory ____________________
+[gw2] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/inheritance/test_inheritance.py:174: in test_inherited_function_calldata_memory
+    app = harness.compile_and_deploy("inheritance/contracts/inherited_function_calldata_memory.sol")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/harness.py:170: in compile_and_deploy
+    artifacts = self.compile(
+framework/harness.py:121: in compile
+    artifacts = compile_sol(resolved, compile_dir, **opts)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/compile.py:583: in compile_sol
+    raise CompileError(
+E   framework.compile.CompileError: puya-sol exited 1: error: Solidity assertion failed
+___________________ test_dce_reverting_subexpr_literal_folds ___________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_puyasol_regression.py:2142: in test_dce_reverting_subexpr_literal_folds
+    assert getattr(r, "reverted", False), f"{sig}{args} must revert (divide/mod by zero)"
+E   AssertionError: divdivShl(uint256)(0,) must revert (divide/mod by zero)
+E   assert False
+E    +  where False = getattr(Result(abi_return=0, logs=[b'\x15\x1f|u\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0...x00\x00\x00\x00\x00\x00\x00'], reverted=False, revert_data=b'', revert_reason=None, raw_response=None, fail_message=''), 'reverted', False)
+________________ test_array_mapping_abstract_constructor_param _________________
+[gw0] linux -- Python 3.12.12 /usr/bin/python3.12
+framework/deploy.py:566: in _call_postinit
+    atc = au.populate_app_call_resources(atc, algod)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algokit_utils/transactions/transaction_composer.py:845: in populate_app_call_resources
+    return prepare_group_for_sending(atc, algod, populate_app_call_resources=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algokit_utils/transactions/transaction_composer.py:867: in prepare_group_for_sending
+    execution_info = _get_group_execution_info(
+/home/argi/.local/lib/python3.12/site-packages/algokit_utils/transactions/transaction_composer.py:726: in _get_group_execution_info
+    raise ValueError(
+E   ValueError: Error resolving execution info via simulate in transaction 0: transaction HTBPEJ4W5QG4PAR7UWWAXTZ63TIXZ2EMHU5KDZTZS2DGNQHTU7MA: logic eval error: assert failed pc=335. Details: app=2839179, pc=335, opcodes=intc_2 // 0; extract_uint16; assert
+
+During handling of the above exception, another exception occurred:
+framework/deploy.py:566: in _call_postinit
+    atc = au.populate_app_call_resources(atc, algod)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algokit_utils/transactions/transaction_composer.py:845: in populate_app_call_resources
+    return prepare_group_for_sending(atc, algod, populate_app_call_resources=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/argi/.local/lib/python3.12/site-packages/algokit_utils/transactions/transaction_composer.py:867: in prepare_group_for_sending
+    execution_info = _get_group_execution_info(
+/home/argi/.local/lib/python3.12/site-packages/algokit_utils/transactions/transaction_composer.py:726: in _get_group_execution_info
+    raise ValueError(
+E   ValueError: Error resolving execution info via simulate in transaction 8: transaction UO4SXBRJJVVN4BGPN5XHQN27MKHFFJXJ2SMWR4FQPREQM2KTTYZQ: logic eval error: assert failed pc=335. Details: app=2839179, pc=335, opcodes=intc_2 // 0; extract_uint16; assert
+
+The above exception was the direct cause of the following exception:
+tests/types/test_types.py:27: in test_array_mapping_abstract_constructor_param
+    app = harness.compile_and_deploy('types/contracts/array_mapping_abstract_constructor_param.sol')
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/harness.py:177: in compile_and_deploy
+    return self.deploy(
+framework/harness.py:143: in deploy
+    deployed = deploy(self.localnet, artifacts.by_contract[name], **deploy_opts)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+framework/deploy.py:334: in deploy
+    _call_postinit(
+framework/deploy.py:582: in _call_postinit
+    return _call_postinit(
+framework/deploy.py:587: in _call_postinit
+    raise DeployError(f"__postInit failed: {str(e)[:300]}") from e
+E   framework.deploy.DeployError: __postInit failed: Error resolving execution info via simulate in transaction 8: transaction UO4SXBRJJVVN4BGPN5XHQN27MKHFFJXJ2SMWR4FQPREQM2KTTYZQ: logic eval error: assert failed pc=335. Details: app=2839179, pc=335, opcodes=intc_2 // 0; extract_uint16; assert
+=========================== short test summary info ============================
+FAILED tests/inheritance/test_inheritance.py::test_inherited_function_calldata_memory
+FAILED tests/puyasolRegression/test_puyasol_regression.py::test_dce_reverting_subexpr_literal_folds
+FAILED tests/types/test_types.py::test_array_mapping_abstract_constructor_param
+3 failed, 2545 passed, 100 xfailed, 39 xpassed in 1038.62s (0:17:18)

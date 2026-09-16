@@ -74,7 +74,7 @@ std::unique_ptr<InstanceBuilder> TypeConversions::convertToAddress(
 	// Integer → left-pad to 32 bytes → account.
 	if (awst::isNumericWType(srcWType))
 	{
-		auto promoted = TypeCoercion::implicitNumericCast(
+		auto promoted = TypeCoercion::coerceScalar(
 			std::move(_arg), awst::WType::biguintType(), _loc);
 		auto toBytes = awst::makeAsBytes(std::move(promoted), _loc);
 
@@ -109,36 +109,8 @@ std::unique_ptr<InstanceBuilder> TypeConversions::convertToFixedBytes(
 	auto const* fbType = dynamic_cast<solidity::frontend::FixedBytesType const*>(_targetSolType);
 	if (!fbType) return nullptr;
 
-	auto const* source = _arg->wtype;
-	int const width = static_cast<int>(fbType->numBytes());
-	if (source == _targetWType)
-		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(_arg));
-	std::shared_ptr<awst::Expression> value;
-	if (source == awst::WType::uint64Type() || source == awst::WType::biguintType()
-		|| source == awst::WType::accountType())
-	{
-		// Integer/address magnitudes are right-aligned; signed carriers already
-		// contain two's-complement bits. Keep exactly solc's declared byte width.
-		if (source == awst::WType::uint64Type()) value = awst::makeItob(std::move(_arg), _loc);
-		else value = awst::makeAsBytes(std::move(_arg), _loc);
-		value = awst::makeLeftPadToN(std::move(value), width, _loc);
-	}
-	else if (auto literal = TypeCoercion::stringToBytesN(_arg.get(), _targetWType, width, _loc))
-		return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType, std::move(literal));
-	else if (source && source->kind() == awst::WTypeKind::Bytes)
-	{
-		// Fixed/dynamic byte strings are left-aligned: extend on the right,
-		// then select their prefix. Known lengths avoid unnecessary padding.
-		auto const length = awst::fixedBytesLength(source);
-		value = awst::makeAsBytes(std::move(_arg), _loc);
-		if (!length || *length < width)
-			value = awst::makeRightPad(std::move(value), width - length.value_or(0), _loc);
-		if (!length || *length != width)
-			value = awst::makeExtract(std::move(value), 0, width, _loc);
-	}
-	else return nullptr;
 	return std::make_unique<SolFixedBytesBuilder>(_ctx, fbType,
-		awst::makeReinterpretCast(std::move(value), _targetWType, _loc));
+		TypeCoercion::coerceScalar(std::move(_arg), _targetWType, _loc));
 }
 
 // ─────────────────────────────────────────────────────────────────────

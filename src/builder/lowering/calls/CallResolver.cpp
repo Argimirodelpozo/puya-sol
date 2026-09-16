@@ -65,7 +65,7 @@ CallPlan CallResolver::plan(solidity::frontend::FunctionCall const& _call)
 		|| kind == FunctionType::Kind::DelegateCall)
 		? CallTransport::External : CallTransport::Internal;
 
-	if (auto const* member = dynamic_cast<MemberAccess const*>(result.callee))
+	if (auto const* member = SolcFacts::expressionAs<MemberAccess>(result.callee))
 	{
 		result.declaration = dynamic_cast<FunctionDefinition const*>(
 			member->annotation().referencedDeclaration);
@@ -73,27 +73,7 @@ CallPlan CallResolver::plan(solidity::frontend::FunctionCall const& _call)
 			&& result.declaration->annotation().contract->isLibrary())
 			result.transport = CallTransport::Internal;
 
-		auto const* receiver = &member->expression();
-		for (;;)
-		{
-			if (auto const* conversion = dynamic_cast<FunctionCall const*>(receiver);
-				conversion && conversion->annotation().kind.set()
-				&& *conversion->annotation().kind == FunctionCallKind::TypeConversion
-				&& conversion->arguments().size() == 1)
-			{
-				receiver = conversion->arguments()[0].get();
-				continue;
-			}
-			if (auto const* tuple = dynamic_cast<TupleExpression const*>(receiver);
-				tuple && tuple->components().size() == 1 && tuple->components()[0])
-			{
-				receiver = tuple->components()[0].get();
-				continue;
-			}
-			break;
-		}
-		if (auto const* identifier = dynamic_cast<Identifier const*>(receiver);
-			identifier && identifier->name() == "this")
+		if (SolcFacts::isThis(member->expression()))
 		{
 			result.isSelfCall = true;
 			result.transport = CallTransport::Internal;
@@ -110,7 +90,7 @@ CallPlan CallResolver::plan(solidity::frontend::FunctionCall const& _call)
 				result.transport = CallTransport::Internal;
 			}
 	}
-	else if (auto const* identifier = dynamic_cast<Identifier const*>(result.callee))
+	else if (auto const* identifier = SolcFacts::expressionAs<Identifier>(result.callee))
 	{
 		if (auto const* variable = dynamic_cast<VariableDeclaration const*>(
 				identifier->annotation().referencedDeclaration);
@@ -211,7 +191,7 @@ std::optional<ResolvedCall> CallResolver::resolveFunction(
 	// Type-level contract members are super.f or explicit Base.f. The solc
 	// declaration is already concrete, so give it an internal copy even if its
 	// public entrypoint is overridden or carries ABI-boundary checks.
-	if (auto const* member = dynamic_cast<MemberAccess const*>(&expression))
+	if (auto const* member = SolcFacts::expressionAs<MemberAccess>(&expression))
 	{
 		if (auto const* type = dynamic_cast<TypeType const*>(member->expression().annotation().type);
 			type && dynamic_cast<ContractType const*>(type->actualType()))
@@ -221,10 +201,17 @@ std::optional<ResolvedCall> CallResolver::resolveFunction(
 		}
 		// This backend internalizes self calls. Their ABI selector denotes the
 		// host's override, unlike the static source declaration on `this.f`.
-		if (auto const* receiver = dynamic_cast<Identifier const*>(
-				&SolcFacts::functionExpression(member->expression()));
-			receiver && receiver->name() == "this" && _ctx.currentContract)
-			result.funcDef = function = &function->resolveVirtual(*_ctx.currentContract);
+		if (_ctx.currentContract && SolcFacts::isThis(member->expression()))
+		{
+			// External overrides may change calldata to memory. Internal virtual
+			// lookup asserts equal source parameter types; solc's ABI table owns
+			// the external target, including that legal data-location change.
+			auto signature = function->externalSignature();
+			for (auto const& [_, entry]: _ctx.currentContract->interfaceFunctionList(true))
+				if (entry->externalSignature() == signature)
+					if (auto const* implementation = dynamic_cast<FunctionDefinition const*>(&entry->declaration()))
+						result.funcDef = function = implementation;
+		}
 	}
 	result.target = awst::InstanceMethodTarget{resolveMethodName(_ctx, *function)};
 	return result;

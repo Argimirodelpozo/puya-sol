@@ -3,6 +3,8 @@
 #include "builder/ast/stmts/SolVariableDeclaration.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
 #include "builder/ast/exprs/SolTupleExpression.h"
+#include "builder/solc/SolcFacts.h"
+#include "builder/eb/CallOperands.h"
 #include "Logger.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -46,49 +48,41 @@ bool SolVariableDeclaration::tryCalldataSlicePointerBinding(
 	// (solc's calldataStride = the element's calldata head size) and mark t
 	// live, so a later asm `s := t` reads t's byte offset in __cd_blob —
 	// 0x44 + 1*64 = 0x84 in calldata_array_read.
-	if (decl.referenceLocation() == VariableDeclaration::Location::CallData && initialValue)
-		if (auto const* idx = dynamic_cast<IndexAccess const*>(initialValue))
-			if (auto const* baseId = dynamic_cast<Identifier const*>(&idx->baseExpression()))
-				if (auto const* baseVd = dynamic_cast<VariableDeclaration const*>(
-						baseId->annotation().referencedDeclaration))
-					if (auto* live = m_blk.fn.scope.liveCalldataPointers();
-						live && live->count(baseVd->name()) && idx->indexExpression())
-						if (auto const* arrT = dynamic_cast<solidity::frontend::ArrayType const*>(
-								baseVd->type()))
-						{
-							auto loc = m_blk.makeLoc(decl.location());
-							auto idxVal = builder::TypeCoercion::implicitNumericCast(
-								m_blk.builderCtx().pinIfWriteBacks(
-									m_blk.builderCtx().lower(*idx->indexExpression(), false), loc),
-								awst::WType::biguintType(), loc);
-							auto scaled = awst::makeBigUIntBinOp(std::move(idxVal),
-								awst::BigUIntBinaryOperator::Mult,
-								awst::makeIntegerConstant(
-									std::to_string(arrT->calldataStride()), loc,
-									awst::WType::biguintType()), loc);
-							auto off = awst::makeBigUIntBinOp(
-								awst::makeVarExpression("__cd_off_" + baseVd->name(),
-									awst::WType::biguintType(), loc),
-								awst::BigUIntBinaryOperator::Add, std::move(scaled), loc);
-							// Name via awstVarName: assembly resolves the bare local
-							// through externalRefAwstName (= awstVarName mangling), so
-							// the __cd_off_ local + live-set entry must match it.
-							std::string tName = m_blk.scope.awstVarName(decl);
-							m_blk.builderCtx().appendEffectsTo(result);
-							result.push_back(awst::makeAssignmentStatement(
-								awst::makeVarExpression("__cd_off_" + tName,
-									awst::WType::biguintType(), loc),
-								std::move(off), loc));
-							live->insert(tName);
-							// The POINTER is the binding for a calldata slice: skip the
-							// value copy (a ReferenceArray local from an arc4 element is
-							// a type mismatch puya rejects, and EVM semantics are the
-							// pointer anyway). A value use of the slice would hit an
-							// undefined local — loud, not silently wrong.
-							return true;
-						}
+	if (decl.referenceLocation() != VariableDeclaration::Location::CallData || !initialValue)
+		return false;
+	auto const* idx = SolcFacts::expressionAs<IndexAccess>(initialValue);
+	if (!idx || !idx->indexExpression()) return false;
+	auto const* baseId = SolcFacts::expressionAs<Identifier>(&idx->baseExpression());
+	auto const* baseVd = baseId ? dynamic_cast<VariableDeclaration const*>(
+		baseId->annotation().referencedDeclaration) : nullptr;
+	auto const* arrT = baseVd ? dynamic_cast<ArrayType const*>(baseVd->type()) : nullptr;
+	auto* live = m_blk.fn.scope.liveCalldataPointers();
+	if (!arrT || !live) return false;
+	auto const baseName = m_blk.scope.awstVarName(*baseVd);
+	if (!live->count(baseName)) return false;
 
-	return false;
+	auto loc = m_blk.makeLoc(decl.location());
+	auto* word = awst::WType::biguintType();
+	auto idxVal = TypeCoercion::coerceScalar(
+		CallOperands::evaluate(m_blk.builderCtx(), *idx->indexExpression(), loc), word, loc);
+	std::shared_ptr<awst::Expression> length;
+	if (arrT->isDynamicallySized()) length = awst::makeVarExpression("__cd_len_" + baseName, word, loc);
+	else length = awst::makeIntegerConstant(arrT->length().str(), loc, word);
+	m_blk.builderCtx().appendEffectsTo(result);
+	result.push_back(awst::makeExpressionStatement(awst::makeAssert(
+		awst::makeNumericCompare(idxVal, awst::NumericComparison::Lt, std::move(length), loc),
+		loc, "array index out of bounds"), loc));
+	auto scaled = awst::makeBigUIntBinOp(std::move(idxVal), awst::BigUIntBinaryOperator::Mult,
+		awst::makeIntegerConstant(std::to_string(arrT->calldataStride()), loc, word), loc);
+	auto off = awst::makeBigUIntBinOp(awst::makeVarExpression("__cd_off_" + baseName, word, loc),
+		awst::BigUIntBinaryOperator::Add, std::move(scaled), loc);
+	// Assembly and Solidity must use the same declaration-based local name.
+	std::string tName = m_blk.scope.awstVarName(decl);
+	result.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression("__cd_off_" + tName, word, loc), std::move(off), loc));
+	live->insert(tName);
+	// The pointer is the binding; a materialized array would copy the value.
+	return true;
 }
 
 bool SolVariableDeclaration::trySlotModeStoragePointer(
@@ -130,7 +124,7 @@ bool SolVariableDeclaration::trySlotModeStoragePointer(
 	return false;
 }
 
-/// Lower once, retaining the existing fixed-size NewArray representation upgrade.
+/// Lower once using the declared solc type, including for array literals.
 std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 	VariableDeclaration const& decl,
 	Expression const* initialValue,
@@ -140,28 +134,6 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 	if (initialValue)
 	{
 		value = m_blk.builderCtx().pinIfWriteBacks(m_blk.builderCtx().lower(*initialValue, false), m_loc);
-
-		// Upgrade dynamic array to fixed-size when N is known
-		if (auto* newArr = dynamic_cast<awst::NewArray*>(value.get()))
-		{
-			if (!newArr->values.empty())
-			{
-				if (type && type->kind() == awst::WTypeKind::ReferenceArray)
-				{
-					auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(type);
-					if (refArr && !refArr->arraySize())
-					{
-						int n = static_cast<int>(newArr->values.size());
-						type = m_blk.typeMapper().createType<awst::ReferenceArray>(
-							refArr->elementType(), true, n);
-						newArr->wtype = type;
-					}
-				}
-				// Note: don't upgrade ARC4DynamicArray→ARC4StaticArray here.
-				// Subsequent references to the variable use TypeMapper which
-				// returns ARC4DynamicArray, causing type mismatches.
-			}
-		}
 
 		value = convertInitValue(decl, std::move(value), initialValue->annotation().type, type);
 	}
@@ -317,7 +289,7 @@ bool SolVariableDeclaration::tryStorageAliasBinding(
 		// (2) biguint return → slotStorageRef for __storage_read/write.
 		if (dynamic_cast<awst::SubroutineCallExpression const*>(value.get())
 			|| ((dynamic_cast<awst::TupleItemExpression const*>(value.get())
-					|| (dynamic_cast<FunctionCall const*>(initialValue)
+					|| (SolcFacts::expressionAs<FunctionCall>(initialValue)
 						&& dynamic_cast<awst::VarExpression const*>(value.get())))
 				&& (value->wtype == awst::WType::biguintType()
 					|| value->wtype == awst::WType::uint64Type()
@@ -395,7 +367,7 @@ bool SolVariableDeclaration::tryMemoryAliasBinding(
 		// (the no-asm Base64 encoder wrote its output into a detached copy).
 		solidity::frontend::Expression const* aliasSrc = initialValue;
 		bool viaByteCast = false;
-		if (auto const* fc = dynamic_cast<solidity::frontend::FunctionCall const*>(initialValue);
+		if (auto const* fc = SolcFacts::expressionAs<solidity::frontend::FunctionCall>(initialValue);
 			fc && fc->annotation().kind.set()
 			&& *fc->annotation().kind
 				== solidity::frontend::FunctionCallKind::TypeConversion
@@ -410,7 +382,7 @@ bool SolVariableDeclaration::tryMemoryAliasBinding(
 				viaByteCast = true;
 			}
 		}
-		auto const* srcId = dynamic_cast<solidity::frontend::Identifier const*>(aliasSrc);
+		auto const* srcId = SolcFacts::expressionAs<solidity::frontend::Identifier>(aliasSrc);
 		auto const* srcVd = srcId
 			? dynamic_cast<VariableDeclaration const*>(srcId->annotation().referencedDeclaration)
 			: nullptr;
@@ -453,7 +425,7 @@ bool SolVariableDeclaration::tryBlobOffsetBinding(
 		m_blk.builderCtx().appendEffectsTo(result);
 		result.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
-			builder::TypeCoercion::implicitNumericCast(
+			builder::TypeCoercion::coerceScalar(
 				std::move(value), awst::WType::uint64Type(), m_loc),
 			m_loc));
 		m_blk.scope.bindings.blobAggregates.set(decl.id(), offN);
@@ -470,14 +442,14 @@ bool SolVariableDeclaration::tryAsmBytesAllocation(
 	if (!initialValue || decl.referenceLocation() != VariableDeclaration::Location::Memory
 		|| !m_blk.scope.bindings.assemblyAggregates.contains(decl.id())) return false;
 	auto const* array = dynamic_cast<ArrayType const*>(decl.type());
-	auto const* call = dynamic_cast<FunctionCall const*>(initialValue);
+	auto const* call = SolcFacts::expressionAs<FunctionCall>(initialValue);
 	if (!array || !array->isByteArrayOrString() || !call
-		|| !dynamic_cast<NewExpression const*>(&call->expression())) return false;
+		|| !SolcFacts::expressionAs<NewExpression>(&SolcFacts::functionExpression(call->expression()))) return false;
 
 	// Decide the representation before lowering new bytes/string(n): only the
 	// length is needed for blob allocation. Lower it once, including write-backs.
 	auto& bc = m_blk.builderCtx();
-	auto length = TypeCoercion::implicitNumericCast(
+	auto length = TypeCoercion::coerceScalar(
 		bc.pinIfWriteBacks(bc.lower(*call->arguments().front(), false), m_loc),
 		awst::WType::uint64Type(), m_loc);
 	bc.appendEffectsTo(result);
@@ -637,7 +609,7 @@ void SolVariableDeclaration::buildTupleDestructuring(
 		// Literal tuple components retain useful alias provenance. Opaque calls
 		// still pass a non-null initializer, without rebuilding the call.
 		auto const* source = initialValue;
-		if (auto const* tuple = dynamic_cast<TupleExpression const*>(initialValue);
+		if (auto const* tuple = SolcFacts::expressionAs<TupleExpression>(initialValue);
 			tuple && !tuple->isInlineArray()) source = tuple->components().at(i).get();
 		bindValue(decl, source, std::move(itemExpr), type, result);
 	}
@@ -648,6 +620,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	auto const& declarations = m_node.declarations();
 	auto const* initialValue = m_node.initialValue();
+	if (initialValue) initialValue = &SolcFacts::unparenthesized(*initialValue);
 
 	if (declarations.size() == 1 && declarations[0])
 	{

@@ -1,0 +1,72 @@
+bringing up nodes...
+bringing up nodes...
+
+.....x..............................X.X.XX.XX.X.X..XX..X.XXXX..XX.X.X.X. [  2%]
+X.X.X....Xx.X...x..X.X..................x...........................x... [  5%]
+.........x...................x.......................................... [  7%]
+.............x.......................................................... [ 10%]
+...xx..x...x..xx...xxxx.............................................x... [ 13%]
+.....................................................X..x.........x..... [ 15%]
+..x...............x......................x..X....x....xx................ [ 18%]
+...........F...................x....x.........x............X.X.......... [ 20%]
+......X...............x.......x...............................F......... [ 23%]
+............x..........x...............x.......................x........ [ 26%]
+..................................x.............................xxx..xxx [ 28%]
+x.xx.........................x.x........x........x...................... [ 31%]
+........................................................................ [ 34%]
+........................................................................ [ 36%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 44%]
+........................................................................ [ 47%]
+........................................................................ [ 49%]
+........................................................................ [ 52%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+.................................................................F...... [ 60%]
+........................................................................ [ 62%]
+........................................................................ [ 65%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+.................................................................X...... [ 78%]
+...........x.xxx.x....................................x.......xxx....... [ 81%]
+.......................................................................x [ 83%]
+........................................................................ [ 86%]
+..................xxxxxxxxxxxxxxx..xx................................... [ 88%]
+.............xxxxx..............xx.......x....X.X.......x..X............ [ 91%]
+.........................x......xxx.xx.......x.....xXxx.xX.x............ [ 94%]
+.....x........X........................................x................ [ 96%]
+........................................................................ [ 99%]
+...............                                                          [100%]
+=================================== FAILURES ===================================
+___________________ test_inline_array_with_value_call_option ___________________
+[gw2] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/functionTypes/test_functionTypes.py:133: in test_inline_array_with_value_call_option
+    assert as_int(r.abi_return) == 1
+           ^^^^^^^^^^^^^^^^^^^^
+framework/values.py:137: in as_int
+    raise AssertionError(
+E   AssertionError: call returned no value because it REVERTED: transaction EECISZ3WMJW2VN6TUWNRD7QJUDJLYZV6AKMWHE6BLGJU6OP7RM6A: logic eval error: assert failed pc=479. Details: app=2950530, pc=479, opcodes=pop; intc_2 // 0; assert
+----------------------------- Captured stdout call -----------------------------
+[call] h FAILED after retries: TransactionPool.Remember: transaction 4P3BXWCCVZFK4XY7XIE7NKLRVWXH5PASX26MYLH5547FJW53HUHA: logic eval error: assert failed pc=479. Details: app=2950530, pc=479, opcodes=pop; intc_2 // 0; assert
+[call]   populate had failed first: pool-populate: Error resolving execution info via simulate in transaction 15: transaction 5KKQ6X34M5GWBI5E3EIHRDSXK3XSE3ZYLEZCR57WVEDFBUSTLWRQ: logic eval error: assert failed pc=479. Details: app=2950530, pc=479, opcodes=pop; intc_2 // 0; assert
+________________________ test_tstore_hidden_staticcall _________________________
+[gw1] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/inlineAssembly/test_inlineAssembly.py:831: in test_tstore_hidden_staticcall
+    assert r.reverted
+E   AssertionError: assert False
+E    +  where False = Result(abi_return=None, logs=[], reverted=False, revert_data=b'', revert_reason=None, raw_response=None, fail_message='').reverted
+___________________ test_dce_reverting_subexpr_literal_folds ___________________
+[gw2] linux -- Python 3.12.12 /usr/bin/python3.12
+tests/puyasolRegression/test_puyasol_regression.py:2142: in test_dce_reverting_subexpr_literal_folds
+    assert getattr(r, "reverted", False), f"{sig}{args} must revert (divide/mod by zero)"
+E   AssertionError: divdivShl(uint256)(0,) must revert (divide/mod by zero)
+E   assert False
+E    +  where False = getattr(Result(abi_return=0, logs=[b'\x15\x1f|u\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0...x00\x00\x00\x00\x00\x00\x00'], reverted=False, revert_data=b'', revert_reason=None, raw_response=None, fail_message=''), 'reverted', False)
+=========================== short test summary info ============================
+FAILED tests/functionTypes/test_functionTypes.py::test_inline_array_with_value_call_option
+FAILED tests/inlineAssembly/test_inlineAssembly.py::test_tstore_hidden_staticcall
+FAILED tests/puyasolRegression/test_puyasol_regression.py::test_dce_reverting_subexpr_literal_folds
+3 failed, 2609 passed, 100 xfailed, 39 xpassed in 935.29s (0:15:35)

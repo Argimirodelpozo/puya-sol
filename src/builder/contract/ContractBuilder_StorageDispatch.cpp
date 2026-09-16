@@ -598,14 +598,11 @@ struct NamedCellDispatch
 		// Build if/else chain for known slots (bottom-up; default = dynamic fallback).
 		auto elseBlock = awst::makeBlock(loc);
 		{
-			auto key = slotBoxKey();
-			auto boxCreate = awst::makeBoxCreate(key, makeUint64("32"), loc);
-			elseBlock->body.push_back(
-				awst::makeExpressionStatement(std::move(boxCreate), loc));
-
-			auto boxExtract = awst::makeBoxExtract(
-				key, makeUint64("0"), makeUint64("32"), loc);
-			auto cast = awst::makeAsBiguint(std::move(boxExtract), loc);
+			auto cast = StorageMapper::makeStateGetWithDefault(
+				awst::makeBoxValueExpression(
+					awst::makeReinterpretCast(slotBoxKey(), awst::WType::boxKeyType(), loc),
+					awst::WType::biguintType(), loc),
+				awst::WType::biguintType(), loc);
 			elseBlock->body.push_back(
 				awst::makeReturnStatement(std::move(cast), loc));
 		}

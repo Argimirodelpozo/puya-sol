@@ -110,6 +110,16 @@ def test_finalize_backend_artifacts_rejects_invalid_child_schema(tmp_path, schem
     assert not (tmp_path / "deploy.tmpl.json").exists()
 
 
+def test_finalize_backend_requires_requested_arc56(tmp_path):
+    _frontend_artifacts(tmp_path, child=False, awst_value=[{"_type": "Contract", "name": "Target"}])
+    for suffix in (".approval.bin", ".clear.bin", ".approval.teal", ".clear.teal"):
+        (tmp_path / ("Target" + suffix)).write_bytes(b"fresh")
+    assert not finalize_backend_artifacts(tmp_path)
+    assert json.loads((tmp_path / "artifact-manifest.json").read_text())["phase"] == "frontend-only"
+    (tmp_path / "Target.arc56.json").write_text("{}")
+    assert finalize_backend_artifacts(tmp_path)
+
+
 def test_finalize_backend_artifacts_verifies_frontend_digest(tmp_path):
     _frontend_artifacts(tmp_path, child=False)
     (tmp_path / "awst.json").write_text("[]\n ")

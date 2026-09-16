@@ -2,6 +2,7 @@
 /// toAwst dispatchers remain in SolIndexAccess.cpp.
 
 #include "builder/ast/exprs/SolIndexAccess.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/eb/MappingPrefix.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/storage/named/StoragePathWalker.h"
@@ -45,7 +46,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	// param (handle model) is keyed by the runtime bytes the caller passed, so a[i] reads
 	// the CALLER's box. (Field WRITES go through tryHandleBoxedArrayElemWrite's box_replace.)
 	std::shared_ptr<awst::BoxValueExpression> boxExpr;
-	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
+	if (auto const* ident = SolcFacts::expressionAs<Identifier>(&m_indexAccess.baseExpression()))
 	{
 		std::string keyParam;
 		auto const* decl = ident->annotation().referencedDeclaration;
@@ -93,7 +94,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	// key, so both representations get the same recursive-shape bounds rule.
 	if (arrType->isDynamicallySized() && !arrType->isByteArrayOrString()
 		&& !builder::computeEncodedElementSize(elemType).fixedBytes())
-		if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
+		if (auto const* ident = SolcFacts::expressionAs<Identifier>(&m_indexAccess.baseExpression()))
 			if (auto const* decl = dynamic_cast<VariableDeclaration const*>(
 					ident->annotation().referencedDeclaration); decl)
 			{
@@ -176,30 +177,21 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 	std::vector<Expression const*> indexExprs;
 	Expression const* cursor = &m_indexAccess;
 
-	while (auto const* idxAccess = dynamic_cast<IndexAccess const*>(cursor))
+	while (auto const* idxAccess = SolcFacts::expressionAs<IndexAccess>(cursor))
 	{
 		if (idxAccess->indexExpression())
 			indexExprs.push_back(idxAccess->indexExpression());
-		cursor = &idxAccess->baseExpression();
+		cursor = &SolcFacts::unparenthesized(idxAccess->baseExpression());
 	}
 	// `(m = m2)[k]`: emit the assignment (side effect: update storageAliases),
 	// then resolve from the RHS. Also peel parenthesised TupleExpression wrappers.
 	while (true)
 	{
-		if (auto const* assign = dynamic_cast<Assignment const*>(cursor))
+		if (auto const* assign = SolcFacts::expressionAs<Assignment>(cursor))
 		{
 			buildExpr(*assign);
-			cursor = &assign->rightHandSide();
+			cursor = &SolcFacts::unparenthesized(assign->rightHandSide());
 			continue;
-		}
-		if (auto const* tuple = dynamic_cast<TupleExpression const*>(cursor))
-		{
-			if (!tuple->isInlineArray() && tuple->components().size() == 1
-				&& tuple->components()[0])
-			{
-				cursor = tuple->components()[0].get();
-				continue;
-			}
 		}
 		break;
 	}
@@ -273,7 +265,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 {
 	// Multi-box array (>32KB): split across `<name>` ++ `itob(page)` boxes.
 	// Standard IndexExpression would box_extract a non-existent single box.
-	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
+	if (auto const* ident = SolcFacts::expressionAs<Identifier>(&m_indexAccess.baseExpression()))
 	{
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 			ident->annotation().referencedDeclaration);

@@ -1,4 +1,5 @@
 #include "builder/eb/MappingPrefix.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/context/TranslationContext.h"
 #include "builder/solc/StorageRefPointer.h"
 #include "builder/context/ContractContext.h"
@@ -69,9 +70,10 @@ StorageHolder resolveBuiltStorageHolder(eb::ContractContext& ctx,
 }
 
 StorageHolder resolveStorageHolder(eb::ContractContext& ctx, Context& scope,
-	Expression const& expression, awst::SourceLocation const& loc)
+	Expression const& source, awst::SourceLocation const& loc)
 {
-	if (auto const* id = dynamic_cast<Identifier const*>(&expression))
+	auto const& expression = SolcFacts::unparenthesized(source);
+	if (auto const* id = SolcFacts::expressionAs<Identifier>(&expression))
 	{
 		auto const* declaration = id->annotation().referencedDeclaration;
 		if (!declaration) return {};
@@ -90,7 +92,7 @@ StorageHolder resolveStorageHolder(eb::ContractContext& ctx, Context& scope,
 				? std::shared_ptr<awst::Expression>(key) : ctx.storageMapper.createStateRead(binding, loc)};
 		}
 	}
-	if (auto const* field = dynamic_cast<MemberAccess const*>(&expression))
+	if (auto const* field = SolcFacts::expressionAs<MemberAccess>(&expression))
 	{
 		if (auto const* type = dynamic_cast<StructType const*>(field->expression().annotation().type))
 			return StoragePathWalker::member(resolveStorageHolder(ctx, scope, field->expression(), loc), *type,
@@ -103,7 +105,7 @@ StorageHolder resolveStorageHolder(eb::ContractContext& ctx, Context& scope,
 			return withValue(ctx, awst::makeUtf8BytesConstant(binding.key, loc), var->type(), loc);
 		}
 	}
-	if (auto const* index = dynamic_cast<IndexAccess const*>(&expression))
+	if (auto const* index = SolcFacts::expressionAs<IndexAccess>(&expression))
 	{
 		if (auto const* array = dynamic_cast<ArrayType const*>(index->baseExpression().annotation().type);
 			array && index->indexExpression())
@@ -114,14 +116,11 @@ StorageHolder resolveStorageHolder(eb::ContractContext& ctx, Context& scope,
 		if (dynamic_cast<MappingType const*>(index->baseExpression().annotation().type))
 			return resolveBuiltStorageHolder(ctx, ctx.buildExpr(expression), loc);
 	}
-	if (dynamic_cast<FunctionCall const*>(&expression))
+	if (SolcFacts::expressionAs<FunctionCall>(&expression))
 		return withValue(ctx, ctx.buildExpr(expression), expression.annotation().type, loc);
-	if (dynamic_cast<Conditional const*>(&expression)
+	if (SolcFacts::expressionAs<Conditional>(&expression)
 		&& dynamic_cast<MappingType const*>(expression.annotation().type))
 		return resolveBuiltStorageHolder(ctx, ctx.buildExpr(expression), loc);
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&expression);
-		tuple && !tuple->isInlineArray() && tuple->components().size() == 1 && tuple->components()[0])
-		return resolveStorageHolder(ctx, scope, *tuple->components()[0], loc);
 	return {};
 }
 

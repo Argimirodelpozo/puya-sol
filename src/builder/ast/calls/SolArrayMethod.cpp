@@ -7,6 +7,7 @@
 #include "Logger.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/eb/ResolvedLValue.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/target/EvmLayoutMode.h"
 #include "builder/storage/slot/SlotHandleAccess.h"
 #include "builder/storage/StorageMapper.h"
@@ -32,13 +33,13 @@ namespace
 Expression const* peelBytesCastBase(Expression const& baseExpr)
 {
 	Expression const* effectiveBase = &baseExpr;
-	if (auto const* castCall = dynamic_cast<FunctionCall const*>(&baseExpr))
+	if (auto const* castCall = SolcFacts::expressionAs<FunctionCall>(&baseExpr))
 	{
 		if (*castCall->annotation().kind == FunctionCallKind::TypeConversion
 			&& castCall->arguments().size() == 1)
 		{
-			auto const* convArg = castCall->arguments()[0].get();
-			if (auto const* convIdent = dynamic_cast<Identifier const*>(convArg))
+			auto const* convArg = &SolcFacts::unparenthesized(*castCall->arguments()[0]);
+			if (auto const* convIdent = SolcFacts::expressionAs<Identifier>(convArg))
 			{
 				auto const* convDecl = dynamic_cast<VariableDeclaration const*>(
 					convIdent->annotation().referencedDeclaration);
@@ -58,8 +59,13 @@ Expression const* peelBytesCastBase(Expression const& baseExpr)
 std::shared_ptr<awst::Expression> SolArrayMethod::buildArrayTarget(Expression const& source)
 {
 	auto operand = m_ctx.lowerOperand([&] {
+		auto const* id = SolcFacts::expressionAs<Identifier>(&source);
+		auto const* declaration = id ? id->annotation().referencedDeclaration : nullptr;
+		auto const* alias = declaration ? m_scope.bindings.storageAliases.find(declaration->id()) : nullptr;
+		// Value lowering may substitute a holder placeholder for mapping-containing
+		// aliases. Mutation needs their bound lvalue, not that placeholder.
 		return ResolvedLValue::freezeTarget(m_ctx,
-			awst::makeWritableTarget(buildExpr(source)), m_loc);
+			awst::makeWritableTarget(alias ? alias->expr : buildExpr(source)), m_loc);
 	}, false);
 	return m_ctx.emitSequencedOperand(std::move(operand.effects), std::move(operand.value), false, m_loc);
 }
@@ -276,112 +282,16 @@ std::shared_ptr<awst::Expression> SolArrayMethod::emitArrayPushPop(
 		m_ctx.emitSequencedOperand({}, std::move(lastIndex), true, m_loc), elemType, m_loc);
 }
 
-/// `m[k].push()/.pop()`: IndexAccess base lowers to BoxValueExpression (wrapped in StateGet when read).
-std::shared_ptr<awst::Expression> SolArrayMethod::tryBoxedElementPushPop(
-	std::string const& memberName,
-	Expression const& baseExpr)
-{
-	auto const* innerIA = dynamic_cast<IndexAccess const*>(&baseExpr);
-	if (!innerIA)
-		return nullptr;
-	auto const* innerArrType = dynamic_cast<ArrayType const*>(
-		innerIA->annotation().type);
-	if (innerArrType && innerArrType->isDynamicallySized()
-		&& !innerArrType->isByteArrayOrString()
-		&& (memberName == "push" || memberName == "pop"))
-	{
-		auto baseAwst = buildArrayTarget(baseExpr);
-		if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
-			|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get())
-			|| dynamic_cast<awst::FieldExpression const*>(baseAwst.get()))
-			return emitArrayPushPop(memberName, std::move(baseAwst), *innerArrType);
-	}
-	return nullptr;
-}
-
-/// Storage-pointer alias / mapping-key-param arrays: push/pop through the aliased BOX (runtime key).
-std::shared_ptr<awst::Expression> SolArrayMethod::tryStoragePointerPushPop(
-	std::string const& memberName,
-	Expression const& baseExpr)
-{
-	auto const* ident = dynamic_cast<Identifier const*>(&baseExpr);
-	if (!ident)
-		return nullptr;
-	if (auto const* decl = dynamic_cast<VariableDeclaration const*>(
-			ident->annotation().referencedDeclaration))
-	{
-		if (auto const* array = dynamic_cast<ArrayType const*>(decl->type());
-			array && array->isDynamicallySized()
-			&& !array->isByteArrayOrString()
-			&& (memberName == "push" || memberName == "pop"))
-		{
-			auto const& keyParam = m_scope.bindings.mappingKeyParams.get(decl->id());
-			if (!keyParam.empty())
-				return handleBoxArray(
-					memberName, baseExpr, *decl,
-					awst::makeReinterpretCast(
-						awst::makeVarExpression(
-							keyParam, awst::WType::bytesType(), m_loc),
-						awst::WType::boxKeyType(), m_loc));
-		}
-		if (!decl->isStateVariable())
-		{
-			auto const* alias = m_scope.bindings.storageAliases.find(decl->id());
-			if (alias
-				&& (memberName == "push" || memberName == "pop"))
-			{
-				auto const* solArrType = dynamic_cast<ArrayType const*>(decl->type());
-				if (solArrType && !solArrType->isByteArrayOrString())
-				{
-					std::shared_ptr<awst::Expression> aliasExpr = alias->expr;
-					// Unwrap StateGet (same transform as m[k].push() path above).
-					// Writable targets: BoxValueExpression / IndexExpression / FieldExpression.
-					aliasExpr = awst::unwrapStateGet(std::move(aliasExpr));
-					aliasExpr = awst::makeWritableTarget(aliasExpr);
-					if (dynamic_cast<awst::BoxValueExpression const*>(aliasExpr.get())
-						|| dynamic_cast<awst::IndexExpression const*>(aliasExpr.get())
-						|| dynamic_cast<awst::FieldExpression const*>(aliasExpr.get()))
-						return emitArrayPushPop(memberName, std::move(aliasExpr), *solArrType);
-				}
-			}
-		}
-	}
-	return nullptr;
-}
-
-
-/// Chained storage path (`m[k].field.push()`, `arr[i].field.push()`, etc.): unwrap StateGet and emit ArrayExtend/ArrayPop.
-std::shared_ptr<awst::Expression> SolArrayMethod::tryChainedFieldPushPop(
-	std::string const& memberName,
-	Expression const& baseExpr,
-	MemberAccess const& innerMA)
-{
-	// Chained storage path (`m[k].field.push()`, `arr[i].field.push()`, etc.):
-	// unwrap StateGet and emit ArrayExtend/ArrayPop, including direct fields.
-	auto const* maType = dynamic_cast<ArrayType const*>(
-		innerMA.annotation().type);
-	if (maType && maType->isDynamicallySized()
-		&& !maType->isByteArrayOrString()
-		&& (memberName == "push" || memberName == "pop"))
-	{
-		auto baseAwst = buildArrayTarget(baseExpr);
-		if (dynamic_cast<awst::BoxValueExpression const*>(baseAwst.get())
-			|| dynamic_cast<awst::IndexExpression const*>(baseAwst.get())
-			|| dynamic_cast<awst::FieldExpression const*>(baseAwst.get()))
-			return emitArrayPushPop(memberName, std::move(baseAwst), *maType);
-	}
-	return nullptr;
-}
 
 std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 {
 	auto const& funcExpr = funcExpression();
-	auto const* memberAccess = dynamic_cast<MemberAccess const*>(&funcExpr);
+	auto const* memberAccess = SolcFacts::expressionAs<MemberAccess>(&funcExpr);
 	if (!memberAccess)
 		return nullptr;
 
 	std::string memberName = memberAccess->memberName();
-	auto const& baseExpr = memberAccess->expression();
+	auto const& baseExpr = SolcFacts::unparenthesized(memberAccess->expression());
 	auto const* array = dynamic_cast<ArrayType const*>(baseExpr.annotation().type);
 	assert(array && array->dataStoredIn(DataLocation::Storage));
 	if (array->isByteArrayOrString())
@@ -400,32 +310,26 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		}
 	}
 
-	if (auto result = tryBoxedElementPushPop(memberName, baseExpr))
-		return result;
-
-	if (auto result = tryStoragePointerPushPop(memberName, baseExpr))
-		return result;
-
-	Expression const* effectiveBase = peelBytesCastBase(baseExpr);
-
-	if (auto const* ident = dynamic_cast<Identifier const*>(effectiveBase))
+	if (auto const* ident = SolcFacts::expressionAs<Identifier>(&baseExpr))
 	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
 		{
+			auto const& key = m_scope.bindings.mappingKeyParams.get(varDecl->id());
+			if (!key.empty())
+				return handleBoxArray(memberName, *varDecl, awst::makeReinterpretCast(
+					awst::makeVarExpression(key, awst::WType::bytesType(), m_loc),
+					awst::WType::boxKeyType(), m_loc));
 			// Generic box-stored dynamic array (non-bytes)
 			if (varDecl->isStateVariable()
 				&& m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
 				&& dynamic_cast<ArrayType const*>(varDecl->type()))
 			{
-				return handleBoxArray(memberName, baseExpr, *varDecl);
+				return handleBoxArray(memberName, *varDecl);
 			}
 		}
 	}
 
-	if (auto const* member = dynamic_cast<MemberAccess const*>(&baseExpr))
-		if (auto result = tryChainedFieldPushPop(memberName, baseExpr, *member))
-			return result;
 	return emitArrayPushPop(memberName, buildArrayTarget(baseExpr), *array);
 }
 

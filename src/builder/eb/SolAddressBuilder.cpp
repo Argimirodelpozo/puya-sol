@@ -2,6 +2,7 @@
 /// Solidity address/contract type builder.
 
 #include "builder/eb/SolAddressBuilder.h"
+#include "builder/eb/SolBoolBuilder.h"
 
 namespace puyasol::builder::eb
 {
@@ -135,7 +136,7 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 		if (_op == BuilderComparisonOp::Ne)
 			result = awst::makeNot(std::move(result), _loc);
 
-		return std::make_unique<SolAddressBuilder>(m_ctx, m_solType, std::move(result));
+		return std::make_unique<SolBoolBuilder>(m_ctx, std::move(result));
 	}
 
 	auto e = makeBytesEq(
@@ -144,20 +145,7 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 			? awst::EqualityComparison::Eq
 			: awst::EqualityComparison::Ne,
 		_loc);
-	return std::make_unique<SolAddressBuilder>(m_ctx, m_solType, std::move(e));
-}
-
-std::unique_ptr<InstanceBuilder> SolAddressBuilder::bool_eval(
-	awst::SourceLocation const& _loc, bool _negate)
-{
-	auto zero = awst::makeBytesConstant(
-		std::vector<uint8_t>(32, 0), _loc, awst::BytesEncoding::Base16,
-		awst::WType::accountType());
-
-	auto e = awst::makeBytesComparison(resolve(),
-		_negate ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
-		std::move(zero), _loc);
-	return std::make_unique<SolAddressBuilder>(m_ctx, m_solType, std::move(e));
+	return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
 }
 
 } // namespace puyasol::builder::eb

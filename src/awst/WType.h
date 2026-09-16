@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
@@ -26,7 +27,6 @@ enum class WTypeKind
 	ARC4DynamicArray,
 	ARC4StaticArray,
 	ARC4Struct,
-	ReferenceArray,
 	WTuple,
 	WGroupTransaction,
 	WInnerTransactionFields,
@@ -190,7 +190,9 @@ class ARC4Tuple: public WType
 {
 public:
 	explicit ARC4Tuple(std::vector<WType const*> _types)
-		: WType("arc4.tuple", WTypeKind::ARC4Tuple, true), m_types(std::move(_types))
+		: WType("arc4.tuple", WTypeKind::ARC4Tuple,
+			std::all_of(_types.begin(), _types.end(), [](auto* type) { return type->immutable(); })),
+		  m_types(std::move(_types))
 	{
 	}
 
@@ -280,35 +282,6 @@ private:
 	bool m_frozen;
 };
 
-class ReferenceArray: public WType
-{
-public:
-	explicit ReferenceArray(
-		WType const* _elementType,
-		bool _immutable = true,
-		std::optional<int64_t> _arraySize = std::nullopt
-	)
-		: WType(
-			  _arraySize
-				  ? "array<" + _elementType->name() + ", " + std::to_string(*_arraySize) + ">"
-				  : "array<" + _elementType->name() + ">",
-			  WTypeKind::ReferenceArray,
-			  _immutable
-		  ),
-		  m_elementType(_elementType),
-		  m_arraySize(_arraySize)
-	{
-	}
-
-	char const* jsonType() const override { return "ReferenceArray"; }
-	WType const* elementType() const { return m_elementType; }
-	std::optional<int64_t> arraySize() const { return m_arraySize; }
-
-private:
-	WType const* m_elementType;
-	std::optional<int64_t> m_arraySize;
-};
-
 class WTuple: public WType
 {
 public:
@@ -317,7 +290,8 @@ public:
 		std::optional<std::vector<std::string>> _names = std::nullopt,
 		std::string _name = "tuple"
 	)
-		: WType(std::move(_name), WTypeKind::WTuple, true),
+		: WType(std::move(_name), WTypeKind::WTuple,
+			std::all_of(_types.begin(), _types.end(), [](auto* type) { return type->immutable(); })),
 		  m_types(std::move(_types)),
 		  m_names(std::move(_names))
 	{
@@ -406,8 +380,6 @@ inline WType const* arrayElementType(WType const* _array)
 		return dynamic->elementType();
 	if (auto const* fixed = dynamic_cast<ARC4StaticArray const*>(_array))
 		return fixed->elementType();
-	if (auto const* reference = dynamic_cast<ReferenceArray const*>(_array))
-		return reference->elementType();
 	return nullptr;
 }
 

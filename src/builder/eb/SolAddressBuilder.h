@@ -12,7 +12,6 @@ namespace puyasol::builder::eb
 /// Handles:
 ///   - compare: Eq/Ne → BytesComparisonExpression (address is bytes-backed)
 ///   - member_access: .code, .balance (future: .call, .staticcall, .transfer)
-///   - bool_eval: addr != zero_address
 class SolAddressBuilder: public InstanceBuilder
 {
 public:
@@ -29,9 +28,6 @@ public:
 	std::unique_ptr<InstanceBuilder> compare(
 		InstanceBuilder& _other, BuilderComparisonOp _op,
 		awst::SourceLocation const& _loc) override;
-
-	std::unique_ptr<InstanceBuilder> bool_eval(
-		awst::SourceLocation const& _loc, bool _negate = false) override;
 
 private:
 	solidity::frontend::Type const* m_solType;

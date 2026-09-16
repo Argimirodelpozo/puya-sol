@@ -33,6 +33,15 @@ int main()
 	ARC4Struct differentField("S", {{"other", &arrayB}}, false);
 
 	bool ok = true;
+	WTuple mutableTuple({&arrayA}), immutableTuple({&uint128a}), emptyTuple({});
+	ARC4Tuple mutableArc4Tuple({&arrayA}), immutableArc4Tuple({&uint128a}), emptyArc4Tuple({});
+	ARC4Struct frozenMutable("Frozen", {{"values", &mutableArc4Tuple}}, true);
+	ARC4Struct frozenImmutable("Frozen", {{"value", &immutableArc4Tuple}}, true);
+	ok &= require(!mutableTuple.immutable() && !mutableArc4Tuple.immutable()
+		&& !frozenMutable.immutable(), "tuple/struct ignored mutable descendants");
+	ok &= require(immutableTuple.immutable() && immutableArc4Tuple.immutable()
+		&& emptyTuple.immutable() && emptyArc4Tuple.immutable() && frozenImmutable.immutable(),
+		"immutable tuple/struct differs from Puya's element-derived rule");
 	NameGen::resetAll();
 	int first = nextSingleEvalId();
 	{

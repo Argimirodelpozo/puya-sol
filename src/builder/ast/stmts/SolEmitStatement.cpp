@@ -2,6 +2,7 @@
 
 #include "builder/ast/stmts/SolEmitStatement.h"
 #include "builder/eb/CallOperands.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/context/ContractContext.h"
 #include "builder/types/ConversionPlan.h"
 #include "builder/types/TypeCoercion.h"
@@ -26,7 +27,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 {
 	auto const& call = m_node.eventCall();
 	auto const* event = dynamic_cast<EventDefinition const*>(
-		ASTNode::referencedDeclaration(call.expression()));
+		ASTNode::referencedDeclaration(SolcFacts::functionExpression(call.expression())));
 	if (!event) throw std::logic_error("Event has no resolved solc declaration");
 	auto& ctx = m_blk.builderCtx();
 	auto& types = m_blk.typeMapper();
@@ -39,7 +40,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		{
 			value = ctx.emitSequencedOperand({}, std::move(value), true, m_loc);
 			ctx.queuePreExpression(awst::makeEnumRangeAssert(
-				TypeCoercion::implicitNumericCast(value, awst::WType::uint64Type(), m_loc),
+				TypeCoercion::coerceScalar(value, awst::WType::uint64Type(), m_loc),
 				enumeration->numberOfMembers(), m_loc), m_loc);
 		}
 		return value;

@@ -123,12 +123,12 @@ std::string AssemblyBuilder::externalRefAwstName(
 	std::function<std::string(solidity::frontend::VariableDeclaration const&)> const& _declName)
 {
 	auto const* vd = dynamic_cast<solidity::frontend::VariableDeclaration const*>(_info.declaration);
-	// Rename only outer Solidity LOCALS to the mangled AWST name (value refs +
-	// fn-ptr .selector/.address — the dotted base must mangle for the downstream
-	// dotPos split). State vars/constants/.slot/.offset/.length keep the bare Yul
-	// name; their meaning comes from the storage/calldata machinery, not identity.
+	// Value refs, function members and calldata coordinates share the
+	// declaration-based local name. Storage coordinates retain their route keys.
 	bool const eligible = vd && _declName && !vd->isStateVariable() && !vd->isConstant()
-		&& (_info.suffix.empty() || _info.suffix == "selector" || _info.suffix == "address");
+		&& (_info.suffix.empty() || _info.suffix == "selector" || _info.suffix == "address"
+			|| (vd->referenceLocation() == solidity::frontend::VariableDeclaration::Location::CallData
+				&& (_info.suffix == "offset" || _info.suffix == "length")));
 	if (!eligible)
 		return _bareName;
 	return _declName(*vd) + (_info.suffix.empty() ? "" : "." + _info.suffix);

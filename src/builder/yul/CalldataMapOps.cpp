@@ -19,12 +19,6 @@ int AssemblyBuilder::computeFlatElementCount(awst::WType const* _type)
 {
 	if (!_type)
 		return 1;
-	if (_type->kind() == awst::WTypeKind::ReferenceArray)
-	{
-		auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(_type);
-		if (refArr && refArr->arraySize())
-			return *refArr->arraySize() * computeFlatElementCount(refArr->elementType());
-	}
 	if (_type->kind() == awst::WTypeKind::ARC4StaticArray)
 	{
 		auto const* arc4Arr = dynamic_cast<awst::ARC4StaticArray const*>(_type);
@@ -90,26 +84,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::accessFlatElement(
 	awst::SourceLocation const& _loc
 )
 {
-	if (_type && _type->kind() == awst::WTypeKind::ReferenceArray)
-	{
-		auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(_type);
-		if (!refArr || !refArr->arraySize())
-			return _base;
-
-		int innerSize = computeFlatElementCount(refArr->elementType());
-		int outerIndex = _flatIndex / innerSize;
-		int innerFlatIndex = _flatIndex % innerSize;
-
-		auto index = awst::makeIntegerConstant(outerIndex, _loc);
-
-		auto indexExpr = awst::makeIndexExpression(_base, std::move(index), refArr->elementType(), _loc);
-
-		if (innerSize == 1)
-			return indexExpr;
-
-		return accessFlatElement(indexExpr, refArr->elementType(), innerFlatIndex, _loc);
-	}
-
 	if (_type && _type->kind() == awst::WTypeKind::ARC4StaticArray)
 	{
 		auto const* arc4Arr = dynamic_cast<awst::ARC4StaticArray const*>(_type);

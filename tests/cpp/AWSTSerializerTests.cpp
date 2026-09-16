@@ -1,4 +1,6 @@
 #include "json/AWSTSerializer.h"
+#include "awst/Visit.h"
+#include <unordered_set>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <iostream>
 
@@ -43,5 +45,29 @@ int main()
 	struct Unknown: awst::RootNode { std::string nodeType() const override { return "Unknown"; } } root;
 	try { serializer.serializeRootNode(root); require(false, "unknown root accepted"); }
 	catch (std::logic_error const&) {}
+	awst::SourceLocation loc;
+	std::shared_ptr<awst::Expression> graph = awst::makeVarExpression("input", awst::WType::uint64Type(), loc);
+	for (int i = 0; i < 24; ++i)
+		graph = awst::makeEvalOnce(awst::makeUInt64BinOp(graph, awst::UInt64BinaryOperator::Add, graph, loc), loc);
+	auto statement = awst::makeReturnStatement(graph, loc);
+	size_t visits = 0;
+	awst::visitExpressions(static_cast<awst::Statement const&>(*statement), [&](awst::Expression const&) { ++visits; });
+	require(visits == 49, "shared expression graph was expanded as a tree");
+	auto compact = serializer.serializeStatement(*statement);
+	require(compact.dump().size() < 50000, "serialized graph is not bounded by unique nodes");
+	std::unordered_set<size_t> ids, refs;
+	std::function<void(nlohmann::ordered_json const&)> checkGraph = [&](nlohmann::ordered_json const& json) {
+		if (json.is_object())
+		{
+			if (json.contains("_$%!#ID")) require(ids.insert(json["_$%!#ID"].get<size_t>()).second, "duplicate definition ID");
+			if (json.contains("_$%!#REF")) refs.insert(json["_$%!#REF"].get<size_t>());
+		}
+		if (json.is_structured()) for (auto const& item: json) checkGraph(item);
+	};
+	checkGraph(compact);
+	require(ids.size() == 49 && refs.size() == 24, "incorrect shared-node inventory");
+	for (auto id: refs) require(ids.contains(id), "dangling JSON reference");
+	require(compact == serializer.serializeStatement(*statement), "serializer state leaked between documents");
+	require(serializer.serializeExpression(*graph).contains("_$%!#ID"), "standalone expression is a dangling reference");
 	return ok ? 0 : 1;
 }

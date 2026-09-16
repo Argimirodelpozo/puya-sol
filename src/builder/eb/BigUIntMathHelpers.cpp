@@ -52,7 +52,7 @@ std::shared_ptr<awst::Expression> shiftAmountToUint64(
 {
 	auto* u64 = awst::WType::uint64Type();
 	if (_amount->wtype != awst::WType::biguintType())
-		return TypeCoercion::implicitNumericCast(std::move(_amount), u64, _loc);
+		return TypeCoercion::coerceScalar(std::move(_amount), u64, _loc);
 
 	// Materialize once — the amount feeds both the <256 guard and the low-64
 	// extract, so a side-effecting amount (`x >> f()`) still runs f() once.
@@ -64,7 +64,7 @@ std::shared_ptr<awst::Expression> shiftAmountToUint64(
 		awst::makeIntegerConstant("256", _loc, awst::WType::biguintType()), _loc);
 	// amount < 256 → the low-64 extract is the exact value; else clamp to 256,
 	// which the downstream shift builders saturate on (0 / sign-fill).
-	auto low64 = TypeCoercion::implicitNumericCast(amt, u64, _loc);
+	auto low64 = TypeCoercion::coerceScalar(amt, u64, _loc);
 	return awst::makeConditional(std::move(lt256), std::move(low64),
 		awst::makeIntegerConstant("256", _loc, u64), u64, _loc);
 }
@@ -211,8 +211,8 @@ std::shared_ptr<awst::Expression> buildBigUIntExpInto(
 	std::shared_ptr<awst::Expression> _exp,
 	awst::SourceLocation const& _loc)
 {
-	_base = TypeCoercion::implicitNumericCast(std::move(_base), awst::WType::biguintType(), _loc);
-	_exp = TypeCoercion::implicitNumericCast(std::move(_exp), awst::WType::biguintType(), _loc);
+	_base = TypeCoercion::coerceScalar(std::move(_base), awst::WType::biguintType(), _loc);
+	_exp = TypeCoercion::coerceScalar(std::move(_exp), awst::WType::biguintType(), _loc);
 
 	int id = awst::NameGen::next("BigUIntMathHelpers.expCounter");
 	std::string resultVar = "__biguint_exp_result_" + std::to_string(id);
@@ -703,76 +703,6 @@ std::shared_ptr<awst::Expression> buildIncDec(
 			return guardUIncOverflow(std::move(bin), _unsignedBits);
 		return bin;
 	}
-}
-
-std::shared_ptr<awst::Expression> buildSignedNegate(
-	ContractContext& _ctx,
-	bool _isUnchecked,
-	unsigned _bits,
-	std::string const& _pow2NStr,
-	std::string const& _halfNStr,
-	int64_t _nodeId,
-	std::shared_ptr<awst::Expression> _operand,
-	awst::SourceLocation const& _loc)
-{
-	auto makeBiguintConst = [&](std::string const& val) { return shorthand::biguintConst(val, _loc); };
-
-	auto operand = std::move(_operand);
-
-	if (_bits < 256)
-	{
-		auto mask = awst::makeBigUIntBinOp(std::move(operand), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(_pow2NStr), _loc);
-		operand = std::move(mask);
-	}
-
-	if (!_isUnchecked)
-	{
-		auto cmp = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst(_halfNStr), _loc);
-
-		_ctx.queuePreExpression(awst::makeAssert(std::move(cmp), _loc, "signed negation overflow"), _loc);
-	}
-
-	// -x = (2^N - x) mod 2^N
-	std::shared_ptr<awst::Expression> negated;
-	if (_bits == 256)
-	{
-		std::string tmpName = "__neg_tmp_" + std::to_string(_nodeId);
-
-		auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::biguintType(), _loc);
-
-		auto initStmt = awst::makeAssignmentStatement(tmpVar, makeBiguintConst("0"), _loc);
-		_ctx.preEffects().push_back(std::move(initStmt));
-
-		auto isNonZero = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst("0"), _loc);
-
-		auto sub = awst::makeBigUIntBinOp(makeBiguintConst(_pow2NStr), awst::BigUIntBinaryOperator::Sub, operand, _loc);
-
-		auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(_pow2NStr), _loc);
-
-		auto assignTmp = awst::makeAssignmentStatement(tmpVar, std::move(mod), _loc);
-
-		auto ifBody = awst::makeBlock(_loc);
-		ifBody->body.push_back(std::move(assignTmp));
-
-		_ctx.preEffects().push_back(awst::makeIfElse(
-			std::move(isNonZero), std::move(ifBody), nullptr, _loc));
-
-		negated = tmpVar;
-	}
-	else
-	{
-		auto sub = awst::makeBigUIntBinOp(makeBiguintConst(_pow2NStr), awst::BigUIntBinaryOperator::Sub, std::move(operand), _loc);
-
-		auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(_pow2NStr), _loc);
-
-		negated = std::move(mod);
-	}
-
-	if (_bits <= 64)
-	{
-		return awst::makeBiguintToUInt64(std::move(negated), _loc);
-	}
-	return negated;
 }
 
 } // namespace puyasol::builder::eb

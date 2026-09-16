@@ -1,5 +1,6 @@
 /// @file Storage-pointer rebinding and assignment value conversion.
 #include "builder/ast/exprs/SolAssignment.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/eb/MappingPrefix.h"
 #include "builder/solc/StorageRefPointer.h"
 #include "builder/eb/AssignmentHelper.h"
@@ -21,7 +22,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 {
 	Token op = m_assignment.assignmentOperator();
 	if (op != Token::Assign) return std::nullopt;
-	auto const* lhsIdent = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide());
+	auto const* lhsIdent = SolcFacts::expressionAs<Identifier>(&m_assignment.leftHandSide());
 	if (!lhsIdent) return std::nullopt;
 	auto const* lhsDecl = dynamic_cast<VariableDeclaration const*>(
 		lhsIdent->annotation().referencedDeclaration);

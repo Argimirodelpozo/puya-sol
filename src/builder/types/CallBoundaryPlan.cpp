@@ -96,7 +96,7 @@ void CallParameterPlan::setAbiWireType(
 	else if (!assembly && type)
 	{
 		auto kind = type->kind();
-		if (kind == awst::WTypeKind::ReferenceArray || kind == awst::WTypeKind::ARC4StaticArray
+		if (kind == awst::WTypeKind::ARC4StaticArray
 			|| kind == awst::WTypeKind::ARC4DynamicArray || kind == awst::WTypeKind::WTuple
 			|| (kind == awst::WTypeKind::Bytes
 				&& dynamic_cast<solidity::frontend::FunctionType const*>(solType)))
@@ -108,9 +108,6 @@ std::shared_ptr<awst::Expression> CallParameterPlan::decodeArgument(
 	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc) const
 {
 	if (type == wireType) return value;
-	if (auto const* array = dynamic_cast<awst::ReferenceArray const*>(type);
-		array && !array->arraySize())
-		return awst::makeConvertArray(std::move(value), type, loc);
 	value = awst::makeARC4Decode(std::move(value), type, loc);
 	if (signedDecodeBits)
 		value = TypeCoercion::signExtendToUint256(std::move(value), signedDecodeBits, loc);
@@ -224,9 +221,7 @@ std::shared_ptr<awst::Expression> decodeCallResult(
 			return result;
 		}
 	if (dynamic_cast<awst::ARC4UIntN const*>(value->wtype))
-		return TypeCoercion::implicitNumericCast(awst::makeARC4Decode(std::move(value), awst::WType::biguintType(), loc), native, loc);
-	if (native && native->kind() == awst::WTypeKind::ReferenceArray)
-		return awst::makeConvertArray(std::move(value), native, loc);
+		return TypeCoercion::coerceScalar(awst::makeARC4Decode(std::move(value), awst::WType::biguintType(), loc), native, loc);
 	return TypeCoercion::coerceForAssignment(std::move(value), native, loc);
 }
 

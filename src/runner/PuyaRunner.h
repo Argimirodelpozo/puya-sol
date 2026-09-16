@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <csignal>
 #include <optional>
 #include <stop_token>
 #include <string>
@@ -19,6 +20,8 @@ public:
 	{
 		std::optional<std::chrono::steady_clock::time_point> deadline;
 		std::stop_token cancellation;
+		/// Optional signal-handler flag owned by the caller; no handlers are installed here.
+		volatile std::sig_atomic_t const* signal = nullptr;
 	};
 	struct Result
 	{
@@ -36,7 +39,7 @@ public:
 		std::string const& _awstPath,
 		std::string const& _optionsPath,
 		std::string const& _logLevel = "info",
-		Control const& _control = {}
+		Control const& _control = {{}, {}, nullptr}
 	) const;
 
 private:

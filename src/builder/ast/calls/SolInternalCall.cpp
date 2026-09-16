@@ -7,6 +7,7 @@
 #include "builder/ast/exprs/SolIndexAccess.h"
 #include "builder/context/ProgramAnalysis.h"
 #include "builder/solc/SolcFacts.h"
+#include "builder/storage/named/StoragePathWalker.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/eb/MappingPrefix.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -86,14 +87,14 @@ std::optional<BoxedArrayPath> boxedArrayPath(Expression const& expression)
 {
 	BoxedArrayPath result;
 	auto const* cursor = &SolcFacts::functionExpression(expression);
-	while (auto const* index = dynamic_cast<IndexAccess const*>(cursor))
+	while (auto const* index = SolcFacts::expressionAs<IndexAccess>(cursor))
 	{
 		if (!index->indexExpression())
 			return std::nullopt;
 		result.indices.push_back(index);
 		cursor = &SolcFacts::functionExpression(index->baseExpression());
 	}
-	result.root = dynamic_cast<Identifier const*>(cursor);
+	result.root = SolcFacts::expressionAs<Identifier>(cursor);
 	result.declaration = result.root
 		? dynamic_cast<VariableDeclaration const*>(
 			result.root->annotation().referencedDeclaration) : nullptr;
@@ -206,8 +207,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::wrapStorageRefResult(
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::extractMappingKeyPrefix(
-	Expression const& argExpr)
+	Expression const& source)
 {
+	auto const& argExpr = SolcFacts::unparenthesized(source);
 	if (containsMappingType(argExpr.annotation().type))
 		return storageReferenceKey(m_ctx, m_scope, argExpr, m_loc);
 	// Any-rank array element path rooted in one physical box keeps that
@@ -220,7 +222,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::extractMappingKeyPrefix(
 	// is a SLICE of the array's box, not its own box — lift the ARRAY's box key here; the
 	// companion offset carries header + i*elemSize. Mapping values (`m[k]`)
 	// ARE their own box and are handled by the generic lift below.
-	if (auto const* iaArr = dynamic_cast<IndexAccess const*>(&argExpr))
+	if (auto const* iaArr = SolcFacts::expressionAs<IndexAccess>(&argExpr))
 		if (auto const* at = dynamic_cast<ArrayType const*>(
 				iaArr->baseExpression().annotation().type))
 			if (!at->isByteArrayOrString())
@@ -235,7 +237,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::extractMappingKeyPrefix(
 	// IndexAccess storage-ref: prefix must be the RUNTIME box key
 	// (the derived mapping-entry hash), not a static name (all keys would alias).
 	// Build the element access, lift its box key; callee reinterprets it.
-	if (dynamic_cast<IndexAccess const*>(&argExpr))
+	if (SolcFacts::expressionAs<IndexAccess>(&argExpr))
 	{
 		auto built = awst::unwrapStateGet(buildExpr(argExpr));
 		if (auto const* box = dynamic_cast<awst::BoxValueExpression const*>(built.get()))
@@ -265,7 +267,8 @@ void SolInternalCall::buildSequencedArgs(
 	auto const& evmSlotRefParamIndices = plan ? plan->slotParams : noParameters;
 	auto const& blobOffsetParamIndices = plan ? plan->blobParams : noParameters;
 	std::map<size_t, std::shared_ptr<awst::Expression>> offsets;
-	auto keyArgument = [&](Expression const& expression, size_t pi) -> std::shared_ptr<awst::Expression> {
+	auto keyArgument = [&](Expression const& source, size_t pi) -> std::shared_ptr<awst::Expression> {
+		auto const& expression = SolcFacts::unparenthesized(source);
 		auto const* array = dynamic_cast<ArrayType const*>(expression.annotation().type);
 		bool largeFixed = isLargeFixedArrayRef(m_ctx.typeMapper, expression.annotation().type);
 		// A key-only array parameter addresses the entire encoded box. An
@@ -274,7 +277,7 @@ void SolInternalCall::buildSequencedArgs(
 		bool dynamicValue = array && !containsMappingType(array) && hasDynamicStorageShape(array);
 		if (largeFixed || dynamicValue)
 		{
-			if (auto const* id = dynamic_cast<Identifier const*>(&expression))
+			if (auto const* id = SolcFacts::expressionAs<Identifier>(&expression))
 				if (auto const* declaration = id->annotation().referencedDeclaration;
 					declaration && !m_scope.bindings.mappingKeyParams.get(declaration->id()).empty())
 					return extractMappingKeyPrefix(expression);
@@ -357,7 +360,7 @@ void SolInternalCall::buildSequencedArgs(
 	};
 
 	auto bindArgument = [&](Expression const& expression, size_t paramIdx) -> std::shared_ptr<awst::Expression> {
-		auto const& source = SolcFacts::functionExpression(expression);
+		auto const& source = SolcFacts::unparenthesized(expression);
 		auto const* parameterType = _funcDef && paramIdx < _funcDef->parameters().size()
 			? _funcDef->parameters()[paramIdx]->type()
 			: functionType && paramIdx < functionType->parameterTypes().size()
@@ -394,9 +397,10 @@ void SolInternalCall::buildSequencedArgs(
 				std::move(value), source.annotation().type, paramTypes[paramIdx], m_loc);
 		if (parameterType && paramIdx < paramTypes.size())
 			return ConversionPlan{source.annotation().type, parameterType, paramTypes[paramIdx],
-				ConversionPlan::Context::Argument}.emit(std::move(value), m_loc, &m_ctx.preEffects());
+				isExternalFunctionPointer(functionType) ? ConversionPlan::Context::AbiArgument
+					: ConversionPlan::Context::Argument}.emit(std::move(value), m_loc, &m_ctx.preEffects());
 		return paramIdx < paramTypes.size()
-			? TypeCoercion::implicitNumericCast(std::move(value), paramTypes[paramIdx], m_loc) : value;
+			? TypeCoercion::coerceScalar(std::move(value), paramTypes[paramIdx], m_loc) : value;
 	};
 	auto values = CallOperands::buildParameters(m_ctx, m_call, m_loc, bindArgument);
 	for (auto& value: values)
@@ -407,12 +411,13 @@ void SolInternalCall::buildSequencedArgs(
 }
 
 std::pair<std::shared_ptr<awst::Expression>, std::shared_ptr<awst::Expression>>
-SolInternalCall::bindBoxedReference(Expression const& argExpr)
+SolInternalCall::bindBoxedReference(Expression const& source)
 {
+	auto const& argExpr = SolcFacts::unparenthesized(source);
 	// A storage-ref PARAM passed onward carries ITS caller-supplied
 	// runtime offset — forward the offset var (bump(s) inside
 	// inner(S storage s) wrote element 0 without this).
-	if (auto const* id = dynamic_cast<Identifier const*>(&argExpr))
+	if (auto const* id = SolcFacts::expressionAs<Identifier>(&argExpr))
 		if (auto const* vd = dynamic_cast<VariableDeclaration const*>(
 				id->annotation().referencedDeclaration))
 			if (auto offVar = m_scope.bindings.structRefOffsets.get(vd->id());
@@ -422,6 +427,7 @@ SolInternalCall::bindBoxedReference(Expression const& argExpr)
 	if (auto path = boxedArrayPath(argExpr))
 		if (auto key = boxedArrayKey(m_ctx, m_scope, *path, m_loc))
 		{
+			key = m_ctx.emitSequencedOperand({}, std::move(key), true, m_loc);
 			auto const* rootW = m_ctx.typeMapper.map(path->declaration->type());
 			auto boxKey = awst::makeReinterpretCast(
 				key, awst::WType::boxKeyType(), m_loc);
@@ -429,11 +435,6 @@ SolInternalCall::bindBoxedReference(Expression const& argExpr)
 				std::move(boxKey), rootW, m_loc);
 			std::string bytesName = "__sref_path_" + std::to_string(
 				awst::NameGen::next("SolInternalCall.structRefPath"));
-			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-				awst::makeVarExpression(
-					bytesName, awst::WType::bytesType(), m_loc),
-				awst::makeAsBytes(builder::StorageMapper::makeStateGetWithDefault(
-					std::move(box), rootW, m_loc), m_loc), m_loc));
 			auto bytesVar = [&]() {
 				return awst::makeVarExpression(
 					bytesName, awst::WType::bytesType(), m_loc);
@@ -446,8 +447,15 @@ SolInternalCall::bindBoxedReference(Expression const& argExpr)
 				auto const* array = dynamic_cast<ArrayType const*>(current);
 				if (!array || array->isByteArrayOrString())
 					throw SizeError("unsupported boxed storage-reference path");
-				auto idx = builder::TypeCoercion::checkedIndexToUint64(
-					m_ctx.preEffects(), CallOperands::evaluate(m_ctx, *index->indexExpression(), m_loc), m_loc);
+				auto idx = CallOperands::evaluate(m_ctx, *index->indexExpression(), m_loc);
+				// Evaluate each index before observing the current length/offset
+				// table: the index expression may have resized the enclosing box.
+				m_ctx.preEffects().push_back(awst::makeAssignmentStatement(bytesVar(),
+					awst::makeAsBytes(StorageMapper::makeStateGetWithDefault(box, rootW, m_loc), m_loc), m_loc));
+				auto length = array->isDynamicallySized() ? awst::makeBtoi(awst::makeExtract3(
+					bytesVar(), base, awst::makeIntegerConstant(2, m_loc), m_loc), m_loc) : nullptr;
+				idx = StoragePathWalker::checkedArrayIndex(*array, std::move(idx),
+					std::move(length), m_ctx.preEffects(), m_loc);
 				auto const* elemArc4 =
 					m_ctx.typeMapper.mapSolTypeToARC4(array->baseType());
 				uint64_t header = array->isDynamicallySized() ? 2 : 0;
@@ -486,6 +494,7 @@ SolInternalCall::bindBoxedReference(Expression const& argExpr)
 							awst::makeIntegerConstant(
 								static_cast<uint64_t>(elemSize), m_loc), m_loc), m_loc);
 				}
+				base = m_ctx.emitSequencedOperand({}, std::move(base), true, m_loc);
 				current = array->baseType();
 			}
 			return {key, base};
@@ -593,6 +602,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	std::shared_ptr<awst::Expression> result = call;
 	if (abiEntry && functionType && isExternalFunctionPointer(functionType))
 	{
+		result = ApplicationCall::withStaticContext(m_ctx.typeMapper, std::move(result),
+			functionType->stateMutability() <= StateMutability::View, m_loc, m_ctx.preEffects());
 		if (!functionType->returnParameterTypes().empty())
 			result = awst::makeSingleEvaluation(std::move(result), emittedReturn, awst::nextSingleEvalId(), m_loc);
 		ApplicationCall::setTypedReturnData(m_ctx.typeMapper, result,
@@ -670,17 +681,17 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildFunctionPointerCall(
 	// Retain the direct-call reference conventions only for immutable source
 	// facts. A mutable local must read its runtime pointer, even before the
 	// first syntactically encountered write or through a branch/loop.
-	if (auto const* identifier = dynamic_cast<Identifier const*>(&callee))
+	if (auto const* identifier = SolcFacts::expressionAs<Identifier>(&callee);
+		identifier && SolcFacts::callOptions(m_call.expression()).empty())
 		if (auto const* declaration = identifier->annotation().referencedDeclaration)
 		{
 			auto const& stable = m_ctx.typeMapper.analysis().stableFunctionPointers;
 			if (auto it = stable.find(declaration->id()); it != stable.end())
 			{
 				auto const& initializer = SolcFacts::functionExpression(*it->second);
-				auto const* member = dynamic_cast<MemberAccess const*>(&initializer);
-				auto const* receiver = member ? dynamic_cast<Identifier const*>(&member->expression()) : nullptr;
+				auto const* member = SolcFacts::expressionAs<MemberAccess>(&initializer);
 				// A foreign receiver remains an actual inner application call.
-				if (type.kind() == FunctionType::Kind::Internal || (receiver && receiver->name() == "this"))
+				if (type.kind() == FunctionType::Kind::Internal || (member && SolcFacts::isThis(member->expression())))
 					if (auto resolved = eb::CallResolver::resolveFunction(m_ctx, initializer))
 						return buildSubroutineCall(std::move(resolved->target),
 							returnTypeFrom(resolved->funcDef), resolved->funcDef);
@@ -701,6 +712,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildFunctionPointerCall(
 			std::move(pointer.value), true, m_loc);
 	};
 	if (calleeFirst) emitPointer();
+	auto callValue = extractCallValue();
 	std::vector<awst::CallArg> arguments;
 	// Even a plain pointer read can observe a change made by an argument's
 	// value expression (not just its queued effects). Finish args first on legacy.
@@ -710,7 +722,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildFunctionPointerCall(
 	for (auto& argument: arguments)
 		values.push_back(std::move(argument.value));
 	return eb::FunctionPointerBuilder::buildFunctionPointerCall(
-		m_ctx, std::move(pointer.value), &type, std::move(values), m_loc);
+		m_ctx, std::move(pointer.value), &type, std::move(values), m_loc, std::move(callValue));
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
@@ -718,9 +730,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 	auto const plan = eb::CallResolver::plan(m_call);
 	if (plan.isFunctionPointer && plan.functionType)
 		return buildFunctionPointerCall(*plan.callee, *plan.functionType);
-	if (auto const* identifier = dynamic_cast<Identifier const*>(plan.callee))
+	if (auto const* identifier = SolcFacts::expressionAs<Identifier>(plan.callee))
 		return resolveIdentifierCall(*identifier);
-	if (auto const* member = dynamic_cast<MemberAccess const*>(plan.callee))
+	if (auto const* member = SolcFacts::expressionAs<MemberAccess>(plan.callee))
 		return resolveMemberAccessCall(*member);
 	Logger::instance().error("could not resolve function call target", m_loc);
 	return buildSubroutineCall(awst::InstanceMethodTarget{"unknown"},

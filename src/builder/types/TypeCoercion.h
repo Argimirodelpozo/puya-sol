@@ -56,9 +56,10 @@ class TypeCoercion
 public:
 	// ── Numeric ──────────────────────────────────────────────────
 
-	/// Insert implicit numeric cast if needed (uint64 ↔ biguint).
-	/// Returns the expression unchanged when no cast is needed.
-	static std::shared_ptr<awst::Expression> implicitNumericCast(
+	/// Adapt scalar representations (integers, bytes, strings and addresses).
+	/// Semantic conversion legality belongs to solc/ConversionPlan. Returns the
+	/// expression unchanged when no scalar adapter applies.
+	static std::shared_ptr<awst::Expression> coerceScalar(
 		std::shared_ptr<awst::Expression> _expr,
 		awst::WType const* _targetType,
 		awst::SourceLocation const& _loc

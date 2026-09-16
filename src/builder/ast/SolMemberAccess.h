@@ -31,10 +31,7 @@ public:
 	std::string const& memberName() const { return m_memberAccess.memberName(); }
 
 	/// The base expression (what's before the dot).
-	solidity::frontend::Expression const& baseExpression() const
-	{
-		return m_memberAccess.expression();
-	}
+	solidity::frontend::Expression const& baseExpression() const;
 
 protected:
 	solidity::frontend::MemberAccess const& m_memberAccess;

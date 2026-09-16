@@ -51,7 +51,7 @@ IndexAccess const* indexedStorageReturn(FunctionDefinition const& function)
 		}
 		bool visit(Assignment const& assignment) override
 		{
-			if (auto const* lhs = dynamic_cast<Identifier const*>(&assignment.leftHandSide());
+			if (auto const* lhs = SolcFacts::expressionAs<Identifier>(&assignment.leftHandSide());
 				lhs && lhs->annotation().referencedDeclaration == &parameter)
 				assigned = &assignment.rightHandSide();
 			return true;
@@ -61,12 +61,12 @@ IndexAccess const* indexedStorageReturn(FunctionDefinition const& function)
 	bool const named = facts.returns.empty() && !facts.parameter.name().empty();
 	auto const* expression = named ? facts.assigned
 		: facts.returns.size() == 1 ? facts.returns[0]->expression() : nullptr;
-	auto const* access = dynamic_cast<IndexAccess const*>(expression);
+	auto const* access = expression ? SolcFacts::expressionAs<IndexAccess>(expression) : nullptr;
 	if (!access)
 		return nullptr;
 	bool const mapping = dynamic_cast<MappingType const*>(
 		access->baseExpression().annotation().type) != nullptr;
-	auto const* identifier = dynamic_cast<Identifier const*>(&access->baseExpression());
+	auto const* identifier = SolcFacts::expressionAs<Identifier>(&access->baseExpression());
 	auto const* holder = identifier ? dynamic_cast<VariableDeclaration const*>(
 		identifier->annotation().referencedDeclaration) : nullptr;
 	return holder && (mapping || (!named && holder->isStateVariable())) ? access : nullptr;
@@ -162,6 +162,17 @@ void collectContractCallGraphFacts(
 struct CallableReferenceScanner: ASTConstVisitor
 {
 	std::set<int64_t> references;
+	bool selfCall = false;
+
+	bool visit(FunctionCall const& call) override
+	{
+		auto const* type = dynamic_cast<FunctionType const*>(call.expression().annotation().type);
+		auto const* member = SolcFacts::expressionAs<MemberAccess>(&SolcFacts::functionExpression(call.expression()));
+		if (type && member && (type->kind() == FunctionType::Kind::BareCall
+			|| type->kind() == FunctionType::Kind::BareStaticCall)
+			&& SolcFacts::isThis(member->expression())) selfCall = true;
+		return true;
+	}
 
 	void add(Declaration const* _declaration)
 	{
@@ -205,6 +216,7 @@ void indexCallable(CallableDeclaration const& _callable, ProgramAnalysis& _out)
 {
 	CallableReferenceScanner scanner;
 	_callable.accept(scanner);
+	if (scanner.selfCall) _out.selfCallFunctions.insert(_callable.id());
 	auto& references = _out.callableReferences[_callable.id()];
 	references.insert(scanner.references.begin(), scanner.references.end());
 }
@@ -297,7 +309,7 @@ public:
 	{
 		if (auto const* variable = dynamic_cast<VariableDeclaration const*>(expression.annotation().referencedDeclaration);
 			variable && variable->isStateVariable()) effects.stateReferences.insert(variable->id());
-		if (auto const* id = dynamic_cast<Identifier const*>(&expression.expression()))
+		if (auto const* id = SolcFacts::expressionAs<Identifier>(&expression.expression()))
 			if (auto const* magic = dynamic_cast<MagicVariableDeclaration const*>(id->annotation().referencedDeclaration);
 				magic && magic->name() == "msg")
 				effects.messageContext |= expression.memberName() == "value"
@@ -369,8 +381,8 @@ void indexFunctionDeclarations(CompilerStack& _compiler, ProgramAnalysis& _out)
 		if (function)
 		{
 			_out.functionDeclarations[function->id()] = function;
-			if (auto library = eb::AsaIntrinsics::facadeLibrary(*function); !library.empty())
-				_out.avmIntrinsics.emplace(function->id(), std::move(library));
+			if (auto const* intrinsic = eb::AsaIntrinsics::descriptor(*function))
+				_out.avmIntrinsics.emplace(function->id(), intrinsic);
 			indexCallable(*function, _out);
 		}
 		if (!function || !contract || contract->isLibrary())
@@ -412,7 +424,7 @@ struct BodyFactsWalker: ASTConstVisitor
 
 	static bool isArrayElementStructRef(Expression const* _expression)
 	{
-		auto const* index = dynamic_cast<IndexAccess const*>(_expression);
+		auto const* index = SolcFacts::expressionAs<IndexAccess>(_expression);
 		if (!index)
 			return false;
 		auto const* array = dynamic_cast<ArrayType const*>(
@@ -428,25 +440,24 @@ struct BodyFactsWalker: ASTConstVisitor
 			|| !dynamic_cast<StructType const*>(target.type()))
 			return;
 		auto const& value = SolcFacts::functionExpression(argument);
-		if (auto const* conditional = dynamic_cast<Conditional const*>(&value))
+		if (auto const* conditional = SolcFacts::expressionAs<Conditional>(&value))
 		{
 			transferOffset(target, conditional->trueExpression());
 			transferOffset(target, conditional->falseExpression());
 		}
 		else if (isArrayElementStructRef(&value))
 			analysis.structRefOffsetParams.insert(target.id());
-		else if (auto const* identifier = dynamic_cast<Identifier const*>(&value))
+		else if (auto const* identifier = SolcFacts::expressionAs<Identifier>(&value))
 			if (auto const* declaration = identifier->annotation().referencedDeclaration)
 				offsetTransfers[declaration->id()].insert(target.id());
 	}
 
-	void transferSlot(int64_t target, Expression const& expression, std::optional<size_t> component = {})
+	void transferSlot(int64_t target, Expression const& source, std::optional<size_t> component = {})
 	{
-		if (auto const* tuple = dynamic_cast<TupleExpression const*>(&expression))
+		auto const& expression = SolcFacts::unparenthesized(source);
+		if (auto const* tuple = SolcFacts::expressionAs<TupleExpression>(&expression))
 		{
-			if (!tuple->isInlineArray() && tuple->components().size() == 1)
-				transferSlot(target, *tuple->components()[0], component);
-			else if (component && tuple->components().at(*component))
+			if (component && tuple->components().at(*component))
 				transferSlot(target, *tuple->components()[*component]);
 			return;
 		}
@@ -455,23 +466,23 @@ struct BodyFactsWalker: ASTConstVisitor
 			type = tuple->components().at(*component);
 		if (!type || !type->dataStoredIn(DataLocation::Storage))
 			return;
-		if (auto const* identifier = dynamic_cast<Identifier const*>(&expression))
+		if (auto const* identifier = SolcFacts::expressionAs<Identifier>(&expression))
 		{
 			if (auto const* source = identifier->annotation().referencedDeclaration)
 				slotTransfers[source->id()].insert(target);
 		}
-		else if (auto const* call = dynamic_cast<FunctionCall const*>(&expression))
+		else if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&expression))
 		{
 			auto const* source = ASTNode::referencedDeclaration(
 				SolcFacts::functionExpression(call->expression()));
 			if (dynamic_cast<FunctionDefinition const*>(source))
 				slotTransfers[source->id()].insert(target);
 		}
-		else if (auto const* index = dynamic_cast<IndexAccess const*>(&expression))
+		else if (auto const* index = SolcFacts::expressionAs<IndexAccess>(&expression))
 			transferSlot(target, index->baseExpression());
-		else if (auto const* member = dynamic_cast<MemberAccess const*>(&expression))
+		else if (auto const* member = SolcFacts::expressionAs<MemberAccess>(&expression))
 			transferSlot(target, member->expression());
-		else if (auto const* conditional = dynamic_cast<Conditional const*>(&expression))
+		else if (auto const* conditional = SolcFacts::expressionAs<Conditional>(&expression))
 		{
 			transferSlot(target, conditional->trueExpression(), component);
 			transferSlot(target, conditional->falseExpression(), component);
@@ -503,7 +514,7 @@ struct BodyFactsWalker: ASTConstVisitor
 			analysis.localInitializers.emplace(statement.declarations()[0]->id(), statement.initialValue());
 			if (dynamic_cast<FunctionType const*>(statement.declarations()[0]->type())
 				&& dynamic_cast<FunctionDefinition const*>(
-					ASTNode::referencedDeclaration(*statement.initialValue())))
+					ASTNode::referencedDeclaration(SolcFacts::unparenthesized(*statement.initialValue()))))
 				analysis.stableFunctionPointers.emplace(
 					statement.declarations()[0]->id(), statement.initialValue());
 		}
@@ -532,7 +543,7 @@ struct BodyFactsWalker: ASTConstVisitor
 		if (!type || type->isValueType() || !target.type()
 			|| target.type()->isValueType()) return;
 		for (auto const* source: SolcFacts::referenceSources(value))
-			if (auto const* identifier = dynamic_cast<Identifier const*>(source))
+			if (auto const* identifier = SolcFacts::expressionAs<Identifier>(source))
 				if (auto const* variable = dynamic_cast<VariableDeclaration const*>(
 					identifier->annotation().referencedDeclaration);
 					variable && variable->referenceLocation() == target.referenceLocation()
@@ -541,18 +552,17 @@ struct BodyFactsWalker: ASTConstVisitor
 					analysis.referenceAssignments[target.id()].insert(variable->id());
 	}
 
-	void transfer(VariableDeclaration const& target, Expression const& value,
+	void transfer(VariableDeclaration const& target, Expression const& source,
 		std::optional<size_t> component = {})
 	{
-		if (auto const* tuple = dynamic_cast<TupleExpression const*>(&value); tuple && !tuple->isInlineArray())
+		auto const& value = SolcFacts::unparenthesized(source);
+		if (auto const* tuple = SolcFacts::expressionAs<TupleExpression>(&value); tuple && !tuple->isInlineArray())
 		{
-			if (tuple->components().size() == 1 && tuple->components()[0])
-				transfer(target, *tuple->components()[0], component);
-			else if (component && tuple->components().at(*component))
+			if (component && tuple->components().at(*component))
 				transfer(target, *tuple->components()[*component]);
 			return;
 		}
-		if (auto const* conditional = dynamic_cast<Conditional const*>(&value))
+		if (auto const* conditional = SolcFacts::expressionAs<Conditional>(&value))
 		{
 			transfer(target, conditional->trueExpression(), component);
 			transfer(target, conditional->falseExpression(), component);
@@ -570,14 +580,12 @@ struct BodyFactsWalker: ASTConstVisitor
 	void transferAssignment(Expression const& lhs, Expression const& rhs,
 		std::optional<size_t> component = {})
 	{
-		if (auto const* tuple = dynamic_cast<TupleExpression const*>(&lhs))
+		if (auto const* tuple = SolcFacts::expressionAs<TupleExpression>(&lhs))
 		{
-			if (tuple->components().size() == 1 && tuple->components()[0])
-				return transferAssignment(*tuple->components()[0], rhs, component);
 			for (size_t i = 0; i < tuple->components().size(); ++i)
 				if (tuple->components()[i]) transferAssignment(*tuple->components()[i], rhs, i);
 		}
-		else if (auto const* identifier = dynamic_cast<Identifier const*>(&lhs))
+		else if (auto const* identifier = SolcFacts::expressionAs<Identifier>(&lhs))
 			if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(
 					identifier->annotation().referencedDeclaration))
 				transfer(*declaration, rhs, component);

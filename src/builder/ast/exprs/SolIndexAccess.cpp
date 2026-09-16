@@ -1,6 +1,7 @@
 /// @file SolIndexAccess.cpp
 
 #include "builder/ast/exprs/SolIndexAccess.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "awst/NameGen.h"
 #include "builder/eb/NodeBuilder.h"
@@ -120,8 +121,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 	bool isDynamicArrayAccess = false;
 	if (auto const* arrType = dynamic_cast<ArrayType const*>(baseType))
 	{
-		if (auto const* ident = dynamic_cast<Identifier const*>(
-				&m_indexAccess.baseExpression()))
+		if (auto const* ident = SolcFacts::expressionAs<Identifier>(&m_indexAccess.baseExpression()))
 		{
 			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 					ident->annotation().referencedDeclaration))
@@ -167,18 +167,16 @@ std::optional<eb::ContractContext::LoweredExpression> SolIndexAccess::resolveBlo
 
 std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	eb::ContractContext& _ctx, Context& _scope,
-	solidity::frontend::Expression const& _node, awst::SourceLocation const& _loc)
+	solidity::frontend::Expression const& _source, awst::SourceLocation const& _loc)
 {
 	using namespace solidity::frontend;
 
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(&_node);
-		tuple && tuple->components().size() == 1 && tuple->components()[0])
-		return resolveBlobOffset(_ctx, _scope, *tuple->components()[0], _loc);
-	if (auto const* call = dynamic_cast<FunctionCall const*>(&_node);
+	auto const& _node = SolcFacts::unparenthesized(_source);
+	if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&_node);
 		call && call->annotation().kind.set() && *call->annotation().kind == FunctionCallKind::TypeConversion
 		&& call->arguments().size() == 1 && !_node.annotation().type->isValueType())
 		return resolveBlobOffset(_ctx, _scope, *call->arguments()[0], _loc);
-	if (auto const* conditional = dynamic_cast<Conditional const*>(&_node))
+	if (auto const* conditional = SolcFacts::expressionAs<Conditional>(&_node))
 	{
 		auto branch = [&](auto const& expression) {
 			return _ctx.lowerOperand([&] { return resolveBlobOffset(_ctx, _scope, expression, _loc); });
@@ -221,7 +219,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	}
 
 	// Root: Identifier referencing a blob-backed aggregate local → its base offset.
-	if (auto const* ident = dynamic_cast<Identifier const*>(&_node))
+	if (auto const* ident = SolcFacts::expressionAs<Identifier>(&_node))
 	{
 		auto const* vd = dynamic_cast<VariableDeclaration const*>(
 			ident->annotation().referencedDeclaration);
@@ -233,7 +231,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 
 	// `base[i]` → the element's EVM-memory address.  solc owns the stride;
 	// reference elements occupy pointer slots which are followed recursively.
-	if (auto const* ia = dynamic_cast<IndexAccess const*>(&_node))
+	if (auto const* ia = SolcFacts::expressionAs<IndexAccess>(&_node))
 	{
 		if (!ia->indexExpression()) return nullptr;
 		auto const* baseArr = dynamic_cast<ArrayType const*>(ia->baseExpression().annotation().type);
@@ -276,7 +274,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	}
 
 	// `base.field` → parentOffset + sum of encoded sizes of preceding members.
-	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_node))
+	if (auto const* ma = SolcFacts::expressionAs<MemberAccess>(&_node))
 	{
 		auto const* structType = dynamic_cast<StructType const*>(
 			ma->expression().annotation().type);
@@ -326,10 +324,8 @@ std::optional<SolIndexRangeAccess::Slice> SolIndexRangeAccess::resolveSlice(
 		auto const* current = &expression;
 		for (;;)
 		{
-			if (auto const* tuple = dynamic_cast<TupleExpression const*>(current);
-				tuple && tuple->components().size() == 1 && tuple->components()[0])
-				current = tuple->components()[0].get();
-			else if (auto const* call = dynamic_cast<FunctionCall const*>(current);
+			current = &SolcFacts::unparenthesized(*current);
+			if (auto const* call = SolcFacts::expressionAs<FunctionCall>(current);
 				call && *call->annotation().kind == FunctionCallKind::TypeConversion)
 				current = call->arguments()[0].get();
 			else return current;
@@ -337,7 +333,7 @@ std::optional<SolIndexRangeAccess::Slice> SolIndexRangeAccess::resolveSlice(
 	};
 	std::vector<IndexRangeAccess const*> ranges;
 	auto const* root = peel(source);
-	while (auto const* range = dynamic_cast<IndexRangeAccess const*>(root))
+	while (auto const* range = SolcFacts::expressionAs<IndexRangeAccess>(root))
 	{
 		ranges.push_back(range);
 		root = peel(range->baseExpression());

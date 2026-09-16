@@ -138,11 +138,12 @@ void ContractBuilder::buildPostInitMethod(
 	for (size_t i = 0; i < wire.parameters.size(); ++i)
 	{
 		auto const& parameter = wire.parameters[i];
-		if (parameter.type == parameter.wireType) continue;
 		auto value = awst::makeVarExpression(parameter.wireName(), parameter.wireType, method.sourceLocation);
+		auto decoded = wire.decodeParameter(i, value, method.sourceLocation, postInitBody->body);
+		if (decoded == value) continue;
 		postInitBody->body.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(parameter.name, parameter.type, method.sourceLocation),
-			wire.decodeParameter(i, std::move(value), method.sourceLocation), method.sourceLocation));
+			std::move(decoded), method.sourceLocation));
 	}
 
 	emitBoxCreateForStateVars(*postInitBody, method.sourceLocation);

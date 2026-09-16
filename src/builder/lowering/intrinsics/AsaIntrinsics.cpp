@@ -21,6 +21,18 @@ namespace puyasol::builder::eb
 
 using namespace solidity::frontend;
 
+enum class IntrinsicKind { Create, Destroy, OptIn, Freeze, Balance, Transfer,
+	AssetParam, Crypto, Scratch, Bitlen, Txn, Global, Gtxn, Opcode };
+struct Intrinsic
+{
+	char const* library;
+	char const* signature;
+	IntrinsicKind kind;
+	char const* opcode = nullptr;
+	awst::WType const* (*result)() = nullptr;
+	char const* immediate = nullptr;
+};
+
 namespace
 {
 
@@ -66,43 +78,6 @@ std::shared_ptr<awst::Expression> assetParamFirst(
 		std::move(_field), std::move(_assetId), tupleType, _loc);
 	return tupleFirst(std::move(paramsGet), _firstType, _loc);
 }
-
-/// Arity gate shared by every intrinsic: logs `_message` and answers false
-/// (the caller returns nullptr) unless exactly `_n` args were supplied.
-bool expectArgs(
-	std::vector<std::shared_ptr<awst::Expression>> const& _args,
-	size_t _n,
-	std::string const& _message,
-	awst::SourceLocation const& _loc)
-{
-	if (_args.size() == _n)
-		return true;
-	Logger::instance().error(_message, _loc);
-	return false;
-}
-
-/// `<Lib>.<method> expects N arg[s]`, plus ` (<argNames>)` when given.
-std::string arityMessage(
-	std::string const& _lib, std::string const& _method, size_t _n, char const* _argNames)
-{
-	std::string message = _lib + "." + _method + " expects " + std::to_string(_n)
-		+ (_n == 1 ? " arg" : " args");
-	if (_argNames)
-		message += std::string(" (") + _argNames + ")";
-	return message;
-}
-
-enum class IntrinsicKind { Create, Destroy, OptIn, Freeze, Balance, Transfer,
-	AssetParam, Crypto, Scratch, Bitlen, Txn, Global, Gtxn, Opcode };
-struct Intrinsic
-{
-	char const* library;
-	char const* signature;
-	IntrinsicKind kind;
-	char const* opcode = nullptr;
-	awst::WType const* (*result)() = nullptr;
-	char const* immediate = nullptr;
-};
 
 // The declaration allowlist and backend operation live together. Solidity
 // arity and surface types come from the validated solc declaration, not a
@@ -219,10 +194,9 @@ void submitItxn(
 
 } // namespace
 
-std::string AsaIntrinsics::facadeLibrary(FunctionDefinition const& function)
+Intrinsic const* AsaIntrinsics::descriptor(FunctionDefinition const& function)
 {
-	auto const* intrinsic = intrinsicFor(function);
-	return intrinsic ? intrinsic->library : std::string{};
+	return intrinsicFor(function);
 }
 
 std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
@@ -237,8 +211,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 	auto found = function ? known.find(function->id()) : known.end();
 	if (found == known.end())
 		return std::nullopt;
-	auto const& lib = found->second;
-	auto const& method = function->name();
+	auto const* intrinsic = found->second;
 	auto const* type = dynamic_cast<FunctionType const*>(_call.expression().annotation().type);
 	bool bound = type && type->hasBoundFirstArgument();
 	std::shared_ptr<awst::Expression> receiver;
@@ -253,10 +226,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 		args.insert(args.begin(), std::move(receiver));
 	}
 
-	auto const* intrinsic = intrinsicFor(*function);
-	if (!intrinsic) throw std::logic_error("Validated intrinsic has no descriptor");
-	if (!expectArgs(args, function->parameters().size(),
-		arityMessage(lib, method, function->parameters().size(), nullptr), _loc)) return nullptr;
+	assert(args.size() == function->parameters().size());
 	using K = IntrinsicKind;
 	switch (intrinsic->kind)
 	{
@@ -270,7 +240,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 	case K::Global: return std::shared_ptr<awst::Expression>(awst::makeGlobal(intrinsic->opcode, intrinsic->result(), _loc));
 	case K::Gtxn:
 		return std::shared_ptr<awst::Expression>(awst::makeGtxns(intrinsic->opcode,
-			TypeCoercion::implicitNumericCast(std::move(args[0]), awst::WType::uint64Type(), _loc),
+			TypeCoercion::coerceScalar(std::move(args[0]), awst::WType::uint64Type(), _loc),
 			intrinsic->result(), _loc));
 	case K::AssetParam:
 	{
@@ -278,7 +248,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 		auto const* target = _ctx.typeMapper.map(function->returnParameters().front()->type());
 		if (target == awst::WType::stringType())
 			return std::shared_ptr<awst::Expression>(awst::makeReinterpretCast(std::move(value), target, _loc));
-		return TypeCoercion::implicitNumericCast(std::move(value), target, _loc);
+		return TypeCoercion::coerceScalar(std::move(value), target, _loc);
 	}
 	default: break;
 	}
@@ -293,11 +263,11 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 		if (intrinsic->kind == K::Crypto) value = stringToBytes(std::move(value), _loc);
 		else if (intrinsic->kind == K::Scratch
 			&& function->parameters()[i]->type()->isValueType())
-			value = TypeCoercion::implicitNumericCast(std::move(value), awst::WType::uint64Type(), _loc);
+			value = TypeCoercion::coerceScalar(std::move(value), awst::WType::uint64Type(), _loc);
 		call->stackArgs.push_back(std::move(value));
 	}
 	if (intrinsic->kind == K::Bitlen)
-		return TypeCoercion::implicitNumericCast(std::move(call), awst::WType::biguintType(), _loc);
+		return TypeCoercion::coerceScalar(std::move(call), awst::WType::biguintType(), _loc);
 	return std::shared_ptr<awst::Expression>(std::move(call));
 }
 
@@ -308,12 +278,6 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	if (_args.size() != 4 && _args.size() != 5)
-	{
-		Logger::instance().error(
-			"AVM.asaCreate expects 4 or 5 args (total, decimals, name, symbol[, defaultFrozen])", _loc);
-		return nullptr;
-	}
 
 	auto total = std::move(_args[0]);
 	auto decimals = std::move(_args[1]);
@@ -354,8 +318,6 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaBalance(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	if (!expectArgs(_args, 2, "AVM.asaBalance expects 2 args (holder, assetId)", _loc))
-		return nullptr;
 
 	auto holder = std::move(_args[0]);
 	auto assetId = std::move(_args[1]);
@@ -369,7 +331,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaBalance(
 	holdingGet->stackArgs.push_back(std::move(assetId));
 
 	auto balanceU64 = tupleFirst(std::move(holdingGet), awst::WType::uint64Type(), _loc);
-	return TypeCoercion::implicitNumericCast(std::move(balanceU64), awst::WType::biguintType(), _loc);
+	return TypeCoercion::coerceScalar(std::move(balanceU64), awst::WType::biguintType(), _loc);
 }
 
 std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
@@ -377,8 +339,6 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	if (!expectArgs(_args, 4, "AVM.asaTransfer expects 4 args (assetId, from, to, amount)", _loc))
-		return nullptr;
 
 	auto assetId = std::move(_args[0]);
 	auto from = std::move(_args[1]);
@@ -409,8 +369,6 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaOptIn(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	if (!expectArgs(_args, 1, "AVM.asaOptIn expects 1 arg (assetId)", _loc))
-		return nullptr;
 	auto assetId = std::move(_args[0]);
 
 	// axfer 0 units to self = standard ASA opt-in.
@@ -427,8 +385,6 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaDestroy(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	if (!expectArgs(_args, 1, "AVM.asaDestroy expects 1 arg (assetId)", _loc))
-		return nullptr;
 	auto assetId = std::move(_args[0]);
 
 	// acfg with ConfigAsset set and no other config fields = destroy.
@@ -443,8 +399,6 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaFreeze(
 	std::vector<std::shared_ptr<awst::Expression>>& _args,
 	awst::SourceLocation const& _loc)
 {
-	if (!expectArgs(_args, 3, "AVM.asaFreeze expects 3 args (assetId, holder, frozen)", _loc))
-		return nullptr;
 	auto assetId = std::move(_args[0]);
 	auto holder = std::move(_args[1]);
 	auto frozen = std::move(_args[2]);

@@ -22,31 +22,9 @@ public:
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:
-	/// Classification of an already-lowered assignment target.  Keeping this
-	/// decision in one place prevents the top-level translator from becoming a
-	/// growing chain of mutually-exclusive dynamic_cast probes.
-	enum class LValueKind
-	{
-		SlotArray,
-		SlotScalar,
-		Tuple,
-		Generic,
-	};
-
-	struct LValuePlan
-	{
-		LValueKind kind = LValueKind::Generic;
-	};
-
 	solidity::frontend::Assignment const& m_assignment;
 	std::unordered_map<int64_t, std::shared_ptr<ResolvedLValue>> m_tupleTargets;
 
-	LValuePlan planLValue(std::shared_ptr<awst::Expression> const& _target) const;
-	std::shared_ptr<awst::Expression> emitLValuePlan(
-		LValuePlan _plan,
-		solidity::frontend::Token _op,
-		std::shared_ptr<awst::Expression> _target,
-		std::shared_ptr<awst::Expression> _value);
 	std::shared_ptr<awst::Expression> emitGenericAssignment(
 		solidity::frontend::Token _op,
 		std::shared_ptr<awst::Expression> _target,
@@ -133,24 +111,11 @@ private:
 		std::shared_ptr<awst::Expression> _value,
 		solidity::frontend::Token _op);
 
-	/// `slot = arr` (slot is biguint, arr is static-sized): expand to
-	/// per-element __storage_write(slot+j, arr[j]).
-	std::optional<std::shared_ptr<awst::Expression>> trySlotBasedArrayWrite(
-		solidity::frontend::Token _op,
-		std::shared_ptr<awst::Expression> const& _target,
-		std::shared_ptr<awst::Expression> const& _value);
-
-	/// `slot = v` (computed biguint slot): emit __storage_write(btoi(slot), v),
-	/// with read-modify-write for compound assigns.
-	std::optional<std::shared_ptr<awst::Expression>> trySlotBasedScalarWrite(
-		solidity::frontend::Token _op,
-		std::shared_ptr<awst::Expression> const& _target,
-		std::shared_ptr<awst::Expression>& _value);
-
-	/// `(a, b) = expr`: delegates to handleTupleAssignment; nullopt if not a tuple target.
-	std::optional<std::shared_ptr<awst::Expression>> tryTupleAssignment(
-		std::shared_ptr<awst::Expression>& _target,
-		std::shared_ptr<awst::Expression>& _value);
+	/// Same-type scalar arrays copy solc-sized words, masking unused padding.
+	void emitEvmScalarArrayCopy(
+		solidity::frontend::ArrayType const& _target, solidity::frontend::ArrayType const& _source,
+		std::shared_ptr<awst::Expression> const& _to,
+		std::shared_ptr<awst::Expression> const& _from);
 
 	/// Compound-assign RHS canonicalization: a narrower SIGNED rhs is widened
 	/// to the TARGET type's canonical form (`a op= b` == `a = a op T(b)`)

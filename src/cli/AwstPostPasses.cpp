@@ -213,7 +213,7 @@ std::optional<BackendTargets> BackendTargets::collect(
 			result.m_ids.push_back(target->id);
 			auto suffixes = target->logicSig
 				? std::vector<std::string>{".bin", ".teal"}
-				: std::vector<std::string>{".approval.bin", ".clear.bin", ".approval.teal", ".clear.teal"};
+				: std::vector<std::string>{".approval.bin", ".clear.bin", ".approval.teal", ".clear.teal", ".arc56.json"};
 			for (auto const& suffix: suffixes) result.m_requiredFiles.insert(target->stem + suffix);
 		}
 	return result;

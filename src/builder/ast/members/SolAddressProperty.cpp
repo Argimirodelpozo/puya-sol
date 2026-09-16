@@ -2,6 +2,8 @@
 /// Address balance and explicitly adapted AVM code metadata.
 
 #include "builder/ast/members/SolAddressProperty.h"
+#include "builder/solc/SolcFacts.h"
+#include "builder/solc/SolcConstFold.h"
 #include "builder/AwstShorthand.h"
 #include "awst/NameGen.h"
 #include "builder/target/EvmFeaturePolicy.h"
@@ -17,20 +19,6 @@ namespace puyasol::builder::sol_ast
 
 namespace
 {
-
-bool isConstantZeroAddress(solidity::frontend::Expression const& baseExpr)
-{
-	using namespace solidity::frontend;
-	auto const* fc = dynamic_cast<solidity::frontend::FunctionCall const*>(&baseExpr);
-	if (!fc || !fc->annotation().kind.set()
-		|| *fc->annotation().kind != FunctionCallKind::TypeConversion
-		|| fc->arguments().size() != 1)
-		return false;
-	// Solc's rational fact also covers constant expressions, not just literals.
-	auto const* rational = dynamic_cast<RationalNumberType const*>(
-		fc->arguments()[0]->annotation().type);
-	return rational && rational->literalValue(nullptr) == 0;
-}
 
 std::shared_ptr<awst::Expression> readApprovalProgram(
 	eb::ContractContext& ctx, std::shared_ptr<awst::Expression> appId,
@@ -73,7 +61,7 @@ std::shared_ptr<awst::Expression> tryContractTypedBalance(
 	eb::ContractContext& ctx, solidity::frontend::MemberAccess const& node,
 	awst::SourceLocation const& loc)
 {
-	auto const* fc = dynamic_cast<solidity::frontend::FunctionCall const*>(&node.expression());
+	auto const* fc = SolcFacts::expressionAs<solidity::frontend::FunctionCall>(&node.expression());
 	if (!fc || *fc->annotation().kind != solidity::frontend::FunctionCallKind::TypeConversion
 		|| fc->arguments().size() != 1)
 		return nullptr;
@@ -83,14 +71,7 @@ std::shared_ptr<awst::Expression> tryContractTypedBalance(
 		solidity::frontend::ContractType const*>(innerType) != nullptr;
 	// Skip for `address(this)` — fallback emits
 	// `global CurrentApplicationAddress` directly.
-	bool isThis = false;
-	if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(
-		fc->arguments()[0].get()))
-	{
-		if (id->name() == "this")
-			isThis = true;
-	}
-	if (!isContractType || isThis)
+	if (!isContractType || SolcFacts::isThis(*fc->arguments()[0]))
 		return nullptr;
 
 	auto appExpr = ctx.buildExpr(*fc->arguments()[0]);
@@ -167,7 +148,8 @@ std::shared_ptr<awst::Expression> SolAddressProperty::buildCodeMetadata(
 	// calls, reverts and delayed storage write-backs, exactly once.
 	auto receiver = ctx.lower(source, false);
 	bool const self = shorthand::isCurrentAppAddressGlobal(receiver.value.get());
-	bool const zero = isConstantZeroAddress(source);
+	auto const constant = SolcConstFold::constantAddress(source);
+	bool const zero = constant && *constant == 0;
 	bool const precompile = eb::detectPrecompileAddress(source).has_value();
 	auto address = ctx.emitSequencedOperand(
 		std::move(receiver.effects), std::move(receiver.value), true, loc);

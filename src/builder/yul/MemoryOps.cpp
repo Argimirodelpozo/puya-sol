@@ -1226,24 +1226,6 @@ void AssemblyBuilder::handleReturn(
 		returnValue = std::move(cmp);
 	}
 
-	// When the function returns an array type but assembly produces a scalar,
-	// the assembly was manually building ABI-encoded memory (EVM-specific).
-	// Return an empty array as fallback since the memory ops don't translate.
-	if (m_frame.returnType && dynamic_cast<awst::ReferenceArray const*>(m_frame.returnType)
-		&& !dynamic_cast<awst::ReferenceArray const*>(returnValue->wtype))
-	{
-		// HARD ERROR — returning an empty array would silently hand the caller
-		// `[]` instead of the real ABI-encoded data the assembly built in EVM
-		// memory. Refuse to compile rather than emit a wrong return value.
-		Logger::instance().error(
-			"assembly `return(offset, size)` builds an ABI-encoded array in EVM "
-			"memory, which has no AVM translation here; returning an empty array "
-			"would silently hand the caller `[]` instead of the real data.", _loc
-		);
-		auto emptyArr = awst::makeNewArray(m_frame.returnType, _loc);
-		returnValue = std::move(emptyArr);
-	}
-
 	if (m_frame.frameIsProgram)
 	{
 		emitArc4ReturnHalt(std::move(returnValue), _loc, _out);

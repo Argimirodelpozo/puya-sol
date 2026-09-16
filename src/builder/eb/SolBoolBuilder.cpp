@@ -13,31 +13,6 @@ solidity::frontend::Type const* SolBoolBuilder::solType() const
 	return solidity::frontend::TypeProvider::boolean();
 }
 
-std::unique_ptr<InstanceBuilder> SolBoolBuilder::binary_op(
-	InstanceBuilder& _other, BuilderBinaryOp _op,
-	awst::SourceLocation const& _loc, bool /*_reverse*/)
-{
-	// Bool only supports logical And/Or (both && and & map here for bools)
-	if (_other.wtype() != awst::WType::boolType())
-		return nullptr;
-
-	awst::BinaryBooleanOperator boolOp;
-	switch (_op)
-	{
-	case BuilderBinaryOp::BitAnd:
-		boolOp = awst::BinaryBooleanOperator::And;
-		break;
-	case BuilderBinaryOp::BitOr:
-		boolOp = awst::BinaryBooleanOperator::Or;
-		break;
-	default:
-		return nullptr;
-	}
-
-	auto e = awst::makeBoolBinOp(resolve(), boolOp, _other.resolve(), _loc);
-	return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
-}
-
 std::unique_ptr<InstanceBuilder> SolBoolBuilder::compare(
 	InstanceBuilder& _other, BuilderComparisonOp _op,
 	awst::SourceLocation const& _loc)
@@ -61,17 +36,6 @@ std::unique_ptr<InstanceBuilder> SolBoolBuilder::unary_op(
 
 	auto e = awst::makeNot(resolve(), _loc);
 	return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
-}
-
-std::unique_ptr<InstanceBuilder> SolBoolBuilder::bool_eval(
-	awst::SourceLocation const& /*_loc*/, bool _negate)
-{
-	if (_negate)
-	{
-		auto e = awst::makeNot(resolve(), m_expr->sourceLocation);
-		return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
-	}
-	return std::make_unique<SolBoolBuilder>(m_ctx, resolve());
 }
 
 } // namespace puyasol::builder::eb

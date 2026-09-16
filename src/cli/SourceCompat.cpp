@@ -405,20 +405,24 @@ InterfaceEventMap collectInterfaceEventsFromImports(
 	std::string const& _mainSource, fs::path const& _sourceDir)
 {
 	InterfaceEventMap interfaceEvents;
+	std::set<std::string> ambiguous;
 
-	// Scan imports with solc's lexer. This covers alias/from forms and never
-	// mistakes commented-out imports for dependencies.
+	// This pre-analysis rewrite has no resolved import declarations. Only plain
+	// imports are safe here; leave aliases/selective imports to solc unchanged.
 	auto tokens = lex(_mainSource);
 	for (size_t i = 0; i < tokens.size(); ++i)
 	{
+		if ((tokens[i].token == Token::Contract || tokens[i].token == Token::Interface
+			|| tokens[i].token == Token::Library) && i + 1 < tokens.size())
+			ambiguous.insert(tokens[i + 1].literal);
 		if (tokens[i].token != Token::Import)
 			continue;
-		std::string importPath;
-		for (size_t j = i + 1; j < tokens.size() && tokens[j].token != Token::Semicolon; ++j)
-			if (tokens[j].token == Token::StringLiteral)
-				importPath = tokens[j].literal;
+		if (i + 2 >= tokens.size() || tokens[i + 1].token != Token::StringLiteral
+			|| tokens[i + 2].token != Token::Semicolon)
+			return {};
+		auto const& importPath = tokens[i + 1].literal;
 		if (importPath.empty() || importPath[0] != '.')
-			continue;
+			return {};
 		fs::path importAbsPath = _sourceDir / importPath;
 		if (fs::exists(importAbsPath))
 		{
@@ -430,10 +434,12 @@ InterfaceEventMap collectInterfaceEventsFromImports(
 				std::string impContent = ss.str();
 				auto interfaces = collectInterfaces(impContent);
 				for (auto& [name, events]: interfaces)
-					interfaceEvents[name].insert(events.begin(), events.end());
+					if (!interfaceEvents.emplace(name, std::move(events)).second)
+						ambiguous.insert(name);
 			}
 		}
 	}
+	for (auto const& name: ambiguous) interfaceEvents.erase(name);
 	if (!interfaceEvents.empty())
 		puyasol::Logger::instance().debug(
 			"Found events in " + std::to_string(interfaceEvents.size()) +

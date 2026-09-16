@@ -42,6 +42,7 @@ struct FunctionPointerRegistry
 	unsigned nextId = 1;
 	std::map<std::string, solidity::frontend::FunctionType const*> neededDispatches;
 	std::set<std::string> neededRootDispatches;
+	std::set<std::string> neededSelectorDispatches;
 	std::string currentCref;
 
 	void reset()
@@ -50,6 +51,7 @@ struct FunctionPointerRegistry
 		nextId = 1;
 		neededDispatches.clear();
 		neededRootDispatches.clear();
+		neededSelectorDispatches.clear();
 		currentCref.clear();
 	}
 };
@@ -81,7 +83,8 @@ public:
 		std::shared_ptr<awst::Expression> _ptrExpr,
 		solidity::frontend::FunctionType const* _funcType,
 		std::vector<std::shared_ptr<awst::Expression>> _args,
-		awst::SourceLocation const& _loc);
+		awst::SourceLocation const& _loc,
+		std::shared_ptr<awst::Expression> _callValue = nullptr);
 
 	/// Register a function pointer target.
 	/// Returns the ID of the already-resolved implementation.

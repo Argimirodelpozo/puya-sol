@@ -12,7 +12,6 @@ enum class BuilderBinaryOp
 	Add,
 	Sub,
 	Mult,
-	Div,
 	FloorDiv,
 	Mod,
 	Pow,
@@ -37,15 +36,9 @@ enum class BuilderComparisonOp
 /// Unary operators.
 enum class BuilderUnaryOp
 {
-	Positive,
 	Negative,
 	BitInvert,
 	LogicalNot,
-	PreIncrement,
-	PreDecrement,
-	PostIncrement,
-	PostDecrement,
-	Delete,
 };
 
 using solidity::langutil::Token;

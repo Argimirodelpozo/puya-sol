@@ -43,11 +43,6 @@ ReturnWireElem planReturnElement(
 		item.wireType = types.createType<awst::ARC4UIntN>(static_cast<int>(item.bits));
 		item.encoded = true;
 	}
-	else if (nativeType && nativeType->kind() == awst::WTypeKind::ReferenceArray)
-	{
-		item.wireType = types.mapToARC4Type(nativeType);
-		item.encoded = item.wireType != nativeType;
-	}
 	return item;
 }
 

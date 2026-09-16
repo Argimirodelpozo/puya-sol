@@ -3,6 +3,11 @@
 /// and precompile routing.
 
 #include "builder/lowering/itxn/InnerCallHandlers.h"
+#include "builder/solc/SolcFacts.h"
+#include "builder/solc/SolcConstFold.h"
+#include "builder/codec/EvmValueCodec.h"
+#include "builder/codec/EvmAbiDecode.h"
+#include "builder/context/BuildArtifacts.h"
 #include "builder/eb/CallOperands.h"
 #include "builder/AwstShorthand.h"
 #include "awst/NameGen.h"
@@ -28,40 +33,11 @@ namespace puyasol::builder::eb
 // ── Helpers ──
 
 std::optional<uint64_t> detectPrecompileAddress(
-	solidity::frontend::Expression const& _baseExpr)
+	solidity::frontend::Expression const& expression)
 {
-	using namespace solidity::frontend;
-	std::optional<uint64_t> precompileAddr;
-	if (auto const* baseCall = dynamic_cast<FunctionCall const*>(&_baseExpr))
-	{
-		if (baseCall->annotation().kind.set()
-			&& *baseCall->annotation().kind == FunctionCallKind::TypeConversion
-			&& !baseCall->arguments().empty())
-		{
-			auto const* argType = baseCall->arguments()[0]->annotation().type;
-			if (auto const* ratType = dynamic_cast<RationalNumberType const*>(argType))
-			{
-				auto val = ratType->literalValue(nullptr);
-				if (val >= 1 && val <= 10)
-					precompileAddr = static_cast<uint64_t>(val);
-			}
-		}
-	}
-	return precompileAddr;
-}
-
-static bool isLiteralZeroAddress(
-	solidity::frontend::Expression const& _baseExpr)
-{
-	using namespace solidity::frontend;
-	auto const* baseCall = dynamic_cast<FunctionCall const*>(&_baseExpr);
-	if (!baseCall || !baseCall->annotation().kind.set()
-		|| *baseCall->annotation().kind != FunctionCallKind::TypeConversion
-		|| baseCall->arguments().empty())
-		return false;
-	auto const* rational = dynamic_cast<RationalNumberType const*>(
-		baseCall->arguments()[0]->annotation().type);
-	return rational && rational->literalValue(nullptr) == 0;
+	auto address = SolcConstFold::constantAddress(expression);
+	return address && *address >= 1 && *address <= 10
+		? std::optional<uint64_t>(static_cast<uint64_t>(*address)) : std::nullopt;
 }
 
 static awst::WTuple s_boolBytesType(
@@ -83,23 +59,6 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::makeBoolBytesTupleEmpty(
 {
 	return makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc);
 }
-
-std::shared_ptr<awst::IntrinsicCall> InnerCallHandlers::makeExtract(
-	std::shared_ptr<awst::Expression> _source, int _offset, int _length,
-	awst::SourceLocation const& _loc)
-{
-	auto call = awst::makeExtract3(std::move(_source), awst::makeIntegerConstant(_offset, _loc), awst::makeIntegerConstant(_length, _loc), _loc);
-	return call;
-}
-
-std::shared_ptr<awst::IntrinsicCall> InnerCallHandlers::makeConcat(
-	std::shared_ptr<awst::Expression> _a, std::shared_ptr<awst::Expression> _b,
-	awst::SourceLocation const& _loc)
-{
-	return awst::makeConcat(std::move(_a), std::move(_b), _loc);
-}
-
-
 
 std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	ContractContext& _ctx,
@@ -124,108 +83,14 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 			builder::ConversionPlan::Context::AbiArgument}.emit(
 				std::move(_argExpr), _loc);
 
-	bool isDynamicBytes = false;
-	if (_paramSolType)
-	{
-		auto cat = _paramSolType->category();
-		isDynamicBytes = (cat == Type::Category::Array
-			&& dynamic_cast<ArrayType const*>(_paramSolType)
-			&& dynamic_cast<ArrayType const*>(_paramSolType)->isByteArrayOrString());
-	}
-
-	if (_argExpr->wtype == awst::WType::bytesType()
-		|| _argExpr->wtype->kind() == awst::WTypeKind::Bytes)
-	{
-		if (isDynamicBytes)
-		{
-			// ARC4 byte[]: uint16(len)++raw. makeEvalOnce for side-effecting args.
-			_argExpr = awst::makeEvalOnce(std::move(_argExpr), _loc);
-			auto lenExpr = awst::makeLen(_argExpr, _loc);
-			auto itobLen = awst::makeItob(std::move(lenExpr), _loc);
-			auto header = awst::makeExtract(std::move(itobLen), 6, 2, _loc);
-
-			return awst::makeConcat(std::move(header), std::move(_argExpr), _loc);
-		}
-		return _argExpr;
-	}
-	else if (_argExpr->wtype == awst::WType::uint64Type())
-	{
-		// itob → 8 bytes; left-pad if param is wider (callee's arc4 len check).
-		unsigned widthBytes = 8;
-		if (_paramSolType)
-		{
-			if (auto const* intType = dynamic_cast<IntegerType const*>(_paramSolType))
-				widthBytes = intType->numBits() / 8;
-			else if (auto const* addr = dynamic_cast<AddressType const*>(_paramSolType))
-				(void)addr, widthBytes = 32; // ARC-4 address is the full AVM account
-		}
-		auto itob = awst::makeItob(std::move(_argExpr), _loc);
-		if (widthBytes <= 8)
-			return itob;
-		// pad = bzero(widthBytes - 8)  ++  itob(value)
-		return awst::makeLeftPad(std::move(itob), widthBytes - 8, _loc);
-	}
-	else if (_argExpr->wtype == awst::WType::biguintType())
-	{
-		// Encode to the param's exact ARC4 width (N/8 bytes); callee arc4 decode
-		// asserts len==N/8, so a 32-byte arg reverts. makeARC4Encode trims to low
-		// N/8 bytes. int256/uint256 stays 32 bytes.
-		auto const* solT = _paramSolType;
-		if (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(solT))
-			solT = &udvt->underlyingType();
-		if (dynamic_cast<IntegerType const*>(solT))
-		{
-			auto* arc4Type = _ctx.typeMapper.mapSolTypeToARC4(_paramSolType);
-			auto enc = awst::makeARC4Encode(std::move(_argExpr), arc4Type, _loc);
-			return awst::makeAsBytes(std::move(enc), _loc);
-		}
-		// Non-integer biguint (rare): keep the 32-byte left-pad.
-		auto cast = awst::makeAsBytes(std::move(_argExpr), _loc);
-		return awst::makeLeftPadToN(std::move(cast), 32, _loc);
-	}
-	else if (_argExpr->wtype == awst::WType::boolType())
-	{
-		// bool → ARC4 bool = setbit(0x00, 0, boolValue)
-		return awst::makeSetbit(
-			awst::makeBytesConstant({0x00}, _loc),
-			awst::makeZero(_loc),
-			std::move(_argExpr), _loc);
-	}
-	else if (_argExpr->wtype->kind() == awst::WTypeKind::ReferenceArray)
-	{
-		// ReferenceArray → ARC4 encode
-		auto* refArr = dynamic_cast<awst::ReferenceArray const*>(_argExpr->wtype);
-		auto* elemType = refArr ? refArr->elementType() : nullptr;
-		auto* arc4ElemType = elemType ? _ctx.typeMapper.mapToARC4Type(elemType) : nullptr;
-
-		awst::WType const* arc4ArrayType = nullptr;
-		if (arc4ElemType && refArr && refArr->arraySize())
-			arc4ArrayType = _ctx.typeMapper.createType<awst::ARC4StaticArray>(
-				arc4ElemType, *refArr->arraySize());
-		else if (arc4ElemType)
-			arc4ArrayType = _ctx.typeMapper.createType<awst::ARC4DynamicArray>(arc4ElemType);
-
-		if (arc4ArrayType)
-		{
-			auto encode = awst::makeARC4Encode(std::move(_argExpr), arc4ArrayType, _loc);
-
-			auto rcast = awst::makeAsBytes(std::move(encode), _loc);
-			return rcast;
-		}
-	}
-	else if (_argExpr->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4DynamicArray
-		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4Struct
-		|| _argExpr->wtype->kind() == awst::WTypeKind::ARC4Tuple)
-	{
-		auto rcast = awst::makeAsBytes(std::move(_argExpr), _loc);
-		return rcast;
-	}
-	else
-	{
-		auto rcast = awst::makeAsBytes(std::move(_argExpr), _loc);
-		return rcast;
-	}
+	// The public call-boundary plan owns native-vs-wire widths. In particular,
+	// uint8 parameters use a uint64 carrier, unlike uint8 inside an aggregate.
+	CallParameterPlan parameter;
+	parameter.type = _argExpr->wtype;
+	parameter.setAbiWireType(_ctx.typeMapper, _paramSolType);
+	auto const* wire = _ctx.typeMapper.mapToARC4Type(parameter.wireType);
+	return awst::makeAsBytes(codec::valueToArc4(_ctx.typeMapper, _paramSolType,
+		std::move(_argExpr), wire, _loc), _loc);
 }
 
 std::vector<std::shared_ptr<awst::Expression>> InnerCallHandlers::lowerArguments(
@@ -254,47 +119,6 @@ std::vector<std::shared_ptr<awst::Expression>> InnerCallHandlers::lowerArguments
 		}));
 	}
 	return values;
-}
-
-std::shared_ptr<awst::Expression> InnerCallHandlers::encodeEvmArgumentBody(
-	ContractContext& _ctx,
-	std::vector<solidity::frontend::ASTPointer<
-		solidity::frontend::Expression const>> const& _args,
-	std::vector<solidity::frontend::Type const*> const& _paramTypes,
-	awst::SourceLocation const& _loc)
-{
-	std::vector<solidity::frontend::Type const*> types;
-	for (size_t i = 0; i < _args.size(); ++i)
-	{
-		auto const* targetType = i < _paramTypes.size() && _paramTypes[i]
-			? _paramTypes[i] : _args[i]->annotation().type;
-		if (targetType && targetType->category() == solidity::frontend::Type::Category::StringLiteral)
-			targetType = targetType->mobileType();
-		types.push_back(targetType);
-	}
-	return AbiEncoderBuilder::encodeValuesAsEvmAbi(
-		_ctx, types, lowerArguments(_ctx, _args, _paramTypes, _loc), _loc);
-}
-
-std::shared_ptr<awst::TupleExpression>
-InnerCallHandlers::buildEvmApplicationArgs(
-	ContractContext& _ctx,
-	std::shared_ptr<awst::Expression> _selector,
-	std::vector<solidity::frontend::ASTPointer<
-		solidity::frontend::Expression const>> const& _args,
-	std::vector<solidity::frontend::Type const*> const& _paramTypes,
-	awst::SourceLocation const& _loc)
-{
-	auto tuple = awst::makeTupleExpression(nullptr, _loc);
-	tuple->items.push_back(std::move(_selector));
-	tuple->items.push_back(encodeEvmArgumentBody(
-		_ctx, _args, _paramTypes, _loc));
-	std::vector<awst::WType const*> wireTypes;
-	for (auto const& item: tuple->items)
-		wireTypes.push_back(item->wtype);
-	tuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(
-		std::move(wireTypes), std::nullopt);
-	return tuple;
 }
 
 std::string solTypeToArc4ParamName(
@@ -444,7 +268,7 @@ InnerCallHandlers::SelfEncodeForm InnerCallHandlers::parseSelfEncodeForm(
 	if (encMA && encMA->memberName() == "encodeWithSignature"
 		&& !encCallExpr->arguments().empty())
 	{
-		if (auto const* sigLit = dynamic_cast<Literal const*>(encCallExpr->arguments()[0].get()))
+		if (auto const* sigLit = SolcFacts::expressionAs<Literal>(encCallExpr->arguments()[0].get()))
 		{
 			sigString = sigLit->value();
 		}
@@ -456,9 +280,9 @@ InnerCallHandlers::SelfEncodeForm InnerCallHandlers::parseSelfEncodeForm(
 	{
 		targetIdentityExpr = encCallExpr->arguments()[0].get();
 		// `this.fn.selector` = MemberAccess("selector", MemberAccess("fn", this)).
-		if (auto const* selMA = dynamic_cast<MemberAccess const*>(encCallExpr->arguments()[0].get()))
+		if (auto const* selMA = SolcFacts::expressionAs<MemberAccess>(encCallExpr->arguments()[0].get()))
 			if (selMA->memberName() == "selector")
-				if (auto const* fnMA = dynamic_cast<MemberAccess const*>(&selMA->expression()))
+				if (auto const* fnMA = SolcFacts::expressionAs<MemberAccess>(&selMA->expression()))
 				{
 					refFunc = dynamic_cast<FunctionDefinition const*>(
 						fnMA->annotation().referencedDeclaration);
@@ -493,7 +317,7 @@ solidity::frontend::FunctionDefinition const* InnerCallHandlers::resolveSelfCall
 			&& type->parameterTypes().size() == form.resolvedArgs.size())
 			if (auto const* function = dynamic_cast<FunctionDefinition const*>(&type->declaration());
 				function && function->isImplemented())
-				return &function->resolveVirtual(*_ctx.currentContract);
+				return function;
 	return nullptr;
 }
 
@@ -503,6 +327,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::emitDirectSelfCall(
 	solidity::frontend::FunctionDefinition const& targetFunc,
 	SelfEncodeForm const& form,
 	std::string const& encodeName,
+	bool staticCall,
 	awst::SourceLocation const& _loc)
 {
 	using namespace solidity::frontend;
@@ -530,7 +355,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::emitDirectSelfCall(
 	for (size_t i = 0; i < values.size(); ++i)
 		awst::pushCallArg(call->args, boundary.parameters[i].wireName(),
 			boundary.parameters[i].encodeArgument(std::move(values[i]), _loc));
-	auto bytes = ApplicationCall::setTypedReturnData(_ctx.typeMapper, std::move(call),
+	auto value = ApplicationCall::withStaticContext(_ctx.typeMapper, std::move(call),
+		staticCall, _loc, _ctx.preEffects());
+	auto bytes = ApplicationCall::setTypedReturnData(_ctx.typeMapper, std::move(value),
 		returnTypes, true, _loc, _ctx.preEffects());
 	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTuple(true, std::move(bytes), _loc));
 }
@@ -547,7 +374,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 {
 	using namespace solidity::frontend;
 
-	auto const& dataArg = *_callNode.arguments()[0];
+	auto const& dataArg = SolcFacts::unparenthesized(*_callNode.arguments()[0]);
 
 	// {value:} needs an inner PaymentTxn grouped with a real inner app call.
 	// Self-calls rewrite to a direct callsub (no inner txn to attach it to)
@@ -569,52 +396,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 		}
 	}
 
-	// Self-call with abi.encodeWithSignature/WithSelector: resolve to a
-	// direct subroutine call (mirrors handleCallWithEncodeCall self-call
-	// path; avoids fallback stub for contracts without a fallback).
-	if (isCurrentAppAddressReceiver(_receiver.get()))
-	{
-		if (auto const* encCallExpr = dynamic_cast<FunctionCall const*>(&dataArg))
-		{
-			auto const* encMA = dynamic_cast<MemberAccess const*>(&encCallExpr->expression());
-			bool recognised = encMA && !encCallExpr->arguments().empty()
-				&& (encMA->memberName() == "encodeWithSignature"
-					|| encMA->memberName() == "encodeWithSelector"
-					|| encMA->memberName() == "encodeCall");
-			if (recognised)
-			{
-				auto form = parseSelfEncodeForm(*encCallExpr, encMA);
-				if (auto const* target = resolveSelfCallOverload(_ctx, form))
-					return emitDirectSelfCall(
-						_ctx, *target, form, encMA->memberName(), _loc);
-			}
-		}
-	}
-
-	if (auto const* encodeCallExpr = dynamic_cast<FunctionCall const*>(&dataArg);
-		encodeCallExpr && !isCurrentAppAddressReceiver(_receiver.get()))
-	{
-		auto const* encodeMA = dynamic_cast<MemberAccess const*>(&encodeCallExpr->expression());
-		if (encodeMA && encodeMA->memberName() == "encodeCall" && encodeCallExpr->arguments().size() >= 2)
-		{
-			auto result = handleCallWithEncodeCall(_ctx, _receiver, *encodeCallExpr, _callValue, _loc);
-			if (result) return result;
-		}
-		// .call(abi.encodeWithSignature/WithSelector(...)): encoder visible at call site —
-		// preserve the declared argument types while adapting the byte blob to
-		// the selected contract-entry transport.
-		if (encodeMA
-			&& (encodeMA->memberName() == "encodeWithSignature"
-				|| encodeMA->memberName() == "encodeWithSelector")
-			&& !encodeCallExpr->arguments().empty())
-		{
-			auto result = handleCallWithSignatureArgs(
-				_ctx, _receiver, *encodeCallExpr,
-				encodeMA->memberName() == "encodeWithSignature", _callValue, _loc);
-			if (result) return result;
-		}
-	}
-
 	// .call(data) to known precompile address → route like .staticcall
 	if (auto precompileAddr = detectPrecompileAddress(_baseExpr))
 	{
@@ -622,74 +403,80 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 		auto result = handleStaticCallPrecompile(_ctx, *precompileAddr, std::move(inputData), _loc);
 		if (result) return result;
 	}
-	// Non-encodeCall self-call: an exact route exists — non-selector data
-	// reaches the fallback in the approval program, so call __fallback
-	// directly. Not an UnknownLowLevelCall: the target is proven (self).
-	bool isSelfCall = isCurrentAppAddressReceiver(_receiver.get());
-
-	if (isSelfCall)
+	// Proven builtin self calls retain their direct-call optimization.
+	if (isCurrentAppAddressReceiver(_receiver.get()))
 	{
-		auto dataExpr = sol_ast::CallOperands::evaluate(_ctx, dataArg, _loc);
-		if (dataExpr->wtype == awst::WType::stringType())
+		if (auto const* encCallExpr = SolcFacts::expressionAs<FunctionCall>(&dataArg))
 		{
-			auto cast = awst::makeAsBytes(std::move(dataExpr), _loc);
-			dataExpr = std::move(cast);
-		}
-
-		// Only route to __fallback if the contract defines one; otherwise
-		// an InstanceMethodTarget{"__fallback"} would be unresolvable.
-		solidity::frontend::FunctionDefinition const* fallbackFunc = nullptr;
-		if (_ctx.currentContract)
-		{
-			forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
+			auto const* encMA = SolcFacts::expressionAs<MemberAccess>(&SolcFacts::functionExpression(encCallExpr->expression()));
+			auto const* type = dynamic_cast<FunctionType const*>(encCallExpr->expression().annotation().type);
+			bool recognised = encMA && type && !encCallExpr->arguments().empty()
+				&& (type->kind() == FunctionType::Kind::ABIEncodeWithSignature
+					|| type->kind() == FunctionType::Kind::ABIEncodeWithSelector
+					|| type->kind() == FunctionType::Kind::ABIEncodeCall);
+			if (recognised)
 			{
-				if (fallbackFunc) return;
-				if (func->isImplemented() && func->isFallback())
-					fallbackFunc = func;
-			});
+				auto form = parseSelfEncodeForm(*encCallExpr, encMA);
+				if (auto const* target = resolveSelfCallOverload(_ctx, form))
+					return emitDirectSelfCall(
+						_ctx, *target, form, encMA->memberName(), _memberName == "staticcall", _loc);
+			}
 		}
-
-		if (!fallbackFunc)
-		{
-			return std::make_unique<GenericResultBuilder>(_ctx,
-				makeBoolBytesTuple(false, ApplicationCall::setReturnData(_ctx.typeMapper,
-					awst::makeBytesConstant({}, _loc), _loc, _ctx.preEffects()), _loc));
-		}
-
-		bool fallbackTakesBytes = fallbackFunc->parameters().size() == 1;
-		bool fallbackReturnsBytes = !fallbackFunc->returnParameters().empty();
-
-		auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{"__fallback"}, fallbackReturnsBytes ? awst::WType::bytesType() : awst::WType::voidType(), _loc);
-		if (fallbackTakesBytes)
-			awst::pushCallArg(call->args, dataExpr);
-
-		// Spill bytes-returning fallback result to a temp.
-		if (fallbackReturnsBytes)
-		{
-			std::string tmpName = "__fallback_ret_" + std::to_string((awst::NameGen::next("InnerCallHandlers.s_tmpCounter") + 1));
-			auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
-			auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(call), _loc);
-			_ctx.preEffects().push_back(std::move(assign));
-
-			auto retRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
-			return std::make_unique<GenericResultBuilder>(_ctx,
-				makeBoolBytesTuple(true, std::move(retRead), _loc));
-		}
-
-		auto stmt = awst::makeExpressionStatement(call, _loc);
-		_ctx.preEffects().push_back(std::move(stmt));
-
-		return std::make_unique<GenericResultBuilder>(_ctx,
-			makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
 	}
 
-	// Non-self raw .call(data) → inner app call; splits [selector, rest].
-	// Empty calls are only exactly decidable for the literal zero address;
-	// other addresses need open-world account/code state that AVM does not expose.
-	// Preserve literal shape for the empty-data fold while sequencing effects.
+	if (isCurrentAppAddressReceiver(_receiver.get()))
+	{
+		EvmFeaturePolicy::report(EvmFeature::SelfCall, _ctx.typeMapper.profile(), _loc);
+		if (!_ctx.currentContract)
+			throw std::logic_error("Self-call dispatch requires a concrete host contract");
+		_ctx.typeMapper.artifacts().contract().needsSelfCallDispatch = true;
+		auto call = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{"__puyasol_self_call"}, &s_boolBytesType, _loc);
+		awst::pushCallArg(call->args, awst::makeAsBytes(
+			sol_ast::CallOperands::evaluate(_ctx, dataArg, _loc), _loc));
+		return std::make_unique<GenericResultBuilder>(_ctx, ApplicationCall::withStaticContext(
+			_ctx.typeMapper, std::move(call), _memberName == "staticcall", _loc, _ctx.preEffects()));
+	}
+
 	auto dataOperand = _ctx.lower(dataArg, false);
 	auto dataExpr = _ctx.emitSequencedOperand(
 		std::move(dataOperand.effects), std::move(dataOperand.value), false, _loc);
+	// ARC4's explicit selector boundary is retained only when solc identifies
+	// the declaration. Decode the actual EVM argument body before converting
+	// to native ApplicationArgs: never guess carrier widths from source syntax.
+	auto const* encoder = SolcFacts::expressionAs<FunctionCall>(&dataArg);
+	auto const* builtin = encoder ? dynamic_cast<FunctionType const*>(encoder->expression().annotation().type) : nullptr;
+	auto const* selector = builtin && builtin->kind() == FunctionType::Kind::ABIEncodeWithSelector
+		? SolcFacts::expressionAs<MemberAccess>(encoder->arguments()[0].get()) : nullptr;
+	auto const* function = selector && selector->memberName() == "selector"
+		? dynamic_cast<FunctionType const*>(selector->expression().annotation().type) : nullptr;
+	if (_ctx.typeMapper.profile().contractAbi == ContractAbi::Arc4 && function && function->hasDeclaration())
+	{
+		auto const& parameters = function->parameterTypes();
+		std::vector<awst::WType const*> nativeTypes;
+		for (auto const* parameter: parameters) nativeTypes.push_back(_ctx.typeMapper.map(parameter));
+		auto args = awst::makeTupleExpression(nullptr, _loc);
+		auto const& declaration = function->declaration();
+		auto const* definition = dynamic_cast<FunctionDefinition const*>(&declaration);
+		args->items.push_back(awst::makeMethodConstant(definition
+			? buildMethodSelector(_ctx, definition)
+			: buildMethodSelector(_ctx, declaration.name(), *function), awst::WType::bytesType(), _loc));
+		if (!parameters.empty())
+		{
+			auto const* decodedType = parameters.size() == 1 ? nativeTypes[0]
+				: _ctx.typeMapper.createType<awst::WTuple>(nativeTypes);
+			auto decoded = awst::makeEvalOnce(abi::decodeEvmAbi(_ctx.typeMapper,
+				awst::makeExtract(dataExpr, 4, 0, _loc), parameters, decodedType, _loc, _ctx.preEffects()), _loc);
+			for (size_t i = 0; i < parameters.size(); ++i)
+				args->items.push_back(encodeArgToBytes(_ctx, parameters.size() == 1 ? decoded
+					: awst::makeTupleItem(decoded, static_cast<int>(i), nativeTypes[i], _loc),
+					parameters[i], parameters[i], _loc));
+		}
+		args->wtype = _ctx.typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>(args->items.size(), awst::WType::bytesType()));
+		EvmFeaturePolicy::report(EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
+		return submitAppCall(_ctx, std::move(_receiver), std::move(args), std::move(_callValue), _loc);
+	}
 	auto isEmptyConst = [](awst::Expression const* e) {
 		// Unwrap ReinterpretCast (string→bytes, etc.) to inspect the inner.
 		while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(e))
@@ -705,14 +492,15 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 		// Empty data + {value:} = plain transfer (EVM: invokes receive()).
 		if (_callValue)
 			return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
-		if (isLiteralZeroAddress(_baseExpr))
+		if (SolcConstFold::constantAddress(_baseExpr) == std::optional<solidity::u256>(0))
 			return std::make_unique<GenericResultBuilder>(_ctx,
 				makeBoolBytesTupleEmpty(_loc));
 		// Zero-value empty call: solc EXECUTES the callee (receive, or
 		// fallback when no receive) — zero-arg inner app call.
 		return handleCallWithEmptyData(_ctx, std::move(_receiver), _loc);
 	}
-	return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), std::move(_callValue), _loc);}
+	return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), std::move(_callValue), _loc);
+}
 
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	ContractContext& _ctx,
@@ -755,27 +543,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		return handleCallWithData(
 			_ctx, std::move(_receiver), _memberName, _callNode,
 			std::move(_callValue), _baseExpr, _loc);
-
-	if (_memberName == "staticcall")
-	{
-		auto precompileAddr = detectPrecompileAddress(_baseExpr);
-		if (precompileAddr && !_callNode.arguments().empty())
-		{
-			auto inputData = sol_ast::CallOperands::evaluate(_ctx, *_callNode.arguments()[0], _loc);
-			auto result = handleStaticCallPrecompile(_ctx, *precompileAddr, std::move(inputData), _loc);
-			if (result) return result;
-		}
-
-		// Hard error: stubbing as (true, "") would make require(ok) pass spuriously.
-		for (auto const& arg : _callNode.arguments())
-			_ctx.evaluateForEffects(*arg, _loc);
-		EvmFeaturePolicy::report(
-			EvmFeature::UnknownLowLevelCall,
-			_ctx.typeMapper.profile(), _loc);
-		return std::make_unique<GenericResultBuilder>(_ctx,
-			makeBoolBytesTuple(
-				false, awst::makeBytesConstant({}, _loc), _loc));
-	}
 
 	if (_memberName == "delegatecall")
 		return handleDelegatecall(_ctx, _callNode, _loc);

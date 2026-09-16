@@ -1,6 +1,7 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/storage/named/StoragePathWalker.h"
 #include "awst/NameGen.h"
+#include "awst/TupleValue.h"
 #include "builder/target/EvmLayoutMode.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "Logger.h"
@@ -19,19 +20,43 @@ namespace puyasol::builder
 namespace
 {
 
-std::shared_ptr<awst::Expression> getterFieldValue(
-	TypeMapper& types, solidity::frontend::Type const* solType,
-	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc)
+using Expr = std::shared_ptr<awst::Expression>;
+
+Expr packGetterValues(TypeMapper& types, std::vector<Expr> values,
+	awst::SourceLocation const& loc,
+	std::optional<std::vector<std::string>> names = std::nullopt)
 {
-	auto plan = planReturnElement(types, solType, abiReturnNativeType(types, solType));
-	return TypeCoercion::encodeReturnElement(
-		codec::valueFromArc4(types, solType, std::move(value), loc), plan, loc, false, false);
+	if (values.size() == 1) return std::move(values.front());
+	std::vector<awst::WType const*> fields;
+	for (auto const& value: values) fields.push_back(value->wtype);
+	auto tuple = awst::makeTupleExpression(
+		types.createType<awst::WTuple>(std::move(fields), std::move(names)), loc);
+	tuple->items = std::move(values);
+	return tuple;
+}
+
+/// Physical readers return native values; this one boundary owns cleanup,
+/// signed extension, and wire encoding for every getter shape.
+Expr finishGetterRead(TypeMapper& types, solidity::frontend::FunctionType const& getter,
+	Expr value, std::vector<std::shared_ptr<awst::Statement>>& pre,
+	awst::SourceLocation const& loc)
+{
+	auto const& returns = getter.returnParameterTypes();
+	auto values = returns.size() == 1 ? std::vector<Expr>{std::move(value)}
+		: awst::tupleItems(std::move(value), loc, &pre);
+	for (size_t i = 0; i < returns.size(); ++i)
+	{
+		auto plan = planReturnElement(types, returns[i], abiReturnNativeType(types, returns[i]));
+		values[i] = TypeCoercion::encodeReturnElement(
+			codec::valueFromArc4(types, returns[i], std::move(values[i]), loc), plan, loc);
+	}
+	return packGetterValues(types, std::move(values), loc, getter.returnParameterNames());
 }
 
 /// solc's getter FunctionType owns the projection, including one-field
 /// structs and hidden mapping/array members. The physical stored struct can
 /// still contain placeholders for members that are absent from this interface.
-std::vector<std::shared_ptr<awst::Expression>> projectStructFields(
+Expr projectStructFields(
 	TypeMapper& types, solidity::frontend::FunctionType const& getter,
 	awst::ARC4Struct const* stored, std::shared_ptr<awst::Expression> const& base,
 	std::vector<std::shared_ptr<awst::Statement>>& pre, awst::SourceLocation const& loc)
@@ -47,9 +72,9 @@ std::vector<std::shared_ptr<awst::Expression>> projectStructFields(
 				if (name == names[i]) { fieldType = type; break; }
 		auto field = StorageMapper::makePartialBoxReadWithDefault(types,
 			awst::makeFieldExpression(base, names[i], fieldType, loc), pre, loc);
-		items.push_back(getterFieldValue(types, returns[i], std::move(field), loc));
+		items.push_back(std::move(field));
 	}
-	return items;
+	return packGetterValues(types, std::move(items), loc);
 }
 
 // ── buildPublicStateVariableGetters branch builders ─────────────────────
@@ -103,7 +128,7 @@ std::shared_ptr<awst::Expression> buildSlotModeGetterRead(
 		{
 			auto idxRef = awst::makeVarExpression(
 				getter.args[ai].name, getter.args[ai].wtype, loc);
-			auto idx = TypeCoercion::implicitNumericCast(
+			auto idx = TypeCoercion::coerceScalar(
 				std::move(idxRef), awst::WType::biguintType(), loc);
 			std::shared_ptr<awst::Expression> dataBase;
 			std::shared_ptr<awst::Expression> lenExpr;
@@ -120,7 +145,7 @@ std::shared_ptr<awst::Expression> buildSlotModeGetterRead(
 			}
 			auto idxRef2 = awst::makeVarExpression(
 				getter.args[ai].name, getter.args[ai].wtype, loc);
-			auto idxCheck = TypeCoercion::implicitNumericCast(
+			auto idxCheck = TypeCoercion::coerceScalar(
 				std::move(idxRef2), awst::WType::biguintType(), loc);
 			auto cmp = awst::makeNumericCompare(std::move(idxCheck),
 				awst::NumericComparison::Lt, std::move(lenExpr), loc);
@@ -152,17 +177,9 @@ std::shared_ptr<awst::Expression> buildSlotModeGetterRead(
 			{
 				auto const* storedType = st->memberType(names[i]);
 				auto field = low.memberAddr(addr->slot, st, names[i], storedType);
-				items.push_back(getterFieldValue(tm, returns[i], low.readAny(field, storedType), loc));
+				items.push_back(low.readAny(field, storedType));
 			}
-			if (supported && items.size() == 1)
-				readExpr = std::move(items[0]);
-			else if (supported && !items.empty())
-			{
-				auto tuple = awst::makeTupleExpression(getter.returnType, loc);
-				for (auto& it3: items)
-					tuple->items.push_back(std::move(it3));
-				readExpr = std::move(tuple);
-			}
+			readExpr = packGetterValues(tm, std::move(items), loc);
 		}
 	}
 	// flush anything the lowering queued (index pins etc.)
@@ -196,36 +213,10 @@ std::shared_ptr<awst::Expression> buildConstantGetterRead(
 		readExpr = exprBuilder.buildExpr(*var->value());
 	if (!readExpr)
 		readExpr = TypeCoercion::makeDefaultValue(returnType, loc);
-	if (readExpr && readExpr->wtype != returnType)
-		readExpr = TypeCoercion::implicitNumericCast(
-			std::move(readExpr), returnType, loc
-		);
-	// String literal → bytes[N]: right-pad.
-	if (readExpr && readExpr->wtype != returnType)
-	{
-		auto const* bytesType = dynamic_cast<awst::BytesWType const*>(returnType);
-		if (bytesType && bytesType->length().has_value() && *bytesType->length() > 0)
-		{
-			if (auto padded = TypeCoercion::stringToBytesN(
-					readExpr.get(), returnType, *bytesType->length(), loc))
-				readExpr = std::move(padded);
-		}
-		else
-		{
-			// Generic ReinterpretCast for bytes-compatible coercions.
-			bool compat = readExpr->wtype == awst::WType::stringType()
-				|| (readExpr->wtype && readExpr->wtype->kind() == awst::WTypeKind::Bytes);
-			if (compat)
-			{
-				auto cast = awst::makeReinterpretCast(std::move(readExpr), returnType, loc);
-				readExpr = std::move(cast);
-			}
-		}
-	}
-	return readExpr;
+	return TypeCoercion::coerceScalar(std::move(readExpr), returnType, loc);
 }
 
-/// Simple state variable (no keys/indices): read from storage; struct getters project each field (sign-extending signed sub-word …
+/// Simple state variable (no keys/indices): read from storage and project struct fields.
 std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 	TypeMapper& tm,
 	StorageMapper& sm,
@@ -233,7 +224,6 @@ std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 	solidity::frontend::VariableDeclaration const& _var,
 	awst::ContractMethod const& getter,
 	size_t returnTypeCount,
-	unsigned signedGetterBits,
 	awst::Block& body,
 	awst::SourceLocation const& loc)
 {
@@ -242,9 +232,8 @@ std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 	// Simple state variable (no keys/indices): read from storage.
 	auto binding = sm.physicalBindingFor(*var);
 
-	// Struct getter: read the full ARC4Struct, project each field (sign-extending
-	// signed sub-word fields). Covers single-field structs too — they were read
-	// as a bare scalar and skipped per-field sign-extension.
+	// Single-field structs still need projection: their other stored members
+	// can be absent from solc's getter interface.
 	auto const* solStructType = dynamic_cast<solidity::frontend::StructType const*>(var->type());
 	if (solStructType && returnTypeCount >= 1)
 	{
@@ -252,25 +241,13 @@ std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 		auto fullStruct = sm.createStateRead(binding, loc);
 
 		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
-		auto items = projectStructFields(tm, *var->functionType(false), arc4Struct, fullStruct, body.body, loc);
-
-		// One returnable field keeps the scalar return type; >1 packs a tuple.
-		// Either way each field is sign-extended inside projectStructFields.
-		if (items.size() == 1)
-			readExpr = std::move(items[0]);
-		else
-		{
-			auto tuple = awst::makeTupleExpression(getter.returnType, loc);
-			for (auto& item: items)
-				tuple->items.push_back(std::move(item));
-			readExpr = std::move(tuple);
-		}
+		readExpr = projectStructFields(tm, *var->functionType(false),
+			arc4Struct, fullStruct, body.body, loc);
 	}
 	else
 	{
 		// Use original storage type (not promoted return type).
-		auto* readType = signedGetterBits > 0
-			? tm.map(var->type()) : getter.returnType;
+		auto* readType = tm.map(var->type());
 
 		// Transient vars: route through transient blob (same as named-var reads).
 		if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
@@ -365,16 +342,8 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 		// arrays) is still projected: decoding the whole placeholder-bearing
 		// element as that scalar returned nothing (`Pool[] public pools`).
 		auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(elemARC4);
-		auto items = projectStructFields(tm, *var->functionType(false), arc4Struct, result, body.body, loc);
-		if (items.size() == 1)
-			readExpr = std::move(items[0]);
-		else
-		{
-			auto tuple = awst::makeTupleExpression(getter.returnType, loc);
-			for (auto& item: items)
-				tuple->items.push_back(std::move(item));
-			readExpr = std::move(tuple);
-		}
+		readExpr = projectStructFields(tm, *var->functionType(false),
+			arc4Struct, result, body.body, loc);
 	}
 	else
 	{
@@ -512,20 +481,8 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 			std::shared_ptr<awst::Expression> fullStruct = std::move(indexed);
 			auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(fullStruct->wtype);
 
-			auto items = projectStructFields(
+			readExpr = projectStructFields(
 				tm, *var->functionType(false), arc4Struct, fullStruct, body.body, loc);
-
-			if (items.size() == 1)
-			{
-				readExpr = std::move(items[0]);
-			}
-			else
-			{
-				auto tuple = awst::makeTupleExpression(getter.returnType, loc);
-				for (auto& it : items)
-					tuple->items.push_back(std::move(it));
-				readExpr = std::move(tuple);
-			}
 		}
 		else
 		{
@@ -553,40 +510,24 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 
 /// ABI param validation for getter key params (sub-64-bit mapping keys) — reuses buildABIEntryChecks (same as the router), inserted …
 void prependGetterAbiChecks(
+	TypeMapper& types,
 	solidity::frontend::ContractDefinition const& _contract,
 	solidity::frontend::TypePointers const& solParamTypes,
 	std::vector<std::string> const& solParamNames,
 	awst::Block& body,
 	awst::SourceLocation const& loc)
 {
-	// ABI param validation for getter key params (sub-64-bit mapping keys).
-	bool getterV2 = true;
-	{
-		auto const& ann = _contract.sourceUnit().annotation();
-		if (ann.useABICoderV2.set())
-			getterV2 = *ann.useABICoderV2;
-	}
-	// Reuse buildABIEntryChecks (same as the router) inserted BEFORE key derivation.
-	// Sub-64-bit mapping keys (e.g. mapping(uint8=>V)) otherwise alias wrong slots.
-	// (Array-index params are uint256 and are unaffected.)
-	{
-		std::vector<ABIParamDesc> descs;
-		descs.reserve(solParamTypes.size());
-		for (size_t pi = 0; pi < solParamTypes.size(); ++pi)
-		{
-			std::string pname = (pi < solParamNames.size() && !solParamNames[pi].empty())
-				? solParamNames[pi] : "key" + std::to_string(pi);
-			descs.push_back({solParamTypes[pi], std::move(pname), loc});
-		}
-		// _enumChecksRequireV2=true: an auto-getter does not range-
-		// check enum keys under abicoder v1 (matches solc).
-		auto checks = buildABIEntryChecks(descs, getterV2, /*_enumChecksRequireV2=*/true);
-		body.body.insert(
-			body.body.begin(),
-			std::make_move_iterator(checks.begin()),
-			std::make_move_iterator(checks.end()));
-	}
-
+	if (types.profile().contractAbi == ContractAbi::Evm) return;
+	auto const& coder = _contract.sourceUnit().annotation().useABICoderV2;
+	bool const validate = types.profile().viaIRSequencing || !coder.set() || *coder;
+	std::vector<ABIParamDesc> descs;
+	for (size_t i = 0; i < solParamTypes.size(); ++i)
+		descs.push_back({solParamTypes[i],
+			i < solParamNames.size() && !solParamNames[i].empty()
+				? solParamNames[i] : "key" + std::to_string(i), loc});
+	// Unlike explicit functions, solc's v1 getters don't validate enum keys.
+	auto checks = buildABIEntryChecks(descs, validate, /*enumChecksRequireV2=*/true);
+	body.body.insert(body.body.begin(), checks.begin(), checks.end());
 }
 
 /// Remap biguint getter params to ARC4UIntN at the key's DECLARED width (not a blanket 256): explicit functions publish declared …
@@ -668,49 +609,12 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 		auto const& solReturnTypes = getterFuncType->returnParameterTypes();
 		auto const& solReturnNames = getterFuncType->returnParameterNames();
-		unsigned signedGetterBits = 0; // >0 for signed sub-256-bit returns
-		if (solReturnTypes.size() == 1)
-		{
-			getter.returnType = abiReturnNativeType(m_typeMapper, solReturnTypes[0]);
-			if (auto intInfo = builder::SolIntType::fromSol(solReturnTypes[0]))
-			{
-				// ANY signed sub-256 return must sign-extend to canonical 256-bit
-				// TC for the ABI. ≤64-bit is uint64-backed (override to biguint);
-				// 64<bits<256 already maps to biguint, but an ARRAY-ELEMENT / UDVT
-				// getter reads the element at its NATURAL width (int72 -1 = 2^72-1),
-				// which is NOT canonical — the old `<= 64` gate skipped sign-extension
-				// for those, so `int72[] public a; a(i)` returned 2^72-1 for -1.
-				// signExtendToUint256 is idempotent, so widening is safe for the
-				// already-canonical scalar case too. Found by the corpus-mutation
-				// fuzzer (userDefinedValueType/memory_to_storage uint16->int72).
-				if (intInfo->isSigned && intInfo->bits < 256)
-					signedGetterBits = intInfo->bits;
-			}
-		}
-		std::vector<awst::WType const*> tupleTypes;
-		std::vector<std::string> tupleNames;
-		if (solReturnTypes.size() == 1)
-		{
-			// handled above; the tuple vectors stay empty
-		}
-		else if (solReturnTypes.size() > 1)
-		{
-			for (size_t i = 0; i < solReturnTypes.size(); ++i)
-			{
-				// Signed sub-256 elements → biguint (256-bit), matching the value
-				// projectStructFields produces and an explicit signed tuple return.
-				tupleTypes.push_back(abiReturnNativeType(m_typeMapper, solReturnTypes[i]));
-				tupleNames.push_back(i < solReturnNames.size() ? solReturnNames[i] : "");
-			}
-			getter.returnType = m_typeMapper.createType<awst::WTuple>(
-				std::vector<awst::WType const*>(tupleTypes),
-				std::vector<std::string>(tupleNames)
-			);
-		}
-		else
-		{
-			return; // no return types — shouldn't happen for getters
-		}
+		if (solReturnTypes.empty()) return;
+		std::vector<awst::WType const*> returnTypes;
+		for (auto const* type: solReturnTypes)
+			returnTypes.push_back(abiReturnNativeType(m_typeMapper, type));
+		getter.returnType = returnTypes.size() == 1 ? returnTypes.front()
+			: m_typeMapper.createType<awst::WTuple>(std::move(returnTypes), solReturnNames);
 
 		auto body = awst::makeBlock(loc);
 
@@ -734,7 +638,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 		else if (getter.args.empty())
 			readExpr = buildSimpleGetterRead(
 				m_typeMapper, m_storageMapper, m_transientStorage, *var,
-				getter, solReturnTypes.size(), signedGetterBits, *body, loc);
+				getter, solReturnTypes.size(), *body, loc);
 		else if (dynamic_cast<solidity::frontend::ArrayType const*>(var->type())
 			&& !dynamic_cast<solidity::frontend::ArrayType const*>(var->type())->isByteArrayOrString()
 			&& getter.args.size() == 1)
@@ -746,44 +650,9 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				m_typeMapper, m_storageMapper, *var,
 				getter, solReturnTypes.size(), *body, loc);
 
-		if (signedGetterBits > 0 && readExpr) // sign-extend signed integer return
-		{
-			readExpr = TypeCoercion::signExtendToUint256(std::move(readExpr), signedGetterBits, loc);
-		}
-
-		prependGetterAbiChecks(_contract, solParamTypes, solParamNames, *body, loc);
-
-		if (solReturnTypes.size() == 1)
-		{
-			auto element = planReturnElement(m_typeMapper, solReturnTypes[0], getter.returnType);
-			element.isSigned = false; // getter reads already sign-extend
-			readExpr = TypeCoercion::encodeReturnElement(std::move(readExpr), element, loc);
-			getter.returnType = element.wireType;
-		}
-		else if (readExpr)
-		{
-			// Struct/tuple getters publish declared ABI widths per element, like
-			// the single-value path: a biguint-carried uint128 field was leaving
-			// as uint512 and a signed field as a 256-bit value inside a uint512.
-			std::vector<ReturnWireElem> plans;
-			for (size_t i = 0; i < solReturnTypes.size(); ++i)
-			{
-				auto element = planReturnElement(
-					m_typeMapper, solReturnTypes[i], tupleTypes[i]);
-				element.isSigned = false; // projected fields already sign-extend
-				plans.push_back(element);
-			}
-			std::vector<std::shared_ptr<awst::Statement>> prepend;
-			readExpr = TypeCoercion::encodeReturnValue(
-				m_typeMapper, std::move(readExpr), plans, loc, prepend);
-			for (auto& statement: prepend)
-				body->body.push_back(std::move(statement));
-			std::vector<awst::WType const*> wireTypes;
-			for (auto const& plan: plans)
-				wireTypes.push_back(plan.wireType);
-			getter.returnType = m_typeMapper.createType<awst::WTuple>(
-				std::move(wireTypes), std::vector<std::string>(tupleNames));
-		}
+		prependGetterAbiChecks(m_typeMapper, _contract, solParamTypes, solParamNames, *body, loc);
+		readExpr = finishGetterRead(m_typeMapper, *getterFuncType, std::move(readExpr), body->body, loc);
+		getter.returnType = readExpr->wtype;
 
 		auto ret = awst::makeReturnStatement(std::move(readExpr), loc);
 		body->body.push_back(std::move(ret));

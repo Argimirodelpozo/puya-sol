@@ -2,6 +2,7 @@
 /// Solidity enum type builder — enums encoded as uint64 on AVM.
 
 #include "builder/eb/SolEnumBuilder.h"
+#include "builder/eb/SolBoolBuilder.h"
 #include "awst/NameGen.h"
 
 namespace puyasol::builder::eb
@@ -50,16 +51,7 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 	case BuilderComparisonOp::Gte: cmpOp = awst::NumericComparison::Gte; break;
 	}
 	auto e = awst::makeNumericCompare(std::move(lhs), cmpOp, std::move(rhs), _loc);
-	return std::make_unique<SolEnumBuilder>(m_ctx, m_enumType, std::move(e));
-}
-
-std::unique_ptr<InstanceBuilder> SolEnumBuilder::bool_eval(
-	awst::SourceLocation const& _loc, bool _negate)
-{
-	auto zero = awst::makeZero(_loc);
-
-	auto cmp = awst::makeNumericCompare(resolve(), _negate ? awst::NumericComparison::Eq : awst::NumericComparison::Ne, std::move(zero), _loc);
-	return std::make_unique<SolEnumBuilder>(m_ctx, m_enumType, std::move(cmp));
+	return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
 }
 
 } // namespace puyasol::builder::eb

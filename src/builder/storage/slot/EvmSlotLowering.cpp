@@ -29,7 +29,7 @@ namespace
 
 VariableDeclaration const* referencedVar(Expression const& _e)
 {
-	auto const* id = dynamic_cast<Identifier const*>(&_e);
+	auto const* id = SolcFacts::expressionAs<Identifier>(&_e);
 	if (!id)
 		return nullptr;
 	return dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration);
@@ -99,12 +99,12 @@ bool EvmSlotLowering::isStorageStateRef(Expression const& _e)
 	for (;;)
 	{
 		cur = &SolcFacts::functionExpression(*cur);
-		if (auto const* ia = dynamic_cast<IndexAccess const*>(cur))
+		if (auto const* ia = SolcFacts::expressionAs<IndexAccess>(cur))
 		{
 			cur = &ia->baseExpression();
 			continue;
 		}
-		if (auto const* ma = dynamic_cast<MemberAccess const*>(cur))
+		if (auto const* ma = SolcFacts::expressionAs<MemberAccess>(cur))
 		{
 			// Contract-qualified state var (`C.x = g`): same slot as bare `x` —
 			// resolveMemberAccess handles it, so the shape test must admit it.
@@ -136,12 +136,12 @@ bool EvmSlotLowering::isSlotHandleRef(
 	Expression const* cur = &_e;
 	for (;;)
 	{
-		if (auto const* ia = dynamic_cast<IndexAccess const*>(cur))
+		if (auto const* ia = SolcFacts::expressionAs<IndexAccess>(cur))
 		{
 			cur = &ia->baseExpression();
 			continue;
 		}
-		if (auto const* ma = dynamic_cast<MemberAccess const*>(cur);
+		if (auto const* ma = SolcFacts::expressionAs<MemberAccess>(cur);
 			ma && dynamic_cast<StructType const*>(
 				ma->expression().annotation().type))
 		{
@@ -153,7 +153,7 @@ bool EvmSlotLowering::isSlotHandleRef(
 	// Named handles are registered when their declaration/call binding is
 	// lowered.  Do not infer from `storage` alone in the default profile: its
 	// ordinary representation may instead be an ARC4 value or box key.
-	if (auto const* id = dynamic_cast<Identifier const*>(cur))
+	if (auto const* id = SolcFacts::expressionAs<Identifier>(cur))
 	{
 		auto const* vd = dynamic_cast<VariableDeclaration const*>(
 			id->annotation().referencedDeclaration);
@@ -167,7 +167,7 @@ bool EvmSlotLowering::isSlotHandleRef(
 	// referenced declaration rather than
 	// the final element type, so every array rank and aggregate shape follows
 	// the same route.
-	if (auto const* call = dynamic_cast<FunctionCall const*>(cur))
+	if (auto const* call = SolcFacts::expressionAs<FunctionCall>(cur))
 	{
 		if (call->annotation().kind.set()
 			&& *call->annotation().kind == FunctionCallKind::TypeConversion
@@ -190,7 +190,7 @@ bool EvmSlotLowering::isSlotHandleRef(
 
 	// Ternaries preserve the slot representation only when both possible refs
 	// do.  Address resolution already gates each arm's effects correctly.
-	if (auto const* cond = dynamic_cast<Conditional const*>(cur))
+	if (auto const* cond = SolcFacts::expressionAs<Conditional>(cur))
 		return isSlotHandleRef(cond->trueExpression(), _ctx, _scope)
 			&& isSlotHandleRef(cond->falseExpression(), _ctx, _scope);
 
@@ -251,7 +251,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::mappingEntrySlot(
 		auto const* keyW = m_ctx.typeMapper.map(_keyType);
 		if (keyW && _key->wtype != keyW
 			&& (keyW == awst::WType::uint64Type() || keyW == awst::WType::biguintType()))
-			_key = TypeCoercion::implicitNumericCast(std::move(_key), keyW, m_loc);
+			_key = TypeCoercion::coerceScalar(std::move(_key), keyW, m_loc);
 		auto const* effW = _key->wtype;
 		if (auto it = SolIntType::fromSol(_keyType);
 			it && it->isSigned && it->bits < 256)
@@ -307,18 +307,18 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolve(Expression const& 
 {
 	auto const& expression = SolcFacts::functionExpression(_e);
 	if (&expression != &_e) return resolve(expression);
-	if (auto const* id = dynamic_cast<Identifier const*>(&_e))
+	if (auto const* id = SolcFacts::expressionAs<Identifier>(&_e))
 		return resolveIdentifier(*id);
-	if (auto const* ia = dynamic_cast<IndexAccess const*>(&_e))
+	if (auto const* ia = SolcFacts::expressionAs<IndexAccess>(&_e))
 		return resolveIndexAccess(*ia);
-	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_e))
+	if (auto const* ma = SolcFacts::expressionAs<MemberAccess>(&_e))
 		return resolveMemberAccess(*ma);
 	// Ternary of storage refs (`c ? a1 : a2`): resolve each arm in an isolated
 	// effect frame and gate its address-derivation effects with the condition.
 	// This is the same generic sequencing rule used by SolConditional, and lets
 	// indexed/mapped/member paths recurse here without evaluating the untaken
 	// arm (or adding another shape-specific allowance).
-	if (auto const* cond = dynamic_cast<Conditional const*>(&_e))
+	if (auto const* cond = SolcFacts::expressionAs<Conditional>(&_e))
 	{
 		auto condition = m_ctx.pinIfWriteBacks(
 			m_ctx.lower(cond->condition(), false), m_loc);
@@ -367,7 +367,7 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolve(Expression const& 
 	}
 	// Type conversion over a storage ref (`bytes(a)` on a storage string):
 	// same location, different label — peel it.
-	if (auto const* fc = dynamic_cast<FunctionCall const*>(&_e))
+	if (auto const* fc = SolcFacts::expressionAs<FunctionCall>(&_e))
 		if (fc->annotation().kind.set()
 			&& *fc->annotation().kind == FunctionCallKind::TypeConversion
 			&& !fc->arguments().empty() && isStorageTypedRoot(_e))
@@ -694,7 +694,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::coerceToNative(
 	bool targetNum = _a.wtype == awst::WType::uint64Type()
 		|| _a.wtype == awst::WType::biguintType();
 	if (valueNum && targetNum)
-		return TypeCoercion::implicitNumericCast(std::move(_value), _a.wtype, m_loc);
+		return TypeCoercion::coerceScalar(std::move(_value), _a.wtype, m_loc);
 	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_a.wtype);
 		bw && bw->length().has_value())
 		return TypeCoercion::relabelUnsizedBytes(std::move(_value), _a.wtype, m_loc);

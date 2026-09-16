@@ -199,14 +199,6 @@ std::shared_ptr<awst::Expression> buildStateVarRead(
 
 	auto binding = ctx.storageMapper.physicalBindingFor(varDecl);
 
-	// Dynamic arrays in box storage: placeholder
-	if (type && type->kind() == awst::WTypeKind::ReferenceArray
-		&& binding.kind == awst::AppStorageKind::Box)
-	{
-		auto placeholder = awst::makeVarExpression(name, type, loc);
-		return placeholder;
-	}
-
 	return ctx.storageMapper.createStateRead(
 		binding.key, type, binding.kind, loc);
 }

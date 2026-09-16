@@ -38,13 +38,6 @@ std::unique_ptr<InstanceBuilder> InstanceBuilder::compare(
 	return nullptr; // not implemented — caller tries reversed comparison
 }
 
-std::shared_ptr<awst::Statement> InstanceBuilder::augmented_assignment(
-	BuilderBinaryOp /*_op*/, InstanceBuilder& /*_rhs*/,
-	awst::SourceLocation const& /*_loc*/)
-{
-	return nullptr; // not supported
-}
-
 std::unique_ptr<NodeBuilder> InstanceBuilder::member_access(
 	std::string const& _name, awst::SourceLocation const& /*_loc*/)
 {
@@ -57,68 +50,6 @@ std::unique_ptr<InstanceBuilder> InstanceBuilder::index(
 	InstanceBuilder& /*_idx*/, awst::SourceLocation const& /*_loc*/)
 {
 	return nullptr; // type does not support indexing
-}
-
-std::unique_ptr<InstanceBuilder> InstanceBuilder::call(
-	std::vector<std::shared_ptr<awst::Expression>>& /*_args*/,
-	awst::SourceLocation const& /*_loc*/)
-{
-	return nullptr; // not callable
-}
-
-std::shared_ptr<awst::Expression> InstanceBuilder::to_bytes(
-	awst::SourceLocation const& /*_loc*/)
-{
-	return nullptr; // cannot convert to bytes
-}
-
-std::unique_ptr<InstanceBuilder> InstanceBuilder::bool_eval(
-	awst::SourceLocation const& /*_loc*/, bool /*_negate*/)
-{
-	// Default: treat as truthy. Concrete builders override for proper bool evaluation.
-	return nullptr;
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// TypeBuilder defaults
-// ─────────────────────────────────────────────────────────────────────
-
-std::unique_ptr<InstanceBuilder> TypeBuilder::try_convert(
-	std::shared_ptr<awst::Expression> /*_expr*/,
-	awst::SourceLocation const& /*_loc*/)
-{
-	return nullptr; // conversion not supported by default
-}
-
-std::unique_ptr<NodeBuilder> TypeBuilder::member_access(
-	std::string const& _name, awst::SourceLocation const& /*_loc*/)
-{
-	Logger::instance().warning("unrecognised member '" + _name + "' on type expression");
-	return nullptr;
-}
-
-std::unique_ptr<InstanceBuilder> TypeBuilder::bool_eval(
-	awst::SourceLocation const& /*_loc*/, bool /*_negate*/)
-{
-	// Type expressions are always truthy. TODO: return SolBoolBuilder when wired up.
-	return nullptr;
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// CallableBuilder defaults
-// ─────────────────────────────────────────────────────────────────────
-
-std::unique_ptr<NodeBuilder> CallableBuilder::member_access(
-	std::string const& _name, awst::SourceLocation const& /*_loc*/)
-{
-	Logger::instance().warning("no member '" + _name + "' on callable");
-	return nullptr;
-}
-
-std::unique_ptr<InstanceBuilder> CallableBuilder::bool_eval(
-	awst::SourceLocation const& /*_loc*/, bool /*_negate*/)
-{
-	return nullptr; // callables are always truthy
 }
 
 } // namespace puyasol::builder::eb

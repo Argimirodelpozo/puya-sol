@@ -145,4 +145,35 @@ ApplicationCall::Expr ApplicationCall::splitPayload(TypeMapper& types, Expr byte
 	return tuple;
 }
 
+ApplicationCall::Expr ApplicationCall::staticContext(TypeMapper& types, awst::SourceLocation const& loc)
+{
+	types.artifacts().usesStaticContext = true;
+	return awst::makeIntrinsicCall("load", awst::WType::uint64Type(), loc, {ScratchLayout::staticContextSlot});
+}
+
+ApplicationCall::Expr ApplicationCall::withStaticContext(TypeMapper& types, Expr value,
+	bool staticCall, awst::SourceLocation const& loc, Statements& out)
+{
+	if (!staticCall) return value;
+	auto saved = awst::makeVarExpression("__static_context_" + std::to_string(
+		awst::NameGen::next("ApplicationCall.staticContext")), awst::WType::uint64Type(), loc);
+	out.push_back(awst::makeAssignmentStatement(saved, staticContext(types, loc), loc));
+	out.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(
+		ScratchLayout::staticContextSlot, awst::makeIntegerConstant("1", loc), loc), loc));
+	if (value->wtype == awst::WType::voidType())
+	{
+		out.push_back(awst::makeExpressionStatement(std::move(value), loc));
+		value = awst::makeVoidConstant(loc);
+	}
+	else
+	{
+		auto result = awst::makeVarExpression(saved->name + "_result", value->wtype, loc);
+		out.push_back(awst::makeAssignmentStatement(result, std::move(value), loc));
+		value = std::move(result);
+	}
+	out.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(
+		ScratchLayout::staticContextSlot, std::move(saved), loc), loc));
+	return value;
+}
+
 } // namespace puyasol::builder

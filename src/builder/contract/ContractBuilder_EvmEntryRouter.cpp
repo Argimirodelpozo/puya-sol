@@ -7,10 +7,13 @@
 
 #include "Logger.h"
 #include "builder/context/ProgramAnalysis.h"
+#include "builder/context/BuildArtifacts.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/codec/EvmAbiDecode.h"
+#include "builder/lowering/itxn/ApplicationCall.h"
 #include "builder/codec/EvmAbiEncode.h"
 #include "builder/codec/EvmValueCodec.h"
+#include "builder/codec/SelectorSemantics.h"
 #include "builder/solc/OverloadSuffix.h"
 #include "builder/types/TypeMapper.h"
 
@@ -182,7 +185,7 @@ void synthesizeEvmEntryHelpers(
 struct EvmRoute
 {
 	FunctionType const* function = nullptr;
-	awst::ContractMethod* method = nullptr;
+	size_t methodIndex = 0;
 	std::vector<uint8_t> selector;
 };
 
@@ -269,7 +272,7 @@ std::vector<EvmRoute> collectEvmRoutes(
 			if (blocked)
 				continue;
 		}
-		routes.push_back({function, method,
+		routes.push_back({function, static_cast<size_t>(method - contract.methods.data()),
 			SolcFacts::externalSelector(*function)});
 	}
 	return routes;
@@ -278,14 +281,14 @@ std::vector<EvmRoute> collectEvmRoutes(
 /// Group key for a route's return tail: canonical Solidity return signature
 /// + the method's wire return WType identity (createType canonicalizes, so
 /// pointer equality is type equality).
-std::string evmRetTailKey(EvmRoute const& route)
+std::string evmRetTailKey(EvmRoute const& route, awst::Contract const& contract)
 {
 	std::string key;
 	for (auto const* type: route.function->returnParameterTypes())
 		key += type->canonicalName() + ",";
 	key += "#";
 	key += std::to_string(
-		reinterpret_cast<uintptr_t>(route.method->returnType));
+		reinterpret_cast<uintptr_t>(contract.methods.at(route.methodIndex).returnType));
 	return key;
 }
 
@@ -298,7 +301,7 @@ std::string evmRetTailKey(EvmRoute const& route)
 std::map<std::string, std::string> synthesizeEvmReturnTails(
 	TypeMapper& typeMapper,
 	awst::Contract& contract,
-	std::vector<EvmRoute> const& probeRoutes,
+	std::vector<EvmRoute> const& routes,
 	awst::SourceLocation const& loc)
 {
 	struct TailSpec
@@ -308,13 +311,13 @@ std::map<std::string, std::string> synthesizeEvmReturnTails(
 		int uses = 0;
 	};
 	std::map<std::string, TailSpec> groups;
-	for (auto const& route: probeRoutes)
+	for (auto const& route: routes)
 	{
-		auto& spec = groups[evmRetTailKey(route)];
+		auto& spec = groups[evmRetTailKey(route, contract)];
 		if (spec.uses == 0)
 		{
 			spec.returnTypes = route.function->returnParameterTypes();
-			spec.retW = route.method->returnType;
+			spec.retW = contract.methods.at(route.methodIndex).returnType;
 		}
 		spec.uses++;
 	}
@@ -375,14 +378,16 @@ std::map<std::string, std::string> synthesizeEvmReturnTails(
 /// spend ~half its program on sequential selector compares.
 std::shared_ptr<awst::Block> buildEvmArmBody(
 	TypeMapper& typeMapper,
+	awst::Contract const& contract,
 	EvmRoute const& route,
 	std::map<std::string, std::string> const& retTails,
-	awst::SourceLocation const& loc)
+	awst::SourceLocation const& loc,
+	std::shared_ptr<awst::Expression> selfPayload = nullptr)
 {
 	auto const& paramTypes = route.function->parameterTypes();
 	auto const& returnTypes = route.function->returnParameterTypes();
 	auto body = awst::makeBlock(loc);
-	if (!route.function->isPayable())
+	if (!selfPayload && !route.function->isPayable())
 		emitNonPayableCall(loc, body->body);
 
 	std::vector<std::shared_ptr<awst::Expression>> values;
@@ -399,8 +404,10 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 			decodedType = typeMapper.createType<awst::WTuple>(
 				std::move(tupleTypes));
 		}
-		auto decoded = abi::decodeEvmCalldata(
-			typeMapper, paramTypes, decodedType, loc, body->body);
+		auto decoded = selfPayload
+			? abi::decodeEvmAbi(typeMapper, awst::makeExtract(selfPayload, 4, 0, loc),
+				paramTypes, decodedType, loc, body->body)
+			: abi::decodeEvmCalldata(typeMapper, paramTypes, decodedType, loc, body->body);
 		if (paramTypes.size() == 1)
 			values.push_back(std::move(decoded));
 		else
@@ -414,17 +421,28 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 	}
 
 	auto call = awst::makeSubroutineCall(
-		awst::InstanceMethodTarget{route.method->memberName},
-		route.method->returnType, loc);
+		awst::InstanceMethodTarget{contract.methods.at(route.methodIndex).memberName},
+		contract.methods.at(route.methodIndex).returnType, loc);
 	for (size_t i = 0; i < values.size(); ++i)
 	{
 		auto value = std::move(values[i]);
-		auto const* expected = i < route.method->args.size()
-			? route.method->args[i].wtype : value->wtype;
+		auto const* expected = i < contract.methods.at(route.methodIndex).args.size()
+			? contract.methods.at(route.methodIndex).args[i].wtype : value->wtype;
 		if (value->wtype != expected)
 			value = codec::valueToArc4(
 				typeMapper, paramTypes[i], std::move(value), expected, loc);
 		awst::pushCallArg(call->args, std::move(value));
+	}
+
+	if (selfPayload)
+	{
+		auto bytes = ApplicationCall::setTypedReturnData(typeMapper, call,
+			returnTypes, true, loc, body->body);
+		auto result = awst::makeTupleExpression(typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>{awst::WType::boolType(), awst::WType::bytesType()}), loc);
+		result->items = {awst::makeTrue(loc), std::move(bytes)};
+		body->body.push_back(awst::makeReturnStatement(std::move(result), loc));
+		return body;
 	}
 
 	if (returnTypes.empty())
@@ -439,7 +457,7 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 
 	// Shared tail: `callsub __evm_ret<i>` replaces the inline encode+log
 	// epilogue for return shapes used by 2+ arms.
-	if (auto tailIt = retTails.find(evmRetTailKey(route));
+	if (auto tailIt = retTails.find(evmRetTailKey(route, contract));
 		tailIt != retTails.end())
 	{
 		auto tailCall = awst::makeSubroutineCall(
@@ -460,7 +478,7 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 	{
 		auto once = awst::makeEvalOnce(call, loc);
 		auto const* tuple = dynamic_cast<awst::WTuple const*>(
-			route.method->returnType);
+			contract.methods.at(route.methodIndex).returnType);
 		for (size_t i = 0; i < returnTypes.size(); ++i)
 			returnValues.push_back(awst::makeTupleItem(
 				once, static_cast<int>(i), tuple->types()[i], loc));
@@ -479,6 +497,7 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 /// to whatever dispatch follows, exactly like the old per-arm if-chain.
 void emitEvmArmSwitch(
 	TypeMapper& typeMapper,
+	awst::Contract const& contract,
 	std::vector<EvmRoute> const& routes,
 	std::map<std::string, std::string> const& retTails,
 	std::vector<std::shared_ptr<awst::Statement>>& sink,
@@ -493,7 +512,7 @@ void emitEvmArmSwitch(
 		switchNode->cases.emplace_back(
 			awst::makeBytesConstant(route.selector, loc,
 				awst::BytesEncoding::Base16, awst::WType::bytesType()),
-			buildEvmArmBody(typeMapper, route, retTails, loc));
+			buildEvmArmBody(typeMapper, contract, route, retTails, loc));
 	auto guarded = awst::makeBlock(loc);
 	// xchain account model: ApplicationArgs[2] is an OPTIONAL 20-byte owner
 	// claim. Verify it ONCE here — the claimed identity must own THIS sender:
@@ -538,6 +557,69 @@ void emitEvmArmSwitch(
 }
 }
 
+void ContractBuilder::emitSelfCallDispatch(
+	ContractDefinition const& definition, awst::Contract& contract)
+{
+	if (!m_typeMapper.artifacts().contract().needsSelfCallDispatch) return;
+	auto const loc = contract.approvalProgram.sourceLocation;
+	auto const* resultType = m_typeMapper.createType<awst::WTuple>(
+		std::vector<awst::WType const*>{awst::WType::boolType(), awst::WType::bytesType()});
+	auto method = awst::ContractMethod(contract.id, "__puyasol_self_call", resultType,
+		{{"__payload", awst::WType::bytesType(), loc}}, loc);
+	auto payload = awst::makeVarExpression("__payload", awst::WType::bytesType(), loc);
+	auto finish = [&](std::shared_ptr<awst::Block> block, bool success,
+		std::shared_ptr<awst::Expression> bytes) {
+		auto result = awst::makeTupleExpression(resultType, loc);
+		result->items = {awst::makeBoolConstant(success, loc),
+			ApplicationCall::setReturnData(m_typeMapper, std::move(bytes), loc, block->body)};
+		block->body.push_back(awst::makeReturnStatement(std::move(result), loc));
+	};
+	auto fallback = [&](FunctionDefinition const* function) {
+		auto block = awst::makeBlock(loc);
+		auto bytes = std::shared_ptr<awst::Expression>(awst::makeBytesConstant({}, loc));
+		if (function)
+		{
+			auto const name = function->isReceive() ? "__receive" : "__fallback";
+			auto const* target = findMethod(contract, name);
+			if (!target) throw std::logic_error("Missing self-call fallback method");
+			auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{name}, target->returnType, loc);
+			if (!function->parameters().empty()) awst::pushCallArg(call->args, payload);
+			if (function->returnParameters().empty())
+				block->body.push_back(awst::makeExpressionStatement(std::move(call), loc));
+			else bytes = std::move(call);
+		}
+		finish(block, function != nullptr, std::move(bytes));
+		return block;
+	};
+	// solc's dispatcher selects receive only for EMPTY calldata, then fallback.
+	auto const* receive = definition.receiveFunction();
+	auto const* fallbackFunction = definition.fallbackFunction();
+	method.body->body.push_back(awst::makeIfElse(awst::makeNumericCompare(
+		awst::makeLen(payload, loc), awst::NumericComparison::Eq, awst::makeZero(loc), loc),
+		fallback(receive ? receive : fallbackFunction), nullptr, loc));
+
+	auto routes = collectEvmRoutes(definition, contract, m_overloadedNames, loc,
+		m_typeMapper.profile().contractAbi != ContractAbi::Evm);
+	auto dispatch = std::make_shared<awst::Switch>();
+	dispatch->sourceLocation = loc;
+	dispatch->value = awst::makeExtract(payload, 0, 4, loc);
+	if (m_typeMapper.profile().contractAbi == ContractAbi::Arc4 && !m_typeMapper.profile().evmSelectors)
+		dispatch->value = SelectorSemantics::translateRuntimeSelector(
+			dispatch->value, SelectorSemantics::routes(*m_exprBuilder), loc);
+	for (auto const& route: routes)
+		dispatch->cases.emplace_back(awst::makeBytesConstant(route.selector, loc),
+			buildEvmArmBody(m_typeMapper, contract, route, {}, loc, payload));
+	auto guarded = awst::makeBlock(loc);
+	guarded->body.push_back(std::move(dispatch));
+	method.body->body.push_back(awst::makeIfElse(awst::makeNumericCompare(
+		awst::makeLen(payload, loc), awst::NumericComparison::Gte, u64(4, loc), loc),
+		std::move(guarded), nullptr, loc));
+	auto fallbackBody = fallback(fallbackFunction);
+	for (auto& statement: fallbackBody->body)
+		method.body->body.push_back(std::move(statement));
+	contract.methods.push_back(std::move(method));
+}
+
 void ContractBuilder::emitEvmEntryDispatch(
 	ContractDefinition const& contractDefinition,
 	awst::Contract& contract)
@@ -547,25 +629,15 @@ void ContractBuilder::emitEvmEntryDispatch(
 		return;
 	auto const& loc = approval.sourceLocation;
 
-	// Synthesize helpers BEFORE collecting routes: collectEvmRoutes stores
-	// ContractMethod pointers, and appending methods afterwards could
-	// reallocate the vector under them.
+	// Routes retain indices; helper emission may freely grow methods.
 	synthesizeEvmEntryHelpers(contract, loc);
-	// Probe pass (quiet) just to group return shapes; the tail subs it
-	// appends would invalidate route pointers, so the REAL collect follows.
-	std::map<std::string, std::string> retTails;
-	{
-		auto probe = collectEvmRoutes(
-			contractDefinition, contract, m_overloadedNames, loc,
-			/*quiet=*/true, nullptr);
-		retTails = synthesizeEvmReturnTails(m_typeMapper, contract, probe, loc);
-	}
 	auto routes = collectEvmRoutes(
 		contractDefinition, contract, m_overloadedNames, loc, /*quiet=*/false);
+	auto retTails = synthesizeEvmReturnTails(m_typeMapper, contract, routes, loc);
 	// The methods remain ordinary callable subroutines, but are no longer
 	// advertised to or dispatched by puya's ARC4 router.
 	for (auto const& route: routes)
-		route.method->arc4MethodConfig.reset();
+		contract.methods.at(route.methodIndex).arc4MethodConfig.reset();
 
 	// Solidity fallback/receive are owned by this adapter as well. Their full
 	// forwarding behavior is added below; suppress accidental ARC4 exposure.
@@ -638,7 +710,7 @@ void ContractBuilder::emitEvmEntryDispatch(
 			std::move(condition), std::move(body), nullptr, loc));
 	}
 
-	emitEvmArmSwitch(m_typeMapper, routes, retTails, approval.body->body, loc);
+	emitEvmArmSwitch(m_typeMapper, contract, routes, retTails, approval.body->body, loc);
 
 	// Unmatched non-empty calldata selects fallback(). Reconstruct exactly the
 	// Solidity byte stream from the AVM carrier split: selector ++ ABI body.
@@ -691,20 +763,12 @@ void ContractBuilder::emitEvmCompatRoutes(
 	// before. arc4MethodConfigs are NOT reset — ARC-4 stays the primary
 	// transport; methods whose types cannot round-trip the EVM codec simply
 	// have no alias (quiet mode) and keep their ARC-4 route.
-	// Helpers go in BEFORE route collection (pointer stability, see
-	// emitEvmEntryDispatch); puya strips them when no arm ends up calling.
 	synthesizeEvmEntryHelpers(contract, loc);
-	std::map<std::string, std::string> retTails;
-	{
-		auto probe = collectEvmRoutes(
-			contractDefinition, contract, m_overloadedNames, loc,
-			/*quiet=*/true, &m_typeMapper.analysis());
-		retTails = synthesizeEvmReturnTails(m_typeMapper, contract, probe, loc);
-	}
 	auto routes = collectEvmRoutes(
 		contractDefinition, contract, m_overloadedNames, loc, /*quiet=*/true,
 		&m_typeMapper.analysis());
-	emitEvmArmSwitch(m_typeMapper, routes, retTails, approval.body->body, loc);
+	auto retTails = synthesizeEvmReturnTails(m_typeMapper, contract, routes, loc);
+	emitEvmArmSwitch(m_typeMapper, contract, routes, retTails, approval.body->body, loc);
 }
 
 } // namespace puyasol::builder

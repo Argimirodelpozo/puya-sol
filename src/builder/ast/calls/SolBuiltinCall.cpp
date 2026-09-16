@@ -1,4 +1,5 @@
 #include "builder/ast/calls/SolBuiltinCall.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/lowering/intrinsics/Ripemd160Builder.h"
 #include "builder/context/BuildArtifacts.h"
 #include "builder/target/EvmFeaturePolicy.h"
@@ -52,7 +53,7 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		{
 			auto const* arg = m_call.arguments()[0].get();
 			bool isEmpty = false;
-			if (auto const* strLit = dynamic_cast<solidity::frontend::Literal const*>(arg))
+			if (auto const* strLit = SolcFacts::expressionAs<solidity::frontend::Literal>(arg))
 			{
 				if ((strLit->token() == solidity::frontend::Token::StringLiteral
 					|| strLit->token() == solidity::frontend::Token::HexStringLiteral)
@@ -144,13 +145,13 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 		return result;
 	}
 
-	// All other builtins: delegate to BuiltinCallableRegistry
-	eb::BuiltinCallableRegistry registry;
+	// CallOperands owns legacy/via-IR argument sequencing.
 	auto args = CallOperands::build(m_ctx, m_call, m_loc);
-
-	auto result = registry.tryCall(m_ctx, m_builtinName, args, m_loc);
+	auto const& function = dynamic_cast<solidity::frontend::FunctionType const&>(
+		*m_call.expression().annotation().type);
+	auto result = eb::buildBuiltinCall(m_ctx, function.kind(), std::move(args), m_loc);
 	if (result)
-		return result->resolve();
+		return result;
 
 	Logger::instance().error("unhandled builtin: " + m_builtinName, m_loc);
 	auto vc = awst::makeVoidConstant(m_loc);
