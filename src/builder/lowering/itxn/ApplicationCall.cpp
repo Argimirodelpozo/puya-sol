@@ -1,4 +1,5 @@
 #include "builder/lowering/itxn/ApplicationCall.h"
+#include "builder/lowering/itxn/NativePayment.h"
 #include "builder/target/ApplicationTarget.h"
 #include "builder/context/BuildArtifacts.h"
 #include "builder/types/TypeMapper.h"
@@ -10,6 +11,30 @@
 
 namespace puyasol::builder
 {
+
+ApplicationCall::Expr ApplicationCall::encodeArguments(TypeMapper& types, Expr selector,
+	std::vector<solidity::frontend::Type const*> const& parameters,
+	std::vector<Expr> values, awst::SourceLocation const& loc, Statements& out)
+{
+	assert(parameters.size() == values.size());
+	auto arguments = awst::makeTupleExpression(nullptr, loc);
+	arguments->items.push_back(std::move(selector));
+	if (types.profile().contractAbi == ContractAbi::Evm)
+		arguments->items.push_back(abi::encodeEvmAbi(types, parameters, std::move(values), loc, out));
+	else
+		for (size_t i = 0; i < values.size(); ++i)
+		{
+			// Public parameters use call-boundary carriers, not aggregate widths.
+			CallParameterPlan parameter;
+			parameter.type = values[i]->wtype;
+			parameter.setAbiWireType(types, parameters[i]);
+			arguments->items.push_back(awst::makeAsBytes(codec::valueToArc4(types, parameters[i],
+				std::move(values[i]), types.mapToARC4Type(parameter.wireType), loc), loc));
+		}
+	arguments->wtype = types.createType<awst::WTuple>(
+		std::vector<awst::WType const*>(arguments->items.size(), awst::WType::bytesType()));
+	return arguments;
+}
 
 ApplicationCall::Expr ApplicationCall::submit(TypeMapper& types, Expr receiver,
 	Expr arguments, Expr payment, awst::SourceLocation const& loc, Statements& out)
@@ -37,7 +62,7 @@ void ApplicationCall::submitOnly(TypeMapper& types, Expr receiver,
 }
 
 ApplicationCall::Expr ApplicationCall::submitRaw(TypeMapper& types, Expr receiver,
-	Expr bytes, Expr payment, awst::SourceLocation const& loc, Statements& out)
+	Expr bytes, Expr amount, awst::SourceLocation const& loc, Statements& out)
 {
 	auto input = awst::makeVarExpression("__raw_input_" + std::to_string(
 		awst::NameGen::next("ApplicationCall.rawInput")), awst::WType::bytesType(), loc);
@@ -49,14 +74,14 @@ ApplicationCall::Expr ApplicationCall::submitRaw(TypeMapper& types, Expr receive
 		return local;
 	};
 	receiver = pin(std::move(receiver));
-	if (auto create = std::dynamic_pointer_cast<awst::CreateInnerTransaction>(payment))
-		for (auto& [name, field]: create->fields) field = pin(std::move(field));
+	if (amount) amount = pin(std::move(amount));
 	auto empty = awst::makeBlock(loc), nonEmpty = awst::makeBlock(loc);
-	submitOnly(types, receiver, nullptr, payment, loc, empty->body);
-	submitOnly(types, receiver, splitPayload(types, input, loc), payment, loc, nonEmpty->body);
+	empty->body.push_back(buildNativeTransfer(types, empty->body, receiver, amount, loc));
+	auto payment = amount ? buildNativePayment(types.profile(), nonEmpty->body, receiver, amount, loc) : nullptr;
+	submit(types, receiver, splitPayload(types, input, loc), std::move(payment), loc, nonEmpty->body);
 	out.push_back(awst::makeIfElse(awst::makeNumericCompare(awst::makeLen(input, loc),
 		awst::NumericComparison::Eq, awst::makeZero(loc), loc), std::move(empty), std::move(nonEmpty), loc));
-	return capture(types, loc, out);
+	return pin(returnData(types, loc));
 }
 
 ApplicationCall::Expr ApplicationCall::capture(TypeMapper& types,

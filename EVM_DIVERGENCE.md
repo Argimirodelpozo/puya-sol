@@ -80,11 +80,12 @@ but AVM still rejects self inner transactions: only statically resolved self
 calls use the existing direct-subroutine rewrite. This does not expand native
 payment permissions or waive the xchain/account-mapping opt-in.
 
-`transfer` and `send` to a contract-convention receiver submit a grouped payment
-and zero-argument application call, executing `receive()` or `fallback()` even
-at zero value. Receiver rejection aborts the group (including `send`, which
-cannot catch an inner failure). These calls use AVM fees/opcode budgets, not the
-EVM 2,300-gas stipend. Ordinary accounts receive only a payment; child funding
+`transfer`, `send` and empty-data calls with `{value: ...}` to a contract-convention
+receiver submit a grouped payment and zero-argument application call, executing
+`receive()` or `fallback()` even at zero value. Receiver rejection aborts the
+group (including `send`, which cannot catch an inner failure). These calls use
+AVM fees/opcode budgets, not the EVM 2,300-gas stipend. Ordinary accounts receive
+only a payment; child funding
 and high-level `selfdestruct` payouts do not invoke receiver code.
 
 **The xchain account model provides a spendable mapping**
@@ -150,9 +151,9 @@ recovery failures can still abort in the AVM intrinsic.
 Yul calls keep the complete supported result in a separate return-data buffer
 and copy only `min(output length, result length)` bytes into memory; the remaining
 destination bytes are unchanged. Empty raw Yul application calls invoke
-`receive()`/`fallback()`, including value-bearing calls. This differs from the
-existing high-level empty value-call adaptation described below. Both precompile
-adapters replace the return-data buffer, including when the result is empty.
+`receive()`/`fallback()`, including value-bearing calls, using the same transport
+as high-level empty calls. Both precompile adapters replace the return-data
+buffer, including when the result is empty.
 
 Modeled external self-calls also replace that buffer, including void calls,
 getters and external function-pointer dispatch. The EVM profile and explicitly
@@ -216,17 +217,18 @@ ABI round trips still require `--evm-selectors` to retain the EVM selector.
   is already executing (A→B→A aborts), where the EVM allows it. Contracts
   RELYING on reentrancy cannot be expressed; reentrancy-guarded code is
   unaffected.
-- Low-level calls (`t.call`/`staticcall`, any calldata incl. empty): submit a
+- Low-level calls (`t.call`/`staticcall`) to application targets submit a
   real inner app call and require `--allow-divergence
   low-level-call-outcome`; `staticcall` additionally warns about the missing
-  read-only guarantee. Two consequences vs the EVM: a REJECTED call
-  aborts the whole transaction (`ok == false` is not catchable), and a
-  CODELESS target aborts where the EVM silently succeeds with
-  `(true, "")` — fabricating that success would let error handling pass
-  spuriously. Zero-value `t.call("")` on a real contract executes the
-  callee's `receive()`/`fallback()` like solc (zero-arg app call).
-  Solidity `{value:}` + empty calldata stays a bare payment: the receive BODY does
-  not run (see the value-transfer section above).
+  read-only guarantee. A rejected inner call aborts the whole transaction
+  (`ok == false` is not catchable). Nonempty data still requires an application
+  target; an ordinary account cannot consume it as an application call.
+  Empty data executes an application's `receive()`/`fallback()`, including
+  explicit zero value and runtime-empty payloads. Ordinary accounts receive
+  only the optional payment; a no-value empty call succeeds without an inner
+  transaction. Every successful path replaces the return-data buffer, including
+  clearing it for an ordinary account. The value-transfer permissions above
+  still apply, and a nonexistent encoded application ID is not an account.
 - Default-layout storage uses [versioned holder keys](docs/storage-format.md),
   not EVM slot arithmetic. ARC-56 records exact roots, not prefix maps for
   hash-derived entries. Existing deployments require their original artifacts.

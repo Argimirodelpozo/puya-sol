@@ -143,21 +143,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 	return tuple;
 }
 
-std::shared_ptr<awst::Expression> TypeCoercion::calldataPointerValueRead(
-	std::string const& _name,
-	awst::SourceLocation const& _loc
-)
-{
-	auto off = coerceScalar(
-		awst::makeVarExpression("__cd_off_" + _name, awst::WType::biguintType(), _loc),
-		awst::WType::uint64Type(), _loc);
-	auto len = coerceScalar(
-		awst::makeVarExpression("__cd_len_" + _name, awst::WType::biguintType(), _loc),
-		awst::WType::uint64Type(), _loc);
-	return awst::makeExtract3(
-		awst::makeVarExpression("__cd_blob", awst::WType::bytesType(), _loc),
-		std::move(off), std::move(len), _loc);
-}
+
 
 std::shared_ptr<awst::Expression> TypeCoercion::signExtendToUint256(
 	std::shared_ptr<awst::Expression> _value,

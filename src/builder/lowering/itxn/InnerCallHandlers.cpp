@@ -60,39 +60,6 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::makeBoolBytesTupleEmpty(
 	return makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc);
 }
 
-std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
-	ContractContext& _ctx,
-	std::shared_ptr<awst::Expression> _argExpr,
-	solidity::frontend::Type const* _sourceSolType,
-	solidity::frontend::Type const* _paramSolType,
-	awst::SourceLocation const& _loc)
-{
-	using namespace solidity::frontend;
-	// Slot mode: a storage-ref arg bound to a VALUE param materializes before
-	// conversion — the raw slot handle padded to 32 bytes otherwise BECOMES
-	// the encoded arg (callee's ARC-4 length assert rejects it).
-	if (_argExpr && _paramSolType)
-		_argExpr = sol_ast::EvmSlotLowering::materializeRefValue(
-			_ctx, std::move(_argExpr), _sourceSolType,
-			_ctx.typeMapper.map(_paramSolType), _loc);
-	if (_paramSolType)
-		_argExpr = builder::ConversionPlan{
-			_sourceSolType,
-			_paramSolType,
-			_ctx.typeMapper.map(_paramSolType),
-			builder::ConversionPlan::Context::AbiArgument}.emit(
-				std::move(_argExpr), _loc);
-
-	// The public call-boundary plan owns native-vs-wire widths. In particular,
-	// uint8 parameters use a uint64 carrier, unlike uint8 inside an aggregate.
-	CallParameterPlan parameter;
-	parameter.type = _argExpr->wtype;
-	parameter.setAbiWireType(_ctx.typeMapper, _paramSolType);
-	auto const* wire = _ctx.typeMapper.mapToARC4Type(parameter.wireType);
-	return awst::makeAsBytes(codec::valueToArc4(_ctx.typeMapper, _paramSolType,
-		std::move(_argExpr), wire, _loc), _loc);
-}
-
 std::vector<std::shared_ptr<awst::Expression>> InnerCallHandlers::lowerArguments(
 	ContractContext& _ctx,
 	std::vector<solidity::frontend::ASTPointer<
@@ -194,16 +161,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
 {
 	EvmFeaturePolicy::report(
 		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
-	auto create = buildNativePayment(_ctx.typeMapper.profile(), _ctx.preEffects(),
-		std::move(_receiver), std::move(_amount), _loc);
-	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
-	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
-	submit->itxns.push_back(std::move(create));
-
-	auto stmt = awst::makeExpressionStatement(submit, _loc);
-	_ctx.postEffects().push_back(std::move(stmt));
-
-	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
+	_ctx.preEffects().push_back(buildNativeTransfer(_ctx.typeMapper, _ctx.preEffects(),
+		std::move(_receiver), std::move(_amount), _loc));
+	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTuple(true,
+		_ctx.emitSequencedOperand({}, ApplicationCall::returnData(_ctx.typeMapper, _loc), true, _loc), _loc));
 }
 
 // ── .call(abi.encodeCall(...)) ──
@@ -455,12 +416,12 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 		auto const& parameters = function->parameterTypes();
 		std::vector<awst::WType const*> nativeTypes;
 		for (auto const* parameter: parameters) nativeTypes.push_back(_ctx.typeMapper.map(parameter));
-		auto args = awst::makeTupleExpression(nullptr, _loc);
 		auto const& declaration = function->declaration();
 		auto const* definition = dynamic_cast<FunctionDefinition const*>(&declaration);
-		args->items.push_back(awst::makeMethodConstant(definition
+		auto selector = awst::makeMethodConstant(definition
 			? buildMethodSelector(_ctx, definition)
-			: buildMethodSelector(_ctx, declaration.name(), *function), awst::WType::bytesType(), _loc));
+			: buildMethodSelector(_ctx, declaration.name(), *function), awst::WType::bytesType(), _loc);
+		std::vector<std::shared_ptr<awst::Expression>> values;
 		if (!parameters.empty())
 		{
 			auto const* decodedType = parameters.size() == 1 ? nativeTypes[0]
@@ -468,12 +429,11 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 			auto decoded = awst::makeEvalOnce(abi::decodeEvmAbi(_ctx.typeMapper,
 				awst::makeExtract(dataExpr, 4, 0, _loc), parameters, decodedType, _loc, _ctx.preEffects()), _loc);
 			for (size_t i = 0; i < parameters.size(); ++i)
-				args->items.push_back(encodeArgToBytes(_ctx, parameters.size() == 1 ? decoded
-					: awst::makeTupleItem(decoded, static_cast<int>(i), nativeTypes[i], _loc),
-					parameters[i], parameters[i], _loc));
+				values.push_back(parameters.size() == 1 ? decoded
+					: awst::makeTupleItem(decoded, static_cast<int>(i), nativeTypes[i], _loc));
 		}
-		args->wtype = _ctx.typeMapper.createType<awst::WTuple>(
-			std::vector<awst::WType const*>(args->items.size(), awst::WType::bytesType()));
+		auto args = ApplicationCall::encodeArguments(_ctx.typeMapper, std::move(selector),
+			parameters, std::move(values), _loc, _ctx.preEffects());
 		EvmFeaturePolicy::report(EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
 		return submitAppCall(_ctx, std::move(_receiver), std::move(args), std::move(_callValue), _loc);
 	}
@@ -489,12 +449,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 	};
 	if (isEmptyConst(dataExpr.get()))
 	{
-		// Empty data + {value:} = plain transfer (EVM: invokes receive()).
+		// Empty data still executes an application's receive/fallback.
 		if (_callValue)
 			return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
 		if (SolcConstFold::constantAddress(_baseExpr) == std::optional<solidity::u256>(0))
 			return std::make_unique<GenericResultBuilder>(_ctx,
-				makeBoolBytesTupleEmpty(_loc));
+				makeBoolBytesTuple(true, ApplicationCall::setReturnData(_ctx.typeMapper,
+					awst::makeBytesConstant({}, _loc), _loc, _ctx.preEffects()), _loc));
 		// Zero-value empty call: solc EXECUTES the callee (receive, or
 		// fallback when no receive) — zero-arg inner app call.
 		return handleCallWithEmptyData(_ctx, std::move(_receiver), _loc);

@@ -1,6 +1,7 @@
 #include <unordered_set>
 #include "builder/solc/SourceLocConvert.h"
 #include "builder/contract/AWSTBuilder.h"
+#include "builder/eb/AssemblyBoundary.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/types/RefParamPassing.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -257,6 +258,7 @@ void AWSTBuilder::buildFreestandingParams(
 			m_session.sourceMap.toAwstLoc(
 				sourceFile, parameter.declaration->location()));
 	}
+	appendCalldataParameters(plan, sub.args, sub.sourceLocation);
 }
 
 /// buildFreestandingSubroutine phase: zero-initialize named return variables (Solidity implicit init) + blob-backed memory-return …
@@ -373,6 +375,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// EVM blob memory: spill asm-pointer memory params (the LIBRARY path —
 	// Morpho's MarketParamsLib.id(), Solady's LibString helpers, ...).
 	std::vector<std::shared_ptr<awst::Statement>> asmParamSpills;
+	prepareAssemblyBoundary(fnCtx, _func.body(), asmParamSpills);
 	emitAsmParamSpills(m_session.typeMapper, fnCtx, _func.body(), _sourceFile,
 		asmParamSpills);
 

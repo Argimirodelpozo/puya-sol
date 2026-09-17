@@ -3,7 +3,9 @@
 /// inner app calls for external.
 
 #include "builder/lowering/calls/FunctionPointerBuilder.h"
+#include "builder/context/ProgramAnalysis.h"
 #include "builder/solc/FunctionIdentity.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/target/ApplicationTarget.h"
 #include "builder/lowering/itxn/ApplicationCall.h"
 #include "builder/lowering/itxn/NativePayment.h"
@@ -11,16 +13,10 @@
 #include "builder/target/EvmFeaturePolicy.h"
 #include "builder/codec/SelectorSemantics.h"
 #include "builder/solc/SolcFacts.h"
-#include "builder/lowering/abi/AbiEncoderBuilder.h"
-#include "builder/codec/EvmAbiDecode.h"
-#include "builder/codec/EvmAbiEncode.h"
 #include "builder/lowering/calls/CallResolver.h"
-#include "builder/lowering/calls/FunctionPointerDispatchTypes.h"
 #include "builder/types/FunctionPointerKind.h"
-#include "builder/types/ConversionPlan.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/TypeCoercion.h"
-#include "builder/types/SolIntType.h"
 #include "builder/ast/calls/RevertBlob.h"
 #include "Logger.h"
 
@@ -35,6 +31,16 @@ using namespace solidity::frontend;
 
 namespace
 {
+
+awst::WType const* computeReturnType(ContractContext& ctx, FunctionType const* type)
+{
+	if (!type || type->returnParameterTypes().empty()) return awst::WType::voidType();
+	auto const& returns = type->returnParameterTypes();
+	if (returns.size() == 1) return ctx.typeMapper.map(returns.front());
+	std::vector<awst::WType const*> components;
+	for (auto const* result: returns) components.push_back(ctx.typeMapper.map(result));
+	return ctx.typeMapper.createType<awst::WTuple>(std::move(components));
+}
 
 /// Freestanding bodies cannot use InstanceMethodTarget. The resolved host
 /// declaration is authoritative; display-name substring matching is not.
@@ -65,52 +71,24 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 	auto call = awst::makeSubroutineCall(
 		std::move(target), computeReturnType(_ctx, _funcType), _loc);
 
-	awst::pushCallArg(call->args, "__funcptr_id", std::move(_ptrIdExpr));
+	awst::pushCallArg(call->args, std::move(_ptrIdExpr));
 
 	// Only external view/pure calls create an EVM static context. Internal
 	// pointers jump without changing the caller's execution context.
 	bool staticCtx = isExternalFunctionPointer(_funcType)
 		&& (_funcType->stateMutability() == StateMutability::View
 			|| _funcType->stateMutability() == StateMutability::Pure);
-	awst::pushCallArg(call->args, "__static",
+	awst::pushCallArg(call->args,
 		staticCtx ? awst::makeIntegerConstant("1", _loc)
 			: ApplicationCall::staticContext(_ctx.typeMapper, _loc));
 
 	for (size_t i = 0; i < _args.size(); ++i)
 	{
 		awst::CallArg arg;
-		arg.name = "__arg" + std::to_string(i);
 		arg.value = _args[i];
 		call->args.push_back(std::move(arg));
 	}
 	return call;
-}
-
-void FunctionPointerBuilder::setCurrentCref(
-	ContractContext& _ctx, std::string _cref)
-{
-	_ctx.functionPointers.currentCref = std::move(_cref);
-}
-
-void FunctionPointerBuilder::reset(ContractContext& _ctx)
-{
-	_ctx.functionPointers.reset();
-}
-
-// ── Type mapping ──
-
-awst::WType const* FunctionPointerBuilder::mapFunctionType(
-	ContractContext& _ctx,
-	FunctionType const* _funcType)
-{
-	if (!_funcType)
-		return awst::WType::uint64Type();
-
-	if (isExternalFunctionPointer(_funcType))
-		return _ctx.typeMapper.map(_funcType);
-
-	// Internal function pointers: uint64 ID
-	return awst::WType::uint64Type();
 }
 
 // ── Register a function as a pointer target ──
@@ -124,7 +102,10 @@ unsigned FunctionPointerBuilder::registerTarget(
 	if (!_funcDef) return 0;
 	auto& registry = _ctx.functionPointers;
 	auto const id = _funcDef->id();
-	if (_ctx.baseImplementationIds.count(id))
+	if (_ctx.baseImplementationIds.count(id)
+		|| (_funcType && _funcType->kind() == FunctionType::Kind::Internal
+			&& _funcDef->isPartOfExternalInterface()
+			&& _ctx.typeMapper.callBoundaryPlan(*_funcDef, _ctx.currentContract).calldataFrame))
 		_awstName = CallResolver::baseImplementationName(_ctx, *_funcDef);
 	if (auto found = registry.targets.find(id); found != registry.targets.end())
 	{
@@ -212,18 +193,13 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 		auto const* pointerType = _ctx.typeMapper.map(funcType);
 
 		std::shared_ptr<awst::Expression> appIdBytes;
-		std::shared_ptr<awst::Expression> routeSelector;
+		auto routeSelector = awst::makeMethodConstant(
+			InnerCallHandlers::buildMethodSelector(_ctx, _funcDef), awst::WType::bytesType(), _loc);
 
 		if (_receiverAddress)
 		{
 			appIdBytes = awst::makeItob(ApplicationTarget::pointerId(
 				_ctx.typeMapper.profile(), _receiverAddress, _loc), _loc);
-
-			// Routing selector: used as ApplicationArgs[0].
-			auto selectorConst = awst::makeMethodConstant(
-				InnerCallHandlers::buildMethodSelector(_ctx, _funcDef),
-				awst::WType::bytesType(), _loc);
-			routeSelector = std::move(selectorConst);
 		}
 		else
 		{
@@ -239,10 +215,6 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 			auto curApp = awst::makeGlobal(
 				std::string("CurrentApplicationID"), awst::WType::uint64Type(), _loc);
 			appIdBytes = awst::makeItob(std::move(curApp), _loc);
-			auto selectorConst = awst::makeMethodConstant(
-				InnerCallHandlers::buildMethodSelector(_ctx, _funcDef),
-				awst::WType::bytesType(), _loc);
-			routeSelector = std::move(selectorConst);
 		}
 
 		std::shared_ptr<awst::Expression> left = std::move(appIdBytes);
@@ -336,45 +308,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		// Cross-contract selector chosen by the contract wire profile.
 		auto sel4 = extractSlice(routeSelectorOffset, 4);
 
-		auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
-		argsTuple->items.push_back(std::move(sel4));
-		if (evmContractAbi)
-		{
-			std::vector<std::shared_ptr<awst::Expression>> converted;
-			for (size_t i = 0; i < _args.size(); ++i)
-			{
-				auto const* parameter = i < _funcType->parameterTypes().size()
-					? _funcType->parameterTypes()[i] : nullptr;
-				auto value = _args[i];
-				if (parameter)
-					value = builder::ConversionPlan{
-						nullptr, parameter, _ctx.typeMapper.map(parameter),
-						builder::ConversionPlan::Context::AbiArgument}.emit(
-							std::move(value), _loc);
-				converted.push_back(std::move(value));
-			}
-			argsTuple->items.push_back(abi::encodeEvmAbi(
-				_ctx.typeMapper, _funcType->parameterTypes(),
-				std::move(converted), _loc, _ctx.preEffects()));
-		}
-		else
-		{
-			for (size_t i = 0; i < _args.size(); ++i)
-			{
-				solidity::frontend::Type const* paramSolType =
-					i < _funcType->parameterTypes().size()
-						? _funcType->parameterTypes()[i] : nullptr;
-				argsTuple->items.push_back(
-					InnerCallHandlers::encodeArgToBytes(
-						_ctx, _args[i], nullptr, paramSolType, _loc));
-			}
-		}
-		{
-			std::vector<awst::WType const*> argTypes;
-			for (auto const& item : argsTuple->items)
-				argTypes.push_back(item->wtype);
-			argsTuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(std::move(argTypes), std::nullopt);
-		}
+		auto argsTuple = ApplicationCall::encodeArguments(_ctx.typeMapper, std::move(sel4),
+			_funcType->parameterTypes(), _args, _loc, _ctx.preEffects());
 
 		auto ifStmt = awst::makeIfElse(isSelf, awst::makeBlock(_loc), awst::makeBlock(_loc), _loc);
 
@@ -441,6 +376,7 @@ std::string FunctionPointerBuilder::dispatchName(
 		return id;
 	};
 	std::string name = "__funcptr_dispatch";
+	if (_funcType && _funcType->kind() == FunctionType::Kind::Internal) name += "_internal";
 	if (_funcType)
 	{
 		for (auto const* pt : _funcType->parameterTypes())
@@ -467,11 +403,8 @@ std::map<std::string, std::vector<FuncPtrEntry const*>> collectDispatchGroups(
 	std::map<std::string, std::vector<FuncPtrEntry const*>> groups;
 	for (auto const& [key, entry] : _registry.targets)
 	{
-		std::string dname = FunctionPointerBuilder::dispatchName(entry.funcType);
 		// Taking a function's address does not require a dispatcher. A dynamic
 		// call or external self-call records the signature in neededDispatches.
-		if (!_registry.neededDispatches.count(dname))
-			continue;
 		// Use solc's declaration identity and C3 hierarchy, not parsed cref or
 		// short-name equality. Inherited public targets belong to this host too.
 		auto const* fdContract = entry.funcDef ? entry.funcDef->annotation().contract : nullptr;
@@ -485,7 +418,10 @@ std::map<std::string, std::vector<FuncPtrEntry const*>> collectDispatchGroups(
 			&& !fdContract->isLibrary()
 			&& entry.subroutineId.empty())
 			continue;
-		groups[dname].push_back(&entry);
+		for (auto const& [dname, type]: _registry.neededDispatches)
+			if (type->hasEqualParameterTypes(*entry.funcType)
+				&& type->hasEqualReturnTypes(*entry.funcType))
+				groups[dname].push_back(&entry);
 	}
 	// Ensure needed signatures have entries, even if empty.
 	for (auto const& [dname, funcType] : _registry.neededDispatches)
@@ -524,6 +460,17 @@ awst::ContractMethod buildDispatchSignature(
 		dispatch.args.emplace_back(
 			"__arg" + std::to_string(i),
 			_ctx.typeMapper.map(_funcType->parameterTypes()[i]), _loc);
+	}
+	if (_ctx.typeMapper.analysis().pointerNeedsCalldata(*_funcType))
+	{
+		dispatch.args.emplace_back("__cd_blob", awst::WType::bytesType(), _loc);
+		for (size_t i = 0; i < _funcType->parameterTypes().size(); ++i)
+			if (auto const* type = _funcType->parameterTypes()[i]; type->dataStoredIn(DataLocation::CallData))
+			{
+				dispatch.args.emplace_back("__cd_off_" + std::to_string(i), awst::WType::biguintType(), _loc);
+				if (sol_ast::CalldataReference::hasLength(type))
+					dispatch.args.emplace_back("__cd_len_" + std::to_string(i), awst::WType::biguintType(), _loc);
+			}
 	}
 	return dispatch;
 }
@@ -593,6 +540,20 @@ std::shared_ptr<awst::Block> buildDispatchEntryArm(
 		{
 			awst::CallArg arg;
 			arg.value = awst::makeVarExpression("__arg" + std::to_string(i), dispatch.args[i + 2].wtype, _loc);
+			auto const* sourceType = funcType->parameterTypes()[i];
+			if (_ctx.typeMapper.analysis().pointerNeedsCalldata(*funcType)
+				&& sourceType->dataStoredIn(DataLocation::CallData) && (!plan || !plan->calldataFrame))
+			{
+				auto materialized = _ctx.lowerOperand([&] {
+					sol_ast::CalldataReference reference{sourceType, awst::makeVarExpression(
+						"__cd_off_" + std::to_string(i), awst::WType::biguintType(), _loc), nullptr};
+					if (sol_ast::CalldataReference::hasLength(sourceType))
+						reference.length = awst::makeVarExpression("__cd_len_" + std::to_string(i), awst::WType::biguintType(), _loc);
+					return reference.read(_ctx, _loc);
+				});
+				for (auto& effect: materialized.effects.pre) ifBlock->body.push_back(std::move(effect));
+				arg.value = std::move(materialized.value);
+			}
 			if (plan)
 			{
 				auto const& parameter = plan->parameters.at(i);
@@ -604,6 +565,9 @@ std::shared_ptr<awst::Block> buildDispatchEntryArm(
 				arg.name = targetMethod->args.at(i).name;
 			call->args.push_back(std::move(arg));
 		}
+		if (plan && plan->calldataFrame && !isPublic)
+			for (size_t i = funcType->parameterTypes().size() + 2; i < dispatch.args.size(); ++i)
+				awst::pushCallArg(call->args, awst::makeVarExpression(dispatch.args[i].name, dispatch.args[i].wtype, _loc));
 
 		if (dispatch.returnType != awst::WType::voidType())
 		{
@@ -727,12 +691,14 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 	for (auto const& [dname, entries] : groups)
 	{
-		FunctionType const* funcType = nullptr;
-		if (!entries.empty())
-			funcType = entries[0]->funcType;
-		else if (registry.neededDispatches.count(dname))
-			funcType = registry.neededDispatches.at(dname);
-		if (!funcType) continue;
+		auto const* funcType = registry.neededDispatches.at(dname);
+		auto emit = [&](awst::ContractMethod method) {
+			if (_outRootSubs && registry.neededRootDispatches.count(dname))
+				_outRootSubs->push_back(awst::makeSubroutine(
+					_cref + "." + method.memberName, method.memberName,
+					method.args, method.returnType, method.body, method.pure, method.sourceLocation));
+			methods.push_back(std::move(method));
+		};
 
 		auto dispatch = buildDispatchSignature(_ctx, _cref, dname, funcType, _loc);
 
@@ -743,6 +709,11 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 		for (auto const* entry : entries)
 		{
+			auto selected = *entry;
+			if (funcType->kind() == FunctionType::Kind::External && entry->funcDef
+				&& entry->funcDef->isPartOfExternalInterface() && entry->subroutineId.empty())
+				selected.name = CallResolver::resolveMethodName(_ctx, *entry->funcDef);
+			entry = &selected;
 			// Ground-truth return type for wire adaptation: the target's
 			// translated ContractMethod (public returns are wire-encoded).
 			awst::ContractMethod const* targetMethod = nullptr;
@@ -790,30 +761,12 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 		// Also emit as root-level Subroutine: library subroutines can't use
 		// InstanceMethodTarget outside the contract scope.
-		if (_outRootSubs && registry.neededRootDispatches.count(dname))
-		{
-			auto sub = awst::makeSubroutine(
-				_cref + "." + dispatch.memberName, dispatch.memberName,
-				dispatch.args, dispatch.returnType, dispatch.body /*shared*/,
-				dispatch.pure, dispatch.sourceLocation);
-			_outRootSubs->push_back(std::move(sub));
-		}
-
-		methods.push_back(std::move(dispatch));
+		emit(std::move(dispatch));
 
 		// Only external pointer calls need selector lookup. Empty groups still
 		// get a helper so their call-site references resolve.
 		if (!registry.neededSelectorDispatches.count(dname)) continue;
-		auto selToId = buildSelToIdMethod(_ctx, _cref, dname, entries, _loc);
-		if (_outRootSubs && registry.neededRootDispatches.count(dname))
-		{
-			auto sub = awst::makeSubroutine(
-				_cref + "." + selToId.memberName, selToId.memberName,
-				selToId.args, selToId.returnType, selToId.body,
-				/*pure=*/false, selToId.sourceLocation);
-			_outRootSubs->push_back(std::move(sub));
-		}
-		methods.push_back(std::move(selToId));
+		emit(buildSelToIdMethod(_ctx, _cref, dname, entries, _loc));
 	}
 
 	return methods;

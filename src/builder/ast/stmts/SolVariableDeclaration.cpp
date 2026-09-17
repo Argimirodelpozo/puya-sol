@@ -5,6 +5,8 @@
 #include "builder/ast/exprs/SolTupleExpression.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/eb/CallOperands.h"
+#include "builder/eb/AssemblyBoundary.h"
+#include "builder/eb/CalldataReference.h"
 #include "Logger.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -38,52 +40,21 @@ SolVariableDeclaration::SolVariableDeclaration(
 // ── toAwst binding rungs: each handles one declaration shape and returns
 // true when it consumed the declaration (including error early-outs). ──────
 
-bool SolVariableDeclaration::tryCalldataSlicePointerBinding(
+bool SolVariableDeclaration::tryCalldataReferenceBinding(
 	VariableDeclaration const& decl,
 	Expression const* initialValue,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
-	// CALLDATA slice binding through a LIVE pointer: `uint[2] calldata t = x[1]`
-	// where x's mutable pointer locals exist (an asm block touched x.offset/
-	// .length). Bind t's own pointer local `__cd_off_t = __cd_off_x + i*stride`
-	// (solc's calldataStride = the element's calldata head size) and mark t
-	// live, so a later asm `s := t` reads t's byte offset in __cd_blob —
-	// 0x44 + 1*64 = 0x84 in calldata_array_read.
-	if (decl.referenceLocation() != VariableDeclaration::Location::CallData || !initialValue)
-		return false;
-	auto const* idx = SolcFacts::expressionAs<IndexAccess>(initialValue);
-	if (!idx || !idx->indexExpression()) return false;
-	auto const* baseId = SolcFacts::expressionAs<Identifier>(&idx->baseExpression());
-	auto const* baseVd = baseId ? dynamic_cast<VariableDeclaration const*>(
-		baseId->annotation().referencedDeclaration) : nullptr;
-	auto const* arrT = baseVd ? dynamic_cast<ArrayType const*>(baseVd->type()) : nullptr;
-	auto* live = m_blk.fn.scope.liveCalldataPointers();
-	if (!arrT || !live) return false;
-	auto const baseName = m_blk.scope.awstVarName(*baseVd);
-	if (!live->count(baseName)) return false;
-
-	auto loc = m_blk.makeLoc(decl.location());
-	auto* word = awst::WType::biguintType();
-	auto idxVal = TypeCoercion::coerceScalar(
-		CallOperands::evaluate(m_blk.builderCtx(), *idx->indexExpression(), loc), word, loc);
-	std::shared_ptr<awst::Expression> length;
-	if (arrT->isDynamicallySized()) length = awst::makeVarExpression("__cd_len_" + baseName, word, loc);
-	else length = awst::makeIntegerConstant(arrT->length().str(), loc, word);
-	m_blk.builderCtx().appendEffectsTo(result);
-	result.push_back(awst::makeExpressionStatement(awst::makeAssert(
-		awst::makeNumericCompare(idxVal, awst::NumericComparison::Lt, std::move(length), loc),
-		loc, "array index out of bounds"), loc));
-	auto scaled = awst::makeBigUIntBinOp(std::move(idxVal), awst::BigUIntBinaryOperator::Mult,
-		awst::makeIntegerConstant(std::to_string(arrT->calldataStride()), loc, word), loc);
-	auto off = awst::makeBigUIntBinOp(awst::makeVarExpression("__cd_off_" + baseName, word, loc),
-		awst::BigUIntBinaryOperator::Add, std::move(scaled), loc);
-	// Assembly and Solidity must use the same declaration-based local name.
-	std::string tName = m_blk.scope.awstVarName(decl);
-	result.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression("__cd_off_" + tName, word, loc), std::move(off), loc));
-	live->insert(tName);
-	// The pointer is the binding; a materialized array would copy the value.
-	return true;
+	if (decl.referenceLocation() != VariableDeclaration::Location::CallData || !initialValue) return false;
+	if (auto reference = CalldataReference::resolve(m_blk.builderCtx(), *initialValue, m_loc))
+	{
+		reference->bind(m_blk.builderCtx(), decl, m_loc);
+		m_blk.builderCtx().appendEffectsTo(result);
+		return true;
+	}
+	if (m_blk.fn.hasAssemblyCalldata)
+		throw SizeError("calldata reference initializer has no preserved input coordinates");
+	return false;
 }
 
 bool SolVariableDeclaration::trySlotModeStoragePointer(
@@ -134,6 +105,7 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 	std::shared_ptr<awst::Expression> value;
 	if (initialValue)
 	{
+		if (auto copy = assemblyScalarCopy(m_blk.builderCtx(), decl, *initialValue, m_loc)) return copy;
 		value = m_blk.builderCtx().pinIfWriteBacks(m_blk.builderCtx().lower(*initialValue, false), m_loc);
 
 		value = convertInitValue(decl, std::move(value), initialValue->annotation().type, type);
@@ -150,6 +122,7 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::convertInitValue(
 	VariableDeclaration const& decl, std::shared_ptr<awst::Expression> value,
 	solidity::frontend::Type const* sourceType, awst::WType const* type)
 {
+	if (isAssemblyScalarCopy(value->wtype)) return value;
 	if (auto const* tuple = dynamic_cast<TupleType const*>(sourceType);
 		tuple && tuple->components().size() == 1) sourceType = tuple->components().front();
 	if (decl.referenceLocation() != VariableDeclaration::Location::Storage)
@@ -169,6 +142,12 @@ void SolVariableDeclaration::bindValue(
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
 	if (!value) return; // lowering already reported the error
+	if (auto store = writeAssemblyScalar(m_blk.scope, m_blk.typeMapper(), decl, value, m_loc))
+	{
+		m_blk.builderCtx().appendEffectsTo(result);
+		result.push_back(std::move(store));
+		return;
+	}
 	if (tryStorageAliasBinding(decl, value, initialValue, result)
 		|| tryMemoryAliasBinding(decl, initialValue, type, result)
 		|| tryBlobOffsetBinding(decl, initialValue, value, type, result)
@@ -588,6 +567,14 @@ void SolVariableDeclaration::buildTupleDestructuring(
 			std::move(baseRef), static_cast<int>(i), slotType, m_loc);
 
 		auto const* sourceType = rhsSolTuple->components().at(i);
+		if (auto reference = CalldataReference::unpack(decl.type(), itemExpr, m_loc))
+		{
+			reference->bind(ctx, decl, m_loc);
+			ctx.appendEffectsTo(result);
+			continue;
+		}
+		if (m_blk.fn.hasAssemblyCalldata && decl.referenceLocation() == VariableDeclaration::Location::CallData)
+			throw SizeError("calldata reference initializer has no preserved input coordinates");
 		if (decl.referenceLocation() == VariableDeclaration::Location::Memory
 			&& !decl.type()->isValueType() && slotType == awst::WType::uint64Type())
 		{
@@ -619,7 +606,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		auto const& decl = *declarations[0];
 		auto* type = m_blk.typeMapper().map(decl.type());
 
-		if (tryCalldataSlicePointerBinding(decl, initialValue, result))
+		if (tryCalldataReferenceBinding(decl, initialValue, result))
 			return result;
 
 		if (trySlotModeStoragePointer(decl, initialValue, result))

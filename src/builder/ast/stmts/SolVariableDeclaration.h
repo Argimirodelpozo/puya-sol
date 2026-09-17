@@ -18,7 +18,7 @@ public:
 
 private:
 	// ── toAwst binding rungs (SolVariableDeclaration.cpp) ───────────────
-	bool tryCalldataSlicePointerBinding(
+	bool tryCalldataReferenceBinding(
 		solidity::frontend::VariableDeclaration const& decl,
 		solidity::frontend::Expression const* initialValue,
 		std::vector<std::shared_ptr<awst::Statement>>& result);

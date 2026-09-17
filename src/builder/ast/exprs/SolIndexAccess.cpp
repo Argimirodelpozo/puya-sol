@@ -2,6 +2,7 @@
 
 #include "builder/ast/exprs/SolIndexAccess.h"
 #include "builder/solc/SolcFacts.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "awst/NameGen.h"
 #include "builder/eb/NodeBuilder.h"
@@ -31,6 +32,8 @@ SolIndexAccess::SolIndexAccess(eb::ContractContext& _ctx, IndexAccess const& _no
 
 std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 {
+	if (auto reference = CalldataReference::resolve(m_ctx, m_indexAccess, m_loc))
+		return reference->read(m_ctx, m_loc);
 	// `S[7][]` in expression position is an array type, not an element read.
 	if (dynamic_cast<TypeType const*>(m_indexAccess.annotation().type))
 		return awst::makeVoidConstant(m_loc);
@@ -379,6 +382,8 @@ SolIndexRangeAccess::Bounds SolIndexRangeAccess::resolveBounds(
 
 std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 {
+	if (auto reference = CalldataReference::resolve(m_ctx, m_rangeAccess, m_loc))
+		return reference->read(m_ctx, m_loc);
 	auto base = m_ctx.emitSequencedOperand({},
 		m_ctx.pinIfWriteBacks(m_ctx.lower(m_rangeAccess.baseExpression(), false), m_loc), true, m_loc);
 	auto const* element = awst::arrayElementType(base->wtype);

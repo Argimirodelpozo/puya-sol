@@ -49,7 +49,7 @@ private:
 		std::shared_ptr<awst::Expression> _amount,
 		awst::SourceLocation const& _loc);
 
-	/// .call{value: X}("") (empty/absent data) → bare payment
+	/// .call{value: X}("") → payment plus receive/fallback for applications.
 	static std::unique_ptr<InstanceBuilder> handleCallWithValue(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
@@ -138,15 +138,6 @@ private:
 		awst::SourceLocation const& _loc);
 
 public:
-	/// Encode a typed call argument using the shared boundary plan and ARC4
-	/// value codec. Solidity source/parameter types own implicit conversions.
-	static std::shared_ptr<awst::Expression> encodeArgToBytes(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _arg,
-		solidity::frontend::Type const* _sourceSolType,
-		solidity::frontend::Type const* _paramSolType,
-		awst::SourceLocation const& _loc);
-
 	/// Canonical ARC4 selector string from a FunctionDefinition
 	/// (routers always dispatch on this; compatibility-mode selector expressions
 	/// and the routing field of external function pointers also expose it).

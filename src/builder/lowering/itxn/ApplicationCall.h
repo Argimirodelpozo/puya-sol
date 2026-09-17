@@ -16,9 +16,14 @@ public:
 	using Expr = std::shared_ptr<awst::Expression>;
 	using Statements = std::vector<std::shared_ptr<awst::Statement>>;
 
+	/// Encode already-evaluated, converted formal values for the selected wire.
+	/// Source evaluation and implicit conversions belong to the caller.
+	static Expr encodeArguments(TypeMapper& types, Expr selector,
+		std::vector<solidity::frontend::Type const*> const& parameters,
+		std::vector<Expr> values, awst::SourceLocation const& loc, Statements& out);
 	static Expr submit(TypeMapper& types, Expr receiver, Expr arguments, Expr payment,
 		awst::SourceLocation const& loc, Statements& out);
-	static Expr submitRaw(TypeMapper& types, Expr receiver, Expr bytes, Expr payment,
+	static Expr submitRaw(TypeMapper& types, Expr receiver, Expr bytes, Expr amount,
 		awst::SourceLocation const& loc, Statements& out);
 	/// Capture an already submitted app call, before another inner transaction
 	/// can replace its log. Returns a stable local snapshot of the payload.

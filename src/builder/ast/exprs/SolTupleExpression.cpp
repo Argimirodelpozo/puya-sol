@@ -5,6 +5,8 @@
 #include "builder/solc/SolcFacts.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/eb/AssignmentHelper.h"
+#include "builder/eb/AssemblyBoundary.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/ConversionPlan.h"
 // Uses solc AST/Type definitions directly; the hub headers only
@@ -80,6 +82,9 @@ std::shared_ptr<awst::Expression> SolTupleExpression::buildTuple(
 		auto const& comp = m_tuple.components()[i];
 		auto const* target = i < bindings.size() ? bindings[i] : nullptr;
 		std::shared_ptr<awst::Expression> value;
+		if (comp && target) value = assemblyScalarCopy(m_ctx, *target, *comp, m_loc);
+		if (comp && target && target->referenceLocation() == solidity::frontend::VariableDeclaration::Location::CallData)
+			if (auto reference = CalldataReference::resolve(m_ctx, *comp, m_loc)) value = reference->pack(m_loc);
 		if (comp && storageReferences)
 		{
 			auto const& source = SolcFacts::unparenthesized(*comp);

@@ -66,12 +66,13 @@ private:
 	struct Slot { EvmSlotLowering::Addr address; Expr byteIndex; };
 	struct Blob { Expr offset; bool packedByte = false; bool referenceSlot = false; };
 	struct Transient { solidity::frontend::VariableDeclaration const* declaration; };
+	struct AssemblyWord { solidity::frontend::VariableDeclaration const* declaration; };
 	struct Aggregate
 	{
 		Expr target, root, initial, key, offset, box;
 		std::shared_ptr<awst::Statement> ensure;
 	};
-	std::variant<Target, Slot, Blob, Transient, Aggregate> m_destination;
+	std::variant<Target, Slot, Blob, Transient, AssemblyWord, Aggregate> m_destination;
 	Expr target() const;
 	void writeTarget(Expr _target, Expr _value);
 	Expr pin(Expr _value);

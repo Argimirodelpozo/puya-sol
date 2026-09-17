@@ -22,13 +22,14 @@ remains experimental and unsuitable for production funds.
 - **Project metadata:** the root still needs an owner-selected license,
   vulnerability-reporting policy, and contribution/release ownership guidance.
   Dependency licenses do not substitute for first-party project metadata.
-- **Calldata-local alias provenance:** ordinary calldata alias initialization
-  does not always initialize the raw Yul pointer metadata. The subarray tests
-  that explicitly assign both `.offset` and `.length` do not cover implicit
-  alias initialization. This is separate from the memory-model experiment.
-- **Raw Yul scalar lifetime:** narrow unsigned, bool and fixed-bytes locals now
-  preserve full words within an assembly block. That does not establish full
-  dirty-word preservation across separate blocks and intervening high-level use.
+- **Calldata-reference returns:** ordinary aliases, slices, rebinding and
+  internal-call arguments now preserve input coordinates for Yul. Returning
+  a calldata reference through an internal function and binding it in a
+  calldata-observing body is still unsupported: scalar and tuple bindings
+  reject explicitly instead of producing uninitialized pointer locals. This
+  is separate from the memory-model experiment. Narrow scalar words now
+  survive separate assembly blocks and same-type local copies; that is not
+  a promise of arbitrary dirty-word transport across function/ABI boundaries.
 - **Remapping diagnostics:** malformed import remappings still emit warnings.
   Whether they should fail immediately remains a policy decision; log-file
   opening and source-read failures now have explicit error handling and tests.

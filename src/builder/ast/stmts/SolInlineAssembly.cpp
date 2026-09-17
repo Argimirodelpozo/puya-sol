@@ -119,6 +119,7 @@ public:
 	std::map<std::string, AssemblyBuilder::SlotRoute> slotRoutes;
 	std::vector<AssemblyBuilder::SlotRoute> slotDataRegions;
 	std::map<std::string, unsigned> paramBitWidths, signedParamBits;
+	std::map<std::string, std::string> wordBindings;
 	std::set<std::string> calldataPointerNames, calldataStaticPtrNames;
 
 	AssemblyBindings(BlockContext& block, InlineAssembly const& node)
@@ -290,6 +291,8 @@ private:
 		// Match the resolver: declaration-based value names, dotted coordinates.
 		std::string name = AssemblyBuilder::externalRefAwstName(ref.info, ref.name,
 			[&](auto const& declaration) { return blk.scope.awstVarName(declaration); });
+		if (auto word = blk.scope.bindings.assemblyWords.get(vd.id()); !word.empty())
+			wordBindings.emplace(name, std::move(word));
 		if ((ref.info.suffix == "slot" || ref.info.suffix == "offset")
 			&& (vd.isStateVariable() || vd.referenceLocation() == VariableDeclaration::Location::Storage))
 		{
@@ -302,8 +305,8 @@ private:
 			if (auto dot = base.rfind('.'); dot != std::string::npos)
 				if (auto suffix = base.substr(dot + 1); suffix == "offset" || suffix == "length")
 					base.resize(dot);
-			// solc owns the recursive ABI rule, including dynamic fixed arrays.
-			if (vd.type()->isDynamicallyEncoded()) calldataPointerNames.insert(base);
+			// ABI-dynamic structs/fixed arrays still occupy ONE calldata stack item.
+			if (vd.type()->stackItems().size() == 2) calldataPointerNames.insert(base);
 			else if (dynamic_cast<ReferenceType const*>(vd.type())) calldataStaticPtrNames.insert(base);
 		}
 		if (auto offset = blk.scope.bindings.blobAggregates.get(vd.id()); !offset.empty())
@@ -348,8 +351,9 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	AssemblyBuilder asmTranslator(m_blk.typeMapper(), m_blk.sourceFile(), contextName,
 		m_blk.scope.isInConstructor());
 	asmTranslator.setTransientStorage(m_blk.builderCtx().transientStorage);
+	asmTranslator.setWordBindings(std::move(bindings.wordBindings));
 	asmTranslator.setFrameIsProgram(m_blk.fn.frameIsProgram);
-	asmTranslator.setSeededCalldataPointers(&m_blk.fn.seededCalldataPointers);
+	asmTranslator.setFunctionCalldata(m_blk.fn.hasAssemblyCalldata);
 	asmTranslator.setCalldataSolTypes(m_blk.fn.parameterSolTypes());
 	asmTranslator.setBoxKeyStructParams(m_blk.fn.boxKeyStructParams);
 	asmTranslator.setCalldataPointerNames(std::move(bindings.calldataPointerNames));

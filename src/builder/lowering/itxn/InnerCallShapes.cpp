@@ -62,12 +62,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 			"fallback. Native ARC4 arguments cannot be inferred from this blob; "
 			"use --contract-abi evm when every public method must support "
 			"canonical Solidity calldata.", _loc);
-	std::shared_ptr<awst::Expression> payment;
-	if (_callValue)
-		payment = buildNativePayment(_ctx.typeMapper.profile(), _ctx.preEffects(),
-			_receiver, std::move(_callValue), _loc);
 	auto result = ApplicationCall::submitRaw(_ctx.typeMapper, std::move(_receiver),
-		std::move(_dataBytes), std::move(payment), _loc, _ctx.preEffects());
+		std::move(_dataBytes), std::move(_callValue), _loc, _ctx.preEffects());
 	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTuple(true, std::move(result), _loc));
 }
 
@@ -76,14 +72,12 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEmptyData(
 	std::shared_ptr<awst::Expression> _receiver,
 	awst::SourceLocation const& _loc)
 {
-	// Solc's dispatcher runs receive() for calldatasize==0 (fallback when no
-	// receive exists) even at zero value — the callee EXECUTES. A zero-arg
-	// inner app call reaches the EVM entry router's NumAppArgs==0 arm, which
-	// is that dispatch. Non-app receivers (EVM: a silent success on an EOA)
-	// fail the inner txn — the LowLevelCallOutcome adaptation applies.
 	EvmFeaturePolicy::report(
 		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
-	return submitAppCall(_ctx, std::move(_receiver), nullptr, nullptr, _loc);
+	_ctx.preEffects().push_back(buildNativeTransfer(_ctx.typeMapper, _ctx.preEffects(),
+		std::move(_receiver), nullptr, _loc));
+	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTuple(true,
+		_ctx.emitSequencedOperand({}, ApplicationCall::returnData(_ctx.typeMapper, _loc), true, _loc), _loc));
 }
 
 // ── .staticcall(data) precompile routing ──

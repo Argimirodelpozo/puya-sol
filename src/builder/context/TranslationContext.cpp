@@ -88,11 +88,6 @@ bool Context::isInConstructor() const
 	return function && function->inConstructor;
 }
 
-std::set<std::string>* Context::liveCalldataPointers() const
-{
-	return function ? &function->seededCalldataPointers : nullptr;
-}
-
 int64_t Context::callableId() const
 {
 	return function ? function->callableId : 0;

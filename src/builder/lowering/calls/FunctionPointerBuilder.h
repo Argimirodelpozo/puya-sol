@@ -59,11 +59,6 @@ struct FunctionPointerRegistry
 class FunctionPointerBuilder
 {
 public:
-	/// Internal → uint64. External → the profile-selected dual-identity layout.
-	static awst::WType const* mapFunctionType(
-		ContractContext& _ctx,
-		solidity::frontend::FunctionType const* _funcType);
-
 	/// Build a function reference expression (internal: IntegerConstant id;
 	/// external: appId ++ Solidity selector (flagged mode) ++ ARC-4 selector.
 	/// @param _callerFuncType  Determines Internal vs External when both exist
@@ -113,13 +108,6 @@ public:
 
 	/// Bind registered targets to root-subroutine or contract-method symbols.
 	static void setSubroutineIds(ContractContext& _ctx);
-
-	/// Set current contract cref before translating function bodies
-	/// (library subroutines need it to construct SubroutineIDs).
-	static void setCurrentCref(ContractContext& _ctx, std::string _cref);
-
-	/// Clear all registered targets between contracts.
-	static void reset(ContractContext& _ctx);
 
 private:
 	/// Build internal-dispatch SubroutineCallExpression (shared by internal

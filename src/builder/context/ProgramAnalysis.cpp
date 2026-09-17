@@ -449,6 +449,7 @@ struct BodyFactsWalker: ASTConstVisitor
 	std::map<int64_t, std::set<int64_t>> offsetTransfers;
 	std::map<int64_t, std::set<int64_t>> slotTransfers;
 	std::vector<std::pair<int64_t, FunctionCall const*>> calls;
+	std::vector<std::pair<int64_t, FunctionType const*>> indirectCalls;
 	bool collectOffsets;
 	int64_t callableId = 0;
 	BodyFactsWalker(ProgramAnalysis& _analysis, bool _collectOffsets)
@@ -644,6 +645,8 @@ struct BodyFactsWalker: ASTConstVisitor
 	{
 		analysis.callablesWithInlineAssembly.insert(callableId);
 		auto prepared = SolcFacts::prepareAssembly(_assembly);
+		if (prepared->facts.usesCalldata)
+			analysis.callablesWithCalldata.insert(callableId);
 		if (prepared->facts.usesStorage)
 			analysis.callablesWithStorageSlotAccess.insert(callableId);
 		analysis.slotHandleDeclarations.insert(
@@ -652,6 +655,9 @@ struct BodyFactsWalker: ASTConstVisitor
 		for (auto const& [_, reference]: _assembly.annotation().externalReferences)
 			if (reference.declaration)
 			{
+				if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(reference.declaration);
+					declaration && declaration->referenceLocation() == VariableDeclaration::Location::CallData)
+					analysis.callablesWithCalldata.insert(callableId);
 				writtenDeclarations.insert(reference.declaration->id());
 				if (reference.suffix == "slot")
 					analysis.asmSlotReferenceDeclarations.insert(reference.declaration->id());
@@ -661,12 +667,18 @@ struct BodyFactsWalker: ASTConstVisitor
 
 	bool visit(FunctionCall const& _call) override
 	{
-		if (collectOffsets) calls.emplace_back(callableId, &_call);
+		calls.emplace_back(callableId, &_call);
+		if (auto const* type = dynamic_cast<FunctionType const*>(_call.expression().annotation().type);
+			type && type->kind() == FunctionType::Kind::Internal
+			&& !dynamic_cast<FunctionDefinition const*>(ASTNode::referencedDeclaration(
+				SolcFacts::functionExpression(_call.expression()))))
+			indirectCalls.emplace_back(callableId, type);
 		return true;
 	}
 
 	void transferCallOffsets()
 	{
+		if (!collectOffsets) return;
 		// The source declaration's parameter IDs are not the override's IDs.
 		// Resolve each reachable body's calls in its concrete solc host, then
 		// map actual arguments to the exact implementation by formal position.
@@ -747,6 +759,17 @@ StorageReferenceReturnFacts const& ProgramAnalysis::storageReturnFacts(
 	return found == storageReferenceReturns.end() ? empty : found->second;
 }
 
+bool ProgramAnalysis::pointerNeedsCalldata(FunctionType const& type) const
+{
+	if (type.kind() != FunctionType::Kind::Internal) return false;
+	for (auto id: callablesWithCalldata)
+		if (auto function = functionDeclarations.find(id); function != functionDeclarations.end())
+			if (auto const* candidate = function->second->functionType(true);
+				candidate && candidate->hasEqualParameterTypes(type)
+				&& candidate->hasEqualReturnTypes(type)) return true;
+	return false;
+}
+
 ProgramAnalysis ProgramAnalysis::analyze(
 	CompilerStack& _compiler,
 	bool _evmStorageLayout)
@@ -763,6 +786,20 @@ ProgramAnalysis ProgramAnalysis::analyze(
 	// Body/Yul facts are invariant: collect them once, then close the finite,
 	// monotone parameter-transfer graph without an arbitrary depth cutoff.
 	collectBodyFacts(bodyFactsWalker);
+	// Virtual calls can reach a calldata consumer only in a derived host.
+	// Reuse solc's resolution, keeping the actual caller/body edge.
+	for (auto const& [caller, call]: bodyFactsWalker.calls)
+		for (auto const* host: result.contracts)
+			if (result.isCallableReachable(host->id(), caller))
+				if (auto const* target = SolcFacts::resolveInternalCall(*call, host))
+					result.callableCallers[target->id()].insert(caller);
+	for (size_t previous = size_t(-1); previous != result.callablesWithCalldata.size();)
+	{
+		previous = result.callablesWithCalldata.size();
+		closeOverEdges(result.callablesWithCalldata, result.callableCallers);
+		for (auto const& [caller, type]: bodyFactsWalker.indirectCalls)
+			if (result.pointerNeedsCalldata(*type)) result.callablesWithCalldata.insert(caller);
+	}
 	bodyFactsWalker.transferCallOffsets();
 	auto aliasComponents = result.referenceAssignments;
 	for (auto const& [target, sources]: result.referenceAssignments)

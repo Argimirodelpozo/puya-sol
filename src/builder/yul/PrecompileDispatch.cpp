@@ -5,7 +5,6 @@
 #include "builder/target/EvmFeaturePolicy.h"
 #include "builder/lowering/itxn/ApplicationCall.h"
 #include "builder/lowering/itxn/Precompile.h"
-#include "builder/lowering/itxn/NativePayment.h"
 #include "Logger.h"
 #include <libyul/AST.h>
 
@@ -52,10 +51,8 @@ void AssemblyBuilder::handlePrecompileCall(
 	}
 	else
 	{
-		std::shared_ptr<awst::Expression> payment;
-		if (_isCall && resolveConstantOffset(args[2]) != 0)
-			payment = buildNativePayment(m_typeMapper.profile(), _out, args[1], args[2], _loc);
-		result = ApplicationCall::submitRaw(m_typeMapper, args[1], input, std::move(payment), _loc, _out);
+		auto amount = _isCall && resolveConstantOffset(args[2]) != 0 ? args[2] : nullptr;
+		result = ApplicationCall::submitRaw(m_typeMapper, args[1], input, std::move(amount), _loc, _out);
 	}
 	// EVM copies min(outSize, result.size), never zero-filling the destination
 	// tail. Return data retains the entire result independently of this window.

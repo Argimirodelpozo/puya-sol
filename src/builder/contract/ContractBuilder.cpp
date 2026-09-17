@@ -16,6 +16,7 @@
 #include "builder/storage/StateVarWalker.h"
 #include "builder/lowering/calls/FunctionPointerBuilder.h"
 #include "builder/types/TypeCoercion.h"
+#include "builder/eb/AssemblyBoundary.h"
 #include "builder/target/EvmLayoutMode.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/context/BuildArtifacts.h"
@@ -348,6 +349,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	// VALUE into a blob region at function entry and register the param as
 	// blob-backed, so asm gets a real offset and value uses read it back.
 	std::vector<std::shared_ptr<awst::Statement>> paramSpills;
+	prepareAssemblyBoundary(fn, _block, paramSpills);
 	if (!_placeholder)
 		emitAsmParamSpills(typeMapper, fn, _block, sourceFile, paramSpills);
 
@@ -582,7 +584,7 @@ void ContractBuilder::createFunctionContexts()
 	m_storageBackend.emplace(m_storageMapper, m_exprBuilder->transientStorage);
 	m_exprBuilder->storageBackend = &*m_storageBackend;
 
-	eb::FunctionPointerBuilder::setCurrentCref(*m_exprBuilder, m_contractId);
+	m_exprBuilder->functionPointers.currentCref = m_contractId;
 }
 
 std::shared_ptr<awst::Contract> ContractBuilder::makeContractNode(
@@ -822,7 +824,7 @@ void ContractBuilder::emitFunctionPointerDispatch(awst::Contract& _contractNode)
 			dispCtx, cref, loc, &m_dispatchSubroutines, &_contractNode.methods);
 		for (auto& m : dispatchMethods)
 			_contractNode.methods.push_back(std::move(m));
-		eb::FunctionPointerBuilder::reset(*m_exprBuilder);
+		m_exprBuilder->functionPointers.reset();
 	}
 
 	// Drain any Subroutines emitted for reachable Yul functions so the

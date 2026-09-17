@@ -244,11 +244,13 @@ set(SOURCES
 	src/builder/context/TranslationContext.cpp
 
 	# builder/eb
+	src/builder/eb/AssemblyBoundary.cpp
 	src/builder/eb/AssignmentHelper.cpp
 	src/builder/eb/BigUIntMathHelpers.cpp
 	src/builder/eb/BinaryOpBuilder.cpp
 	src/builder/eb/BuiltinCallables.cpp
 	src/builder/eb/CallOperands.cpp
+	src/builder/eb/CalldataReference.cpp
 	src/builder/eb/EffectScan.cpp
 	src/builder/eb/MappingPrefix.cpp
 	src/builder/eb/NodeBuilder.cpp
@@ -276,7 +278,6 @@ set(SOURCES
 	# builder/lowering/calls
 	src/builder/lowering/calls/CallResolver.cpp
 	src/builder/lowering/calls/FunctionPointerBuilder.cpp
-	src/builder/lowering/calls/FunctionPointerDispatchTypes.cpp
 
 	# builder/lowering/intrinsics
 	src/builder/lowering/intrinsics/AppCodeSizeLowering.cpp

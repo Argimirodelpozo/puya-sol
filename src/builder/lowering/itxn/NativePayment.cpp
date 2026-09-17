@@ -96,8 +96,9 @@ std::shared_ptr<awst::Statement> buildNativeTransfer(
 	std::shared_ptr<awst::Expression> _amount,
 	awst::SourceLocation const& _loc)
 {
-	auto receiver = paymentReceiver(_types.profile(), std::move(_receiver), _loc);
-	auto amount = TypeCoercion::checkedAmountToUint64(_preEffects, std::move(_amount), _loc);
+	auto receiver = _amount ? paymentReceiver(_types.profile(), std::move(_receiver), _loc)
+		: NativeReceiver{nullptr, ApplicationTarget::resolve(_types.profile(), std::move(_receiver), _loc)};
+	auto amount = _amount ? TypeCoercion::checkedAmountToUint64(_preEffects, std::move(_amount), _loc) : nullptr;
 	auto block = awst::makeBlock(_loc);
 	// A shared field can contain nested SingleEvaluation nodes (e.g. amount
 	// narrowing). Materialize before the branch so every definition dominates
@@ -109,29 +110,24 @@ std::shared_ptr<awst::Statement> buildNativeTransfer(
 		block->body.push_back(awst::makeAssignmentStatement(read, std::move(value), _loc));
 		return read;
 	};
-	amount = pin(std::move(amount), "amount");
-	receiver.account = pin(std::move(receiver.account), "receiver");
+	if (amount) amount = pin(std::move(amount), "amount");
+	if (receiver.account) receiver.account = pin(std::move(receiver.account), "receiver");
 	receiver.appId = pin(std::move(receiver.appId), "app");
-	auto payment = paymentFields(std::move(receiver.account), std::move(amount), _loc);
-	static awst::WInnerTransaction s_payTxn(1), s_appTxn(6);
-	auto payOnly = awst::makeSubmitInnerTransaction(&s_payTxn, _loc);
-	payOnly->itxns.push_back(payment);
+	auto payment = amount ? paymentFields(std::move(receiver.account), std::move(amount), _loc) : nullptr;
 
-	static awst::WInnerTransactionFields s_appFields(6);
-	auto call = awst::makeCreateInnerTransaction(&s_appFields, _loc);
-	call->fields["TypeEnum"] = awst::makeIntegerConstant(6, _loc);
-	call->fields["Fee"] = awst::makeZero(_loc);
-	call->fields["ApplicationID"] = awst::makeAsApplication(receiver.appId, _loc);
-	call->fields["OnCompletion"] = awst::makeZero(_loc);
 	// No ApplicationArgs: the callee dispatches receive/fallback. Grouping the
 	// payment immediately before it supplies msg.value and makes rejection atomic.
-	auto payAndCall = awst::makeSubmitInnerTransaction(&s_appTxn, _loc);
-	payAndCall->itxns = {std::move(payment), std::move(call)};
 	auto appBranch = awst::makeBlock(_loc);
-	appBranch->body.push_back(awst::makeExpressionStatement(std::move(payAndCall), _loc));
-	ApplicationCall::capture(_types, _loc, appBranch->body);
+	ApplicationCall::submit(_types, awst::makeAsApplication(receiver.appId, _loc),
+		nullptr, payment, _loc, appBranch->body);
 	auto accountBranch = awst::makeBlock(_loc);
-	accountBranch->body.push_back(awst::makeExpressionStatement(std::move(payOnly), _loc));
+	if (payment)
+	{
+		static awst::WInnerTransaction s_payTxn(1);
+		auto payOnly = awst::makeSubmitInnerTransaction(&s_payTxn, _loc);
+		payOnly->itxns.push_back(std::move(payment));
+		accountBranch->body.push_back(awst::makeExpressionStatement(std::move(payOnly), _loc));
+	}
 	ApplicationCall::setReturnData(_types, awst::makeBytesConstant({}, _loc), _loc, accountBranch->body);
 	block->body.push_back(awst::makeIfElse(
 		awst::makeNumericCompare(receiver.appId, awst::NumericComparison::Ne,

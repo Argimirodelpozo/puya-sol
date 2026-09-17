@@ -1,6 +1,8 @@
 /// @file SolAssignmentTuple.cpp — ordered tuple assignment lowering.
 #include "builder/ast/exprs/SolAssignment.h"
 #include "builder/eb/ResolvedLValue.h"
+#include "builder/eb/AssemblyBoundary.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/solc/SolcFacts.h"
 
 #include "builder/storage/slot/EvmSlotLowering.h"
@@ -295,6 +297,19 @@ bool SolAssignment::emitTupleComponentWrite(
 			? dynamic_cast<VariableDeclaration const*>(
 				identifier->annotation().referencedDeclaration)
 			: nullptr;
+		if (declaration && declaration->referenceLocation() == VariableDeclaration::Location::CallData)
+		{
+			auto const* tuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
+			auto value = awst::makeTupleItem(_value, static_cast<int>(i), tuple->types().at(i), m_loc);
+			if (auto reference = CalldataReference::unpack(declaration->type(), value, m_loc))
+			{
+				auto copy = m_ctx.lowerOperand([&] { reference->bind(m_ctx, *declaration, m_loc); return value; }, false);
+				for (auto& statement: copy.effects.pre) m_ctx.queuePostEffect(std::move(statement));
+				return true;
+			}
+			if (m_scope.function && m_scope.function->hasAssemblyCalldata)
+				throw SizeError("calldata reference assignment has no preserved input coordinates");
+		}
 		std::string const offsetName = declaration
 			? m_scope.bindings.blobAggregates.get(declaration->id()) : std::string{};
 		if (declaration && !offsetName.empty()
@@ -372,6 +387,8 @@ bool SolAssignment::emitTupleComponentWrite(
 			auto const* targetType = source.annotation().type;
 			auto const* native = m_ctx.typeMapper.map(targetType);
 			auto resolved = m_tupleTargets.find(source.id());
+			if (isAssemblyScalarCopy(assignValue->wtype))
+				return resolved->second->write(assignValue);
 			auto const* sourceType = _sourceType->components()[i];
 			if (!sourceType->isValueType() && sourceType->dataStoredIn(DataLocation::Memory)
 				&& assignValue->wtype == awst::WType::uint64Type())

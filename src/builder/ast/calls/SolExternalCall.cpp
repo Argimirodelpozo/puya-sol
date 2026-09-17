@@ -7,7 +7,6 @@
 #include "builder/solc/SolcFacts.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/types/ConversionPlan.h"
-#include "builder/lowering/abi/AbiEncoderBuilder.h"
 #include "builder/lowering/itxn/InnerCallHandlers.h"
 #include "builder/lowering/itxn/NativePayment.h"
 #include "builder/target/ApplicationTarget.h"
@@ -102,7 +101,6 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	auto const* functionType = dynamic_cast<FunctionType const*>(memberAccess->annotation().type);
 	assert(functionType);
 	auto const& paramSolTypes = functionType->parameterTypes();
-	bool const evm = m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm;
 	auto values = CallOperands::build(m_ctx, m_call, m_loc,
 		[&](Expression const& source, size_t i) {
 			auto value = buildExpr(source);
@@ -112,20 +110,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 			return ConversionPlan{source.annotation().type, param, m_ctx.typeMapper.map(param),
 				ConversionPlan::Context::AbiArgument}.emit(std::move(value), m_loc);
 		});
-	auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
-	argsTuple->items.push_back(std::move(selector));
-	if (evm)
-		argsTuple->items.push_back(eb::AbiEncoderBuilder::encodeValuesAsEvmAbi(
-			m_ctx, paramSolTypes, std::move(values), m_loc));
-	else
-		for (size_t i = 0; i < values.size(); ++i)
-			argsTuple->items.push_back(eb::InnerCallHandlers::encodeArgToBytes(m_ctx,
-				std::move(values[i]), paramSolTypes[i], paramSolTypes[i], m_loc));
-	std::vector<awst::WType const*> argTypes;
-	for (auto const& item: argsTuple->items)
-		argTypes.push_back(item->wtype);
-	argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-		std::move(argTypes), std::nullopt);
+	auto argsTuple = ApplicationCall::encodeArguments(m_ctx.typeMapper, std::move(selector),
+		paramSolTypes, std::move(values), m_loc, m_ctx.preEffects());
 	// Convert receiver to app ID
 	auto appId = ApplicationTarget::requireApplication(std::move(baseTranslated), m_loc);
 

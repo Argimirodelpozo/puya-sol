@@ -108,6 +108,7 @@ public:
 		/// a reassignment anywhere drops the entry).
 		std::map<std::string, std::string> constantValues;
 		bool usesStorage = false;
+		bool usesCalldata = false;
 	};
 
 	/// Disambiguate once using solc's lexical scopes, remap external references,

@@ -21,6 +21,7 @@ class ContractDefinition;
 class Expression;
 class FunctionCall;
 class FunctionDefinition;
+class FunctionType;
 class IndexAccess;
 }
 
@@ -110,6 +111,9 @@ struct ProgramAnalysis
 	std::map<int64_t, solidity::frontend::Expression const*> stableFunctionPointers;
 	std::set<int64_t> structRefOffsetParams;
 	std::set<int64_t> callablesWithInlineAssembly;
+	/// Callers of Yul calldata consumers retain the entry frame as well.
+	std::set<int64_t> callablesWithCalldata;
+	bool pointerNeedsCalldata(solidity::frontend::FunctionType const& type) const;
 	std::map<int64_t, std::shared_ptr<PreparedAssembly const>> preparedAssemblies;
 	/// Storage declarations carrying runtime logical slots: assigned via Yul
 	/// or receiving slot-return components through the solc transfer graph.

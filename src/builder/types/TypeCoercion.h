@@ -124,15 +124,7 @@ public:
 		bool _wire = true
 	);
 
-	/// Value of a dynamic CALLDATA param whose mutable pointer locals are live
-	/// (an assembly block seeded or wrote `__cd_off_<name>` / `__cd_len_<name>`):
-	/// `extract3(__cd_blob, off, len)` — the byte range the (possibly repointed)
-	/// pointer designates inside the synthetic calldata blob. Locals are biguint
-	/// (Yul word type); cast to uint64 for extract3.
-	static std::shared_ptr<awst::Expression> calldataPointerValueRead(
-		std::string const& _name,
-		awst::SourceLocation const& _loc
-	);
+
 
 	/// Sign-extend an N-bit (N<64) signed value held in a uint64 to the 64-bit
 	/// two's-complement form. Input must be in [0, 2^N-1] (e.g. the raw result

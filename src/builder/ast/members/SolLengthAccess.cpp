@@ -3,6 +3,7 @@
 
 #include "builder/ast/members/SolLengthAccess.h"
 #include "builder/solc/SolcFacts.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/ast/members/SolAddressProperty.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
@@ -148,6 +149,8 @@ std::shared_ptr<awst::Expression> tryBoxStateArrayLength(
 std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 {
 	auto const& baseExpr = baseExpression();
+	if (auto reference = CalldataReference::resolve(m_ctx, baseExpr, m_loc); reference && reference->length)
+		return reference->length;
 
 	if (auto const* codeAccess = SolcFacts::expressionAs<MemberAccess>(&baseExpr);
 		codeAccess && codeAccess->memberName() == "code"

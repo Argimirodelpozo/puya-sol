@@ -59,17 +59,15 @@ def test_native_payments_reach_contract_escrow(harness, profile, method):
                    f"{method}({'uint256' if word else 'address'},uint256)", target, AMOUNT)
     assert not result.reverted, result.fail_message
     assert client.account_info(receiver.app_addr)["amount"] == before + AMOUNT
-    if method != "callTo":
-        # transfer/send execute receive; typed/Yul calls already execute a callee.
-        value = _call(harness, receiver, profile, "received()")
-        assert _uint_return(value, profile) == AMOUNT
+    value = _call(harness, receiver, profile, "received()")
+    assert _uint_return(value, profile) == AMOUNT
     if method == "transferOnce":
         for getter in ("receiverEvaluations()", "amountEvaluations()"):
             assert _uint_return(_call(harness, sender, profile, getter), profile) == 1
 
 
 @pytest.mark.parametrize("profile", ["arc4", "evm"])
-@pytest.mark.parametrize("method", ["transferTo", "sendTo"])
+@pytest.mark.parametrize("method", ["transferTo", "sendTo", "callTo"])
 @pytest.mark.parametrize("amount", [0, AMOUNT])
 @pytest.mark.parametrize("receiver_name", ["NativePaymentRejectingReceiver", "NativePaymentNoReceiver"])
 def test_native_transfer_receiver_rejection_is_atomic(harness, profile, method, amount, receiver_name):
@@ -84,7 +82,7 @@ def test_native_transfer_receiver_rejection_is_atomic(harness, profile, method, 
 
 
 @pytest.mark.parametrize("profile", ["arc4", "evm"])
-@pytest.mark.parametrize("method", ["transferTo", "sendTo"])
+@pytest.mark.parametrize("method", ["transferTo", "sendTo", "callTo"])
 @pytest.mark.parametrize("amount", [0, AMOUNT])
 def test_native_transfer_dispatches_fallback(harness, profile, method, amount):
     artifacts, sender, _ = _deploy(harness, profile)

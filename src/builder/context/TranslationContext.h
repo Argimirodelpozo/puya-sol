@@ -131,6 +131,9 @@ private:
 /// only lexical blocks within a frame share these tables.
 struct ScopeState
 {
+	/// Scalar declarations visible to Yul: canonical raw EVM-word locals.
+	DeclBindings<std::string> assemblyWords;
+
 	/// Local `T storage p = …` aliases. Tag + expression; see StorageAlias.
 	DeclBindings<StorageAlias> storageAliases;
 
@@ -181,7 +184,6 @@ struct Context
 
 	bool isUnchecked() const { return unchecked; }
 	bool isInConstructor() const;
-	std::set<std::string>* liveCalldataPointers() const;
 	int64_t callableId() const;
 
 	/// AWST local name: params keep bare name (ABI-facing); locals/catch params
@@ -265,15 +267,11 @@ struct FunctionContext
 	bool returnAsmWrap = false;
 	std::vector<ReturnWireElem> returnWirePlan;
 
-	/// Calldata params whose mutable (__cd_off_x, __cd_len_x) pointer locals are
-	/// LIVE — seeded at an assembly block's entry or written via `x.offset := V`.
-	/// Shared across the function's per-block AssemblyBuilders (else every block
-	/// would re-seed from the canonical blob, clobbering an earlier block's write —
-	/// calldata_offset_read_write) AND consulted by value reads of the param
-	/// (SolIdentifier / the implicit-return synth read `extract3(__cd_blob, off,
-	/// len)` instead of the decoded param). The function context outlives buildBlock,
-	/// so no external mirror is needed.
-	std::set<std::string> seededCalldataPointers;
+	/// Immutable calldata is established at function entry, before any branch
+	/// or parameter assignment. Pointer locals follow solc's stackItems(), not
+	/// its independent ABI head/tail classification.
+	bool hasAssemblyCalldata = false;
+	std::set<int64_t> calldataDeclarations;
 
 	FunctionContext(
 		TranslationContext& _tr,

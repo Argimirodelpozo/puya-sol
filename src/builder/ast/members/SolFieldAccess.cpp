@@ -4,6 +4,7 @@
 #include "builder/ast/members/SolFieldAccess.h"
 #include "builder/eb/MappingPrefix.h"
 #include "builder/solc/SolcFacts.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/solc/StorageRefPointer.h"
 #include "builder/types/TypeMapper.h"
@@ -30,37 +31,8 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 		return addr ? low.readAny(*addr, m_solType) : nullptr;
 	}
 
-	// Live calldata struct fields use solc offsets and the same validated word
-	// decoder as ABI input. Never fall back to a stale decoded parameter.
-	if (auto const* id = SolcFacts::expressionAs<Identifier>(&baseExpression()))
-		if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration);
-			declaration && declaration->referenceLocation() == VariableDeclaration::Location::CallData)
-			if (auto const* live = m_scope.liveCalldataPointers();
-				live && live->contains(m_scope.awstVarName(*declaration)))
-			{
-				auto const* structure = dynamic_cast<StructType const*>(declaration->type());
-				if (!structure || !codec::isWordType(m_solType))
-					throw SizeError("aggregate member reads through a live calldata pointer are not supported");
-				auto name = m_scope.awstVarName(*declaration);
-				auto position = m_ctx.emitSequencedOperand({}, awst::makeBigUIntBinOp(
-					awst::makeBigUIntBinOp(awst::makeVarExpression("__cd_off_" + name,
-						awst::WType::biguintType(), m_loc), awst::BigUIntBinaryOperator::Add,
-						awst::makeIntegerConstant(structure->calldataOffsetOfMember(member),
-							m_loc, awst::WType::biguintType()), m_loc), awst::BigUIntBinaryOperator::Mod,
-					makePow256(m_loc), m_loc), true, m_loc);
-				auto blob = awst::makeVarExpression("__cd_blob", awst::WType::bytesType(), m_loc);
-				auto length = awst::makeLen(blob, m_loc);
-				// calldataload zero-pads, even for a full-width out-of-range pointer.
-				auto offset = awst::makeConditional(awst::makeNumericCompare(position,
-					awst::NumericComparison::Lt, TypeCoercion::coerceScalar(
-						length, awst::WType::biguintType(), m_loc), m_loc),
-					TypeCoercion::coerceScalar(position, awst::WType::uint64Type(), m_loc),
-					length, awst::WType::uint64Type(), m_loc);
-				auto word = awst::makeExtract3(awst::makeConcat(blob, awst::makeBzero(32, m_loc), m_loc),
-					std::move(offset), awst::makeIntegerConstant(32, m_loc), m_loc);
-				return codec::valueFromEvmWord(m_ctx.typeMapper, m_solType, std::move(word),
-					m_loc, m_ctx.preEffects(), codec::PaddingPolicy::Validate);
-			}
+	if (auto reference = CalldataReference::resolve(m_ctx, m_memberAccess, m_loc))
+		return reference->read(m_ctx, m_loc);
 
 	if (dynamic_cast<solidity::frontend::MappingType const*>(m_memberAccess.annotation().type))
 	{

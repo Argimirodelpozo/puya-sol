@@ -306,6 +306,7 @@ SolcFacts::YulAnalysis SolcFacts::analyzeYul(
 					changed |= terminating.insert(caller).second;
 			}
 	} while (changed);
+	result.usesCalldata = calldata.count(FunctionHandle{YulName{}});
 	for (auto const& name: reachable)
 	{
 		auto handle = FunctionHandle{name};

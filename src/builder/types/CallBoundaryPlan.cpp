@@ -30,6 +30,7 @@ CallBoundaryPlan const& TypeMapper::callBoundaryPlan(
 	auto key = std::make_pair(mostDerived ? mostDerived->id() : int64_t{0}, function.id());
 	if (auto it = m_callPlans.find(key); it != m_callPlans.end()) return it->second;
 	CallBoundaryPlan plan;
+	plan.calldataFrame = analysis().callablesWithCalldata.contains(function.id());
 	bool const threadReferences = function.isImplemented();
 	auto const* mutations = threadReferences ? &analysis().parameterMutations(mostDerived, function) : nullptr;
 	bool const assembly = analysis().callablesWithInlineAssembly.contains(function.id());

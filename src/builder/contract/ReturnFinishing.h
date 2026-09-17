@@ -41,9 +41,6 @@ struct ImplicitReturnShape
 {
 	/// The callable yields a value at all (each caller's own test).
 	bool hasReturnValue = false;
-	/// Method: a named CALLDATA return whose pointer locals are live (an asm
-	/// block wrote x.offset/x.length) reads through the pointer.
-	bool calldataPointerReturns = false;
 	/// Freestanding: a >4KB memory return is its __blobagg_off_<id> uint64.
 	bool blobReturnsAsOffset = false;
 	/// Method: an enum named return gets a range assert.

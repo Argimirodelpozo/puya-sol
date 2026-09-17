@@ -228,22 +228,6 @@ void AssemblyBuilder::buildAssignment(
 		m_frame.localConstants.erase(name);
 	m_frame.localSlotConstants.erase(name);
 
-	// Bare STATIC calldata pointer write (`s := s2`, `s2 := 4`): repoint —
-	// assign the mutable __cd_off_<name> local; later reads (asm or Solidity
-	// member access through the live pointer) follow the new offset.
-	if (m_frame.useSyntheticCalldata && m_frame.calldataStaticPtrNames.count(name) && _assign.value)
-	{
-		auto rhs = buildExpression(*_assign.value);
-		drainPendingStatements(_out);
-		if (!rhs)
-			return;
-		if (m_frame.seededCalldataPointers)
-			m_frame.seededCalldataPointers->insert(name);
-		_out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), loc),
-			std::move(rhs), loc));
-		return;
-	}
 
 	// fn-ptr writes: fp.selector := expr / fp.address := expr
 	// → replace3 the public selector/address slice of the profile-selected layout.
@@ -253,31 +237,6 @@ void AssemblyBuilder::buildAssignment(
 		{
 			std::string suffix = name.substr(dotIdx + 1);
 			std::string baseName = name.substr(0, dotIdx);
-			// Dynamic calldata param: `x.offset := V` / `x.length := L` repoints x within __cd_blob —
-			// write the mutable pointer local so later reads / value-extracts see the new range.
-			if ((suffix == "offset" || suffix == "length") && _assign.value)
-			{
-				auto typeIt = m_frame.locals.find(baseName);
-				bool isCdPtr = (typeIt != m_frame.locals.end() && isDynamicCalldataType(typeIt->second))
-					|| m_frame.calldataPointerNames.count(baseName);
-				if (m_frame.useSyntheticCalldata && isCdPtr)
-				{
-					auto rhs = buildExpression(*_assign.value);
-					drainPendingStatements(_out);
-					if (!rhs)
-						return;
-					std::string local = (suffix == "offset" ? "__cd_off_" : "__cd_len_") + baseName;
-					// Mark the pointer locals LIVE: later blocks must not re-seed over
-					// this write, and value reads of the param (return x) now go
-					// through extract3(__cd_blob, off, len).
-					if (m_frame.seededCalldataPointers)
-						m_frame.seededCalldataPointers->insert(baseName);
-					_out.push_back(awst::makeAssignmentStatement(
-						awst::makeVarExpression(local, awst::WType::biguintType(), loc),
-						std::move(rhs), loc));
-					return;
-				}
-			}
 			if (suffix == "selector" || suffix == "address")
 			{
 				auto fullIt = m_frame.locals.find(name);
@@ -448,19 +407,28 @@ void AssemblyBuilder::emitPlainYulAssignment(
 	}
 
 	// Bare STATIC calldata pointer: repoint through its mutable offset local.
+	if (auto dot = name.rfind('.'); dot != std::string::npos && m_frame.useSyntheticCalldata)
+	{
+		auto base = name.substr(0, dot), suffix = name.substr(dot + 1);
+		if (m_frame.calldataPointerNames.contains(base) && (suffix == "offset" || suffix == "length"))
+		{
+			_out.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
+				(suffix == "offset" ? "__cd_off_" : "__cd_len_") + base, awst::WType::biguintType(), loc),
+				ensureBiguint(std::move(value), loc), loc));
+			return;
+		}
+	}
 	if (m_frame.useSyntheticCalldata && m_frame.calldataStaticPtrNames.count(name))
 	{
 		if (!value)
 			return;
-		if (m_frame.seededCalldataPointers)
-			m_frame.seededCalldataPointers->insert(name);
 		_out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), loc),
 			ensureBiguint(std::move(value), loc), loc));
 		return;
 	}
 
-	// Narrow Solidity locals retain raw words until the block-exit conversion.
+	// Declaration-lifetime words are cleaned only at a Solidity read/write.
 	if (auto shIt = m_frame.wordShadow.find(name); shIt != m_frame.wordShadow.end())
 		name = shIt->second;
 

@@ -102,7 +102,6 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	context.stateVarSlots = _stateVarSlots;
 	context.externalRefs = _assembly.externalReferences;
 	context.declName = std::move(_declName);
-	m_frame.wordShadow.clear();
 	m_frame.haltEmitted = false;
 
 	for (auto const& [name, type]: _params)
@@ -119,7 +118,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 
 	// Enable synthetic-calldata blob if Yul accesses calldata at non-constant offsets / calldatasize
 	// / a dynamic param's .offset|.length. Blob is emitted in the prelude below, after array-param init.
-	m_frame.useSyntheticCalldata = detectDynamicCalldataAccess(_block)
+	m_frame.useSyntheticCalldata = m_frame.functionCalldata || detectDynamicCalldataAccess(_block)
 		|| !yulFacts.calldataFunctions.empty();
 
 	// solc owns Yul function discovery, reachability, and recursion semantics.
@@ -155,28 +154,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	// Load scratch blob, write params into it; blob pre-allocated in preamble.
 	initializeMemoryBlob(_params, result);
 
-	// Solidity's small carriers cannot represent a dirty Yul word. Defer their
-	// conversion until the block ends, including bools and left-aligned bytesN.
-	for (auto const& [name, type]: _params)
-	{
-		auto const* bytes = dynamic_cast<awst::BytesWType const*>(type);
-		bool const fixedBytes = bytes && bytes->length() && *bytes->length() < 32;
-		if (type != awst::WType::uint64Type() && type != awst::WType::boolType() && !fixedBytes)
-			continue;
-		if (m_frame.blobOffsetVars.count(name) || m_frame.calldataStaticPtrNames.count(name)) continue;
-		awst::SourceLocation loc(m_context->sourceFile);
-		std::string shadow = "__asmword_" + name;
-		std::shared_ptr<awst::Expression> value = awst::makeVarExpression(name, type, loc);
-		if (auto signedType = m_context->signedParamBits.find(name); signedType != m_context->signedParamBits.end())
-			value = TypeCoercion::signExtendToUint256(std::move(value), signedType->second, loc);
-		else if (fixedBytes) value = awst::makeRightPad(std::move(value), 32 - *bytes->length(), loc);
-		result.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(shadow, awst::WType::biguintType(), loc),
-			ensureBiguint(std::move(value), loc),
-			loc));
-		m_frame.locals[shadow] = awst::WType::biguintType();
-		m_frame.wordShadow[name] = shadow;
-	}
+	for (auto const& [name, word]: m_frame.wordShadow)
+		m_frame.locals[word] = awst::WType::biguintType();
 
 	for (auto const& stmt: _block.statements)
 	{
@@ -190,19 +169,6 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	// trailing `calldatacopy(...)`) previously left it undrained here and the
 	// memory write silently vanished.
 	drainPendingStatements(result);
-
-	auto shadows = std::move(m_frame.wordShadow);
-	m_frame.wordShadow.clear();
-	if (!m_frame.haltEmitted)
-	for (auto const& [name, shadow]: shadows)
-	{
-		awst::SourceLocation loc(m_context->sourceFile);
-		auto value = awst::makeVarExpression(shadow, awst::WType::biguintType(), loc);
-		if (m_context->signedParamBits.count(name))
-			result.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(name,
-				awst::WType::uint64Type(), loc), safeBtoi(std::move(value), loc), loc));
-		else emitPlainYulAssignment(name, std::move(value), loc, result);
-	}
 
 	return result;
 }
@@ -348,7 +314,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 	// then seed the mutable (__cd_off_x, __cd_len_x) pointer locals from it. The seeding MUST
 	// be inside the guard: without the blob the seeds read an unassigned __cd_blob (was a
 	// missing-braces bug, latent only because re-seeding made the bad seeds dead stores).
-	if (m_frame.useSyntheticCalldata)
+	if (m_frame.useSyntheticCalldata && !m_frame.functionCalldata)
 	{
 		buildSyntheticCalldataBlob(m_context->calldataParams, _out, loc);
 		initCalldataPointerLocals(_out, loc);

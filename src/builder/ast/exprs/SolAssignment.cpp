@@ -6,6 +6,8 @@
 #include "builder/ast/exprs/SolAssignment.h"
 #include "builder/ast/exprs/SolTupleExpression.h"
 #include "builder/eb/ResolvedLValue.h"
+#include "builder/eb/AssemblyBoundary.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/solc/SolcFacts.h"
 #include "awst/NameGen.h"
 #include "builder/eb/AssignmentHelper.h"
@@ -48,6 +50,21 @@ SolAssignment::SolAssignment(eb::ContractContext& _ctx, Assignment const& _node)
 std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 {
 	Token op = m_assignment.assignmentOperator();
+	if (op == Token::Assign)
+		if (auto const* id = SolcFacts::expressionAs<Identifier>(&m_assignment.leftHandSide()))
+			if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration))
+				if (auto copy = assemblyScalarCopy(m_ctx, *declaration, m_assignment.rightHandSide(), m_loc))
+					return ResolvedLValue(m_ctx, m_assignment.leftHandSide(), m_loc).write(std::move(copy));
+	if (auto const* id = SolcFacts::expressionAs<Identifier>(&m_assignment.leftHandSide()))
+		if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration);
+			declaration && declaration->referenceLocation() == VariableDeclaration::Location::CallData)
+			if (auto reference = CalldataReference::resolve(m_ctx, m_assignment.rightHandSide(), m_loc))
+			{
+				reference->bind(m_ctx, *declaration, m_loc);
+				return reference->read(m_ctx, m_loc);
+			}
+			else if (m_scope.function && m_scope.function->hasAssemblyCalldata)
+				throw SizeError("calldata reference assignment has no preserved input coordinates");
 
 	// (1) Pre-buildExpr early-outs.
 	if (auto r = tryHandleAddressedWrite())         return std::move(*r);
@@ -100,6 +117,8 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			auto const* identifier = SolcFacts::expressionAs<Identifier>(&component);
 			auto const* declaration = identifier
 				? dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration) : nullptr;
+			if (declaration)
+				if (auto reference = CalldataReference::local(m_scope, *declaration, m_loc)) return reference->pack(m_loc);
 			auto resolution = ResolvedLValue::classify(m_ctx, component);
 			if (component.annotation().type->isValueType()
 				|| ((!declaration || declaration->isStateVariable()) && resolution.isAddressed()))

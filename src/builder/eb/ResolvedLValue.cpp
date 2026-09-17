@@ -1,4 +1,5 @@
 #include "builder/eb/ResolvedLValue.h"
+#include "builder/eb/AssemblyBoundary.h"
 #include "builder/context/TranslationContext.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/storage/StoragePlace.hpp"
@@ -146,6 +147,13 @@ ResolvedLValue::ResolvedLValue(eb::ContractContext& ctx, Expression const& sourc
 	awst::SourceLocation const& loc, Resolution resolution, Expr built)
 	: m_ctx(ctx), m_type(source.annotation().type), m_native(ctx.typeMapper.map(m_type)), m_loc(loc)
 {
+	if (auto const* identifier = SolcFacts::expressionAs<Identifier>(&source))
+		if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration);
+			declaration && ctx.scope().bindings.assemblyWords.find(declaration->id()))
+		{
+			m_destination = AssemblyWord{declaration};
+			return;
+		}
 	if (auto const* declaration = std::get_if<VariableDeclaration const*>(&resolution.m_kind))
 	{
 		m_destination = Transient{*declaration};
@@ -293,6 +301,8 @@ Expr ResolvedLValue::freezeTarget(eb::ContractContext& ctx, Expr target, awst::S
 
 Expr ResolvedLValue::read()
 {
+	if (auto const* word = std::get_if<AssemblyWord>(&m_destination))
+		return readAssemblyScalar(m_ctx.scope(), m_ctx.typeMapper, *word->declaration, m_loc, m_ctx.preEffects());
 	if (auto const* transient = std::get_if<Transient>(&m_destination))
 		return m_ctx.transientStorage->buildRead(*transient->declaration, m_loc);
 	if (auto const* slot = std::get_if<Slot>(&m_destination))
@@ -358,8 +368,16 @@ void ResolvedLValue::writeTarget(Expr target, Expr value)
 
 Expr ResolvedLValue::write(Expr value)
 {
+	if (auto const* word = std::get_if<AssemblyWord>(&m_destination);
+		word && isAssemblyScalarCopy(value->wtype))
+	{
+		m_ctx.queuePreEffect(writeAssemblyScalar(m_ctx.scope(), m_ctx.typeMapper, *word->declaration, pin(value), m_loc));
+		return read();
+	}
 	value = pin(TypeCoercion::coerceForAssignment(std::move(value), m_native, m_loc, &m_ctx.preEffects()));
-	if (auto const* transient = std::get_if<Transient>(&m_destination))
+	if (auto const* word = std::get_if<AssemblyWord>(&m_destination))
+		m_ctx.queuePreEffect(writeAssemblyScalar(m_ctx.scope(), m_ctx.typeMapper, *word->declaration, value, m_loc));
+	else if (auto const* transient = std::get_if<Transient>(&m_destination))
 		m_ctx.queuePreEffect(m_ctx.transientStorage->buildWrite(*transient->declaration, value, m_loc));
 	else if (auto* slot = std::get_if<Slot>(&m_destination))
 	{

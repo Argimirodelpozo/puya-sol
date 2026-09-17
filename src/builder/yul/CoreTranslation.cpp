@@ -190,6 +190,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	{
 		std::string suffix = name.substr(dotPos + 1);
 		std::string baseName = name.substr(0, dotPos);
+		if (m_frame.useSyntheticCalldata && m_frame.calldataPointerNames.contains(baseName)
+			&& (suffix == "offset" || suffix == "length"))
+			return awst::makeVarExpression((suffix == "offset" ? "__cd_off_" : "__cd_len_") + baseName,
+				awst::WType::biguintType(), loc);
 
 		if (suffix == "slot")
 		{
@@ -350,7 +354,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	if (boIt != m_frame.blobOffsetVars.end())
 		return awst::makeVarExpression(boIt->second, awst::WType::uint64Type(), loc);
 
-	// Narrow Solidity local: use its full word until leaving this Yul block.
+	// Raw words survive assembly blocks; Solidity reads clean a separate value.
 	if (auto shIt = m_frame.wordShadow.find(name); shIt != m_frame.wordShadow.end())
 		return awst::makeVarExpression(shIt->second, awst::WType::biguintType(), loc);
 

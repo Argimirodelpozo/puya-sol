@@ -4,6 +4,8 @@
 #include "Logger.h"
 #include "awst/NameGen.h"
 #include "builder/codec/EvmValueCodec.h"
+#include "builder/codec/ByteSlice.h"
+#include "builder/types/TypeCoercion.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/codec/Arc4Defaults.h"
 #include "builder/context/BuildArtifacts.h"
@@ -49,6 +51,22 @@ public:
 			cursor += component->calldataHeadSize();
 		}
 		return result;
+	}
+
+	std::shared_ptr<awst::Expression> calldataValue(Type const* type,
+		std::shared_ptr<awst::Expression> offset, std::shared_ptr<awst::Expression> length, Statements& out)
+	{
+		if (auto const* array = dynamic_cast<ArrayType const*>(type); array && array->isDynamicallySized())
+		{
+			auto count = TypeCoercion::checkedAllocationSizeToUint64(out, std::move(length), m_loc);
+			if (array->isByteArrayOrString())
+			{
+				auto bytes = readPaddedBytes(m_typeMapper, m_blob, std::move(offset), count, m_loc);
+				return array->isString() ? awst::makeReinterpretCast(bytes, awst::WType::stringType(), m_loc) : bytes;
+			}
+			return arrayElements(array, TypeCoercion::checkedIndexToUint64(out, std::move(offset), m_loc), out, count);
+		}
+		return inlineValue(type, TypeCoercion::checkedIndexToUint64(out, std::move(offset), m_loc), out);
 	}
 
 private:
@@ -239,19 +257,20 @@ private:
 	}
 
 	std::shared_ptr<awst::Expression> arrayElements(
-		ArrayType const* array, std::shared_ptr<awst::Expression> start, Statements& out)
+		ArrayType const* array, std::shared_ptr<awst::Expression> start, Statements& out,
+		std::shared_ptr<awst::Expression> suppliedLength = nullptr)
 	{
 		auto const* arrayW = m_typeMapper.map(array);
 		auto const* elemW = arrayElementType(arrayW);
 		auto const* elemType = array->baseType();
 		bool const dynamic = array->isDynamicallySized();
 		auto base = awst::makeEvalOnce(std::move(start), m_loc);
-		auto count = awst::makeEvalOnce(dynamic ? smallWord(base, out, "array length")
+		auto count = awst::makeEvalOnce(suppliedLength ? suppliedLength : dynamic ? smallWord(base, out, "array length")
 			: u64(static_cast<uint64_t>(array->length()), m_loc), m_loc);
 		out.push_back(awst::makeExpressionStatement(awst::makeAssert(
 			awst::makeNumericCompare(count, awst::NumericComparison::Lte, u64(65535, m_loc), m_loc),
 			m_loc, "EVM ABI array exceeds ARC4 uint16 length"), m_loc));
-		auto elementsBase = awst::makeEvalOnce(dynamic ? add(base, u64(32, m_loc), m_loc) : base, m_loc);
+		auto elementsBase = awst::makeEvalOnce(dynamic && !suppliedLength ? add(base, u64(32, m_loc), m_loc) : base, m_loc);
 		auto bodySize = awst::makeUInt64BinOp(count, awst::UInt64BinaryOperator::Mult,
 			u64(elemType->calldataHeadSize(), m_loc), m_loc);
 		// solc validates the complete head before decoding any elements.
@@ -390,6 +409,14 @@ std::shared_ptr<awst::Expression> decodeEvmAbi(
 		return awst::makeBytesConstant({}, loc);
 	}
 	return Decoder(typeMapper, std::move(blob), loc).tuple(components, target, out);
+}
+
+std::shared_ptr<awst::Expression> readCalldataValue(
+	TypeMapper& mapper, std::shared_ptr<awst::Expression> blob, Type const* type,
+	std::shared_ptr<awst::Expression> offset, std::shared_ptr<awst::Expression> length,
+	awst::SourceLocation const& loc, Statements& out)
+{
+	return Decoder(mapper, std::move(blob), loc).calldataValue(type, std::move(offset), std::move(length), out);
 }
 
 std::shared_ptr<awst::Expression> decodeEvmCalldata(

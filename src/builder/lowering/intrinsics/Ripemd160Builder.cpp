@@ -30,6 +30,7 @@
 ///   4. Concatenate h0..h4 (each as 4 LE bytes) into the 20-byte digest.
 
 #include "builder/lowering/intrinsics/Ripemd160Builder.h"
+#include "builder/AwstShorthand.h"
 
 #include <utility>
 #include <vector>
@@ -38,6 +39,7 @@ namespace puyasol::builder::builtin
 {
 
 using namespace puyasol::awst;
+using namespace puyasol::builder::shorthand;
 
 namespace
 {
@@ -46,44 +48,24 @@ std::string const SUBROUTINE_ID = "__builtin_ripemd160";
 
 // ── Small AWST helpers ─────────────────────────────────────────────────
 
-std::shared_ptr<Expression> u64Const(uint64_t v, SourceLocation const& loc)
-{
-	return makeIntegerConstant(v, loc, WType::uint64Type());
-}
+using puyasol::awst::makeUInt64BinOp;
 
-std::shared_ptr<VarExpression> u64Var(std::string const& name, SourceLocation const& loc)
-{
-	return makeVarExpression(name, WType::uint64Type(), loc);
-}
-
-std::shared_ptr<VarExpression> bytesVar(std::string const& name, SourceLocation const& loc)
-{
-	return makeVarExpression(name, WType::bytesType(), loc);
-}
-
-std::shared_ptr<Expression> u64BinOp(
-	std::shared_ptr<Expression> l, UInt64BinaryOperator op, std::shared_ptr<Expression> r,
-	SourceLocation const& loc)
-{
-	return makeUInt64BinOp(std::move(l), op, std::move(r), loc);
-}
-
-std::shared_ptr<Expression> u64BinOp(
+std::shared_ptr<Expression> makeUInt64BinOp(
 	std::shared_ptr<Expression> l, UInt64BinaryOperator op, uint64_t r,
 	SourceLocation const& loc)
 {
-	return makeUInt64BinOp(std::move(l), op, u64Const(r, loc), loc);
+	return makeUInt64BinOp(std::move(l), op, u64(r, loc), loc);
 }
 
 std::shared_ptr<Expression> mask32(std::shared_ptr<Expression> expr, SourceLocation const& loc)
 {
-	return u64BinOp(std::move(expr), UInt64BinaryOperator::BitAnd, 0xFFFFFFFFULL, loc);
+	return makeUInt64BinOp(std::move(expr), UInt64BinaryOperator::BitAnd, 0xFFFFFFFFULL, loc);
 }
 
 std::shared_ptr<Expression> add32(
 	std::shared_ptr<Expression> a, std::shared_ptr<Expression> b, SourceLocation const& loc)
 {
-	return mask32(u64BinOp(std::move(a), UInt64BinaryOperator::Add, std::move(b), loc), loc);
+	return mask32(makeUInt64BinOp(std::move(a), UInt64BinaryOperator::Add, std::move(b), loc), loc);
 }
 
 /// Rotate a uint64-as-uint32 variable left by a pure shift expression.
@@ -91,45 +73,31 @@ std::shared_ptr<Expression> add32(
 std::shared_ptr<Expression> rol32(
 	std::string const& xName, std::shared_ptr<Expression> n, SourceLocation const& loc)
 {
-	auto lo = u64BinOp(u64Var(xName, loc), UInt64BinaryOperator::LShift,
+	auto lo = makeUInt64BinOp(u64Var(xName, loc), UInt64BinaryOperator::LShift,
 		n, loc);
-	auto comp = u64BinOp(u64Const(32, loc), UInt64BinaryOperator::Sub, std::move(n), loc);
-	auto hi = u64BinOp(u64Var(xName, loc), UInt64BinaryOperator::RShift,
+	auto comp = makeUInt64BinOp(u64(32, loc), UInt64BinaryOperator::Sub, std::move(n), loc);
+	auto hi = makeUInt64BinOp(u64Var(xName, loc), UInt64BinaryOperator::RShift,
 		std::move(comp), loc);
-	return mask32(u64BinOp(std::move(lo), UInt64BinaryOperator::BitOr, std::move(hi), loc), loc);
+	return mask32(makeUInt64BinOp(std::move(lo), UInt64BinaryOperator::BitOr, std::move(hi), loc), loc);
 }
 
 std::shared_ptr<Expression> not32(std::shared_ptr<Expression> x, SourceLocation const& loc)
 {
-	return u64BinOp(std::move(x), UInt64BinaryOperator::BitXor, 0xFFFFFFFFULL, loc);
-}
-
-std::shared_ptr<Statement> assignStmt(
-	std::shared_ptr<Expression> target, std::shared_ptr<Expression> value,
-	SourceLocation const& loc)
-{
-	return makeAssignmentStatement(std::move(target), std::move(value), loc);
+	return makeUInt64BinOp(std::move(x), UInt64BinaryOperator::BitXor, 0xFFFFFFFFULL, loc);
 }
 
 std::shared_ptr<Expression> getByte(
 	std::shared_ptr<Expression> b, std::shared_ptr<Expression> off,
 	SourceLocation const& loc)
 {
-	auto call = makeIntrinsicCall("getbyte", WType::uint64Type(), loc);
-	call->stackArgs.push_back(std::move(b));
-	call->stackArgs.push_back(std::move(off));
-	return call;
+	return makeIntrinsicCall("getbyte", WType::uint64Type(), loc, {std::move(b), std::move(off)});
 }
 
 std::shared_ptr<Expression> setByte(
 	std::shared_ptr<Expression> b, std::shared_ptr<Expression> off,
 	std::shared_ptr<Expression> val, SourceLocation const& loc)
 {
-	auto call = makeIntrinsicCall("setbyte", WType::bytesType(), loc);
-	call->stackArgs.push_back(std::move(b));
-	call->stackArgs.push_back(std::move(off));
-	call->stackArgs.push_back(std::move(val));
-	return call;
+	return makeIntrinsicCall("setbyte", WType::bytesType(), loc, {std::move(b), std::move(off), std::move(val)});
 }
 
 std::shared_ptr<Expression> oneByte(uint8_t value, SourceLocation const& loc)
@@ -144,17 +112,17 @@ std::shared_ptr<Expression> readLeWord(
 	SourceLocation const& loc)
 {
 	auto byteAt = [&](uint64_t i) {
-		auto off = u64BinOp(u64Var(offName, loc), UInt64BinaryOperator::Add,
-			u64Const(i, loc), loc);
+		auto off = makeUInt64BinOp(u64Var(offName, loc), UInt64BinaryOperator::Add,
+			u64(i, loc), loc);
 		return getByte(bytesVar(bName, loc), std::move(off), loc);
 	};
 	auto b0 = byteAt(0);
-	auto b1 = u64BinOp(byteAt(1), UInt64BinaryOperator::LShift, 8, loc);
-	auto b2 = u64BinOp(byteAt(2), UInt64BinaryOperator::LShift, 16, loc);
-	auto b3 = u64BinOp(byteAt(3), UInt64BinaryOperator::LShift, 24, loc);
-	auto or01 = u64BinOp(std::move(b0), UInt64BinaryOperator::BitOr, std::move(b1), loc);
-	auto or012 = u64BinOp(std::move(or01), UInt64BinaryOperator::BitOr, std::move(b2), loc);
-	return u64BinOp(std::move(or012), UInt64BinaryOperator::BitOr, std::move(b3), loc);
+	auto b1 = makeUInt64BinOp(byteAt(1), UInt64BinaryOperator::LShift, 8, loc);
+	auto b2 = makeUInt64BinOp(byteAt(2), UInt64BinaryOperator::LShift, 16, loc);
+	auto b3 = makeUInt64BinOp(byteAt(3), UInt64BinaryOperator::LShift, 24, loc);
+	auto or01 = makeUInt64BinOp(std::move(b0), UInt64BinaryOperator::BitOr, std::move(b1), loc);
+	auto or012 = makeUInt64BinOp(std::move(or01), UInt64BinaryOperator::BitOr, std::move(b2), loc);
+	return makeUInt64BinOp(std::move(or012), UInt64BinaryOperator::BitOr, std::move(b3), loc);
 }
 
 // Encode a uint32-in-uint64 var (named) as 4 LE bytes.
@@ -162,15 +130,15 @@ std::shared_ptr<Expression> wordLeBytes(
 	std::string const& wName, SourceLocation const& loc)
 {
 	auto byte = [&](uint64_t shift) {
-		return u64BinOp(
-			u64BinOp(u64Var(wName, loc), UInt64BinaryOperator::RShift, shift, loc),
+		return makeUInt64BinOp(
+			makeUInt64BinOp(u64Var(wName, loc), UInt64BinaryOperator::RShift, shift, loc),
 			UInt64BinaryOperator::BitAnd, 0xFFULL, loc);
 	};
-	std::shared_ptr<Expression> buf = makeBzero(u64Const(4, loc), loc);
-	buf = setByte(std::move(buf), u64Const(0, loc), byte(0), loc);
-	buf = setByte(std::move(buf), u64Const(1, loc), byte(8), loc);
-	buf = setByte(std::move(buf), u64Const(2, loc), byte(16), loc);
-	buf = setByte(std::move(buf), u64Const(3, loc), byte(24), loc);
+	std::shared_ptr<Expression> buf = makeBzero(u64(4, loc), loc);
+	buf = setByte(std::move(buf), u64(0, loc), byte(0), loc);
+	buf = setByte(std::move(buf), u64(1, loc), byte(8), loc);
+	buf = setByte(std::move(buf), u64(2, loc), byte(16), loc);
+	buf = setByte(std::move(buf), u64(3, loc), byte(24), loc);
 	return buf;
 }
 
@@ -231,12 +199,12 @@ std::shared_ptr<Expression> buildFnDispatch(
 	auto b = [&] { return u64Var(bName, loc); };
 	auto c = [&] { return u64Var(cName, loc); };
 	auto d = [&] { return u64Var(dName, loc); };
-	auto Xor = [&](auto x, auto y) { return u64BinOp(std::move(x), O::BitXor, std::move(y), loc); };
-	auto And = [&](auto x, auto y) { return u64BinOp(std::move(x), O::BitAnd, std::move(y), loc); };
-	auto Or  = [&](auto x, auto y) { return u64BinOp(std::move(x), O::BitOr,  std::move(y), loc); };
+	auto Xor = [&](auto x, auto y) { return makeUInt64BinOp(std::move(x), O::BitXor, std::move(y), loc); };
+	auto And = [&](auto x, auto y) { return makeUInt64BinOp(std::move(x), O::BitAnd, std::move(y), loc); };
+	auto Or  = [&](auto x, auto y) { return makeUInt64BinOp(std::move(x), O::BitOr,  std::move(y), loc); };
 
 	auto eq = [&](uint64_t v) {
-		return makeNumericCompare(u64Var(fnName, loc), NumericComparison::Eq, u64Const(v, loc), loc);
+		return makeNumericCompare(u64Var(fnName, loc), NumericComparison::Eq, u64(v, loc), loc);
 	};
 
 	// f1: b ^ c ^ d
@@ -263,12 +231,12 @@ void emitLine(Block& body, SourceLocation const& loc)
 {
 	using O = UInt64BinaryOperator;
 	auto left = [&] {
-		return makeNumericCompare(u64Var("line", loc), NumericComparison::Eq, u64Const(0, loc), loc);
+		return makeNumericCompare(u64Var("line", loc), NumericComparison::Eq, u64(0, loc), loc);
 	};
 	for (int i = 0; i < 5; ++i)
-		body.body.push_back(assignStmt(u64Var("W" + std::to_string(i), loc),
+		body.body.push_back(makeAssignmentStatement(u64Var("W" + std::to_string(i), loc),
 			u64Var("h" + std::to_string(i), loc), loc));
-	body.body.push_back(assignStmt(bytesVar("indices", loc), makeConditional(
+	body.body.push_back(makeAssignmentStatement(bytesVar("indices", loc), makeConditional(
 		left(), makeBytesConstant(fullIndexTable(indexLine(0, 1)), loc, BytesEncoding::Base16),
 		makeBytesConstant(fullIndexTable(indexLine(5, 9)), loc, BytesEncoding::Base16),
 		WType::bytesType(), loc), loc));
@@ -279,53 +247,53 @@ void emitLine(Block& body, SourceLocation const& loc)
 		for (int shift = 24; shift >= 0; shift -= 8)
 			constants.push_back(static_cast<uint8_t>(k >> shift));
 
-	body.body.push_back(assignStmt(u64Var("round", loc), u64Const(0, loc), loc));
+	body.body.push_back(makeAssignmentStatement(u64Var("round", loc), u64(0, loc), loc));
 	auto roundBody = makeBlock(loc);
-	roundBody->body.push_back(assignStmt(u64Var("fn", loc), makeConditional(
-		left(), u64BinOp(u64Var("round", loc), O::Add, 1, loc),
-		u64BinOp(u64Const(5, loc), O::Sub, u64Var("round", loc), loc),
+	roundBody->body.push_back(makeAssignmentStatement(u64Var("fn", loc), makeConditional(
+		left(), makeUInt64BinOp(u64Var("round", loc), O::Add, 1, loc),
+		makeUInt64BinOp(u64(5, loc), O::Sub, u64Var("round", loc), loc),
 		WType::uint64Type(), loc), loc));
-	auto constantOffset = u64BinOp(
-		u64BinOp(u64BinOp(u64Var("line", loc), O::Mult, 5, loc),
+	auto constantOffset = makeUInt64BinOp(
+		makeUInt64BinOp(makeUInt64BinOp(u64Var("line", loc), O::Mult, 5, loc),
 			O::Add, u64Var("round", loc), loc), O::Mult, 4, loc);
-	roundBody->body.push_back(assignStmt(u64Var("k", loc), makeBtoi(makeExtract3(
+	roundBody->body.push_back(makeAssignmentStatement(u64Var("k", loc), makeBtoi(makeExtract3(
 		makeBytesConstant(std::move(constants), loc, BytesEncoding::Base16),
-		std::move(constantOffset), u64Const(4, loc), loc), loc), loc));
-	roundBody->body.push_back(assignStmt(u64Var("roundBase", loc),
-		u64BinOp(u64Var("round", loc), O::Mult, 16, loc), loc));
-	roundBody->body.push_back(assignStmt(u64Var("i", loc), u64Const(0, loc), loc));
+		std::move(constantOffset), u64(4, loc), loc), loc), loc));
+	roundBody->body.push_back(makeAssignmentStatement(u64Var("roundBase", loc),
+		makeUInt64BinOp(u64Var("round", loc), O::Mult, 16, loc), loc));
+	roundBody->body.push_back(makeAssignmentStatement(u64Var("i", loc), u64(0, loc), loc));
 
 	auto innerBody = makeBlock(loc);
-	innerBody->body.push_back(assignStmt(u64Var("idx", loc), getByte(
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("idx", loc), getByte(
 		bytesVar("indices", loc),
-		u64BinOp(u64Var("roundBase", loc), O::Add, u64Var("i", loc), loc), loc), loc));
+		makeUInt64BinOp(u64Var("roundBase", loc), O::Add, u64Var("i", loc), loc), loc), loc));
 	// Shifts are indexed by the permuted word index, not the step index.
-	innerBody->body.push_back(assignStmt(u64Var("shift", loc), getByte(
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("shift", loc), getByte(
 		makeBytesConstant(shiftsTable(), loc, BytesEncoding::Base16),
-		u64BinOp(u64Var("roundBase", loc), O::Add, u64Var("idx", loc), loc), loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("xOff", loc),
-		u64BinOp(u64Var("idx", loc), O::Mult, 4, loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("xi", loc), readLeWord("chunk", "xOff", loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("fnVal", loc),
+		makeUInt64BinOp(u64Var("roundBase", loc), O::Add, u64Var("idx", loc), loc), loc), loc));
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("xOff", loc),
+		makeUInt64BinOp(u64Var("idx", loc), O::Mult, 4, loc), loc));
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("xi", loc), readLeWord("chunk", "xOff", loc), loc));
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("fnVal", loc),
 		buildFnDispatch("fn", "W1", "W2", "W3", loc), loc));
 	auto sum = add32(add32(add32(u64Var("W0", loc), u64Var("fnVal", loc), loc),
 		u64Var("xi", loc), loc), u64Var("k", loc), loc);
-	innerBody->body.push_back(assignStmt(u64Var("sum", loc), std::move(sum), loc));
-	innerBody->body.push_back(assignStmt(u64Var("sum", loc),
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("sum", loc), std::move(sum), loc));
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("sum", loc),
 		add32(rol32("sum", u64Var("shift", loc), loc), u64Var("W4", loc), loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("W0", loc), u64Var("W4", loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("W4", loc), u64Var("W3", loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("W3", loc), rol32("W2", u64Const(10, loc), loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("W2", loc), u64Var("W1", loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("W1", loc), u64Var("sum", loc), loc));
-	innerBody->body.push_back(assignStmt(u64Var("i", loc),
-		u64BinOp(u64Var("i", loc), O::Add, 1, loc), loc));
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("W0", loc), u64Var("W4", loc), loc));
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("W4", loc), u64Var("W3", loc), loc));
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("W3", loc), rol32("W2", u64(10, loc), loc), loc));
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("W2", loc), u64Var("W1", loc), loc));
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("W1", loc), u64Var("sum", loc), loc));
+	innerBody->body.push_back(makeAssignmentStatement(u64Var("i", loc),
+		makeUInt64BinOp(u64Var("i", loc), O::Add, 1, loc), loc));
 	roundBody->body.push_back(makeWhileLoop(makeNumericCompare(
-		u64Var("i", loc), NumericComparison::Lt, u64Const(16, loc), loc), std::move(innerBody), loc));
-	roundBody->body.push_back(assignStmt(u64Var("round", loc),
-		u64BinOp(u64Var("round", loc), O::Add, 1, loc), loc));
+		u64Var("i", loc), NumericComparison::Lt, u64(16, loc), loc), std::move(innerBody), loc));
+	roundBody->body.push_back(makeAssignmentStatement(u64Var("round", loc),
+		makeUInt64BinOp(u64Var("round", loc), O::Add, 1, loc), loc));
 	body.body.push_back(makeWhileLoop(makeNumericCompare(
-		u64Var("round", loc), NumericComparison::Lt, u64Const(5, loc), loc), std::move(roundBody), loc));
+		u64Var("round", loc), NumericComparison::Lt, u64(5, loc), loc), std::move(roundBody), loc));
 }
 
 void emitProcessChunk(Block& body, SourceLocation const& loc)
@@ -334,25 +302,25 @@ void emitProcessChunk(Block& body, SourceLocation const& loc)
 	// Initialize both outside loops so the AWST has no undefined incoming values.
 	for (int i = 0; i < 5; ++i)
 		for (auto const* prefix: {"L", "W"})
-			body.body.push_back(assignStmt(u64Var(prefix + std::to_string(i), loc), u64Const(0, loc), loc));
-	body.body.push_back(assignStmt(u64Var("line", loc), u64Const(0, loc), loc));
+			body.body.push_back(makeAssignmentStatement(u64Var(prefix + std::to_string(i), loc), u64(0, loc), loc));
+	body.body.push_back(makeAssignmentStatement(u64Var("line", loc), u64(0, loc), loc));
 	auto lineBody = makeBlock(loc);
 	emitLine(*lineBody, loc);
 	auto saveLeft = makeBlock(loc);
 	for (int i = 0; i < 5; ++i)
-		saveLeft->body.push_back(assignStmt(u64Var("L" + std::to_string(i), loc),
+		saveLeft->body.push_back(makeAssignmentStatement(u64Var("L" + std::to_string(i), loc),
 			u64Var("W" + std::to_string(i), loc), loc));
 	lineBody->body.push_back(makeIfElse(makeNumericCompare(
-		u64Var("line", loc), NumericComparison::Eq, u64Const(0, loc), loc),
+		u64Var("line", loc), NumericComparison::Eq, u64(0, loc), loc),
 		std::move(saveLeft), nullptr, loc));
-	lineBody->body.push_back(assignStmt(u64Var("line", loc),
-		u64BinOp(u64Var("line", loc), UInt64BinaryOperator::Add, 1, loc), loc));
+	lineBody->body.push_back(makeAssignmentStatement(u64Var("line", loc),
+		makeUInt64BinOp(u64Var("line", loc), UInt64BinaryOperator::Add, 1, loc), loc));
 	body.body.push_back(makeWhileLoop(makeNumericCompare(
-		u64Var("line", loc), NumericComparison::Lt, u64Const(2, loc), loc), std::move(lineBody), loc));
+		u64Var("line", loc), NumericComparison::Lt, u64(2, loc), loc), std::move(lineBody), loc));
 
 	// Cross-combine the two lines, retaining h0 until the final rotation.
 	auto combine = [&](std::string const& dst, std::string const& hSrc, int li, int ri) {
-		body.body.push_back(assignStmt(u64Var(dst, loc), add32(
+		body.body.push_back(makeAssignmentStatement(u64Var(dst, loc), add32(
 			add32(u64Var(hSrc, loc), u64Var("L" + std::to_string(li), loc), loc),
 			u64Var("W" + std::to_string(ri), loc), loc), loc));
 	};
@@ -361,7 +329,7 @@ void emitProcessChunk(Block& body, SourceLocation const& loc)
 	combine("h1", "h2", 3, 4);
 	combine("h2", "h3", 4, 0);
 	combine("h3", "h4", 0, 1);
-	body.body.push_back(assignStmt(u64Var("h4", loc), u64Var("htmp", loc), loc));
+	body.body.push_back(makeAssignmentStatement(u64Var("h4", loc), u64Var("htmp", loc), loc));
 }
 
 } // anonymous namespace
@@ -370,75 +338,65 @@ std::string const& ripemd160SubroutineId() { return SUBROUTINE_ID; }
 
 std::shared_ptr<Subroutine> buildRipemd160Subroutine(SourceLocation loc)
 {
-	auto sub = std::make_shared<Subroutine>();
-	sub->sourceLocation = loc;
-	sub->id = SUBROUTINE_ID;
-	sub->name = SUBROUTINE_ID;
-	sub->returnType = WType::bytesType();
-	sub->pure = true;
-	sub->inlineOpt = false;
-
-	sub->args.emplace_back("data", WType::bytesType(), loc);
-
 	auto body = makeBlock(loc);
 
 	// Initialize digest state h0..h4 with the canonical IV.
-	body->body.push_back(assignStmt(u64Var("h0", loc), u64Const(0x67452301ULL, loc), loc));
-	body->body.push_back(assignStmt(u64Var("h1", loc), u64Const(0xefcdab89ULL, loc), loc));
-	body->body.push_back(assignStmt(u64Var("h2", loc), u64Const(0x98badcfeULL, loc), loc));
-	body->body.push_back(assignStmt(u64Var("h3", loc), u64Const(0x10325476ULL, loc), loc));
-	body->body.push_back(assignStmt(u64Var("h4", loc), u64Const(0xc3d2e1f0ULL, loc), loc));
+	body->body.push_back(makeAssignmentStatement(u64Var("h0", loc), u64(0x67452301ULL, loc), loc));
+	body->body.push_back(makeAssignmentStatement(u64Var("h1", loc), u64(0xefcdab89ULL, loc), loc));
+	body->body.push_back(makeAssignmentStatement(u64Var("h2", loc), u64(0x98badcfeULL, loc), loc));
+	body->body.push_back(makeAssignmentStatement(u64Var("h3", loc), u64(0x10325476ULL, loc), loc));
+	body->body.push_back(makeAssignmentStatement(u64Var("h4", loc), u64(0xc3d2e1f0ULL, loc), loc));
 
 	// dataLen = len(data); bits = dataLen * 8
-	body->body.push_back(assignStmt(u64Var("dataLen", loc),
+	body->body.push_back(makeAssignmentStatement(u64Var("dataLen", loc),
 		makeLen(bytesVar("data", loc), loc), loc));
-	body->body.push_back(assignStmt(u64Var("bits", loc),
-		u64BinOp(u64Var("dataLen", loc), UInt64BinaryOperator::Mult, 8, loc), loc));
+	body->body.push_back(makeAssignmentStatement(u64Var("bits", loc),
+		makeUInt64BinOp(u64Var("dataLen", loc), UInt64BinaryOperator::Mult, 8, loc), loc));
 
 	// Keep the original full blocks in data. Only the remainder is padded;
 	// even a 4096-byte input therefore never creates an oversized AVM value.
-	body->body.push_back(assignStmt(u64Var("remainder", loc),
-		u64BinOp(u64Var("dataLen", loc), UInt64BinaryOperator::Mod, 64, loc), loc));
-	body->body.push_back(assignStmt(u64Var("fullLen", loc),
-		u64BinOp(u64Var("dataLen", loc), UInt64BinaryOperator::Sub, u64Var("remainder", loc), loc), loc));
-	body->body.push_back(assignStmt(u64Var("tailLen", loc), makeConditional(
-		makeNumericCompare(u64Var("remainder", loc), NumericComparison::Lt, u64Const(56, loc), loc),
-		u64Const(64, loc), u64Const(128, loc), WType::uint64Type(), loc), loc));
-	body->body.push_back(assignStmt(u64Var("padLen", loc),
-		u64BinOp(u64Var("fullLen", loc), UInt64BinaryOperator::Add, u64Var("tailLen", loc), loc), loc));
-	auto zerosLen = u64BinOp(
-		u64BinOp(u64Var("tailLen", loc), UInt64BinaryOperator::Sub, u64Var("remainder", loc), loc),
-		UInt64BinaryOperator::Sub, u64Const(9, loc), loc);
+	body->body.push_back(makeAssignmentStatement(u64Var("remainder", loc),
+		makeUInt64BinOp(u64Var("dataLen", loc), UInt64BinaryOperator::Mod, 64, loc), loc));
+	body->body.push_back(makeAssignmentStatement(u64Var("fullLen", loc),
+		makeUInt64BinOp(u64Var("dataLen", loc), UInt64BinaryOperator::Sub, u64Var("remainder", loc), loc), loc));
+	body->body.push_back(makeAssignmentStatement(u64Var("tailLen", loc), makeConditional(
+		makeNumericCompare(u64Var("remainder", loc), NumericComparison::Lt, u64(56, loc), loc),
+		u64(64, loc), u64(128, loc), WType::uint64Type(), loc), loc));
+	body->body.push_back(makeAssignmentStatement(u64Var("padLen", loc),
+		makeUInt64BinOp(u64Var("fullLen", loc), UInt64BinaryOperator::Add, u64Var("tailLen", loc), loc), loc));
+	auto zerosLen = makeUInt64BinOp(
+		makeUInt64BinOp(u64Var("tailLen", loc), UInt64BinaryOperator::Sub, u64Var("remainder", loc), loc),
+		UInt64BinaryOperator::Sub, u64(9, loc), loc);
 	auto firstPart = makeConcat(
 		makeConcat(makeExtract3(bytesVar("data", loc), u64Var("fullLen", loc),
 			u64Var("remainder", loc), loc), oneByte(0x80, loc), loc),
 		makeBzero(std::move(zerosLen), loc), loc);
-	body->body.push_back(assignStmt(bytesVar("tail", loc), std::move(firstPart), loc));
+	body->body.push_back(makeAssignmentStatement(bytesVar("tail", loc), std::move(firstPart), loc));
 
 	// 8-byte LE length of bits at the end of the last chunk.
 	auto bitsByte = [&](uint64_t shift) {
-		return u64BinOp(
-			u64BinOp(u64Var("bits", loc), UInt64BinaryOperator::RShift, shift, loc),
+		return makeUInt64BinOp(
+			makeUInt64BinOp(u64Var("bits", loc), UInt64BinaryOperator::RShift, shift, loc),
 			UInt64BinaryOperator::BitAnd, 0xFFULL, loc);
 	};
-	std::shared_ptr<Expression> lenLeBuf = makeBzero(u64Const(8, loc), loc);
+	std::shared_ptr<Expression> lenLeBuf = makeBzero(u64(8, loc), loc);
 	for (int i = 0; i < 8; ++i)
-		lenLeBuf = setByte(std::move(lenLeBuf), u64Const(i, loc), bitsByte(i * 8), loc);
-	body->body.push_back(assignStmt(bytesVar("tail", loc),
+		lenLeBuf = setByte(std::move(lenLeBuf), u64(i, loc), bitsByte(i * 8), loc);
+	body->body.push_back(makeAssignmentStatement(bytesVar("tail", loc),
 		makeConcat(bytesVar("tail", loc), std::move(lenLeBuf), loc), loc));
 
 	// Chunk loop: for pos = 0; pos < padLen; pos += 64
-	body->body.push_back(assignStmt(u64Var("pos", loc), u64Const(0, loc), loc));
+	body->body.push_back(makeAssignmentStatement(u64Var("pos", loc), u64(0, loc), loc));
 	auto chunkBody = makeBlock(loc);
-	chunkBody->body.push_back(assignStmt(bytesVar("chunk", loc), makeConditional(
+	chunkBody->body.push_back(makeAssignmentStatement(bytesVar("chunk", loc), makeConditional(
 		makeNumericCompare(u64Var("pos", loc), NumericComparison::Lt, u64Var("fullLen", loc), loc),
-		makeExtract3(bytesVar("data", loc), u64Var("pos", loc), u64Const(64, loc), loc),
+		makeExtract3(bytesVar("data", loc), u64Var("pos", loc), u64(64, loc), loc),
 		makeExtract3(bytesVar("tail", loc),
-			u64BinOp(u64Var("pos", loc), UInt64BinaryOperator::Sub, u64Var("fullLen", loc), loc),
-			u64Const(64, loc), loc), WType::bytesType(), loc), loc));
+			makeUInt64BinOp(u64Var("pos", loc), UInt64BinaryOperator::Sub, u64Var("fullLen", loc), loc),
+			u64(64, loc), loc), WType::bytesType(), loc), loc));
 	emitProcessChunk(*chunkBody, loc);
-	chunkBody->body.push_back(assignStmt(u64Var("pos", loc),
-		u64BinOp(u64Var("pos", loc), UInt64BinaryOperator::Add, 64, loc), loc));
+	chunkBody->body.push_back(makeAssignmentStatement(u64Var("pos", loc),
+		makeUInt64BinOp(u64Var("pos", loc), UInt64BinaryOperator::Add, 64, loc), loc));
 	body->body.push_back(makeWhileLoop(makeNumericCompare(
 		u64Var("pos", loc), NumericComparison::Lt, u64Var("padLen", loc), loc), std::move(chunkBody), loc));
 
@@ -455,7 +413,9 @@ std::shared_ptr<Subroutine> buildRipemd160Subroutine(SourceLocation loc)
 
 	body->body.push_back(makeReturnStatement(std::move(digest), loc));
 
-	sub->body = std::move(body);
+	auto sub = makeSubroutine(SUBROUTINE_ID, SUBROUTINE_ID,
+		{{"data", WType::bytesType(), loc}}, WType::bytesType(), std::move(body), true, loc);
+	sub->inlineOpt = false;
 	return sub;
 }
 

@@ -20,6 +20,7 @@ std::shared_ptr<awst::CreateInnerTransaction> buildNativePayment(
 
 /// Solidity transfer/send: invoke receive/fallback for application identities
 /// in the same inner group as the payment; ordinary accounts receive only pay.
+/// A null amount is an empty call without a payment (accounts succeed silently).
 std::shared_ptr<awst::Statement> buildNativeTransfer(
 	TypeMapper& _types,
 	std::vector<std::shared_ptr<awst::Statement>>& _preEffects,

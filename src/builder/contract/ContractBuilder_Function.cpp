@@ -19,6 +19,8 @@
 #include "builder/types/SolIntType.h"
 #include "builder/codec/Arc4Defaults.h"
 #include "builder/types/TypeCoercion.h"
+#include "builder/eb/AssemblyBoundary.h"
+#include "builder/eb/CalldataReference.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -349,8 +351,13 @@ void emitImplicitReturn(
 	{
 		auto const& rp = *retParams[0];
 		bool const inMemory = rp.referenceLocation() == VariableDeclaration::Location::Memory;
-		if (_shape.calldataPointerReturns && _fnCtx.seededCalldataPointers.count(rp.name()))
-			retStmt->value = TypeCoercion::calldataPointerValueRead(rp.name(), _loc);
+		if (auto word = readAssemblyScalar(_fnCtx.scope, _typeMapper, rp, _loc, _body.body))
+			retStmt->value = std::move(word);
+		else if (auto reference = sol_ast::CalldataReference::local(_fnCtx.scope, rp, _loc))
+		{
+			retStmt->value = reference->read(_fnCtx.tr.contractCtx, _loc);
+			_fnCtx.tr.contractCtx.appendEffectsTo(_body.body);
+		}
 		else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id())
 			&& !memoryUsesBlob(_typeMapper.map(rp.type())))
 			retStmt->value = materialized(rp, _typeMapper.map(rp.type()));
@@ -379,6 +386,13 @@ void emitImplicitReturn(
 			if (rp.name().empty())
 				// Solc initializes every return parameter, including unnamed ones.
 				tuple->items.push_back(TypeCoercion::makeDefaultValue(vt, _loc));
+			else if (auto word = readAssemblyScalar(_fnCtx.scope, _typeMapper, rp, _loc, _body.body))
+				tuple->items.push_back(std::move(word));
+			else if (auto reference = sol_ast::CalldataReference::local(_fnCtx.scope, rp, _loc))
+			{
+				tuple->items.push_back(reference->read(_fnCtx.tr.contractCtx, _loc));
+				_fnCtx.tr.contractCtx.appendEffectsTo(_body.body);
+			}
 			else if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(vt))
 				tuple->items.push_back(blobOffVar(rp));
 			else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id()) && !memoryUsesBlob(vt))
@@ -457,7 +471,6 @@ void ContractBuilder::synthesizeImplicitReturn(
 {
 	ImplicitReturnShape shape;
 	shape.hasReturnValue = method.returnType != awst::WType::voidType();
-	shape.calldataPointerReturns = true;
 	shape.enumRangeAssert = true;
 	shape.encodeReturns = encodeReturnsAtBuildTime;
 	shape.returnPlan = &returnPlan;
@@ -575,6 +588,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		m_typeMapper.analysis().callablesWithInlineAssembly.count(_func.id()) != 0;
 
 	buildMethodSignature(method, _func, _nameOverride);
+	if (_asInternalCopy || !_func.isPartOfExternalInterface())
+		if (!_func.isConstructor() && !_func.isFallback() && !_func.isReceive())
+			appendCalldataParameters(m_typeMapper.callBoundaryPlan(_func, m_currentContract),
+				method.args, method.sourceLocation);
 
 	auto const& signature = m_typeMapper.functionReturnPlan(_func);
 	method.returnType = signature.nativeType;
@@ -603,6 +620,45 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	// insertion (collectArc4ParamRemaps above).
 	auto paramDecodes = collectArc4ParamRemaps(
 		m_typeMapper, _func, method, funcHasInlineAssembly);
+	auto const& boundary = m_typeMapper.callBoundaryPlan(_func, m_currentContract);
+	if (_func.isImplemented() && method.arc4MethodConfig && boundary.calldataFrame
+		&& !_func.isFallback() && !_func.isReceive())
+	{
+		// Capture before any Solidity code, including modifiers. Internal calls
+		// use the same implementation with their caller's frame instead.
+		std::vector<awst::SubroutineArgument> nativeArgs;
+		for (auto const& parameter: boundary.parameters)
+			nativeArgs.emplace_back(parameter.name, parameter.type, method.sourceLocation);
+		m_functionCtx.emplace(*m_tr, _func, nativeArgs, signature.nativeType);
+		auto scope = m_exprBuilder->pushScopeRaii(&m_functionCtx->scope);
+		method.body = awst::makeBlock(method.sourceLocation);
+		method.body->body = makeParamDecodeStatements(paramDecodes);
+		prepareAssemblyBoundary(*m_functionCtx, _func.body(), method.body->body);
+		appendCalldataParameters(boundary, nativeArgs, method.sourceLocation);
+		auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{
+			eb::CallResolver::baseImplementationName(*m_exprBuilder, _func)},
+			boundary.augmentReturn(m_typeMapper, signature.nativeType), method.sourceLocation);
+		for (auto const& argument: nativeArgs)
+			awst::pushCallArg(call->args, awst::makeVarExpression(argument.name, argument.wtype, argument.sourceLocation));
+		std::shared_ptr<awst::Expression> value = call;
+		if (!boundary.writeBackParams.empty() && signature.nativeType != awst::WType::voidType())
+			value = boundary.unpackReturn(awst::makeEvalOnce(call, method.sourceLocation),
+				signature.nativeType, method.sourceLocation).first;
+		if (signature.nativeType == awst::WType::voidType())
+		{
+			method.body->body.push_back(awst::makeExpressionStatement(std::move(value), method.sourceLocation));
+			value = nullptr;
+		}
+		else value = TypeCoercion::encodeReturnValue(m_typeMapper, std::move(value), signature.elements,
+			method.sourceLocation, method.body->body, funcHasInlineAssembly);
+		method.returnType = signature.wireType;
+		method.body->body.push_back(awst::makeReturnStatement(std::move(value), method.sourceLocation));
+		applyParamDecodeNames(paramDecodes, method);
+		prependEnsureBudget(method, _func);
+		prependAbiEntryChecks(method, _func);
+		maybePrependNonPayable(method, _func);
+		return method;
+	}
 
 	if (_func.isImplemented())
 	{

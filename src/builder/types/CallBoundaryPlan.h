@@ -40,6 +40,7 @@ struct CallParameterPlan
 /// source parameters; companion offsets follow them, in offsetParams order.
 struct CallBoundaryPlan
 {
+	bool calldataFrame = false;
 	std::vector<CallParameterPlan> parameters;
 	std::set<size_t> slotParams, keyParams, blobParams, asmSlotParams;
 	std::vector<size_t> offsetParams, storageWriteBackParams, memoryWriteBackParams, writeBackParams;

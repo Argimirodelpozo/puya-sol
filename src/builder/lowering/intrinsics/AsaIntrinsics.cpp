@@ -212,19 +212,7 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 	if (found == known.end())
 		return std::nullopt;
 	auto const* intrinsic = found->second;
-	auto const* type = dynamic_cast<FunctionType const*>(_call.expression().annotation().type);
-	bool bound = type && type->hasBoundFirstArgument();
-	std::shared_ptr<awst::Expression> receiver;
-	auto bindReceiver = [&] {
-		receiver = sol_ast::CallOperands::evaluate(_ctx, _memberAccess.expression(), _loc);
-	};
-	if (bound && _ctx.viaIRSequencing) bindReceiver();
-	auto args = sol_ast::CallOperands::build(_ctx, _call, _loc);
-	if (bound)
-	{
-		if (!_ctx.viaIRSequencing) bindReceiver();
-		args.insert(args.begin(), std::move(receiver));
-	}
+	auto args = sol_ast::CallOperands::buildParameters(_ctx, _call, _loc);
 
 	assert(args.size() == function->parameters().size());
 	using K = IntrinsicKind;

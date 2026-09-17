@@ -1,6 +1,6 @@
 /// @file SyntheticCalldataOps.cpp
 /// Synthetic EVM-ABI calldata blob: when Yul accesses calldata at a non-constant
-/// offset, stand up `__cd_blob` at the assembly-block entry so dynamic calldataload
+/// offset, stand up `__cd_blob` at function entry so dynamic calldataload
 /// becomes `extract3(__cd_blob, off, 32)`.
 ///
 /// Layout + value widening are driven by the DECLARED solc types when available.
@@ -17,6 +17,7 @@
 #include "builder/codec/EvmAbiEncode.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/codec/Arc4Defaults.h"
+#include "builder/contract/SelectorRouter.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -110,7 +111,7 @@ void flattenSolLeaves(
 } // anonymous
 
 // True when the declared solc type is trustworthy for EVM-ABI layout math:
-// value types, and reference types actually located in calldata. Storage-ref
+// value types, and memory/calldata reference values. Storage-ref
 // params (V4 handle-model) travel as box keys — their solc types would hit
 // calldataEncodedSize solAsserts.
 bool AssemblyBuilder::solTypeUsable(solidity::frontend::Type const* _t)
@@ -119,7 +120,7 @@ bool AssemblyBuilder::solTypeUsable(solidity::frontend::Type const* _t)
 	if (!_t) return false;
 	if (_t->isValueType()) return true;
 	if (auto const* rt = dynamic_cast<ReferenceType const*>(_t))
-		return rt->location() == DataLocation::CallData;
+		return rt->location() == DataLocation::CallData || rt->location() == DataLocation::Memory;
 	return false;
 }
 
@@ -293,43 +294,32 @@ void AssemblyBuilder::initCalldataPointerLocals(
 	for (auto const& [name, type]: m_context->calldataParams)
 	{
 		auto const* solType = calldataSolType(name);
-		bool const dynamicallyEncoded = solTypeUsable(solType)
-			? solType->isDynamicallyEncoded()
-			: isDynamicCalldataType(type);
-		// STATIC calldata pointer param (struct / fixed array) referenced as a bare
-		// pointer in this block: seed __cd_off_<name> with its constant data offset
-		// (statics live inline in the head area — m_frame.localConstants holds the byte pos).
-		if (!dynamicallyEncoded)
-		{
-			if (!m_frame.calldataStaticPtrNames.count(name)) continue;
-			auto cdIt = m_frame.localConstants.find(name);
-			if (cdIt == m_frame.localConstants.end()) continue;
-			if (m_frame.seededCalldataPointers)
-			{
-				if (m_frame.seededCalldataPointers->count(name)) continue;
-				m_frame.seededCalldataPointers->insert(name);
-			}
-			_out.push_back(awst::makeAssignmentStatement(
-				awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), _loc),
-				awst::makeIntegerConstant(cdIt->second, _loc, awst::WType::biguintType()), _loc));
-			continue;
-		}
+		if (!solType || !solType->dataStoredIn(solidity::frontend::DataLocation::CallData)) continue;
 		auto cdIt = m_frame.localConstants.find(name);
 		if (cdIt == m_frame.localConstants.end()) continue;
-		// Seed ONCE per function: a later block must see a pointer mutated by an
-		// earlier block (x.offset := V), not a fresh canonical re-seed.
-		if (m_frame.seededCalldataPointers)
-		{
-			if (m_frame.seededCalldataPointers->count(name)) continue;
-			m_frame.seededCalldataPointers->insert(name);
-		}
 		_out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), _loc),
-			calldataDynOffset(cdIt->second, solType, _loc), _loc));
-		_out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression("__cd_len_" + name, awst::WType::biguintType(), _loc),
-			calldataDynLength(cdIt->second, solType, _loc), _loc));
+			solType->isDynamicallyEncoded() ? calldataDynOffset(cdIt->second, solType, _loc)
+				: awst::makeBiguintConstant(std::to_string(cdIt->second), _loc), _loc));
+		for (auto const& [part, partType]: solType->stackItems())
+			if (part == "length")
+				_out.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression("__cd_len_" + name, awst::WType::biguintType(), _loc),
+					calldataDynLength(cdIt->second, solType, _loc), _loc));
 	}
+}
+
+void AssemblyBuilder::prepareCalldata(
+	std::vector<std::pair<std::string, awst::WType const*>> const& params,
+	std::vector<std::shared_ptr<awst::Statement>>& out, awst::SourceLocation const& loc, bool transactionInput)
+{
+	prepareContext().calldataParams = params;
+	initializeCalldataMap(params);
+	if (transactionInput && m_typeMapper.profile().contractAbi == ContractAbi::Evm)
+		out.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(CD_BLOB_VAR,
+			awst::WType::bytesType(), loc), reconstructCalldata(CalldataTransport::SplitEvm, loc), loc));
+	else buildSyntheticCalldataBlob(params, out, loc);
+	initCalldataPointerLocals(out, loc);
 }
 
 void AssemblyBuilder::buildSyntheticCalldataBlob(

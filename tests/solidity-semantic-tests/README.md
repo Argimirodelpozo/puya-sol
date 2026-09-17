@@ -8,6 +8,60 @@ not as an active test runner.
 
 ## Recorded baseline
 
+### Lowering reductions and Solidity/Yul boundaries — 2026-09-17
+
+This commit on `rev-2` follows `c65593221f`. Empty literal and runtime calls
+share application/account transport and replace returndata on every successful
+path. External-call encoding, ASA operand sequencing and function-pointer
+construction are shared; the RIPEMD helper cleanup preserves its complete AWST
+subroutine. Assembly-visible scalar locals retain full words across blocks and
+same-type copies. Calldata uses immutable caller frames, dominating parameter
+initialization and declaration-keyed, solc-shaped references for aliases,
+slices, rebinding and typed reads. Internal direct, virtual and function-pointer
+calls preserve the caller frame. The memory experiment remains separate.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,805 |
+| Failed | 0 |
+| Expected failure (xfail) | 99 |
+| Unexpected pass (xpass) | 40 |
+| Total | 2,944 |
+
+The final full LocalNet semantic and framework repeat took **999.55 seconds**:
+`PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 2 --tb=short
+--junitxml=out/lowering-boundaries/semantic.xml`. All **2,887 existing individual
+outcomes are unchanged**; all **57 new configurations pass**, comprising 49
+runtime configurations and eight explicit compiler-rejection checks. No cases
+were removed, failure markers changed, ledger reset or compile cache cleared.
+
+Native CTests passed **24/24** in 3.00 seconds. The final focused repeat passed
+**217/217** in 165.69 seconds, including four super-resolution regressions found
+and fixed before this full repeat. Official solc **0.8.34+80d5c536** execution
+records **146 passing probes** across optimized legacy/via-IR; this oracle is
+distinct from the frontend's clean pinned solc source checkout. The complete
+`__builtin_ripemd160` AWST subroutine is unchanged, including source locations.
+Compiler, production-source and test manifests matched after validation; the
+compiler SHA-256 is
+`a5425b3dc191bc78cd36ef77c15355ac74d719f21d70ec7370e0d3168612b685`.
+
+Returning a calldata reference through an internal function and binding it in a
+calldata-observing body still rejects explicitly; arbitrary dirty scalar-word
+transport across function/ABI boundaries is not promised. Existing external
+self-call and staticcall divergences are unchanged. See
+[known limitations](../../docs/KNOWN_ISSUES.md) and
+[call transport adaptations](../../EVM_DIVERGENCE.md).
+
+`lowering/` removes **193 physical / 133 code lines**. The complete correctness
+and reduction pass adds **433 physical / 469 code lines** to `src/`, leaving
+**62,481 physical / 48,460 code lines** in 320 files. The
+[bytecode-size comparison](../sizes/reports/lowering-boundaries.md) separates
+existing-program deltas from new fixtures. The
+[JUnit report](out/lowering-boundaries/semantic.xml),
+[outcome comparison](out/lowering-boundaries/semantic-comparison.json),
+[console output](results.txt), oracle evidence and hash manifests are retained
+as thin reports; raw generated artifacts remain local and ignored.
+
 ### Storage/codec/memory correctness — 2026-09-16
 
 This commit on `rev-2` follows the reduction checkpoint `e94bbc6218`. Memory

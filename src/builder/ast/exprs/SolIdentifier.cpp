@@ -8,6 +8,8 @@
 #include "builder/target/EvmLayoutMode.h"
 #include "builder/lowering/calls/FunctionPointerBuilder.h"
 #include "builder/solc/SolcFacts.h"
+#include "builder/eb/AssemblyBoundary.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/storage/StorageBackend.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
@@ -212,13 +214,10 @@ std::shared_ptr<awst::Expression> tryLiveCalldataPointerValue(
 	eb::ContractContext& ctx, Declaration const* decl,
 	std::string const& name, awst::SourceLocation const& loc)
 {
-	auto const* vd = dynamic_cast<VariableDeclaration const*>(decl);
-	if (!vd || vd->referenceLocation() != solidity::frontend::VariableDeclaration::Location::CallData)
-		return nullptr;
-	auto* live = ctx.currentScope ? ctx.currentScope->liveCalldataPointers() : nullptr;
-	if (!live || !live->count(name))
-		return nullptr;
-	return builder::TypeCoercion::calldataPointerValueRead(name, loc);
+	if (auto const* variable = dynamic_cast<VariableDeclaration const*>(decl))
+		if (auto reference = CalldataReference::local(ctx.scope(), *variable, loc))
+			return reference->read(ctx, loc);
+	return nullptr;
 }
 
 // Regular local variable.
@@ -259,6 +258,10 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		return buildThisValue(m_loc);
 
 	auto const* decl = m_ident.annotation().referencedDeclaration;
+	if (auto const* variable = dynamic_cast<VariableDeclaration const*>(decl);
+		variable && !m_ident.annotation().willBeWrittenTo)
+		if (auto word = readAssemblyScalar(m_scope, m_ctx.typeMapper, *variable, m_loc, m_ctx.preEffects()))
+			return word;
 	if (decl)
 	{
 		// Parameter remaps (modifier parameters)

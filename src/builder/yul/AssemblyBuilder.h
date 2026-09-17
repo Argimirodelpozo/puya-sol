@@ -197,17 +197,13 @@ public:
 	/// FLASH_SCRATCH_* constants were consumed by nothing and are gone.
 	int transientSlot() const { return scratchLayout().transientSlot(); }
 	void setTransientStorage(TransientStorage const* _storage) { prepareContext().transientStorage = _storage; }
+	void setWordBindings(std::map<std::string, std::string> bindings) { m_frame.wordShadow = std::move(bindings); }
 
-	/// Share the enclosing FUNCTION's seeded-calldata-pointer set across this
-	/// function's per-block AssemblyBuilders (each block constructs a fresh
-	/// builder). initCalldataPointerLocals seeds each dynamic calldata param's
-	/// (__cd_off_x, __cd_len_x) locals only if the param is not yet in the set —
-	/// so a pointer write from an earlier block survives into later blocks.
-	/// Mirrors setFrameIsProgram. Nullable (freestanding uses seed every block).
-	void setSeededCalldataPointers(std::set<std::string>* _seeded)
-	{
-		m_frame.seededCalldataPointers = _seeded;
-	}
+	void setFunctionCalldata(bool present) { m_frame.functionCalldata = present; }
+	void prepareCalldata(
+		std::vector<std::pair<std::string, awst::WType const*>> const& params,
+		std::vector<std::shared_ptr<awst::Statement>>& out,
+		awst::SourceLocation const& loc, bool transactionInput);
 
 
 	/// Base names of dynamic-CALLDATA pointer vars referenced by this block
@@ -1357,7 +1353,7 @@ private:
 		/// True when dynamic calldataload/copy/size detected; materialise __cd_blob.
 		bool useSyntheticCalldata = false;
 
-		std::set<std::string>* seededCalldataPointers = nullptr;
+		bool functionCalldata = false;
 
 		std::set<std::string> calldataPointerNames;
 

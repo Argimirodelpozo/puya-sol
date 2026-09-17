@@ -6,6 +6,7 @@
 #include "builder/solc/SolcFacts.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/eb/MappingPrefix.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/target/EvmLayoutMode.h"
 #include "builder/contract/AWSTBuilder.h" // containsMappingType
 #include "builder/ast/calls/RevertBlob.h"
@@ -34,6 +35,13 @@ SolExpressionStatement::SolExpressionStatement(
 std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
+	// Discarding a reference (including a rebind) must not decode its referent.
+	if (m_node.expression().annotation().type->dataStoredIn(DataLocation::CallData))
+		if (CalldataReference::resolve(m_blk.builderCtx(), m_node.expression(), m_loc))
+		{
+			m_blk.builderCtx().appendEffectsTo(result);
+			return result;
+		}
 
 	// Type expressions as statements (e.g. `s[7][];`) resolve to a type
 	// value with no runtime representation. We still need to walk the

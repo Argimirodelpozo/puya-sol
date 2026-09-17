@@ -7,6 +7,14 @@ namespace puyasol::builder { class TypeMapper; }
 namespace puyasol::builder::abi
 {
 
+/// Materialize an already-resolved calldata reference, whose offset points
+/// at data (past the length word for a dynamic array). Coordinates may have
+/// been reassigned in Yul; the declared solc type still controls decoding.
+std::shared_ptr<awst::Expression> readCalldataValue(
+	TypeMapper&, std::shared_ptr<awst::Expression> blob, solidity::frontend::Type const* type,
+	std::shared_ptr<awst::Expression> offset, std::shared_ptr<awst::Expression> length,
+	awst::SourceLocation const&, std::vector<std::shared_ptr<awst::Statement>>&);
+
 /// Decode a value blob once, using solc head sizes/dynamic predicates and
 /// validator rules. Memory/return/constructor payloads use this entry.
 std::shared_ptr<awst::Expression> decodeEvmAbi(

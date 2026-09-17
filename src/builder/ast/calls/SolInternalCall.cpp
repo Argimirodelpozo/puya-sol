@@ -3,6 +3,7 @@
 
 #include "builder/ast/calls/SolInternalCall.h"
 #include "builder/eb/ResolvedLValue.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/types/RefParamPassing.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
 #include "builder/context/ProgramAnalysis.h"
@@ -255,6 +256,12 @@ void SolInternalCall::buildSequencedArgs(
 {
 	auto const* plan = _funcDef ? &m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract) : nullptr;
 	auto const* functionType = dynamic_cast<FunctionType const*>(funcExpression().annotation().type);
+	auto const* methodTarget = target ? std::get_if<awst::InstanceMethodTarget>(target) : nullptr;
+	bool const abiTarget = _funcDef && _funcDef->isPartOfExternalInterface() && methodTarget
+		&& methodTarget->memberName == eb::CallResolver::resolveMethodName(m_ctx, *_funcDef);
+	bool const frame = plan ? plan->calldataFrame && !abiTarget
+		: functionType && m_ctx.typeMapper.analysis().pointerNeedsCalldata(*functionType);
+	std::map<size_t, CalldataReference> references;
 	std::vector<awst::WType const*> paramTypes;
 	if (plan)
 		for (auto const& parameter: plan->parameters)
@@ -377,7 +384,19 @@ void SolInternalCall::buildSequencedArgs(
 			if (auto offset = SolIndexAccess::resolveBlobOffset(m_ctx, m_scope, source, m_loc))
 				return offset;
 		std::shared_ptr<awst::Expression> value;
-		if (plan && *source.annotation().isLValue
+		if (frame && parameterType && parameterType->dataStoredIn(DataLocation::CallData))
+		{
+			auto reference = CalldataReference::resolve(m_ctx, source, m_loc);
+			if (!reference) throw SizeError("cannot transport this calldata reference across an internal call");
+			reference->offset = m_ctx.emitSequencedOperand({}, reference->offset, true, m_loc);
+			if (reference->length) reference->length = m_ctx.emitSequencedOperand({}, reference->length, true, m_loc);
+			// The callee consumes coordinates, not a speculative copy of the
+			// referent. In particular, forwarding a forged pointer must not
+			// perform bounds checks when the callee only observes its length.
+			value = TypeCoercion::makeDefaultValue(paramTypes.at(paramIdx), m_loc);
+			references.emplace(paramIdx, std::move(*reference));
+		}
+		else if (plan && *source.annotation().isLValue
 			&& plan->parameters[paramIdx].passing == RefParamPassing::Value
 			&& std::find(plan->writeBackParams.begin(), plan->writeBackParams.end(), paramIdx)
 				!= plan->writeBackParams.end())
@@ -408,6 +427,17 @@ void SolInternalCall::buildSequencedArgs(
 	if (plan)
 		for (auto pi: plan->offsetParams)
 			args.push_back({std::nullopt, offsets.at(pi)});
+	if (frame)
+	{
+		if (!m_scope.function || !m_scope.function->hasAssemblyCalldata)
+			throw SizeError("internal calldata consumer has no input frame");
+		awst::pushCallArg(args, awst::makeVarExpression("__cd_blob", awst::WType::bytesType(), m_loc));
+		for (auto const& [pi, reference]: references)
+		{
+			awst::pushCallArg(args, reference.offset);
+			if (CalldataReference::hasLength(reference.type)) awst::pushCallArg(args, reference.length);
+		}
+	}
 }
 
 std::pair<std::shared_ptr<awst::Expression>, std::shared_ptr<awst::Expression>>
@@ -523,7 +553,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		? &m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract) : nullptr;
 	// The public ABI remains unchanged; direct Solidity calls use a private
 	// implementation carrier when reference results must travel back.
-	if (plan && !plan->writeBackParams.empty() && _funcDef->isPartOfExternalInterface()
+	if (plan && (!plan->writeBackParams.empty() || plan->calldataFrame) && _funcDef->isPartOfExternalInterface()
 		&& functionType && functionType->kind() == FunctionType::Kind::Internal
 		&& std::holds_alternative<awst::InstanceMethodTarget>(_target))
 		_target = awst::InstanceMethodTarget{eb::CallResolver::baseImplementationName(m_ctx, *_funcDef)};
@@ -698,7 +728,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildFunctionPointerCall(
 	// evaluates internal-call arguments before its callee; IR and external
 	// calls evaluate the callee first.
 	auto pointer = m_ctx.lower(callee, false);
-	auto const* wanted = eb::FunctionPointerBuilder::mapFunctionType(m_ctx, &type);
+	auto const* wanted = m_ctx.typeMapper.map(&type);
 	if (pointer.value && !awst::structurallyEquivalent(pointer.value->wtype, wanted))
 		pointer.value = decodeCallResult(std::move(pointer.value), wanted, m_loc);
 	bool const calleeFirst = m_ctx.viaIRSequencing || isExternalFunctionPointer(&type);
