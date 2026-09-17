@@ -1,5 +1,10 @@
 # Memory-word sharing and Yul call facts — 2026-09-08
 
+Historical implementation and benchmark record. The
+[semantic test guide](../tests/solidity-semantic-tests/README.md) has the current
+validation baseline; the DCE failure recorded here was fixed by frontend
+guards in `6d940b1e43`. Measurements below describe this sharing checkpoint.
+
 The two follow-ups to [Yul outlining](yul-subroutines.md) are implemented.
 The real SP1 PLONK verifier falls from **33,879 to 16,597 approval bytes**:
 **17,282 bytes saved (51.01%)**. Its four-byte clear program brings the total

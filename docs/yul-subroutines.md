@@ -1,5 +1,10 @@
 # Preserving Yul functions — 2026-09-08
 
+Historical implementation and benchmark record. The
+[semantic test guide](../tests/solidity-semantic-tests/README.md) has the current
+validation baseline; the DCE failure recorded here was fixed by frontend
+guards in `6d940b1e43`. Measurements below describe this outlining checkpoint.
+
 This records the outlining baseline. The subsequent
 [memory-word sharing and Yul call-fact follow-up](memory-word-subroutines.md)
 reduces the verifier further to **16,597 + 4 bytes**, still 217 bytes over the

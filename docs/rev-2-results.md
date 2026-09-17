@@ -1,5 +1,10 @@
 # rev-2: sol-types and storage results
 
+Historical validation record, not the current branch status. Later fixes and
+the current baseline are recorded in the [semantic test guide](../tests/solidity-semantic-tests/README.md).
+In particular, the DCE failure recorded below was fixed by frontend guards in
+`6d940b1e43`; the old counts and compatibility decisions remain historical evidence.
+
 Completed on 2026-09-06. All F1–F9 and R1–R3 are implemented on `rev-2`, based
 on `3b9a82d8e46c4ca99873b4fb1d7239d1ed50771b`. The tested compiler and regression
 sources are committed as `45ecf7139c024569e94bc36e008d70db9c6e36a0`.

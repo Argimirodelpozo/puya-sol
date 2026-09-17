@@ -9,7 +9,7 @@
 > - **Not officially supported** by the Algorand Foundation or any other organization. This is a personal side project.
 > - **Maintained on a best-effort basis.** No guaranteed release cadence. Identified bugs may sit unfixed for long periods of time. That said, Pull requests, issue reports, feature requests, questions, etc. are welcome and encouraged!
 > - **A research/PoC effort**, not a stable release. APIs, AWST shapes, codegen patterns, output formats, and even successful test counts can change between commits without notice.
-> - **Likely to mis-compile contracts in subtle ways.** A known backend failure and expected failures remain in the semantic suite; passing tests do not establish EVM equivalence. Research runs explicitly accept adaptations such as non-enforced static calls, uncatchable inner-call failures, and AVM-specific address and storage conventions.
+> - **Likely to mis-compile contracts in subtle ways.** Expected failures and known limitations remain; passing tests do not establish EVM equivalence. Research runs explicitly accept adaptations such as non-enforced static calls, uncatchable inner-call failures, and AVM-specific address and storage conventions.
 > - **Not production money safe.** Do not deploy compiler output to MainNet, do not handle real funds with anything emitted by this tool, and do not assume security properties of the original Solidity contracts carry over to the TEAL output.
 >
 > Use at your own risk. Use this for experimentation, prototyping, or research. Do not use it for anything that touches user funds, real assets, or production systems.
@@ -28,14 +28,14 @@ The pipeline:
 
 ## Status
 
-The full semantic/harness run on **2026-09-07** at `9521c807ba` recorded
-**1,860 passed, 1 failed, 101 xfailed, and 38 xpassed** (2,000 total). All
-**19 native tests** passed. The remaining failure is a known backend
-optimization bug that drops a required divide-by-zero revert; the suite is
-**not fully green**. See the
+The full semantic/harness run on **2026-09-16**, committed in `6d940b1e43`,
+recorded **2,748 passed, 0 failed, 99 xfailed, and 40 xpassed** (2,887 total).
+All **24 native tests** passed. Explicit frontend guards fix the known
+divide/modulo-by-zero DCE regression; the pinned Puya optimizer is unchanged.
+Expected failures remain, and this is not a claim of full EVM equivalence. See the
 [test guide and revision-specific baseline](tests/solidity-semantic-tests/README.md).
-The sol-types/storage audit work is complete; see the
-[rev-2 results and compatibility boundaries](docs/rev-2-results.md).
+Current follow-ups are in [KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md); the earlier
+[sol-types/storage results](docs/rev-2-results.md) are a historical record.
 
 This repository focuses on the compiler and regression tests. The example-port
 collections have been removed in preparation for a separate repository; no
@@ -240,6 +240,44 @@ PUYASOL_LOCALNET_RESET=0 pytest tests/puyasolRegression/test_builder_findings.py
 ```
 
 `PUYASOL_LOCALNET_RESET=0` preserves the existing LocalNet ledger during tests.
+
+### Bytecode sizes
+
+The committed tables under `tests/sizes/` record assembled approval/clear bytes
+and static TEAL instruction counts. They cover the regression contracts in
+named and slot storage modes, plus the four tracked chainwide replay inputs.
+Static instruction counts are not executed opcode cost. Refresh these tables
+alongside compiler changes so the commit diff shows each program's growth or
+reduction; CI checks all three tables. There is no expensive automatic Git hook.
+`ERR`/`EMPTY` rows record outcomes under these fixed profiles, including negative
+and profile-specific fixtures; this census is not the semantic test score.
+
+```bash
+cmake --build build --parallel 2
+python3 tests/sizes/sizes.py --write
+python3 tests/sizes/sizes.py --corpus regression-slot --write
+python3 tests/sizes/sizes.py --corpus chainwide --write
+python3 tests/sizes/sizes.py --check
+python3 tests/sizes/diff_commits.py --base HEAD~1 --json /tmp/size-delta.json
+python3 tests/sizes/diff_commits.py --base <rev> --corpus chainwide --teal-diffs /tmp/teal
+```
+
+The compiler must match its binary/source/standard-library build manifest.
+Cache keys include source and import contents, flags, the actual backend and
+compiler, and the measurement code. Only programs compiling on both sides
+contribute to size deltas; failures, recoveries and added/removed programs are
+reported separately. Historical comparisons hold the current corpus and chosen
+Puya backend fixed, even if the old commit pinned a different backend.
+
+Raw compile output is temporary; only explicitly requested TEAL diffs are retained.
+`build/sizes/` keeps at most eight small census records and two
+historical compiler snapshots; historical worktrees are removed after building.
+An interrupted historical build must be recovered before another is allocated.
+Runs refuse to overlap an active semantic suite or another size run.
+Use `--corpus chainwide-local --only <tag> --out /tmp/sizes.txt` for downloaded
+cases; these inputs are not a reproducible CI corpus and cannot overwrite a
+canonical table. No size increase is automatically forbidden: an intentional
+increase must be visible in the updated table and reviewed with its reason.
 
 ## Repository layout
 

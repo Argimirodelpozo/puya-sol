@@ -37,6 +37,9 @@ jobs:
       - name: Verify source formatting
         run: git diff --check
 
+      - name: Test contract-size reporting
+        run: python3 -m unittest discover -s tests/sizes -v
+
       - name: Configure from a fresh checkout
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
@@ -63,11 +66,14 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload the compiler for the chain-diff job
+      - name: Upload the compiler, standard library and provenance
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: puya-sol-${{ github.sha }}
-          path: build/puya-sol
+          path: |
+            build/puya-sol
+            build/puya-sol-build-manifest.txt
+            build/share/puya-sol/libs/AVM.sol
           if-no-files-found: error
           retention-days: 7
 
@@ -147,3 +153,47 @@ jobs:
           path: tests/chainwide-historical-diff/cases/*/report.json
           if-no-files-found: warn
           retention-days: 30
+
+  # Tables make per-contract size changes reviewable in the same commit.
+  # Downloaded/untracked chainwide cases are deliberately outside this lane.
+  bytecode-sizes:
+    runs-on: ubuntu-24.04
+    needs: build-and-test
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        corpus: [regression, regression-slot, chainwide]
+
+    steps:
+      - name: Check out pinned sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+
+      - name: Install the pinned puya backend
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install ./puya
+          echo "PUYA_SOL_PUYA=$(command -v puya)" >> "$GITHUB_ENV"
+
+      - name: Download the compiler
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: puya-sol-${{ github.sha }}
+          path: build
+      - run: chmod +x build/puya-sol && build/puya-sol --help > /dev/null
+
+      - name: Verify the committed size table
+        run: >-
+          python3 tests/sizes/sizes.py --corpus ${{ matrix.corpus }}
+          --check --jobs 2 --limit 0 --no-cache --log-dir build/size-logs
+
+      - name: Upload failed-compile diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: size-diagnostics-${{ matrix.corpus }}-${{ github.sha }}
+          path: build/size-logs
+          if-no-files-found: ignore
+          retention-days: 7

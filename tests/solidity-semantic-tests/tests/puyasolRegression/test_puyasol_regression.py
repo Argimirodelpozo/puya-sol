@@ -2101,7 +2101,8 @@ def test_dce_reverting_subexpr(harness):
     buildBigUIntShift's >=256 saturation conditional evaluated the shifted VALUE lazily, so a
     reverting subexpression under a shift by a RUNTIME amount >= 256 was skipped at runtime.
     Fixed: the value is pinned eagerly via a comma-expr binding (the SAR helper's idiom).
-    The LITERAL-amount shapes are the separate OPEN backend half — see the xfail test below.
+    Literal-amount shapes need the explicit frontend zero-divisor guard to
+    survive backend value DCE; the separate regression below covers them.
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/dce_reverting_subexpr.sol")
 

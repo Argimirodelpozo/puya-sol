@@ -1,16 +1,16 @@
 # Open engineering follow-ups
 
 Maintained follow-ups carried forward from the September 2026 audits. Completed
-audit/refactor reports have been removed; their tracked originals remain in Git
-history before this cleanup. This list is not a new security audit or a complete
-catalogue of miscompilations. The compiler remains experimental and unsuitable
-for production funds.
+audit/refactor reports have been removed; tracked originals remain in Git
+history and local-only notebooks were archived before removal. This list is not
+a new security audit or a complete catalogue of miscompilations. The compiler
+remains experimental and unsuitable for production funds.
 
-- **Backend correctness:** the pinned Puya optimizer still drops a required
-  divide-by-zero revert in the literal-fold DCE regression. The exact test and
-  current full-suite result are in the [semantic test guide](../tests/solidity-semantic-tests/README.md).
-  Keep that failure visible until the backend fix is available in the pinned
-  dependency; it is not an accepted divergence.
+- **Backend optimization semantics:** the literal-fold divide/modulo regression
+  is fixed in `6d940b1e43` by explicit frontend zero-divisor guards. The pinned
+  Puya optimizer itself is unchanged; this is not a general proof that it
+  preserves every unused may-trap expression. The latest full-suite result is
+  in the [semantic test guide](../tests/solidity-semantic-tests/README.md).
 - **Continuous semantic evidence:** clean-build/native CI exists, but scheduled
   LocalNet semantic/differential gates, sanitizer/fuzz coverage, and review of
   non-strict xpasses remain follow-ups. Publish results against exact root and
@@ -22,16 +22,23 @@ for production funds.
 - **Project metadata:** the root still needs an owner-selected license,
   vulnerability-reporting policy, and contribution/release ownership guidance.
   Dependency licenses do not substitute for first-party project metadata.
-- **Modifier memory parameters that are both written through and rebound:**
-  a modifier body that mutates a member of a memory parameter and then
-  rebinds the parameter (`c.value += 1; c = Cell(7);`) binds the parameter by
-  value, so member writes made before the rebind are not visible to the
-  wrapped function; the compiler warns. Pure member writes alias the caller's
-  object and pure rebinds stay local, matching Solidity.
-- **Operational diagnostics:** the earlier audit identified unchecked log-file
-  opening/source-read failures and warning-only invalid remappings. Revisit
-  those entry points and filesystem exception handling with focused negative
-  tests; they were not part of the builder refactor.
+- **Calldata-local alias provenance:** ordinary calldata alias initialization
+  does not always initialize the raw Yul pointer metadata. The subarray tests
+  that explicitly assign both `.offset` and `.length` do not cover implicit
+  alias initialization. This is separate from the memory-model experiment.
+- **Raw Yul scalar lifetime:** narrow unsigned, bool and fixed-bytes locals now
+  preserve full words within an assembly block. That does not establish full
+  dirty-word preservation across separate blocks and intervening high-level use.
+- **Remapping diagnostics:** malformed import remappings still emit warnings.
+  Whether they should fail immediately remains a policy decision; log-file
+  opening and source-read failures now have explicit error handling and tests.
+
+The former modifier write-through/rebind limitation is no longer current:
+modifier parameters use distinct pointer locals over shared roots, including
+branch/loop, tuple and Yul rebinds. The storage format and remaining direct-copy
+capacities are documented in [storage-format.md](storage-format.md). Self-call
+frame limitations and intentional cross-contract behavior remain in the
+divergence policy, not a claim of full EVM frame emulation.
 
 Intentional behavior differences belong in [EVM_DIVERGENCE.md](../EVM_DIVERGENCE.md),
 not in the bug backlog. In particular, missing cross-contract static-call

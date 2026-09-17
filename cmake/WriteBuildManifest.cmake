@@ -51,6 +51,21 @@ endif()
 file(SHA256 "${PUYA_SOL_BINARY}" binary_sha256)
 file(SHA256 "${PUYA_SOL_STDLIB}" stdlib_sha256)
 
+# Content identity for the frontend build inputs, independent of unrelated
+# documentation edits or a commit made after the build. Solidity is verified
+# clean and pinned by the build dependency before this target runs.
+file(GLOB_RECURSE source_files LIST_DIRECTORIES false
+    RELATIVE "${PUYA_SOL_ROOT_DIR}"
+    "${PUYA_SOL_ROOT_DIR}/src/*" "${PUYA_SOL_ROOT_DIR}/cmake/*")
+list(APPEND source_files "CMakeLists.txt")
+list(SORT source_files)
+set(source_identity "solidity:${PUYA_SOL_SOLIDITY_COMMIT}\n")
+foreach(source_file IN LISTS source_files)
+    file(SHA256 "${PUYA_SOL_ROOT_DIR}/${source_file}" source_hash)
+    string(APPEND source_identity "${source_file}:${source_hash}\n")
+endforeach()
+string(SHA256 source_sha256 "${source_identity}")
+
 file(WRITE "${PUYA_SOL_OUTPUT}"
     "root_commit=${root_commit}\n"
     "root_tree_state=${tree_state}\n"
@@ -62,6 +77,7 @@ file(WRITE "${PUYA_SOL_OUTPUT}"
     "boost_include_dir=${PUYA_SOL_BOOST_INCLUDE_DIR}\n"
     "boost_filesystem_library=${PUYA_SOL_BOOST_FILESYSTEM_LIBRARY}\n"
     "puya_sol_sha256=${binary_sha256}\n"
+    "source_sha256=${source_sha256}\n"
     "avm_stdlib_sha256=${stdlib_sha256}\n"
     "\n[submodules]\n${submodule_status}\n"
     "\n[cxx_compiler_version]\n${compiler_version}\n"
