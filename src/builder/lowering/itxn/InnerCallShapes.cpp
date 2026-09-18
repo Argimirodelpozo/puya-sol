@@ -14,7 +14,7 @@
 namespace puyasol::builder::eb
 {
 
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitAppCall(
+std::shared_ptr<awst::Expression> InnerCallHandlers::submitAppCall(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _argsTuple,
@@ -31,13 +31,12 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitAppCall(
 	}
 	auto payload = ApplicationCall::submit(_ctx.typeMapper, std::move(_receiver),
 		std::move(_argsTuple), std::move(payTxn), _loc, _ctx.preEffects());
-	return std::make_unique<GenericResultBuilder>(_ctx,
-		makeBoolBytesTuple(true, std::move(payload), _loc));
+	return makeBoolBytesTuple(true, std::move(payload), _loc);
 }
 
 // ── .call(rawBytes) → inner app call ──
 
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
+std::shared_ptr<awst::Expression> InnerCallHandlers::handleCallWithRawData(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _dataBytes,
@@ -64,10 +63,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 			"canonical Solidity calldata.", _loc);
 	auto result = ApplicationCall::submitRaw(_ctx.typeMapper, std::move(_receiver),
 		std::move(_dataBytes), std::move(_callValue), _loc, _ctx.preEffects());
-	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTuple(true, std::move(result), _loc));
+	return makeBoolBytesTuple(true, std::move(result), _loc);
 }
 
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEmptyData(
+std::shared_ptr<awst::Expression> InnerCallHandlers::handleCallWithEmptyData(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	awst::SourceLocation const& _loc)
@@ -76,13 +75,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEmptyData(
 		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
 	_ctx.preEffects().push_back(buildNativeTransfer(_ctx.typeMapper, _ctx.preEffects(),
 		std::move(_receiver), nullptr, _loc));
-	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTuple(true,
-		_ctx.emitSequencedOperand({}, ApplicationCall::returnData(_ctx.typeMapper, _loc), true, _loc), _loc));
+	return makeBoolBytesTuple(true,
+		_ctx.emitSequencedOperand({}, ApplicationCall::returnData(_ctx.typeMapper, _loc), true, _loc), _loc);
 }
 
 // ── .staticcall(data) precompile routing ──
 
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
+std::shared_ptr<awst::Expression> InnerCallHandlers::handleStaticCallPrecompile(
 	ContractContext& _ctx,
 	uint64_t _precompileAddr,
 	std::shared_ptr<awst::Expression> _inputData,
@@ -91,9 +90,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 	auto result = evaluatePrecompile(_ctx.typeMapper, _precompileAddr, std::move(_inputData),
 		_loc, _ctx.preEffects());
 	if (!result)
-		return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
-	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTuple(true,
-		ApplicationCall::setReturnData(_ctx.typeMapper, std::move(result), _loc, _ctx.preEffects()), _loc));
+		return makeBoolBytesTupleEmpty(_loc);
+	return makeBoolBytesTuple(true,
+		ApplicationCall::setReturnData(_ctx.typeMapper, std::move(result), _loc, _ctx.preEffects()), _loc);
 }
 
 } // namespace puyasol::builder::eb

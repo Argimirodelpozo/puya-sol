@@ -5,6 +5,7 @@
 #include "builder/storage/StoragePlace.hpp"
 #include "builder/solc/StorageRefPointer.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
+#include "builder/ast/calls/SolInternalCall.h"
 #include "builder/eb/AssignmentHelper.h"
 #include "builder/yul/AssemblyBuilder.h"
 #include "builder/codec/EvmMemoryCodec.h"
@@ -44,10 +45,14 @@ VariableDeclaration const* transientDeclaration(eb::ContractContext& ctx, Expres
 bool blobRoot(eb::ContractContext& ctx, Expression const& source)
 {
 	for (auto const* root: SolcFacts::referenceSources(source))
+	{
+		if (auto const* call = SolcFacts::expressionAs<FunctionCall>(root);
+			call && SolInternalCall::hasMemoryReturns(*call)) return true;
 		if (auto const* id = SolcFacts::expressionAs<Identifier>(root))
 			if (auto const* declaration = id->annotation().referencedDeclaration;
 				declaration && !ctx.scope().bindings.blobAggregates.get(declaration->id()).empty())
 				return true;
+	}
 	return false;
 }
 } // namespace

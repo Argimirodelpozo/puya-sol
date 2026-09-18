@@ -194,6 +194,18 @@ std::shared_ptr<awst::Expression> StorageMapper::makeBoxLenTuple(
 	return awst::makeBoxLen(std::move(_key), tupleType, _loc);
 }
 
+std::shared_ptr<awst::Expression> StorageMapper::makeBoxArrayLength(
+	TypeMapper& mapper, std::shared_ptr<awst::Expression> key,
+	awst::SourceLocation const& loc)
+{
+	key = awst::makeEvalOnce(std::move(key), loc);
+	auto exists = awst::makeTupleItem(makeBoxLenTuple(mapper, key, loc),
+		1, awst::WType::boolType(), loc);
+	auto header = awst::makeBoxExtract(key, awst::makeZero(loc), awst::makeIntegerConstant(2, loc), loc);
+	return awst::makeConditional(std::move(exists), awst::makeBtoi(std::move(header), loc),
+		awst::makeZero(loc), awst::WType::uint64Type(), loc);
+}
+
 std::shared_ptr<awst::Statement> StorageMapper::makeEnsureRootBoxForWrite(
 	TypeMapper& _typeMapper,
 	std::shared_ptr<awst::Expression> const& _target,

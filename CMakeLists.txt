@@ -261,7 +261,6 @@ set(SOURCES
 	src/builder/eb/SolEnumBuilder.cpp
 	src/builder/eb/SolFixedBytesBuilder.cpp
 	src/builder/eb/SolIntegerBuilder.cpp
-	src/builder/eb/TypeConversions.cpp
 
 	# builder/lowering/itxn
 	src/builder/lowering/itxn/ApplicationCall.cpp
@@ -524,6 +523,8 @@ if(BUILD_TESTING)
 	add_test(NAME puya-sol-wtype-equivalence COMMAND puya-sol-wtype-tests)
 
 	add_executable(puya-sol-type-mapper-tests
+		src/builder/solc/SolcFacts.cpp
+		src/builder/solc/SolcConstFold.cpp
 		src/builder/target/ApplicationTarget.cpp
 		tests/cpp/TypeMapperTests.cpp
 		src/builder/codec/SlotWordCodec.cpp

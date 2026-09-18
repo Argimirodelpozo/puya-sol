@@ -28,8 +28,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 1, "calldataload", _loc))
-		return nullptr;
 
 	// Once a block needs the synthetic EVM-calldata view, ALL loads in that
 	// block must read that view. This includes constant offsets: a constant can
@@ -169,8 +167,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 2, "keccak256", _loc, "offset, length"))
-		return nullptr;
 
 	auto length = resolveConstantOffset(_args[1]);
 
@@ -179,9 +175,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	// COMPILE-TIME keccak over known memory content: `mstore(0, <const>);
 	// keccak256(0, 0x20)` is solc's slot-derivation idiom (array data slots).
 	// handleMstore records constant stores in m_frame.localConstants["mem_0x.."];
-	// hash the known 32-byte word HERE (zero opcodes) so the derived slot
-	// becomes a constant the SlotRoute machinery routes — never a runtime
-	// keccak for storage routing (project hashing policy).
+	// hash the known 32-byte word HERE (zero opcodes), preserving the full
+	// derived slot without paying for a runtime hash.
 	if (offset && length && *length == 32)
 	{
 		std::ostringstream memKey;
@@ -234,14 +229,6 @@ void AssemblyBuilder::handleLog(
 	// return); offset may be runtime. NB: this mirrors the raw `log` op used by
 	// high-level `emit` — asm logN carries no event signature, so it can't route
 	// through the ARC-28 Emit path (no arc56 registration → oracle won't decode it).
-	if (_args.size() != static_cast<size_t>(2 + _numTopics))
-	{
-		Logger::instance().error("log" + std::to_string(_numTopics) + " requires "
-			+ std::to_string(2 + _numTopics) + " arguments (offset, length, "
-			+ std::to_string(_numTopics) + " topics)", _loc);
-		return;
-	}
-
 	auto lenConst = resolveConstantOffset(_args[1]);
 	if (!lenConst)
 	{
@@ -289,8 +276,6 @@ void AssemblyBuilder::emitReturndatacopy(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (!checkArity(_args, 3, "returndatacopy", _loc, "destOffset, offset, size"))
-		return;
 	// Copy size bytes of returndata[offset..] into memory at destOffset.
 	// extract3 reverts on OOB, matching EVM returndatacopy semantics.
 	// returndataBytes strips the ARC4 return prefix (M8) so offsets index the

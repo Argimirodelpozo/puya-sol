@@ -25,7 +25,7 @@ std::shared_ptr<awst::Expression> SolBareCall::toAwst()
 		m_ctx, receiver, memberAccess->memberName(),
 		m_call, extractCallValue(), memberAccess->expression(), m_loc);
 	if (result)
-		return result->resolve();
+		return result;
 
 	// Fallback: return (true, empty bytes) tuple
 	auto vc = awst::makeVoidConstant(m_loc);

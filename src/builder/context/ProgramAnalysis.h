@@ -102,6 +102,10 @@ struct ProgramAnalysis
 	/// Aliases connected to a rebound memory name need the existing pointer
 	/// representation locally; stable aliases keep their value/write-back path.
 	std::set<int64_t> memoryIdentityDeclarations;
+	/// Memory references escaping through internal returns travel as offsets,
+	/// including connected actual/formal parameters and local aliases.
+	std::set<int64_t> memoryPointerDeclarations;
+	std::set<size_t> pointerMemoryParameters(solidity::frontend::FunctionType const& type) const;
 	/// Single-declaration initializer ASTs, indexed once by solc declaration ID.
 	/// Source provenance only: live reference bindings still win after reassignments.
 	std::map<int64_t, solidity::frontend::Expression const*> localInitializers;

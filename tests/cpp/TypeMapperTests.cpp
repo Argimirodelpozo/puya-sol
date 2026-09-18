@@ -11,9 +11,12 @@
 #include "builder/types/ConversionPlan.h"
 #include "awst/TupleValue.h"
 #include "builder/solc/StorageRefPointer.h"
+#include "builder/solc/PreparedAssembly.h"
+#include "builder/solc/SolcConstFold.h"
 #include "builder/codec/SlotWordCodec.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/interface/CompilerStack.h>
 
@@ -43,6 +46,45 @@ T const& declaration(SourceUnit const& _source, std::string const& _name)
 void require(bool _condition, char const* _message)
 {
 	if (!_condition) throw std::runtime_error(_message);
+}
+
+void testSolcFacts(CompilerStack const& compiler)
+{
+	using namespace puyasol;
+	struct Facts: ASTConstVisitor
+	{
+		bool visit(Return const& statement) override
+		{
+			if (!statement.expression()) return false;
+			auto value = builder::SolcConstFold::foldTyped(*statement.expression(), {});
+			if (auto const* sum = dynamic_cast<BinaryOperation const*>(statement.expression());
+				sum && sum->getOperator() == solidity::langutil::Token::Add)
+			{
+				auto const* literal = dynamic_cast<awst::IntegerConstant const*>(value.get());
+				require(literal && literal->value == "2", "solc safe typed sum did not fold");
+			}
+			else require(!value, "overflowing/unsupported typed expression was folded");
+			return false;
+		}
+		bool visit(InlineAssembly const& assembly) override
+		{
+			auto prepared = builder::SolcFacts::prepareAssembly(assembly);
+			auto parameter = [&](std::string const& function) {
+				return prepared->facts.functions.at(function)->parameters.front().name.str();
+			};
+			// The SSA visitor has been destroyed. Default zero, external constants,
+			// and mutable snapshots must still have distinct, stable meanings.
+			for (auto n: {7, 19, 7})
+			{
+				auto facts = builder::SolcFacts::yulArgumentFacts(*prepared, {{"K", std::to_string(n)}});
+				require(facts.constants.at(parameter("zero")) == "0", "cached SSA zero lost ownership");
+				require(facts.constants.at(parameter("externalValue")) == std::to_string(n), "external Yul facts leaked between lowerings");
+				require(!facts.constants.contains(parameter("snapshot")), "mutable snapshot was reinterpreted");
+			}
+			return false;
+		}
+	} facts;
+	declaration<ContractDefinition>(compiler.ast("a.sol"), "FactChecks").accept(facts);
 }
 
 void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile const& _profile)
@@ -84,6 +126,21 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 		"scalar codec ignored solc's storage width");
 	auto const& a = _compiler.ast("a.sol");
 	auto const& b = _compiler.ast("b.sol");
+	auto const* enumeration = TypeProvider::enumType(declaration<EnumDefinition>(a, "Choice"));
+	for (auto const* carrier: {awst::WType::uint64Type(), awst::WType::biguintType()})
+	{
+		auto word = awst::makeVarExpression("word", carrier, {});
+		std::vector<std::shared_ptr<awst::Statement>> effects;
+		auto checked = builder::TypeCoercion::checkedEnum(word, enumeration, {}, &effects);
+		require(checked->wtype == carrier && effects.size() == 1, "enum check lost its word or explicit assertion");
+		auto* statement = dynamic_cast<awst::ExpressionStatement*>(effects[0].get());
+		auto* assertion = statement ? dynamic_cast<awst::AssertExpression*>(statement->expr.get()) : nullptr;
+		auto* comparison = assertion ? dynamic_cast<awst::NumericComparisonExpression*>(assertion->condition.get()) : nullptr;
+		auto* bound = comparison ? dynamic_cast<awst::IntegerConstant*>(comparison->rhs.get()) : nullptr;
+		require(bound && bound->value == "2" && bound->wtype == carrier, "enum bound did not use solc facts at full width");
+		require(dynamic_cast<awst::CheckedMaybe*>(builder::TypeCoercion::checkedEnum(word, enumeration, {}).get()),
+			"value-only enum conversion lost its checked value");
+	}
 	auto const* structA = TypeProvider::structType(
 		declaration<StructDefinition>(a, "Item"), DataLocation::Storage);
 	auto const* structB = TypeProvider::structType(
@@ -384,6 +441,29 @@ struct RecursiveHolder { RecursiveWrapper[] children; mapping(uint256 => uint256
 struct RecursiveWrapper { RecursiveHolder inner; }
 struct Left { uint16 value; Right[] children; }
 struct Right { bool flag; Left parent; }
+contract FactChecks {
+    uint8 constant ONE = 1;
+    uint8 constant MAX = 255;
+    int8 constant MIN = -128;
+    uint256 constant K = 7;
+    function safe() external pure returns (uint8) { return ONE + ONE; }
+    function checked() external pure returns (uint8) { return (MAX + ONE) - ONE; }
+    function uncheckedMath() external pure returns (uint8) { unchecked { return (MAX + ONE) - ONE; } }
+    function negate() external pure returns (int8) { return -MIN; }
+    function callOperand() external view returns (uint256) { return this.yul(); }
+    function yul() external pure returns (uint256 r) {
+        assembly {
+            function zero(a) -> v { v := a }
+            function externalValue(b) -> v { v := b }
+            function snapshot(c) -> v { v := c }
+            let uninitialized
+            let mutable := K
+            let saved := mutable
+            mutable := 19
+            r := add(add(zero(uninitialized), externalValue(K)), snapshot(saved))
+        }
+    }
+}
 )"},
 			{"b.sol", R"(pragma solidity ^0.8.20;
 struct Item { uint16 first; bool second; }
@@ -415,6 +495,7 @@ contract Target {}
 			return 0;
 		}
 		testValueAdapters();
+		testSolcFacts(compiler);
 		for (auto abi: {puyasol::builder::ContractAbi::Arc4, puyasol::builder::ContractAbi::Evm})
 		{
 			puyasol::builder::TargetProfile profile;

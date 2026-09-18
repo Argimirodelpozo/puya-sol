@@ -2,6 +2,7 @@
 #include "builder/context/ContractContext.h"
 #include "builder/types/RefParamPassing.h"
 #include <libsolidity/ast/AST.h>
+#include <algorithm>
 
 namespace puyasol::builder::sol_ast
 {
@@ -32,7 +33,9 @@ FunctionContext::FunctionContext(TranslationContext& _tr,
 			scope.bindings.mappingKeyParams.set(declaration.id(), parameter.name);
 			break;
 		case RefParamPassing::BlobOffset:
-			scope.bindings.blobAggregates.set(declaration.id(), parameter.name);
+			if (auto arg = std::find_if(args.begin(), args.end(), [&](auto const& arg) { return arg.name == parameter.name; });
+				arg != args.end() && arg->wtype == awst::WType::uint64Type())
+				scope.bindings.blobAggregates.set(declaration.id(), parameter.name);
 			break;
 		case RefParamPassing::Value: break;
 		}
@@ -44,8 +47,8 @@ FunctionContext::FunctionContext(TranslationContext& _tr,
 		for (auto pi: plan.asmSlotParams)
 			boxKeyStructParams[plan.parameters[pi].name] =
 				types.map(plan.parameters[pi].declaration->type());
-	bool const slotReturns = types.profile().evmStorageLayout
-		|| storageRefReturnUsesSlot(&function, types.analysis());
+	auto const& storageReturns = types.analysis().storageReturnFacts(&function);
+	bool const slotReturns = types.profile().evmStorageLayout || storageReturns.slotHandle;
 	for (auto const& result: function.returnParameters())
 	{
 		if (result->name().empty()) continue;
@@ -56,11 +59,12 @@ FunctionContext::FunctionContext(TranslationContext& _tr,
 					result->name(), awst::WType::biguintType(), tr.makeLoc(result->location())));
 			else if (types.isBoxKeyedStorageRef(result->type())
 				|| types.analysis().asmSlotReferenceDeclarations.contains(result->id())
-				|| storageRefReturnIsBytesKeyed(&function, types.analysis()))
+				|| storageReturns.bytesKeyed)
 				scope.bindings.mappingKeyParams.set(result->id(), result->name());
 		}
 		else if (result->referenceLocation() == VariableDeclaration::Location::Memory
-			&& memoryUsesBlob(types.map(result->type())))
+			&& (memoryUsesBlob(types.map(result->type()))
+				|| types.analysis().memoryPointerDeclarations.contains(result->id())))
 			scope.bindings.blobAggregates.set(result->id(), "__blobagg_off_" + std::to_string(result->id()));
 	}
 }

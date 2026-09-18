@@ -67,15 +67,4 @@ inline void appendOverloadSuffix(
 	_name += ")";
 }
 
-/// Returns the parameter-count-only suffix `(N)` for `_func`. A coarser
-/// disambiguator than `appendOverloadSuffix` — sufficient where the
-/// concern is "two functions with the same name but different arity"
-/// rather than "two functions with the same name+arity but different
-/// param types". Used by super-call resolution and a few name-keyed
-/// caches where the registry layer separately tracks the param types.
-inline std::string paramCountSuffix(solidity::frontend::FunctionDefinition const& _func)
-{
-	return "(" + std::to_string(_func.parameters().size()) + ")";
-}
-
 } // namespace puyasol::builder

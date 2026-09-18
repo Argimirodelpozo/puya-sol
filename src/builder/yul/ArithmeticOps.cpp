@@ -3,43 +3,21 @@
 
 #include "builder/yul/AssemblyBuilder.h"
 #include "builder/eb/BigUIntMathHelpers.h"
-#include "Logger.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <string>
-#include <libyul/AST.h>
-#include <libyul/Dialect.h>
 
 namespace puyasol::builder
 {
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────
 
-bool AssemblyBuilder::checkArity(
-	std::vector<std::shared_ptr<awst::Expression>> const& _args,
-	size_t _n, char const* _name, awst::SourceLocation const& _loc,
-	char const* _hint
-)
-{
-	if (_args.size() != _n)
-	{
-		Logger::instance().error(
-			std::string(_name) + " requires " + std::to_string(_n)
-			+ (_n == 1 ? " argument" : " arguments")
-			+ (_hint ? std::string(" (") + _hint + ")" : std::string()), _loc);
-		return false;
-	}
-	return true;
-}
-
 std::shared_ptr<awst::Expression> AssemblyBuilder::makeYulCompare(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
-	awst::NumericComparison _cmp, char const* _name,
+	awst::NumericComparison _cmp,
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 2, _name, _loc))
-		return nullptr;
 	return awst::makeNumericCompare(
 		ensureBiguint(_args[0], _loc), _cmp, ensureBiguint(_args[1], _loc), _loc);
 }
@@ -47,13 +25,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::makeYulCompare(
 std::shared_ptr<awst::Expression> AssemblyBuilder::makeYulBitwise(
 	char const* _op,
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
-	char const* _name, awst::SourceLocation const& _loc
+	awst::SourceLocation const& _loc
 )
 {
 	// No 32-byte padding needed — missing high bytes of minimal-encoded operands act as
 	// zeros, giving the right result for &, |, ^ (only `not` must pad to 32).
-	if (!checkArity(_args, 2, _name, _loc))
-		return nullptr;
 	auto call = awst::makeIntrinsicCall(_op, awst::WType::bytesType(), _loc);
 	call->stackArgs.push_back(awst::makeAsBytes(ensureBiguint(_args[0], _loc), _loc));
 	call->stackArgs.push_back(awst::makeAsBytes(ensureBiguint(_args[1], _loc), _loc));
@@ -69,8 +45,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMulmod(
 {
 	// mulmod(a,b,c) = (a*b)%c in full precision (no 2^256 wrap). EVM defines mulmod(a,b,0)=0;
 	// safeDivMod guards the AVM divide-by-zero panic.
-	if (!checkArity(_args, 3, "mulmod", _loc))
-		return nullptr;
 	auto product = makeBigUIntBinOp(
 		_args[0], awst::BigUIntBinaryOperator::Mult, _args[1], _loc
 	);
@@ -86,8 +60,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleAddmod(
 {
 	// addmod(a,b,c) = (a+b)%c in full precision (no 2^256 wrap). EVM defines addmod(a,b,0)=0;
 	// safeDivMod guards the AVM divide-by-zero panic.
-	if (!checkArity(_args, 3, "addmod", _loc))
-		return nullptr;
 	auto sum = makeBigUIntBinOp(
 		_args[0], awst::BigUIntBinaryOperator::Add, _args[1], _loc
 	);
@@ -101,8 +73,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleAdd(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 2, "add", _loc))
-		return nullptr;
 	// EVM add wraps modulo 2^256
 	auto sum = makeBigUIntBinOp(
 		_args[0], awst::BigUIntBinaryOperator::Add, _args[1], _loc
@@ -115,8 +85,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMul(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 2, "mul", _loc))
-		return nullptr;
 	// EVM mul wraps modulo 2^256
 	auto product = makeBigUIntBinOp(
 		_args[0], awst::BigUIntBinaryOperator::Mult, _args[1], _loc
@@ -129,8 +97,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleExp(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 2, "exp", _loc))
-		return nullptr;
 	// AVM has no exp opcode. Fold when BOTH operands are compile-time constants
 	// (the idiomatic Yul use is byte-shifting by a power of a literal, e.g.
 	// `exp(256, 12)` = 2^96 in ENS AddrResolver's asm addr<->bytes). EVM exp
@@ -169,8 +135,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMod(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 2, "mod", _loc))
-		return nullptr;
 	// EVM: mod(a, 0) = 0. AVM: b% by 0 panics.
 	// Emit: b != 0 ? a % b : 0
 	return safeDivMod(
@@ -183,8 +147,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSub(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 2, "sub", _loc))
-		return nullptr;
 	// EVM sub wraps mod 2^256: (a + 2^256 - b) mod 2^256. Avoids AVM biguint underflow when a < b.
 	auto aPlusPow = makeBigUIntBinOp(
 		_args[0], awst::BigUIntBinaryOperator::Add, makeTwoPow256(_loc), _loc
@@ -202,8 +164,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleIszero(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 1, "iszero", _loc))
-		return nullptr;
 	if (_args[0]->wtype == awst::WType::boolType())
 		return awst::makeNot(_args[0], _loc);
 
@@ -218,7 +178,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleEq(
 	awst::SourceLocation const& _loc
 )
 {
-	return makeYulCompare(_args, awst::NumericComparison::Eq, "eq", _loc);
+	return makeYulCompare(_args, awst::NumericComparison::Eq, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleLt(
@@ -226,7 +186,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleLt(
 	awst::SourceLocation const& _loc
 )
 {
-	return makeYulCompare(_args, awst::NumericComparison::Lt, "lt", _loc);
+	return makeYulCompare(_args, awst::NumericComparison::Lt, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleGt(
@@ -234,7 +194,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleGt(
 	awst::SourceLocation const& _loc
 )
 {
-	return makeYulCompare(_args, awst::NumericComparison::Gt, "gt", _loc);
+	return makeYulCompare(_args, awst::NumericComparison::Gt, _loc);
 }
 
 // ─── Bitwise ────────────────────────────────────────────────────────────────
@@ -244,7 +204,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleAnd(
 	awst::SourceLocation const& _loc
 )
 {
-	return makeYulBitwise("b&", _args, "and", _loc);
+	return makeYulBitwise("b&", _args, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleOr(
@@ -252,7 +212,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleOr(
 	awst::SourceLocation const& _loc
 )
 {
-	return makeYulBitwise("b|", _args, "or", _loc);
+	return makeYulBitwise("b|", _args, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleXor(
@@ -260,7 +220,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleXor(
 	awst::SourceLocation const& _loc
 )
 {
-	return makeYulBitwise("b^", _args, "xor", _loc);
+	return makeYulBitwise("b^", _args, _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleNot(
@@ -268,8 +228,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleNot(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 1, "not", _loc))
-		return nullptr;
 	// AVM `b~` operates on actual byte length; pad to 32 so b~ gives the 256-bit result (not(0) = MAX_UINT256).
 	auto padded = padTo32Bytes(ensureBiguint(_args[0], _loc), _loc);
 	auto call = awst::makeIntrinsicCall("b~", awst::WType::bytesType(), _loc);

@@ -44,23 +44,24 @@ void SourceMap::registerCharStream(
 	// A virtual source has valid line facts, but no readable filesystem path.
 	if (!std::filesystem::path(file).is_absolute()) file.clear();
 	else file = std::filesystem::path(file).lexically_normal().string();
-	m_streams[name] = {std::move(file), stream};
+	m_streams[name] = {std::move(file), stream, {}};
 }
 
 awst::SourceLocation SourceMap::toAwstLoc(
 	std::string const& fallback, solidity::langutil::SourceLocation const& location) const
 {
 	// A foreign source's offsets never belong to the fallback source.
-	auto it = m_streams.find(location.sourceName ? *location.sourceName : fallback);
-	return it == m_streams.end() ? awst::SourceLocation({}, 1, 1)
-		: convert(it->second.file, it->second.stream, location.start, location.end);
+	return toAwstLoc(location.sourceName ? *location.sourceName : fallback, location.start, location.end);
 }
 
 awst::SourceLocation SourceMap::toAwstLoc(std::string const& fallback, int start, int end) const
 {
 	auto it = m_streams.find(fallback);
-	return it == m_streams.end() ? awst::SourceLocation({}, 1, 1)
-		: convert(it->second.file, it->second.stream, start, end);
+	if (it == m_streams.end()) return awst::SourceLocation({}, 1, 1);
+	auto& source = it->second;
+	auto [cached, inserted] = source.locations.try_emplace({start, end});
+	if (inserted) cached->second = convert(source.file, source.stream, start, end);
+	return cached->second;
 }
 
 } // namespace puyasol::builder

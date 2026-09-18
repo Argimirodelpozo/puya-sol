@@ -136,7 +136,8 @@ def test_delete_overlapping_transient_after_storage_array_delete_different_base_
 
 def test_delete_overlapping_transient_after_storage_array_pop_same_base_type(harness):  # currently fails
     """storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol"""
-    app = harness.compile_and_deploy('storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol')
+    app = harness.compile_and_deploy('storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol',
+                                     extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'pushArr()')
     r = harness.call(app, 'getArr()')
     assert as_int(r.abi_return) == 1
@@ -591,7 +592,8 @@ def test_static_array_copy_cleanup(harness):
 
 def test_storage_boundary_array_and_partial_assignment_with_layout(harness):
     """storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol"""
-    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol')
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol',
+                                     extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'x()')
     assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
     r = harness.call(app, 'fillArray()')
@@ -610,7 +612,8 @@ def test_storage_boundary_array_and_partial_assignment_with_layout(harness):
 
 def test_storage_boundary_array_assignment(harness):
     """storage/contracts/storage_boundary_array_assignment.sol"""
-    app = harness.compile_and_deploy("storage/contracts/storage_boundary_array_assignment.sol")
+    app = harness.compile_and_deploy("storage/contracts/storage_boundary_array_assignment.sol",
+                                     extra_args=["--evm-storage-layout"])
     # x() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "x()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -634,7 +637,8 @@ def test_storage_boundary_array_copy(harness):
     """storage/contracts/storage_boundary_array_copy.sol"""
     # Ten independent slot boxes require resource-sharing app calls even when
     # constant folding makes the constructor fit within one opcode budget.
-    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_copy.sol', postinit_budget_pool=4)
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_copy.sol', postinit_budget_pool=4,
+                                     extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'x()')
     assert tuple(as_int(x) for x in r.abi_return) == (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,)
     r = harness.call(app, 'y()')
@@ -657,7 +661,8 @@ def test_storage_boundary_array_copy(harness):
 
 def test_storage_boundary_array_delete(harness):
     """storage/contracts/storage_boundary_array_delete.sol"""
-    app = harness.compile_and_deploy("storage/contracts/storage_boundary_array_delete.sol")
+    app = harness.compile_and_deploy("storage/contracts/storage_boundary_array_delete.sol",
+                                     extra_args=["--evm-storage-layout"])
     # x() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "x()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -679,7 +684,8 @@ def test_storage_boundary_array_delete(harness):
 
 def test_storage_boundary_array_delete_overlapping_variable(harness):
     """storage/contracts/storage_boundary_array_delete_overlapping_variable.sol"""
-    app = harness.compile_and_deploy("storage/contracts/storage_boundary_array_delete_overlapping_variable.sol")
+    app = harness.compile_and_deploy("storage/contracts/storage_boundary_array_delete_overlapping_variable.sol",
+                                     extra_args=["--evm-storage-layout"])
     # y() -> 42
     r = harness.call(app, "y()")
     assert as_int(r.abi_return) == 42
@@ -710,7 +716,8 @@ def test_storage_boundary_array_delete_overlapping_variable(harness):
 
 def test_storage_boundary_array_packing_not_overlapping_variable(harness):  # currently fails
     """storage/contracts/storage_boundary_array_packing_not_overlapping_variable.sol"""
-    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_packing_not_overlapping_variable.sol')
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_packing_not_overlapping_variable.sol',
+                                     extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'x()')
     assert tuple(as_int(x) for x in r.abi_return) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0,)
     r = harness.call(app, 'canaryValue()')
@@ -733,7 +740,8 @@ def test_storage_boundary_array_packing_not_overlapping_variable(harness):  # cu
 
 def test_storage_boundary_array_partial_assignment(harness):
     """storage/contracts/storage_boundary_array_partial_assignment.sol"""
-    app = harness.compile_and_deploy("storage/contracts/storage_boundary_array_partial_assignment.sol")
+    app = harness.compile_and_deploy("storage/contracts/storage_boundary_array_partial_assignment.sol",
+                                     extra_args=["--evm-storage-layout"])
     # x() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "x()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -784,7 +792,8 @@ def test_storage_boundary_delete_overflow_bug(harness):
 
 def test_storage_boundary_packed_array(harness):
     """storage/contracts/storage_boundary_packed_array.sol"""
-    app = harness.compile_and_deploy("storage/contracts/storage_boundary_packed_array.sol")
+    app = harness.compile_and_deploy("storage/contracts/storage_boundary_packed_array.sol",
+                                     extra_args=["--evm-storage-layout"])
     # x() -> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     r = harness.call(app, "x()")
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -806,7 +815,8 @@ def test_storage_boundary_packed_array(harness):
 
 def test_storage_boundary_struct_array_mixed_types(harness):
     """storage/contracts/storage_boundary_struct_array_mixed_types.sol"""
-    app = harness.compile_and_deploy('storage/contracts/storage_boundary_struct_array_mixed_types.sol')
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_struct_array_mixed_types.sol',
+                                     extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'canaryValue()')
     assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, 'boundaryArray()')
@@ -851,7 +861,8 @@ def test_storage_boundary_struct_array_mixed_types(harness):
 
 def test_storage_boundary_struct_array_multislot(harness):
     """storage/contracts/storage_boundary_struct_array_multislot.sol"""
-    app = harness.compile_and_deploy('storage/contracts/storage_boundary_struct_array_multislot.sol')
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_struct_array_multislot.sol',
+                                     extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'canaryValue()')
     assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, 'boundaryArray()')
@@ -896,7 +907,8 @@ def test_storage_boundary_struct_array_multislot(harness):
 
 def test_storage_boundary_struct_array_packed(harness):
     """storage/contracts/storage_boundary_struct_array_packed.sol"""
-    app = harness.compile_and_deploy('storage/contracts/storage_boundary_struct_array_packed.sol')
+    app = harness.compile_and_deploy('storage/contracts/storage_boundary_struct_array_packed.sol',
+                                     extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'canaryValue()')
     assert as_int(r.abi_return) == 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     r = harness.call(app, 'boundaryArray()')

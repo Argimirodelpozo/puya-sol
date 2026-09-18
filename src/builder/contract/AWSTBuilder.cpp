@@ -322,7 +322,9 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	buildFreestandingParams(_func, _sourceFile, *sub);
 	sub->returnType = m_session.typeMapper.functionReturnPlan(_func).internalType;
 
-	sub->pure = _func.stateMutability() == solidity::frontend::StateMutability::Pure;
+	// Solidity pure may revert or mutate shared memory; its calls are not
+	// safe for AWST's unused-pure-call elimination.
+	sub->pure = false;
 
 	// Build body. ContractContext stores overloadedNames as const& — must
 	// pass a long-lived object (a temporary `{}` would dangle → SIGSEGV).

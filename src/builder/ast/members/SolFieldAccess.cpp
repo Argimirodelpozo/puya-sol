@@ -7,6 +7,7 @@
 #include "builder/eb/CalldataReference.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/solc/StorageRefPointer.h"
+#include "builder/context/ProgramAnalysis.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/storage/StorageMapper.h"
@@ -50,7 +51,7 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 	auto const* call = SolcFacts::expressionAs<FunctionCall>(&baseExpression());
 	auto const* callee = call ? SolcFacts::resolveInternalCall(*call, m_ctx.currentContract) : nullptr;
 	if (callee && !m_ctx.typeMapper.profile().evmStorageLayout
-		&& builder::storageRefReturnIsBytesKeyed(callee, m_ctx.typeMapper.analysis()))
+		&& m_ctx.typeMapper.analysis().storageReturnFacts(callee).bytesKeyed)
 	{
 		auto receiver = m_ctx.lower(baseExpression(), false);
 		auto key = m_ctx.emitSequencedOperand(

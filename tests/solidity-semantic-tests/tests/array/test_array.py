@@ -239,7 +239,8 @@ def test_array_storage_index_boundary_test(harness):
 
 def test_array_storage_index_zeroed_test(harness):
     """array/contracts/array_storage_index_zeroed_test.sol"""
-    app = harness.compile_and_deploy("array/contracts/array_storage_index_zeroed_test.sol")
+    app = harness.compile_and_deploy("array/contracts/array_storage_index_zeroed_test.sol",
+                                     extra_args=["--evm-storage-layout"])
     # test_zeroed_indices(uint256): 1 ->
     r = harness.call(app, "test_zeroed_indices(uint256)", 1)
     # (void return — call succeeding is the assertion)
@@ -350,7 +351,8 @@ def test_arrays_complex_from_and_to_storage(harness):
 
 def test_byte_array_storage_layout(harness):
     """array/contracts/byte_array_storage_layout.sol"""
-    app = harness.compile_and_deploy('array/contracts/byte_array_storage_layout.sol')
+    app = harness.compile_and_deploy('array/contracts/byte_array_storage_layout.sol',
+                                     extra_args=["--evm-storage-layout"])
 
 def test_byte_array_transitional_2(harness):
     """array/contracts/byte_array_transitional_2.sol"""
@@ -1023,7 +1025,8 @@ def test_invalid_encoding_for_storage_byte_array(harness):
     strict=False)
 def test_long_byte_array_cleanup_after_delete(harness):
     """array/contracts/long_byte_array_cleanup_after_delete.sol"""
-    app = harness.compile_and_deploy('array/contracts/long_byte_array_cleanup_after_delete.sol')
+    app = harness.compile_and_deploy('array/contracts/long_byte_array_cleanup_after_delete.sol',
+                                     extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'getArrayDataAreaSlot()')
     assert as_int(r.abi_return) == 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
     r = harness.call(app, 'getCanarySlot()')

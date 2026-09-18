@@ -24,7 +24,7 @@ public:
 
 	std::unique_ptr<InstanceBuilder> binary_op(
 		InstanceBuilder& _other, BuilderBinaryOp _op,
-		awst::SourceLocation const& _loc, bool _reverse = false) override;
+		awst::SourceLocation const& _loc) override;
 
 	std::unique_ptr<InstanceBuilder> compare(
 		InstanceBuilder& _other, BuilderComparisonOp _op,

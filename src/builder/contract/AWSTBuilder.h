@@ -8,7 +8,7 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/types/TypeMapper.h"
-#include "builder/solc/StorageRefPointer.h" // containsMappingType + storageRefPointerReturn
+#include "builder/solc/StorageRefPointer.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/CompilerStack.h>
@@ -20,10 +20,6 @@
 
 namespace puyasol::builder
 {
-
-// containsMappingType lives in builder/solc/StorageRefPointer.h so
-// storageRefPointerReturn can share it; visible here for AWSTBuilder.cpp,
-// SolInternalCall.cpp, FunctionBuilder.cpp, PublicGetterBuilder.cpp.
 
 /// Top-level builder that drives the Solidity AST → AWST transformation.
 /// Uses CompilerStack for parsing and type-checking, then visits all contracts.

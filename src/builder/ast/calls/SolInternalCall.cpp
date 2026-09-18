@@ -25,6 +25,7 @@
 #include "builder/types/FunctionPointerKind.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/codec/Arc4Defaults.h"
+#include "builder/codec/EvmMemoryCodec.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/types/ConversionPlan.h"
 #include "builder/storage/StorageMapper.h"
@@ -70,7 +71,9 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 {
 	if (!_funcDef)
 		return m_ctx.typeMapper.map(m_call.annotation().type);
-	return m_ctx.typeMapper.functionReturnPlan(*_funcDef).internalType;
+	auto const& plan = m_ctx.typeMapper.functionReturnPlan(*_funcDef);
+	auto const* type = dynamic_cast<FunctionType const*>(m_call.expression().annotation().type);
+	return type && type->kind() == FunctionType::Kind::External ? plan.nativeType : plan.internalType;
 }
 
 namespace
@@ -190,7 +193,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::wrapStorageRefResult(
 	// IndexExpression reconstitution.
 	if (m_ctx.typeMapper.profile().evmStorageLayout)
 		return _result;
-	auto const* indexAccess = builder::storageRefPointerReturn(_funcDef, m_ctx.typeMapper.analysis());
+	auto const& storageReturns = m_ctx.typeMapper.analysis().storageReturnFacts(_funcDef);
+	auto const* indexAccess = storageReturns.indexedReturn;
 	if (!indexAccess)
 		return _result;
 	// Box-keyed mapping-of-struct storage ref: the callee already returns the
@@ -198,7 +202,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::wrapStorageRefResult(
 	// it through unchanged — the caller binds it as a struct-storage-ref
 	// (SolVariableDeclaration) — rather than reconstituting an IndexExpression,
 	// which here would be the invalid `bytes[idx] -> Struct`.
-	if (builder::storageRefReturnIsBytesKeyed(_funcDef, m_ctx.typeMapper.analysis()))
+	if (storageReturns.bytesKeyed)
 		return _result;
 	auto base = m_ctx.buildExpr(indexAccess->baseExpression());
 	auto* elemType = m_ctx.typeMapper.map(
@@ -265,14 +269,16 @@ void SolInternalCall::buildSequencedArgs(
 	std::vector<awst::WType const*> paramTypes;
 	if (plan)
 		for (auto const& parameter: plan->parameters)
-			paramTypes.push_back(parameter.type);
+			paramTypes.push_back(abiTarget && parameter.abiNativeType ? parameter.abiNativeType : parameter.type);
 	else if (functionType)
 		for (auto const* type: functionType->parameterTypes())
 			paramTypes.push_back(m_ctx.typeMapper.map(type));
 	static std::set<size_t> const noParameters;
 	auto const& mappingStorageParamIndices = plan ? plan->keyParams : noParameters;
 	auto const& evmSlotRefParamIndices = plan ? plan->slotParams : noParameters;
-	auto const& blobOffsetParamIndices = plan ? plan->blobParams : noParameters;
+	auto const blobOffsetParamIndices = abiTarget ? noParameters : plan ? plan->blobParams
+		: functionType ? m_ctx.typeMapper.analysis().pointerMemoryParameters(*functionType) : noParameters;
+	for (auto pi: blobOffsetParamIndices) paramTypes.at(pi) = awst::WType::uint64Type();
 	std::map<size_t, std::shared_ptr<awst::Expression>> offsets;
 	auto keyArgument = [&](Expression const& source, size_t pi) -> std::shared_ptr<awst::Expression> {
 		auto const& expression = SolcFacts::unparenthesized(source);
@@ -381,8 +387,8 @@ void SolInternalCall::buildSequencedArgs(
 		if (mappingStorageParamIndices.count(paramIdx))
 			return keyArgument(source, paramIdx);
 		if (blobOffsetParamIndices.count(paramIdx))
-			if (auto offset = SolIndexAccess::resolveBlobOffset(m_ctx, m_scope, source, m_loc))
-				return offset;
+			return SolIndexAccess::buildMemoryReference(m_ctx, m_scope, source, parameterType, m_loc,
+				functionType && functionType->kind() == FunctionType::Kind::DelegateCall);
 		std::shared_ptr<awst::Expression> value;
 		if (frame && parameterType && parameterType->dataStoredIn(DataLocation::CallData))
 		{
@@ -553,7 +559,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		? &m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract) : nullptr;
 	// The public ABI remains unchanged; direct Solidity calls use a private
 	// implementation carrier when reference results must travel back.
-	if (plan && (!plan->writeBackParams.empty() || plan->calldataFrame) && _funcDef->isPartOfExternalInterface()
+	if (plan && (!plan->writeBackParams.empty() || plan->calldataFrame || !plan->blobParams.empty()
+		|| m_ctx.typeMapper.functionReturnPlan(*_funcDef).internalType != m_ctx.typeMapper.functionReturnPlan(*_funcDef).nativeType)
+		&& _funcDef->isPartOfExternalInterface()
 		&& functionType && functionType->kind() == FunctionType::Kind::Internal
 		&& std::holds_alternative<awst::InstanceMethodTarget>(_target))
 		_target = awst::InstanceMethodTarget{eb::CallResolver::baseImplementationName(m_ctx, *_funcDef)};
@@ -751,6 +759,24 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildFunctionPointerCall(
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
+{
+	auto result = toReferenceAwst();
+	auto const* type = dynamic_cast<FunctionType const*>(m_call.expression().annotation().type);
+	return result && type
+		? materializeEvmMemoryResult(m_ctx.typeMapper, type->returnParameterTypes(), std::move(result), m_loc, m_ctx.preEffects())
+		: result;
+}
+
+bool SolInternalCall::hasMemoryReturns(FunctionCall const& call)
+{
+	auto const* type = dynamic_cast<FunctionType const*>(call.expression().annotation().type);
+	if (!type || type->kind() != FunctionType::Kind::Internal) return false;
+	for (auto const* result: type->returnParameterTypes())
+		if (!result->isValueType() && result->dataStoredIn(DataLocation::Memory)) return true;
+	return false;
+}
+
+std::shared_ptr<awst::Expression> SolInternalCall::toReferenceAwst()
 {
 	auto const plan = eb::CallResolver::plan(m_call);
 	if (plan.isFunctionPointer && plan.functionType)

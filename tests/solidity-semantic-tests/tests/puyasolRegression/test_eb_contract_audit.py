@@ -102,7 +102,7 @@ def test_storage_reads_do_not_allocate(harness, via_ir, profile, slot):
 @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
 @pytest.mark.parametrize("profile", ["arc4", "evm"])
 def test_bytes_storage_header_validation(harness, via_ir, profile):
-    artifacts = compile_app(harness, "contract_storage_words", via_ir, profile, True)
+    artifacts = compile_app(harness, "contract_bytes_headers", via_ir, profile, True)
     app = harness.deploy(artifacts, "BytesStorageHeaders", fund_wei=30_000_000)
     for method in ("read", "replace"):
         for word in (1, 3, 63, 64, 126, 254):

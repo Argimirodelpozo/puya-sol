@@ -61,6 +61,18 @@ an interior data slice and therefore support key-only references to their sole
 member. EVM slot mode retains its existing representation and interior
 references through canonical logical slots.
 
+Raw assembly array storage requires `--evm-storage-layout` explicitly. In named
+mode, changing an ARC4 array's encoded length would resize or rebuild its data,
+whereas an EVM length-word write preserves hidden elements across shrink/regrow.
+The compiler therefore rejects raw array reads, writes and assembly storage-pointer
+rebinding, including arrays nested in structs or mappings. If a contract has
+named arrays, an unproven raw slot could alias their storage and is also rejected;
+proven scalar state slots remain available. Ordinary typed array operations and
+pure `.slot`/`.offset` metadata queries do not require the flag. There is no
+automatic layout switch or persistent shadow store. Internal typed array
+references still use logical slots across calls; their named-cell length and
+element dispatch remains necessary and is separate from raw assembly access.
+
 Declared mapping-key encoding retains the native rules: uint64-carried integer
 and bool values use eight bytes; biguint-carried integers use 32 bytes; accounts
 use their profile-selected address representation; fixed bytes use their declared

@@ -8,7 +8,6 @@
 #include "builder/storage/named/StoragePathWalker.h"
 #include "awst/NameGen.h"
 #include "builder/context/ProgramAnalysis.h"
-#include "builder/ast/members/SolLengthAccess.h"
 #include "builder/eb/NodeBuilder.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/codec/Arc4Defaults.h"
@@ -88,7 +87,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	// bytes sit at the phantom table slot — garbage instead of a revert.
 	// (Static-stride elements at least die on the physical box_extract
 	// boundary.) Assert idx < length, EVM Panic 0x32 semantics; length via
-	// stateDynArrayLength so it can never disagree with `.length`/push/pop.
+	// makeBoxArrayLength so it can never disagree with `.length`/push/pop.
 	// Covers reads AND the write lvalue (both built here). The length helper
 	// accepts either a physical state key or a storage-ref parameter's runtime
 	// key, so both representations get the same recursive-shape bounds rule.
@@ -101,19 +100,18 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 				std::shared_ptr<awst::Expression> length;
 				auto const& keyParam = m_scope.bindings.mappingKeyParams.get(decl->id());
 				if (!keyParam.empty())
-					length = SolLengthAccess::stateDynArrayLengthForKey(
-						m_ctx,
+					length = StorageMapper::makeBoxArrayLength(
+						m_ctx.typeMapper,
 						awst::makeReinterpretCast(
 							awst::makeVarExpression(
 								keyParam, awst::WType::bytesType(), m_loc),
 							awst::WType::boxKeyType(), m_loc),
-						arrType, m_loc);
+						m_loc);
 				else if (decl->isStateVariable() && !decl->isConstant()
 					&& !decl->immutable())
-					length = SolLengthAccess::stateDynArrayLength(
-						m_ctx,
-						m_ctx.storageMapper.physicalBindingFor(*decl).key,
-						arrType, m_loc);
+					length = StorageMapper::makeBoxArrayLength(m_ctx.typeMapper,
+						awst::makeUtf8BytesConstant(m_ctx.storageMapper.physicalBindingFor(*decl).key,
+							m_loc, awst::WType::boxKeyType()), m_loc);
 				if (!length)
 					return awst::makeZero(m_loc);
 				// idx feeds the assert AND the element access — pin once.

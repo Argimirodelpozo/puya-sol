@@ -51,34 +51,14 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 	std::shared_ptr<awst::Expression> _runtimeKey)
 {
 	// Box: 2-byte big-endian length, no element data.
-	// Read: box_get; empty (deleted/never-created) → len=0; else extract_uint16(0).
+	// Read the shared ARC4 header; missing boxes have length zero.
 	// Write: itob(new_len) → extract last 2 bytes → box_put.
 
 	auto boxKey = _runtimeKey ? std::move(_runtimeKey)
 		: awst::makeUtf8BytesConstant(
 			_arrayVarName, m_loc, awst::WType::boxKeyType());
 
-	// Read box bytes (or empty if missing).
-	auto boxRead = [&]() -> std::shared_ptr<awst::Expression> {
-		auto box = awst::makeBoxValueExpression(boxKey, awst::WType::bytesType(), m_loc);
-		return awst::makeStateGet(box, awst::makeBytesConstant({}, m_loc), awst::WType::bytesType(), m_loc);
-	};
-
-	// currentLen = box_bytes.length() > 0 ? extract_uint16(box,0) : 0
-	// (exists → len>=2; guard to avoid extract_uint16 on empty bytes)
-	auto bytes = boxRead();
-	auto lenOfBytes = awst::makeLen(bytes, m_loc);
-	auto isNonEmpty = awst::makeNumericCompare(
-		std::move(lenOfBytes),
-		awst::NumericComparison::Gt,
-		awst::makeIntegerConstant("0", m_loc),
-		m_loc);
-	auto extractLen = awst::makeExtractUInt16(
-		boxRead(), awst::makeZero(m_loc), m_loc);
-	auto cur = awst::makeConditional(
-		std::move(isNonEmpty), std::move(extractLen),
-		awst::makeIntegerConstant("0", m_loc),
-		awst::WType::uint64Type(), m_loc);
+	auto cur = StorageMapper::makeBoxArrayLength(m_ctx.typeMapper, boxKey, m_loc);
 
 	// new_len = cur ± 1
 	auto delta = awst::makeOne(m_loc);

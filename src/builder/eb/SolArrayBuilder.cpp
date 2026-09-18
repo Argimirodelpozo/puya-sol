@@ -1,5 +1,5 @@
 /// @file SolArrayBuilder.cpp
-/// Solidity typed array builder — handles index access and .length.
+/// Solidity typed array builder — keeps element places separate from read validation.
 
 #include "builder/eb/SolArrayBuilder.h"
 #include "awst/NameGen.h"
@@ -97,54 +97,26 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 		&& builder::isArc4EncodedType(elemType) && !builder::isArc4EncodedType(expectedType);
 
 	std::shared_ptr<awst::Expression> result = std::move(e);
-	bool signExtendElem = false;
 	if (needsDecode)
-	{
 		result = awst::makeARC4Decode(std::move(result), expectedType, _loc);
-		// Signed sub-256 (e.g. int128): defer sign-extension to resolve() so the
-		// bare decode stays a valid lvalue for `a[i] = x`.
-		signExtendElem = true;
-	}
-
-	// Enum: panic(0x21) on out-of-range. Spill to local so assert survives DCE.
-	if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(
-			m_arrayType->baseType()))
-	{
-		unsigned numMembers = enumType->numberOfMembers();
-		std::string tmpName = "__enum_idx_" + std::to_string(awst::NameGen::next("SolArrayBuilder.enumCheckCounter"));
-
-		auto tmpVar = awst::makeVarExpression(tmpName, result->wtype, _loc);
-
-		auto assignTmp = awst::makeAssignmentStatement(tmpVar, result, _loc);
-		m_ctx.preEffects().push_back(std::move(assignTmp));
-
-		auto assertStmt = awst::makeExpressionStatement(
-			awst::makeEnumRangeAssert(tmpVar, numMembers, _loc, "Enum out of range"), _loc);
-		m_ctx.preEffects().push_back(std::move(assertStmt));
-
-		result = tmpVar;
-	}
 
 	auto out = std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(result));
-	if (signExtendElem)
-	{
-		out->m_signExtendElem = m_arrayType->baseType();
-		out->m_signExtendLoc = _loc;
-	}
+	out->m_elementType = m_arrayType->baseType();
+	out->m_elementLoc = _loc;
 	return out;
 }
 
 std::shared_ptr<awst::Expression> SolArrayBuilder::resolve()
 {
-	// rvalue read: sign-extend a decoded signed sub-256 element to canonical
-	// 256-bit (no-op for unsigned / int256 / <=64-bit — see TypeCoercion).
-	if (m_signExtendElem)
+	// Validation and signed cleanup belong to reads, never to writable places.
+	if (m_elementType)
 	{
 		auto value = m_expr;
-		if (m_signExtendElem->isValueType())
+		if (m_elementType->isValueType())
 			value = StorageMapper::makePartialBoxReadWithDefault(
-				m_ctx.typeMapper, std::move(value), m_ctx.preEffects(), m_signExtendLoc);
-		return TypeCoercion::signExtendSignedElement(std::move(value), m_signExtendElem, m_signExtendLoc);
+				m_ctx.typeMapper, std::move(value), m_ctx.preEffects(), m_elementLoc);
+		value = TypeCoercion::checkedEnum(std::move(value), m_elementType, m_elementLoc, &m_ctx.preEffects());
+		return TypeCoercion::signExtendSignedElement(std::move(value), m_elementType, m_elementLoc);
 	}
 	return m_expr;
 }
@@ -154,28 +126,6 @@ std::shared_ptr<awst::Expression> SolArrayBuilder::resolve_lvalue()
 	// Assignment target: the bare decoded element. Never sign-extend (a
 	// CommaExpression is not a valid lvalue).
 	return m_expr;
-}
-
-std::unique_ptr<NodeBuilder> SolArrayBuilder::member_access(
-	std::string const& _name, awst::SourceLocation const& _loc)
-{
-	if (_name == "length")
-	{
-		auto base = resolve();
-		auto kind = base->wtype ? base->wtype->kind() : awst::WTypeKind::Bytes;
-		if (kind == awst::WTypeKind::ARC4StaticArray
-			|| kind == awst::WTypeKind::ARC4DynamicArray)
-		{
-			auto e = awst::makeArrayLength(std::move(base), awst::WType::uint64Type(), _loc);
-			return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(e));
-		}
-		// For other types (bytes): use len intrinsic
-		auto len = awst::makeLen(std::move(base), _loc);
-		return std::make_unique<SolArrayBuilder>(m_ctx, m_arrayType, std::move(len));
-	}
-
-	// .push/.pop/.concat arrive as FunctionCalls → SolArrayMethod.cpp, not here.
-	return nullptr;
 }
 
 } // namespace puyasol::builder::eb

@@ -36,14 +36,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		auto const* declared = event->parameters().at(i)->type();
 		auto value = ConversionPlan{source.annotation().type, declared, types.map(declared),
 			ConversionPlan::Context::Argument}.emit(ctx.buildExpr(source), m_loc, &ctx.preEffects());
-		if (auto const* enumeration = dynamic_cast<EnumType const*>(declared))
-		{
-			value = ctx.emitSequencedOperand({}, std::move(value), true, m_loc);
-			ctx.queuePreExpression(awst::makeEnumRangeAssert(
-				value,
-				enumeration->numberOfMembers(), m_loc), m_loc);
-		}
-		return value;
+		return TypeCoercion::checkedEnum(std::move(value), declared, m_loc, &ctx.preEffects());
 	});
 
 	std::shared_ptr<awst::Expression> emitted;

@@ -8,13 +8,13 @@
 #include "builder/yul/AssemblyBuilder.h"
 #include "builder/solc/SolcConstFold.h"
 #include "builder/solc/SolcFacts.h"
+#include "builder/solc/PreparedAssembly.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/target/EvmLayoutMode.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StateVarWalker.h"
 #include "builder/storage/StorageMapper.h"
 
-#include <libsolutil/Keccak256.h>
 #include "builder/storage/TransientStorage.h"
 #include "Logger.h"
 
@@ -47,12 +47,29 @@ SolInlineAssembly::SolInlineAssembly(
 namespace
 {
 
+bool containsStorageArray(Type const* type)
+{
+	std::vector<Type const*> pending{type};
+	std::set<Type const*> seen;
+	while (!pending.empty())
+	{
+		auto const* current = pending.back();
+		pending.pop_back();
+		if (!current || !seen.insert(current).second) continue;
+		if (dynamic_cast<ArrayType const*>(current)) return true;
+		if (auto const* mapping = dynamic_cast<MappingType const*>(current))
+			pending.push_back(mapping->valueType());
+		if (auto const* structure = dynamic_cast<StructType const*>(current))
+			for (auto const& member: structure->members(nullptr)) pending.push_back(member.type);
+	}
+	return false;
+}
+
 /// toAwst scan: compile-time slot routes + layout-derived slot/offset constants (StorageLayout of the current or declaring contract).
 void registerStateVarSlotRoutes(
 	BlockContext& blk, ContractDefinition const& contractDef,
 	StorageLayout const& layout,
-	std::map<std::string, AssemblyBuilder::SlotRoute>& slotRoutes,
-	std::vector<AssemblyBuilder::SlotRoute>& slotDataRegions)
+	std::map<std::string, AssemblyBuilder::StateVarSlot>& slotRoutes)
 {
 	forEachStateVar(contractDef, [&](solidity::frontend::VariableDeclaration const* svDecl)
 	{
@@ -63,45 +80,10 @@ void registerStateVarSlotRoutes(
 		if (!vi) return;
 		auto physicalName =
 			blk.builderCtx().storageMapper.physicalBindingFor(*svDecl).key;
-		auto const* arrT = dynamic_cast<solidity::frontend::ArrayType const*>(svDecl->type());
-		if (arrT && arrT->isDynamicallySized() && !arrT->isByteArrayOrString()
-			&& blk.builderCtx().storageMapper.shouldUseBoxStorage(*svDecl))
-		{
-			auto* arc4Elem = blk.typeMapper().mapSolTypeToARC4(arrT->baseType());
-			auto elemSize = builder::computeEncodedElementSize(arc4Elem).fixedBytes<int>().value_or(0);
-			AssemblyBuilder::SlotRoute root;
-			root.kind = AssemblyBuilder::SlotRoute::Kind::ArrayRoot;
-			root.varName = physicalName;
-			root.wtype = blk.typeMapper().map(arrT);
-			root.elementSize = elemSize;
-			slotRoutes[vi->slot.str()] = root;
-
-			// Raw EVM data slots coincide with ARC4 element boundaries only
-			// for one-word encodings. Root length routing above is generic;
-			// packed and multi-slot data regions remain an explicit layout
-			// boundary instead of being silently mis-routed.
-			if (elemSize == 32)
-			{
-				auto slotWord = solidity::toBigEndian(vi->slot);
-				auto k = solidity::u256(solidity::util::keccak256(slotWord));
-				AssemblyBuilder::SlotRoute data;
-				data.kind = AssemblyBuilder::SlotRoute::Kind::ArrayData;
-				data.varName = physicalName;
-				data.dataBase = k.str();
-				data.elementSize = elemSize;
-				slotDataRegions.push_back(std::move(data));
-			}
-		}
-		else if (vi->isFullSlot
+		if (vi->isFullSlot
 			&& svDecl->type()->isValueType()   // structs share the slot repr; route can't model them
 			&& !blk.builderCtx().storageMapper.shouldUseBoxStorage(*svDecl))
-		{
-			AssemblyBuilder::SlotRoute r;
-			r.kind = AssemblyBuilder::SlotRoute::Kind::Scalar;
-			r.varName = physicalName;
-			r.wtype = vi->wtype;
-			slotRoutes[vi->slot.str()] = r;
-		}
+			slotRoutes[vi->slot.str()] = {physicalName, vi->wtype};
 	});
 
 }
@@ -116,8 +98,9 @@ public:
 	std::map<std::string, std::string> constants, structRefSlotLocals, storageSlotVars, blobOffsetVars;
 	std::map<std::string, AssemblyBuilder::BoxKeyedSlot> boxKeyedStructSlots;
 	std::map<std::string, AssemblyBuilder::StateVarSlot> stateVarSlots;
-	std::map<std::string, AssemblyBuilder::SlotRoute> slotRoutes;
-	std::vector<AssemblyBuilder::SlotRoute> slotDataRegions;
+	std::map<std::string, AssemblyBuilder::StateVarSlot> slotRoutes;
+	std::set<std::string> scalarStorageSlots;
+	bool hasArrayStorage = false;
 	std::map<std::string, unsigned> paramBitWidths, signedParamBits;
 	std::map<std::string, std::string> wordBindings;
 	std::set<std::string> calldataPointerNames, calldataStaticPtrNames;
@@ -147,7 +130,17 @@ public:
 				fallback.computeLayout(*contract, blk.typeMapper());
 				layout = &fallback;
 			}
-			registerStateVarSlotRoutes(blk, *contract, *layout, slotRoutes, slotDataRegions);
+			registerStateVarSlotRoutes(blk, *contract, *layout, slotRoutes);
+			if (!blk.typeMapper().profile().evmStorageLayout)
+			{
+				for (auto const& variable: layout->variables())
+					hasArrayStorage |= containsStorageArray(variable.solType);
+				for (auto const& slot: layout->slots())
+					if (std::all_of(slot.variableIndices.begin(), slot.variableIndices.end(), [&](auto index) {
+						auto const* type = layout->variables().at(index).solType;
+						return type && type->isValueType();
+					})) scalarStorageSlots.insert(slot.slotNumber.str());
+			}
 		}
 		for (auto const& reference: references) bind(reference, layout);
 	}
@@ -220,41 +213,17 @@ private:
 			auto const& source = SolcFacts::unparenthesized(*initial->second);
 			if (auto const* member = SolcFacts::expressionAs<MemberAccess>(&source))
 			{
-				auto const* base = dynamic_cast<VariableDeclaration const*>(
+				auto const* state = dynamic_cast<VariableDeclaration const*>(
 					ASTNode::referencedDeclaration(SolcFacts::unparenthesized(member->expression())));
-				if (base && base->isStateVariable()) bindMemberArray(ref, *base, member->memberName(), *layout);
+				auto const* structure = state ? dynamic_cast<StructType const*>(state->type()) : nullptr;
+				auto const* root = state && state->isStateVariable() ? layout->getVarInfoById(state->id()) : nullptr;
+				if (structure && root)
+					constants[ref.name] = (root->slot + structure->storageOffsetsOfMember(member->memberName()).first).str();
 			}
 			else if (auto const* state = dynamic_cast<VariableDeclaration const*>(ASTNode::referencedDeclaration(source));
 				state && state->isStateVariable())
 				bindLayout(ref, *state, *layout);
 		}
-	}
-
-	void bindMemberArray(Reference const& ref, VariableDeclaration const& state,
-		std::string const& field, StorageLayout const& layout)
-	{
-		if (!blk.builderCtx().storageMapper.shouldUseBoxStorage(state)) return;
-		auto const* structure = dynamic_cast<StructType const*>(state.type());
-		auto const* represented = dynamic_cast<awst::ARC4Struct const*>(blk.typeMapper().map(state.type()));
-		auto const* array = dynamic_cast<ArrayType const*>(ref.declaration.type());
-		if (!structure || !represented || !array || !array->isDynamicallySized() || array->isByteArrayOrString()) return;
-		auto const* root = layout.getVarInfoById(state.id());
-		if (!root) return;
-		auto offset = structure->storageOffsetsOfMember(field);
-		if (offset.second != 0) return;
-		std::string slot = (root->slot + offset.first).str();
-
-		// Register the constant only with its named-box route; an unmodeled
-		// .slot must never fall through to an unrelated box-per-slot cell.
-		AssemblyBuilder::SlotRoute route;
-		route.kind = AssemblyBuilder::SlotRoute::Kind::StructMemberArrayRoot;
-		route.varName = blk.builderCtx().storageMapper.physicalBindingFor(state).key;
-		route.fieldName = field;
-		route.wtype = represented;
-		route.elementSize = computeEncodedElementSize(
-			blk.typeMapper().mapSolTypeToARC4(array->baseType())).fixedBytes<int>().value_or(0);
-		slotRoutes[slot] = std::move(route);
-		constants[ref.name] = std::move(slot);
 	}
 
 	void bindLayout(Reference const& ref, VariableDeclaration const& state, StorageLayout const& layout)
@@ -325,6 +294,17 @@ private:
 std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 {
 	Logger::instance().debug("translating inline assembly block", m_loc);
+	auto const& prepared = *m_blk.typeMapper().analysis().preparedAssemblies.at(m_node.id());
+	if (!m_blk.typeMapper().profile().evmStorageLayout)
+		for (auto const& [_, reference]: m_node.annotation().externalReferences)
+			if (auto const* variable = dynamic_cast<VariableDeclaration const*>(reference.declaration);
+				variable && reference.suffix == "slot" && containsStorageArray(variable->type())
+				&& (prepared.facts.usesStorage || prepared.assignedSlotDeclarations.contains(variable->id())))
+			{
+				Logger::instance().error("raw array storage references require --evm-storage-layout; "
+					"named storage cannot preserve EVM array length/data semantics", m_loc);
+				return {};
+			}
 
 	std::string contextName = m_blk.builderCtx().contractName;
 	if (contextName.empty())
@@ -340,6 +320,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		+ "_emit_" + std::to_string(awst::NameGen::next("SolInlineAssembly.emit"));
 
 	AssemblyBindings bindings(m_blk, m_node);
+	if (bindings.hasArrayStorage && !prepared.assignedSlotDeclarations.empty())
+	{
+		Logger::instance().error("raw storage reference rebinding may address array storage; "
+			"use --evm-storage-layout", m_loc);
+		return {};
+	}
 
 	// Resolve a Solidity VariableDeclaration to its AWST name (Context::awstVarName:
 	// locals → name__<declId>, params/returns bare). AssemblyBuilder names outer-var
@@ -358,7 +344,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setBoxKeyStructParams(m_blk.fn.boxKeyStructParams);
 	asmTranslator.setCalldataPointerNames(std::move(bindings.calldataPointerNames));
 	asmTranslator.setCalldataStaticPtrNames(std::move(bindings.calldataStaticPtrNames));
-	asmTranslator.setSlotRoutes(std::move(bindings.slotRoutes), std::move(bindings.slotDataRegions));
+	asmTranslator.setSlotRoutes(std::move(bindings.slotRoutes), std::move(bindings.scalarStorageSlots),
+		bindings.hasArrayStorage);
 	asmTranslator.setSignedParamBits(std::move(bindings.signedParamBits));
 	asmTranslator.setReturnSolTypes(m_blk.fn.returnSolTypes());
 	asmTranslator.setReturnWirePlan(
@@ -367,7 +354,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	if (builder::SelectorSemantics::enabled(m_blk.typeMapper()))
 		asmTranslator.setSelectorRoutes(builder::SelectorSemantics::routes(m_blk.builderCtx()));
 	return asmTranslator.buildBlock(
-		*m_blk.typeMapper().analysis().preparedAssemblies.at(m_node.id()),
+		prepared,
 		bindings.params,
 		m_blk.fn.returnType,
 		bindings.constants,

@@ -1,13 +1,13 @@
 # puya-sol bytecode sizes v3: corpus regression-slot
 # approval/clear: assembled bytes; teal_ops: static instructions, not runtime cost
 # regenerate: python3 tests/sizes/sizes.py --corpus regression-slot --write
-# inputs: 0d8411c4d1fb872d4d68c848f04e7b7003155a6f0cebbdcb73f8019395bc1240
+# inputs: 338d8f96e5a1aac24154d3736a655536876b87ca1b93ced869f0bc64bb019b70
 # backend: puya 5.10.1
 # source                                       contract                     approval teal_ops    clear
 abi_array_facts.sol                          AbiArrayFacts                    3958     2484        4
 abi_bytes_roundtrip.sol                      C                                1129      719        4
 abi_decode_tuple_signed.sol                  C                                2981     1711        4
-abi_intrinsic_facts.sol                      AbiEffectFacts                   1819     1047        4
+abi_intrinsic_facts.sol                      AbiEffectFacts                   2327     1379        4
 abi_intrinsic_facts.sol                      PackedAbiFacts                   1707      861        4
 abi_intrinsic_facts.sol                      ShadowedIntrinsicFacts            487      240        4
 abi_reference_operands.sol                   AbiReferenceOperands             1010      466        4
@@ -16,7 +16,7 @@ address_literal.sol                          AddressLiteral                   10
 address_metadata.sol                         AddressMetadata                  2378     1445        4
 address_metadata.sol                         MetadataHash                      552      261        4
 address_metadata.sol                         MetadataTarget                    240      101        4
-aggregate_compaction.sol                     AggregateCompaction              5990     3667        4
+aggregate_compaction.sol                     AggregateCompaction              6341     3897        4
 amount_overflow_guard.sol                    AmountOverflowGuard               933      531        4
 application_targets.sol                      ApplicationTargetProbe            386      209        4
 application_targets.sol                      ApplicationTargets               2243     1307        4
@@ -25,7 +25,7 @@ arc56_mapping_roots.sol                      Arc56MappingRoots                24
 array_oob_index.sol                          ArrayOOB                         1754      917        4
 array_ref_writethrough.sol                   ArrayRefWriteThrough              744      372        4
 array_struct_mapping_alias.sol               ArrayStructMappingAlias          2369     1088        4
-asa_operand_order.sol                        AsaOperandOrder                   691      422        4
+asa_operand_order.sol                        AsaOperandOrder                  1724     1019        4
 asm_byte_oob.sol                             AsmByteOOB                        222       97        4
 asm_call_value.sol                           AsmCallValueCallee                739      404        4
 asm_call_value.sol                           AsmCallValueCaller               1649      896        4
@@ -49,14 +49,14 @@ asm_pop_call_output.sol                      PopCallCallee                     2
 asm_pop_call_output.sol                      PopCallCaller                     915      484        4
 asm_return_root_subroutine.sol               AsmReturnRoot                     948      566        4
 asm_return_root_subroutine.sol               Hasher                            569      338        4
-asm_sar_shift_zero.sol                       C                                 454      211        4
+asm_sar_shift_zero.sol                       C                                 358      160        4
 asm_semantics_batch.sol                      AsmSemanticsBatch                 890      459        4
 asm_signed_div_min.sol                       AsmSignedDivMin                   420      192        4
-asm_signed_negatives.sol                     AsmSignedNegatives                460      183        4
+asm_signed_negatives.sol                     AsmSignedNegatives                453      178        4
 asm_slot_dynarray_param.sol                  Ckpt                             1168      679        4
-asm_slot_storage_ref_param.sol               AsmSlotStorageRefParam            772      449        4
+asm_slot_storage_ref_param.sol               AsmSlotStorageRefParam            805      468        4
 asm_sstore_statevar.sol                      C                                 436      243        4
-asm_string_buffer_pointer.sol                AsmStringBuffer                  1735      979        4
+asm_string_buffer_pointer.sol                AsmStringBuffer                  2317     1326        4
 assembly_boundaries.sol                      Alias                             313      142        4
 assembly_boundaries.sol                      ArrayAlias                        307      135        4
 assembly_boundaries.sol                      CalldataSnapshot                  844      542        4
@@ -91,7 +91,7 @@ balance_alias.sol                            Child                             3
 batchA_correctness.sol                       BatchACorrectness                 840      467        4
 batchB_asm.sol                               BatchBAsm                         567      280        4
 bitinvert_subword_mask.sol                   BitinvertSubwordMask             1022      619        4
-blob_array_value_use.sol                     EnumSetValues                    1746     1075        4
+blob_array_value_use.sol                     EnumSetValues                    1625      996        4
 blob_memory_address_write.sol                C                                1327      750        4
 blob_memory_address_write.sol                Shift                            1518      744        4
 blob_offset_arms.sol                         Audit                            3386     1591        4
@@ -115,7 +115,7 @@ call_boundary_pointers.sol                   CallBoundaryPointerBase           1
 call_boundary_pointers.sol                   CallBoundaryPointers             2431     1397        4
 call_boundary_values.sol                     CallBoundaryValues               8095     5222        4
 call_conversions.sol                         CallConversions                   976      482        4
-call_operands.sol                            CallsProbes                      5484     3376        4
+call_operands.sol                            CallsProbes                      6310     3857        4
 call_operands.sol                            CallsTarget                       533      261        4
 call_value_with_data.sol                     CallValueData                     750      417        4
 call_value_with_data.sol                     Vault                             490      256        4
@@ -145,7 +145,7 @@ const_negate_typemin.sol                     ConstNegateTypeMin               19
 const_var_fold.sol                           C                                1164      555        4
 constructor_plan.sol                         DeferredConstructorPlan           846      511        4
 constructor_plan.sol                         InlineConstructorPlan             680      416        4
-context_reference_transfers.sol              ContextMemoryTransfers           2067     1088        4
+context_reference_transfers.sol              ContextMemoryTransfers           2175     1174        4
 context_reference_transfers.sol              ContextOffsetBase                 744      402        4
 context_reference_transfers.sol              ContextOffsetDerived             1118      652        4
 context_scopes.sol                           ContextBase                       536      291        4
@@ -155,6 +155,7 @@ contract_aware_param_mutation.sol            MutationDerived                   2
 contract_aware_param_mutation.sol            RecursiveMutation                 645      281        4
 contract_aware_param_mutation.sol            SuperLeaf                         358      154        4
 contract_aware_param_mutation.sol            SuperMiddle                       240      101        4
+contract_bytes_headers.sol                   BytesStorageHeaders               797      440        4
 contract_ingress.sol                         ContractIngress                  2449     1360        4
 contract_initializers.sol                    BytesInitializers                1264      689        4
 contract_initializers.sol                    FixedInitializers                 577      229        4
@@ -171,7 +172,6 @@ contract_parity_matrix.sol                   OrderLog                          5
 contract_parity_matrix.sol                   SideEffectArgs                    855      460        4
 contract_parity_matrix.sol                   VBase                             825      436        4
 contract_parity_matrix.sol                   VDerived                          944      517        4
-contract_storage_words.sol                   BytesStorageHeaders               797      440        4
 contract_storage_words.sol                   RawStorageRead                    523      305        4
 conversion_cold_arms.sol                     ConvHelper                        240      101        4
 conversion_cold_arms.sol                     ConvProbe2                       1621      906        4
@@ -204,11 +204,14 @@ dynarray_compound_assign.sol                 C                                26
 dynarray_incdec.sol                          C                                2574     1510        4
 eb_arithmetic.sol                            EbArithmetic                     3265     1848        4
 eb_bytes.sol                                 EbBytes                           522      285        4
+eb_value_boundaries.sol                      EnumArrayPlaces                  2650     1648        4
+eb_value_boundaries.sol                      NamedArrayLengths                1797     1034        4
+eb_value_boundaries.sol                      ValueComparisons                 1432      807        4
 ecpairing_length_guard.sol                   EcPairingLengthGuard              403      221        4
 ecrecover_invalid_input_zero.sol             C                                 558      258        4
 effect_sequencing.sol                        EffectSequencing                 2890     1788        4
 encodepacked_padding.sol                     PackedPadding                    1278      650        4
-ens_core_resolver.sol                        CoreResolverCore                 4161     2430        4
+ens_core_resolver.sol                        CoreResolverCore                 4128     2408        4
 entry_guard_compaction.sol                   EntryGuardBase                    407      207        4
 entry_guard_compaction.sol                   EntryGuardCompaction              976      550        4
 entry_guard_compaction.sol                   PayableFallbackCompaction         402      195        4
@@ -257,14 +260,14 @@ expression_members.sol                       ExpressionMembers                20
 expression_power.sol                         ExpressionPower                  1163      645        4
 external_call_signed_narrow_return.sol       Caller                           9392     5924        4
 external_call_signed_narrow_return.sol       Cee                              6707     4214        4
-external_result_facts.sol                    ExternalResultFacts              4156     2523        4
+external_result_facts.sol                    ExternalResultFacts              5796     3594        4
 fallback_oncompletion.sol                    FallbackOC                        444      218        4
 fallback_result_facts.sol                    EventOnlyFallback                 785      425        4
 fallback_result_facts.sol                    FallbackResultFacts              1250      738        4
 fmp_alignment.sol                            FmpAlignment                      677      400        4
 fnptr_dispatch_seam.sol                      FnPtrSeam                        2045     1111        4
 fnptr_dispatch_seam.sol                      FnPtrTarget                       502      223        4
-funcptr_multireturn.sol                      FuncPtrMultiReturn               1226      606        4
+funcptr_multireturn.sol                      FuncPtrMultiReturn               1808      986        4
 function_pointer_host_identity.sol           PointerFirst                      572      287        4
 function_pointer_host_identity.sol           PointerSecond                     572      287        4
 function_pointer_wire_facts.sol              FunctionPointerWireFacts         2065     1279        4
@@ -281,7 +284,7 @@ itxn_parity_matrix.sol                       ItxnCallee                        3
 itxn_parity_matrix.sol                       ItxnMatrix                       1717      969        4
 literal_aggregate_fields.sol                 LiteralAggregateFields           1504      837        4
 loop_prefixes.sol                            LoopPrefixes                     2106     1386        4
-lowering_calls.sol                           Probe                            4099     2552        4
+lowering_calls.sol                           Probe                            4748     2938        4
 lowering_calls.sol                           Sink                              631      316        4
 lowering_empty_calls.sol                     EmptyCallFallback                 590      313        4
 lowering_empty_calls.sol                     EmptyCallReceiver                 497      262        4
@@ -293,7 +296,7 @@ lowering_pointer_override.sol                B                                 7
 lowering_precompiles.sol                     PrecompileProbe                   910      530        4
 lowering_returndata.sol                      FallbackProbe                     722      401        4
 lowering_static.sol                          StaticProbe                      2706     1699        4
-lowering_wire.sol                            WireProbe                        1970      970        4
+lowering_wire.sol                            WireProbe                        2449     1292        4
 lowering_wire.sol                            WireSink                         1011      577        4
 mapping_chain_index_bounds.sol               MappingChainIndexBounds          1998     1130        4
 mapping_key_collision.sol                    MappingKeyCollision              2244     1297        4
@@ -308,7 +311,7 @@ memory_slot_audit.sol                        MemorySlotAudit                  13
 memory_subword_aggregate.sol                 MemorySubwordAggregate           2675     1628        4
 memory_word_helpers.sol                      MemoryWordHelpers                 737      418        4
 memparam_return_in_loop.sol                  MemParamReturnInLoop              836      401        4
-mixed_returns.sol                            MixedReturns                     3481     2390        4
+mixed_returns.sol                            MixedReturns                     3776     2573        4
 mixed_width_signed_bitwise.sol               MixedWidthSignedBitwise          2166     1220        4
 modifier_arg_bytes32.sol                     ModifierArgBytes32               1461      727        4
 modifier_arg_side_effecting.sol              C                                1214      689        4
@@ -324,7 +327,7 @@ modifier_lookup.sol                          LookupBase                        6
 modifier_lookup.sol                          LookupLeft                        814      486        4
 modifier_lookup.sol                          LookupRight                       672      387        4
 modifier_lookup.sol                          ModifierLookup                   1001      621        4
-modifier_memory_rebind.sol                   ModifierMemoryRebind             3003     1780        4
+modifier_memory_rebind.sol                   ModifierMemoryRebind             3219     1919        4
 modifier_multiple_placeholder.sol            G                                 792      440        4
 modifier_returns.sol                         ModifierReturns                  2919     1743        4
 modifier_semantics_matrix.sol                ModProbe                         1454      825        4
@@ -340,6 +343,8 @@ mtail_correctness.sol                        MTailBase                         2
 mtail_correctness.sol                        MTailCorrectness                 1276      759        4
 multibox_direct_compound.sol                 MultiBoxDirectCompound           1000      493        4
 multidim_fixed_array_box_size.sol            G                                 613      339        4
+named_scalar_slots.sol                       NamedScalarSlots                  720      376        4
+named_storage_schema.sol                     NamedStorageSchema               1043      557        4
 native_payments.sol                          NativePaymentClose                262      128        4
 native_payments.sol                          NativePaymentFallbackReceiver      530      277        4
 native_payments.sol                          NativePaymentNoReceiver           240      101        4
@@ -371,7 +376,8 @@ operand_effect_facts.sol                     OperandEffectFacts               15
 operator_call_plan.sol                       OperatorCalls                     788      507        4
 packed_slot_word_dispatch.sol                C                                1355      762        4
 param_mutation_incdec.sol                    ParamMutationIncDec               490      210        4
-parenthesized_expressions.sol                ParenthesizedExpressions         2053     1174        4
+parenthesized_expressions.sol                ParenthesizedExpressions         1672      942        4
+parenthesized_slots.sol                      ParenthesizedSlots                642      357        4
 payable_calls_nonpayable.sol                 PayableCallsNonPayable            635      349        4
 pending_drain_batch.sol                      PendingDrainBatch                1531      871        4
 postinit_creator_only.sol                    PostInitCreatorOnly               876      476        4
@@ -386,26 +392,30 @@ proxy_policy.sol                             AdminPolicy                       6
 proxy_policy.sol                             DiamondPolicy                     767      375        4
 proxy_policy.sol                             LifecycleOnly                     389      187        4
 push_element_reference.sol                   PushElementReference             1097      628        4
+raw_array_storage.sol                        RawArrayStorage                  2497     1295        4
 recursive_evm_memory_codec.sol               RecursiveEvmMemoryCodec          4458     2841        4
-recursive_shape_audit.sol                    RecursiveShapeAsmArrayRoot        932      539        4
 recursive_shape_audit.sol                    RecursiveShapeBoxRef             2119     1040        4
 recursive_shape_audit.sol                    RecursiveShapeEvm                8809     5778        4
 recursive_shape_audit.sol                    RecursiveShapeMapping            1327      799        4
-recursive_shape_audit.sol                    RecursiveShapeSlotHandle         1215      761        4
 recursive_shape_audit.sol                    RecursiveShapeStorage             915      523        4
 recursive_shape_audit.sol                    RecursiveShapeType                346      178        4
+recursive_shape_slots.sol                    RecursiveShapeAsmArrayRoot        932      539        4
+recursive_shape_slots.sol                    RecursiveShapeSlotHandle         1215      761        4
 recursive_struct_array.sol                   C                                1037      584        4
 recursive_struct_slot_delete.sol             RecurClear                        968      504        4
 reduction_arithmetic.sol                     ReductionArithmetic              4157     2407        4
 reduction_arithmetic.sol                     ReductionDivideOnly               720      292        4
 reduction_arrays.sol                         ReductionArrays                  5017     3123        4
-reference_boundary_identity.sol              ReferenceBoundaryIdentity        3399     1839        4
+reference_boundary_identity.sol              ReferenceBoundaryIdentity        4008     2304        4
 resolved_location_facts.sol                  ResolvedLocationFacts            1708      958        4
 ret_ternary_encode.sol                       RetTernaryEncode                  811      386        4
 return_void_external_call.sol                Forwarder                        1068      600        4
 return_void_external_call.sol                Sink                              346      178        4
-rev_2_array_conversion_loop.sol              ArrayConversionLoop              1454      720        4
-rev_2_array_conversions.sol                  ArrayConversions                 6971     4354        4
+returned_memory_identity.sol                 MemoryIdentityLibrary             743      406        4
+returned_memory_identity.sol                 ReturnedMemoryArrays             1696      913        4
+returned_memory_identity.sol                 ReturnedMemoryIdentity           4861     3090        4
+rev_2_array_conversion_loop.sol              ArrayConversionLoop              1855      980        4
+rev_2_array_conversions.sol                  ArrayConversions                 7988     5034        4
 rev_2_constants.sol                          TypedConstants                    627      119        4
 rev_2_function_storage_interior.sol          FunctionStorageInterior           473      237        4
 rev_2_function_storage_interior_field.sol    FunctionStorageInteriorField      220       98        4
@@ -442,14 +452,14 @@ rev_2_transient_words.sol                    TransientLeft                      
 rev_2_transient_words.sol                    TransientReverse                  550      191        4
 rev_2_transient_words.sol                    TransientRight                     86       32        4
 rev_2_transient_words.sol                    TransientWords                   3852     1594        4
-rev_2_type_locations.sol                     TypeLocations                    1148      740        4
-revert_payload_compaction.sol                RevertPayloadCompaction          1037      491        4
+rev_2_type_locations.sol                     TypeLocations                    1822     1188        4
+revert_payload_compaction.sol                RevertPayloadCompaction          1490      743        4
 shared_return_plan.sol                       SharedReturnPlan                 2460     1433        4
 shift_amount_huge.sol                        C                                1255      684        4
 shift_saturate.sol                           ShiftSaturate                     562      318        4
 short_circuit_rhs_side_effects.sol           ShortCircuitRhsSideEffects       2258     1185        4
 signed_array_getter.sol                      C                                2895     1572        4
-signed_asm_read_word.sol                     C                                1090      524        4
+signed_asm_read_word.sol                     C                                1083      517        4
 signed_compound.sol                          SignedCompound                   1993     1248        4
 signed_getter_cross_call.sol                 holder                            910      446        4
 signed_getter_cross_call.sol                 reader                           1292      671        4
@@ -471,10 +481,10 @@ slot_storage_ref_ext_arg.sol                 ExtArg                            9
 slot_storage_ref_ext_arg.sol                 Sink                              294      156        4
 slot_storage_ref_ext_call_arg.sol            ExtArg                            999      550        4
 slot_storage_ref_ext_call_arg.sol            Sink                              294      156        4
-slot_storage_ref_materialize.sol             SlotRefMat                       1152      699        4
+slot_storage_ref_materialize.sol             SlotRefMat                       1499      919        4
 slot_value_facts.sol                         SlotValueFacts                   5521     3311        4
-sol_ast_boundary_facts.sol                   FrameBase                         698      331        4
-sol_ast_boundary_facts.sol                   SolAstBoundaryFacts              1917     1157        4
+sol_ast_boundary_facts.sol                   FrameBase                         753      374        4
+sol_ast_boundary_facts.sol                   SolAstBoundaryFacts              2027     1243        4
 soleb_parity_matrix.sol                      SolEbParity                      2261     1246        4
 soltypes_array_loop.sol                      SolTypesArrayLoop                 934      434        4
 soltypes_conversions.sol                     SolTypesConversions              5467     3270        4
@@ -488,17 +498,17 @@ statement_assembly_facts.sol                 StatementAssemblyFacts           12
 statement_calldata.sol                       StatementCalldata                 430      210        4
 statement_conditions.sol                     StatementLoops                    791      501        4
 statement_declarations.sol                   StatementDeclarations            2559     1474        4
-statement_effects.sol                        StatementEffects                 1293      746        4
+statement_effects.sol                        StatementEffects                 1353      765        4
 staticcall_inner.sol                         Base                              289      137        4
 staticcall_inner.sol                         C                                1356      801        4
 storage_alias_facts.sol                      AliasBase                          81       29        4
 storage_alias_facts.sol                      StorageAliasFacts                1404      889        4
 storage_array_returns.sol                    StorageArrayReturns              2242     1272        4
-storage_codec_correctness.sol                EnumBoundaryChecks               1388      886        4
+storage_codec_correctness.sol                EnumBoundaryChecks               1392      890        4
 storage_codec_correctness.sol                PackedAddressChecks              1585      797        4
 storage_codec_correctness.sol                StorageLengthChecks              1584      941        4
 storage_codec_correctness.sol                StorageTraversalChecks           1445      746        4
-storage_codec_yul_reductions.sol             MemoryCodecReductions            3515     1868        4
+storage_codec_yul_reductions.sol             MemoryCodecReductions            3558     1901        4
 storage_codec_yul_reductions.sol             StorageCodecReductions           1535      809        4
 storage_codec_yul_reductions.sol             YulReductions                    1626      812        4
 storage_copy_facts.sol                       ArrayCopyFacts                   1499      864        4
@@ -510,7 +520,7 @@ storage_immutable_facts.sol                  ImmutableRight                    2
 storage_modifier_facts.sol                   StorageModifierFacts              284      126        4
 storage_packed_copy_facts.sol                PackedCopyFacts                   854      517        4
 storage_parity_bools.sol                     BoolArrayParity                  1121      683        4
-storage_parity_matrix.sol                    StorageParityCore                2331     1198        4
+storage_parity_core.sol                      StorageParityCore                2331     1198        4
 storage_parity_matrix.sol                    StorageParitySlots               4064     2221        4
 storage_placement_facts.sol                  StoragePlacementFacts            2450     1583        4
 storage_placement_refs_facts.sol             StoragePlacementMappedReferenceFacts     1073      655        4
@@ -546,15 +556,15 @@ super_expression_lookup.sol                  SuperExpressionLookup            28
 super_payable_caller.sol                     A                                 454      242        4
 super_payable_caller.sol                     B                                 707      418        4
 switch_termination.sol                       SwitchTermination                 790      312        4
-t2_eval_once_tail.sol                        T2EvalOnce                       1144      694        4
+t2_eval_once_tail.sol                        T2EvalOnce                       1887     1114        4
 ternary_storage_ptr_families.sol             MappingTernary                    714      403        4
 ternary_storage_ptr_families.sol             TernaryFamilies                  1679     1074        4
 ternary_storage_ptr_mutation.sol             TernaryStoragePtrMut             1928     1155        4
 this_call_return_widths.sol                  ThisCallReturnWidths             2031     1281        4
 this_contract_value.sol                      Cee                               626      354        4
 this_contract_value.sol                      Cer                               715      402        4
-tmv_body_slice_len.sol                       TmvBodyData                      2207     1130        4
-tmv_body_slice_len.sol                       TmvBodySliceLen                  2941     1591        4
+tmv_body_slice_len.sol                       TmvBodyData                      1960      965        4
+tmv_body_slice_len.sol                       TmvBodySliceLen                  3034     1655        4
 transient_incdec.sol                         TransientIncDec                  1206      714        4
 transitive_assembly_effects.sol              AssemblyEffectsBase                81       29        4
 transitive_assembly_effects.sol              TransitiveAssemblyEffects        1185      606        4
@@ -574,7 +584,7 @@ unchecked_uint64_mul_add.sol                 UncheckedUint64MulAdd             6
 unchecked_uint64_sub.sol                     UncheckedUint64Sub                627      339        4
 unmapped_type_fixed.sol                      *                                 ERR      ERR      ERR
 unsigned_inc_overflow.sol                    C                                1042      624        4
-uups_impl.sol                                UupsBox                          2629     1450        4
+uups_impl.sol                                UupsBox                          2803     1555        4
 visitor_dispatch.sol                         VisitorDispatch                  1041      591        4
 wide_dynamic_array_length.sol                WideDynamicArrayLength           1880     1044        4
 xchain_accounts.sol                          XchainKit                        1014      536        4
@@ -588,3 +598,4 @@ yul_subroutine_roots.sol                     FirstYulHost                      5
 yul_subroutine_roots.sol                     SecondYulHost                     542      281        4
 yul_subroutines.sol                          YulSubroutines                   3324     2113        4
 yul_user_fn_var_clash.sol                    YulUserFnVarClash                 202       86        4
+yul_word_reductions.sol                      YulWordReductions                1847     1025        4

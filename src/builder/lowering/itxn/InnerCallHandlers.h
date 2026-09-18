@@ -1,6 +1,6 @@
 #pragma once
 
-#include "builder/eb/NodeBuilder.h"
+#include "builder/context/ContractContext.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
@@ -18,7 +18,7 @@ class InnerCallHandlers
 {
 public:
 	/// Try to handle an address member call; nullptr if not handled.
-	static std::unique_ptr<InstanceBuilder> tryHandleAddressCall(
+	static std::shared_ptr<awst::Expression> tryHandleAddressCall(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		std::string const& _memberName,
@@ -36,21 +36,21 @@ private:
 		awst::SourceLocation const& loc, bool reinterpret = false);
 
 	/// .transfer(amount)
-	static std::unique_ptr<InstanceBuilder> handleTransfer(
+	static std::shared_ptr<awst::Expression> handleTransfer(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		std::shared_ptr<awst::Expression> _amount,
 		awst::SourceLocation const& _loc);
 
 	/// .send(amount)
-	static std::unique_ptr<InstanceBuilder> handleSend(
+	static std::shared_ptr<awst::Expression> handleSend(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		std::shared_ptr<awst::Expression> _amount,
 		awst::SourceLocation const& _loc);
 
 	/// .call{value: X}("") → payment plus receive/fallback for applications.
-	static std::unique_ptr<InstanceBuilder> handleCallWithValue(
+	static std::shared_ptr<awst::Expression> handleCallWithValue(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		std::shared_ptr<awst::Expression> _amount,
@@ -60,7 +60,7 @@ private:
 	/// `_argsTuple`, omitted when null so the callee sees empty calldata)
 	/// grouped behind the optional payment, submitted as a pre-effect; result
 	/// = (true, LastLog[4:]).
-	static std::unique_ptr<InstanceBuilder> submitAppCall(
+	static std::shared_ptr<awst::Expression> submitAppCall(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		std::shared_ptr<awst::Expression> _argsTuple,
@@ -81,7 +81,7 @@ private:
 	static solidity::frontend::FunctionDefinition const* resolveSelfCallOverload(
 		ContractContext& _ctx,
 		SelfEncodeForm const& form);
-	static std::unique_ptr<InstanceBuilder> emitDirectSelfCall(
+	static std::shared_ptr<awst::Expression> emitDirectSelfCall(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const& targetFunc,
 		SelfEncodeForm const& form,
@@ -90,7 +90,7 @@ private:
 		awst::SourceLocation const& _loc);
 
 	/// `.call/.staticcall(data)` router (self-call rewrites, visible encoders, precompiles, self fallback, empty-data folds, raw data).
-	static std::unique_ptr<InstanceBuilder> handleCallWithData(
+	static std::shared_ptr<awst::Expression> handleCallWithData(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		std::string const& _memberName,
@@ -99,7 +99,7 @@ private:
 		solidity::frontend::Expression const& _baseExpr,
 		awst::SourceLocation const& _loc);
 
-	static std::unique_ptr<InstanceBuilder> handleCallWithRawData(
+	static std::shared_ptr<awst::Expression> handleCallWithRawData(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		std::shared_ptr<awst::Expression> _dataBytes,
@@ -109,20 +109,20 @@ private:
 	/// `t.call("")` with NO value: EVM still EXECUTES the callee (receive, or
 	/// fallback when no receive exists). Zero-arg inner app call — the EVM
 	/// entry router's NumAppArgs==0 arm is exactly that dispatch.
-	static std::unique_ptr<InstanceBuilder> handleCallWithEmptyData(
+	static std::shared_ptr<awst::Expression> handleCallWithEmptyData(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,
 		awst::SourceLocation const& _loc);
 
 	/// .staticcall(data) for precompile addresses 0x01–0x0a; unsupported ones fail.
-	static std::unique_ptr<InstanceBuilder> handleStaticCallPrecompile(
+	static std::shared_ptr<awst::Expression> handleStaticCallPrecompile(
 		ContractContext& _ctx,
 		uint64_t _precompileAddr,
 		std::shared_ptr<awst::Expression> _inputData,
 		awst::SourceLocation const& _loc);
 
 	/// .delegatecall(...) → explicit runtime failure when reached.
-	static std::unique_ptr<InstanceBuilder> handleDelegatecall(
+	static std::shared_ptr<awst::Expression> handleDelegatecall(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);

@@ -1,6 +1,7 @@
 """Solc-bound storage aliases and transitive inline-assembly reference effects."""
 
 import pytest
+from framework.compile import CompileError
 from test_call_operands import invoke
 from test_root_inventory import compile_source
 
@@ -9,6 +10,11 @@ from test_root_inventory import compile_source
 @pytest.mark.parametrize("profile", ["arc4", "evm"])
 @pytest.mark.parametrize("slot", [False, True], ids=["named", "slot"])
 def test_storage_alias_facts(harness, via_ir, profile, slot):
+    if not slot:
+        with pytest.raises(CompileError, match="--evm-storage-layout"):
+            harness.compile("puyasolRegression/contracts/storage_alias_facts.sol",
+                via_yul_behavior=via_ir, extra_args=["--contract-abi", profile])
+        return
     artifacts = harness.compile("puyasolRegression/contracts/storage_alias_facts.sol",
                                 via_yul_behavior=via_ir, extra_args=["--contract-abi", profile]
                                 + (["--evm-storage-layout"] if slot else []))
@@ -47,7 +53,7 @@ def test_pointer_cast_body_is_not_elided_without_proof(tmp_path, reason):
             function read() external returns (uint256) {{ return pointer(data).value[0]; }}
         }}
     """
-    result, roots, _ = compile_source(tmp_path, source)
+    result, roots, _ = compile_source(tmp_path, source, extra=["--evm-storage-layout"])
     assert result.returncode == 0, result.stderr
 
     def calls(value):

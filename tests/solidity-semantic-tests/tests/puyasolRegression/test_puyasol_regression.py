@@ -2495,7 +2495,9 @@ def test_slot_handle_array_bounds_and_packed_compound(harness):
     fired) did an unscaled whole-word RMW at slot base+i; now routed through
     the packed-aware sub-word read/replace3/write.
     """
-    app = harness.compile_and_deploy("puyasolRegression/contracts/slot_handle_array_bounds.sol")
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/slot_handle_array_bounds.sol",
+        extra_args=["--evm-storage-layout"])
     # seed
     harness.call(app, "wrPair(uint256,uint256)", 0, 1000)
     harness.call(app, "wrPair(uint256,uint256)", 1, 2000)
@@ -3530,7 +3532,8 @@ def test_storage_slot_write_through(harness):
     Blocked 7 real contracts via OZ ShortStrings.
     """
     app = harness.compile_and_deploy(
-        "puyasolRegression/contracts/storage_slot_write_through.sol")
+        "puyasolRegression/contracts/storage_slot_write_through.sol",
+        extra_args=["--evm-storage-layout"])
     harness.call(app, "setA(string)", "hello")
     assert harness.call(app, "getA()").abi_return == "hello"
     assert harness.call(app, "readA()").abi_return == "hello"   # read via alias
@@ -4114,11 +4117,13 @@ def test_evm_layout_arrays_and_structs(harness):
 
 
 def test_evm_layout_default_mode_untouched(harness):
-    """No-regression guard: the same fixture compiled WITHOUT the flag keeps
-    per-var ARC-56 state declarations, including exact format-2 mapping roots."""
+    """Raw arrays require the flag; ordinary named state keeps per-var
+    ARC-56 declarations, including exact format-2 mapping roots."""
     import json as _json
-    arts = harness.compile(_EVM_SOL)
-    arc56 = _json.loads(arts.by_contract["EvmFull"]["arc56"].read_text())
+    with pytest.raises(CompileError, match="--evm-storage-layout"):
+        harness.compile(_EVM_SOL)
+    arts = harness.compile("puyasolRegression/contracts/named_storage_schema.sol")
+    arc56 = _json.loads(arts.by_contract["NamedStorageSchema"]["arc56"].read_text())
     keys = arc56.get("state", {}).get("keys", {}).get("global", {})
     maps = arc56.get("state", {}).get("maps", {}).get("box", {})
     boxes = arc56["state"]["keys"]["box"]
@@ -4469,8 +4474,11 @@ def test_recursive_shape_audit(harness):
         mapping, "read(uint256,uint256,uint256)", 0, 1, 9,
         **opts).abi_return) == 99
 
+    slot_arts = harness.compile(
+        "puyasolRegression/contracts/recursive_shape_slots.sol",
+        extra_args=_EVM_LAYOUT)
     slot = harness.deploy(
-        evm_arts, "RecursiveShapeSlotHandle",
+        slot_arts, "RecursiveShapeSlotHandle",
         extra_funding_microalgos=10_000_000)
     harness.call(slot, "write(uint256,uint256,uint256,uint256,bool)",
                  1, 1, 1, 515, True, **opts)
@@ -4482,7 +4490,7 @@ def test_recursive_shape_audit(harness):
         0, False, 515, True)
 
     roots = harness.deploy(
-        evm_arts, "RecursiveShapeAsmArrayRoot",
+        slot_arts, "RecursiveShapeAsmArrayRoot",
         extra_funding_microalgos=10_000_000)
     harness.call(roots, "resizeRoots(uint256,uint256)", 3, 2, **opts)
     harness.call(roots, "resizeMembers(uint256,uint256)", 4, 1, **opts)

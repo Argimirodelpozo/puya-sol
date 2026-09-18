@@ -27,8 +27,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 1, "mload", _loc))
-		return nullptr;
 
 	// Memory and calldata are separate address spaces, even at equal offsets.
 	return awst::makeAsBiguint(readMemWordDyn(_args[0], _loc), _loc);
@@ -975,8 +973,6 @@ void AssemblyBuilder::handleMstore(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (!checkArity(_args, 2, "mstore", _loc))
-		return;
 
 	// A word store can overlap a differently aligned tracked word. Retain
 	// only the new fact; other writes/control-flow already use this barrier.
@@ -1006,8 +1002,6 @@ void AssemblyBuilder::handleMstore8(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (!checkArity(_args, 2, "mstore8", _loc))
-		return;
 
 	// Write the low 8 bits of value as one byte at memory[ptr]. The byte never
 	// straddles a slot, so route through the SAME runtime slot math the
@@ -1042,8 +1036,6 @@ void AssemblyBuilder::handleReturn(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (!checkArity(_args, 2, "return", _loc))
-		return;
 
 	// return(offset, size): EVM pattern bypassing ABI encoding.
 	// Void function: emit data as structured log so callers read it from logs.

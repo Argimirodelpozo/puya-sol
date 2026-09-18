@@ -22,6 +22,14 @@ using namespace solidity::frontend;
 namespace
 {
 
+bool hasInternalSignature(FunctionDefinition const& function, FunctionType const& type)
+{
+	if (!function.isOrdinary()) return false;
+	auto const* candidate = function.functionType(true);
+	return candidate && candidate->hasEqualParameterTypes(type)
+		&& candidate->hasEqualReturnTypes(type);
+}
+
 void closeOverEdges(std::set<int64_t>& ids,
 	std::map<int64_t, std::set<int64_t>> const& edges)
 {
@@ -450,6 +458,8 @@ struct BodyFactsWalker: ASTConstVisitor
 	std::map<int64_t, std::set<int64_t>> slotTransfers;
 	std::vector<std::pair<int64_t, FunctionCall const*>> calls;
 	std::vector<std::pair<int64_t, FunctionType const*>> indirectCalls;
+	std::map<int64_t, std::set<FunctionDefinition const*, ASTNode::CompareByID>> memoryCallTargets;
+	std::vector<std::tuple<int64_t, FunctionCall const*, std::optional<size_t>>> memoryCallTransfers;
 	bool collectOffsets;
 	int64_t callableId = 0;
 	BodyFactsWalker(ProgramAnalysis& _analysis, bool _collectOffsets)
@@ -529,8 +539,11 @@ struct BodyFactsWalker: ASTConstVisitor
 		{
 			auto const& returns = statement.annotation().functionReturnParameters->parameters();
 			for (size_t i = 0; i < returns.size(); ++i)
+			{
+				transfer(*returns[i], *statement.expression(), returns.size() > 1 ? std::optional<size_t>{i} : std::nullopt);
 				if (returns[i]->referenceLocation() == VariableDeclaration::Location::Storage)
 					transferSlot(callableId, *statement.expression(), returns.size() > 1 ? std::optional<size_t>{i} : std::nullopt);
+			}
 		}
 		return true;
 	}
@@ -571,12 +584,14 @@ struct BodyFactsWalker: ASTConstVisitor
 		return true;
 	}
 
-	void transferReference(VariableDeclaration const& target, Expression const& value)
+	void transferReference(VariableDeclaration const& target, Expression const& value,
+		std::optional<size_t> component = {})
 	{
 		auto const* type = value.annotation().type;
 		if (!type || type->isValueType() || !target.type()
 			|| target.type()->isValueType()) return;
 		for (auto const* source: SolcFacts::referenceSources(value))
+		{
 			if (auto const* identifier = SolcFacts::expressionAs<Identifier>(source))
 				if (auto const* variable = dynamic_cast<VariableDeclaration const*>(
 					identifier->annotation().referencedDeclaration);
@@ -584,6 +599,10 @@ struct BodyFactsWalker: ASTConstVisitor
 					&& (target.referenceLocation() == VariableDeclaration::Location::Memory
 						|| target.referenceLocation() == VariableDeclaration::Location::Storage))
 					analysis.referenceAssignments[target.id()].insert(variable->id());
+			if (target.referenceLocation() == VariableDeclaration::Location::Memory)
+				if (auto const* call = SolcFacts::expressionAs<FunctionCall>(source))
+					memoryCallTransfers.emplace_back(target.id(), call, component);
+		}
 	}
 
 	void transfer(VariableDeclaration const& target, Expression const& source,
@@ -602,9 +621,9 @@ struct BodyFactsWalker: ASTConstVisitor
 			transfer(target, conditional->falseExpression(), component);
 			return;
 		}
+		transferReference(target, value, component);
 		if (!component)
 		{
-			transferReference(target, value);
 			transferOffset(target, value);
 		}
 		if (target.referenceLocation() == VariableDeclaration::Location::Storage)
@@ -660,7 +679,10 @@ struct BodyFactsWalker: ASTConstVisitor
 					analysis.callablesWithCalldata.insert(callableId);
 				writtenDeclarations.insert(reference.declaration->id());
 				if (reference.suffix == "slot")
+				{
+					analysis.callablesWithStorageSlotAccess.insert(callableId);
 					analysis.asmSlotReferenceDeclarations.insert(reference.declaration->id());
+				}
 			}
 		return false;
 	}
@@ -676,21 +698,54 @@ struct BodyFactsWalker: ASTConstVisitor
 		return true;
 	}
 
-	void transferCallOffsets()
+	void transferCallFacts()
 	{
-		if (!collectOffsets) return;
-		// The source declaration's parameter IDs are not the override's IDs.
-		// Resolve each reachable body's calls in its concrete solc host, then
-		// map actual arguments to the exact implementation by formal position.
 		for (auto const& [caller, call]: calls)
+		{
+			auto& targets = memoryCallTargets[call->id()];
+			auto arguments = SolcFacts::callArguments(*call);
+			// Override parameter IDs belong to the exact solc-resolved body.
+			// Share this lookup across calldata, storage and memory transfers.
 			for (auto const* host: analysis.contracts)
 				if (analysis.isCallableReachable(host->id(), caller))
 					if (auto const* target = SolcFacts::resolveInternalCall(*call, host))
 					{
-						auto arguments = SolcFacts::callArguments(*call);
-						for (size_t i = 0; i < arguments.size(); ++i)
-							transferOffset(*target->parameters().at(i), *arguments[i]);
+						analysis.callableCallers[target->id()].insert(caller);
+						if (targets.insert(target).second)
+							for (size_t i = 0; i < arguments.size(); ++i)
+								transferOffset(*target->parameters().at(i), *arguments[i]);
 					}
+			auto const* type = dynamic_cast<FunctionType const*>(call->expression().annotation().type);
+			if (targets.empty() && type && type->kind() == FunctionType::Kind::Internal)
+			{
+				if (auto const* target = dynamic_cast<FunctionDefinition const*>(ASTNode::referencedDeclaration(
+					SolcFacts::functionExpression(call->expression())))) targets.insert(target);
+				else
+					// Solc's signature facts give a conservative set for an indirect
+					// call. All compatible targets must agree on pointer positions.
+					for (auto const& [_, function]: analysis.functionDeclarations)
+						if (hasInternalSignature(*function, *type)) targets.insert(function);
+			}
+			for (auto const* target: targets)
+			{
+				for (size_t i = 0; i < arguments.size(); ++i)
+					if (target->parameters().at(i)->referenceLocation() == VariableDeclaration::Location::Memory)
+					{
+						transferReference(*target->parameters()[i], *arguments[i]);
+						analysis.referenceAssignments[target->parameters()[i]->id()].insert(
+							(*targets.begin())->parameters()[i]->id());
+					}
+				for (auto const& result: target->returnParameters())
+					if (result->referenceLocation() == VariableDeclaration::Location::Memory)
+						analysis.memoryPointerDeclarations.insert(result->id());
+			}
+		}
+		for (auto const& [destination, call, component]: memoryCallTransfers)
+			for (auto const* target: memoryCallTargets[call->id()])
+				for (size_t i = 0; i < target->returnParameters().size(); ++i)
+					if ((!component || *component == i)
+						&& target->returnParameters()[i]->referenceLocation() == VariableDeclaration::Location::Memory)
+						analysis.referenceAssignments[destination].insert(target->returnParameters()[i]->id());
 	}
 };
 
@@ -708,7 +763,14 @@ void collectBodyFacts(BodyFactsWalker& _walker)
 			function->body().accept(_walker);
 			for (auto const& modifier: function->modifiers())
 				if (auto const* arguments = modifier->arguments())
+				{
 					for (auto const& argument: *arguments) argument->accept(_walker);
+					for (auto const* host: _walker.analysis.contracts)
+						if (_walker.analysis.isCallableReachable(host->id(), function->id()))
+							if (auto const* target = SolcFacts::resolveModifier(*modifier, host))
+								for (size_t i = 0; i < arguments->size(); ++i)
+									_walker.transferReference(*target->parameters().at(i), *(*arguments)[i]);
+				}
 		}
 	for (auto const* contract: _walker.analysis.contracts)
 		for (auto const* modifier: contract->functionModifiers())
@@ -764,10 +826,19 @@ bool ProgramAnalysis::pointerNeedsCalldata(FunctionType const& type) const
 	if (type.kind() != FunctionType::Kind::Internal) return false;
 	for (auto id: callablesWithCalldata)
 		if (auto function = functionDeclarations.find(id); function != functionDeclarations.end())
-			if (auto const* candidate = function->second->functionType(true);
-				candidate && candidate->hasEqualParameterTypes(type)
-				&& candidate->hasEqualReturnTypes(type)) return true;
+			if (hasInternalSignature(*function->second, type)) return true;
 	return false;
+}
+
+std::set<size_t> ProgramAnalysis::pointerMemoryParameters(FunctionType const& type) const
+{
+	std::set<size_t> result;
+	if (type.kind() != FunctionType::Kind::Internal) return result;
+	for (auto const& [_, function]: functionDeclarations)
+		if (hasInternalSignature(*function, type))
+			for (size_t i = 0; i < function->parameters().size(); ++i)
+				if (memoryPointerDeclarations.contains(function->parameters()[i]->id())) result.insert(i);
+	return result;
 }
 
 ProgramAnalysis ProgramAnalysis::analyze(
@@ -786,13 +857,7 @@ ProgramAnalysis ProgramAnalysis::analyze(
 	// Body/Yul facts are invariant: collect them once, then close the finite,
 	// monotone parameter-transfer graph without an arbitrary depth cutoff.
 	collectBodyFacts(bodyFactsWalker);
-	// Virtual calls can reach a calldata consumer only in a derived host.
-	// Reuse solc's resolution, keeping the actual caller/body edge.
-	for (auto const& [caller, call]: bodyFactsWalker.calls)
-		for (auto const* host: result.contracts)
-			if (result.isCallableReachable(host->id(), caller))
-				if (auto const* target = SolcFacts::resolveInternalCall(*call, host))
-					result.callableCallers[target->id()].insert(caller);
+	bodyFactsWalker.transferCallFacts();
 	for (size_t previous = size_t(-1); previous != result.callablesWithCalldata.size();)
 	{
 		previous = result.callablesWithCalldata.size();
@@ -800,10 +865,11 @@ ProgramAnalysis ProgramAnalysis::analyze(
 		for (auto const& [caller, type]: bodyFactsWalker.indirectCalls)
 			if (result.pointerNeedsCalldata(*type)) result.callablesWithCalldata.insert(caller);
 	}
-	bodyFactsWalker.transferCallOffsets();
 	auto aliasComponents = result.referenceAssignments;
 	for (auto const& [target, sources]: result.referenceAssignments)
 		for (auto source: sources) aliasComponents[source].insert(target);
+	closeOverEdges(result.memoryPointerDeclarations, aliasComponents);
+	result.memoryIdentityDeclarations.insert(result.memoryPointerDeclarations.begin(), result.memoryPointerDeclarations.end());
 	// A standalone local's rebind needs no identity carrier. Promote only
 	// connected aliases or input parameters whose caller retains the entry
 	// referent, then close those finite declaration-ID components.

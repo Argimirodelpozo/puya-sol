@@ -218,11 +218,11 @@ YulName const* userFunctionName(FunctionHandle const& _handle)
 
 } // namespace
 
-SolcFacts::YulAnalysis SolcFacts::analyzeYul(
-	Block const& _block,
-	Dialect const& _dialect)
+void SolcFacts::analyzeYul(PreparedAssembly& _assembly)
 {
-	YulAnalysis result;
+	auto const& _block = _assembly.block;
+	auto const& _dialect = *_assembly.dialect;
+	auto& result = _assembly.facts;
 	auto definitions = allFunctionDefinitions(_block);
 	for (auto const& [name, definition]: definitions)
 		result.functions.emplace(nameString(name), definition);
@@ -232,15 +232,24 @@ SolcFacts::YulAnalysis SolcFacts::analyzeYul(
 
 	SSAValueTracker ssaValues;
 	ssaValues(_block);
-	for (auto const& [name, value]: ssaValues.values())
+	for (auto [name, value]: ssaValues.values())
 	{
 		if (!value)
 			continue;
 		auto const* literal = std::get_if<Literal>(value);
-		if (!literal || literal->kind != LiteralKind::Number)
-			continue;
-		result.constantValues.emplace(
-			nameString(name), literal->value.value().str());
+		if (literal && literal->kind == LiteralKind::Number)
+		{
+			result.constantValues.emplace(nameString(name), literal->value.value().str());
+			if (literal->value.value() == 0) value = &_assembly.zero;
+		}
+		if (!SideEffectsCollector(_dialect, *value).movable()) continue;
+		// An immutable local can snapshot a mutable variable. Never substitute
+		// that initializer using the variable's later value.
+		auto refs = VariableReferencesCounter::countReferences(*value);
+		if (std::none_of(refs.begin(), refs.end(), [&](auto const& ref) {
+			return result.assignedVariables.count(ref.first.str());
+		}))
+			_assembly.immutableDefinitions.emplace(name, value);
 	}
 
 	auto graph = CallGraphGenerator::callGraph(_block);
@@ -350,7 +359,30 @@ SolcFacts::YulAnalysis SolcFacts::analyzeYul(
 				result.usesStorage = true;
 				break;
 			}
-	return result;
+	struct Calls: ASTWalker
+	{
+		PreparedAssembly& assembly;
+		explicit Calls(PreparedAssembly& a): assembly(a) {}
+		void operator()(FunctionDefinition const& f) override
+		{
+			if (assembly.facts.reachableFunctions.count(f.name.str()))
+				ASTWalker::operator()(f);
+		}
+		void operator()(FunctionCall const& call) override
+		{
+			if (auto const* id = std::get_if<Identifier>(&call.functionName))
+				if (auto f = assembly.facts.functions.find(id->name.str()); f != assembly.facts.functions.end())
+					for (size_t i = 0; i < call.arguments.size(); ++i)
+					{
+						auto const& p = f->second->parameters.at(i).name;
+						if (!assembly.facts.assignedVariables.count(p.str()))
+							assembly.incomingArguments[p].push_back(&call.arguments[i]);
+					}
+			ASTWalker::operator()(call);
+		}
+	};
+	Calls calls(_assembly);
+	static_cast<ASTWalker&>(calls)(_block);
 }
 
 std::shared_ptr<PreparedAssembly const> SolcFacts::prepareAssembly(
@@ -395,9 +427,7 @@ std::shared_ptr<PreparedAssembly const> SolcFacts::prepareAssembly(
 	};
 	Remap remap(externalByName, *result);
 	static_cast<ASTWalker&>(remap)(result->block);
-	result->facts = analyzeYul(result->block, _assembly.dialect());
-	for (auto const& [_, reference]: result->externalReferences)
-		result->facts.usesStorage |= reference.suffix == "slot";
+	analyzeYul(*result);
 	return result;
 }
 
@@ -446,48 +476,9 @@ SolcFacts::YulArgumentFacts SolcFacts::yulArgumentFacts(
 	if (facts.reachableFunctions.empty() || !_assembly.dialect)
 		return result;
 	auto const& dialect = *_assembly.dialect;
-	std::map<YulName, std::vector<Expression const*>> incoming;
-	struct Calls: ASTWalker
-	{
-		YulAnalysis const& facts;
-		decltype(incoming)& args;
-		Calls(YulAnalysis const& f, decltype(incoming)& a): facts(f), args(a) {}
-		void operator()(FunctionDefinition const& f) override
-		{
-			if (facts.reachableFunctions.count(f.name.str()))
-				ASTWalker::operator()(f);
-		}
-		void operator()(FunctionCall const& call) override
-		{
-			if (auto const* id = std::get_if<Identifier>(&call.functionName))
-				if (auto f = facts.functions.find(id->name.str()); f != facts.functions.end())
-					for (size_t i = 0; i < call.arguments.size(); ++i)
-					{
-						auto const& p = f->second->parameters.at(i).name;
-						if (!facts.assignedVariables.count(p.str()))
-							args[p].push_back(&call.arguments[i]);
-					}
-			ASTWalker::operator()(call);
-		}
-	};
-	Calls calls(facts, incoming);
-	static_cast<ASTWalker&>(calls)(_assembly.block);
-
-	SSAValueTracker ssa;
-	ssa(_assembly.block);
 	std::map<YulName, AssignedValue> values;
-	for (auto const& [name, value]: ssa.values())
-	{
-		if (!value || !SideEffectsCollector(dialect, *value).movable())
-			continue;
-		// An immutable local can snapshot a MUTABLE variable. Its initializer
-		// must not be reinterpreted using that variable's later value.
-		auto refs = VariableReferencesCounter::countReferences(*value);
-		if (std::none_of(refs.begin(), refs.end(), [&](auto const& ref) {
-			return facts.assignedVariables.count(ref.first.str());
-		}))
-			values.emplace(name, AssignedValue{value, 0});
-	}
+	for (auto const& [name, value]: _assembly.immutableDefinitions)
+		values.emplace(name, AssignedValue{value, 0});
 	std::map<YulName, Expression> literals;
 	auto bindConstant = [&](YulName name, std::string const& value) {
 		auto [it, inserted] = literals.emplace(name,
@@ -552,7 +543,7 @@ SolcFacts::YulArgumentFacts SolcFacts::yulArgumentFacts(
 				}
 			return std::nullopt;
 		};
-		for (auto const& [parameter, args]: incoming)
+		for (auto const& [parameter, args]: _assembly.incomingArguments)
 		{
 			auto constant = knowledge.valueIfKnownConstant(*args.front());
 			auto alignment = residue(*args.front());

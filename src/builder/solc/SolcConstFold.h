@@ -52,21 +52,10 @@ public:
 		TypeMapper& _typeMapper,
 		awst::SourceLocation const& _loc);
 
-	/// Case (b): the expression is typed at a DECLARED integer type (not
-	/// rational) yet is compile-time constant — arithmetic over constant
-	/// variables (`-M`, `A / B`, `A % B << 2`). Folds ONLY when every
-	/// integer-typed node in the subtree evaluates IN RANGE of its OWN
-	/// annotated type: an out-of-range intermediate means the runtime lowering
-	/// would revert (checked) or wrap (unchecked), so rational evaluation
-	/// diverges — the fold is rejected and the normal lowering runs. That is
-	/// what keeps `int8 constant M = type(int8).min; -M` REVERTING (128 is out
-	/// of int8 range → no fold → checked path) and keeps
-	/// `unchecked { (P+P)/P }` computing on the WRAPPED intermediate.
-	/// Node whitelist: literals, constant-variable identifiers, parens,
-	/// unary -/~, binary + - * / % ** << >> & | ^, and rational-typed leaves
-	/// (`type(T).min`). Conversions, calls and ternaries deliberately do NOT
-	/// fold (conversion truncation has its own semantics). Ops the evaluator
-	/// can't compute simply fail to fold — the guard only ever REJECTS.
+	/// Fold a declared integer expression using solc's checked ConstantEvaluator.
+	/// Solc rejects overflowing intermediates and unsupported expressions; normal
+	/// lowering then preserves checked reverts or unchecked wrapping. The final
+	/// value must also fit the expression's annotated integer type.
 	static std::shared_ptr<awst::Expression> foldTyped(
 		solidity::frontend::Expression const& _expr,
 		awst::SourceLocation const& _loc);
@@ -85,19 +74,6 @@ public:
 	/// return nullopt; never infer a value from source spelling.
 	static std::optional<solidity::u256> constantAddress(
 		solidity::frontend::Expression const& _expression);
-
-	/// fable-review.md item 2 — solc's TypeChecker-computed effect fact.
-	/// True iff solc marked the expression PURE: no state read/write, no
-	/// environment dependence. Evaluating a pure expression TWICE is
-	/// unobservable, so this licenses skipping SingleEvaluation/EvalOnce
-	/// wrapping (DUPLICATION).
-	///
-	/// ⚠️ It does NOT license ELISION or reordering across control flow:
-	/// pure ≠ cannot revert (`a / b` is pure yet reverts at b==0). Operand
-	/// evaluation must never become conditional on anything Solidity doesn't
-	/// make it conditional on — see test_dce_reverting_subexpr* for the class
-	/// of bug that rule prevents. There is deliberately no `canElide()` here.
-	static bool isEffectFree(solidity::frontend::Expression const& _expr);
 };
 
 } // namespace puyasol::builder

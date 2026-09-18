@@ -562,12 +562,12 @@ void AssemblyBuilder::buildExpressionStatement(
 		// per-offset itself); over-invalidating only costs folding, never
 		// correctness.
 		{
-			std::string effective = funcName;
+			auto const* effective = &call->functionName;
 			if (funcName == "pop" && call->arguments.size() == 1)
 				if (auto const* inner =
 						std::get_if<solidity::yul::FunctionCall>(&call->arguments[0]))
-					effective = getFunctionName(inner->functionName);
-			if (builtinClobbersMemory(effective))
+					effective = &inner->functionName;
+			if (builtinClobbersMemory(*effective))
 				invalidateMemConstants();
 		}
 
@@ -694,7 +694,6 @@ void AssemblyBuilder::buildExpressionStatement(
 		}
 		if (funcName == "mcopy")
 		{
-			if (!checkArity(args, 3, "mcopy", loc)) return;
 			auto data = readMemRangeDyn(args[1], args[2], loc, _out);
 			writeMemRangeDyn(args[0], std::move(data), loc, _out);
 			return;

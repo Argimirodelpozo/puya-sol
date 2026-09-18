@@ -3,6 +3,7 @@
 
 #include "builder/eb/SolAddressBuilder.h"
 #include "builder/eb/SolBoolBuilder.h"
+#include "builder/eb/BinaryOpBuilder.h"
 
 namespace puyasol::builder::eb
 {
@@ -50,14 +51,6 @@ std::shared_ptr<awst::Expression> makeConventionFormAddress(
 	return awst::makeAsAccount(std::move(pad), loc);
 }
 
-std::shared_ptr<awst::Expression> makeBytesEq(
-	std::shared_ptr<awst::Expression> a, std::shared_ptr<awst::Expression> b,
-	awst::EqualityComparison op, awst::SourceLocation const& loc)
-{
-	return awst::makeBytesComparison(std::move(a), op, std::move(b), loc);
-}
-
-
 } // namespace
 
 std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
@@ -75,20 +68,6 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 
 	auto lhs = resolve();
 	auto rhs = _other.resolve();
-
-	auto coerceToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
-		if (expr->wtype != awst::WType::bytesType()
-			&& expr->wtype != awst::WType::accountType())
-		{
-			auto cast = awst::makeAsBytes(std::move(expr), _loc);
-			expr = std::move(cast);
-		}
-	};
-	if (lhs->wtype != rhs->wtype)
-	{
-		coerceToBytes(lhs);
-		coerceToBytes(rhs);
-	}
 
 	// Hash/convention bridge:
 	//   addr == address(this)  →  (addr == hash-form) || (addr == \x00*24+id)
@@ -114,10 +93,10 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 		// evaluates once (T2; a shared shared_ptr still re-emits per parent).
 		storedSlot = awst::makeEvalOnce(std::move(storedSlot), _loc);
 		auto convention = makeConventionFormAddress(std::move(appId), _loc);
-		auto direct = makeBytesEq(
-			std::move(intrinSlot), storedSlot, awst::EqualityComparison::Eq, _loc);
-		auto conventional = makeBytesEq(
-			std::move(convention), std::move(storedSlot), awst::EqualityComparison::Eq, _loc);
+		auto direct = buildBytesComparison(BuilderComparisonOp::Eq,
+			std::move(intrinSlot), storedSlot, _loc);
+		auto conventional = buildBytesComparison(BuilderComparisonOp::Eq,
+			std::move(convention), std::move(storedSlot), _loc);
 
 		// Gate convention arm on appId!=0: CallerApplicationID is 0 for user-account callers;
 		// without guard, conv-form collapses to zero address and `msg.sender==address(0)`
@@ -139,12 +118,7 @@ std::unique_ptr<InstanceBuilder> SolAddressBuilder::compare(
 		return std::make_unique<SolBoolBuilder>(m_ctx, std::move(result));
 	}
 
-	auto e = makeBytesEq(
-		std::move(lhs), std::move(rhs),
-		(_op == BuilderComparisonOp::Eq)
-			? awst::EqualityComparison::Eq
-			: awst::EqualityComparison::Ne,
-		_loc);
+	auto e = buildBytesComparison(_op, std::move(lhs), std::move(rhs), _loc);
 	return std::make_unique<SolBoolBuilder>(m_ctx, std::move(e));
 }
 

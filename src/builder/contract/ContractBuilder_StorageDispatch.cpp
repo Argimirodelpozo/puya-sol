@@ -32,15 +32,14 @@ struct StructSlotGroup
 /// A layout slot the dispatch methods route, classified ONCE for both
 /// __storage_read and __storage_write so the two cannot disagree about which
 /// slots (and which struct field groups) get an arm. `vars` keeps the slot's
-/// variableIndices order. The emitters still own the per-backend gates: the
-/// length-word bridge exists only for dynamic arrays, its store side only
-/// for box-backed ones.
+/// variableIndices order. Typed array references still use logical slots in
+/// named mode; raw assembly array storage requires explicit EVM slot layout.
 struct DispatchSlot
 {
 	enum class Kind
 	{
 		Struct,      ///< lone ARC4Struct-typed struct var: per-internal-slot field arms
-		Aggregate,   ///< lone non-value var: dynamic length-word bridge or fallback
+		Aggregate,   ///< lone non-value var: typed array length-word bridge or fallback
 		FullSlot,    ///< dynamic slot, or a lone full-slot scalar
 		Packed,      ///< sub-word vars sharing the word
 	};
@@ -129,6 +128,7 @@ std::vector<DispatchSlot> collectDispatchSlots(StorageLayout const& layout)
 struct NamedCellDispatch
 {
 	StorageMapper& m_storageMapper;
+	TypeMapper& m_typeMapper;
 	awst::SourceLocation loc;
 	std::string cref;
 
@@ -367,22 +367,24 @@ struct NamedCellDispatch
 				structCellTarget(v), std::move(ns), loc, v->wtype), loc));
 	}
 
-	// EVM exposes a dynamic array's length in its root slot. Named AVM cells
-	// keep the value itself (ARC4 header/body or raw bytes), so bridge that
-	// representation explicitly for assembly sload/sstore(root).
+	// Typed storage references cross call boundaries as logical slots even in
+	// named mode. Keep their length/data bridge; raw assembly array access is
+	// rejected before reaching this layer.
+	std::shared_ptr<awst::Expression> arrayLength(SlotVariable const* v)
+	{
+		auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(v->solType);
+		if (at->isByteArrayOrString())
+			return awst::makeLen(stateCellRead(v), loc);
+		if (at->isDynamicallySized() && usesBoxStorage(v))
+			return StorageMapper::makeBoxArrayLength(m_typeMapper, makeBytes(storageName(v)), loc);
+		return awst::makeArrayLength(stateCellRead(v), awst::WType::uint64Type(), loc);
+	}
+
 	std::shared_ptr<awst::Expression> dynamicLengthWord(SlotVariable const* v)
 	{
-		auto const* at = v ? dynamic_cast<solidity::frontend::ArrayType const*>(v->solType)
-			: nullptr;
+		auto const* at = v ? dynamic_cast<solidity::frontend::ArrayType const*>(v->solType) : nullptr;
 		if (!at || !at->isDynamicallySized()) return nullptr;
-		auto cell = stateCellRead(v);
-		std::shared_ptr<awst::Expression> len;
-		if (at->isByteArrayOrString())
-			len = awst::makeLen(std::move(cell), loc);
-		else
-			len = awst::makeArrayLength(
-				std::move(cell), awst::WType::uint64Type(), loc);
-		return awst::makeAsBiguint(awst::makeItob(std::move(len), loc), loc);
+		return awst::makeAsBiguint(awst::makeItob(arrayLength(v), loc), loc);
 	}
 
 	bool emitDynamicLengthStore(SlotVariable const* v, awst::Block& blk)
@@ -434,9 +436,7 @@ struct NamedCellDispatch
 					return StorageMapper::makeTopLevelBoxExpr(
 						storageName(v), v->wtype, loc);
 				};
-				blk.body.push_back(awst::makeAssignmentStatement(
-					currentVar(), awst::makeArrayLength(
-						stateCellRead(v), awst::WType::uint64Type(), loc), loc));
+				blk.body.push_back(awst::makeAssignmentStatement(currentVar(), arrayLength(v), loc));
 
 				auto grow = awst::makeBlock(loc);
 				grow->body.push_back(awst::makeExpressionStatement(
@@ -489,6 +489,7 @@ struct NamedCellDispatch
 		}
 		return true;
 	}
+
 	std::shared_ptr<awst::Expression> structCellTarget(SlotVariable const* v) const
 	{
 		auto name = storageName(v);
@@ -525,7 +526,7 @@ struct NamedCellDispatch
 		auto baseWord = awst::makeBiguintConstant(base.str(), loc);
 		auto delta = awst::makeBigUIntBinOp(
 			slotVar(), awst::BigUIntBinaryOperator::Sub, baseWord, loc);
-		auto length = awst::makeArrayLength(stateCellRead(v), awst::WType::uint64Type(), loc);
+		auto length = arrayLength(v);
 		auto words = awst::makeUInt64BinOp(
 			awst::makeUInt64BinOp(length, awst::UInt64BinaryOperator::Add,
 				u64(layout.perSlot - 1), loc),
@@ -625,33 +626,21 @@ struct NamedCellDispatch
 				continue;
 			}
 
-			// The packed-word codec is a LEAF codec. A whole aggregate is never
-			// a scalar just because solc assigns its root a full slot. Dynamic
-			// arrays/bytes expose their length word through the dedicated bridge;
-			// other aggregate slots retain the sparse raw-slot fallback.
 			if (ds.kind == DispatchSlot::Kind::Aggregate)
 			{
-				auto aggregateWord = dynamicLengthWord(v);
-				if (!aggregateWord)
-					continue;
-				auto aggregateBlock = awst::makeBlock(loc);
-				aggregateBlock->body.push_back(
-					awst::makeReturnStatement(std::move(aggregateWord), loc));
-				chainArm(elseBlock, ds.slot->slotNumber, std::move(aggregateBlock));
+				auto word = dynamicLengthWord(v);
+				if (!word) continue;
+				auto arm = awst::makeBlock(loc);
+				arm->body.push_back(awst::makeReturnStatement(std::move(word), loc));
+				chainArm(elseBlock, ds.slot->slotNumber, std::move(arm));
 				continue;
 			}
 
 			auto ifBlock = awst::makeBlock(loc);
 			if (ds.kind == DispatchSlot::Kind::FullSlot)
 			{
-				auto cast = dynamicLengthWord(v);
-				if (!cast)
-				{
-					auto read = stateCellRead(v);
-					auto raw = SlotWordCodec::nativeToPackedBytes(
-						std::move(read), v->wtype, 32, loc);
-					cast = awst::makeAsBiguint(std::move(raw), loc);
-				}
+				auto raw = SlotWordCodec::nativeToPackedBytes(stateCellRead(v), v->wtype, 32, loc);
+				auto cast = awst::makeAsBiguint(std::move(raw), loc);
 				ifBlock->body.push_back(awst::makeReturnStatement(std::move(cast), loc));
 			}
 			else
@@ -716,34 +705,25 @@ struct NamedCellDispatch
 				continue;
 			}
 
-			// Mirror the read-side aggregate gate. Only a box-backed dynamic
-			// aggregate has a representation-preserving root-word store here;
-			// every other non-value shape must use the sparse fallback rather
-			// than being reinterpreted as a packed scalar.
 			if (ds.kind == DispatchSlot::Kind::Aggregate)
 			{
-				auto aggregateBlock = awst::makeBlock(loc);
-				if (!emitDynamicLengthStore(v, *aggregateBlock))
-					continue;
-				aggregateBlock->body.push_back(
-					awst::makeReturnStatement(nullptr, loc));
-				chainArm(elseBlock, ds.slot->slotNumber, std::move(aggregateBlock));
+				auto arm = awst::makeBlock(loc);
+				if (!emitDynamicLengthStore(v, *arm)) continue;
+				arm->body.push_back(awst::makeReturnStatement(nullptr, loc));
+				chainArm(elseBlock, ds.slot->slotNumber, std::move(arm));
 				continue;
 			}
 
 			auto ifBlock = awst::makeBlock(loc);
 			if (ds.kind == DispatchSlot::Kind::FullSlot)
 			{
-				if (!emitDynamicLengthStore(v, *ifBlock))
-				{
-					auto raw = awst::makeExtractLastN(awst::makeLeftPadToN(
-						awst::makeAsBytes(valueVar(), loc), 32, loc), 32, loc);
-					auto native = SlotWordCodec::packedBytesToNative(
-						std::move(raw), v->wtype, v->solType, 32, loc);
-					if (native)
-						ifBlock->body.push_back(awst::makeExpressionStatement(
-							stateCellWrite(v, std::move(native)), loc));
-				}
+				auto raw = awst::makeExtractLastN(awst::makeLeftPadToN(
+					awst::makeAsBytes(valueVar(), loc), 32, loc), 32, loc);
+				auto native = SlotWordCodec::packedBytesToNative(
+					std::move(raw), v->wtype, v->solType, 32, loc);
+				if (native)
+					ifBlock->body.push_back(awst::makeExpressionStatement(
+						stateCellWrite(v, std::move(native)), loc));
 				ifBlock->body.push_back(awst::makeReturnStatement(nullptr, loc));
 			}
 			else
@@ -779,7 +759,7 @@ void ContractBuilder::buildStorageDispatch(
 	auto const& layout = _storagePlan.solidityLayout;
 	awst::SourceLocation loc(m_sourceFile);
 
-	NamedCellDispatch dispatch{m_storageMapper, loc, m_contractId};
+	NamedCellDispatch dispatch{m_storageMapper, m_typeMapper, loc, m_contractId};
 	auto const table = collectDispatchSlots(layout);
 	_contractNode->methods.push_back(dispatch.emitRead(table));
 	_contractNode->methods.push_back(dispatch.emitWrite(table));

@@ -1,6 +1,7 @@
 /// @file SolIndexAccess.cpp
 
 #include "builder/ast/exprs/SolIndexAccess.h"
+#include "builder/ast/calls/SolInternalCall.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/eb/CalldataReference.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
@@ -12,6 +13,7 @@
 #include "builder/types/TypeMapper.h"
 #include "builder/codec/Arc4Defaults.h"
 #include "builder/types/TypeCoercion.h"
+#include "builder/types/ConversionPlan.h"
 #include "builder/yul/AssemblyBuilder.h"
 #include "builder/codec/EvmMemoryCodec.h"
 #include "awst/WType.h"
@@ -177,6 +179,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 
 	auto const& _node = SolcFacts::unparenthesized(_source);
 	if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&_node);
+		call && SolInternalCall::hasMemoryReturns(*call)
+		&& _node.annotation().type->dataStoredIn(DataLocation::Memory))
+		return SolInternalCall(_ctx, *call).toReferenceAwst();
+	if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&_node);
 		call && call->annotation().kind.set() && *call->annotation().kind == FunctionCallKind::TypeConversion
 		&& call->arguments().size() == 1 && !_node.annotation().type->isValueType())
 		return resolveBlobOffset(_ctx, _scope, *call->arguments()[0], _loc);
@@ -299,6 +305,25 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	}
 
 	return nullptr;
+}
+
+std::shared_ptr<awst::Expression> SolIndexAccess::buildMemoryReference(
+	eb::ContractContext& ctx, Context& scope, Expression const& source,
+	solidity::frontend::Type const* type, awst::SourceLocation const& loc, bool copy)
+{
+	if (!copy)
+		if (auto reference = resolveBlobReference(ctx, scope, source, loc))
+			return ctx.emitSequencedOperand(std::move(reference->effects), std::move(reference->value), true, loc);
+	auto const* native = ctx.typeMapper.map(type);
+	auto value = ctx.pinIfWriteBacks(ctx.lower(source, false), loc);
+	value = EvmSlotLowering::materializeRefValue(ctx, scope, std::move(value), source.annotation().type, native, loc);
+	value = ConversionPlan{source.annotation().type, type, native, ConversionPlan::Context::Initialization}.emit(
+		std::move(value), loc, &ctx.preEffects());
+	auto id = awst::NameGen::next("SolIndexAccess.memoryReference");
+	auto name = "__memory_reference_" + std::to_string(id);
+	if (!spillEvmMemoryValue(ctx.typeMapper, type, native, std::move(value), name, id, loc, ctx.preEffects()))
+		throw SizeError("Cannot preserve returned memory reference");
+	return awst::makeVarExpression(name, awst::WType::uint64Type(), loc);
 }
 
 std::shared_ptr<awst::Expression> SolIndexAccess::readBlobValue(

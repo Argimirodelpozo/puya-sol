@@ -58,16 +58,17 @@ FunctionReturnPlan const& TypeMapper::functionReturnPlan(
 	std::vector<awst::WType const*> nativeTypes, wireTypes;
 	std::vector<std::string> names;
 	bool allNamed = true;
+	auto const& storageReturns = analysis().storageReturnFacts(&function);
 	for (auto const& parameter: returns)
 	{
 		auto const* native = function.isPartOfExternalInterface()
 			? abiReturnNativeType(*this, parameter->type()) : map(parameter->type());
 		bool const storage = parameter->referenceLocation() == VariableDeclaration::Location::Storage;
-		if (storage && (profile().evmStorageLayout || storageRefReturnUsesSlot(&function, analysis())))
+		if (storage && (profile().evmStorageLayout || storageReturns.slotHandle))
 			native = awst::WType::biguintType();
-		else if (storage && storageRefReturnIsBytesKeyed(&function, analysis()))
+		else if (storage && storageReturns.bytesKeyed)
 			native = awst::WType::bytesType();
-		else if (returns.size() == 1 && storageRefPointerReturn(&function, analysis()))
+		else if (returns.size() == 1 && storageReturns.indexedReturn)
 			native = awst::WType::uint64Type();
 		plan.elements.push_back(planReturnElement(*this, parameter->type(), native));
 		nativeTypes.push_back(native);
@@ -92,12 +93,22 @@ FunctionReturnPlan const& TypeMapper::functionReturnPlan(
 		plan.wireType = createType<awst::WTuple>(std::move(wireTypes));
 	}
 	plan.internalType = plan.nativeType;
-	// The existing blob-return protocol transports a named memory result as
-	// its uint64 base offset; the caller reconstructs the source-level value.
-	if (returns.size() == 1 && !returns[0]->name().empty()
-		&& returns[0]->referenceLocation() == VariableDeclaration::Location::Memory
-		&& memoryUsesBlob(plan.nativeType))
-		plan.internalType = awst::WType::uint64Type();
+	plan.internalElements = plan.elements;
+	std::vector<awst::WType const*> internalTypes;
+	bool pointers = false;
+	for (size_t i = 0; i < returns.size(); ++i)
+	{
+		auto& element = plan.internalElements[i];
+		if (returns[i]->referenceLocation() == VariableDeclaration::Location::Memory
+			&& analysis().memoryPointerDeclarations.contains(returns[i]->id()))
+		{
+			element = planReturnElement(*this, returns[i]->type(), awst::WType::uint64Type());
+			pointers = true;
+		}
+		internalTypes.push_back(element.nativeType);
+	}
+	if (pointers) plan.internalType = internalTypes.size() == 1 ? internalTypes.front()
+		: createType<awst::WTuple>(std::move(internalTypes));
 	return m_returnPlans.emplace(function.id(), std::move(plan)).first->second;
 }
 

@@ -200,8 +200,9 @@ def test_recursive_shape_audit_guards(harness):
         mappings, "rows(uint256,uint256)", 0, 1).abi_return) == 303
 
     slot_handles = harness.compile_and_deploy(
-        "puyasolRegression/contracts/recursive_shape_audit.sol",
-        contract_name="RecursiveShapeSlotHandle", fund_wei=2_000_000)
+        "puyasolRegression/contracts/recursive_shape_slots.sol",
+        contract_name="RecursiveShapeSlotHandle", fund_wei=2_000_000,
+        extra_args=["--evm-storage-layout"])
     harness.call(slot_handles, "write(uint256,uint256,uint256,uint256,bool)",
                  1, 0, 1, 301, True)
     harness.call(slot_handles, "write(uint256,uint256,uint256,uint256,bool)",
@@ -224,8 +225,9 @@ def test_recursive_shape_audit_guards(harness):
     assert _ints(harness.call(box_refs, "runMixedRef()").abi_return) == (717, 818)
 
     asm_arrays = harness.compile_and_deploy(
-        "puyasolRegression/contracts/recursive_shape_audit.sol",
-        contract_name="RecursiveShapeAsmArrayRoot", fund_wei=3_000_000)
+        "puyasolRegression/contracts/recursive_shape_slots.sol",
+        contract_name="RecursiveShapeAsmArrayRoot", fund_wei=3_000_000,
+        extra_args=["--evm-storage-layout"])
     harness.call(asm_arrays, "resizeRoots(uint256,uint256)", 3, 2)
     harness.call(asm_arrays, "resizeMembers(uint256,uint256)", 4, 3)
     assert _ints(harness.call(asm_arrays, "lengths()").abi_return) == (

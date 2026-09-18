@@ -107,7 +107,7 @@ public:
 		/// literal, as a full-width decimal string (solc's SSAValueTracker:
 		/// a reassignment anywhere drops the entry).
 		std::map<std::string, std::string> constantValues;
-		bool usesStorage = false;
+		bool usesStorage = false;  ///< Reachable storage builtins, not pure .slot metadata.
 		bool usesCalldata = false;
 	};
 
@@ -156,9 +156,7 @@ public:
 		solidity::frontend::ContractDefinition const& _contract);
 
 private:
-	static YulAnalysis analyzeYul(
-		solidity::yul::Block const& _block,
-		solidity::yul::Dialect const& _dialect);
+	static void analyzeYul(PreparedAssembly& _assembly);
 };
 
 } // namespace puyasol::builder

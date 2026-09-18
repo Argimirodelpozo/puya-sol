@@ -9,6 +9,7 @@
 /// TypeMapper::isBoxKeyedStorageRef).
 
 #include "builder/types/TypeMapper.h"
+#include "builder/context/ProgramAnalysis.h"
 #include "builder/codec/Arc4Defaults.h"
 #include "builder/solc/StorageRefPointer.h"
 
@@ -43,7 +44,8 @@ inline RefParamPassing classifyRefParamPassing(
 			|| _isAsmSlotRef)) // widened: plain structs + asm .slot refs
 		return RefParamPassing::BoxKeyPrefix;
 	if (_param.referenceLocation() == Loc::Memory
-		&& memoryUsesBlob(_tm.map(_param.type())))
+		&& (memoryUsesBlob(_tm.map(_param.type()))
+			|| _tm.analysis().memoryPointerDeclarations.contains(_param.id())))
 		return RefParamPassing::BlobOffset;
 	return RefParamPassing::Value;
 }

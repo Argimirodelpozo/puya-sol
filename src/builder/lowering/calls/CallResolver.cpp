@@ -131,10 +131,7 @@ std::string CallResolver::baseImplementationName(
 	solAssert(_func.isImplemented(), "Unimplemented solc base target");
 	if (_ctx.baseImplementationIds.insert(_func.id()).second)
 		_ctx.pendingBaseImplementations.push_back(&_func);
-	std::string name = _func.name();
-	if (_ctx.overloadedNames.count(name))
-		name += paramCountSuffix(_func);
-	return name + "__impl_" + std::to_string(_func.id());
+	return _func.name() + "__impl_" + std::to_string(_func.id());
 }
 
 bool CallResolver::tryResolveLibraryOrFree(

@@ -8,6 +8,7 @@ import json
 import pytest
 
 from framework import as_int, as_signed_int
+from framework.compile import CompileError
 
 
 @pytest.mark.parametrize("via_ir", [False, True])
@@ -60,6 +61,10 @@ def test_yul_scoped_facts(harness, via_ir):
 
 @pytest.mark.parametrize("slot_layout", [False, True])
 def test_storage_return_facts(harness, slot_layout):
+    if not slot_layout:
+        with pytest.raises(CompileError, match="--evm-storage-layout"):
+            harness.compile("puyasolRegression/contracts/storage_return_facts.sol")
+        return
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/storage_return_facts.sol",
         extra_args=["--evm-storage-layout"] if slot_layout else [])

@@ -37,7 +37,7 @@ std::unique_ptr<SolIntegerBuilder> SolIntegerBuilder::wrap(
 
 std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 	InstanceBuilder& _other, BuilderBinaryOp _op,
-	awst::SourceLocation const& _loc, bool _reverse)
+	awst::SourceLocation const& _loc)
 {
 	auto const* otherInt = dynamic_cast<solidity::frontend::IntegerType const*>(_other.solType());
 	if (!otherInt)
@@ -65,8 +65,6 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 
 	auto lhs = resolve();
 	auto rhs = _other.resolve();
-	if (_reverse)
-		std::swap(lhs, rhs);
 	if (_op == BuilderBinaryOp::FloorDiv || _op == BuilderBinaryOp::Mod)
 	{
 		// Solidity's zero-divisor panic is observable even when the quotient
@@ -116,8 +114,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::binary_op(
 			return buildBigUIntPowOp(std::move(lhs), std::move(rhs), _loc);
 		if (m_int.isSigned && (_op == BuilderBinaryOp::Mod || _op == BuilderBinaryOp::FloorDiv))
 			return buildSignedModDivOp(_op, std::move(lhs), std::move(rhs),
-				_reverse ? otherInt->numBits() : m_int.bits,
-				_reverse ? m_int.bits : otherInt->numBits(), _loc);
+				m_int.bits,
+				otherInt->numBits(), _loc);
 		return buildBigUIntArithBitwiseOp(_op, std::move(lhs), std::move(rhs), _loc);
 	}
 
@@ -495,17 +493,8 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::compare(
 			rhs = promoteToBiguint(std::move(rhs), _loc);
 	}
 
-	awst::NumericComparison cmpOp = awst::NumericComparison::Eq;
-	switch (_op)
-	{
-	case BuilderComparisonOp::Eq: cmpOp = awst::NumericComparison::Eq; break;
-	case BuilderComparisonOp::Ne: cmpOp = awst::NumericComparison::Ne; break;
-	case BuilderComparisonOp::Lt: cmpOp = awst::NumericComparison::Lt; break;
-	case BuilderComparisonOp::Lte: cmpOp = awst::NumericComparison::Lte; break;
-	case BuilderComparisonOp::Gt: cmpOp = awst::NumericComparison::Gt; break;
-	case BuilderComparisonOp::Gte: cmpOp = awst::NumericComparison::Gte; break;
-	}
-	auto cmp = awst::makeNumericCompare(std::move(lhs), cmpOp, std::move(rhs), _loc);
+
+	auto cmp = awst::makeNumericCompare(std::move(lhs), _op, std::move(rhs), _loc);
 
 	return std::make_unique<SolBoolBuilder>(m_ctx, std::move(cmp));
 }

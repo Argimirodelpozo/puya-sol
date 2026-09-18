@@ -58,7 +58,7 @@ class TransientStorage;
 ///   - CoreTranslation.cpp      — Expression dispatch, literals, identifiers, function calls
 ///   - ArithmeticOps.cpp        — add, mul, mod, sub, mulmod, addmod, eq, lt, gt, and, or, not, xor
 ///   - BitwiseShiftOps.cpp      — shl, shr, div, byte, signextend, sload, gas, timestamp
-///   - SignedOps.cpp             — sdiv, smod, slt, sgt, sar, tload, tstore, isNegative256, negate256
+///   - SignedOps.cpp            — sdiv, smod, slt, sgt, sar, isNegative256
 ///   - DataOps.cpp              — calldataload, resolveConstantYulValue, keccak256
 ///   - MemoryHelpers.cpp        — readMemSlot, padTo32Bytes, concatSlotsRT, storeResultToMemory
 ///   - MemoryOps.cpp            — mload, mstore, handleReturn, tryHandleBytesMemoryRead
@@ -93,34 +93,15 @@ public:
 		awst::WType const* wtype = nullptr;
 	};
 
-	/// Compile-time route for a CONSTANT storage slot number: connects raw-slot
-	/// asm (sload/sstore at a folded constant) to the NAMED variable's real
-	/// storage. Kinds mirror the EVM layout rules:
-	///  - Scalar:    full-slot state var → its app-global.
-	///  - ArrayRoot: dynamic array's root slot holds its LENGTH (read = element
-	///               count; write = RESIZE the backing box).
-	///  - ArrayData: the keccak256(root-slot) data region — slot K+i is element i
-	///               (32-byte elements). The keccak is computed at COMPILE time
-	///               (util::keccak256 in the C++ compiler, zero opcodes); routing
-	///               is by constant comparison, never runtime hashing.
-	struct SlotRoute
-	{
-		enum class Kind { Scalar, ArrayRoot, ArrayData, StructMemberArrayRoot };
-		Kind kind = Kind::Scalar;
-		std::string varName;
-		awst::WType const* wtype = nullptr;   ///< Scalar: var's wtype; StructMemberArrayRoot: the STRUCT's ARC4Struct
-		std::string dataBase;                 ///< ArrayData: decimal K (region base)
-		std::string fieldName;                ///< StructMemberArrayRoot: the dyn-array member
-		unsigned elementSize = 0;             ///< ArrayRoot/Data: fixed ARC4 element width; 0 means dynamic
-	};
-
-	/// Exact-slot routes (decimal slot string → route) + data regions
-	/// ([K, K+2^32) element windows). See SlotRoute.
+	/// Named scalar routes and solc's scalar-slot proofs. With named arrays,
+	/// any raw slot not proven scalar requires explicit EVM storage layout.
 	void setSlotRoutes(
-		std::map<std::string, SlotRoute> _exact, std::vector<SlotRoute> _regions)
+		std::map<std::string, StateVarSlot> _exact, std::set<std::string> _scalars,
+		bool _hasArrays)
 	{
 		prepareContext().slotRoutes = std::move(_exact);
-		prepareContext().slotDataRegions = std::move(_regions);
+		prepareContext().scalarStorageSlots = std::move(_scalars);
+		prepareContext().hasArrayStorage = _hasArrays;
 	}
 
 	/// Register signed intN (N<=64) locals whose bare Yul read must sign-extend
@@ -532,25 +513,19 @@ private:
 	);
 
 	// ── ArithmeticOps shared helpers ────────────────────────────────────
-	// Arity guard: logs error + returns false when _args doesn't hold exactly _n.
-	bool checkArity(
-		std::vector<std::shared_ptr<awst::Expression>> const& _args,
-		size_t _n, char const* _name, awst::SourceLocation const& _loc,
-		char const* _hint = nullptr
-	);
 	// Drain pending statements [_from, end) into _out. Memory-bounds asserts and
 	// inlined-fn side effects must precede the statement that consumes the expression.
 	void drainPendingStatements(
 		std::vector<std::shared_ptr<awst::Statement>>& _out, size_t _from = 0);
 	std::shared_ptr<awst::Expression> makeYulCompare(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
-		awst::NumericComparison _cmp, char const* _name,
+		awst::NumericComparison _cmp,
 		awst::SourceLocation const& _loc
 	);
 	std::shared_ptr<awst::Expression> makeYulBitwise(
 		char const* _op,
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
-		char const* _name, awst::SourceLocation const& _loc
+		awst::SourceLocation const& _loc
 	);
 
 	std::shared_ptr<awst::Expression> handleGas(
@@ -629,7 +604,7 @@ private:
 	/// value / 2^shift (right); 0 when shift ≥ 256 (EIP-145).
 	std::shared_ptr<awst::Expression> buildLogicalShift(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
-		char const* _name, bool _left, awst::SourceLocation const& _loc
+		bool _left, awst::SourceLocation const& _loc
 	);
 
 	/// Yul byte(n, x): extract byte n from 32-byte big-endian value x.
@@ -673,7 +648,7 @@ private:
 	/// (div: sign(a) XOR sign(b); mod: sign(a)); x/0 = x%0 = 0.
 	std::shared_ptr<awst::Expression> buildSignedDivMod(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
-		char const* _name, bool _isDiv, awst::SourceLocation const& _loc
+		bool _isDiv, awst::SourceLocation const& _loc
 	);
 
 	/// Yul slt(a, b): signed less-than (two's complement).
@@ -737,21 +712,8 @@ private:
 		solidity::yul::FunctionCall const& _call,
 		awst::SourceLocation const& _loc);
 
-	/// 2^shift via setbit(bzero(32), 255-shift, 1) (no bexp opcode on AVM).
-	std::shared_ptr<awst::Expression> buildPowerOf2(
-		std::shared_ptr<awst::Expression> _shift,
-		awst::SourceLocation const& _loc
-	);
-
-	/// True when value's sign bit is set (bit 255 for biguint, bit 63 for uint64).
-	/// _origType is the pre-ensureBiguint type; nullptr → biguint (256-bit).
+	/// True when the canonical Yul word's sign bit (bit 255) is set.
 	std::shared_ptr<awst::Expression> isNegative256(
-		std::shared_ptr<awst::Expression> _val,
-		awst::SourceLocation const& _loc
-	);
-
-	/// Negate a 256-bit two's complement value: ~x + 1 (mod 2^256).
-	std::shared_ptr<awst::Expression> negate256(
 		std::shared_ptr<awst::Expression> _val,
 		awst::SourceLocation const& _loc
 	);
@@ -814,22 +776,6 @@ private:
 		bool _isCall
 	);
 
-
-	// ── Memory blob helpers ──────────────────────────────────────────
-
-	/// Load blob from scratch slot (slot = _slot index, not byte offset).
-	std::shared_ptr<awst::Expression> loadMemoryBlob(
-		awst::SourceLocation const& _loc,
-		int _slot = 0
-	);
-
-	/// Emit a store of the blob back to the scratch slot.
-	void storeMemoryBlob(
-		std::shared_ptr<awst::Expression> _blob,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out,
-		int _slot = 0
-	);
 
 	/// Read 32 bytes from the blob at a constant offset → biguint.
 	std::shared_ptr<awst::Expression> readMemSlot(
@@ -987,16 +933,6 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
-	/// Read EVM-memory slot 0 directly from the configured first scratch slot.
-	std::shared_ptr<awst::Expression> memoryVar(awst::SourceLocation const& _loc);
-
-	/// Write EVM-memory slot 0 directly to the configured first scratch slot.
-	void assignMemoryVar(
-		std::shared_ptr<awst::Expression> _value,
-		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
-	);
-
 	std::optional<uint64_t> resolveConstantOffset(
 		std::shared_ptr<awst::Expression> const& _expr
 	);
@@ -1140,10 +1076,10 @@ private:
 	/// content tracker cannot model precisely (so every entry must be
 	/// dropped). Shared by the expression and statement translation paths so
 	/// the two can't drift. `mstore` is excluded: it tracks per-offset itself.
-	static bool builtinClobbersMemory(std::string const& _name);
+	bool builtinClobbersMemory(solidity::yul::FunctionName const& name) const;
 
 	/// Try to lower sload/sstore at a compile-time-CONSTANT slot directly to the
-	/// named variable's storage (see SlotRoute). Returns the read expression /
+	/// named scalar variable's storage. Returns the read expression /
 	/// true when routed; nullptr / false to fall through to __storage_read/write.
 	std::shared_ptr<awst::Expression> tryRouteConstSlotLoad(
 		std::shared_ptr<awst::Expression> const& _slot,
@@ -1308,9 +1244,9 @@ private:
 		/// the var's own app-global storage (not __dyn_storage). Populated by SolInlineAssembly.
 		std::map<std::string, StateVarSlot> stateVarSlots;
 
-		std::map<std::string, SlotRoute> slotRoutes;
-
-		std::vector<SlotRoute> slotDataRegions;
+		std::map<std::string, StateVarSlot> slotRoutes;
+		std::set<std::string> scalarStorageSlots;
+		bool hasArrayStorage = false;
 
 		/// Dotted yul name (`ptr.slot`) → mangled biguint local holding a storage-ref
 		/// slot handle. Lets `.slot` on a struct-storage-ref local resolve to the

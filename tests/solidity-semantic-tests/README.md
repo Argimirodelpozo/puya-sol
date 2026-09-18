@@ -8,6 +8,118 @@ not as an active test runner.
 
 ## Recorded baseline
 
+### Yul/storage reductions and solc facts — 2026-09-18
+
+This commit on `rev-2` follows `08b016037c` and includes the typed-value pass below.
+The Yul pass shares word lowering and requires `--evm-storage-layout` explicitly
+for raw assembly array-storage access; it never silently selects another storage
+layout. The solc-fact pass removes redundant constant-folding and storage-shape
+walks and unused wrappers, caches immutable Yul analysis and source locations,
+and preserves returned memory-reference identity through internal calls,
+function pointers, modifiers and conditional tuples. Public library calls retain
+their ABI copy boundary. Return objects are initialized at function entry, and
+signature scans use solc's ordinary-function predicate. The memory experiment
+remains separate.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,915 |
+| Failed | 0 |
+| Expected failure (xfail) | 99 |
+| Unexpected pass (xpass) | 40 |
+| Total | 3,054 |
+
+The complete repeat took **2,552.28 seconds**, using one worker to limit resource
+pressure: `PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 1 --tb=short
+--junitxml=out/yul-reductions/solc-facts-semantic-20260918-v2.xml`.
+All **2,968 previous individual outcomes are unchanged**, none are missing, and
+all **86 added configurations pass**. No failure markers were changed, ledger
+reset or compile cache cleared for this validation.
+
+Native CTests pass **24/24** in 3.28 seconds. The focused recheck passes
+**182 tests**, with 13 xfails and four xpasses, in 111.70 seconds; it includes
+all 48 failures from the earlier interrupted attempt, after their fixes.
+Official solc **0.8.34+80d5c536** execution confirms **52** memory alias/copy
+checks across optimized legacy and via-IR backends, including public-library
+linking. Source-map tests cover invalidation, Unicode, CRLF and repeated long-line
+lookups; native tests also cover checked/unchecked constant-folding boundaries
+and cached Yul facts with different external constants.
+
+The compiler and recorded production/semantic inputs are unchanged across the
+full run. Compiler SHA-256:
+`eca28dca489d25cc60c73c589398f0c2865fb5d335b97520a3474b9ea98608c0`.
+`src/` contains **61,250 physical / 47,630 code lines** in 318 files. The solc
+sub-pass adds **163 physical / 225 code lines**; the memory correctness work
+outweighs its reductions. Across the complete checkpoint from `08b016037c`,
+`src/` removes **1,231 physical / 830 code lines**. Code counts exclude comments
+and blank lines. The final [bytecode-size census](../sizes/reports/rev2-checkpoint.md)
+records **+11,492 named / +11,574 slot / +1,805 chainwide approval bytes** across
+unchanged, successfully compiled fixtures. New and changed fixtures and rejected
+profiles do not contribute to those totals. All three canonical tables pass
+cached checks. POL's original named profile now explicitly requires
+`--evm-storage-layout`; a separate compile with that flag succeeds, without
+silently changing its canonical profile or claiming a historical replay.
+
+Evidence: [JUnit report](out/yul-reductions/solc-facts-semantic-20260918-v2.xml),
+[outcome comparison](out/solc-facts/solc-facts-semantic-20260918-v2/semantic-comparison.json),
+[final input manifest](out/solc-facts/solc-facts-semantic-20260918-v2/validation-finish.json),
+[native tests](out/solc-facts/ctest.xml),
+[solc oracle](out/solc-facts/solc-oracle.json),
+[source counts](out/solc-facts/src-cloc.json) and [console output](results.txt).
+Raw generated compiler outputs remain local and ignored.
+
+### Typed-value reductions and enum-array places — 2026-09-17
+
+This pass on `rev-2` follows `08b016037c`. Enum-array assignments retain their
+element locations instead of writing validation temporaries. Reads, casts,
+assignments, comparisons and returns share full-width enum validation using
+solc's member counts; implicit returns check the actual returned word before
+encoding. Value-only conversion/inner-call wrappers, the redundant member
+fallback and `NodeBuilder` superclass, unused reverse dispatch and four unused
+AWST makers are removed. Comparison emission is shared. Named-array lengths,
+bounds guards and mapping-array mutations share bounded ARC4 header reads;
+raw bytes/string and slot-storage representations are unchanged. The memory
+experiment remains separate.
+
+| Result | Count |
+|---|---:|
+| Passed | 2,829 |
+| Failed | 0 |
+| Expected failure (xfail) | 99 |
+| Unexpected pass (xpass) | 40 |
+| Total | 2,968 |
+
+The full LocalNet semantic and framework repeat took **1,169.03 seconds**:
+`PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q -n 2 --tb=short
+--junitxml=out/eb-values/semantic.xml`. All **2,944 previous individual outcomes
+are unchanged**; all **24 new configurations pass**. No tests were removed,
+failure markers changed, ledger reset or compile cache cleared.
+
+Native CTests pass **24/24** in 2.28 seconds; the focused repeat passes
+**152/152** in 70.92 seconds. Official solc **0.8.34+80d5c536** execution
+confirms **166** checks across optimized legacy/via-IR, covering enum writes,
+deletion, tuple/nested assignments, storage references, dirty values,
+side-effect counts, comparisons, address conversions and array lengths.
+The pre-fix runtime regression returns zero instead of one after an enum-array
+assignment, demonstrating that the new test detects the original defect.
+
+Compiler, production-source and test fingerprints are unchanged after
+validation. Compiler SHA-256:
+`cedd6e6596c5f2ae8d26a236a76fdd96b17aff36fd6e090c986882f861fa7e7e`.
+`src/` removes **604 physical / 443 code lines**, leaving **61,877 physical /
+48,017 code lines** in 318 files. Existing-program approval bytes change by
+**-193 named / +4 slot / 0 tracked chainwide**; new fixtures are counted
+separately. The four-array length benchmark shrinks from **1,187 to 1,167
+bytes** and from **142 to 136 executed opcode-budget units** per query.
+
+Evidence: [size comparison](../sizes/reports/eb-values.md),
+[JUnit report](out/eb-values/semantic.xml),
+[outcome comparison](out/eb-values/semantic-comparison.json),
+[solc oracle](out/eb-values/solc-oracle.json),
+[validation manifest](out/eb-values/validation-manifest.json) and
+[console output](results.txt). Only thin reports and canonical size tables are
+retained for versioning; raw generated artifacts remain local and ignored.
+
 ### Lowering reductions and Solidity/Yul boundaries — 2026-09-17
 
 This commit on `rev-2` follows `c65593221f`. Empty literal and runtime calls

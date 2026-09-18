@@ -1,13 +1,7 @@
 #include "builder/eb/NodeBuilder.h"
-#include "Logger.h"
 
 namespace puyasol::builder::eb
 {
-
-NodeBuilder::NodeBuilder(ContractContext& _ctx)
-	: m_ctx(_ctx), m_scope(_ctx.scope())
-{
-}
 
 // ─────────────────────────────────────────────────────────────────────
 // InstanceBuilder defaults
@@ -26,23 +20,15 @@ std::unique_ptr<InstanceBuilder> InstanceBuilder::unary_op(
 
 std::unique_ptr<InstanceBuilder> InstanceBuilder::binary_op(
 	InstanceBuilder& /*_other*/, BuilderBinaryOp /*_op*/,
-	awst::SourceLocation const& /*_loc*/, bool /*_reverse*/)
+	awst::SourceLocation const& /*_loc*/)
 {
-	return nullptr; // not implemented — caller tries reverse dispatch
+	return nullptr;
 }
 
 std::unique_ptr<InstanceBuilder> InstanceBuilder::compare(
 	InstanceBuilder& /*_other*/, BuilderComparisonOp /*_op*/,
 	awst::SourceLocation const& /*_loc*/)
 {
-	return nullptr; // not implemented — caller tries reversed comparison
-}
-
-std::unique_ptr<NodeBuilder> InstanceBuilder::member_access(
-	std::string const& _name, awst::SourceLocation const& /*_loc*/)
-{
-	Logger::instance().warning("unrecognised member '" + _name + "' on type " +
-		(m_expr && m_expr->wtype ? m_expr->wtype->name() : "unknown"));
 	return nullptr;
 }
 

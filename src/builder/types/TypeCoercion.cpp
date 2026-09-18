@@ -26,16 +26,24 @@ namespace puyasol::builder
 
 std::shared_ptr<awst::Expression> TypeCoercion::checkedEnum(
 	std::shared_ptr<awst::Expression> value,
-	solidity::frontend::Type const* type, awst::SourceLocation const& loc)
+	solidity::frontend::Type const* type, awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>* effects)
 {
 	auto const* enumeration = dynamic_cast<solidity::frontend::EnumType const*>(type);
 	if (!enumeration) return value;
 	static awst::WTuple small({awst::WType::uint64Type(), awst::WType::boolType()});
 	static awst::WTuple wide({awst::WType::biguintType(), awst::WType::boolType()});
 	value = awst::makeEvalOnce(std::move(value), loc);
+	auto valid = awst::makeNumericCompare(value, awst::NumericComparison::Lt,
+		awst::makeIntegerConstant(enumeration->numberOfMembers(), loc, value->wtype), loc);
+	if (effects)
+	{
+		effects->push_back(awst::makeExpressionStatement(
+			awst::makeAssert(std::move(valid), loc, "enum out of range"), loc));
+		return value;
+	}
 	auto pair = awst::makeTupleExpression(value->wtype == awst::WType::biguintType() ? &wide : &small, loc);
-	pair->items = {value, awst::makeNumericCompare(value, awst::NumericComparison::Lt,
-		awst::makeIntegerConstant(enumeration->numberOfMembers(), loc, value->wtype), loc)};
+	pair->items = {value, std::move(valid)};
 	auto checked = awst::makeNode<awst::CheckedMaybe>(loc, value->wtype);
 	checked->expr = std::move(pair);
 	checked->comment = "enum out of range";

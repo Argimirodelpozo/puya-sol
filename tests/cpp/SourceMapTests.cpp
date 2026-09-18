@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <chrono>
 
 int main()
 {
@@ -43,5 +44,28 @@ int main()
 	check(span.file.empty() && span.line == 3, "virtual source retains line facts without a guessed path");
 	map.clear();
 	check(location(0, 4).file.empty(), "reset forgets prior source identities");
+	CharStream replacement("\nx", "library.sol");
+	map.registerCharStream("library.sol", &imported, "/project/library.sol");
+	check(location(1, 2).line == 1, "initial registered stream");
+	map.registerCharStream("library.sol", &replacement, "/project/replaced.sol");
+	span = location(1, 2);
+	check(span.file == "/project/replaced.sol" && span.line == 2 && span.column == 0,
+		"re-registering a source must invalidate converted locations");
+	CharStream unicode("\xc3\xa9\xe2\x82\xac\xf0\x9f\x98\x80\r\nz", "unicode.sol");
+	map.registerCharStream("unicode.sol", &unicode, "/project/unicode.sol");
+	span = location(2, 9, "unicode.sol");
+	check(span.column == 1 && span.endColumn == 3, "three/four-byte UTF-8 endpoints");
+	span = location(11, 12, "unicode.sol");
+	check(span.line == 2 && span.column == 0 && span.endColumn == 1, "CRLF source columns");
+	CharStream large(std::string(32768, 'x') + "f\n", "large.sol");
+	map.registerCharStream("large.sol", &large, "/project/large.sol");
+	auto start = std::chrono::steady_clock::now();
+	int checksum = 0;
+	for (int i = 0; i < 10000; ++i)
+		checksum += map.toAwstLoc("large.sol", 32768, 32769).endColumn.value_or(0);
+	check(checksum == 327690000, "repeated source conversion changed columns");
+	std::cout << "repeated location queries (us): "
+		<< std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count()
+		<< '\n';
 	return failures ? 1 : 0;
 }

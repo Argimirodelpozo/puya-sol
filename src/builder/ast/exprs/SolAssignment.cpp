@@ -255,20 +255,9 @@ SolAssignment::tryHandleAddressedWrite()
 std::shared_ptr<awst::Expression>
 SolAssignment::applyEnumRangeCheck(std::shared_ptr<awst::Expression> _value, Token _op)
 {
-	// EVM panic 0x21 on out-of-range enum assign; pre-emit assert.
 	if (_op != Token::Assign) return _value;
 	auto const* lhsType = m_assignment.leftHandSide().annotation().type;
-	auto const* enumType = dynamic_cast<EnumType const*>(lhsType);
-	if (!enumType) return _value;
-
-	unsigned numMembers = enumType->numberOfMembers();
-	// EvalOnce: the value is referenced by the queued assert AND the returned
-	// assignment value — a call-valued RHS ran twice (its twins in
-	// SolExpressionStatement/SolEmitStatement already carry this fix).
-	_value = awst::makeEvalOnce(std::move(_value), m_loc);
-	auto val = builder::TypeCoercion::coerceScalar(_value, m_ctx.typeMapper.map(lhsType), m_loc);
-	m_ctx.queuePreExpression(awst::makeEnumRangeAssert(val, numMembers, m_loc), m_loc);
-	return val;
+	return TypeCoercion::checkedEnum(std::move(_value), lhsType, m_loc, &m_ctx.preEffects());
 }
 
 std::optional<std::shared_ptr<awst::Expression>>

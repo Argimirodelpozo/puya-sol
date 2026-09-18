@@ -9,6 +9,7 @@ from Crypto.Hash import keccak
 from eth_abi import decode, encode
 
 from framework import as_int, as_signed_int
+from framework.compile import CompileError
 
 
 @pytest.fixture(params=[False, True], ids=["legacy", "via-ir"])
@@ -140,6 +141,11 @@ def test_statement_conditions(harness, via_ir, slot_layout, profile):
 
 
 def test_assembly_declaration_facts(harness, via_ir, slot_layout, profile):
+    if not slot_layout:
+        with pytest.raises(CompileError, match="--evm-storage-layout"):
+            harness.compile("puyasolRegression/contracts/statement_assembly_facts.sol",
+                via_yul_behavior=via_ir, extra_args=["--contract-abi", profile])
+        return
     check = deploy(harness, "StatementAssemblyFacts", via_ir, slot_layout, profile)
     check("shadowed()", [], (1, 2, 7 << 80))
     check("memberAlias()", [], (1, 0))

@@ -1,4 +1,5 @@
 #include "builder/types/TypeMapper.h"
+#include "builder/context/ProgramAnalysis.h"
 #include "builder/types/FunctionPointerKind.h"
 #include "builder/codec/Arc4Defaults.h"
 #include "builder/solc/StorageRefPointer.h"

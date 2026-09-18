@@ -31,6 +31,7 @@ struct FunctionReturnPlan
 	awst::WType const* internalType = nullptr; // caller representation (blob returns use offsets)
 	awst::WType const* wireType = nullptr;     // outer ABI method representation
 	std::vector<ReturnWireElem> elements;
+	std::vector<ReturnWireElem> internalElements;
 };
 
 ReturnWireElem planReturnElement(

@@ -3,6 +3,7 @@
 
 #include "Logger.h"
 #include "awst/NameGen.h"
+#include "awst/TupleValue.h"
 #include "builder/context/BuildArtifacts.h"
 #include "builder/yul/AssemblyBuilder.h"
 #include "builder/codec/EvmValueCodec.h"
@@ -21,6 +22,38 @@ namespace puyasol::builder
 {
 using namespace puyasol::builder::shorthand;
 using namespace solidity::frontend;
+
+std::shared_ptr<awst::Expression> materializeEvmMemoryResult(
+	TypeMapper& types, std::vector<Type const*> const& returns,
+	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out)
+{
+	auto const* tuple = returns.size() > 1 ? dynamic_cast<awst::WTuple const*>(value->wtype) : nullptr;
+	auto pointer = [&](size_t i) {
+		return !returns[i]->isValueType() && returns[i]->dataStoredIn(DataLocation::Memory)
+			&& (tuple ? tuple->types().at(i) : value->wtype) == awst::WType::uint64Type()
+			&& !memoryUsesBlob(types.map(returns[i]));
+	};
+	bool needed = false;
+	for (size_t i = 0; i < returns.size(); ++i) needed |= pointer(i);
+	if (!needed) return value;
+	auto saved = awst::makeVarExpression("__memory_result_" + std::to_string(
+		awst::NameGen::next("EvmMemoryCodec.result")), value->wtype, loc);
+	out.push_back(awst::makeAssignmentStatement(saved, value, loc));
+	auto items = tuple ? awst::tupleItems(saved, loc)
+		: std::vector<std::shared_ptr<awst::Expression>>{saved};
+	std::vector<awst::WType const*> elementTypes;
+	for (size_t i = 0; i < items.size(); ++i)
+	{
+		if (pointer(i)) items[i] = materializeEvmMemoryValue(types, returns[i],
+			types.map(returns[i]), std::move(items[i]), loc, out);
+		elementTypes.push_back(items[i]->wtype);
+	}
+	if (!tuple) return items.front();
+	auto result = awst::makeTupleExpression(types.createType<awst::WTuple>(std::move(elementTypes)), loc);
+	result->items = std::move(items);
+	return result;
+}
 
 namespace
 {

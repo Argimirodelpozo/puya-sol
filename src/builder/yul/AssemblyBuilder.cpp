@@ -322,44 +322,6 @@ void AssemblyBuilder::initializeMemoryBlob(
 
 }
 
-std::shared_ptr<awst::Expression> AssemblyBuilder::memoryVar(awst::SourceLocation const& _loc)
-{
-	// Read slot 0 straight from scratch — no __evm_memory local cache.
-	// The cached form caused puya to miscount the dig in large split pieces,
-	// storing uint64 into slot 0; direct scratch loads/stores avoid that.
-	return awst::makeLoadSlot(memorySlotFirst(), _loc);
-}
-
-void AssemblyBuilder::assignMemoryVar(
-	std::shared_ptr<awst::Expression> _value,
-	awst::SourceLocation const& _loc,
-	std::vector<std::shared_ptr<awst::Statement>>& _out
-)
-{
-	_out.push_back(awst::makeExpressionStatement(
-		awst::makeStoreSlot(memorySlotFirst(), std::move(_value), _loc), _loc));
-}
-
-std::shared_ptr<awst::Expression> AssemblyBuilder::loadMemoryBlob(
-	awst::SourceLocation const& _loc,
-	int _slot
-)
-{
-	return awst::makeLoadSlot(memorySlotFirst() + _slot, _loc);
-}
-
-void AssemblyBuilder::storeMemoryBlob(
-	std::shared_ptr<awst::Expression> _blob,
-	awst::SourceLocation const& _loc,
-	std::vector<std::shared_ptr<awst::Statement>>& _out,
-	int _slot
-)
-{
-	auto storeOp = awst::makeStoreSlot(memorySlotFirst() + _slot, std::move(_blob), _loc);
-	auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), _loc);
-	_out.push_back(std::move(exprStmt));
-}
-
 std::shared_ptr<awst::Expression> AssemblyBuilder::offsetToUint64(
 	std::shared_ptr<awst::Expression> _offset,
 	awst::SourceLocation const& _loc
@@ -513,6 +475,16 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::ensureBiguintSlotArg(
 {
 	if (!_expr || !_expr->wtype)
 		return _expr;
+	if (m_context->hasArrayStorage)
+	{
+		auto const* slot = dynamic_cast<awst::IntegerConstant const*>(_expr.get());
+		if (!slot || !m_context->scalarStorageSlots.contains(slot->value))
+		{
+			Logger::instance().error("raw storage access may address array storage; "
+				"use --evm-storage-layout unless the slot is a proven scalar state slot", _loc);
+			return awst::makeBiguintConstant("0", _loc);
+		}
+	}
 	auto const* w = _expr->wtype;
 	bool scalar = w == awst::WType::biguintType()
 		|| w == awst::WType::boolType()

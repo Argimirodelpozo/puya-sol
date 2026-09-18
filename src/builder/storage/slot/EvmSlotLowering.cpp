@@ -4,6 +4,7 @@
 /// policy can evolve independently.
 
 #include "builder/storage/slot/EvmSlotLowering.h"
+#include "builder/context/ProgramAnalysis.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/context/TranslationContext.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -184,7 +185,7 @@ bool EvmSlotLowering::isSlotHandleRef(
 			// Other slot-returning helpers retain normal call execution/transport.
 			if (_ctx.typeMapper.analysis().storageReturnFacts(fd).pointerAlias)
 				return false;
-			return storageRefReturnUsesSlot(fd, _ctx.typeMapper.analysis());
+			return _ctx.typeMapper.analysis().storageReturnFacts(fd).slotHandle;
 		}
 	}
 
@@ -213,8 +214,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::dynDataBase(
 	std::shared_ptr<awst::Expression> _slot, awst::SourceLocation const& _loc)
 {
 	// CONSTANT slot (every declared dynamic array): fold keccak256(slot32) in
-	// the compiler — the on-chain hash (130 budget units) never runs. Mirrors
-	// the default model's compile-time ArrayData SlotRoutes.
+	// the compiler — the on-chain hash (130 budget units) never runs.
 	if (auto const* ic = dynamic_cast<awst::IntegerConstant const*>(_slot.get()))
 	{
 		solidity::u256 slotVal{ic->value};

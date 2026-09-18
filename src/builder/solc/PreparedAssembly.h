@@ -19,6 +19,12 @@ struct PreparedAssembly
 		externalReferences;
 	std::set<int64_t> assignedSlotDeclarations;
 	SolcFacts::YulAnalysis facts;
+	// SSAValueTracker owns its default-zero expression; retain our own copy
+	// so cached definitions never refer to a destroyed analysis visitor.
+	solidity::yul::Expression zero{solidity::yul::Literal{
+		{}, solidity::yul::LiteralKind::Number, solidity::yul::LiteralValue(solidity::u256{0})}};
+	std::map<solidity::yul::YulName, solidity::yul::Expression const*> immutableDefinitions;
+	std::map<solidity::yul::YulName, std::vector<solidity::yul::Expression const*>> incomingArguments;
 };
 
 } // namespace puyasol::builder

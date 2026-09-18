@@ -8,9 +8,6 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
-#include "builder/solc/SolcFwd.h"
-
-#include "builder/context/ProgramAnalysis.h"
 
 #include <cstdint>
 #include <set>
@@ -19,43 +16,11 @@
 namespace puyasol::builder
 {
 
-/// True when `_t`, or any type reachable through its arrays and struct
-/// members, satisfies `_pred`. Shared traversal behind the storage-only-family
-/// predicates below.
-///
-/// A RECURSIVE struct (`struct Node { Node[] kids; }`) would otherwise recurse
-/// forever. Callers that only ever see storage-ref types never hit one, so this
-/// was latent until the predicates started running over every struct state var
-/// (StorageMapper::shouldUseBoxStorage).
-template <typename Predicate>
-inline bool typeContains(
-	solidity::frontend::Type const* _t,
-	Predicate const& _pred,
-	std::set<int64_t>* _visiting = nullptr)
-{
-	if (!_t) return false;
-	if (_pred(_t)) return true;
-	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
-		return typeContains(arr->baseType(), _pred, _visiting);
-	if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(_t))
-	{
-		std::set<int64_t> owned;
-		if (!_visiting) _visiting = &owned;
-		if (!_visiting->insert(st->structDefinition().id()).second)
-			return false;                       // already on the current path
-		for (auto const& member: st->members(nullptr))
-			if (typeContains(member.type, _pred, _visiting))
-				return true;
-		return false;
-	}
-	return false;
-}
-
 /// True if `_t` is a MappingType, or any array/struct that (recursively)
 /// contains one. Determines whether a `storage` ref travels as a bytes
 /// box-key vs an AWST-mapped value. Must be consistent across AWSTBuilder,
-/// SolInternalCall, FunctionBuilder, PublicGetterBuilder, and
-/// storageRefPointerReturn, or callee writes land under the wrong key.
+/// SolInternalCall, ContractBuilder, and return plans, or callee writes land
+/// under the wrong key.
 /// Defined here (lowest storage-ref header); AWSTBuilder.h re-exports it.
 inline bool containsMappingType(
 	solidity::frontend::Type const* _t)
@@ -91,37 +56,24 @@ inline solidity::frontend::StructType const* transparentMappingWrapper(
 /// their own keyed representation and are handled by containsMappingType.
 inline bool hasDynamicStorageShape(solidity::frontend::Type const* _t)
 {
-	return typeContains(_t, [](solidity::frontend::Type const* t) {
-		auto const* array = dynamic_cast<solidity::frontend::ArrayType const*>(t);
-		return array && array->isDynamicallySized();
-	});
-}
-
-/// Cached provenance; no repeated AST scans at signatures, returns or callers.
-inline solidity::frontend::IndexAccess const* storageRefPointerReturn(
-	solidity::frontend::FunctionDefinition const* _func,
-	ProgramAnalysis const& _analysis)
-{
-	return _analysis.storageReturnFacts(_func).indexedReturn;
-}
-
-/// True if the storage-ref pointer function's return is box-keyed (bytes prefix)
-/// rather than a uint64 index: holder is a mapping, or the returned struct
-/// has nested mappings. Use everywhere the old containsMappingType(returnType)
-/// gate stood so plain-struct mapping elements (e.g. V4 Position.State) are
-/// still box-keyed.
-inline bool storageRefReturnIsBytesKeyed(
-	solidity::frontend::FunctionDefinition const* _func,
-	ProgramAnalysis const& _analysis)
-{
-	return _analysis.storageReturnFacts(_func).bytesKeyed;
-}
-
-inline bool storageRefReturnUsesSlot(
-	solidity::frontend::FunctionDefinition const* _func,
-	ProgramAnalysis const& _analysis)
-{
-	return _analysis.storageReturnFacts(_func).slotHandle;
+	using namespace solidity::frontend;
+	std::vector<Type const*> pending{_t};
+	std::set<int64_t> visited;
+	while (!pending.empty())
+	{
+		auto const* type = pending.back();
+		pending.pop_back();
+		if (auto const* array = dynamic_cast<ArrayType const*>(type))
+		{
+			if (array->isDynamicallySized()) return true;
+			pending.push_back(array->baseType());
+		}
+		else if (auto const* structure = dynamic_cast<StructType const*>(type);
+			structure && visited.insert(structure->structDefinition().id()).second)
+			for (auto const& member: structure->members(nullptr))
+				pending.push_back(member.type);
+	}
+	return false;
 }
 
 } // namespace puyasol::builder

@@ -2,7 +2,10 @@
 /// ExpressionStatement, RevertStatement, ReturnStatement.
 
 #include "builder/ast/stmts/SolExpressionStatement.h"
+#include "builder/ast/exprs/SolIndexAccess.h"
+#include "builder/ast/exprs/SolTupleExpression.h"
 #include "builder/codec/SelectorSemantics.h"
+#include "builder/codec/EvmMemoryCodec.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/eb/MappingPrefix.h"
@@ -111,8 +114,8 @@ SolReturnStatement::SolReturnStatement(
 namespace
 {
 
-/// Storage-reference return components carry logical slots when the wire plan requires them.
-bool trySlotStorageReturn(BlockContext& blk, Return const& node,
+/// Reference results carry logical storage slots or shared memory offsets.
+bool tryReferenceReturn(BlockContext& blk, Return const& node,
 	awst::SourceLocation const& loc,
 	std::shared_ptr<awst::ReturnStatement>& stmt,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
@@ -124,6 +127,18 @@ bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 			&& (returnTuple ? returnTuple->types().at(i) : blk.fn.returnType)
 				== awst::WType::biguintType();
 	};
+	auto memoryReturn = [&](size_t i) {
+		return rps[i]->referenceLocation() == VariableDeclaration::Location::Memory
+			&& (returnTuple ? returnTuple->types().at(i) : blk.fn.returnType) == awst::WType::uint64Type();
+	};
+	if (rps.size() == 1 && memoryReturn(0))
+	{
+		stmt->value = SolIndexAccess::buildMemoryReference(blk.builderCtx(), blk.scope,
+			*node.expression(), rps[0]->type(), loc);
+		blk.builderCtx().appendEffectsTo(result);
+		result.push_back(std::move(stmt));
+		return true;
+	}
 	if (rps.size() == 1
 		&& slotReturn(0))
 	{
@@ -141,10 +156,10 @@ bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 	// generic build would MATERIALISE the aggregate (or
 	// reject it); the declared slot-handle convention wants the
 	// biguint slot in that position. Build component-wise.
-	bool anyStorageRet = false;
+	bool anyReferenceRet = false;
 	for (size_t i = 0; i < rps.size(); ++i)
-		anyStorageRet |= slotReturn(i);
-	if (rps.size() > 1 && anyStorageRet)
+		anyReferenceRet |= slotReturn(i) || memoryReturn(i);
+	if (rps.size() > 1 && anyReferenceRet)
 	{
 		auto& ctx = blk.builderCtx();
 		auto build = [&](auto&& self, Expression const* source) -> std::shared_ptr<awst::Expression> {
@@ -166,7 +181,9 @@ bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 			auto const* sourceTypes = dynamic_cast<TupleType const*>(source->annotation().type);
 			if (!srcTup)
 			{
-				auto opaque = ctx.pinIfWriteBacks(ctx.lower(*source, false), loc);
+				auto opaque = ctx.pinIfWriteBacks(ctx.lowerOperand([&] {
+					return SolTupleExpression::buildBindingRhs(ctx, *source, {});
+				}, false), loc);
 				opaque = ctx.emitSequencedOperand({}, std::move(opaque), true, loc);
 				opaqueItems = awst::tupleItems(std::move(opaque), loc);
 			}
@@ -186,9 +203,20 @@ bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 					if (!addr) return nullptr;   // error already logged
 					v = addr->slot;
 				}
+				else if (memoryReturn(ri))
+					v = SolIndexAccess::buildMemoryReference(ctx, blk.scope, *compExpr, rps[ri]->type(), loc);
 				else
 					v = ctx.buildExpr(*compExpr);
-				if (!slotReturn(ri))
+				if (memoryReturn(ri) && v && v->wtype != awst::WType::uint64Type())
+				{
+					auto id = awst::NameGen::next("SolReturnStatement.memory");
+					auto name = "__return_memory_" + std::to_string(id);
+					auto const* valueType = v->wtype;
+					if (!spillEvmMemoryValue(blk.typeMapper(), rps[ri]->type(), valueType,
+						std::move(v), name, id, loc, ctx.preEffects())) return nullptr;
+					v = awst::makeVarExpression(name, awst::WType::uint64Type(), loc);
+				}
+				if (!slotReturn(ri) && !memoryReturn(ri))
 				{
 					auto const* target = blk.typeMapper().map(rps[ri]->type());
 					v = EvmSlotLowering::materializeRefValue(ctx, blk.scope,
@@ -317,18 +345,7 @@ void maybeAppendEnumReturnAssert(BlockContext& blk, Return const& node,
 	auto const& retParams = retAnnotation.functionReturnParameters->parameters();
 	if (retParams.size() != 1)
 		return;
-	auto const* enumType = dynamic_cast<EnumType const*>(retParams[0]->type());
-	if (!enumType)
-		return;
-
-	unsigned numMembers = enumType->numberOfMembers();
-	// The value feeds both the range-assert and the return —
-	// wrap so `return f()` with a side-effecting enum f()
-	// evaluates once (verified: f() ran twice).
-	stmt.value = awst::makeEvalOnce(std::move(stmt.value), loc);
-	auto assertStmt = awst::makeExpressionStatement(
-		awst::makeEnumRangeAssert(stmt.value, numMembers, loc), loc);
-	result.push_back(std::move(assertStmt));
+	stmt.value = TypeCoercion::checkedEnum(std::move(stmt.value), retParams[0]->type(), loc, &result);
 }
 
 } // anonymous namespace
@@ -352,7 +369,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			result.push_back(std::move(stmt));
 			return result;
 		}
-		if (trySlotStorageReturn(m_blk, m_node, m_loc, stmt, result))
+		if (tryReferenceReturn(m_blk, m_node, m_loc, stmt, result))
 			return result;
 		if (tryBoxKeyedRefReturn(m_blk, m_node, m_loc, stmt, result))
 			return result;

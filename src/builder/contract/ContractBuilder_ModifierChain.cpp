@@ -4,9 +4,11 @@
 /// preserving multiple-placeholder semantics without copying AWST nodes.
 
 #include "builder/contract/ContractBuilder.h"
+#include "builder/context/ProgramAnalysis.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/types/CallBoundaryPlan.h"
 #include "builder/types/ConversionPlan.h"
+#include "builder/codec/EvmMemoryCodec.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -184,7 +186,8 @@ public:
 			if (r.isWriteBack)
 				continue;
 			auto target = awst::makeVarExpression(r.name, r.type, loc);
-			auto zeroVal = TypeCoercion::makeDefaultValue(r.type, loc);
+			auto zeroVal = r.memoryType ? defaultEvmMemoryValue(m_types, r.memoryType, loc, entryBody->body)
+				: TypeCoercion::makeDefaultValue(r.type, loc);
 			entryBody->body.push_back(awst::makeAssignmentStatement(
 				std::move(target), std::move(zeroVal), loc));
 		}
@@ -211,6 +214,7 @@ private:
 		awst::WType const* type;
 		bool isWriteBack;
 		ReturnWireElem returnPlan;
+		solidity::frontend::Type const* memoryType = nullptr;
 	};
 
 	/// Locals use Solidity's numeric carriers; outgoing results retain the
@@ -233,6 +237,7 @@ private:
 	}
 
 	awst::ContractMethod const& m_method;
+	TypeMapper& m_types;
 	std::vector<RetInfo> m_retInfos;
 	awst::WType const* m_localReturnType;
 	bool m_hasRet = false;
@@ -249,7 +254,7 @@ ReturnThreading::ReturnThreading(
 	std::vector<awst::SubroutineArgument> _extraArgs,
 	int _chainId,
 	TypeMapper& _typeMapper)
-	: m_method(_method), m_extraArgs(std::move(_extraArgs))
+	: m_method(_method), m_types(_typeMapper), m_extraArgs(std::move(_extraArgs))
 {
 	// Preserve the actual emitted return signature, including reference handles
 	// and write-backs. Numeric source locals can use a narrower carrier; adapt
@@ -267,7 +272,9 @@ ReturnThreading::ReturnThreading(
 			(retTuple && ri < retTuple->types().size()) ? retTuple->types()[ri]
 			: (!retTuple ? _method.returnType : _typeMapper.map(rp->type()));
 		auto const* local = SolIntType::fromSolOrEnum(rp->type()) ? _typeMapper.map(rp->type()) : rt;
-		m_retInfos.push_back({nm, local, false, planReturnElement(_typeMapper, rp->type(), rt)});
+		bool const pointer = isMemoryReference(*rp) && rt == awst::WType::uint64Type();
+		if (pointer) nm = "__blobagg_off_" + std::to_string(rp->id());
+		m_retInfos.push_back({nm, local, false, planReturnElement(_typeMapper, rp->type(), rt), pointer ? rp->type() : nullptr});
 	}
 	for (size_t paramIndex: _writeBackParams)
 		if (paramIndex < _method.args.size())
@@ -337,7 +344,7 @@ void ContractBuilder::registerModifierMemoryRootParams(
 		auto const* type = m_typeMapper.map(parameter->type());
 		// Large aggregates already use their declared uint64 BlobOffset calling
 		// convention; small values need the chain-local bridge allocated below.
-		if (!memoryUsesBlob(type))
+		if (!memoryUsesBlob(type) && !m_typeMapper.analysis().memoryPointerDeclarations.contains(parameter->id()))
 			m_functionCtx->scope.bindings.blobAggregates.set(
 				parameter->id(), memoryRootName(_func, *parameter));
 	}
@@ -488,7 +495,7 @@ void ContractBuilder::buildModifierChain(
 	for (auto const* parameter: modifierMemoryRootParams(_func))
 	{
 		auto const* nativeType = m_typeMapper.map(parameter->type());
-		if (memoryUsesBlob(nativeType))
+		if (memoryUsesBlob(nativeType) || m_typeMapper.analysis().memoryPointerDeclarations.contains(parameter->id()))
 			continue; // already a uint64 parameter under the ordinary call plan
 		auto found = std::find_if(
 			_func.parameters().begin(), _func.parameters().end(),

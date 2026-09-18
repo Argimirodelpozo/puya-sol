@@ -32,6 +32,11 @@ public:
 		eb::ContractContext& _ctx, Context& _scope,
 		solidity::frontend::Expression const& _node, awst::SourceLocation const& _loc);
 
+	/// Preserve an existing memory reference, or allocate a fresh converted value. ABI boundaries copy.
+	static std::shared_ptr<awst::Expression> buildMemoryReference(
+		eb::ContractContext& ctx, Context& scope, solidity::frontend::Expression const& source,
+		solidity::frontend::Type const* type, awst::SourceLocation const& loc, bool copy = false);
+
 	/// Materialise a VALUE read from the blob at `_off` for a leaf of Solidity
 	/// type `_solType`: a scalar leaf → `asBiguint(readMemWordDirect)`; a small
 	/// (<=SLOT_SIZE) struct/static-array leaf → `reinterpret(readMemRangeDirect,

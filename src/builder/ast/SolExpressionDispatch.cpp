@@ -207,20 +207,8 @@ private:
 			if (result) return result;
 		}
 
-		// Fallback: sol-eb builder dispatch on the base value's instance builder.
-		auto base = buildExpression(m_ctx, _n.expression());
 		auto loc = makeLoc(_n);
 		auto* baseSolType = _n.expression().annotation().type;
-		auto builder = m_ctx.builderForInstance(baseSolType, base);
-		if (builder)
-		{
-			auto result = builder->member_access(_n.memberName(), loc);
-			if (result)
-			{
-				if (auto* instBuilder = dynamic_cast<eb::InstanceBuilder*>(result.get()))
-					return instBuilder->resolve();
-			}
-		}
 
 		// LVALUE position (solc's willBeWrittenTo): a placeholder here becomes
 		// an assignment target and the write silently goes nowhere — fail loud

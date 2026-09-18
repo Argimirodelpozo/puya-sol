@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from framework.compile import CompileError
 from test_call_operands import invoke
 
 
@@ -20,9 +21,6 @@ def test_parenthesized_expressions(harness, tmp_path, depth, via_ir, profile, sl
                                 + (["--evm-storage-layout"] if slot else []))
     app = harness.deploy(artifacts, "ParenthesizedExpressions", fund_wei=30_000_000,
                          postinit_budget_pool=8)
-    for choose, expected in ((False, 23), (True, 12)):
-        assert invoke(harness, app, profile, "slotReferences(bool)", [choose],
-                      ["uint256"] * 2) == (expected, 33)
     assert invoke(harness, app, profile, "transientValue()", returns=["uint256"] * 2) == (8, 0)
     assert invoke(harness, app, profile, "namedArrays()", returns=["uint256"] * 2) == (7, 9)
     assert invoke(harness, app, profile, "constants()", returns=["bytes4", "bytes4", "bytes20"]) == (
@@ -33,6 +31,22 @@ def test_parenthesized_expressions(harness, tmp_path, depth, via_ir, profile, sl
     assert invoke(harness, app, profile, "customRequire(bool)", [True]) == (1,)
     invoke(harness, app, profile, "customRequire(bool)", [False], reverts=True)
     assert invoke(harness, app, profile, "tuplesAndArrays()", returns=["uint256"] * 3) == (3, 3, 7)
+
+
+@pytest.mark.parametrize("depth", [0, 1, 3], ids=["plain", "grouped", "nested"])
+@pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
+@pytest.mark.parametrize("profile", ["arc4", "evm"])
+def test_parenthesized_slot_references(harness, tmp_path, depth, via_ir, profile):
+    template = Path(__file__).parent / "contracts" / "parenthesized_slots.sol"
+    source = tmp_path / template.name
+    source.write_text(template.read_text().replace("/*(*/", "(" * depth).replace("/*)*/", ")" * depth))
+    with pytest.raises(CompileError, match="--evm-storage-layout"):
+        harness.compile(source, via_yul_behavior=via_ir, extra_args=["--contract-abi", profile])
+    app = harness.compile_and_deploy(source, "ParenthesizedSlots", via_yul_behavior=via_ir,
+        extra_args=["--contract-abi", profile, "--evm-storage-layout"], fund_wei=30_000_000)
+    for choose, expected in ((False, 23), (True, 12)):
+        assert invoke(harness, app, profile, "slotReferences(bool)", [choose],
+                      ["uint256"] * 2) == (expected, 33)
 
 
 @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])

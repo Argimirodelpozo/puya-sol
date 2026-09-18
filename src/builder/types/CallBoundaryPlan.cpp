@@ -43,10 +43,12 @@ CallBoundaryPlan const& TypeMapper::callBoundaryPlan(
 		bool const asmSlot = analysis().asmSlotReferenceDeclarations.contains(declaration.id());
 		if (asmSlot) plan.asmSlotParams.insert(pi);
 		bool const returnedSlots = function.returnParameters().size() > 1
-			&& storageRefReturnUsesSlot(&function, analysis());
+			&& analysis().storageReturnFacts(&function).slotHandle;
 		parameter.passing = returnedSlots
 			&& declaration.referenceLocation() == VariableDeclaration::Location::Storage
 			? RefParamPassing::SlotHandle : classifyRefParamPassing(*this, declaration, asmSlot);
+		if (function.isConstructor() && parameter.passing == RefParamPassing::BlobOffset
+			&& !memoryUsesBlob(map(declaration.type()))) parameter.passing = RefParamPassing::Value;
 		parameter.type = refParamWType(parameter.passing, *this, declaration);
 		parameter.wireType = parameter.type;
 		switch (parameter.passing)
@@ -84,14 +86,15 @@ CallBoundaryPlan const& TypeMapper::callBoundaryPlan(
 void CallParameterPlan::setAbiWireType(
 	TypeMapper& types, solidity::frontend::Type const* solType, bool assembly)
 {
-	wireType = type;
+	abiNativeType = passing == RefParamPassing::BlobOffset ? types.map(solType) : type;
+	wireType = abiNativeType;
 	signedDecodeBits = 0;
 	if (dynamic_cast<solidity::frontend::EnumType const*>(solType))
 	{
 		wireType = awst::WType::uint64Type();
 		return;
 	}
-	if (type == awst::WType::biguintType())
+	if (abiNativeType == awst::WType::biguintType())
 	{
 		auto integer = SolIntType::fromSol(solType);
 		unsigned bits = integer ? integer->bits : 256;
@@ -99,24 +102,25 @@ void CallParameterPlan::setAbiWireType(
 		if (integer && integer->isSigned && bits > 64 && bits < 256)
 			signedDecodeBits = bits;
 	}
-	else if (!assembly && type)
+	else if (!assembly && abiNativeType)
 	{
-		auto kind = type->kind();
+		auto kind = abiNativeType->kind();
 		if (kind == awst::WTypeKind::ARC4StaticArray
 			|| kind == awst::WTypeKind::ARC4DynamicArray || kind == awst::WTypeKind::WTuple
 			|| (kind == awst::WTypeKind::Bytes
 				&& dynamic_cast<solidity::frontend::FunctionType const*>(solType)))
-			wireType = types.mapToARC4Type(type);
+			wireType = types.mapToARC4Type(abiNativeType);
 	}
 }
 
 std::shared_ptr<awst::Expression> CallParameterPlan::decodeArgument(
 	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc) const
 {
-	if (type == wireType) return value;
+	auto const* native = abiNativeType ? abiNativeType : type;
+	if (native == wireType) return value;
 	if (wireType == awst::WType::uint64Type())
-		return TypeCoercion::coerceScalar(std::move(value), type, loc);
-	value = awst::makeARC4Decode(std::move(value), type, loc);
+		return TypeCoercion::coerceScalar(std::move(value), native, loc);
+	value = awst::makeARC4Decode(std::move(value), native, loc);
 	if (signedDecodeBits)
 		value = TypeCoercion::signExtendToUint256(std::move(value), signedDecodeBits, loc);
 	return value;

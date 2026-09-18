@@ -390,7 +390,8 @@ def test_struct_delete_storage_small(harness):
 
 def test_struct_delete_storage_with_array(harness):
     """structs/contracts/struct_delete_storage_with_array.sol"""
-    app = harness.compile_and_deploy("structs/contracts/struct_delete_storage_with_array.sol")
+    app = harness.compile_and_deploy("structs/contracts/struct_delete_storage_with_array.sol",
+                                     extra_args=["--evm-storage-layout"])
     # f() ->
     r = harness.call(app, "f()")
     # (void return — call succeeding is the assertion)
@@ -400,7 +401,8 @@ def test_struct_delete_storage_with_array(harness):
 
 def test_struct_delete_storage_with_arrays_small(harness):  # currently fails
     """structs/contracts/struct_delete_storage_with_arrays_small.sol"""
-    app = harness.compile_and_deploy('structs/contracts/struct_delete_storage_with_arrays_small.sol')
+    app = harness.compile_and_deploy('structs/contracts/struct_delete_storage_with_arrays_small.sol',
+                                     extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'f()')
     assert as_int(r.abi_return) == 0
 

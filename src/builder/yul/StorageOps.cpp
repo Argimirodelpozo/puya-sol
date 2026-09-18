@@ -113,8 +113,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 {
 	// extract3(transient blob, slot*32, 32) → biguint.
 	// Scratch slot bzero'd in preamble; persists across callsub within an app call.
-	if (_args.empty()) return nullptr;
-
 	// The transient scratch slot is a fixed 4096-byte blob = 128 slots. A
 	// keccak-derived slot (a transient MAPPING key) is a 32-byte biguint that
 	// overflows btoi, and any slot >= 128 overruns the blob — both would panic
@@ -139,8 +137,6 @@ void AssemblyBuilder::handleTstore(
 )
 {
 	// replace3(transient blob, slot*32, zeroExtend(value, 32)).
-	if (_args.size() < 2) return;
-
 	auto slot = awst::makeVarExpression("__tstore_slot_" + std::to_string(
 		awst::NameGen::next("AssemblyBuilder.tstoreSlot")), awst::WType::biguintType(), _loc);
 	_out.push_back(awst::makeAssignmentStatement(slot, ensureBiguint(_args[0], _loc), _loc));
@@ -166,8 +162,6 @@ void AssemblyBuilder::handleSstore(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	if (!checkArity(_args, 2, "sstore", _loc))
-		return;
 
 	// EIP-1967 proxy slots (proxy.md §1): admin writes land on the
 	// synthesized global (arming the native-update gate); implementation/
@@ -377,8 +371,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!checkArity(_args, 1, "sload", _loc))
-		return nullptr;
 
 	// EIP-1967 proxy slots (proxy.md §1): admin → synthesized global,
 	// implementation → this app's own identity, beacon → runtime trap.
@@ -402,8 +394,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 		break;
 	}
 
-	// CONSTANT slot → route directly to the named variable's storage (scalar
-	// global / array length / array element). See SlotRoute.
+	// CONSTANT scalar slot → route directly to its named app-global cell.
 	if (auto routed = tryRouteConstSlotLoad(_args[0], _loc))
 		return routed;
 

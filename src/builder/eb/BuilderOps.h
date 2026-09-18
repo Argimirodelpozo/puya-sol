@@ -1,5 +1,7 @@
 #pragma once
 
+#include "awst/Node.h"
+
 #include <liblangutil/Token.h>
 #include <optional>
 
@@ -23,15 +25,7 @@ enum class BuilderBinaryOp
 };
 
 /// Comparison operators.
-enum class BuilderComparisonOp
-{
-	Eq,
-	Ne,
-	Lt,
-	Lte,
-	Gt,
-	Gte,
-};
+using BuilderComparisonOp = awst::NumericComparison;
 
 /// Unary operators.
 enum class BuilderUnaryOp

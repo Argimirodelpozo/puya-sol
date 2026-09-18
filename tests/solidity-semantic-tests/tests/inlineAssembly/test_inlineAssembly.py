@@ -447,7 +447,9 @@ def test_inline_assembly_storage_access_inside_function(harness):
 
 def test_inline_assembly_storage_access_local_var(harness):  # currently fails
     """inlineAssembly/contracts/inline_assembly_storage_access_local_var.sol"""
-    app = harness.compile_and_deploy('inlineAssembly/contracts/inline_assembly_storage_access_local_var.sol')
+    app = harness.compile_and_deploy(
+        'inlineAssembly/contracts/inline_assembly_storage_access_local_var.sol',
+        extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'f()')
     assert as_int(r.abi_return) == 7
 
@@ -526,7 +528,9 @@ def test_keccak256_optimizer_bug_different_memory_location(harness):
 
 def test_keccak256_optimizer_cache_bug(harness):  # currently fails
     """inlineAssembly/contracts/keccak256_optimizer_cache_bug.sol"""
-    app = harness.compile_and_deploy('inlineAssembly/contracts/keccak256_optimizer_cache_bug.sol')
+    app = harness.compile_and_deploy(
+        'inlineAssembly/contracts/keccak256_optimizer_cache_bug.sol',
+        extra_args=["--evm-storage-layout"])
     r = harness.call(app, 'val()')
     assert r.abi_return is True
 

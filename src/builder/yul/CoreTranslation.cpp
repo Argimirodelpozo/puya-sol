@@ -10,12 +10,9 @@
 #include "Logger.h"
 #include "awst/NameGen.h"
 
-#include <libevmasm/Instruction.h>
-#include <libevmasm/SemanticInformation.h>
-
 #include <algorithm>
-#include <cctype>
 #include <sstream>
+#include <stdexcept>
 #include <string_view>
 #include <unordered_map>
 // yul nodes BY VALUE (the AST aliases are std::variant, which needs
@@ -59,62 +56,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildLiteral(
 {
 	auto loc = makeLoc(_lit.debugData);
 
-	if (_lit.kind == solidity::yul::LiteralKind::Number)
-	{
-		// Convert u256 to decimal string
-		auto const& val = _lit.value.value();
-		std::ostringstream oss;
-		oss << val;
-		return awst::makeIntegerConstant(oss.str(), loc, awst::WType::biguintType());
-	}
-	else if (_lit.kind == solidity::yul::LiteralKind::Boolean)
-	{
+	if (_lit.kind == solidity::yul::LiteralKind::Boolean)
 		return awst::makeBoolConstant(_lit.value.value() != 0, loc);
-	}
-	else if (_lit.kind == solidity::yul::LiteralKind::String)
-	{
-		if (!_lit.value.unlimited())
-		{
-			// String literal that fits in 32 bytes — stored as u256 (left-aligned bytes).
-			// In Yul, "abc" becomes 0x6162630...0 (left-padded in a 256-bit word).
-			// We emit it as a BytesConstant with the raw bytes from the hint.
-			auto const& hint = _lit.value.hint();
-			if (hint && !hint->empty())
-			{
-				// Pad to 32 bytes (right-padded with zeros, matching EVM left-aligned semantics)
-				std::vector<unsigned char> padded(hint->begin(), hint->end());
-				padded.resize(32, 0);
-				auto node = awst::makeBytesConstant(
-					std::move(padded), loc, awst::BytesEncoding::Unknown);
-
-				// Cast to biguint for use in assembly context
-				auto cast = awst::makeAsBiguint(std::move(node), loc);
-				return cast;
-			}
-			else
-			{
-				// Empty string or no hint — use the numeric value
-				auto const& val = _lit.value.value();
-				std::ostringstream oss;
-				oss << val;
-				return awst::makeIntegerConstant(oss.str(), loc, awst::WType::biguintType());
-			}
-		}
-		else
-		{
-			// Unlimited string literal (e.g., verbatim arguments) — emit as raw bytes
-			auto const& strVal = _lit.value.builtinStringLiteralValue();
-			auto node = awst::makeBytesConstant(
-				std::vector<uint8_t>(strVal.begin(), strVal.end()),
-				loc, awst::BytesEncoding::Unknown);
-
-			auto cast = awst::makeAsBiguint(std::move(node), loc);
-			return cast;
-		}
-	}
-
-	Logger::instance().error("unsupported Yul literal kind", loc);
-	return nullptr;
+	// Solc already parsed and aligned every word literal, including strings.
+	if (!_lit.value.unlimited())
+		return awst::makeBiguintConstant(_lit.value.value().str(), loc);
+	auto const& bytes = _lit.value.builtinStringLiteralValue();
+	return awst::makeAsBiguint(awst::makeBytesConstant(
+		std::vector<uint8_t>(bytes.begin(), bytes.end()), loc), loc);
 }
 
 std::string AssemblyBuilder::externalRefAwstName(
@@ -153,25 +102,13 @@ std::string AssemblyBuilder::resolveVarRef(solidity::yul::Identifier const& _id)
 	return externalRefAwstName(it->second, _id.name.str(), m_context->declName);
 }
 
-bool AssemblyBuilder::builtinClobbersMemory(std::string const& _name)
+bool AssemblyBuilder::builtinClobbersMemory(solidity::yul::FunctionName const& name) const
 {
-	// Classified by solc's own per-instruction effect table
-	// (SemanticInformation::memory == Write) instead of a hand-list that
-	// drifts as builtins gain handlers. `mstore` is excluded because it tracks
-	// and invalidates per-offset itself; Yul-object builtins with no EVM
-	// opcode (datacopy) keep a one-entry supplement.
-	if (_name == "mstore")
-		return false;
-	if (_name == "datacopy")
-		return true;
-	std::string upper = _name;
-	std::transform(upper.begin(), upper.end(), upper.begin(),
-		[](unsigned char c) { return static_cast<char>(std::toupper(c)); });
-	auto it = solidity::evmasm::c_instructions.find(upper);
-	if (it == solidity::evmasm::c_instructions.end())
-		return false;
-	return solidity::evmasm::SemanticInformation::memory(it->second)
-		== solidity::evmasm::SemanticInformation::Write;
+	auto const* builtin = std::get_if<solidity::yul::BuiltinName>(&name);
+	if (!builtin) return false;
+	auto const& facts = m_context->dialect->builtin(builtin->handle);
+	// mstore maintains precise per-offset facts; every other writer invalidates.
+	return facts.name != "mstore" && facts.sideEffects.memory == solidity::yul::SideEffects::Write;
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
@@ -392,6 +329,11 @@ std::vector<std::shared_ptr<awst::Expression>> AssemblyBuilder::buildCallOperand
 	solidity::yul::FunctionCall const& _call,
 	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
+	// Solc validates source calls before translation. Keep one invariant check
+	// for synthesized calls, using that same dialect's arity rather than a second table.
+	if (auto const* builtin = std::get_if<solidity::yul::BuiltinName>(&_call.functionName))
+		if (_call.arguments.size() != m_context->dialect->builtin(builtin->handle).numParameters)
+			throw std::logic_error("Yul call disagrees with solc builtin arity");
 	std::vector<solidity::yul::Expression const*> operands;
 	for (auto const& arg: _call.arguments) operands.push_back(&arg);
 	return buildOperands(operands, makeLoc(_call.debugData), _out);
@@ -517,7 +459,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 
 	auto args = buildCallOperands(_call, m_frame.pendingStatements);
-	if (builtinClobbersMemory(funcName))
+	if (builtinClobbersMemory(_call.functionName))
 		invalidateMemConstants();
 
 	// Builtin dispatch. The uniform opcodes — those that just translate their
@@ -597,11 +539,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleExtcodesize(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc)
 {
-	// Arity mismatch keeps the pre-table behavior: cascade to the
-	// unsupported-builtin hard error.
-	if (_args.size() != 1)
-		return unsupportedBuiltinError("extcodesize", _loc);
-
 	// Resolve the compiler's contract-value address to an application and
 	// query only small metadata. Fetching AppApprovalProgram before taking
 	// `len` fails for programs larger than AVM's stack byte-value limit.
@@ -723,8 +660,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleBalance(
 	// available to the txn — an arbitrary EVM address (e.g. balance(0))
 	// maps to an unfunded/unavailable AVM account, so only addresses the
 	// txn references (incl. address()/self) read meaningfully.
-	if (!checkArity(_args, 1, "balance", _loc, "address"))
-		return awst::makeZero(_loc, awst::WType::uint64Type());
 	// Same fail-closed adaptation as Solidity's `address.balance`.
 	EvmFeaturePolicy::report(
 		EvmFeature::AddressBalance, m_typeMapper.profile(), _loc);
@@ -844,11 +779,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleClz(
 	// Returning uint64 (the natural type for a small result, like the
 	// comparison ops return bool) is the same single stack word and lets
 	// consumers coerce via ensureBiguint only when they need a biguint.
-	if (_args.empty())
-	{
-		Logger::instance().warning("clz() called with no args", _loc);
-		return awst::makeIntegerConstant(static_cast<uint64_t>(256), _loc);
-	}
 	auto x = _args[0];
 	auto bitlen = awst::makeIntrinsicCall("bitlen", awst::WType::uint64Type(), _loc);
 	bitlen->stackArgs.push_back(std::move(x));
@@ -945,8 +875,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldatacopy(
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc)
 {
-	if (!checkArity(_args, 3, "calldatacopy", _loc))
-		return nullptr;
 	if (!m_frame.useSyntheticCalldata)
 	{
 		Logger::instance().error("calldatacopy requires the synthetic calldata view", _loc);

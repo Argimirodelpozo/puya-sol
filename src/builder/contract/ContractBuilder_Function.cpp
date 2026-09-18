@@ -18,6 +18,7 @@
 #include "builder/types/RefParamPassing.h"
 #include "builder/types/SolIntType.h"
 #include "builder/codec/Arc4Defaults.h"
+#include "builder/codec/EvmMemoryCodec.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/eb/AssemblyBoundary.h"
 #include "builder/eb/CalldataReference.h"
@@ -121,8 +122,9 @@ std::vector<ParamDecode> collectArc4ParamRemaps(
 	for (size_t pi = 0; pi < plan.parameters.size(); ++pi)
 	{
 		auto const& parameter = plan.parameters[pi];
-		if (parameter.type == parameter.wireType) continue;
 		auto& arg = method.args[pi];
+		arg.wtype = parameter.abiNativeType ? parameter.abiNativeType : parameter.type;
+		if (arg.wtype == parameter.wireType) continue;
 		auto decode = parameter;
 		decode.name = arg.name;
 		decode.type = arg.wtype;
@@ -140,7 +142,7 @@ namespace
 
 // buildFunction phase: rewrite `return stateVar[idx]` to return just the
 // uint64 index; call sites reconstitute the location (SolInternalCall).
-// Caller guards storageRefPointerReturn.
+// Caller guards the cached indexed-return fact.
 void rewriteStorageRefReturnIndices(awst::ContractMethod& method)
 {
 	awst::forEachReturnStatement(method.body->body, [&](awst::ReturnStatement& ret) {
@@ -252,14 +254,15 @@ void emitNamedReturnInits(
 	for (auto const& rp: retParams)
 	{
 		if (_skipValueInits) break;   // value zero-init handled by the chain's outer method
-		if (rp->name().empty())
+		if (rp->name().empty() && !(rp->referenceLocation() == VariableDeclaration::Location::Memory
+			&& _typeMapper.analysis().memoryPointerDeclarations.contains(rp->id())))
 			continue;
 		// Box-keyed storage-ref named returns hold a bytes box-key, not a struct — skip zero-init.
 		if (rp->referenceLocation() == VariableDeclaration::Location::Storage
-			&& storageRefReturnIsBytesKeyed(&_func, _typeMapper.analysis()))
+			&& _typeMapper.analysis().storageReturnFacts(&_func).bytesKeyed)
 			continue;
 		// --evm-storage-layout: the named return holds a biguint slot.
-		if ((_typeMapper.profile().evmStorageLayout || storageRefReturnUsesSlot(&_func, _typeMapper.analysis()))
+		if ((_typeMapper.profile().evmStorageLayout || _typeMapper.analysis().storageReturnFacts(&_func).slotHandle)
 			&& rp->referenceLocation() == VariableDeclaration::Location::Storage)
 		{
 			inits.push_back(awst::makeAssignmentStatement(
@@ -269,6 +272,14 @@ void emitNamedReturnInits(
 			continue;
 		}
 		auto* rpType = _typeMapper.map(rp->type());
+		if (rp->referenceLocation() == VariableDeclaration::Location::Memory
+			&& _typeMapper.analysis().memoryPointerDeclarations.contains(rp->id()))
+		{
+			auto value = defaultEvmMemoryValue(_typeMapper, rp->type(), _loc, inits);
+			inits.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
+				"__blobagg_off_" + std::to_string(rp->id()), awst::WType::uint64Type(), _loc), std::move(value), _loc));
+			continue;
+		}
 
 		// >4KB memory returns: pre-zeroed in preamble; skip bzero (pointer model).
 		if (rp->referenceLocation() == VariableDeclaration::Location::Memory
@@ -283,6 +294,7 @@ void emitNamedReturnInits(
 	{
 		if (rp->referenceLocation() != VariableDeclaration::Location::Memory)
 			continue;
+		if (_typeMapper.analysis().memoryPointerDeclarations.contains(rp->id())) continue;
 		auto* rpType = _typeMapper.map(rp->type());
 		int sz = computeEncodedElementSize(rpType).fixedBytes<int>().value_or(0);
 		if (sz <= _memoryBumpMinBytes)
@@ -347,11 +359,15 @@ void emitImplicitReturn(
 	};
 
 	auto retStmt = awst::makeReturnStatement(nullptr, _loc);
-	if (hasNamedReturns && retParams.size() == 1)
+	if (retParams.size() == 1)
 	{
 		auto const& rp = *retParams[0];
 		bool const inMemory = rp.referenceLocation() == VariableDeclaration::Location::Memory;
-		if (auto word = readAssemblyScalar(_fnCtx.scope, _typeMapper, rp, _loc, _body.body))
+		bool const pointerReturn = inMemory && _returnType == awst::WType::uint64Type()
+			&& _typeMapper.analysis().memoryPointerDeclarations.contains(rp.id());
+		if (pointerReturn) retStmt->value = blobOffVar(rp);
+		else if (rp.name().empty()) retStmt->value = TypeCoercion::makeDefaultValue(_returnType, _loc);
+		else if (auto word = readAssemblyScalar(_fnCtx.scope, _typeMapper, rp, _loc, _body.body))
 			retStmt->value = std::move(word);
 		else if (auto reference = sol_ast::CalldataReference::local(_fnCtx.scope, rp, _loc))
 		{
@@ -372,7 +388,7 @@ void emitImplicitReturn(
 				retStmt->value = awst::makeVarExpression(rp.name(), vt, _loc);
 		}
 	}
-	else if (hasNamedReturns)
+	else
 	{
 		// Named values, then the augmented args (matches the augmented return type).
 		auto tuple = awst::makeTupleExpression(nullptr, _loc);
@@ -383,9 +399,11 @@ void emitImplicitReturn(
 			auto const* vt = rp.referenceLocation() == VariableDeclaration::Location::Storage
 				? _typeMapper.functionReturnPlan(_func).elements[ri].nativeType
 				: _typeMapper.map(rp.type());
-			if (rp.name().empty())
-				// Solc initializes every return parameter, including unnamed ones.
-				tuple->items.push_back(TypeCoercion::makeDefaultValue(vt, _loc));
+			auto const* internalTuple = dynamic_cast<awst::WTuple const*>(_returnType);
+			bool const pointerReturn = inMemory && internalTuple && internalTuple->types().at(ri) == awst::WType::uint64Type()
+				&& _typeMapper.analysis().memoryPointerDeclarations.contains(rp.id());
+			if (pointerReturn) tuple->items.push_back(blobOffVar(rp));
+			else if (rp.name().empty()) tuple->items.push_back(TypeCoercion::makeDefaultValue(vt, _loc));
 			else if (auto word = readAssemblyScalar(_fnCtx.scope, _typeMapper, rp, _loc, _body.body))
 				tuple->items.push_back(std::move(word));
 			else if (auto reference = sol_ast::CalldataReference::local(_fnCtx.scope, rp, _loc))
@@ -410,8 +428,11 @@ void emitImplicitReturn(
 			std::move(types), declared ? declared->names() : std::nullopt);
 		retStmt->value = std::move(tuple);
 	}
-	else
-		retStmt->value = TypeCoercion::makeDefaultValue(_returnType, _loc);
+	// Validate the actual returned word (including an assembly-visible scalar)
+	// before encoding; the ordinary named variable may no longer be current.
+	if (_shape.enumRangeAssert && hasNamedReturns && retParams.size() == 1)
+		retStmt->value = TypeCoercion::checkedEnum(
+			std::move(retStmt->value), retParams[0]->type(), _loc, &_body.body);
 
 	// Build-time encoding: the synthesized implicit return is the SECOND return
 	// construction site (SolReturnStatement is the first, for explicit returns);
@@ -426,21 +447,6 @@ void emitImplicitReturn(
 			_loc, prepend, /*asmWrap=*/_shape.asmWrap);
 		for (auto& s: prepend)
 			_body.body.push_back(std::move(s));
-	}
-
-	// Enum range check on implicit named-return.
-	if (_shape.enumRangeAssert && hasNamedReturns && retParams.size() == 1)
-	{
-		if (auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(retParams[0]->type()))
-		{
-			unsigned numMembers = enumType->numberOfMembers();
-			auto var = awst::makeVarExpression(retParams[0]->name(), _typeMapper.map(enumType), _loc);
-
-			auto assertStmt = awst::makeExpressionStatement(
-				awst::makeEnumRangeAssert(std::move(var), numMembers, _loc),
-				_loc);
-			_body.body.push_back(std::move(assertStmt));
-		}
 	}
 
 	_body.body.push_back(std::move(retStmt));
@@ -594,7 +600,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				method.args, method.sourceLocation);
 
 	auto const& signature = m_typeMapper.functionReturnPlan(_func);
-	method.returnType = signature.nativeType;
+	method.returnType = _asInternalCopy || !_func.isPartOfExternalInterface() ? signature.internalType : signature.nativeType;
 
 	// Solidity `pure` must NOT map to puya `pure`. They are different contracts:
 	// Solidity's means "reads/writes no state" — the function can still REVERT
@@ -621,14 +627,15 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	auto paramDecodes = collectArc4ParamRemaps(
 		m_typeMapper, _func, method, funcHasInlineAssembly);
 	auto const& boundary = m_typeMapper.callBoundaryPlan(_func, m_currentContract);
-	if (_func.isImplemented() && method.arc4MethodConfig && boundary.calldataFrame
+	if (_func.isImplemented() && method.arc4MethodConfig
+		&& (boundary.calldataFrame || !boundary.blobParams.empty() || signature.internalType != signature.nativeType)
 		&& !_func.isFallback() && !_func.isReceive())
 	{
 		// Capture before any Solidity code, including modifiers. Internal calls
 		// use the same implementation with their caller's frame instead.
 		std::vector<awst::SubroutineArgument> nativeArgs;
 		for (auto const& parameter: boundary.parameters)
-			nativeArgs.emplace_back(parameter.name, parameter.type, method.sourceLocation);
+			nativeArgs.emplace_back(parameter.name, parameter.abiNativeType ? parameter.abiNativeType : parameter.type, method.sourceLocation);
 		m_functionCtx.emplace(*m_tr, _func, nativeArgs, signature.nativeType);
 		auto scope = m_exprBuilder->pushScopeRaii(&m_functionCtx->scope);
 		method.body = awst::makeBlock(method.sourceLocation);
@@ -637,13 +644,28 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		appendCalldataParameters(boundary, nativeArgs, method.sourceLocation);
 		auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{
 			eb::CallResolver::baseImplementationName(*m_exprBuilder, _func)},
-			boundary.augmentReturn(m_typeMapper, signature.nativeType), method.sourceLocation);
-		for (auto const& argument: nativeArgs)
-			awst::pushCallArg(call->args, awst::makeVarExpression(argument.name, argument.wtype, argument.sourceLocation));
+			boundary.augmentReturn(m_typeMapper, signature.internalType), method.sourceLocation);
+		for (size_t i = 0; i < nativeArgs.size(); ++i)
+		{
+			auto const& argument = nativeArgs[i];
+			auto value = awst::makeVarExpression(argument.name, argument.wtype, argument.sourceLocation);
+			if (boundary.blobParams.contains(i))
+			{
+				auto const* declaration = boundary.parameters[i].declaration;
+				auto name = "__abi_memory_" + std::to_string(declaration->id());
+				if (!spillEvmMemoryValue(m_typeMapper, declaration->type(), argument.wtype, value,
+					name, declaration->id(), method.sourceLocation, method.body->body))
+					throw SizeError("Cannot allocate ABI memory parameter");
+				value = awst::makeVarExpression(name, awst::WType::uint64Type(), method.sourceLocation);
+			}
+			awst::pushCallArg(call->args, std::move(value));
+		}
 		std::shared_ptr<awst::Expression> value = call;
 		if (!boundary.writeBackParams.empty() && signature.nativeType != awst::WType::voidType())
 			value = boundary.unpackReturn(awst::makeEvalOnce(call, method.sourceLocation),
-				signature.nativeType, method.sourceLocation).first;
+				signature.internalType, method.sourceLocation).first;
+		value = materializeEvmMemoryResult(m_typeMapper, m_functionCtx->returnSolTypes(),
+			std::move(value), method.sourceLocation, method.body->body);
 		if (signature.nativeType == awst::WType::voidType())
 		{
 			method.body->body.push_back(awst::makeExpressionStatement(std::move(value), method.sourceLocation));
@@ -668,7 +690,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// ABI return encoding belongs at construction time. Plain methods encode
 		// each source return immediately; modifier methods first normalize native
 		// values for chain threading, then encode only the outer wrapper return.
-		auto const& returnPlan = signature.elements;
+		auto const& returnPlan = method.arc4MethodConfig ? signature.elements : signature.internalElements;
 		bool anyWork = false;
 		for (auto const& p: returnPlan)
 			if (p.encoded || p.masked) { anyWork = true; break; }
@@ -715,7 +737,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		prependNamedReturnInits(method, _func);
 
-		if (storageRefPointerReturn(&_func, m_typeMapper.analysis()))
+		if (m_typeMapper.analysis().storageReturnFacts(&_func).indexedReturn)
 			rewriteStorageRefReturnIndices(method);
 
 		synthesizeImplicitReturn(

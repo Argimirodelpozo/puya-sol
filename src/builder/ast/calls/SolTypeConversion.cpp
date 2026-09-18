@@ -8,7 +8,6 @@
 #include "builder/types/ConversionPlan.h"
 
 #include "builder/storage/slot/EvmSlotLowering.h"
-#include "builder/eb/TypeConversions.h"
 #include "Logger.h"
 
 namespace puyasol::builder::sol_ast
@@ -45,9 +44,22 @@ std::shared_ptr<awst::Expression> SolTypeConversion::toAwst()
 	auto argument = buildExpr(*m_call.arguments()[0]);
 	argument = EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
 		std::move(argument), sourceType, targetType, m_loc);
-	if (auto converted = eb::TypeConversions::tryConvert(
-		m_ctx, solTarget, targetType, argument, m_loc))
-		return converted->resolve();
+	// Solc has validated explicit conversion legality. Adapt only the target
+	// carrier here; bytes20 addresses additionally need AVM's 32-byte width.
+	using Category = solidity::frontend::Type::Category;
+	switch (solTarget->category())
+	{
+	case Category::Address:
+	case Category::Contract:
+		if (sourceType->category() == Category::FixedBytes)
+			return awst::makeAsAccount(awst::makeLeftPadToN(
+				awst::makeAsBytes(std::move(argument), m_loc), 32, m_loc), m_loc);
+		[[fallthrough]];
+	case Category::Bool:
+	case Category::FixedBytes:
+		return TypeCoercion::coerceScalar(std::move(argument), targetType, m_loc);
+	default: break;
+	}
 	if (sourceType->isImplicitlyConvertibleTo(*solTarget))
 		return ConversionPlan{sourceType, solTarget, targetType, ConversionPlan::Context::Argument}
 			.emit(std::move(argument), m_loc, &m_ctx.preEffects());
@@ -75,27 +87,9 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleEnumConversion()
 	auto const* enumType = dynamic_cast<solidity::frontend::EnumType const*>(
 		m_call.annotation().type);
 	auto argExpr = buildExpr(*m_call.arguments()[0]);
-	unsigned numMembers = enumType->numberOfMembers();
-
-	// Range-check the FULL value BEFORE truncating to uint64. A wide input
-	// (int136 etc. = biguint) truncated first would drop its high bits, so a
-	// value whose full magnitude is out of range but whose LOW 64 bits form a
-	// valid ordinal (e.g. int136 -2^135 → low64 == 0) slipped the check and
-	// returned the WRONG enum member instead of Panic(0x21). The constant is
-	// typed to the value's width so a biguint value compares at biguint width
-	// (a canonical negative = 2^256-k is > numMembers → reverts). Found by the
-	// corpus-mutation fuzzer (internal_library_function_attached_to_enum
-	// uint256->int136).
-	auto argOnce = awst::makeEvalOnce(std::move(argExpr), m_loc);
-	auto numConst = awst::makeIntegerConstant(numMembers, m_loc, argOnce->wtype);
-	m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-		awst::makeAssert(
-			awst::makeNumericCompare(argOnce, awst::NumericComparison::Lt,
-				std::move(numConst), m_loc),
-			m_loc, "enum out of range"),
-		m_loc));
-
-	return TypeCoercion::coerceScalar(argOnce, m_ctx.typeMapper.map(enumType), m_loc);
+	// Check the full word before narrowing, even for a discarded cast.
+	argExpr = TypeCoercion::checkedEnum(std::move(argExpr), enumType, m_loc, &m_ctx.preEffects());
+	return TypeCoercion::coerceScalar(std::move(argExpr), m_ctx.typeMapper.map(enumType), m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

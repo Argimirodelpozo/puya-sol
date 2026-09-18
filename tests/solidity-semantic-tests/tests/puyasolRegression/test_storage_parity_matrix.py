@@ -43,7 +43,7 @@ def test_slot_mode_raw_word_parity(harness):
 @pytest.mark.parametrize("mode", ["default", "slot"])
 def test_core_semantics_both_modes(harness, mode):
     extra = ["--evm-storage-layout"] if mode == "slot" else []
-    artifacts = harness.compile(SOURCE, extra_args=extra)
+    artifacts = harness.compile("puyasolRegression/contracts/storage_parity_core.sol", extra_args=extra)
     app = harness.deploy(artifacts, "StorageParityCore")
     for sig in CORE_PROBES:
         _run(harness, app, sig)

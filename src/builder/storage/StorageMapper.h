@@ -198,6 +198,12 @@ public:
 		std::shared_ptr<awst::Expression> _key,
 		awst::SourceLocation const& _loc);
 
+	/// ARC4 dynamic-array count, including length-only mapping arrays. Read
+	/// only the two-byte header; missing boxes mean zero. Not for raw bytes/string.
+	static std::shared_ptr<awst::Expression> makeBoxArrayLength(
+		TypeMapper& mapper, std::shared_ptr<awst::Expression> key,
+		awst::SourceLocation const& loc);
+
 	/// CENTRALIZED box-lifecycle prologue. A PARTIAL write (`box[i] = v` / `st.f[i] = v`) or a RESIZE
 	/// (`arr.push()/.pop()`) needs its backing box to already exist with a valid ARC4 default — else
 	/// box_replace / ArrayExtend hits "no such box". A lazily-created state-var or mapping-entry box may

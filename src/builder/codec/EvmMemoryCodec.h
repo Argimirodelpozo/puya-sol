@@ -32,6 +32,13 @@ std::shared_ptr<awst::Expression> materializeEvmMemoryValue(
 	awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out);
 
+/// Internal return offsets become values only at a value/ABI consumer. Tuple
+/// results are captured once before reading any of their memory components.
+std::shared_ptr<awst::Expression> materializeEvmMemoryResult(
+	TypeMapper& types, std::vector<solidity::frontend::Type const*> const& returns,
+	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out);
+
 /// Allocate an EVM-memory region and recursively spill a native/ARC4 value
 /// into it.  `_offVar` is rebound to the new root pointer.
 bool spillEvmMemoryValue(

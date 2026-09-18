@@ -4,6 +4,7 @@
 #include "builder/context/ContractContext.h"
 #include "builder/eb/SolFixedBytesBuilder.h" // padBytesOperandsToCommonWidth
 #include "builder/types/TypeCoercion.h"
+#include "builder/eb/BuilderOps.h"
 #include "Logger.h"
 
 #include <optional>
@@ -11,6 +12,47 @@
 
 namespace puyasol::builder::eb
 {
+
+std::shared_ptr<awst::Expression> buildBytesComparison(
+	awst::NumericComparison _op,
+	std::shared_ptr<awst::Expression> _left,
+	std::shared_ptr<awst::Expression> _right,
+	awst::SourceLocation const& _loc)
+{
+	if (_op == awst::NumericComparison::Eq || _op == awst::NumericComparison::Ne)
+	{
+		if (_left->wtype != _right->wtype)
+		{
+			auto castToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
+				if (expr->wtype != awst::WType::bytesType())
+				{
+					auto cast = awst::makeAsBytes(std::move(expr), _loc);
+					expr = std::move(cast);
+				}
+			};
+			castToBytes(_left);
+			castToBytes(_right);
+		}
+		return awst::makeBytesComparison(std::move(_left),
+			(_op == awst::NumericComparison::Eq) ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
+			std::move(_right), _loc);
+	}
+
+	// Bytes ordering: AVM b</b>/b<=/b>= intrinsics.
+	std::string opCode;
+	switch (_op)
+	{
+	case awst::NumericComparison::Lt: opCode = "b<"; break;
+	case awst::NumericComparison::Lte: opCode = "b<="; break;
+	case awst::NumericComparison::Gt: opCode = "b>"; break;
+	case awst::NumericComparison::Gte: opCode = "b>="; break;
+	default: throw std::logic_error("Not an ordered comparison");
+	}
+	auto e = awst::makeIntrinsicCall(std::move(opCode), awst::WType::boolType(), _loc);
+	e->stackArgs.push_back(std::move(_left));
+	e->stackArgs.push_back(std::move(_right));
+	return e;
+}
 
 namespace
 {
@@ -80,67 +122,6 @@ void promoteUInt64ToBigUInt(
 
 // ── Comparison family ────────────────────────────────────────────────
 
-awst::NumericComparison numericComparisonFor(Token _op)
-{
-	switch (_op)
-	{
-	case Token::Equal: return awst::NumericComparison::Eq;
-	case Token::NotEqual: return awst::NumericComparison::Ne;
-	case Token::LessThan: return awst::NumericComparison::Lt;
-	case Token::LessThanOrEqual: return awst::NumericComparison::Lte;
-	case Token::GreaterThan: return awst::NumericComparison::Gt;
-	case Token::GreaterThanOrEqual: return awst::NumericComparison::Gte;
-	default: throw std::logic_error("Not a comparison token");
-	}
-}
-
-// Bytes-backed (account / bytes / string) operands: Eq/Ne via BytesComparison
-// (both sides relabelled to raw bytes when their wtypes differ), ordering via
-// the AVM b</b<=/b>/b>= intrinsics. nullptr = no ordering opcode for `_op`
-// (never, for the six comparison tokens), leaving the operands untouched.
-std::shared_ptr<awst::Expression> tryBytesBackedComparison(
-	Token _op,
-	std::shared_ptr<awst::Expression>& _left,
-	std::shared_ptr<awst::Expression>& _right,
-	awst::SourceLocation const& _loc)
-{
-	if (_op == Token::Equal || _op == Token::NotEqual)
-	{
-		if (_left->wtype != _right->wtype)
-		{
-			auto castToBytes = [&](std::shared_ptr<awst::Expression>& expr) {
-				if (expr->wtype != awst::WType::bytesType())
-				{
-					auto cast = awst::makeAsBytes(std::move(expr), _loc);
-					expr = std::move(cast);
-				}
-			};
-			castToBytes(_left);
-			castToBytes(_right);
-		}
-		return awst::makeBytesComparison(std::move(_left),
-			(_op == Token::Equal) ? awst::EqualityComparison::Eq : awst::EqualityComparison::Ne,
-			std::move(_right), _loc);
-	}
-
-	// Bytes ordering: AVM b</b>/b<=/b>= intrinsics.
-	std::string opCode;
-	switch (_op)
-	{
-	case Token::LessThan: opCode = "b<"; break;
-	case Token::LessThanOrEqual: opCode = "b<="; break;
-	case Token::GreaterThan: opCode = "b>"; break;
-	case Token::GreaterThanOrEqual: opCode = "b>="; break;
-	default: break;
-	}
-	if (opCode.empty())
-		return nullptr;
-	auto e = awst::makeIntrinsicCall(std::move(opCode), awst::WType::boolType(), _loc);
-	e->stackArgs.push_back(std::move(_left));
-	e->stackArgs.push_back(std::move(_right));
-	return e;
-}
-
 // The six comparison tokens: bytes-backed left operands compare as bytes,
 // everything else numerically (mixed uint64/biguint pairs promoted).
 std::shared_ptr<awst::Expression> buildComparison(
@@ -159,8 +140,7 @@ std::shared_ptr<awst::Expression> buildComparison(
 		// EVM left-aligned bytesN compare: pad both sides to the common declared
 		// width — equality and ordering both (padBytesOperandsToCommonWidth).
 		padBytesOperandsToCommonWidth(_ctx, _left, _right);
-		if (auto cmp = tryBytesBackedComparison(_op, _left, _right, _loc))
-			return cmp;
+		return buildBytesComparison(comparisonOpFor(_op).value(), std::move(_left), std::move(_right), _loc);
 	}
 
 	if (isBigUInt(_left->wtype) != isBigUInt(_right->wtype))
@@ -170,7 +150,7 @@ std::shared_ptr<awst::Expression> buildComparison(
 	}
 
 	return awst::makeNumericCompare(
-		std::move(_left), numericComparisonFor(_op), std::move(_right), _loc);
+		std::move(_left), comparisonOpFor(_op).value(), std::move(_right), _loc);
 }
 
 // ── Exp family ───────────────────────────────────────────────────────

@@ -18,7 +18,6 @@
 #include "builder/storage/StateVarWalker.h"
 #include "builder/lowering/itxn/InnerCallInternal.h"
 #include "builder/lowering/calls/CallResolver.h"
-#include "builder/eb/SolBoolBuilder.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/types/ConversionPlan.h"
 #include "builder/types/TypeCoercion.h"
@@ -132,18 +131,17 @@ std::string InnerCallHandlers::buildMethodSelector(
 
 // ── Payment ──
 
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleTransfer(
+std::shared_ptr<awst::Expression> InnerCallHandlers::handleTransfer(
 	ContractContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount, awst::SourceLocation const& _loc)
 {
 	_ctx.postEffects().push_back(buildNativeTransfer(_ctx.typeMapper, _ctx.preEffects(),
 		std::move(_receiver), std::move(_amount), _loc));
 
-	auto vc = awst::makeVoidConstant(_loc);
-	return std::make_unique<GenericResultBuilder>(_ctx, std::move(vc));
+	return awst::makeVoidConstant(_loc);
 }
 
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
+std::shared_ptr<awst::Expression> InnerCallHandlers::handleSend(
 	ContractContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount, awst::SourceLocation const& _loc)
 {
@@ -152,10 +150,10 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
 	_ctx.postEffects().push_back(buildNativeTransfer(_ctx.typeMapper, _ctx.preEffects(),
 		std::move(_receiver), std::move(_amount), _loc));
 
-	return std::make_unique<SolBoolBuilder>(_ctx, awst::makeTrue(_loc));
+	return awst::makeTrue(_loc);
 }
 
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
+std::shared_ptr<awst::Expression> InnerCallHandlers::handleCallWithValue(
 	ContractContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount, awst::SourceLocation const& _loc)
 {
@@ -163,13 +161,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
 		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
 	_ctx.preEffects().push_back(buildNativeTransfer(_ctx.typeMapper, _ctx.preEffects(),
 		std::move(_receiver), std::move(_amount), _loc));
-	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTuple(true,
-		_ctx.emitSequencedOperand({}, ApplicationCall::returnData(_ctx.typeMapper, _loc), true, _loc), _loc));
+	return makeBoolBytesTuple(true,
+		_ctx.emitSequencedOperand({}, ApplicationCall::returnData(_ctx.typeMapper, _loc), true, _loc), _loc);
 }
 
 // ── .call(abi.encodeCall(...)) ──
 
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
+std::shared_ptr<awst::Expression> InnerCallHandlers::handleDelegatecall(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
 	awst::SourceLocation const& _loc)
@@ -197,7 +195,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 		awst::makeIntegerConstant(uint64_t{0}, _loc), _loc);
 	_ctx.queuePreExpression(awst::makeAssert(std::move(neverTrue), _loc,
 		"delegatecall is not supported on AVM"), _loc);
-	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
+	return makeBoolBytesTupleEmpty(_loc);
 }
 
 // ── Top-level dispatcher ──
@@ -283,7 +281,7 @@ solidity::frontend::FunctionDefinition const* InnerCallHandlers::resolveSelfCall
 }
 
 /// Emit the direct-callsub rewrite for a resolved self-call target and wrap the result as the EVM `(bool, bytes)` tuple.
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::emitDirectSelfCall(
+std::shared_ptr<awst::Expression> InnerCallHandlers::emitDirectSelfCall(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionDefinition const& targetFunc,
 	SelfEncodeForm const& form,
@@ -320,11 +318,11 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::emitDirectSelfCall(
 		staticCall, _loc, _ctx.preEffects());
 	auto bytes = ApplicationCall::setTypedReturnData(_ctx.typeMapper, std::move(value),
 		returnTypes, true, _loc, _ctx.preEffects());
-	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTuple(true, std::move(bytes), _loc));
+	return makeBoolBytesTuple(true, std::move(bytes), _loc);
 }
 
 /// `.call/.staticcall(data)` with a data argument — the encoded-call router: self-call direct rewrites …
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
+std::shared_ptr<awst::Expression> InnerCallHandlers::handleCallWithData(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::string const& _memberName,
@@ -353,7 +351,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 					  "precompiles have no account). Split into a separate "
 					  "transfer + call.", _loc);
 			_ctx.evaluateForEffects(dataArg, _loc);
-			return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
+			return makeBoolBytesTupleEmpty(_loc);
 		}
 	}
 
@@ -395,8 +393,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 			awst::InstanceMethodTarget{"__puyasol_self_call"}, &s_boolBytesType, _loc);
 		awst::pushCallArg(call->args, awst::makeAsBytes(
 			sol_ast::CallOperands::evaluate(_ctx, dataArg, _loc), _loc));
-		return std::make_unique<GenericResultBuilder>(_ctx, ApplicationCall::withStaticContext(
-			_ctx.typeMapper, std::move(call), _memberName == "staticcall", _loc, _ctx.preEffects()));
+		return ApplicationCall::withStaticContext(
+			_ctx.typeMapper, std::move(call), _memberName == "staticcall", _loc, _ctx.preEffects());
 	}
 
 	auto dataOperand = _ctx.lower(dataArg, false);
@@ -453,9 +451,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 		if (_callValue)
 			return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
 		if (SolcConstFold::constantAddress(_baseExpr) == std::optional<solidity::u256>(0))
-			return std::make_unique<GenericResultBuilder>(_ctx,
-				makeBoolBytesTuple(true, ApplicationCall::setReturnData(_ctx.typeMapper,
-					awst::makeBytesConstant({}, _loc), _loc, _ctx.preEffects()), _loc));
+			return makeBoolBytesTuple(true, ApplicationCall::setReturnData(_ctx.typeMapper,
+					awst::makeBytesConstant({}, _loc), _loc, _ctx.preEffects()), _loc);
 		// Zero-value empty call: solc EXECUTES the callee (receive, or
 		// fallback when no receive) — zero-arg inner app call.
 		return handleCallWithEmptyData(_ctx, std::move(_receiver), _loc);
@@ -463,7 +460,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 	return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), std::move(_callValue), _loc);
 }
 
-std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
+std::shared_ptr<awst::Expression> InnerCallHandlers::tryHandleAddressCall(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::string const& _memberName,

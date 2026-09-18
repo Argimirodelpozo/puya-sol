@@ -50,6 +50,7 @@ private:
 	{
 		std::string file;
 		solidity::langutil::CharStream const* stream;
+		mutable std::map<std::pair<int, int>, awst::SourceLocation> locations;
 	};
 	std::map<std::string, Source> m_streams;
 };

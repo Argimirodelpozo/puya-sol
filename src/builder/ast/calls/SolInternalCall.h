@@ -19,6 +19,8 @@ class SolInternalCall: public SolFunctionCall
 public:
 	using SolFunctionCall::SolFunctionCall;
 	std::shared_ptr<awst::Expression> toAwst() override;
+	std::shared_ptr<awst::Expression> toReferenceAwst();
+	static bool hasMemoryReturns(solidity::frontend::FunctionCall const& call);
 
 private:
 	/// Interior field paths requested for reference params of THIS call

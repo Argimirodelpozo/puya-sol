@@ -11,7 +11,6 @@ namespace puyasol::builder::eb
 ///
 /// Handles:
 ///   - compare: Eq/Ne → BytesComparisonExpression (address is bytes-backed)
-///   - member_access: .code, .balance (future: .call, .staticcall, .transfer)
 class SolAddressBuilder: public InstanceBuilder
 {
 public:

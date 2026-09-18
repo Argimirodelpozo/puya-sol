@@ -16,39 +16,20 @@ namespace puyasol::builder::eb
 {
 
 // ─────────────────────────────────────────────────────────────────────
-// NodeBuilder — abstract root of the builder hierarchy
+// InstanceBuilder — wraps a resolved Expression + its Solidity type
 // ─────────────────────────────────────────────────────────────────────
 
-class NodeBuilder
+class InstanceBuilder
 {
 public:
-	virtual ~NodeBuilder() = default;
+	virtual ~InstanceBuilder() = default;
 
 	/// The Solidity type this builder was created from.
 	virtual solidity::frontend::Type const* solType() const = 0;
 
 	/// The AWST type this builder produces.
-	virtual awst::WType const* wtype() const = 0;
+	virtual awst::WType const* wtype() const { return m_expr ? m_expr->wtype : nullptr; }
 
-	/// Handle `.member` access. Returns a new builder for the member.
-	virtual std::unique_ptr<NodeBuilder> member_access(
-		std::string const& _name, awst::SourceLocation const& _loc) = 0;
-
-protected:
-	ContractContext& m_ctx;
-	/// Innermost scope at construction; captured so builders can call
-	/// m_scope.isUnchecked() etc. without going through ContractContext.
-	sol_ast::Context& m_scope;
-	explicit NodeBuilder(ContractContext& _ctx);
-};
-
-// ─────────────────────────────────────────────────────────────────────
-// InstanceBuilder — wraps a resolved Expression + its Solidity type
-// ─────────────────────────────────────────────────────────────────────
-
-class InstanceBuilder: public NodeBuilder
-{
-public:
 	/// Get the underlying AWST expression.
 	virtual std::shared_ptr<awst::Expression> resolve() { return m_expr; }
 
@@ -62,36 +43,31 @@ public:
 	virtual std::unique_ptr<InstanceBuilder> unary_op(
 		BuilderUnaryOp _op, awst::SourceLocation const& _loc);
 
-	/// Handle `this {op} other` (or `other {op} this` if _reverse).
-	/// Returns nullptr for "not implemented" — caller tries reverse dispatch.
+	/// Handle `this {op} other`. Returns nullptr if unsupported.
 	virtual std::unique_ptr<InstanceBuilder> binary_op(
 		InstanceBuilder& _other, BuilderBinaryOp _op,
-		awst::SourceLocation const& _loc, bool _reverse = false);
+		awst::SourceLocation const& _loc);
 
 	/// Handle `this {cmp} other`.
-	/// Returns nullptr for "not implemented" — caller tries reversed comparison.
+	/// Returns nullptr if unsupported.
 	virtual std::unique_ptr<InstanceBuilder> compare(
 		InstanceBuilder& _other, BuilderComparisonOp _op,
 		awst::SourceLocation const& _loc);
 
-	// ── Member / Index ──
-
-	std::unique_ptr<NodeBuilder> member_access(
-		std::string const& _name, awst::SourceLocation const& _loc) override;
-
 	virtual std::unique_ptr<InstanceBuilder> index(
 		InstanceBuilder& _idx, awst::SourceLocation const& _loc);
 
-	awst::WType const* wtype() const override { return m_expr ? m_expr->wtype : nullptr; }
-
 protected:
+	ContractContext& m_ctx;
+	/// Innermost scope at construction, including its checked/unchecked mode.
+	sol_ast::Context& m_scope;
 	std::shared_ptr<awst::Expression> m_expr;
 
 	InstanceBuilder(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _expr
 	)
-		: NodeBuilder(_ctx), m_expr(std::move(_expr))
+		: m_ctx(_ctx), m_scope(_ctx.scope()), m_expr(std::move(_expr))
 	{
 	}
 };

@@ -58,9 +58,11 @@ public:
 
 	/// Validate an enum ordinal at solc conversion/encoding boundaries, before
 	/// narrowing its numeric carrier. Non-enum types pass through unchanged.
+	/// With effects, emit an explicit assertion even if the value is discarded.
 	static std::shared_ptr<awst::Expression> checkedEnum(
 		std::shared_ptr<awst::Expression> value,
-		solidity::frontend::Type const* type, awst::SourceLocation const& loc);
+		solidity::frontend::Type const* type, awst::SourceLocation const& loc,
+		std::vector<std::shared_ptr<awst::Statement>>* effects = nullptr);
 
 	/// Adapt scalar representations (integers, bytes, strings and addresses).
 	/// Semantic conversion legality belongs to solc/ConversionPlan. Returns the

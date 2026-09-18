@@ -11,6 +11,13 @@ namespace puyasol::builder::eb
 {
 class ContractContext;
 
+/// Compare byte-backed values after any Solidity fixed-width alignment.
+std::shared_ptr<awst::Expression> buildBytesComparison(
+	awst::NumericComparison op,
+	std::shared_ptr<awst::Expression> left,
+	std::shared_ptr<awst::Expression> right,
+	awst::SourceLocation const& loc);
+
 /// Build an AWST binary-op from already-resolved operands (fallback when sol-eb
 /// type-builder dispatch fails). Chooses uint64/biguint/bytes based on types;
 /// emits side-effect statements (e.g. exp loop) into the active pre-effect frame.

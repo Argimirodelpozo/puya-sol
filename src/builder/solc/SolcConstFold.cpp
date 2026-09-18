@@ -18,80 +18,19 @@ using namespace solidity::frontend;
 namespace
 {
 
-/// tryEvaluate the node to an integral rational; nullopt on anything else.
-/// tryEvaluate is silent on failure (local discarded ErrorReporter + FatalError
-/// catch), so speculative calls here can never emit solc diagnostics.
-std::optional<rational> nodeValue(Expression const& _e)
+/// Solc checks every intermediate in its operand type, including in unchecked
+/// source. Overflow, effects and unsupported expressions fail speculatively;
+/// normal lowering then retains the source's checked/wrapping semantics.
+std::optional<solidity::bigint> nodeValue(Expression const& _e)
 {
 	auto tv = ConstantEvaluator::tryEvaluate(_e);
-	if (!std::holds_alternative<rational>(tv.value))
+	auto const* value = std::get_if<rational>(&tv.value);
+	if (!value || value->denominator() != 1)
 		return std::nullopt;
-	auto const& rat = std::get<rational>(tv.value);
-	if (rat.denominator() != 1)
+	if (auto const* type = dynamic_cast<IntegerType const*>(_e.annotation().type);
+		type && (value->numerator() < type->minValue() || value->numerator() > type->maxValue()))
 		return std::nullopt;
-	return rat;
-}
-
-/// The load-bearing guard of foldTyped: TRUE iff every integer-typed node in
-/// the subtree evaluates in range of its OWN annotated type (rational-typed
-/// nodes are solc-exact leaves and pass through). Any out-of-range
-/// intermediate, unsupported node kind, or evaluator failure rejects the
-/// whole fold — rejection is always safe (the normal lowering runs).
-bool subtreeFoldable(Expression const& _e)
-{
-	auto const* type = _e.annotation().type;
-	if (!type)
-		return false;
-
-	// solc already folded this subtree to an exact rational (literal
-	// arithmetic, type(T).min/max, ...) — participates exactly; the integer
-	// PARENT's own range check bounds whatever it combines into.
-	if (dynamic_cast<RationalNumberType const*>(type))
-		return true;
-
-	auto const* intType = dynamic_cast<IntegerType const*>(type);
-	if (!intType)
-		return false;
-	auto value = nodeValue(_e);
-	if (!value)
-		return false;
-	if (value->numerator() < intType->minValue() || value->numerator() > intType->maxValue())
-		return false;
-
-	if (SolcFacts::expressionAs<Literal>(&_e))
-		return true;
-	if (auto const* id = SolcFacts::expressionAs<Identifier>(&_e))
-	{
-		// A constant variable's VALUE (computed + range-checked above) is what
-		// solc itself inlines at references — its initializer's internals are
-		// solc's business, not re-validated here.
-		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
-			id->annotation().referencedDeclaration);
-		return varDecl && varDecl->isConstant();
-	}
-	if (auto const* unary = SolcFacts::expressionAs<UnaryOperation>(&_e))
-	{
-		auto op = unary->getOperator();
-		if (op != solidity::langutil::Token::Sub && op != solidity::langutil::Token::BitNot)
-			return false;
-		return subtreeFoldable(unary->subExpression());
-	}
-	if (auto const* binary = SolcFacts::expressionAs<BinaryOperation>(&_e))
-	{
-		using solidity::langutil::Token;
-		switch (binary->getOperator())
-		{
-		case Token::Add: case Token::Sub: case Token::Mul: case Token::Div:
-		case Token::Mod: case Token::Exp: case Token::SHL: case Token::SAR:
-		case Token::BitAnd: case Token::BitOr: case Token::BitXor:
-			return subtreeFoldable(binary->leftExpression())
-				&& subtreeFoldable(binary->rightExpression());
-		default:
-			return false;
-		}
-	}
-	// Conversions, calls, ternaries, index/member accesses: no fold.
-	return false;
+	return value->numerator();
 }
 
 } // anonymous namespace
@@ -118,14 +57,12 @@ std::shared_ptr<awst::Expression> SolcConstFold::foldTyped(
 	auto const* intType = dynamic_cast<IntegerType const*>(_expr.annotation().type);
 	if (!intType)
 		return nullptr;
-	if (!subtreeFoldable(_expr))
-		return nullptr;
 	auto value = nodeValue(_expr);
 	if (!value)
 		return nullptr;
 
 	// 256-bit two's complement, the form canonicalIntConstant expects.
-	solidity::bigint num = value->numerator();
+	solidity::bigint num = *value;
 	if (num < 0)
 		num += solidity::bigint(1) << 256;
 	return TypeCoercion::canonicalIntConstant(
@@ -215,22 +152,11 @@ std::optional<solidity::u256> SolcConstFold::constantAddress(Expression const& e
 				return *result >= integer->minValue() && *result <= integer->maxValue() ? result : std::nullopt;
 			return std::nullopt;
 		}
-		if (subtreeFoldable(source))
-			if (auto result = nodeValue(source)) return result->numerator();
-		return std::nullopt;
+		return nodeValue(source);
 	};
 	auto result = value(expression);
 	return result && *result >= 0 && *result < (bigint(1) << 160)
 		? std::optional<u256>(u256(*result)) : std::nullopt;
-}
-
-bool SolcConstFold::isEffectFree(Expression const& _expr)
-{
-	// SetOnce<bool>: set for every expression once the TypeChecker ran (which
-	// is before any builder executes). `set()` guards the defensive default —
-	// an unset annotation reads as "assume effects" rather than crashing.
-	auto const& isPure = _expr.annotation().isPure;
-	return isPure.set() && *isPure;
 }
 
 } // namespace puyasol::builder

@@ -36,9 +36,13 @@ awst::WType const* computeReturnType(ContractContext& ctx, FunctionType const* t
 {
 	if (!type || type->returnParameterTypes().empty()) return awst::WType::voidType();
 	auto const& returns = type->returnParameterTypes();
-	if (returns.size() == 1) return ctx.typeMapper.map(returns.front());
+	auto representation = [&](Type const* result) {
+		return type->kind() == FunctionType::Kind::Internal && !result->isValueType()
+			&& result->dataStoredIn(DataLocation::Memory) ? awst::WType::uint64Type() : ctx.typeMapper.map(result);
+	};
+	if (returns.size() == 1) return representation(returns.front());
 	std::vector<awst::WType const*> components;
-	for (auto const* result: returns) components.push_back(ctx.typeMapper.map(result));
+	for (auto const* result: returns) components.push_back(representation(result));
 	return ctx.typeMapper.createType<awst::WTuple>(std::move(components));
 }
 
@@ -105,7 +109,9 @@ unsigned FunctionPointerBuilder::registerTarget(
 	if (_ctx.baseImplementationIds.count(id)
 		|| (_funcType && _funcType->kind() == FunctionType::Kind::Internal
 			&& _funcDef->isPartOfExternalInterface()
-			&& _ctx.typeMapper.callBoundaryPlan(*_funcDef, _ctx.currentContract).calldataFrame))
+			&& (_ctx.typeMapper.callBoundaryPlan(*_funcDef, _ctx.currentContract).calldataFrame
+				|| !_ctx.typeMapper.callBoundaryPlan(*_funcDef, _ctx.currentContract).blobParams.empty()
+				|| _ctx.typeMapper.functionReturnPlan(*_funcDef).internalType != _ctx.typeMapper.functionReturnPlan(*_funcDef).nativeType)))
 		_awstName = CallResolver::baseImplementationName(_ctx, *_funcDef);
 	if (auto found = registry.targets.find(id); found != registry.targets.end())
 	{
@@ -451,6 +457,7 @@ awst::ContractMethod buildDispatchSignature(
 		computeReturnType(_ctx, _funcType),
 		{{"__funcptr_id", awst::WType::uint64Type(), _loc},
 			{"__static", awst::WType::uint64Type(), _loc}}, _loc);
+	auto const pointers = _ctx.typeMapper.analysis().pointerMemoryParameters(*_funcType);
 	for (size_t i = 0; i < _funcType->parameterTypes().size(); ++i)
 	{
 		// The SAME native mapping the call site coerces to — the old
@@ -459,7 +466,7 @@ awst::ContractMethod buildDispatchSignature(
 		// wtypes.
 		dispatch.args.emplace_back(
 			"__arg" + std::to_string(i),
-			_ctx.typeMapper.map(_funcType->parameterTypes()[i]), _loc);
+			pointers.contains(i) ? awst::WType::uint64Type() : _ctx.typeMapper.map(_funcType->parameterTypes()[i]), _loc);
 	}
 	if (_ctx.typeMapper.analysis().pointerNeedsCalldata(*_funcType))
 	{

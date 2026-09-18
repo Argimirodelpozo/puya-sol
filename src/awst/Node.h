@@ -852,13 +852,6 @@ inline std::shared_ptr<IntrinsicCall> makeBoxReplace(
 		{std::move(key), std::move(offset), std::move(value)});
 }
 
-// `box_del key` → bool (existed). Most callers discard the result.
-inline std::shared_ptr<IntrinsicCall> makeBoxDel(
-	std::shared_ptr<Expression> key, SourceLocation loc)
-{
-	return makeIntrinsicCall("box_del", WType::boolType(), std::move(loc), {std::move(key)});
-}
-
 // `app_global_put key value` — write to a global state slot.
 inline std::shared_ptr<IntrinsicCall> makeAppGlobalPut(
 	std::shared_ptr<Expression> key,
@@ -1553,15 +1546,6 @@ inline std::shared_ptr<ArrayExtend> makeArrayPushOne(
 	return makeArrayExtend(std::move(base), std::move(singleArr), std::move(loc));
 }
 
-// `base.pop()` → ARC4Decode(ArrayPop(base)) to native type.
-inline std::shared_ptr<ARC4Decode> makeArrayPopDecode(
-	std::shared_ptr<Expression> base, WType const* arc4ElemType,
-	WType const* nativeElemType, SourceLocation loc)
-{
-	auto pop = makeArrayPop(std::move(base), arc4ElemType, loc);
-	return makeARC4Decode(std::move(pop), nativeElemType, std::move(loc));
-}
-
 struct ConvertArray: Expression
 {
 	std::string nodeType() const override { return "ConvertArray"; }
@@ -1613,15 +1597,6 @@ struct NamedTupleExpression: Expression
 	std::string nodeType() const override { return "NamedTupleExpression"; }
 	std::map<std::string, std::shared_ptr<Expression>> values;
 };
-
-inline std::shared_ptr<NamedTupleExpression> makeNamedTupleExpression(
-	WType const* wtype, std::map<std::string, std::shared_ptr<Expression>> values,
-	SourceLocation loc)
-{
-	auto node = makeNode<NamedTupleExpression>(std::move(loc), wtype);
-	node->values = std::move(values);
-	return node;
-}
 
 struct StateGet: Expression
 {
@@ -1826,15 +1801,6 @@ struct AddressConstant: Expression
 	std::string nodeType() const override { return "AddressConstant"; }
 	std::string value;
 };
-
-// AVM account address literal.
-inline std::shared_ptr<AddressConstant> makeAddressConstant(
-	std::string value, SourceLocation loc)
-{
-	auto node = makeNode<AddressConstant>(std::move(loc), WType::accountType());
-	node->value = std::move(value);
-	return node;
-}
 
 struct PuyaLibCall: Expression
 {

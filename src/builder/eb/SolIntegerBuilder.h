@@ -26,7 +26,7 @@ public:
 
 	std::unique_ptr<InstanceBuilder> binary_op(
 		InstanceBuilder& _other, BuilderBinaryOp _op,
-		awst::SourceLocation const& _loc, bool _reverse = false) override;
+		awst::SourceLocation const& _loc) override;
 
 	std::unique_ptr<InstanceBuilder> compare(
 		InstanceBuilder& _other, BuilderComparisonOp _op,
@@ -59,7 +59,7 @@ private:
 
 	// ── binary_op rungs (SolIntegerBuilder.cpp), one per operator family,
 	// dispatched in binary_op's check order. Operands arrive resolved (and
-	// already swapped for `_reverse`); the biguint rungs get `_lhs` promoted
+	// in source order); the biguint rungs get `_lhs` promoted
 	// to biguint — and `_rhs` too, except the shift rung (amount stays
 	// uint64). Every rung ends in wrap(). ──────────────────────────────
 
