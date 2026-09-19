@@ -8,6 +8,28 @@ not as an active test runner.
 
 ## Recorded baseline
 
+### Host-aware callable reachability — 2026-09-19
+
+This commit on `rev-2` follows `35aadd7737`. `CallableReferenceScanner` now
+admits a member reference into the host's reachable set only for internal,
+delegatecall (public library) and cast-`this` external calls, following solc's
+`FunctionCallGraphBuilder`. Foreign external references such as `token.mint()`
+no longer pull the callee's body, and its virtual calls, into the caller's
+host, which previously failed FireBridge with "Virtual function _update not
+found". Twelve frontend and eight runtime regression configurations were added
+in `test_foreign_reachability.py`.
+
+Validation for this commit is partial. Native tests passed 24/24 and the
+twelve frontend configurations passed on the committed binary. The previous
+session recorded a 3,616-configuration frontend comparison with 3,610 unchanged
+outputs, two reproducer profiles newly compiling and four profiles shedding
+foreign-callee requirements, plus a focused runtime set of 70 passed; its full
+semantic repeat was suspended at 46 percent without failures when the host
+disk filled. The eight runtime configurations and the full repeat have not
+been executed on this binary because LocalNet could not be started on the
+exhausted host. The baseline table below is unchanged until that repeat
+completes.
+
 ### Reference correctness and boundary reductions — 2026-09-19
 
 This commit on `rev-2` follows `26aadc01e476`. It preserves memory-reference

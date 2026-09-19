@@ -26,16 +26,13 @@ remains experimental and unsuitable for production funds.
   blocks and same-type local copies; this is not a promise of arbitrary
   dirty-word transport across function/ABI boundaries. Boundary cleanup and
   validation follow the relevant solc operation.
-- **Foreign-contract virtual-call reachability:** the FireBridge remeasurement
-  fails during `BodyFactsWalker::transferCallFacts` with `Virtual function
-  _update not found`. A minimal reproducer is a contract calling another
-  concrete contract's external method, whose body calls an internal virtual
-  method. The source-reference closure admits the foreign body into the caller's
-  host context; virtual resolution then searches the wrong inheritance chain.
-  Solc accepts the reproducer. This requires a host-aware reachability fix and
-  regression coverage; the green semantic baseline does not cover this case.
-  The [workload report](../tests/sizes/reports/reference-boundaries-real-workloads.json)
-  retains the reproducer, official solc results and failed replay details.
+- **Large real-workload deployment limits:** host-aware callable reachability
+  fixes FireBridge's foreign virtual-call compile failure. Its current exact
+  workload compiles to 22,084 approval plus 4 clear bytes, still above the
+  replay's 16,384-byte limit; compilation success is not a successful replay.
+  PrivacyPoolSimple also remains over that limit and has separate closed-world
+  replay exclusions. The [historical workload report](../tests/sizes/reports/reference-boundaries-real-workloads.json)
+  retains the earlier compiler failure, solc results and replay details.
 - **Remapping diagnostics:** malformed import remappings still emit warnings.
   Whether they should fail immediately remains a policy decision; log-file
   opening and source-read failures now have explicit error handling and tests.

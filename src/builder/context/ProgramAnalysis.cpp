@@ -198,7 +198,13 @@ struct CallableReferenceScanner: ASTConstVisitor
 
 	bool visit(MemberAccess const& _member) override
 	{
-		add(_member.annotation().referencedDeclaration);
+		// Like solc's call graph, an external member reference is not a body
+		// executed in this host. Keep the library/self calls we internalize.
+		auto const* type = dynamic_cast<FunctionType const*>(_member.annotation().type);
+		if (type && (type->kind() == FunctionType::Kind::Internal
+			|| type->kind() == FunctionType::Kind::DelegateCall
+			|| (type->kind() == FunctionType::Kind::External && SolcFacts::isThis(_member.expression()))))
+			add(_member.annotation().referencedDeclaration);
 		return true;
 	}
 
