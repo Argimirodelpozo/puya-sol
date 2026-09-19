@@ -137,7 +137,11 @@ std::shared_ptr<awst::Expression> buildMsgData(
 {
 	if (scope.isInConstructor()) return awst::makeBytesConstant({}, loc);
 	if (ctx.typeMapper.profile().contractAbi == builder::ContractAbi::Evm)
+	{
+		if (scope.function && scope.function->hasAssemblyCalldata)
+			return awst::makeVarExpression("__cd_blob", awst::WType::bytesType(), loc);
 		return builder::reconstructCalldata(builder::CalldataTransport::SplitEvm, loc);
+	}
 	return builder::reconstructCalldata(builder::CalldataTransport::Arc4Arguments, loc,
 		builder::SelectorSemantics::runtimeSelector(ctx, awst::makeAppArg(0, loc), loc));
 }

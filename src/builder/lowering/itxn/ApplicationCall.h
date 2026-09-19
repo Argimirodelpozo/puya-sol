@@ -7,6 +7,7 @@ namespace solidity::frontend { class Type; }
 namespace puyasol::builder
 {
 class TypeMapper;
+namespace eb { class ContractContext; }
 
 /// Transport after source operands are evaluated. Solidity and Yul share
 /// application validation, submission, and the return-data lifetime.
@@ -31,12 +32,26 @@ public:
 	static Expr capture(TypeMapper& types, awst::SourceLocation const& loc, Statements& out);
 	static Expr setReturnData(TypeMapper& types, Expr bytes,
 		awst::SourceLocation const& loc, Statements& out);
+	static Expr finishSelfCall(TypeMapper& types, Expr bytes,
+		awst::SourceLocation const& loc, Statements& out);
 	/// Publish a modeled self-call using the same return wire as its external
 	/// transport. The caller may reuse a single-evaluation value after this.
 	static Expr setTypedReturnData(TypeMapper& types, Expr value,
 		std::vector<solidity::frontend::Type const*> const& returns, bool evmWire,
 		awst::SourceLocation const& loc, Statements& out);
 	static Expr returnData(TypeMapper& types, awst::SourceLocation const& loc);
+	/// Successful EVM termination carries bytes, not the callee's declared type.
+	static void returnRaw(TypeMapper& types, Expr bytes, awst::WType const* frameType,
+		awst::SourceLocation const& loc, Statements& out);
+	static Expr selfCallContext(TypeMapper& types, awst::SourceLocation const& loc);
+	static Expr propagateRawReturn(TypeMapper& types, Expr call, awst::WType const* frameType,
+		awst::SourceLocation const& loc, Statements& out);
+	static Expr propagateRawReturn(eb::ContractContext& context, Expr call, awst::SourceLocation const& loc);
+	/// A typed external self-call decodes at its caller, after the callee has
+	/// unwound. Low-level calls keep the raw bytes and do not use this decoder.
+	static Expr decodeRawReturn(TypeMapper& types, Expr value,
+		std::vector<solidity::frontend::Type const*> const& returns,
+		awst::SourceLocation const& loc, Statements& out);
 	/// Internal pointers inherit this flag; their declared mutability does not set it.
 	static Expr staticContext(TypeMapper& types, awst::SourceLocation const& loc);
 	/// Scope a modeled self STATICCALL after evaluating its operands, restoring
@@ -47,6 +62,9 @@ public:
 	static Expr splitPayload(TypeMapper& types, Expr bytes, awst::SourceLocation const& loc);
 
 private:
+	static Expr setTypedReturnDataUnchecked(TypeMapper& types, Expr value,
+		std::vector<solidity::frontend::Type const*> const& returns, bool evmWire,
+		awst::SourceLocation const& loc, Statements& out);
 	static void submitOnly(TypeMapper& types, Expr receiver, Expr arguments, Expr payment,
 		awst::SourceLocation const& loc, Statements& out);
 };

@@ -130,7 +130,8 @@ awst::WType const* CallBoundaryPlan::augmentReturn(TypeMapper& mapper, awst::WTy
 {
 	if (writeBackParams.empty()) return original;
 	std::vector<awst::WType const*> types;
-	if (auto const* tuple = dynamic_cast<awst::WTuple const*>(original)) types = tuple->types();
+	if (auto const* tuple = dynamic_cast<awst::WTuple const*>(original); tuple && original != calldataReferenceType())
+		types = tuple->types();
 	else if (original != awst::WType::voidType()) types.push_back(original);
 	for (auto pi: writeBackParams) types.push_back(parameters[pi].type);
 	return types.size() == 1 ? types.front() : mapper.createType<awst::WTuple>(std::move(types));
@@ -140,7 +141,7 @@ std::pair<std::shared_ptr<awst::Expression>, std::vector<std::shared_ptr<awst::E
 CallBoundaryPlan::unpackReturn(std::shared_ptr<awst::Expression> value,
 	awst::WType const* original, awst::SourceLocation const& loc) const
 {
-	auto const* tuple = dynamic_cast<awst::WTuple const*>(original);
+	auto const* tuple = original == calldataReferenceType() ? nullptr : dynamic_cast<awst::WTuple const*>(original);
 	size_t const count = tuple ? tuple->types().size() : original == awst::WType::voidType() ? 0 : 1;
 	std::vector<std::shared_ptr<awst::Expression>> items;
 	// One augmented value is bare even when that value itself is a tuple.
@@ -182,7 +183,7 @@ void CallBoundaryPlan::augmentReturns(awst::Block& body, awst::WType const* augm
 		std::vector<std::shared_ptr<awst::Expression>> values;
 		if (statement.value)
 		{
-			if (dynamic_cast<awst::WTuple const*>(statement.value->wtype))
+			if (statement.value->wtype != calldataReferenceType() && dynamic_cast<awst::WTuple const*>(statement.value->wtype))
 				values = awst::tupleItems(std::move(statement.value), loc);
 			else values.push_back(std::move(statement.value));
 		}

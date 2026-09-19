@@ -46,6 +46,8 @@ public:
 	static constexpr int returnDataSlot = maxScratchSlot;
 	/// Numeric call-frame flag; AVM initializes it to zero. Reserved only on use.
 	static constexpr int staticContextSlot = returnDataSlot - 1;
+	static constexpr int selfCallFrameSlot = staticContextSlot - 1;
+	static constexpr int rawReturnFlagSlot = selfCallFrameSlot - 1;
 
 	explicit ScratchLayout(int _memorySlots = defaultMemorySlots)
 		: m_memorySlots(_memorySlots)

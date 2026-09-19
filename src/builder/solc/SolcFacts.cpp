@@ -122,6 +122,40 @@ std::vector<solidity::frontend::Expression const*> SolcFacts::referenceSources(
 	return result;
 }
 
+std::vector<solidity::frontend::Expression const*> SolcFacts::retainedMemoryArguments(
+	solidity::frontend::Expression const& expression)
+{
+	using namespace solidity::frontend;
+	std::vector<solidity::frontend::Expression const*> result;
+	auto shared = [&](auto const* source) {
+		auto const* type = source->annotation().type;
+		if (!type || type->isValueType() || !type->dataStoredIn(DataLocation::Memory)) return false;
+		if (auto const* call = expressionAs<solidity::frontend::FunctionCall>(source))
+		{
+			if (call->annotation().kind.set() && *call->annotation().kind == FunctionCallKind::StructConstructorCall)
+				return !retainedMemoryArguments(*call).empty();
+			if (auto const* function = dynamic_cast<FunctionType const*>(call->expression().annotation().type);
+				function && function->kind() == FunctionType::Kind::ObjectCreation) return false;
+		}
+		return true;
+	};
+	auto retain = [&](auto const& arguments) {
+		for (auto const& argument: arguments)
+			if (auto const* type = argument->annotation().type;
+				type && !type->isValueType() && type->dataStoredIn(DataLocation::Memory))
+			{
+				auto roots = referenceSources(*argument);
+				if (std::any_of(roots.begin(), roots.end(), shared)) result.push_back(argument.get());
+			}
+	};
+	if (auto const* call = expressionAs<solidity::frontend::FunctionCall>(&expression);
+		call && call->annotation().kind.set() && *call->annotation().kind == FunctionCallKind::StructConstructorCall)
+		retain(call->sortedArguments());
+	else if (auto const* tuple = expressionAs<TupleExpression>(&expression); tuple && tuple->isInlineArray())
+		retain(tuple->components());
+	return result;
+}
+
 solidity::frontend::FunctionDefinition const* SolcFacts::resolveFunction(
 	solidity::frontend::Expression const& expression,
 	solidity::frontend::ContractDefinition const* mostDerived)
@@ -316,6 +350,7 @@ void SolcFacts::analyzeYul(PreparedAssembly& _assembly)
 			}
 	} while (changed);
 	result.usesCalldata = calldata.count(FunctionHandle{YulName{}});
+	result.canTerminate = terminating.count(FunctionHandle{YulName{}});
 	for (auto const& name: reachable)
 	{
 		auto handle = FunctionHandle{name};

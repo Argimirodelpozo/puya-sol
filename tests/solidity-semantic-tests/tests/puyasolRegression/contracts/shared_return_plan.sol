@@ -7,6 +7,7 @@ contract SharedReturnPlan {
     int8 public small = -7;
     int72 public medium = -9;
     uint128 public wide = uint128(1) << 100;
+    uint8 public tiny = 7;
 
     modifier pass() { _; }
 
@@ -29,4 +30,5 @@ contract SharedReturnPlan {
     function getterCalls() external view returns (int8, int72, uint128) {
         return (this.small(), this.medium(), this.wide());
     }
+    function tinyGetterCall() external view returns (uint8) { return this.tiny(); }
 }

@@ -33,6 +33,8 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 {
 	if (m_tuple.isInlineArray())
 	{
+		if (auto offset = SolIndexAccess::resolveBlobOffset(m_ctx, m_scope, m_tuple, m_loc))
+			return SolIndexAccess::readBlobValue(m_ctx, std::move(offset), m_tuple.annotation().type, m_loc);
 		auto const* solType = dynamic_cast<solidity::frontend::ArrayType const*>(m_tuple.annotation().type);
 		assert(solType);
 		auto const* wtype = m_ctx.typeMapper.map(solType);
@@ -73,7 +75,8 @@ std::shared_ptr<awst::Expression> SolTupleExpression::buildBindingRhs(
 	{
 		auto const* tuple = dynamic_cast<solidity::frontend::TupleType const*>(value.annotation().type);
 		if (!tuple || std::none_of(tuple->components().begin(), tuple->components().end(), [](auto const* type) {
-			return type && type->dataStoredIn(solidity::frontend::DataLocation::Memory);
+			return type && (type->dataStoredIn(solidity::frontend::DataLocation::Memory)
+				|| type->dataStoredIn(solidity::frontend::DataLocation::CallData));
 		})) return ctx.buildExpr(expression);
 		auto loc = ctx.makeLoc(value.location());
 		auto condition = ctx.emitSequencedOperand({}, ctx.pinIfWriteBacks(ctx.lower(conditional->condition(), false), loc), true, loc);
@@ -88,6 +91,7 @@ std::shared_ptr<awst::Expression> SolTupleExpression::buildBindingRhs(
 			bool const pointer = type->dataStoredIn(solidity::frontend::DataLocation::Memory)
 				&& (yesType->types()[i] == awst::WType::uint64Type() || noType->types()[i] == awst::WType::uint64Type());
 			types.push_back(pointer ? awst::WType::uint64Type()
+				: type->dataStoredIn(solidity::frontend::DataLocation::CallData) ? calldataReferenceType()
 				: type->dataStoredIn(solidity::frontend::DataLocation::Storage) ? yesType->types()[i] : ctx.typeMapper.map(type));
 		}
 		auto const* resultType = ctx.typeMapper.createType<awst::WTuple>(std::move(types));
@@ -109,8 +113,9 @@ std::shared_ptr<awst::Expression> SolTupleExpression::buildBindingRhs(
 						throw SizeError("Cannot preserve conditional tuple reference");
 					items[i] = awst::makeVarExpression(name, awst::WType::uint64Type(), loc);
 				}
-				result->items.push_back(ConversionPlan{sourceType->components()[i], type, resultType->types()[i],
-					ConversionPlan::Context::Initialization}.emit(std::move(items[i]), loc, &branch.effects.pre));
+				result->items.push_back(resultType->types()[i] == calldataReferenceType() ? std::move(items[i])
+					: ConversionPlan{sourceType->components()[i], type, resultType->types()[i],
+						ConversionPlan::Context::Initialization}.emit(std::move(items[i]), loc, &branch.effects.pre));
 			}
 			branch.value = std::move(result);
 		};
@@ -119,7 +124,7 @@ std::shared_ptr<awst::Expression> SolTupleExpression::buildBindingRhs(
 		return ctx.emitConditional(std::move(condition), std::move(yes), std::move(no), resultType, loc);
 	}
 	if (auto const* call = SolcFacts::expressionAs<solidity::frontend::FunctionCall>(&value);
-		call && SolInternalCall::hasMemoryReturns(*call))
+		call && SolInternalCall::hasReferenceReturns(*call))
 		return SolInternalCall(ctx, *call).toReferenceAwst();
 	if (auto const* tuple = SolcFacts::expressionAs<solidity::frontend::TupleExpression>(&value);
 		tuple && !tuple->isInlineArray())
@@ -140,7 +145,8 @@ std::shared_ptr<awst::Expression> SolTupleExpression::buildTuple(
 		auto const* target = i < bindings.size() ? bindings[i] : nullptr;
 		std::shared_ptr<awst::Expression> value;
 		if (comp && target) value = assemblyScalarCopy(m_ctx, *target, *comp, m_loc);
-		if (comp && target && target->referenceLocation() == solidity::frontend::VariableDeclaration::Location::CallData)
+		if (comp && comp->annotation().type->dataStoredIn(solidity::frontend::DataLocation::CallData)
+			&& (storageReferences || (target && target->referenceLocation() == solidity::frontend::VariableDeclaration::Location::CallData)))
 			if (auto reference = CalldataReference::resolve(m_ctx, *comp, m_loc)) value = reference->pack(m_loc);
 		if (comp && storageReferences)
 		{

@@ -20,9 +20,11 @@ public:
 	using SolFunctionCall::SolFunctionCall;
 	std::shared_ptr<awst::Expression> toAwst() override;
 	std::shared_ptr<awst::Expression> toReferenceAwst();
-	static bool hasMemoryReturns(solidity::frontend::FunctionCall const& call);
+	static bool hasReferenceReturns(solidity::frontend::FunctionCall const& call);
 
 private:
+	/// Public-library calls own a fresh ABI frame, unlike internal reference calls.
+	std::shared_ptr<awst::Expression> m_resultCalldataFrame;
 	/// Interior field paths requested for reference params of THIS call
 	/// (param index → path, enclosing box wtype); see BuildArtifacts::PathSpecialization.
 	std::map<size_t, std::pair<std::vector<std::string>, awst::WType const*>> m_pathSpecs;

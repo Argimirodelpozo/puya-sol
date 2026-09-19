@@ -8,6 +8,7 @@
 #include "builder/codec/EvmAbiDecode.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/types/TypeCoercion.h"
+#include "builder/lowering/itxn/ApplicationCall.h"
 #include "awst/NameGen.h"
 #include "builder/codec/Arc4Defaults.h"
 #include "Logger.h"
@@ -1037,87 +1038,41 @@ void AssemblyBuilder::handleReturn(
 )
 {
 
-	// return(offset, size): EVM pattern bypassing ABI encoding.
-	// Void function: emit data as structured log so callers read it from logs.
-	if (!m_frame.returnType || m_frame.returnType == awst::WType::voidType())
+	auto const size = resolveConstantOffset(_args[1]);
+	auto const* frameType = m_frame.returnType;
+	if (m_frame.returnWirePlan)
 	{
-		auto returnOffset = resolveConstantOffset(_args[0]);
-		auto returnSize = resolveConstantOffset(_args[1]);
-
-		if (returnSize && *returnSize == 0)
-		{
-			// return(_, 0) → unconditional program-exit via AVM `return 1`.
-			// Needed for Yul helpers using EVM `return` as a hard exit inside a nested call.
-
-			auto returnOp = awst::makeIntrinsicCall("return", awst::WType::voidType(), _loc);
-			returnOp->stackArgs.push_back(awst::makeTrue(_loc));
-			_out.push_back(awst::makeExpressionStatement(std::move(returnOp), _loc));
-			m_frame.haltEmitted = true;
-			return;
-		}
-
-		// RUNTIME offset/size are as good as constants here: the payload is
-		// extract3(blob, off, len) either way. This used to fall into the
-		// bare-exit arm above, which SILENTLY DROPPED a runtime-sized payload —
-		// exactly the shape of a tape-playing fallback
-		// (`return(add(b, 32), mload(b))`), whose answers are variable-width.
-		Logger::instance().warning(
-			"assembly return() in void function — emitting "
-			+ (returnSize ? std::to_string(*returnSize) + " bytes" : std::string("runtime-sized payload"))
-			+ " as structured log", _loc
-		);
-
-		// Read the return region from the memory blob: extract3(blob, offset, size)
-		auto offsetU64 = returnOffset
-			? std::shared_ptr<awst::Expression>(awst::makeIntegerConstant(*returnOffset, _loc))
-			: offsetToUint64(_args[0], _loc);
-
-		auto sizeU64 = returnSize
-			? std::shared_ptr<awst::Expression>(awst::makeIntegerConstant(*returnSize, _loc))
-			: offsetToUint64(_args[1], _loc);
-
-		// Slot-routed: the payload region is at the runtime FMP, so the old
-		// slot-0 extract logged the wrong bytes (or panicked) for any
-		// --evm-memory-slots contract whose buffer passed 4096.
-		auto extract = readMemRangeDyn(
-			std::move(offsetU64), std::move(sizeU64), _loc, _out);
-		// log(0x151f7c75 ++ data): on EVM the return() payload IS the
-		// returndata the caller sees, and on AVM every consumer of a call's
-		// result — the typed caller-decode (extract 4,N past the prefix), the
-		// low-level returndata capture, algosdk's ATC — reads the LAST LOG in
-		// the ARC4 return convention. A bare log made the payload invisible to
-		// all of them: the stand-in's `fallback { return(0,0x20) }` answered
-		// 32 raw bytes, the caller's decode wanted 36, and CoWSwapEthFlow's
-		// ctor died on the resulting wrong-width address.
-		auto prefixed = awst::makeConcat(
-			awst::makeBytesConstant({0x15, 0x1f, 0x7c, 0x75}, _loc),
-			std::move(extract), _loc);
-		auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
-		logCall->stackArgs.push_back(std::move(prefixed));
-
-		auto logStmt = awst::makeExpressionStatement(std::move(logCall), _loc);
-		_out.push_back(std::move(logStmt));
-
-		if (m_frame.frameIsProgram)
-		{
-			// Program frame (internal/private/fallback/receive): EVM return()
-			// ends the whole call — halt so the answer log above stays the
-			// LAST log (the return-carrier the caller decodes). A subroutine
-			// return here let the router append its empty void carrier after.
-			auto returnOp = awst::makeIntrinsicCall(
-				"return", awst::WType::voidType(), _loc);
-			returnOp->stackArgs.push_back(awst::makeTrue(_loc));
-			_out.push_back(awst::makeExpressionStatement(std::move(returnOp), _loc));
-			m_frame.haltEmitted = true;
-			return;
-		}
-		auto ret = awst::makeReturnStatement(nullptr, _loc);
-		_out.push_back(std::move(ret));
-		// A subroutine return ends the frame: nothing after it can run, and
-		// puya rejects the unreachable trailing statements.
+		std::vector<awst::WType const*> types;
+		for (auto const& item: *m_frame.returnWirePlan) types.push_back(item.wireType);
+		if (!types.empty()) frameType = types.size() == 1 ? types.front()
+			: m_typeMapper.createType<awst::WTuple>(std::move(types));
+	}
+	auto rawReturn = [&](auto& out) {
+		auto bytes = size && *size == 0 ? std::shared_ptr<awst::Expression>(awst::makeBytesConstant({}, _loc))
+			: readMemRangeDyn(_args[0], _args[1], _loc, out);
+		ApplicationCall::returnRaw(m_typeMapper, std::move(bytes), frameType, _loc, out);
+	};
+	if (!size)
+	{
+		auto empty = awst::makeBlock(_loc);
+		ApplicationCall::returnRaw(m_typeMapper, awst::makeBytesConstant({}, _loc), frameType, _loc, empty->body);
+		_out.push_back(awst::makeIfElse(awst::makeNumericCompare(_args[1], awst::NumericComparison::Eq,
+			awst::makeZero(_loc, _args[1]->wtype), _loc), std::move(empty), nullptr, _loc));
+	}
+	// EVM return bytes bypass the declaration's ABI. The ARC4 facade retains
+	// its typed adaptation for nonempty values, but an empty exit is never a
+	// fabricated default value. Self-call bytes are decoded only by the caller.
+	if (m_typeMapper.profile().contractAbi == ContractAbi::Evm || (size && *size == 0)
+		|| !frameType || frameType == awst::WType::voidType())
+	{
+		rawReturn(_out);
 		m_frame.haltEmitted = true;
 		return;
 	}
+	auto self = awst::makeBlock(_loc);
+	rawReturn(self->body);
+	_out.push_back(awst::makeIfElse(ApplicationCall::selfCallContext(m_typeMapper, _loc),
+		std::move(self), nullptr, _loc));
 
 	// A runtime return region is standard EVM ABI. Decode it through the same
 	// recursive type-directed codec used by abi.decode: solc supplies every
@@ -1153,12 +1108,6 @@ void AssemblyBuilder::handleReturn(
 			else
 				returnValue = TypeCoercion::coerceForAssignment(
 					std::move(returnValue), m_frame.returnType, _loc);
-		}
-
-		if (m_frame.frameIsProgram)
-		{
-			emitArc4ReturnHalt(std::move(returnValue), _loc, _out);
-			return;
 		}
 
 		returnValue = encodeFrameReturn(std::move(returnValue), _loc, _out);

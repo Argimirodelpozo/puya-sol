@@ -4,6 +4,7 @@
 #include "builder/ast/members/SolLengthAccess.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/eb/CalldataReference.h"
+#include "builder/codec/EvmMemoryCodec.h"
 #include "builder/ast/members/SolAddressProperty.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
@@ -163,6 +164,17 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 
 	if (auto slotLen = trySlotModeArrayLength(m_ctx, m_scope, baseExpr, m_loc))
 		return *slotLen;
+
+	if (auto const* array = dynamic_cast<ArrayType const*>(baseExpr.annotation().type);
+		array && array->dataStoredIn(DataLocation::Memory))
+		if (auto reference = SolIndexAccess::resolveBlobReference(m_ctx, m_scope, baseExpr, m_loc))
+		{
+			auto offset = m_ctx.emitSequencedOperand(std::move(reference->effects),
+				std::move(reference->value), true, m_loc);
+			return array->isDynamicallySized()
+				? readEvmMemoryUint64Word(m_ctx.typeMapper, std::move(offset), m_loc, m_ctx.preEffects())
+				: awst::makeIntegerConstant(array->length().str(), m_loc);
+		}
 
 	// Box-backed dynamic arrays use their ARC4 element-count header.
 	if (auto const* ident = SolcFacts::expressionAs<Identifier>(&baseExpr))

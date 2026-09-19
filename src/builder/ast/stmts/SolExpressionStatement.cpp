@@ -38,43 +38,8 @@ SolExpressionStatement::SolExpressionStatement(
 std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
-	// Discarding a reference (including a rebind) must not decode its referent.
-	if (m_node.expression().annotation().type->dataStoredIn(DataLocation::CallData))
-		if (CalldataReference::resolve(m_blk.builderCtx(), m_node.expression(), m_loc))
-		{
-			m_blk.builderCtx().appendEffectsTo(result);
-			return result;
-		}
-
-	// Type expressions as statements (e.g. `s[7][];`) resolve to a type
-	// value with no runtime representation. We still need to walk the
-	// expression tree to pick up side effects (e.g. `((flag = true) ? M : M).D;`
-	// needs the assignment to happen) but we must not emit the final value
-	// expression because our type mapper can't model it.
-	bool isTypeType = dynamic_cast<solidity::frontend::TypeType const*>(
-		m_node.expression().annotation().type) != nullptr;
-
-	auto expr = m_blk.builderCtx().buildExpr(m_node.expression());
-
-	for (auto& p: m_blk.builderCtx().takePreEffects())
-		result.push_back(std::move(p));
-
-	// If buildExpr couldn't produce a value expression, or the expression
-	// is a type-valued expression, skip emitting the final statement to
-	// avoid a null dereference or invalid AWST.
-	if (!expr || isTypeType)
-	{
-		for (auto& p: m_blk.builderCtx().takePostEffects())
-			result.push_back(std::move(p));
-		return result;
-	}
-
-	auto stmt = awst::makeExpressionStatement(std::move(expr), m_loc);
-	result.push_back(stmt);
-
-	for (auto& p: m_blk.builderCtx().takePostEffects())
-		result.push_back(std::move(p));
-
+	m_blk.builderCtx().evaluateForEffects(m_node.expression(), m_loc);
+	m_blk.builderCtx().appendEffectsTo(result);
 	return result;
 }
 
@@ -121,7 +86,7 @@ bool tryReferenceReturn(BlockContext& blk, Return const& node,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
 	auto const& rps = node.annotation().functionReturnParameters->parameters();
-	auto const* returnTuple = dynamic_cast<awst::WTuple const*>(blk.fn.returnType);
+	auto const* returnTuple = rps.size() > 1 ? dynamic_cast<awst::WTuple const*>(blk.fn.returnType) : nullptr;
 	auto slotReturn = [&](size_t i) {
 		return rps[i]->referenceLocation() == VariableDeclaration::Location::Storage
 			&& (returnTuple ? returnTuple->types().at(i) : blk.fn.returnType)
@@ -131,6 +96,18 @@ bool tryReferenceReturn(BlockContext& blk, Return const& node,
 		return rps[i]->referenceLocation() == VariableDeclaration::Location::Memory
 			&& (returnTuple ? returnTuple->types().at(i) : blk.fn.returnType) == awst::WType::uint64Type();
 	};
+	auto calldataReturn = [&](size_t i) {
+		return (returnTuple ? returnTuple->types().at(i) : blk.fn.returnType) == calldataReferenceType();
+	};
+	if (rps.size() == 1 && calldataReturn(0))
+	{
+		auto reference = CalldataReference::resolve(blk.builderCtx(), *node.expression(), loc);
+		if (!reference) throw SizeError("calldata return lost its input coordinates");
+		stmt->value = reference->pack(loc);
+		blk.builderCtx().appendEffectsTo(result);
+		result.push_back(std::move(stmt));
+		return true;
+	}
 	if (rps.size() == 1 && memoryReturn(0))
 	{
 		stmt->value = SolIndexAccess::buildMemoryReference(blk.builderCtx(), blk.scope,
@@ -158,7 +135,7 @@ bool tryReferenceReturn(BlockContext& blk, Return const& node,
 	// biguint slot in that position. Build component-wise.
 	bool anyReferenceRet = false;
 	for (size_t i = 0; i < rps.size(); ++i)
-		anyReferenceRet |= slotReturn(i) || memoryReturn(i);
+		anyReferenceRet |= slotReturn(i) || memoryReturn(i) || calldataReturn(i);
 	if (rps.size() > 1 && anyReferenceRet)
 	{
 		auto& ctx = blk.builderCtx();
@@ -205,6 +182,12 @@ bool tryReferenceReturn(BlockContext& blk, Return const& node,
 				}
 				else if (memoryReturn(ri))
 					v = SolIndexAccess::buildMemoryReference(ctx, blk.scope, *compExpr, rps[ri]->type(), loc);
+				else if (calldataReturn(ri))
+				{
+					auto reference = CalldataReference::resolve(ctx, *compExpr, loc);
+					if (!reference) throw SizeError("calldata return lost its input coordinates");
+					v = reference->pack(loc);
+				}
 				else
 					v = ctx.buildExpr(*compExpr);
 				if (memoryReturn(ri) && v && v->wtype != awst::WType::uint64Type())
@@ -216,7 +199,7 @@ bool tryReferenceReturn(BlockContext& blk, Return const& node,
 						std::move(v), name, id, loc, ctx.preEffects())) return nullptr;
 					v = awst::makeVarExpression(name, awst::WType::uint64Type(), loc);
 				}
-				if (!slotReturn(ri) && !memoryReturn(ri))
+				if (!slotReturn(ri) && !memoryReturn(ri) && !calldataReturn(ri))
 				{
 					auto const* target = blk.typeMapper().map(rps[ri]->type());
 					v = EvmSlotLowering::materializeRefValue(ctx, blk.scope,

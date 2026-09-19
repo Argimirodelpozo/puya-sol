@@ -5,6 +5,10 @@
 #include "awst/NameGen.h"
 #include "builder/context/TranslationContext.h"
 #include "builder/ast/SolExpressionDispatch.h"
+#include "builder/ast/calls/SolInternalCall.h"
+#include "builder/ast/exprs/SolAssignment.h"
+#include "builder/eb/CalldataReference.h"
+#include "builder/solc/SolcFacts.h"
 #include "builder/eb/BinaryOpBuilder.h"
 #include "builder/eb/SolIntegerBuilder.h"
 #include "builder/eb/SolBoolBuilder.h"
@@ -90,7 +94,18 @@ void ContractContext::evaluateForEffects(
 	solidity::frontend::Expression const& _expr,
 	awst::SourceLocation const& _loc)
 {
-	auto lowered = lower(_expr, false);
+	auto lowered = lowerOperand([&]() -> std::shared_ptr<awst::Expression> {
+		if (_expr.annotation().type->dataStoredIn(solidity::frontend::DataLocation::CallData)
+			&& sol_ast::CalldataReference::resolve(*this, _expr, _loc))
+			return nullptr;
+		if (auto const* call = SolcFacts::expressionAs<solidity::frontend::FunctionCall>(&_expr);
+			call && sol_ast::SolInternalCall::hasReferenceReturns(*call))
+			return sol_ast::SolInternalCall(*this, *call).toReferenceAwst();
+		if (auto const* assignment = SolcFacts::expressionAs<solidity::frontend::Assignment>(&_expr))
+			return sol_ast::SolAssignment(*this, *assignment, false).toAwst();
+		auto value = buildValue(_expr);
+		return dynamic_cast<solidity::frontend::TypeType const*>(_expr.annotation().type) ? nullptr : value;
+	}, false);
 	for (auto& statement: lowered.effects.pre)
 		preEffects().push_back(std::move(statement));
 	if (lowered.value)

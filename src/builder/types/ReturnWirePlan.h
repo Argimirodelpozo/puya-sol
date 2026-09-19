@@ -15,6 +15,9 @@ namespace puyasol::builder
 
 class TypeMapper;
 
+/// Internal calldata references retain coordinates and their immutable byte view.
+awst::WType const* calldataReferenceType();
+
 struct ReturnWireElem
 {
 	awst::WType const* nativeType = nullptr;   // element type in method.returnType (post promotion)

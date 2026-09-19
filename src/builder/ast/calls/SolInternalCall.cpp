@@ -19,6 +19,7 @@
 #include "builder/solc/StorageRefPointer.h"
 #include "builder/lowering/intrinsics/AsaIntrinsics.h"
 #include "builder/lowering/itxn/ApplicationCall.h"
+#include "builder/lowering/itxn/InnerCallHandlers.h"
 #include "builder/lowering/abi/Arc4Stdlib.h"
 #include "builder/lowering/calls/CallResolver.h"
 #include "builder/lowering/calls/FunctionPointerBuilder.h"
@@ -26,10 +27,12 @@
 #include "builder/types/TypeMapper.h"
 #include "builder/codec/Arc4Defaults.h"
 #include "builder/codec/EvmMemoryCodec.h"
+#include "builder/codec/SelectorSemantics.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/types/ConversionPlan.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/StoragePlace.hpp"
+#include "builder/yul/AssemblyBuilder.h"
 #include "Logger.h"
 
 #include <algorithm>
@@ -265,6 +268,7 @@ void SolInternalCall::buildSequencedArgs(
 		&& methodTarget->memberName == eb::CallResolver::resolveMethodName(m_ctx, *_funcDef);
 	bool const frame = plan ? plan->calldataFrame && !abiTarget
 		: functionType && m_ctx.typeMapper.analysis().pointerNeedsCalldata(*functionType);
+	bool const libraryFrame = frame && functionType && functionType->kind() == FunctionType::Kind::DelegateCall;
 	std::map<size_t, CalldataReference> references;
 	std::vector<awst::WType const*> paramTypes;
 	if (plan)
@@ -390,12 +394,13 @@ void SolInternalCall::buildSequencedArgs(
 			return SolIndexAccess::buildMemoryReference(m_ctx, m_scope, source, parameterType, m_loc,
 				functionType && functionType->kind() == FunctionType::Kind::DelegateCall);
 		std::shared_ptr<awst::Expression> value;
-		if (frame && parameterType && parameterType->dataStoredIn(DataLocation::CallData))
+		if (frame && !libraryFrame && parameterType && parameterType->dataStoredIn(DataLocation::CallData))
 		{
 			auto reference = CalldataReference::resolve(m_ctx, source, m_loc);
 			if (!reference) throw SizeError("cannot transport this calldata reference across an internal call");
 			reference->offset = m_ctx.emitSequencedOperand({}, reference->offset, true, m_loc);
 			if (reference->length) reference->length = m_ctx.emitSequencedOperand({}, reference->length, true, m_loc);
+			if (reference->data) reference->data = m_ctx.emitSequencedOperand({}, reference->data, true, m_loc);
 			// The callee consumes coordinates, not a speculative copy of the
 			// referent. In particular, forwarding a forged pointer must not
 			// perform bounds checks when the callee only observes its length.
@@ -428,6 +433,39 @@ void SolInternalCall::buildSequencedArgs(
 			? TypeCoercion::coerceScalar(std::move(value), paramTypes[paramIdx], m_loc) : value;
 	};
 	auto values = CallOperands::buildParameters(m_ctx, m_call, m_loc, bindArgument);
+	if (libraryFrame)
+	{
+		// Delegatecall encodes a new immutable input. Coordinates returned by
+		// the library refer to this frame, never the caller's transaction input.
+		std::vector<std::pair<std::string, awst::WType const*>> parameters;
+		std::map<std::string, Type const*> solTypes;
+		for (size_t i = 0; i < values.size(); ++i)
+		{
+			auto const* type = plan->parameters[i].declaration->type();
+			auto value = values[i];
+			if (blobOffsetParamIndices.contains(i)) value = materializeEvmMemoryValue(
+				m_ctx.typeMapper, type, m_ctx.typeMapper.map(type), value, m_loc, m_ctx.preEffects());
+			auto name = "__library_arg_" + std::to_string(awst::NameGen::next("SolInternalCall.calldata"));
+			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(name, value->wtype, m_loc), value, m_loc));
+			parameters.emplace_back(name, value->wtype);
+			solTypes.emplace(name, type);
+			if (type->dataStoredIn(DataLocation::CallData)) references.emplace(i, CalldataReference{type,
+				awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), m_loc),
+				CalldataReference::hasLength(type)
+					? awst::makeVarExpression("__cd_len_" + name, awst::WType::biguintType(), m_loc) : nullptr});
+		}
+		auto blob = awst::makeVarExpression("__cd_blob", awst::WType::bytesType(), m_loc);
+		auto saved = m_scope.function && m_scope.function->hasAssemblyCalldata
+			? m_ctx.emitSequencedOperand({}, blob, true, m_loc) : nullptr;
+		AssemblyBuilder assembly(m_ctx.typeMapper, m_ctx.sourceFile, "library calldata");
+		assembly.setCalldataSolTypes(std::move(solTypes));
+		assembly.prepareCalldata(parameters, m_ctx.preEffects(), m_loc, false);
+		m_resultCalldataFrame = m_ctx.emitSequencedOperand({}, awst::makeReplace3(blob,
+			awst::makeZero(m_loc), SelectorSemantics::functionSelector(m_ctx, *functionType,
+				eb::InnerCallHandlers::buildMethodSelector(m_ctx, _funcDef), m_loc), m_loc), true, m_loc);
+		if (saved) m_ctx.preEffects().push_back(awst::makeAssignmentStatement(blob, saved, m_loc));
+	}
 	for (auto& value: values)
 		args.push_back({std::nullopt, std::move(value)});
 	if (plan)
@@ -435,13 +473,15 @@ void SolInternalCall::buildSequencedArgs(
 			args.push_back({std::nullopt, offsets.at(pi)});
 	if (frame)
 	{
-		if (!m_scope.function || !m_scope.function->hasAssemblyCalldata)
+		if (!libraryFrame && (!m_scope.function || !m_scope.function->hasAssemblyCalldata))
 			throw SizeError("internal calldata consumer has no input frame");
-		awst::pushCallArg(args, awst::makeVarExpression("__cd_blob", awst::WType::bytesType(), m_loc));
+		awst::pushCallArg(args, libraryFrame ? m_resultCalldataFrame
+			: awst::makeVarExpression("__cd_blob", awst::WType::bytesType(), m_loc));
 		for (auto const& [pi, reference]: references)
 		{
 			awst::pushCallArg(args, reference.offset);
 			if (CalldataReference::hasLength(reference.type)) awst::pushCallArg(args, reference.length);
+			awst::pushCallArg(args, libraryFrame ? m_resultCalldataFrame : reference.data);
 		}
 	}
 }
@@ -606,13 +646,17 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 
 	if (_funcDef)
 		applyAliasingGuard(*call, _funcDef, mutations, m_loc);
+	std::shared_ptr<awst::Expression> callResult = call;
+	if (!abiEntry && m_scope.function && (!_funcDef
+		|| m_ctx.typeMapper.analysis().callablesWithRawReturn.contains(_funcDef->id())))
+		callResult = ApplicationCall::propagateRawReturn(m_ctx, std::move(callResult), m_loc);
 
 	if (_funcDef)
 	{
 		auto const& plan = m_ctx.typeMapper.callBoundaryPlan(*_funcDef, m_ctx.currentContract);
 		if (!abiEntry && !plan.writeBackParams.empty())
 		{
-			auto result = m_ctx.emitSequencedOperand({}, call, true, m_loc);
+			auto result = m_ctx.emitSequencedOperand({}, callResult, true, m_loc);
 			auto [original, modified] = plan.unpackReturn(std::move(result), _returnType, m_loc);
 			for (size_t i = 0; i < plan.writeBackParams.size(); ++i)
 				if (auto destination = m_writeBacks.find(plan.writeBackParams[i]);
@@ -637,11 +681,13 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		}
 	}
 
-	std::shared_ptr<awst::Expression> result = call;
+	std::shared_ptr<awst::Expression> result = std::move(callResult);
 	if (abiEntry && functionType && isExternalFunctionPointer(functionType))
 	{
 		result = ApplicationCall::withStaticContext(m_ctx.typeMapper, std::move(result),
 			functionType->stateMutability() <= StateMutability::View, m_loc, m_ctx.preEffects());
+		result = ApplicationCall::decodeRawReturn(m_ctx.typeMapper, std::move(result),
+			functionType->returnParameterTypes(), m_loc, m_ctx.preEffects());
 		if (!functionType->returnParameterTypes().empty())
 			result = awst::makeSingleEvaluation(std::move(result), emittedReturn, awst::nextSingleEvalId(), m_loc);
 		ApplicationCall::setTypedReturnData(m_ctx.typeMapper, result,
@@ -684,8 +730,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 		auto const* getter = variable->functionType(false);
 		std::vector<awst::WType const*> wire;
 		for (auto const* type: getter->returnParameterTypes())
-			wire.push_back(planReturnElement(m_ctx.typeMapper, type,
-				abiReturnNativeType(m_ctx.typeMapper, type)).wireType);
+		{
+			auto const* result = abiReturnNativeType(m_ctx.typeMapper, type);
+			wire.push_back(m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm ? result
+				: planReturnElement(m_ctx.typeMapper, type, result).wireType);
+		}
 		auto* resultType = wire.size() == 1 ? wire.front()
 			: m_ctx.typeMapper.createType<awst::WTuple>(std::move(wire));
 		auto call = awst::makeSubroutineCall(
@@ -754,8 +803,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildFunctionPointerCall(
 	std::vector<std::shared_ptr<awst::Expression>> values;
 	for (auto& argument: arguments)
 		values.push_back(std::move(argument.value));
-	return eb::FunctionPointerBuilder::buildFunctionPointerCall(
+	auto result = eb::FunctionPointerBuilder::buildFunctionPointerCall(
 		m_ctx, std::move(pointer.value), &type, std::move(values), m_loc, std::move(callValue));
+	if (type.kind() == FunctionType::Kind::Internal && m_scope.function)
+		result = ApplicationCall::propagateRawReturn(m_ctx, std::move(result), m_loc);
+	return result;
 }
 
 std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
@@ -763,16 +815,18 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 	auto result = toReferenceAwst();
 	auto const* type = dynamic_cast<FunctionType const*>(m_call.expression().annotation().type);
 	return result && type
-		? materializeEvmMemoryResult(m_ctx.typeMapper, type->returnParameterTypes(), std::move(result), m_loc, m_ctx.preEffects())
+		? materializeReferenceResult(m_ctx.typeMapper, type->returnParameterTypes(), std::move(result), m_loc,
+			m_ctx.preEffects())
 		: result;
 }
 
-bool SolInternalCall::hasMemoryReturns(FunctionCall const& call)
+bool SolInternalCall::hasReferenceReturns(FunctionCall const& call)
 {
 	auto const* type = dynamic_cast<FunctionType const*>(call.expression().annotation().type);
 	if (!type || type->kind() != FunctionType::Kind::Internal) return false;
 	for (auto const* result: type->returnParameterTypes())
-		if (!result->isValueType() && result->dataStoredIn(DataLocation::Memory)) return true;
+		if (!result->isValueType() && (result->dataStoredIn(DataLocation::Memory)
+			|| result->dataStoredIn(DataLocation::CallData))) return true;
 	return false;
 }
 

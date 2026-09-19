@@ -415,6 +415,10 @@ void AssemblyBuilder::emitPlainYulAssignment(
 			_out.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
 				(suffix == "offset" ? "__cd_off_" : "__cd_len_") + base, awst::WType::biguintType(), loc),
 				ensureBiguint(std::move(value), loc), loc));
+			if (suffix == "offset")
+				_out.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
+					"__cd_data_" + base, awst::WType::bytesType(), loc),
+					awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), loc), loc));
 			return;
 		}
 	}
@@ -425,6 +429,9 @@ void AssemblyBuilder::emitPlainYulAssignment(
 		_out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), loc),
 			ensureBiguint(std::move(value), loc), loc));
+		_out.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
+			"__cd_data_" + name, awst::WType::bytesType(), loc),
+			awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), loc), loc));
 		return;
 	}
 
@@ -662,13 +669,7 @@ void AssemblyBuilder::buildExpressionStatement(
 		}
 		if (funcName == "stop")
 		{
-
-			auto halt = awst::makeIntrinsicCall(
-				"return", awst::WType::voidType(), loc);
-			halt->stackArgs.push_back(awst::makeTrue(loc));
-			_out.push_back(
-				awst::makeExpressionStatement(std::move(halt), loc));
-			m_frame.haltEmitted = true;
+			handleReturn({awst::makeZero(loc), awst::makeZero(loc)}, loc, _out);
 			return;
 		}
 		if (funcName == "returndatacopy")

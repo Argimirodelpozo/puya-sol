@@ -82,10 +82,10 @@ private:
 	}
 
 	std::shared_ptr<awst::Expression> word(
-		std::shared_ptr<awst::Expression> position, Statements& out)
+		std::shared_ptr<awst::Expression> position, Statements& out, bool checked = false)
 	{
 		// Shared fetch subroutine (bounds assert lives in its body).
-		if (m_routerBody)
+		if (m_routerBody && !checked)
 		{
 			auto call = awst::makeSubroutineCall(
 				awst::InstanceMethodTarget{"__evm_decw"},
@@ -94,7 +94,7 @@ private:
 			return call;
 		}
 		auto pos = awst::makeEvalOnce(std::move(position), m_loc);
-		bounds(pos, u64(32, m_loc), out);
+		if (!checked) bounds(pos, u64(32, m_loc), out);
 		return awst::makeExtract3(m_blob, pos, u64(32, m_loc), m_loc);
 	}
 
@@ -129,11 +129,11 @@ private:
 		Type const* type,
 		std::shared_ptr<awst::Expression> base,
 		std::shared_ptr<awst::Expression> position,
-		Statements& out)
+		Statements& out, bool checked = false)
 	{
 		type = codec::underlyingType(type);
 		if (!type->isDynamicallyEncoded())
-			return inlineValue(type, std::move(position), out);
+			return inlineValue(type, std::move(position), out, checked);
 
 		auto offset = awst::makeEvalOnce(
 			smallWord(std::move(position), out, "offset"), m_loc);
@@ -143,9 +143,9 @@ private:
 	std::shared_ptr<awst::Expression> inlineValue(
 		Type const* type,
 		std::shared_ptr<awst::Expression> position,
-		Statements& out)
+		Statements& out, bool checked = false)
 	{
-		if (m_routerBody
+		if (m_routerBody && !checked
 			&& (dynamic_cast<AddressType const*>(type)
 				|| dynamic_cast<ContractType const*>(type)))
 		{
@@ -158,7 +158,7 @@ private:
 		}
 		if (codec::isWordType(type))
 			return codec::valueFromEvmWord(
-				m_typeMapper, type, word(std::move(position), out), m_loc, out,
+				m_typeMapper, type, word(std::move(position), out, checked), m_loc, out,
 				// ABI input IS a trust boundary (solc: validator_revert_t_uintN).
 				codec::PaddingPolicy::Validate);
 		if (auto const* array = dynamic_cast<ArrayType const*>(type))
@@ -275,6 +275,7 @@ private:
 			u64(elemType->calldataHeadSize(), m_loc), m_loc);
 		// solc validates the complete head before decoding any elements.
 		bounds(elementsBase, bodySize, out);
+		bool const checkedWord = codec::isWordType(elemType);
 		if (codec::isByteIdenticalEvmWord(elemType))
 		{
 			auto bytes = awst::makeExtract3(m_blob, elementsBase, std::move(bodySize), m_loc);
@@ -289,7 +290,7 @@ private:
 			for (uint64_t i = 0; i < static_cast<uint64_t>(array->length()); ++i)
 				result->values.push_back(codec::valueToArc4(m_typeMapper, elemType,
 					head(elemType, elementsBase, add(elementsBase,
-						u64(i * elemType->calldataHeadSize(), m_loc), m_loc), out), elemW, m_loc));
+						u64(i * elemType->calldataHeadSize(), m_loc), m_loc), out, checkedWord), elemW, m_loc));
 			return result;
 		}
 
@@ -323,7 +324,7 @@ private:
 		auto pos = add(data, awst::makeUInt64BinOp(index, awst::UInt64BinaryOperator::Mult,
 			u64(elemType->calldataHeadSize(), m_loc), m_loc), m_loc);
 		auto value = codec::valueToArc4(m_typeMapper, elemType,
-			head(elemType, data, std::move(pos), body->body), elemW, m_loc);
+			head(elemType, data, std::move(pos), body->body, checkedWord), elemW, m_loc);
 		if (preallocate)
 			body->body.push_back(awst::makeAssignmentStatement(
 				awst::makeIndexExpression(arr, index, elemW, m_loc), std::move(value), m_loc));

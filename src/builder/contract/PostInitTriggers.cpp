@@ -34,8 +34,9 @@ bool computeNeedsPostInit(
 		|| effects.nativeContext || effects.assembly) return true;
 	bool boxReference = false;
 	forEachStateVar(contract, [&](auto const* variable) {
-		if (!variable->isConstant() && effects.stateReferences.count(variable->id())
-			&& storage.shouldUseBoxStorage(*variable)) boxReference = true;
+		if (storage.initializationFor(*variable) == StorageMapper::RootInitialization::DeferredArrayBox
+			|| (!variable->isConstant() && effects.stateReferences.count(variable->id())
+				&& storage.shouldUseBoxStorage(*variable))) boxReference = true;
 	});
 	return boxReference;
 }

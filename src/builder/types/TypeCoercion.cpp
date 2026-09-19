@@ -337,7 +337,8 @@ std::shared_ptr<awst::Expression> checkedNarrowToUint64(
 std::shared_ptr<awst::Expression> TypeCoercion::checkedIndexToUint64(
 	std::vector<std::shared_ptr<awst::Statement>>& _preStmts,
 	std::shared_ptr<awst::Expression> _idx,
-	awst::SourceLocation const& _loc
+	awst::SourceLocation const& _loc,
+	std::shared_ptr<awst::Expression> _length
 )
 {
 	// Array index → uint64 with a bounds PRE-check: a wide (biguint) index >= 2^64 is always out of
@@ -345,8 +346,16 @@ std::shared_ptr<awst::Expression> TypeCoercion::checkedIndexToUint64(
 	// else `arr[2^128]` silently truncates the high bits and reads arr[low-64-bits] instead of
 	// reverting (the downstream `index < length` check only sees the truncated value). Pins to a
 	// temp so a side-effecting index (`a[--i]`) evaluates once.
-	return checkedNarrowToUint64(_preStmts, std::move(_idx), _loc,
+	_idx = checkedNarrowToUint64(_preStmts, std::move(_idx), _loc,
 		"__ckidx_", "TypeCoercion.checkedIndex", "array index out of bounds");
+	if (_length)
+	{
+		_idx = awst::makeEvalOnce(std::move(_idx), _loc);
+		_preStmts.push_back(awst::makeExpressionStatement(awst::makeAssert(
+			awst::makeNumericCompare(_idx, awst::NumericComparison::Lt, std::move(_length), _loc),
+			_loc, "array index out of bounds"), _loc));
+	}
+	return _idx;
 }
 
 std::shared_ptr<awst::Expression> TypeCoercion::checkedAmountToUint64(
@@ -575,6 +584,13 @@ std::shared_ptr<awst::Expression> TypeCoercion::relabelUnsizedBytes(
 	return awst::makeReinterpretCast(std::move(_expr), _targetType, _loc);
 }
 
+awst::WType const* calldataReferenceType()
+{
+	static awst::WTuple const type({awst::WType::biguintType(), awst::WType::biguintType(), awst::WType::bytesType()},
+		std::vector<std::string>{"__calldata_offset", "__calldata_length", "__calldata_data"});
+	return &type;
+}
+
 std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	awst::WType const* _type,
 	awst::SourceLocation const& _loc
@@ -608,6 +624,13 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		auto tuple = awst::makeTupleExpression(_type, _loc);
 		for (auto const* component: tupleType->types())
 			tuple->items.push_back(makeDefaultValue(component, _loc));
+		if (_type == calldataReferenceType())
+		{
+			// solc pushZeroValue / zeroValueFunction: offset = calldatasize(), length = 0.
+			auto data = awst::makeVarExpression("__cd_blob", awst::WType::bytesType(), _loc);
+			tuple->items[0] = coerceScalar(awst::makeLen(data, _loc), awst::WType::biguintType(), _loc);
+			tuple->items[2] = std::move(data);
+		}
 		return tuple;
 	}
 

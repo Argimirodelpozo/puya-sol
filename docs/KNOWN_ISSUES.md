@@ -22,14 +22,20 @@ remains experimental and unsuitable for production funds.
 - **Project metadata:** the root still needs an owner-selected license,
   vulnerability-reporting policy, and contribution/release ownership guidance.
   Dependency licenses do not substitute for first-party project metadata.
-- **Calldata-reference returns:** ordinary aliases, slices, rebinding and
-  internal-call arguments now preserve input coordinates for Yul. Returning
-  a calldata reference through an internal function and binding it in a
-  calldata-observing body is still unsupported: scalar and tuple bindings
-  reject explicitly instead of producing uninitialized pointer locals. This
-  is separate from the memory-model experiment. Narrow scalar words now
-  survive separate assembly blocks and same-type local copies; that is not
-  a promise of arbitrary dirty-word transport across function/ABI boundaries.
+- **Dirty scalar transport:** narrow scalar words survive separate assembly
+  blocks and same-type local copies; this is not a promise of arbitrary
+  dirty-word transport across function/ABI boundaries. Boundary cleanup and
+  validation follow the relevant solc operation.
+- **Foreign-contract virtual-call reachability:** the FireBridge remeasurement
+  fails during `BodyFactsWalker::transferCallFacts` with `Virtual function
+  _update not found`. A minimal reproducer is a contract calling another
+  concrete contract's external method, whose body calls an internal virtual
+  method. The source-reference closure admits the foreign body into the caller's
+  host context; virtual resolution then searches the wrong inheritance chain.
+  Solc accepts the reproducer. This requires a host-aware reachability fix and
+  regression coverage; the green semantic baseline does not cover this case.
+  The [workload report](../tests/sizes/reports/reference-boundaries-real-workloads.json)
+  retains the reproducer, official solc results and failed replay details.
 - **Remapping diagnostics:** malformed import remappings still emit warnings.
   Whether they should fail immediately remains a policy decision; log-file
   opening and source-read failures now have explicit error handling and tests.
@@ -40,6 +46,12 @@ branch/loop, tuple and Yul rebinds. The storage format and remaining direct-copy
 capacities are documented in [storage-format.md](storage-format.md). Self-call
 frame limitations and intentional cross-contract behavior remain in the
 divergence policy, not a claim of full EVM frame emulation.
+
+The former internal calldata-return rejection is also resolved: scalar and tuple
+bindings preserve input coordinates and their immutable byte view across calls,
+modifiers and function pointers. Public-library calls retain their ABI copy
+boundary, and native ARC4 `msg.data` retains its documented compatibility view.
+This does not change the memory model or remove the target's size limits.
 
 Intentional behavior differences belong in [EVM_DIVERGENCE.md](../EVM_DIVERGENCE.md),
 not in the bug backlog. In particular, missing cross-contract static-call

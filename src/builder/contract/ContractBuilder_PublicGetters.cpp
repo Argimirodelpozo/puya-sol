@@ -48,7 +48,8 @@ Expr finishGetterRead(TypeMapper& types, solidity::frontend::FunctionType const&
 	{
 		auto plan = planReturnElement(types, returns[i], abiReturnNativeType(types, returns[i]));
 		values[i] = TypeCoercion::encodeReturnElement(
-			codec::valueFromArc4(types, returns[i], std::move(values[i]), loc), plan, loc);
+			codec::valueFromArc4(types, returns[i], std::move(values[i]), loc), plan, loc,
+			false, types.profile().contractAbi != ContractAbi::Evm);
 	}
 	return packGetterValues(types, std::move(values), loc, getter.returnParameterNames());
 }

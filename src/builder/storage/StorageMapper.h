@@ -74,6 +74,8 @@ public:
 	/// use versioned solc coordinates; ordinary cells retain their named keys.
 	PhysicalBinding physicalBindingFor(
 		solidity::frontend::VariableDeclaration const& _var) const;
+	/// Initialization policy without requiring a foreign child's physical key.
+	RootInitialization initializationFor(solidity::frontend::VariableDeclaration const& _var) const;
 
 	std::shared_ptr<awst::Expression> createStateRead(
 		PhysicalBinding const& _binding, awst::SourceLocation const& _loc);
@@ -222,6 +224,8 @@ public:
 		awst::SourceLocation const& _loc);
 
 private:
+	RootInitialization classifyInitialization(solidity::frontend::VariableDeclaration const& _var,
+		awst::WType const* _type, awst::AppStorageKind _kind) const;
 	PhysicalBinding makeBinding(solidity::frontend::VariableDeclaration const& _var,
 		std::string _name, SlotVariable const* _logicalSlot) const;
 	bool classifyBoxStorage(solidity::frontend::VariableDeclaration const& _var,

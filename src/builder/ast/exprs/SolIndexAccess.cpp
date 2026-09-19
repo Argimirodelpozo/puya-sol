@@ -4,6 +4,8 @@
 #include "builder/ast/calls/SolInternalCall.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/eb/CalldataReference.h"
+#include "builder/eb/CallOperands.h"
+#include "builder/codec/EvmValueCodec.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "awst/NameGen.h"
 #include "builder/eb/NodeBuilder.h"
@@ -75,18 +77,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 			auto idx = buildExpr(*m_indexAccess.indexExpression());
 			if (!idx)
 				return nullptr;
-			{
-				std::vector<std::shared_ptr<awst::Statement>> idxPre;
-				idx = TypeCoercion::checkedIndexToUint64(idxPre, std::move(idx), m_loc);
-				for (auto& ps: idxPre)
-					m_ctx.queuePreEffect(std::move(ps));
-			}
-			idx = awst::makeEvalOnce(std::move(idx), m_loc);
-			auto inBounds = awst::makeNumericCompare(idx,
-				awst::NumericComparison::Lt, awst::makeLen(wv(), m_loc), m_loc);
-			m_ctx.queuePreEffect(awst::makeExpressionStatement(
-				awst::makeAssert(std::move(inBounds), m_loc,
-					"bytes index out of range"), m_loc));
+			idx = TypeCoercion::checkedIndexToUint64(
+				m_ctx.preEffects(), std::move(idx), m_loc, awst::makeLen(wv(), m_loc));
 			auto one = awst::makeExtract3(wv(), idx,
 				awst::makeIntegerConstant(uint64_t{1}, m_loc), m_loc);
 			auto const* resW =
@@ -170,6 +162,70 @@ std::optional<eb::ContractContext::LoweredExpression> SolIndexAccess::resolveBlo
 	return result;
 }
 
+namespace
+{
+
+std::shared_ptr<awst::Expression> buildMemoryConstruction(
+	eb::ContractContext& ctx, Context& scope, Expression const& source,
+	awst::SourceLocation const& loc)
+{
+	if (SolcFacts::retainedMemoryArguments(source).empty()) return nullptr;
+	auto const* structure = dynamic_cast<StructType const*>(source.annotation().type);
+	auto const* array = dynamic_cast<ArrayType const*>(source.annotation().type);
+	auto const* call = SolcFacts::expressionAs<FunctionCall>(&source);
+	auto const* tuple = SolcFacts::expressionAs<TupleExpression>(&source);
+	bool const operandsFirst = call && ctx.viaIRSequencing;
+	int id = awst::NameGen::next("SolIndexAccess.construction");
+	auto name = "__memory_construction_" + std::to_string(id);
+	auto base = awst::makeVarExpression(name, awst::WType::uint64Type(), loc);
+	auto allocate = [&] {
+		auto size = structure ? structure->memoryDataSize() : array->memoryDataSize();
+		for (auto& statement: AssemblyBuilder::emitMemoryAlloc(ctx.typeMapper.profile().scratchLayout,
+			awst::makeIntegerConstant(size.str(), loc), name, id, loc))
+			ctx.queuePreEffect(std::move(statement));
+	};
+	auto write = [&](size_t i, std::shared_ptr<awst::Expression> word) {
+		auto offset = structure ? structure->memoryOffsetOfMember(structure->constructorType()->parameterNames()[i])
+			: solidity::u256(i) * array->memoryStride();
+		AssemblyBuilder::writeMemWordDirect(ctx.typeMapper,
+			awst::makeUInt64BinOp(base, awst::UInt64BinaryOperator::Add,
+				awst::makeIntegerConstant(offset.str(), loc), loc), std::move(word), loc, ctx.preEffects());
+	};
+	auto lower = [&](Expression const& argument, size_t i) {
+		auto const* type = structure ? structure->constructorType()->parameterTypes()[i] : array->baseType();
+		std::shared_ptr<awst::Expression> word;
+		if (!type->isValueType())
+			word = awst::makeLeftPadToN(awst::makeItob(
+				SolIndexAccess::buildMemoryReference(ctx, scope, argument, type, loc), loc), 32, loc);
+		else
+		{
+			auto value = ctx.pinIfWriteBacks(ctx.lower(argument, false), loc);
+			value = ConversionPlan{argument.annotation().type, type, ctx.typeMapper.map(type),
+				ConversionPlan::Context::Initialization}.emit(std::move(value), loc, &ctx.preEffects());
+			word = codec::valueToEvmWord(ctx.typeMapper, type, std::move(value), loc);
+		}
+		word = ctx.emitSequencedOperand({}, std::move(word), true, loc);
+		if (!operandsFirst) write(i, word);
+		return word;
+	};
+	// IR struct calls visit operands first; legacy structs and both inline-array
+	// backends allocate the head first. Reference children always stay shared.
+	if (!operandsFirst) allocate();
+	std::vector<std::shared_ptr<awst::Expression>> words;
+	if (call) words = CallOperands::build(ctx, *call, loc, lower);
+	else
+		for (size_t i = 0; i < tuple->components().size(); ++i)
+			words.push_back(lower(*tuple->components()[i], i));
+	if (operandsFirst)
+	{
+		allocate();
+		for (size_t i = 0; i < words.size(); ++i) write(i, std::move(words[i]));
+	}
+	return base;
+}
+
+} // namespace
+
 std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	eb::ContractContext& _ctx, Context& _scope,
 	solidity::frontend::Expression const& _source, awst::SourceLocation const& _loc,
@@ -178,10 +234,15 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 	using namespace solidity::frontend;
 
 	auto const& _node = SolcFacts::unparenthesized(_source);
+	if (auto construction = buildMemoryConstruction(_ctx, _scope, _node, _loc)) return construction;
 	if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&_node);
-		call && SolInternalCall::hasMemoryReturns(*call)
+		call && SolInternalCall::hasReferenceReturns(*call)
 		&& _node.annotation().type->dataStoredIn(DataLocation::Memory))
-		return SolInternalCall(_ctx, *call).toReferenceAwst();
+	{
+		auto result = _ctx.lowerOperand([&] { return SolInternalCall(_ctx, *call).toReferenceAwst(); }, false);
+		if (!result.value || result.value->wtype != awst::WType::uint64Type()) return nullptr;
+		return _ctx.emitSequencedOperand(std::move(result.effects), std::move(result.value), true, _loc);
+	}
 	if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&_node);
 		call && call->annotation().kind.set() && *call->annotation().kind == FunctionCallKind::TypeConversion
 		&& call->arguments().size() == 1 && !_node.annotation().type->isValueType())
@@ -248,9 +309,10 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 		if (!baseArr) return nullptr;
 		auto parent = resolveBlobOffset(_ctx, _scope, ia->baseExpression(), _loc);
 		if (!parent) return nullptr;
+		// The base can be a call: capture it before evaluating the index and
+		// before reusing it for both the logical length and element address.
+		parent = _ctx.emitSequencedOperand({}, std::move(parent), true, _loc);
 		auto idx = _ctx.pinIfWriteBacks(_ctx.lower(*ia->indexExpression(), false), _loc);
-		idx = builder::TypeCoercion::checkedIndexToUint64(
-			_ctx.preEffects(), std::move(idx), _loc);
 		std::shared_ptr<awst::Expression> base = std::move(parent);
 		std::shared_ptr<awst::Expression> count;
 		if (baseArr->isDynamicallySized())
@@ -264,11 +326,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 		else
 			count = awst::makeIntegerConstant(
 				static_cast<uint64_t>(baseArr->length()), _loc);
-		idx = awst::makeEvalOnce(std::move(idx), _loc);
-		_ctx.queuePreEffect(awst::makeExpressionStatement(
-			awst::makeAssert(awst::makeNumericCompare(
-				idx, awst::NumericComparison::Lt, std::move(count), _loc),
-				_loc, "memory array index out of range"), _loc));
+		idx = TypeCoercion::checkedIndexToUint64(
+			_ctx.preEffects(), std::move(idx), _loc, std::move(count));
 		uint64_t stride = baseArr->isByteArrayOrString()
 			? uint64_t{1} : static_cast<uint64_t>(baseArr->memoryStride());
 		auto slot = awst::makeUInt64BinOp(std::move(base), awst::UInt64BinaryOperator::Add,
@@ -283,7 +342,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 		return slot;
 	}
 
-	// `base.field` → parentOffset + sum of encoded sizes of preceding members.
+	// `base.field` → parentOffset + solc's EVM-memory member offset.
 	if (auto const* ma = SolcFacts::expressionAs<MemberAccess>(&_node))
 	{
 		auto const* structType = dynamic_cast<StructType const*>(
@@ -314,6 +373,14 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMemoryReference(
 	if (!copy)
 		if (auto reference = resolveBlobReference(ctx, scope, source, loc))
 			return ctx.emitSequencedOperand(std::move(reference->effects), std::move(reference->value), true, loc);
+	if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&source);
+		call && SolcFacts::expressionAs<NewExpression>(&SolcFacts::functionExpression(call->expression())))
+		if (auto const* array = dynamic_cast<ArrayType const*>(type))
+		{
+			auto count = TypeCoercion::checkedAllocationSizeToUint64(ctx.preEffects(),
+				CallOperands::evaluate(ctx, *call->arguments().front(), loc), loc);
+			return allocateEvmMemoryArray(ctx.typeMapper, array, std::move(count), loc, ctx.preEffects());
+		}
 	auto const* native = ctx.typeMapper.map(type);
 	auto value = ctx.pinIfWriteBacks(ctx.lower(source, false), loc);
 	value = EvmSlotLowering::materializeRefValue(ctx, scope, std::move(value), source.annotation().type, native, loc);

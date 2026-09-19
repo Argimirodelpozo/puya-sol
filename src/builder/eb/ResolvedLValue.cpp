@@ -47,7 +47,8 @@ bool blobRoot(eb::ContractContext& ctx, Expression const& source)
 	for (auto const* root: SolcFacts::referenceSources(source))
 	{
 		if (auto const* call = SolcFacts::expressionAs<FunctionCall>(root);
-			call && SolInternalCall::hasMemoryReturns(*call)) return true;
+			call && call->annotation().type->dataStoredIn(DataLocation::Memory)
+			&& SolInternalCall::hasReferenceReturns(*call)) return true;
 		if (auto const* id = SolcFacts::expressionAs<Identifier>(root))
 			if (auto const* declaration = id->annotation().referencedDeclaration;
 				declaration && !ctx.scope().bindings.blobAggregates.get(declaration->id()).empty())

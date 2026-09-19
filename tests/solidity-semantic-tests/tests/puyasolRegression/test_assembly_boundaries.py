@@ -6,7 +6,6 @@ from eth_abi import decode, encode
 
 from test_ast_audit import compile_app
 from test_call_operands import invoke
-from test_root_inventory import compile_source
 
 
 @pytest.mark.parametrize("via_ir", [False, True], ids=["legacy", "via-ir"])
@@ -114,15 +113,16 @@ def test_assembly_boundary_call_frames(harness, via_ir, profile, slot):
     "(bytes calldata a, bytes calldata b) = pair(data);",
     "bytes calldata a = data; bytes calldata b = data; (a, b) = pair(data);",
 ])
-def test_returned_calldata_coordinates_fail_closed(tmp_path, via_ir, binding):
-    # Returning descriptors through an internal function is still unsupported.
-    # Reject it explicitly instead of emitting uninitialized pointer locals.
-    result, _, _ = compile_source(tmp_path, """
+def test_returned_calldata_coordinates(harness, tmp_path, via_ir, binding):
+    source = tmp_path / "ReturnedCalldata.sol"
+    source.write_text("""
+        pragma solidity ^0.8.20;
         contract C {
             function one(bytes calldata data) internal pure returns (bytes calldata) { return data; }
             function pair(bytes calldata data) internal pure returns (bytes calldata, bytes calldata) { return (data, data); }
             function run(bytes calldata data) external pure returns (uint256 n) {
-        """ + binding + " assembly { n := a.length } } }",
-        extra=["--via-yul-behavior"] if via_ir else [])
-    assert result.returncode != 0
-    assert "no preserved input coordinates" in result.stderr
+        """ + binding + " assembly { n := a.length } } }")
+    artifacts = harness.compile(source, via_yul_behavior=via_ir)
+    app = harness.deploy(artifacts, "C")
+    for data in (b"", b"abc"):
+        assert invoke(harness, app, "arc4", "run(bytes)", [data]) == (len(data),)

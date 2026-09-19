@@ -248,10 +248,12 @@ public:
 	/// Truncate an array index to uint64 with an out-of-bounds PRE-check: a wide (biguint) index
 	/// >= 2^64 reverts (it can't be a valid index) rather than silently truncating its high bits.
 	/// Asserts (pushed to `_preStmts`) before truncating. Use at every array index-access site.
+	/// When supplied, the logical length is checked even if the element value is discarded.
 	static std::shared_ptr<awst::Expression> checkedIndexToUint64(
 		std::vector<std::shared_ptr<awst::Statement>>& _preStmts,
 		std::shared_ptr<awst::Expression> _idx,
-		awst::SourceLocation const& _loc
+		awst::SourceLocation const& _loc,
+		std::shared_ptr<awst::Expression> _length = nullptr
 	);
 
 	/// Check solc's 64-bit allocation-length ceiling before narrowing. The

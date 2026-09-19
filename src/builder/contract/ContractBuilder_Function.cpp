@@ -3,6 +3,7 @@
 #include "builder/contract/ReturnFinishing.h"
 #include "builder/context/ProgramAnalysis.h"
 #include "builder/lowering/itxn/InnerCallHandlers.h"
+#include "builder/lowering/itxn/ApplicationCall.h"
 #include "builder/target/EvmLayoutMode.h"
 #include "awst/Termination.hpp"
 #include "awst/StatementWalk.h"
@@ -254,6 +255,7 @@ void emitNamedReturnInits(
 	for (auto const& rp: retParams)
 	{
 		if (_skipValueInits) break;   // value zero-init handled by the chain's outer method
+		if (_typeMapper.analysis().elidedMemoryReturnInitializers.contains(rp->id())) continue;
 		if (rp->name().empty() && !(rp->referenceLocation() == VariableDeclaration::Location::Memory
 			&& _typeMapper.analysis().memoryPointerDeclarations.contains(rp->id())))
 			continue;
@@ -261,6 +263,18 @@ void emitNamedReturnInits(
 		if (rp->referenceLocation() == VariableDeclaration::Location::Storage
 			&& _typeMapper.analysis().storageReturnFacts(&_func).bytesKeyed)
 			continue;
+		if (rp->referenceLocation() == VariableDeclaration::Location::CallData)
+		{
+			auto value = TypeCoercion::makeDefaultValue(calldataReferenceType(), _loc);
+			int index = 0;
+			for (auto const* part: {"__cd_off_", "__cd_len_", "__cd_data_"})
+			{
+				auto type = index == 2 ? awst::WType::bytesType() : awst::WType::biguintType();
+				inits.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
+					part + rp->name(), type, _loc), awst::makeTupleItem(value, index++, type, _loc), _loc));
+			}
+			continue;
+		}
 		// --evm-storage-layout: the named return holds a biguint slot.
 		if ((_typeMapper.profile().evmStorageLayout || _typeMapper.analysis().storageReturnFacts(&_func).slotHandle)
 			&& rp->referenceLocation() == VariableDeclaration::Location::Storage)
@@ -371,7 +385,8 @@ void emitImplicitReturn(
 			retStmt->value = std::move(word);
 		else if (auto reference = sol_ast::CalldataReference::local(_fnCtx.scope, rp, _loc))
 		{
-			retStmt->value = reference->read(_fnCtx.tr.contractCtx, _loc);
+			retStmt->value = _returnType == calldataReferenceType() ? reference->pack(_loc)
+				: reference->read(_fnCtx.tr.contractCtx, _loc);
 			_fnCtx.tr.contractCtx.appendEffectsTo(_body.body);
 		}
 		else if (inMemory && _fnCtx.scope.bindings.assemblyAggregates.contains(rp.id())
@@ -408,7 +423,8 @@ void emitImplicitReturn(
 				tuple->items.push_back(std::move(word));
 			else if (auto reference = sol_ast::CalldataReference::local(_fnCtx.scope, rp, _loc))
 			{
-				tuple->items.push_back(reference->read(_fnCtx.tr.contractCtx, _loc));
+				tuple->items.push_back(internalTuple && internalTuple->types().at(ri) == calldataReferenceType()
+					? reference->pack(_loc) : reference->read(_fnCtx.tr.contractCtx, _loc));
 				_fnCtx.tr.contractCtx.appendEffectsTo(_body.body);
 			}
 			else if (_shape.blobReturnsAsOffset && inMemory && memoryUsesBlob(vt))
@@ -621,6 +637,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	// assert) gates on this config.
 	if (!_asInternalCopy)
 		method.arc4MethodConfig = buildARC4Config(_func, method.sourceLocation);
+	bool const arc4Returns = method.arc4MethodConfig && m_typeMapper.profile().contractAbi != ContractAbi::Evm;
 
 	// ARC4 methods: remap param types to ARC4; stash decode ops for deferred
 	// insertion (collectArc4ParamRemaps above).
@@ -661,10 +678,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			awst::pushCallArg(call->args, std::move(value));
 		}
 		std::shared_ptr<awst::Expression> value = call;
+		if (m_typeMapper.analysis().callablesWithRawReturn.contains(_func.id()))
+			value = ApplicationCall::propagateRawReturn(m_typeMapper, std::move(value),
+				signature.wireType, method.sourceLocation, method.body->body);
 		if (!boundary.writeBackParams.empty() && signature.nativeType != awst::WType::voidType())
-			value = boundary.unpackReturn(awst::makeEvalOnce(call, method.sourceLocation),
+			value = boundary.unpackReturn(awst::makeEvalOnce(value, method.sourceLocation),
 				signature.internalType, method.sourceLocation).first;
-		value = materializeEvmMemoryResult(m_typeMapper, m_functionCtx->returnSolTypes(),
+		value = materializeReferenceResult(m_typeMapper, m_functionCtx->returnSolTypes(),
 			std::move(value), method.sourceLocation, method.body->body);
 		if (signature.nativeType == awst::WType::voidType())
 		{
@@ -672,7 +692,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			value = nullptr;
 		}
 		else value = TypeCoercion::encodeReturnValue(m_typeMapper, std::move(value), signature.elements,
-			method.sourceLocation, method.body->body, funcHasInlineAssembly);
+			method.sourceLocation, method.body->body, funcHasInlineAssembly, arc4Returns);
 		method.returnType = signature.wireType;
 		method.body->body.push_back(awst::makeReturnStatement(std::move(value), method.sourceLocation));
 		applyParamDecodeNames(paramDecodes, method);
@@ -695,7 +715,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		for (auto const& p: returnPlan)
 			if (p.encoded || p.masked) { anyWork = true; break; }
 		bool const encodeReturnsAtBuildTime =
-			method.arc4MethodConfig.has_value()
+			arc4Returns
 			&& _func.modifiers().empty()
 			&& anyWork;
 		if (encodeReturnsAtBuildTime)
@@ -752,7 +772,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				method, m_typeMapper, returnPlan,
 				funcHasInlineAssembly,
 				method.arc4MethodConfig.has_value()
-					&& !_func.modifiers().empty());
+					&& (!arc4Returns || !_func.modifiers().empty()));
 
 		applyParamDecodeNames(paramDecodes, method);
 
@@ -778,7 +798,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			buildModifierChain(
 				_func, method, _contractName, paramDecodes,
 				writeBackParams);
-			if (method.arc4MethodConfig.has_value() && anyWork)
+			if (arc4Returns && anyWork)
 			{
 				// Native normalization already handled signed extension, masking,
 				// and assembly wrap. The dispatch boundary only needs ARC4 encoding.

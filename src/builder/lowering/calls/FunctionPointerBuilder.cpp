@@ -37,6 +37,8 @@ awst::WType const* computeReturnType(ContractContext& ctx, FunctionType const* t
 	if (!type || type->returnParameterTypes().empty()) return awst::WType::voidType();
 	auto const& returns = type->returnParameterTypes();
 	auto representation = [&](Type const* result) {
+		if (type->kind() == FunctionType::Kind::Internal && result->dataStoredIn(DataLocation::CallData))
+			return calldataReferenceType();
 		return type->kind() == FunctionType::Kind::Internal && !result->isValueType()
 			&& result->dataStoredIn(DataLocation::Memory) ? awst::WType::uint64Type() : ctx.typeMapper.map(result);
 	};
@@ -323,6 +325,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		// option effects have already executed even though no payment is emitted.
 		selfCall = ApplicationCall::withStaticContext(_ctx.typeMapper, std::move(selfCall),
 			_funcType->stateMutability() <= StateMutability::View, _loc, ifStmt->ifBranch->body);
+		selfCall = ApplicationCall::decodeRawReturn(_ctx.typeMapper, std::move(selfCall),
+			_funcType->returnParameterTypes(), _loc, ifStmt->ifBranch->body);
 		auto& foreign = ifStmt->elseBranch->body;
 		auto app = awst::makeAsApplication(extractU64(0), _loc);
 		auto payment = _callValue ? buildNativePayment(_ctx.typeMapper.profile(),
@@ -332,8 +336,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 
 		if (retType == awst::WType::voidType())
 		{
-			ifStmt->ifBranch->body.push_back(awst::makeExpressionStatement(selfCall, _loc));
-			ApplicationCall::setReturnData(_ctx.typeMapper, awst::makeBytesConstant({}, _loc),
+			ApplicationCall::setTypedReturnData(_ctx.typeMapper, std::move(selfCall), {}, evmContractAbi,
 				_loc, ifStmt->ifBranch->body);
 			_ctx.preEffects().push_back(std::move(ifStmt));
 			auto vc = awst::makeVoidConstant(_loc);
@@ -477,6 +480,7 @@ awst::ContractMethod buildDispatchSignature(
 				dispatch.args.emplace_back("__cd_off_" + std::to_string(i), awst::WType::biguintType(), _loc);
 				if (sol_ast::CalldataReference::hasLength(type))
 					dispatch.args.emplace_back("__cd_len_" + std::to_string(i), awst::WType::biguintType(), _loc);
+				dispatch.args.emplace_back("__cd_data_" + std::to_string(i), awst::WType::bytesType(), _loc);
 			}
 	}
 	return dispatch;
@@ -553,7 +557,8 @@ std::shared_ptr<awst::Block> buildDispatchEntryArm(
 			{
 				auto materialized = _ctx.lowerOperand([&] {
 					sol_ast::CalldataReference reference{sourceType, awst::makeVarExpression(
-						"__cd_off_" + std::to_string(i), awst::WType::biguintType(), _loc), nullptr};
+						"__cd_off_" + std::to_string(i), awst::WType::biguintType(), _loc), nullptr,
+						awst::makeVarExpression("__cd_data_" + std::to_string(i), awst::WType::bytesType(), _loc)};
 					if (sol_ast::CalldataReference::hasLength(sourceType))
 						reference.length = awst::makeVarExpression("__cd_len_" + std::to_string(i), awst::WType::biguintType(), _loc);
 					return reference.read(_ctx, _loc);

@@ -68,6 +68,10 @@ public:
 	/// a declared storage alias is known, or whether the result is a fresh value.
 	static std::vector<solidity::frontend::Expression const*> referenceSources(
 		solidity::frontend::Expression const& _expression);
+	/// Memory-reference children retained by a fresh struct/inline-array head.
+	/// These are containment edges, not aliases of the enclosing object.
+	static std::vector<solidity::frontend::Expression const*> retainedMemoryArguments(
+		solidity::frontend::Expression const& expression);
 
 	/// Concrete function denoted by a call/reference expression. Uses solc's
 	/// requiredLookup and resolveVirtual; super's lexical owner comes from its
@@ -109,6 +113,7 @@ public:
 		std::map<std::string, std::string> constantValues;
 		bool usesStorage = false;  ///< Reachable storage builtins, not pure .slot metadata.
 		bool usesCalldata = false;
+		bool canTerminate = false;
 	};
 
 	/// Disambiguate once using solc's lexical scopes, remap external references,

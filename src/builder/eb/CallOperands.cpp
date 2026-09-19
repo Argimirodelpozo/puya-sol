@@ -76,7 +76,7 @@ CallOperands::Expr CallOperands::evaluate(eb::ContractContext& ctx,
 	// Mutable lvalues remain referable. Temporaries must execute now even
 	// when their carrier is mutable; encoding waits until every argument runs.
 	bool pin = operand.value && operand.value->wtype
-		&& (operand.value->wtype->immutable() || !*source.annotation().isLValue);
+		&& (operand.value->wtype->immutable() || !*SolcFacts::unparenthesized(source).annotation().isLValue);
 	return ctx.emitSequencedOperand(std::move(operand.effects), std::move(operand.value), pin, loc);
 }
 

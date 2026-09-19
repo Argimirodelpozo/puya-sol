@@ -459,22 +459,37 @@ StorageMapper::PhysicalBinding StorageMapper::makeBinding(
 		binding.initialization = RootInitialization::Unmaterialized;
 		return binding;
 	}
-	if (profile().evmStorageLayout && binding.storageClass == StorageClass::Persistent)
-		binding.initialization = RootInitialization::Slot;
-	else if (binding.kind == awst::AppStorageKind::AppGlobal)
-		binding.initialization = RootInitialization::NamedCell;
-	else if (type && (type->kind() == awst::WTypeKind::ARC4DynamicArray
+	binding.initialization = classifyInitialization(_var, type, binding.kind);
+	return binding;
+}
+
+StorageMapper::RootInitialization StorageMapper::classifyInitialization(
+	solidity::frontend::VariableDeclaration const& _var, awst::WType const* type,
+	awst::AppStorageKind kind) const
+{
+	if (_var.isConstant()
+		|| _var.referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient)
+		return RootInitialization::None;
+	if (!type) return RootInitialization::Unmaterialized;
+	if (profile().evmStorageLayout && !_var.immutable()) return RootInitialization::Slot;
+	if (kind == awst::AppStorageKind::AppGlobal) return RootInitialization::NamedCell;
+	if (type->kind() == awst::WTypeKind::ARC4DynamicArray
 		|| type->kind() == awst::WTypeKind::ARC4StaticArray
-		|| awst::isDynamicBytes(type)))
+		|| awst::isDynamicBytes(type))
 		// Retain the legacy mapping-root bytes placeholder as well as arrays.
 		// This says nothing about the existence of a keyed mapping entry.
-		binding.initialization = arc4StaticArrayTotalBytes(type) > MAX_PREALLOC_BYTES
+		return arc4StaticArrayTotalBytes(type) > MAX_PREALLOC_BYTES
 			? RootInitialization::UnallocatedArrayBox : RootInitialization::DeferredArrayBox;
-	else if (type && type->kind() == awst::WTypeKind::ARC4Struct && _var.value())
-		binding.initialization = RootInitialization::ExplicitBox;
-	else
-		binding.initialization = RootInitialization::LazyBox;
-	return binding;
+	return type->kind() == awst::WTypeKind::ARC4Struct && _var.value()
+		? RootInitialization::ExplicitBox : RootInitialization::LazyBox;
+}
+
+StorageMapper::RootInitialization StorageMapper::initializationFor(
+	solidity::frontend::VariableDeclaration const& _var) const
+{
+	if (auto it = m_bindings.find(_var.id()); it != m_bindings.end()) return it->second.initialization;
+	return classifyInitialization(_var, m_typeMapper.tryMapStorageRepresentation(_var.type()),
+		shouldUseBoxStorage(_var) ? awst::AppStorageKind::Box : awst::AppStorageKind::AppGlobal);
 }
 
 void StorageMapper::beginContract(StorageLayout const& _layout, std::string const& _sourceFile)

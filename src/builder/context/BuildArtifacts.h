@@ -39,6 +39,8 @@ struct BuildArtifacts
 
 	struct ContractEmission
 	{
+		int64_t sourceId = 0;
+		std::set<int> scratchSlots;
 		std::set<std::string> boxProvisionedChildren;
 		std::map<std::string, std::string> helpers;
 		std::vector<awst::ContractMethod> pendingHelpers;
@@ -49,8 +51,8 @@ struct BuildArtifacts
 	class ContractScope
 	{
 	public:
-		explicit ContractScope(BuildArtifacts& owner)
-			: m_scope(owner.m_contract, &m_value) {}
+		explicit ContractScope(BuildArtifacts& owner, int64_t sourceId)
+			: m_scope(owner.m_contract, &m_value) { m_value.sourceId = sourceId; }
 		ContractScope(ContractScope const&) = delete;
 		ContractScope& operator=(ContractScope const&) = delete;
 	private:
@@ -84,10 +86,20 @@ struct BuildArtifacts
 	std::map<std::string, std::string> pathSpecializationIds;
 	std::vector<PathSpecialization> pendingPathSpecializations;
 	bool needsRipemd160 = false;
-	/// Shared by outlined Yul helpers and their Solidity host frame. Unit-wide
-	/// so uses in freestanding functions also reserve and initialize the slot.
-	bool usesReturnData = false;
-	bool usesStaticContext = false;
+	struct ContractScratchUses
+	{
+		std::shared_ptr<awst::Contract> contract;
+		int64_t sourceId;
+		std::set<int> slots;
+	};
+	/// Resolve ownership after late path-specialized bodies have also lowered.
+	std::vector<ContractScratchUses> pendingScratchReservations;
+	std::map<int64_t, std::set<int>> freestandingScratchSlots;
+	void noteScratchUse(int slot)
+	{
+		(currentFreestandingFunctionId >= 0 ? freestandingScratchSlots[currentFreestandingFunctionId]
+			: contract().scratchSlots).insert(slot);
+	}
 	/// AST id of the freestanding (library/free) function currently being
 	/// translated, or -1 during contract translation. Freestanding bodies
 	/// lower BEFORE any contract builds, so their admin-slot uses must not

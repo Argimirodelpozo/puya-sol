@@ -306,6 +306,9 @@ void AssemblyBuilder::initCalldataPointerLocals(
 				_out.push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression("__cd_len_" + name, awst::WType::biguintType(), _loc),
 					calldataDynLength(cdIt->second, solType, _loc), _loc));
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression("__cd_data_" + name, awst::WType::bytesType(), _loc),
+			awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc), _loc));
 	}
 }
 

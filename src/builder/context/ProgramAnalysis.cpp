@@ -460,6 +460,7 @@ struct BodyFactsWalker: ASTConstVisitor
 	std::vector<std::pair<int64_t, FunctionType const*>> indirectCalls;
 	std::map<int64_t, std::set<FunctionDefinition const*, ASTNode::CompareByID>> memoryCallTargets;
 	std::vector<std::tuple<int64_t, FunctionCall const*, std::optional<size_t>>> memoryCallTransfers;
+	std::set<int64_t> retainedMemoryCalls;
 	bool collectOffsets;
 	int64_t callableId = 0;
 	BodyFactsWalker(ProgramAnalysis& _analysis, bool _collectOffsets)
@@ -590,6 +591,9 @@ struct BodyFactsWalker: ASTConstVisitor
 		auto const* type = value.annotation().type;
 		if (!type || type->isValueType() || !target.type()
 			|| target.type()->isValueType()) return;
+		if (target.referenceLocation() == VariableDeclaration::Location::Memory
+			&& !SolcFacts::retainedMemoryArguments(value).empty())
+			analysis.memoryPointerDeclarations.insert(target.id());
 		for (auto const* source: SolcFacts::referenceSources(value))
 		{
 			if (auto const* identifier = SolcFacts::expressionAs<Identifier>(source))
@@ -664,6 +668,7 @@ struct BodyFactsWalker: ASTConstVisitor
 	{
 		analysis.callablesWithInlineAssembly.insert(callableId);
 		auto prepared = SolcFacts::prepareAssembly(_assembly);
+		if (prepared->facts.canTerminate) analysis.callablesWithRawReturn.insert(callableId);
 		if (prepared->facts.usesCalldata)
 			analysis.callablesWithCalldata.insert(callableId);
 		if (prepared->facts.usesStorage)
@@ -687,8 +692,29 @@ struct BodyFactsWalker: ASTConstVisitor
 		return false;
 	}
 
+	void retainConstruction(Expression const& expression)
+	{
+		for (auto const* argument: SolcFacts::retainedMemoryArguments(expression))
+			for (auto const* source: SolcFacts::referenceSources(*argument))
+				if (auto const* identifier = SolcFacts::expressionAs<Identifier>(source))
+				{
+					if (auto const* variable = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration);
+						variable && variable->referenceLocation() == VariableDeclaration::Location::Memory)
+						analysis.memoryPointerDeclarations.insert(variable->id());
+				}
+				else if (auto const* call = SolcFacts::expressionAs<FunctionCall>(source))
+					retainedMemoryCalls.insert(call->id());
+	}
+
+	bool visit(TupleExpression const& tuple) override
+	{
+		retainConstruction(tuple);
+		return true;
+	}
+
 	bool visit(FunctionCall const& _call) override
 	{
+		retainConstruction(_call);
 		calls.emplace_back(callableId, &_call);
 		if (auto const* type = dynamic_cast<FunctionType const*>(_call.expression().annotation().type);
 			type && type->kind() == FunctionType::Kind::Internal
@@ -726,6 +752,40 @@ struct BodyFactsWalker: ASTConstVisitor
 					for (auto const& [_, function]: analysis.functionDeclarations)
 						if (hasInternalSignature(*function, *type)) targets.insert(function);
 			}
+			for (auto const* target: targets) analysis.callableCallers[target->id()].insert(caller);
+		}
+		// Keep allocation behavior whenever an enclosing caller or a callee
+		// can observe raw memory. Purity alone does not establish this fact.
+		auto memoryObservers = analysis.callablesWithInlineAssembly;
+		auto memoryEdges = analysis.callableCallers;
+		for (auto const& [callee, callers]: analysis.callableCallers)
+			for (auto caller: callers) memoryEdges[caller].insert(callee);
+		closeOverEdges(memoryObservers, memoryEdges);
+		std::set<int64_t> freshValueReturns;
+		for (auto const& [id, function]: analysis.functionDeclarations)
+		{
+			if (!function->isImplemented() || !function->modifiers().empty()
+				|| memoryObservers.contains(id) || function->body().statements().size() != 1) continue;
+			auto const* statement = dynamic_cast<Return const*>(function->body().statements().front().get());
+			if (!statement || !statement->expression()) continue;
+			for (auto const& result: function->returnParameters())
+				if (result->name().empty() && result->referenceLocation() == VariableDeclaration::Location::Memory)
+					analysis.elidedMemoryReturnInitializers.insert(result->id());
+			if (function->returnParameters().size() != 1) continue;
+			auto const& value = SolcFacts::unparenthesized(*statement->expression());
+			bool fresh = SolcFacts::expressionAs<Literal>(&value) != nullptr;
+			if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&value))
+				fresh = call->annotation().kind.set()
+					&& *call->annotation().kind == FunctionCallKind::StructConstructorCall
+					&& SolcFacts::retainedMemoryArguments(value).empty();
+			if (auto const* tuple = SolcFacts::expressionAs<TupleExpression>(&value); tuple && tuple->isInlineArray())
+				fresh = static_cast<ArrayType const*>(value.annotation().type)->baseType()->isValueType();
+			if (fresh) freshValueReturns.insert(id);
+		}
+		for (auto const& [caller, call]: calls)
+		{
+			auto const& targets = memoryCallTargets[call->id()];
+			auto arguments = SolcFacts::callArguments(*call);
 			for (auto const* target: targets)
 			{
 				for (size_t i = 0; i < arguments.size(); ++i)
@@ -735,9 +795,18 @@ struct BodyFactsWalker: ASTConstVisitor
 						analysis.referenceAssignments[target->parameters()[i]->id()].insert(
 							(*targets.begin())->parameters()[i]->id());
 					}
-				for (auto const& result: target->returnParameters())
-					if (result->referenceLocation() == VariableDeclaration::Location::Memory)
-						analysis.memoryPointerDeclarations.insert(result->id());
+				for (size_t i = 0; i < target->returnParameters().size(); ++i)
+					if (auto const& result = target->returnParameters()[i];
+						result->referenceLocation() == VariableDeclaration::Location::Memory)
+					{
+						// Indirect dispatch has a signature-wide pointer return convention.
+						if (!freshValueReturns.contains(target->id()) || retainedMemoryCalls.contains(call->id())
+							|| eb::CallResolver::plan(*call).isFunctionPointer)
+							analysis.memoryPointerDeclarations.insert(result->id());
+						// Indirect/virtual targets must agree on the physical return
+						// convention, just as their reference parameters do.
+						analysis.referenceAssignments[result->id()].insert((*targets.begin())->returnParameters()[i]->id());
+					}
 			}
 		}
 		for (auto const& [destination, call, component]: memoryCallTransfers)
@@ -760,6 +829,8 @@ void collectBodyFacts(BodyFactsWalker& _walker)
 			for (auto const& parameter: function->returnParameters())
 				if (parameter->referenceLocation() == VariableDeclaration::Location::Storage)
 					_walker.slotTransfers[parameter->id()].insert(function->id());
+				else if (parameter->referenceLocation() == VariableDeclaration::Location::CallData)
+					_walker.analysis.callablesWithCalldata.insert(function->id());
 			function->body().accept(_walker);
 			for (auto const& modifier: function->modifiers())
 				if (auto const* arguments = modifier->arguments())
@@ -858,6 +929,7 @@ ProgramAnalysis ProgramAnalysis::analyze(
 	// monotone parameter-transfer graph without an arbitrary depth cutoff.
 	collectBodyFacts(bodyFactsWalker);
 	bodyFactsWalker.transferCallFacts();
+	closeOverEdges(result.callablesWithRawReturn, result.callableCallers);
 	for (size_t previous = size_t(-1); previous != result.callablesWithCalldata.size();)
 	{
 		previous = result.callablesWithCalldata.size();

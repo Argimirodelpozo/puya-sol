@@ -1,4 +1,5 @@
 #include "builder/ast/calls/SolStructConstruction.h"
+#include "builder/ast/exprs/SolIndexAccess.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/ConversionPlan.h"
 #include "builder/eb/AssignmentHelper.h"
@@ -10,6 +11,8 @@ namespace puyasol::builder::sol_ast
 
 std::shared_ptr<awst::Expression> SolStructConstruction::toAwst()
 {
+	if (auto offset = SolIndexAccess::resolveBlobOffset(m_ctx, m_scope, m_call, m_loc))
+		return SolIndexAccess::readBlobValue(m_ctx, std::move(offset), solType(), m_loc);
 	auto const* structure = dynamic_cast<solidity::frontend::StructType const*>(solType());
 	auto const* representation = dynamic_cast<awst::ARC4Struct const*>(wtype());
 	assert(structure && representation);

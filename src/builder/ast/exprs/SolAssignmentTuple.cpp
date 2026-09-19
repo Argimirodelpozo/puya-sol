@@ -333,6 +333,8 @@ bool SolAssignment::emitTupleComponentWrite(
 			auto const* targetType = m_ctx.typeMapper.map(declaration->type());
 			auto copy = m_ctx.lowerOperand([&] {
 				assert(_sourceType);
+				if (auto reference = CalldataReference::unpack(_sourceType->components()[i], value, m_loc))
+					value = reference->read(m_ctx, m_loc);
 				value = EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
 					std::move(value), _sourceType->components()[i], targetType, m_loc);
 				value = ConversionPlan{_sourceType->components()[i], declaration->type(), targetType,
@@ -390,6 +392,8 @@ bool SolAssignment::emitTupleComponentWrite(
 			if (isAssemblyScalarCopy(assignValue->wtype))
 				return resolved->second->write(assignValue);
 			auto const* sourceType = _sourceType->components()[i];
+			if (auto reference = CalldataReference::unpack(sourceType, assignValue, m_loc))
+				assignValue = reference->read(m_ctx, m_loc);
 			if (!sourceType->isValueType() && sourceType->dataStoredIn(DataLocation::Memory)
 				&& assignValue->wtype == awst::WType::uint64Type())
 			{

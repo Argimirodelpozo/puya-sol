@@ -45,16 +45,13 @@ bool SolVariableDeclaration::tryCalldataReferenceBinding(
 	Expression const* initialValue,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
-	if (decl.referenceLocation() != VariableDeclaration::Location::CallData || !initialValue) return false;
-	if (auto reference = CalldataReference::resolve(m_blk.builderCtx(), *initialValue, m_loc))
-	{
-		reference->bind(m_blk.builderCtx(), decl, m_loc);
-		m_blk.builderCtx().appendEffectsTo(result);
-		return true;
-	}
-	if (m_blk.fn.hasAssemblyCalldata)
-		throw SizeError("calldata reference initializer has no preserved input coordinates");
-	return false;
+	if (decl.referenceLocation() != VariableDeclaration::Location::CallData || !m_blk.fn.hasAssemblyCalldata) return false;
+	auto reference = initialValue ? CalldataReference::resolve(m_blk.builderCtx(), *initialValue, m_loc)
+		: CalldataReference::unpack(decl.type(), TypeCoercion::makeDefaultValue(calldataReferenceType(), m_loc), m_loc);
+	if (!reference) throw SizeError("calldata reference initializer has no preserved input coordinates");
+	reference->bind(m_blk.builderCtx(), decl, m_loc);
+	m_blk.builderCtx().appendEffectsTo(result);
+	return true;
 }
 
 bool SolVariableDeclaration::trySlotModeStoragePointer(
@@ -125,6 +122,8 @@ std::shared_ptr<awst::Expression> SolVariableDeclaration::convertInitValue(
 	if (isAssemblyScalarCopy(value->wtype)) return value;
 	if (auto const* tuple = dynamic_cast<TupleType const*>(sourceType);
 		tuple && tuple->components().size() == 1) sourceType = tuple->components().front();
+	if (auto reference = CalldataReference::unpack(sourceType, value, m_loc))
+		value = reference->read(m_blk.builderCtx(), m_loc);
 	if (decl.referenceLocation() != VariableDeclaration::Location::Storage)
 	{
 		value = StorageMapper::makePartialBoxReadWithDefault(
@@ -415,7 +414,7 @@ bool SolVariableDeclaration::tryBlobOffsetBinding(
 	return false;
 }
 
-bool SolVariableDeclaration::tryAsmBytesAllocation(
+bool SolVariableDeclaration::tryAsmArrayAllocation(
 	VariableDeclaration const& decl, Expression const* initialValue,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
 {
@@ -423,20 +422,17 @@ bool SolVariableDeclaration::tryAsmBytesAllocation(
 		|| !m_blk.scope.bindings.assemblyAggregates.contains(decl.id())) return false;
 	auto const* array = dynamic_cast<ArrayType const*>(decl.type());
 	auto const* call = SolcFacts::expressionAs<FunctionCall>(initialValue);
-	if (!array || !array->isByteArrayOrString() || !call
+	if (!array || !call
 		|| !SolcFacts::expressionAs<NewExpression>(&SolcFacts::functionExpression(call->expression()))) return false;
 
-	// Decide the representation before lowering new bytes/string(n): only the
-	// length is needed for blob allocation. Lower it once, including write-backs.
+	// Allocate directly in the required representation, including recursive
+	// struct arrays whose compact value projection cannot preserve references.
 	auto& bc = m_blk.builderCtx();
-	auto length = TypeCoercion::coerceScalar(
-		bc.pinIfWriteBacks(bc.lower(*call->arguments().front(), false), m_loc),
-		awst::WType::uint64Type(), m_loc);
+	auto value = SolIndexAccess::buildMemoryReference(bc, m_blk.scope, *initialValue, array, m_loc);
 	bc.appendEffectsTo(result);
 	std::string offset = "__blobagg_off_" + std::to_string(decl.id());
-	for (auto& statement: AssemblyBuilder::emitBytesBlobAlloc(
-		m_blk.typeMapper(), std::move(length), offset, static_cast<int>(decl.id()), m_loc))
-		result.push_back(std::move(statement));
+	result.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(offset, awst::WType::uint64Type(), m_loc), std::move(value), m_loc));
 	m_blk.scope.bindings.blobAggregates.set(decl.id(), offset);
 	return true;
 }
@@ -448,7 +444,7 @@ bool SolVariableDeclaration::tryAsmAggregateInit(
 {
 	if (!initialValue || decl.referenceLocation() != VariableDeclaration::Location::Memory
 		|| !m_blk.scope.bindings.assemblyAggregates.contains(decl.id())) return false;
-	// Calls, casts and new non-bytes arrays all use the recursive EVM-memory
+	// Calls and casts use the recursive EVM-memory
 	// writer. Its input was already lowered once; prerequisites precede the spill.
 	m_blk.builderCtx().appendEffectsTo(result);
 	std::string offset = "__blobagg_off_" + std::to_string(decl.id());
@@ -567,7 +563,8 @@ void SolVariableDeclaration::buildTupleDestructuring(
 			std::move(baseRef), static_cast<int>(i), slotType, m_loc);
 
 		auto const* sourceType = rhsSolTuple->components().at(i);
-		if (auto reference = CalldataReference::unpack(decl.type(), itemExpr, m_loc))
+		if (auto reference = CalldataReference::unpack(decl.type(), itemExpr, m_loc);
+			reference && decl.referenceLocation() == VariableDeclaration::Location::CallData)
 		{
 			reference->bind(ctx, decl, m_loc);
 			ctx.appendEffectsTo(result);
@@ -612,7 +609,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		if (trySlotModeStoragePointer(decl, initialValue, result))
 			return result;
 
-		if (tryAsmBytesAllocation(decl, initialValue, result))
+		if (tryAsmArrayAllocation(decl, initialValue, result))
 			return result;
 		if (initialValue && decl.referenceLocation() == VariableDeclaration::Location::Memory)
 			if (auto reference = SolIndexAccess::resolveBlobReference(

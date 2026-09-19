@@ -571,7 +571,7 @@ void ContractBuilder::emitSelfCallDispatch(
 		std::shared_ptr<awst::Expression> bytes) {
 		auto result = awst::makeTupleExpression(resultType, loc);
 		result->items = {awst::makeBoolConstant(success, loc),
-			ApplicationCall::setReturnData(m_typeMapper, std::move(bytes), loc, block->body)};
+			ApplicationCall::finishSelfCall(m_typeMapper, std::move(bytes), loc, block->body)};
 		block->body.push_back(awst::makeReturnStatement(std::move(result), loc));
 	};
 	auto fallback = [&](FunctionDefinition const* function) {

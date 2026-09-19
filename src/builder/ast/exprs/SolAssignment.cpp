@@ -38,8 +38,8 @@ namespace puyasol::builder::sol_ast
 using namespace solidity::frontend;
 using Token = solidity::frontend::Token;
 
-SolAssignment::SolAssignment(eb::ContractContext& _ctx, Assignment const& _node)
-	: SolExpression(_ctx, _node), m_assignment(_node)
+SolAssignment::SolAssignment(eb::ContractContext& _ctx, Assignment const& _node, bool _resultUsed)
+	: SolExpression(_ctx, _node), m_assignment(_node), m_resultUsed(_resultUsed)
 {
 }
 
@@ -61,7 +61,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			if (auto reference = CalldataReference::resolve(m_ctx, m_assignment.rightHandSide(), m_loc))
 			{
 				reference->bind(m_ctx, *declaration, m_loc);
-				return reference->read(m_ctx, m_loc);
+				return m_resultUsed ? reference->read(m_ctx, m_loc) : awst::makeVoidConstant(m_loc);
 			}
 			else if (m_scope.function && m_scope.function->hasAssemblyCalldata)
 				throw SizeError("calldata reference assignment has no preserved input coordinates");
@@ -241,7 +241,8 @@ SolAssignment::tryHandleAddressedWrite()
 			auto offset = m_ctx.emitSequencedOperand(std::move(reference->effects),
 				std::move(reference->value), true, m_loc);
 			ResolvedLValue target(m_ctx, lhs, m_loc, std::move(resolution));
-			return SolIndexAccess::readBlobValue(m_ctx, target.writeMemoryReference(std::move(offset)), type, m_loc);
+			offset = target.writeMemoryReference(std::move(offset));
+			return m_resultUsed ? SolIndexAccess::readBlobValue(m_ctx, std::move(offset), type, m_loc) : offset;
 		}
 	auto rhs = m_ctx.lower(m_assignment.rightHandSide(), false);
 	auto value = m_ctx.emitSequencedOperand(std::move(rhs.effects), std::move(rhs.value), true, m_loc);
@@ -281,7 +282,7 @@ SolAssignment::tryHandleBlobRespill()
 			std::move(reference->value), true, m_loc);
 		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
 			m_scope.bindings.blobAggregates.get(lvd->id()), awst::WType::uint64Type(), m_loc), offset, m_loc));
-		return SolIndexAccess::readBlobValue(m_ctx, std::move(offset), lvd->type(), m_loc);
+		return m_resultUsed ? SolIndexAccess::readBlobValue(m_ctx, std::move(offset), lvd->type(), m_loc) : offset;
 	}
 	// Blob-backing is selected per declaration whenever Yul observes an EVM
 	// pointer, not only by a universal memory profile. Therefore

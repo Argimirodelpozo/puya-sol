@@ -947,7 +947,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	bool _emitEvmStorageRuntime
 )
 {
-	BuildArtifacts::ContractScope emissions(m_typeMapper.artifacts());
+	BuildArtifacts::ContractScope emissions(m_typeMapper.artifacts(), _contract.id());
 	awst::NameGen::Scope namingScope;
 	std::string const contractName = beginContract(_contract, _storagePlan);
 	std::set<int64_t> const overriddenIds = collectOverloadedNames(_contract);
@@ -998,18 +998,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		method.cref = contract->id;
 		contract->methods.push_back(std::move(method));
 	}
-	// Function bodies and generated dispatchers can discover this after the
-	// approval program was built. Finalize once every lowering path is known.
-	if (m_typeMapper.artifacts().usesStaticContext)
-		contract->reservedScratchSpace.push_back(ScratchLayout::staticContextSlot);
-	if (m_typeMapper.artifacts().usesReturnData)
-	{
-		contract->reservedScratchSpace.push_back(ScratchLayout::returnDataSlot);
-		auto const& loc = contract->approvalProgram.sourceLocation;
-		auto& body = contract->approvalProgram.body->body;
-		body.insert(body.begin(), awst::makeExpressionStatement(awst::makeStoreSlot(
-			ScratchLayout::returnDataSlot, awst::makeBytesConstant({}, loc), loc), loc));
-	}
+	m_typeMapper.artifacts().pendingScratchReservations.push_back({contract, _contract.id(),
+		std::move(m_typeMapper.artifacts().contract().scratchSlots)});
 
 	return contract;
 }

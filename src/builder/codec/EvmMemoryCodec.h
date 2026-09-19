@@ -33,8 +33,8 @@ std::shared_ptr<awst::Expression> materializeEvmMemoryValue(
 	std::vector<std::shared_ptr<awst::Statement>>& out);
 
 /// Internal return offsets become values only at a value/ABI consumer. Tuple
-/// results are captured once before reading any of their memory components.
-std::shared_ptr<awst::Expression> materializeEvmMemoryResult(
+/// results are captured once before reading memory or calldata components.
+std::shared_ptr<awst::Expression> materializeReferenceResult(
 	TypeMapper& types, std::vector<solidity::frontend::Type const*> const& returns,
 	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out);
@@ -56,6 +56,13 @@ bool spillEvmMemoryValue(
 std::shared_ptr<awst::Expression> defaultEvmMemoryValue(
 	TypeMapper& typeMapper, solidity::frontend::Type const* solType,
 	awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out);
+
+/// Allocate new T[](count) directly, initializing each child with solc's
+/// default memory value instead of copying an ARC4 aggregate projection.
+std::shared_ptr<awst::Expression> allocateEvmMemoryArray(
+	TypeMapper& typeMapper, solidity::frontend::ArrayType const* array,
+	std::shared_ptr<awst::Expression> count, awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out);
 
 /// Recursively overwrite an existing EVM-memory value region.  Static

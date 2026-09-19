@@ -8,6 +8,80 @@ not as an active test runner.
 
 ## Recorded baseline
 
+### Reference correctness and boundary reductions — 2026-09-19
+
+This commit on `rev-2` follows `26aadc01e476`. It preserves memory-reference
+identity and raw-return propagation while avoiding unnecessary materialization
+of fresh values and discarded reference assignments. Parenthesized storage
+receivers keep solc's lvalue facts; recursive arrays allocate using solc's
+memory strides and defaults rather than an incompatible value projection.
+
+The five-item follow-up records helper scratch demand per host/reachable
+freestanding callable, shares parent/child deferred-initialization decisions,
+keeps EVM return values native until the wire boundary, and reuses validated
+scalar-array head bounds. Calldata returns preserve coordinates and their
+immutable byte view through tuples, modifiers and indirect calls. Public-library
+copy boundaries, default calldata coordinates and native ARC4's documented
+`msg.data` view are preserved. The memory experiment remains separate.
+
+| Result | Count |
+|---|---:|
+| Passed | 3,013 |
+| Failed | 0 |
+| Expected failure (xfail) | 99 |
+| Unexpected pass (xpass) | 40 |
+| Total | 3,152 |
+
+The final full semantic/framework repeat took **1,454.11 seconds (24:14)**,
+with one worker: `PUYASOL_LOCALNET_RESET=0 pytest tests/ framework/ -q
+--junitxml=/tmp/puyasol-crosscutting-impl.Q29ED8/full-semantic-repeat.xml`.
+All **3,054 committed-baseline outcomes are unchanged**, none are missing, and
+all **98 added configurations pass**. This includes 56 cases from the preceding
+memory/effect pass and 42 from the five-item follow-up. Eight old calldata-return
+rejection tests were intentionally renamed and upgraded to runtime assertions;
+the comparison normalizes those names. No failure markers were relaxed, ledger
+reset or compile cache cleared.
+
+Native CTests pass **24/24** in 2.17 seconds. Focused validation passes
+**216 tests**, with ten xfails and no failures, in 226.85 seconds. The final
+binary matches all **280 scalar/ABI differential probes** across legacy/via-IR
+and named/slot profiles. Official solc **0.8.34** validates another **88**
+calldata/copy/view checks across both backends; the preceding memory regressions
+have 30 solc checks. The first integration run's `msg.data` failure was fixed
+without changing its expected result; it passes the final full repeat.
+
+Compiler, source diff and **2,637 recorded inputs** were unchanged through the
+final validation. Compiler SHA-256:
+`b9f7e456f537644f47c592e93d7f75615702297ce380113ef517a93829a774fc`.
+`src/` contains **61,713 physical / 48,130 code lines** in 318 files:
+**+463 physical / +500 code lines** across this complete checkpoint. The
+five-item follow-up alone adds **241 physical / 230 code lines**. Code counts
+exclude comments and blank lines.
+
+Unchanged-input probes shrink from **340 to 288 bytes** for modifier/helper
+ownership, **482 to 460** for narrow EVM returns, and **1,971 to 1,864** for ABI
+decoding. Successful scalar/ABI probes save 4–41 opcode-budget units, with no
+increase among those probes. These are microbenchmarks, not a whole-corpus claim;
+the [size census](../sizes/reports/reference-boundaries.md) separately records
+unchanged-program deltas, new/changed fixtures and compilation outcomes.
+Its unchanged-program approval totals change by **+1,856 named / -1,268 slot /
+-926 tracked-chainwide bytes**, with unchanged compile outcomes and clear sizes.
+All three canonical size-table checks pass. Separate FireBridge/PrivacyPool
+historical repeats remain blocked by a virtual-call reachability error and
+program-size/closed-world limits, respectively; those workloads are not certified
+by this semantic score. Their exact outcomes are in the size report.
+
+Evidence: [JUnit](out/reference-boundaries/semantic.xml),
+[outcome comparison](out/reference-boundaries/semantic-comparison.json),
+[focused tests](out/reference-boundaries/focused.xml),
+[native tests](out/reference-boundaries/ctest.txt),
+[input manifest](out/reference-boundaries/validation-inputs.sha256),
+[build provenance](out/reference-boundaries/build-manifest.txt),
+[probe budgets](out/reference-boundaries/probe-budgets.json),
+[report hashes](out/reference-boundaries/report-manifest.json) and
+[console output](results.txt). Only thin reports are retained for versioning;
+raw generated outputs remain local and ignored.
+
 ### Yul/storage reductions and solc facts — 2026-09-18
 
 This commit on `rev-2` follows `08b016037c` and includes the typed-value pass below.

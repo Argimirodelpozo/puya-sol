@@ -105,6 +105,9 @@ struct ProgramAnalysis
 	/// Memory references escaping through internal returns travel as offsets,
 	/// including connected actual/formal parameters and local aliases.
 	std::set<int64_t> memoryPointerDeclarations;
+	/// Unnamed memory results overwritten by a sole explicit return, with no
+	/// assembly memory observer in their caller/callee context.
+	std::set<int64_t> elidedMemoryReturnInitializers;
 	std::set<size_t> pointerMemoryParameters(solidity::frontend::FunctionType const& type) const;
 	/// Single-declaration initializer ASTs, indexed once by solc declaration ID.
 	/// Source provenance only: live reference bindings still win after reassignments.
@@ -115,6 +118,9 @@ struct ProgramAnalysis
 	std::map<int64_t, solidity::frontend::Expression const*> stableFunctionPointers;
 	std::set<int64_t> structRefOffsetParams;
 	std::set<int64_t> callablesWithInlineAssembly;
+	/// Successful Yul termination, closed over Solidity call edges. Internal
+	/// calls propagate it; an adapted external self-call catches its own frame.
+	std::set<int64_t> callablesWithRawReturn;
 	/// Callers of Yul calldata consumers retain the entry frame as well.
 	std::set<int64_t> callablesWithCalldata;
 	bool pointerNeedsCalldata(solidity::frontend::FunctionType const& type) const;

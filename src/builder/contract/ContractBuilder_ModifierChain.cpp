@@ -4,11 +4,13 @@
 /// preserving multiple-placeholder semantics without copying AWST nodes.
 
 #include "builder/contract/ContractBuilder.h"
+#include "builder/lowering/itxn/ApplicationCall.h"
 #include "builder/context/ProgramAnalysis.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/types/CallBoundaryPlan.h"
 #include "builder/types/ConversionPlan.h"
 #include "builder/codec/EvmMemoryCodec.h"
+#include "builder/eb/CalldataReference.h"
 #include "builder/storage/slot/EvmSlotLowering.h"
 #include "builder/ast/exprs/SolIndexAccess.h"
 #include "builder/target/EvmLayoutMode.h"
@@ -145,6 +147,8 @@ public:
 		std::shared_ptr<awst::Expression> _call,
 		awst::SourceLocation const& _loc) const
 	{
+		if (m_rawReturn)
+			_call = ApplicationCall::propagateRawReturn(m_types, std::move(_call), m_method.returnType, _loc, _dst->body);
 		if (!m_hasRet) { _dst->body.push_back(awst::makeExpressionStatement(std::move(_call), _loc)); return; }
 		_dst->body.push_back(awst::makeAssignmentStatement(
 			returnValues(_loc, false), decodeCallResult(std::move(_call), m_localReturnType, _loc), _loc));
@@ -238,6 +242,7 @@ private:
 
 	awst::ContractMethod const& m_method;
 	TypeMapper& m_types;
+	bool m_rawReturn;
 	std::vector<RetInfo> m_retInfos;
 	awst::WType const* m_localReturnType;
 	bool m_hasRet = false;
@@ -254,12 +259,14 @@ ReturnThreading::ReturnThreading(
 	std::vector<awst::SubroutineArgument> _extraArgs,
 	int _chainId,
 	TypeMapper& _typeMapper)
-	: m_method(_method), m_types(_typeMapper), m_extraArgs(std::move(_extraArgs))
+	: m_method(_method), m_types(_typeMapper),
+	  m_rawReturn(_typeMapper.analysis().callablesWithRawReturn.contains(_func.id())),
+	  m_extraArgs(std::move(_extraArgs))
 {
 	// Preserve the actual emitted return signature, including reference handles
 	// and write-backs. Numeric source locals can use a narrower carrier; adapt
 	// calls through the shared result decoder and solc-derived return plan.
-	auto const* retTuple = (_method.returnType
+	auto const* retTuple = (_method.returnType && _method.returnType != calldataReferenceType()
 		&& _method.returnType->kind() == awst::WTypeKind::WTuple)
 		? static_cast<awst::WTuple const*>(_method.returnType) : nullptr;
 	for (size_t ri = 0; ri < _func.returnParameters().size(); ++ri)
@@ -567,6 +574,18 @@ void ContractBuilder::buildModifierChain(
 		// body's local pointer and must not escape to its caller (solc memory
 		// reference semantics).
 		std::vector<std::shared_ptr<awst::Statement>> bridgeEntry;
+		for (auto const& parameter: _func.returnParameters())
+			if (!parameter->name().empty() && parameter->referenceLocation() == VariableDeclaration::Location::CallData)
+			{
+				auto value = awst::makeVarExpression(parameter->name(), calldataReferenceType(), bodySub.sourceLocation);
+				for (int i = 0; i < (sol_ast::CalldataReference::hasLength(parameter->type()) ? 2 : 1); ++i)
+					bridgeEntry.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
+						(i ? "__cd_len_" : "__cd_off_") + parameter->name(), awst::WType::biguintType(), bodySub.sourceLocation),
+						awst::makeTupleItem(value, i, awst::WType::biguintType(), bodySub.sourceLocation), bodySub.sourceLocation));
+				bridgeEntry.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
+					"__cd_data_" + parameter->name(), awst::WType::bytesType(), bodySub.sourceLocation),
+					awst::makeTupleItem(value, 2, awst::WType::bytesType(), bodySub.sourceLocation), bodySub.sourceLocation));
+			}
 		for (auto const& bridge: memoryBridges)
 			if (std::find(_writeBackParams.begin(), _writeBackParams.end(),
 					bridge.parameterIndex) != _writeBackParams.end())

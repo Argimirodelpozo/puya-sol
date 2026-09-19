@@ -98,21 +98,26 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 	catch (std::logic_error const&) { unscopedRejected = true; }
 	require(unscopedRejected, "unscoped contract helper use was accepted");
 	{
-		builder::BuildArtifacts::ContractScope outer(artifacts);
+		builder::BuildArtifacts::ContractScope outer(artifacts, 1);
+		artifacts.noteScratchUse(255);
 		artifacts.contract().helpers["host"] = "outer";
 		{
-			builder::BuildArtifacts::ContractScope inner(artifacts);
+			builder::BuildArtifacts::ContractScope inner(artifacts, 2);
+			require(artifacts.contract().sourceId == 2 && artifacts.contract().scratchSlots.empty(),
+				"nested contract inherited scratch demand");
 			require(artifacts.contract().helpers.empty(), "nested contract inherited host helpers");
 			artifacts.contract().helpers["host"] = "inner";
 		}
 		require(artifacts.contract().helpers.at("host") == "outer", "nested build lost its host emission state");
 		try
 		{
-			builder::BuildArtifacts::ContractScope inner(artifacts);
+			builder::BuildArtifacts::ContractScope inner(artifacts, 3);
 			throw std::runtime_error("nested build failed");
 		}
 		catch (std::runtime_error const&) {}
 		require(artifacts.contract().helpers.at("host") == "outer", "failed build leaked its emission scope");
+		require(artifacts.contract().sourceId == 1 && artifacts.contract().scratchSlots.contains(255),
+			"nested build lost its host scratch demand");
 	}
 	artifacts.clear();
 	builder::TypeMapper mapper(analysis, _profile, sources, artifacts);
@@ -143,6 +148,18 @@ void testMapper(CompilerStack const& _compiler, puyasol::builder::TargetProfile 
 	}
 	auto const* structA = TypeProvider::structType(
 		declaration<StructDefinition>(a, "Item"), DataLocation::Storage);
+	{
+		std::vector<std::shared_ptr<awst::Statement>> effects;
+		auto index = awst::makeVarExpression("index", awst::WType::uint64Type(), {});
+		auto length = awst::makeIntegerConstant(3, {});
+		auto checked = builder::TypeCoercion::checkedIndexToUint64(effects, index, {}, length);
+		require(checked == index && effects.size() == 1, "discarded array index lost its explicit bound");
+		auto* statement = dynamic_cast<awst::ExpressionStatement*>(effects.front().get());
+		auto* assertion = statement ? dynamic_cast<awst::AssertExpression*>(statement->expr.get()) : nullptr;
+		auto* bound = assertion ? dynamic_cast<awst::NumericComparisonExpression*>(assertion->condition.get()) : nullptr;
+		require(bound && bound->lhs == index && bound->rhs == length
+			&& bound->op == awst::NumericComparison::Lt, "array bound does not compare the checked index with its length");
+	}
 	auto const* structB = TypeProvider::structType(
 		declaration<StructDefinition>(b, "Item"), DataLocation::Storage);
 	auto const* memA = TypeProvider::withLocationIfReference(DataLocation::Memory, structA);

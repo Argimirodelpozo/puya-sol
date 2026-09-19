@@ -481,9 +481,6 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		if (!m_typeMapper.profile().evmStorageLayout)
 			collectBoxArrayVars(_contract, method.sourceLocation);
 
-		if (!m_boxArrayVars.empty())
-			needsPostInit = true;
-
 		auto const* constructor = _contract.constructor();
 		if (constructor)
 			emitCtorParamDecode(

@@ -4,6 +4,7 @@
 #include "builder/ast/exprs/SolIndexAccess.h"
 #include "builder/solc/SolcFacts.h"
 #include "builder/eb/MappingPrefix.h"
+#include "builder/eb/CallOperands.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/storage/named/StoragePathWalker.h"
 #include "awst/NameGen.h"
@@ -76,79 +77,15 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	if (!m_indexAccess.annotation().willBeWrittenTo)
 		baseExprForRead = builder::StorageMapper::makeStateGetWithDefault(boxExpr, arrWType, m_loc);
 
-	// Index → uint64 with an out-of-bounds pre-check (a wide index >= 2^64 reverts instead of
-	// silently truncating its high bits and reading arr[low-64-bits]).
-	auto idx = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.preEffects(), buildExpr(*m_indexAccess.indexExpression()), m_loc);
-
-	// DYNAMIC-element box arrays (struct-with-mapping elements → the mapping
-	// member maps to dynamic bytes): puya's IndexExpression reads the uint16
-	// offset table with NO length check, so an OOB index dereferences whatever
-	// bytes sit at the phantom table slot — garbage instead of a revert.
-	// (Static-stride elements at least die on the physical box_extract
-	// boundary.) Assert idx < length, EVM Panic 0x32 semantics; length via
-	// makeBoxArrayLength so it can never disagree with `.length`/push/pop.
-	// Covers reads AND the write lvalue (both built here). The length helper
-	// accepts either a physical state key or a storage-ref parameter's runtime
-	// key, so both representations get the same recursive-shape bounds rule.
-	if (arrType->isDynamicallySized() && !arrType->isByteArrayOrString()
-		&& !builder::computeEncodedElementSize(elemType).fixedBytes())
-		if (auto const* ident = SolcFacts::expressionAs<Identifier>(&m_indexAccess.baseExpression()))
-			if (auto const* decl = dynamic_cast<VariableDeclaration const*>(
-					ident->annotation().referencedDeclaration); decl)
-			{
-				std::shared_ptr<awst::Expression> length;
-				auto const& keyParam = m_scope.bindings.mappingKeyParams.get(decl->id());
-				if (!keyParam.empty())
-					length = StorageMapper::makeBoxArrayLength(
-						m_ctx.typeMapper,
-						awst::makeReinterpretCast(
-							awst::makeVarExpression(
-								keyParam, awst::WType::bytesType(), m_loc),
-							awst::WType::boxKeyType(), m_loc),
-						m_loc);
-				else if (decl->isStateVariable() && !decl->isConstant()
-					&& !decl->immutable())
-					length = StorageMapper::makeBoxArrayLength(m_ctx.typeMapper,
-						awst::makeUtf8BytesConstant(m_ctx.storageMapper.physicalBindingFor(*decl).key,
-							m_loc, awst::WType::boxKeyType()), m_loc);
-				if (!length)
-					return awst::makeZero(m_loc);
-				// idx feeds the assert AND the element access — pin once.
-				std::string tmpName = "__sol_dynix_" + std::to_string(
-					awst::NameGen::next("SolIndexAccess.dynamicIndex"));
-				auto tmpVar = [&]() {
-					return awst::makeVarExpression(
-						tmpName, awst::WType::uint64Type(), m_loc);
-				};
-				m_ctx.preEffects().push_back(
-					awst::makeAssignmentStatement(tmpVar(), std::move(idx), m_loc));
-				auto cmp = awst::makeNumericCompare(
-					tmpVar(), awst::NumericComparison::Lt,
-					std::move(length),
-					m_loc);
-				m_ctx.preEffects().push_back(awst::makeExpressionStatement(
-					awst::makeAssert(std::move(cmp), m_loc, "array index out of bounds"),
-					m_loc));
-				idx = tmpVar();
-			}
-
-	// puya evaluates the index twice (bounds check + access); a side-effecting
-	// index `arr[f()]` ran f() twice (verified cnt==2). makeEvalOnce prevents it.
-	// Write path returns a bare lvalue — keep the tree assignable by pinning a
-	// side-effecting index to a TEMP VAR instead (T2: `arr[f()] += 1` escaped).
-	if (!m_indexAccess.annotation().willBeWrittenTo)
-		idx = awst::makeEvalOnce(std::move(idx), m_loc);
-	else if (dynamic_cast<awst::SubroutineCallExpression const*>(idx.get())
-		|| dynamic_cast<awst::AssignmentExpression const*>(idx.get()))
-	{
-		std::string tempName = "__sol_widx_" + std::to_string(
-			awst::NameGen::next("SolIndexAccessHandlers.writeIdxCounter"));
-		auto tempVar = awst::makeVarExpression(tempName, idx->wtype, m_loc);
-		m_ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(tempVar, std::move(idx), m_loc));
-		idx = tempVar;
-	}
+	// The logical bound is required even for unused reads and static-stride
+	// elements; a physical box_extract is not a substitute for this effect.
+	auto length = arrType->isByteArrayOrString()
+		? awst::makeLen(baseExprForRead, m_loc)
+		: arrType->isDynamicallySized()
+			? StorageMapper::makeBoxArrayLength(m_ctx.typeMapper, boxExpr->key, m_loc)
+			: std::shared_ptr<awst::Expression>(awst::makeIntegerConstant(arrType->length().str(), m_loc));
+	auto idx = TypeCoercion::checkedIndexToUint64(m_ctx.preEffects(),
+		buildExpr(*m_indexAccess.indexExpression()), m_loc, std::move(length));
 
 	// bytes/string storage: puya rejects IndexExpression on bytes; use extract3.
 	// Write path unsupported (needs replace3-based lvalue handler).
@@ -296,35 +233,12 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 	}
 
 	auto base = buildExpr(m_indexAccess.baseExpression());
+	// Finish a temporary receiver before its index; retain actual lvalue places.
+	if (!*SolcFacts::unparenthesized(m_indexAccess.baseExpression()).annotation().isLValue)
+		base = m_ctx.emitSequencedOperand({}, std::move(base), true, m_loc);
 	std::shared_ptr<awst::Expression> index;
 	if (m_indexAccess.indexExpression())
-		index = buildExpr(*m_indexAccess.indexExpression());
-
-	// Pin a side-effecting index ONCE, before any consumer. Two independent
-	// consumers share this subtree: the sol-eb dispatch coerces it through
-	// checkedIndexToUint64 (emitting a pin + bounds assert that EVALUATE it)
-	// and, when the builder does not claim the access, the fallthrough uses
-	// the ORIGINAL subtree again — `result[--p] = 0x3d` decremented twice
-	// per statement (the no-asm Base64 encoder wrote its padding into the
-	// wrong cells). Pure indexes pass through: single-use temps are
-	// copy-propagated by the backend.
-	{
-		auto triviallyPureIx = [](awst::Expression const* e) -> bool {
-			while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(e))
-				e = rc->expr.get();
-			return !e || dynamic_cast<awst::VarExpression const*>(e)
-				|| dynamic_cast<awst::IntegerConstant const*>(e);
-		};
-		if (index && !triviallyPureIx(index.get()))
-		{
-			std::string nm = "__sol_ixpin_" + std::to_string(
-				awst::NameGen::next("SolIndexAccess.indexPin"));
-			auto tmp = awst::makeVarExpression(nm, index->wtype, m_loc);
-			m_ctx.preEffects().push_back(
-				awst::makeAssignmentStatement(tmp, std::move(index), m_loc));
-			index = awst::makeVarExpression(nm, tmp->wtype, m_loc);
-		}
-	}
+		index = CallOperands::evaluate(m_ctx, *m_indexAccess.indexExpression(), m_loc);
 
 	// Try sol-eb builder dispatch
 	if (index)
@@ -367,6 +281,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 			|| base->wtype->kind() == awst::WTypeKind::Bytes)
 		&& index)
 	{
+		index = TypeCoercion::checkedIndexToUint64(
+			m_ctx.preEffects(), std::move(index), m_loc, awst::makeLen(base, m_loc));
 		auto* bytes1Type = m_ctx.typeMapper.createType<awst::BytesWType>(1);
 		if (m_indexAccess.annotation().willBeWrittenTo)
 			return awst::makeIndexExpression(std::move(base), std::move(index), bytes1Type, m_loc);

@@ -7,6 +7,8 @@
 #include "builder/solc/OverloadSuffix.h"
 #include "builder/types/ConversionPlan.h"
 #include "builder/types/TypeMapper.h"
+#include "builder/context/ProgramAnalysis.h"
+#include "builder/lowering/itxn/ApplicationCall.h"
 #include "Logger.h"
 
 namespace puyasol::builder::eb
@@ -47,7 +49,8 @@ std::shared_ptr<awst::Expression> CallResolver::buildOperatorCall(
 			std::move(value));
 		++index;
 	}
-	return call;
+	return _ctx.typeMapper.analysis().callablesWithRawReturn.contains(_function.id())
+		? ApplicationCall::propagateRawReturn(_ctx, std::move(call), _loc) : call;
 }
 
 CallPlan CallResolver::plan(solidity::frontend::FunctionCall const& _call)

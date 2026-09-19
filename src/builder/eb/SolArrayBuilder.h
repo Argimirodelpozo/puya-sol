@@ -40,9 +40,6 @@ private:
 	/// Set by index(); resolve_lvalue() retains the unvalidated element location.
 	solidity::frontend::Type const* m_elementType = nullptr;
 	awst::SourceLocation m_elementLoc{};
-
-	/// Get the AWST element type from the base array WType.
-	awst::WType const* elementType() const;
 };
 
 } // namespace puyasol::builder::eb

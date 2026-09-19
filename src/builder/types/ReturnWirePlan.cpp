@@ -92,6 +92,8 @@ FunctionReturnPlan const& TypeMapper::functionReturnPlan(
 			: createType<awst::WTuple>(std::move(nativeTypes));
 		plan.wireType = createType<awst::WTuple>(std::move(wireTypes));
 	}
+	// The EVM router owns serialization; its callee need not round-trip ARC4.
+	if (profile().contractAbi == ContractAbi::Evm) plan.wireType = plan.nativeType;
 	plan.internalType = plan.nativeType;
 	plan.internalElements = plan.elements;
 	std::vector<awst::WType const*> internalTypes;
@@ -103,6 +105,11 @@ FunctionReturnPlan const& TypeMapper::functionReturnPlan(
 			&& analysis().memoryPointerDeclarations.contains(returns[i]->id()))
 		{
 			element = planReturnElement(*this, returns[i]->type(), awst::WType::uint64Type());
+			pointers = true;
+		}
+		else if (returns[i]->referenceLocation() == VariableDeclaration::Location::CallData)
+		{
+			element = planReturnElement(*this, returns[i]->type(), calldataReferenceType());
 			pointers = true;
 		}
 		internalTypes.push_back(element.nativeType);

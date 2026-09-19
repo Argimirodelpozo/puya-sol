@@ -7,6 +7,7 @@
 #include "builder/context/BuildArtifacts.h"
 #include "builder/yul/AssemblyBuilder.h"
 #include "builder/codec/EvmValueCodec.h"
+#include "builder/codec/EvmAbiDecode.h"
 #include "builder/types/TypeMapper.h"
 #include "builder/types/TypeCoercion.h"
 #include "builder/codec/Arc4Defaults.h"
@@ -23,7 +24,7 @@ namespace puyasol::builder
 using namespace puyasol::builder::shorthand;
 using namespace solidity::frontend;
 
-std::shared_ptr<awst::Expression> materializeEvmMemoryResult(
+std::shared_ptr<awst::Expression> materializeReferenceResult(
 	TypeMapper& types, std::vector<Type const*> const& returns,
 	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out)
@@ -35,7 +36,8 @@ std::shared_ptr<awst::Expression> materializeEvmMemoryResult(
 			&& !memoryUsesBlob(types.map(returns[i]));
 	};
 	bool needed = false;
-	for (size_t i = 0; i < returns.size(); ++i) needed |= pointer(i);
+	for (size_t i = 0; i < returns.size(); ++i)
+		needed |= pointer(i) || (tuple ? tuple->types().at(i) : value->wtype) == calldataReferenceType();
 	if (!needed) return value;
 	auto saved = awst::makeVarExpression("__memory_result_" + std::to_string(
 		awst::NameGen::next("EvmMemoryCodec.result")), value->wtype, loc);
@@ -47,6 +49,10 @@ std::shared_ptr<awst::Expression> materializeEvmMemoryResult(
 	{
 		if (pointer(i)) items[i] = materializeEvmMemoryValue(types, returns[i],
 			types.map(returns[i]), std::move(items[i]), loc, out);
+		else if (items[i]->wtype == calldataReferenceType())
+			items[i] = abi::readCalldataValue(types, awst::makeTupleItem(items[i], 2, awst::WType::bytesType(), loc),
+				returns[i], awst::makeTupleItem(items[i], 0, awst::WType::biguintType(), loc),
+				awst::makeTupleItem(items[i], 1, awst::WType::biguintType(), loc), loc, out);
 		elementTypes.push_back(items[i]->wtype);
 	}
 	if (!tuple) return items.front();
@@ -380,19 +386,7 @@ public:
 		if (auto const* array = dynamic_cast<ArrayType const*>(type))
 		{
 			if (array->isDynamicallySized()) return u64(CompilerUtils::zeroPointer, m_loc);
-			auto base = allocate(u64(array->memoryDataSize().str(), m_loc), out);
-			auto index = awst::makeVarExpression("__mem_zero_" + std::to_string(
-				awst::NameGen::next("EvmMemoryCodec.zero")), awst::WType::uint64Type(), m_loc);
-			out.push_back(awst::makeAssignmentStatement(index, u64(0, m_loc), m_loc));
-			auto body = awst::makeBlock(m_loc);
-			auto value = zero(array->baseType(), body->body);
-			writeWord(add(base, awst::makeUInt64BinOp(index, awst::UInt64BinaryOperator::Mult,
-				u64(array->memoryStride(), m_loc), m_loc), m_loc),
-				awst::makeLeftPadToN(awst::makeItob(std::move(value), m_loc), 32, m_loc), body->body);
-			body->body.push_back(awst::makeAssignmentStatement(index, add(index, u64(1, m_loc), m_loc), m_loc));
-			out.push_back(awst::makeWhileLoop(awst::makeNumericCompare(index, awst::NumericComparison::Lt,
-				u64(array->length().str(), m_loc), m_loc), std::move(body), m_loc));
-			return base;
+			return zeroArray(array, u64(array->length().str(), m_loc), out);
 		}
 		auto const& structure = dynamic_cast<StructType const&>(*type);
 		auto base = allocate(u64(structure.memoryDataSize().str(), m_loc), out);
@@ -402,6 +396,36 @@ public:
 			writeWord(add(base, u64(structure.memoryOffsetOfMember(member.name).str(), m_loc), m_loc),
 				awst::makeLeftPadToN(awst::makeItob(std::move(value), m_loc), 32, m_loc), out);
 		}
+		return base;
+	}
+
+	std::shared_ptr<awst::Expression> zeroArray(ArrayType const* array,
+		std::shared_ptr<awst::Expression> count, Statements& out)
+	{
+		count = pin(std::move(count), out, "zerocount");
+		if (array->isByteArrayOrString())
+		{
+			int id = awst::NameGen::next("EvmMemoryCodec.bytes");
+			std::string name = "__evmmem_boff_" + std::to_string(id);
+			for (auto& statement: AssemblyBuilder::emitBytesBlobAlloc(m_mapper, count, name, id, m_loc))
+				out.push_back(std::move(statement));
+			return u64Var(name, m_loc);
+		}
+		auto prefix = u64(array->isDynamicallySized() ? 32 : 0, m_loc);
+		auto base = allocate(add(prefix, awst::makeUInt64BinOp(count, awst::UInt64BinaryOperator::Mult,
+			u64(array->memoryStride(), m_loc), m_loc), m_loc), out);
+		if (array->isDynamicallySized())
+			writeWord(base, awst::makeLeftPadToN(awst::makeItob(count, m_loc), 32, m_loc), out);
+		auto index = u64Var("__mem_zero_" + std::to_string(awst::NameGen::next("EvmMemoryCodec.zero")), m_loc);
+		out.push_back(awst::makeAssignmentStatement(index, u64(0, m_loc), m_loc));
+		auto body = awst::makeBlock(m_loc);
+		auto value = zero(array->baseType(), body->body);
+		writeWord(add(add(base, prefix, m_loc), awst::makeUInt64BinOp(index, awst::UInt64BinaryOperator::Mult,
+			u64(array->memoryStride(), m_loc), m_loc), m_loc),
+			awst::makeLeftPadToN(awst::makeItob(std::move(value), m_loc), 32, m_loc), body->body);
+		body->body.push_back(awst::makeAssignmentStatement(index, add(index, u64(1, m_loc), m_loc), m_loc));
+		out.push_back(awst::makeWhileLoop(awst::makeNumericCompare(index, awst::NumericComparison::Lt,
+			count, m_loc), std::move(body), m_loc));
 		return base;
 	}
 
@@ -706,6 +730,13 @@ std::shared_ptr<awst::Expression> defaultEvmMemoryValue(
 	awst::SourceLocation const& loc, Statements& out)
 {
 	return MemoryWriter(typeMapper, loc).zero(solType, out);
+}
+
+std::shared_ptr<awst::Expression> allocateEvmMemoryArray(
+	TypeMapper& typeMapper, ArrayType const* array, std::shared_ptr<awst::Expression> count,
+	awst::SourceLocation const& loc, Statements& out)
+{
+	return MemoryWriter(typeMapper, loc).zeroArray(array, std::move(count), out);
 }
 
 } // namespace puyasol::builder

@@ -192,9 +192,14 @@ void prepareAssemblyBoundary(sol_ast::FunctionContext& function, Block const& bo
 		AssemblyBuilder builder(function.tr.typeMapper, function.tr.sourceFile, "calldata_entry", function.inConstructor);
 		auto types = function.parameterSolTypes();
 		if (function.sourceFunction)
+		{
 			for (auto const& declaration: function.sourceFunction->parameters())
 				if (declaration->type()->dataStoredIn(DataLocation::CallData))
 					function.calldataDeclarations.insert(declaration->id());
+			for (auto const& declaration: function.sourceFunction->returnParameters())
+				if (declaration->type()->dataStoredIn(DataLocation::CallData))
+					function.calldataDeclarations.insert(declaration->id());
+		}
 		builder.setCalldataSolTypes(std::move(types));
 		if (SelectorSemantics::enabled(function.tr.typeMapper))
 			builder.setSelectorRoutes(SelectorSemantics::routes(function.tr.contractCtx));
@@ -217,6 +222,8 @@ void prepareAssemblyBoundary(sol_ast::FunctionContext& function, Block const& bo
 				prelude.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
 					"__cd_len_" + name, awst::WType::biguintType(), loc),
 					TypeCoercion::coerceScalar(awst::makeLen(input, loc), awst::WType::biguintType(), loc), loc));
+				prelude.push_back(awst::makeAssignmentStatement(awst::makeVarExpression(
+					"__cd_data_" + name, awst::WType::bytesType(), loc), input, loc));
 			}
 		}
 		else if (!incoming)
@@ -243,6 +250,7 @@ void appendCalldataParameters(CallBoundaryPlan const& plan,
 			args.emplace_back("__cd_off_" + parameter.name, awst::WType::biguintType(), loc);
 			if (sol_ast::CalldataReference::hasLength(parameter.declaration->type()))
 				args.emplace_back("__cd_len_" + parameter.name, awst::WType::biguintType(), loc);
+			args.emplace_back("__cd_data_" + parameter.name, awst::WType::bytesType(), loc);
 		}
 }
 

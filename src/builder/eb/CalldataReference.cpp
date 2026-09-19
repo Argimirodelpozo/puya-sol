@@ -1,4 +1,5 @@
 #include "builder/eb/CalldataReference.h"
+#include "builder/ast/calls/SolInternalCall.h"
 #include "builder/codec/ByteSlice.h"
 #include "builder/codec/EvmAbiDecode.h"
 #include "builder/codec/EvmValueCodec.h"
@@ -15,8 +16,6 @@ using namespace solidity::frontend;
 using Expr = CalldataReference::Expr;
 namespace
 {
-awst::WTuple const referenceType({awst::WType::biguintType(), awst::WType::biguintType()},
-	std::vector<std::string>{"__calldata_offset", "__calldata_length"});
 Expr word(uint64_t value, awst::SourceLocation const& loc) { return awst::makeBiguintConstant(std::to_string(value), loc); }
 Expr blob(awst::SourceLocation const& loc) { return awst::makeVarExpression("__cd_blob", awst::WType::bytesType(), loc); }
 Expr add(Expr left, Expr right, awst::SourceLocation const& loc)
@@ -24,9 +23,9 @@ Expr add(Expr left, Expr right, awst::SourceLocation const& loc)
 	return awst::makeBigUIntBinOp(awst::makeBigUIntBinOp(std::move(left), awst::BigUIntBinaryOperator::Add,
 		std::move(right), loc), awst::BigUIntBinaryOperator::Mod, makePow256(loc), loc);
 }
-Expr load(eb::ContractContext& ctx, Expr offset, awst::SourceLocation const& loc)
+Expr load(eb::ContractContext& ctx, Expr data, Expr offset, awst::SourceLocation const& loc)
 {
-	return awst::makeAsBiguint(readPaddedBytes(ctx.typeMapper, blob(loc), std::move(offset),
+	return awst::makeAsBiguint(readPaddedBytes(ctx.typeMapper, std::move(data), std::move(offset),
 		awst::makeIntegerConstant(32, loc), loc), loc);
 }
 ArrayType const* arrayType(Type const* type)
@@ -38,16 +37,17 @@ void require(eb::ContractContext& ctx, Expr condition, awst::SourceLocation cons
 {
 	ctx.queuePreExpression(awst::makeAssert(std::move(condition), loc, message), loc);
 }
-CalldataReference atHead(eb::ContractContext& ctx, Type const* type, Expr base, Expr head,
+CalldataReference atHead(eb::ContractContext& ctx, Type const* type, Expr data, Expr base, Expr head,
 	awst::SourceLocation const& loc)
 {
-	CalldataReference result{type, head, nullptr};
+	if (!data) data = blob(loc);
+	CalldataReference result{type, head, nullptr, data};
 	if (type->isDynamicallyEncoded())
 	{
 		// solc's access_calldata_tail validates the tail before exposing its
 		// pointer. Static scalar loads instead retain calldataload zero padding.
-		auto relative = ctx.emitSequencedOperand({}, load(ctx, head, loc), true, loc);
-		auto end = TypeCoercion::coerceScalar(awst::makeLen(blob(loc), loc), awst::WType::biguintType(), loc);
+		auto relative = ctx.emitSequencedOperand({}, load(ctx, data, head, loc), true, loc);
+		auto end = TypeCoercion::coerceScalar(awst::makeLen(data, loc), awst::WType::biguintType(), loc);
 		auto absolute = awst::makeBigUIntBinOp(base, awst::BigUIntBinaryOperator::Add, relative, loc);
 		require(ctx, awst::makeNumericCompare(awst::makeBigUIntBinOp(absolute,
 			awst::BigUIntBinaryOperator::Add, word(type->calldataEncodedTailSize(), loc), loc),
@@ -55,7 +55,7 @@ CalldataReference atHead(eb::ContractContext& ctx, Type const* type, Expr base, 
 		result.offset = ctx.emitSequencedOperand({}, absolute, true, loc);
 		if (CalldataReference::hasLength(type))
 		{
-			result.length = ctx.emitSequencedOperand({}, load(ctx, result.offset, loc), true, loc);
+			result.length = ctx.emitSequencedOperand({}, load(ctx, data, result.offset, loc), true, loc);
 			result.offset = add(result.offset, word(32, loc), loc);
 			require(ctx, awst::makeNumericCompare(result.length, awst::NumericComparison::Lte,
 				awst::makeBiguintConstant("18446744073709551615", loc), loc), loc, "invalid calldata length");
@@ -86,7 +86,8 @@ std::optional<CalldataReference> CalldataReference::local(Context const& scope,
 		|| !scope.function || !scope.function->hasAssemblyCalldata
 		|| !scope.function->calldataDeclarations.contains(declaration.id())) return std::nullopt;
 	CalldataReference result{declaration.type(),
-		awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), loc), nullptr};
+		awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), loc), nullptr,
+		awst::makeVarExpression("__cd_data_" + name, awst::WType::bytesType(), loc)};
 	if (hasLength(result.type))
 		result.length = awst::makeVarExpression("__cd_len_" + name, awst::WType::biguintType(), loc);
 	else if (auto const* array = arrayType(result.type))
@@ -99,6 +100,20 @@ std::optional<CalldataReference> CalldataReference::resolve(eb::ContractContext&
 {
 	if (!ctx.scope().function || !ctx.scope().function->hasAssemblyCalldata) return std::nullopt;
 	auto const& node = SolcFacts::unparenthesized(source);
+	if (auto const* call = SolcFacts::expressionAs<FunctionCall>(&node);
+		call && node.annotation().type->dataStoredIn(DataLocation::CallData))
+	{
+		if (*call->annotation().kind == FunctionCallKind::TypeConversion && call->arguments().size() == 1)
+			if (auto reference = resolve(ctx, *call->arguments().front(), loc))
+			{
+				reference->type = node.annotation().type;
+				return reference;
+			}
+		if (auto const* function = dynamic_cast<FunctionType const*>(call->expression().annotation().type);
+			function && function->kind() == FunctionType::Kind::Internal)
+			return unpack(node.annotation().type, ctx.emitSequencedOperand({},
+				SolInternalCall(ctx, *call).toReferenceAwst(), true, loc), loc);
+	}
 	if (auto const* id = SolcFacts::expressionAs<Identifier>(&node))
 		if (auto const* declaration = dynamic_cast<VariableDeclaration const*>(id->annotation().referencedDeclaration))
 			return local(ctx.scope(), *declaration, loc);
@@ -125,17 +140,20 @@ std::optional<CalldataReference> CalldataReference::resolve(eb::ContractContext&
 		auto yes = branch(conditional->trueExpression());
 		auto no = branch(conditional->falseExpression());
 		return unpack(node.annotation().type, ctx.emitConditional(std::move(condition),
-			std::move(yes), std::move(no), &referenceType, loc), loc);
+			std::move(yes), std::move(no), calldataReferenceType(), loc), loc);
 	}
 	if (auto const* member = SolcFacts::expressionAs<MemberAccess>(&node))
 	{
 		if (auto const* magic = dynamic_cast<MagicType const*>(member->expression().annotation().type);
 			magic && magic->kind() == MagicType::Kind::Message && member->memberName() == "data")
+		{
+			auto data = ctx.emitSequencedOperand({}, ctx.buildExpr(node), true, loc);
 			return CalldataReference{node.annotation().type, word(0, loc),
-				TypeCoercion::coerceScalar(awst::makeLen(blob(loc), loc), awst::WType::biguintType(), loc)};
+				TypeCoercion::coerceScalar(awst::makeLen(data, loc), awst::WType::biguintType(), loc), data};
+		}
 		if (auto const* structure = dynamic_cast<StructType const*>(member->expression().annotation().type))
 			if (auto base = resolve(ctx, member->expression(), loc))
-				return atHead(ctx, node.annotation().type, base->offset,
+				return atHead(ctx, node.annotation().type, base->data, base->offset,
 					add(base->offset, word(structure->calldataOffsetOfMember(member->memberName()), loc), loc), loc);
 	}
 	if (auto const* index = SolcFacts::expressionAs<IndexAccess>(&node); index && index->indexExpression())
@@ -145,12 +163,13 @@ std::optional<CalldataReference> CalldataReference::resolve(eb::ContractContext&
 			if (!array) return std::nullopt;
 			base->offset = ctx.emitSequencedOperand({}, base->offset, true, loc);
 			base->length = ctx.emitSequencedOperand({}, base->length, true, loc);
+			base->data = ctx.emitSequencedOperand({}, base->data, true, loc);
 			auto i = TypeCoercion::coerceScalar(CallOperands::evaluate(ctx, *index->indexExpression(), loc),
 				awst::WType::biguintType(), loc);
 			require(ctx, awst::makeNumericCompare(i, awst::NumericComparison::Lt, base->length, loc), loc, "array index out of bounds");
 			auto position = add(base->offset, awst::makeBigUIntBinOp(i, awst::BigUIntBinaryOperator::Mult,
 				word(array->calldataStride(), loc), loc), loc);
-			auto result = atHead(ctx, node.annotation().type, base->offset, position, loc);
+			auto result = atHead(ctx, node.annotation().type, base->data, base->offset, position, loc);
 			result.packedByte = array->isByteArrayOrString();
 			return result;
 		}
@@ -159,6 +178,7 @@ std::optional<CalldataReference> CalldataReference::resolve(eb::ContractContext&
 		{
 			base->offset = ctx.emitSequencedOperand({}, base->offset, true, loc);
 			base->length = ctx.emitSequencedOperand({}, base->length, true, loc);
+			base->data = ctx.emitSequencedOperand({}, base->data, true, loc);
 			auto bound = [&](Expression const* expression, Expr fallback) {
 				return expression ? TypeCoercion::coerceScalar(CallOperands::evaluate(ctx, *expression, loc),
 					awst::WType::biguintType(), loc) : fallback;
@@ -177,17 +197,21 @@ std::optional<CalldataReference> CalldataReference::resolve(eb::ContractContext&
 
 CalldataReference::Expr CalldataReference::pack(awst::SourceLocation const& loc) const
 {
-	auto tuple = awst::makeTupleExpression(&referenceType, loc);
-	tuple->items = {offset, length ? length : word(0, loc)};
+	auto tuple = awst::makeTupleExpression(calldataReferenceType(), loc);
+	tuple->items = {offset, length ? length : word(0, loc), data ? data : blob(loc)};
 	return tuple;
 }
 
 std::optional<CalldataReference> CalldataReference::unpack(Type const* type, Expr value,
 	awst::SourceLocation const& loc)
 {
-	if (value->wtype != &referenceType) return std::nullopt;
-	return CalldataReference{type, awst::makeTupleItem(value, 0, awst::WType::biguintType(), loc),
-		awst::makeTupleItem(value, 1, awst::WType::biguintType(), loc)};
+	if (value->wtype != calldataReferenceType()) return std::nullopt;
+	CalldataReference result{type, awst::makeTupleItem(value, 0, awst::WType::biguintType(), loc),
+		awst::makeTupleItem(value, 1, awst::WType::biguintType(), loc),
+		awst::makeTupleItem(value, 2, awst::WType::bytesType(), loc)};
+	if (auto const* array = arrayType(type); array && !array->isDynamicallySized())
+		result.length = awst::makeBiguintConstant(array->length().str(), loc);
+	return result;
 }
 
 void CalldataReference::bind(eb::ContractContext& ctx, VariableDeclaration const& declaration,
@@ -197,10 +221,13 @@ void CalldataReference::bind(eb::ContractContext& ctx, VariableDeclaration const
 	// Freeze both coordinates before changing either side of a rebinding.
 	auto off = ctx.emitSequencedOperand({}, offset, true, loc);
 	auto len = hasLength(declaration.type()) ? ctx.emitSequencedOperand({}, length, true, loc) : nullptr;
+	auto bytes = ctx.emitSequencedOperand({}, data ? data : blob(loc), true, loc);
 	ctx.queuePreEffect(awst::makeAssignmentStatement(
 		awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), loc), off, loc));
 	if (len) ctx.queuePreEffect(awst::makeAssignmentStatement(
 		awst::makeVarExpression("__cd_len_" + name, awst::WType::biguintType(), loc), len, loc));
+	ctx.queuePreEffect(awst::makeAssignmentStatement(
+		awst::makeVarExpression("__cd_data_" + name, awst::WType::bytesType(), loc), bytes, loc));
 	ctx.scope().function->calldataDeclarations.insert(declaration.id());
 }
 
@@ -208,13 +235,13 @@ Expr CalldataReference::read(eb::ContractContext& ctx, awst::SourceLocation cons
 {
 	if (codec::isWordType(type))
 	{
-		auto bytes = readPaddedBytes(ctx.typeMapper, blob(loc), offset,
+		auto bytes = readPaddedBytes(ctx.typeMapper, data ? data : blob(loc), offset,
 			awst::makeIntegerConstant(packedByte ? 1 : 32, loc), loc);
 		if (packedByte) bytes = awst::makeRightPad(std::move(bytes), 31, loc);
 		return codec::valueFromEvmWord(ctx.typeMapper, type, std::move(bytes), loc,
 			ctx.preEffects(), codec::PaddingPolicy::Validate);
 	}
-	return abi::readCalldataValue(ctx.typeMapper, blob(loc), type, offset, length, loc, ctx.preEffects());
+	return abi::readCalldataValue(ctx.typeMapper, data ? data : blob(loc), type, offset, length, loc, ctx.preEffects());
 }
 
 } // namespace puyasol::builder::sol_ast

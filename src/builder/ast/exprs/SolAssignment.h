@@ -18,11 +18,13 @@ class ResolvedLValue;
 class SolAssignment: public SolExpression
 {
 public:
-	SolAssignment(eb::ContractContext& _ctx, solidity::frontend::Assignment const& _node);
+	SolAssignment(eb::ContractContext& _ctx, solidity::frontend::Assignment const& _node,
+		bool _resultUsed = true);
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:
 	solidity::frontend::Assignment const& m_assignment;
+	bool m_resultUsed;
 	std::unordered_map<int64_t, std::shared_ptr<ResolvedLValue>> m_tupleTargets;
 
 	std::shared_ptr<awst::Expression> emitGenericAssignment(

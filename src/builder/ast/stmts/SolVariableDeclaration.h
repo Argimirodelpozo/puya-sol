@@ -39,7 +39,7 @@ private:
 		solidity::frontend::Expression const* initialValue,
 		std::shared_ptr<awst::Expression> value, awst::WType const* type,
 		std::vector<std::shared_ptr<awst::Statement>>& result);
-	bool tryAsmBytesAllocation(
+	bool tryAsmArrayAllocation(
 		solidity::frontend::VariableDeclaration const& decl,
 		solidity::frontend::Expression const* initialValue,
 		std::vector<std::shared_ptr<awst::Statement>>& result);

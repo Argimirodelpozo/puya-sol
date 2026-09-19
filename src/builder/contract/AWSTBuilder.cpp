@@ -193,6 +193,23 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 		roots.push_back(builder::builtin::buildRipemd160Subroutine(builtinLoc));
 	}
 
+	// Slot demand belongs to the concrete host plus its solc-reachable free
+	// functions, including specialized bodies emitted after that host.
+	for (auto& use: m_session.artifacts.pendingScratchReservations)
+	{
+		for (auto const& [function, slots]: m_session.artifacts.freestandingScratchSlots)
+			if (m_session.analysis.isCallableReachable(use.sourceId, function))
+				use.slots.insert(slots.begin(), slots.end());
+		for (int slot: use.slots) use.contract->reservedScratchSpace.push_back(slot);
+		if (use.slots.contains(ScratchLayout::returnDataSlot))
+		{
+			auto const& loc = use.contract->approvalProgram.sourceLocation;
+			auto& body = use.contract->approvalProgram.body->body;
+			body.insert(body.begin(), awst::makeExpressionStatement(awst::makeStoreSlot(
+				ScratchLayout::returnDataSlot, awst::makeBytesConstant({}, loc), loc), loc));
+		}
+	}
+	m_session.artifacts.pendingScratchReservations.clear();
 	validateAwstRoots(roots);
 	// Root subroutines (libraries, free functions) need the same dead-code
 	// pass as contract methods: an asm `return()` ending a library body

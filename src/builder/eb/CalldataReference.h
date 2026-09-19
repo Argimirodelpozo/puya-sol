@@ -12,6 +12,7 @@ struct CalldataReference
 	using Expr = std::shared_ptr<awst::Expression>;
 	solidity::frontend::Type const* type;
 	Expr offset, length;
+	Expr data = nullptr; ///< Native ARC4 msg.data and word-shaped Yul calldata can differ.
 	bool packedByte = false;
 
 	static bool hasLength(solidity::frontend::Type const* type);
